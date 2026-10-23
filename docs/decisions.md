@@ -17,6 +17,33 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-23 — Location fields become Konnect → Map
+
+The last step of "Map Places: location is a Konnection" (below): Konnect can
+now make a Place from the picker, so the composers' location fields go.
+
+**Decision:** no composer has a location field. Where a thing is, is the
+Place it is Konnected to.
+
+- **Konnect → Map → New place.** In a composer the Konnect picker makes the
+  Place right there (a name, an address if wanted, a pin on the map) and
+  picks it; the record links to it when it posts. The person never leaves
+  their composer. On a record's page, **New place** opens Map's Place
+  composer with `?konnect=`, like any other space's **New …**.
+- **Reads fall back to the Konnected Place.** An event's `location_name`
+  and `location_url`, a kar's `location`, a listing's `location`, and the
+  Map's event pins read the record's own old fields first and its Place
+  when they are empty (`Kronk::RecordPlace`). Own fields still win, so
+  older records keep what they said and the Android app, which still
+  writes them, keeps working. Editing in the app sends no location, so it
+  never clears or overwrites them.
+- **Only the owner's link says where it is.** A Place's maker can link it
+  to anything they can see; that Konnects the two but doesn't move someone
+  else's record. A link counts as the location when the record's owner
+  made it.
+
+The old columns stay until the app stops writing them.
+
 ## 2026-10-23 — One composer, one Konnect
 
 Tal, after an audit of every composer: "look at the entirety of the site …
@@ -105,7 +132,8 @@ other korner.
   audience through the link. Places are shared only within one owner's
   records, never across owners.
 - The composers' Location fields go in a later step, once Konnect can make
-  a new Place from the picker.
+  a new Place from the picker (done: "Location fields become Konnect →
+  Map", above).
 
 **Supersedes:** Map's opt-out ("Presence is where people are right now…")
 in "Attaching works from every korner, both ways" (2026-10-21).

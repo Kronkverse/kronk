@@ -95,6 +95,12 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
     end
   end
 
+  # Its own `location` (older listings, the Android app), or its Konnected
+  # Place's name (Kronk::RecordPlace). A list preloads the Places.
+  def location
+    object.location.presence || object.konnected_place&.name
+  end
+
   def photo_full_url
     photos.first&.dig(:full_url)
   end

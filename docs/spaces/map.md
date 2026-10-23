@@ -182,8 +182,25 @@ and `longitude` as exact decimals, `account_id` of its maker).
   looks the address up (`Kronk::Geocoder`) and refuses one it can't find.
   Opened with `?konnect=<slug>:<id>`, it links that record to the new
   Place once it is made, then opens the Place. The Ж bubble still logs a
-  trek (`compose:`); the Place composer is reached from a Konnect, or by
-  its URL.
+  trek (`compose:`); the Place composer is reached from a Konnect (the
+  manifest's `konnect: { make: true, route: /hub/map/places/new, label:
+'New place' }`), or by its URL.
+- **New place, from a composer.** Composers have no location fields
+  (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). In
+  a composer's Konnect picker, Map offers **New place**: a small form in
+  the picker (`components/konnect_new_place.tsx`: name, an optional
+  address, **Pin on the map**) makes the Place at once and picks it, and
+  the record links to it when it posts. It needs an address or a pin.
+- **Where a record is.** Whatever reads a location falls back to the
+  record's Konnected Place when its own old fields are empty
+  (`Kronk::RecordPlace`; own fields still win, for older records and the
+  Android app): an event's `location_name` (the Place's name) and
+  `location_url` (an OpenStreetMap link to its point), a kar's `location`
+  (`{ lat, lng, label }`), a listing's `location`, and the event pins
+  below. Only a link the record's owner made counts, either way round;
+  the oldest wins. Lists read the Places in two queries
+  (`Kronk::RecordPlace.preload`); an event inside a status reads its own
+  when it has no location.
 - **Pins moved over.** Migration `20261023140100` gave every pinned event
   (`location_url` an OpenStreetMap pin) and every kar with coordinates a
   Place and a link to it, whatever its reach: the Place is seen by whoever
@@ -197,8 +214,9 @@ or `name` and `address` alone), `PATCH` and `DELETE` (the maker only).
 
 ## Events
 
-`GET /api/v1/map/events` returns upcoming Kalendar events with a parseable
-OpenStreetMap `location_url` that you're allowed to see. The event page's
+`GET /api/v1/map/events` returns upcoming Kalendar events you're allowed to
+see that have a parseable OpenStreetMap `location_url`, or no `location_url`
+and a Konnected Place (pinned at the Place, with its name). The event page's
 location link goes to `/hub/map?event=<slug>`, which focuses that event.
 
 ## API
@@ -210,11 +228,10 @@ create, update, destroy).
 
 ## Open
 
-- **Location fields still in the composers.** Kalendar's location name
-  and pin, Karporn's location and Wachuneed's free-text location are still
-  fields on their records; the next step replaces them with a Konnection
-  to a Place (Tal, 2026-10-23), then drops the columns. Until then, an
-  event pin and its Place can both show on the map.
+- **The old location columns stay.** `events.location_name` /
+  `location_url`, `kars.location_*` and `listings.location` are read first
+  and still written by the Android app; they go once it stops. An event
+  with both a pin of its own and a Place shows the pin.
 - **No editing a Place in the app yet.** `PATCH` exists; the page only
   offers Delete.
 

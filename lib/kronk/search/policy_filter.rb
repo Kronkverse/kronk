@@ -217,7 +217,8 @@ module Kronk
       def project_event(record)
         subtitle_parts = []
         subtitle_parts << record.start_time.strftime('%a %-d %b %H:%M') if record.start_time
-        subtitle_parts << record.location_name if record.location_name.present?
+        location = record.effective_location_name
+        subtitle_parts << location if location.present?
         {
           id: record.id.to_s,
           korner: 'kalendar',

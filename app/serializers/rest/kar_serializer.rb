@@ -41,9 +41,20 @@ class REST::KarSerializer < ActiveModel::Serializer
 
   # Nil when unset, otherwise a compact { lat, lng, label } shape. Lat +
   # lng ride as floats — decimal(9,6) fits inside JSON number precision.
+  # A kar's own pin or label wins (older kars, the Android app); without
+  # one, its Konnected Place (Kronk::RecordPlace), labelled with its name.
   def location
-    return nil unless object.location? || object.location_label.present?
+    return own_location if object.location? || object.location_label.present?
 
+    place = object.konnected_place
+    return nil if place.nil?
+
+    { lat: place.latitude&.to_f, lng: place.longitude&.to_f, label: place.name }.compact
+  end
+
+  private
+
+  def own_location
     {
       lat: object.location_lat&.to_f,
       lng: object.location_lng&.to_f,

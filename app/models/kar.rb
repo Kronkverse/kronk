@@ -8,6 +8,8 @@ class Kar < ApplicationRecord
   include Reachable
   include Kronk::OwnUploads
   include Kronk::AttachmentSource
+  # Where it is: its Konnected Place, when its own location is empty.
+  include Kronk::RecordPlace::Konnected
 
   self.attachment_source_slug = 'karporn'
 

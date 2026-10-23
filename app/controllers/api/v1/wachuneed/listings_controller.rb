@@ -36,7 +36,9 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     scope = scope.where(kind: params[:kind]) if Listing::KINDS.include?(params[:kind])
     scope = scope.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id))
 
-    @listings = scope.limit(40)
+    # Where each one is, for listings with no location of their own: two
+    # queries for the page (Kronk::RecordPlace).
+    @listings = Kronk::RecordPlace.preload(scope.limit(40).to_a)
     render json: @listings, each_serializer: REST::WachuneedListingSummarySerializer
   end
 

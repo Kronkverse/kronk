@@ -64,7 +64,8 @@ class REST::WachuneedShopSerializer < ActiveModel::Serializer
   # The shop's live offers the visitor can see, in the seller's order; each
   # carries `shop_section_id` so the page can sort them under their sections.
   def listings
-    object.live_offers(instance_options[:viewer]).includes(:listing_photos).in_shop_order.limit(200).map do |listing|
+    offers = object.live_offers(instance_options[:viewer]).includes(:listing_photos).in_shop_order.limit(200).to_a
+    Kronk::RecordPlace.preload(offers).map do |listing|
       REST::WachuneedListingSummarySerializer.new(listing).as_json
     end
   end

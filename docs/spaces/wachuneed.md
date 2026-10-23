@@ -68,8 +68,12 @@ fixes it: **List something**, or **Post a wanted ad** in Desired.
 (`features/wachuneed/new_listing.tsx`): first whether you're offering
 something or looking for something (`?kind=wanted` opens on the second), then
 title, description, category, optional price (a budget, when wanted) in AUD,
-optional free-text location, up to ten photos (`Listing::MAX_PHOTOS`), and
-**Who can see this?**, the reach control (see Who can see it).
+up to ten photos (`Listing::MAX_PHOTOS`), and
+**Who can see this?**, the reach control (see Who can see it). There is no
+location field: where it is, is a Konnection to a Map Place from the Konnect
+row (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). A
+listing's `location` reads its own old free text first (older listings, the
+Android app) and its Konnected Place's name when that is empty.
 Photos upload as they are picked; the first is the cover, and **Make cover**
 on any other moves it to the front. It always
 creates the listing as `live`. No price means free or by arrangement
@@ -450,9 +454,9 @@ returned to Wachuneed, slug and all, on 2026-09-07.
   app, and no draft flow. The `auto_close_after_days` setting (default 90)
   is declared but nothing reads it.
 - **"Or trade" flag.** Designed (a price plus "open to trade"), not built.
-- **Location and Map.** Location is free text. Undecided: whether listings
-  should show on Map, using Map's location primitives, and how remote or
-  digital services are marked.
+- **Location and Map.** A location is a Konnected Place. Undecided:
+  whether listings show on Map, and how remote or digital services are
+  marked.
 - **Trust signals.** The design shows mutual Mates, shared Krews and time on
   Kronk beside a listing, with no stars or reviews (a real concern goes to
   Kommons). Not built.
