@@ -34,6 +34,24 @@ The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
 DO Spaces, drawn in Kronk colours (`basemap.ts`). No third-party map
 provider.
 
+### First Nations Country
+
+A **First Nations Country** button under the zoom buttons (Kommons, @mangobee,
+2026-10-23) lays a map of the Countries of Aboriginal and Torres Strait
+Islander peoples over Australia, under the pins. Off until you turn it on; the
+choice is kept in your browser (`kronk.map.country_layer`). While it is on, a
+note under the button credits the map to @mangobee and says the boundaries are
+approximate.
+
+It is a picture (`app/javascript/images/first-nations-country.webp`, a MapLibre
+`image` source over 111.5°E–155°E, 8.8°S–44.6°S), not data. @mangobee drew
+it in a Lambert conformal conic projection (standard parallels −18° and −36°);
+it was fitted to 21 towns marked on it (about 4 px off on average) and redrawn
+into web mercator, with the white background made clear. The original is on
+the proposal. It shows at 70% and fades out between zoom 7 and 9, where the
+picture would blur. Because it is a picture it can't tell you which Country a
+point is on; see `decisions.md`, 2026-10-23.
+
 ## Presence
 
 You place a pin by searching for a place (`GET /api/v1/map/geocode`, a

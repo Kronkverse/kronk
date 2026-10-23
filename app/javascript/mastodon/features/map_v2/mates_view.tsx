@@ -25,6 +25,7 @@ import {
   basemapLayers,
   ensurePmtilesProtocol,
 } from './basemap';
+import { CountryLayer } from './country_layer';
 import { EventLayer } from './event_layer';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
@@ -698,6 +699,10 @@ export const MatesView: React.FC = () => {
             on a specific event when someone follows the location link
             from event_detail. */}
         <EventLayer map={mapRef.current} ready={ready} />
+
+        {/* First Nations Country — a picture layer over Australia, under
+            the pins, switched on from its own button under the zoom. */}
+        <CountryLayer map={mapRef.current} ready={ready} />
       </div>
     </div>
   );
