@@ -202,6 +202,65 @@ const kitBurnDown = [
   'app/javascript/mastodon/features/ui/components/invite_modal.tsx',
 ];
 
+// The kit rule's selectors, shared with the composer rule (a later block's
+// no-restricted-syntax replaces an earlier one's for the same file).
+const kitSelectors = [
+  {
+    // eslint-disable-next-line no-restricted-syntax
+    selector: 'Literal[value=/•/], JSXText[value=/•/]',
+    // eslint-disable-next-line no-restricted-syntax
+    message: "Use '·' (middle dot) instead of '•' (bullet)",
+  },
+  {
+    selector:
+      "JSXOpeningElement[name.name='h1']:not(:has(JSXAttribute[name.name='className'][value.value='space-header__title']))",
+    message:
+      'A page does not draw its own <h1>. Use <KornerDetail> for a detail page (its `title` slot), or let the Frame draw the header. See docs/design.md (Platform primitives, Detail pages).',
+  },
+  {
+    selector:
+      "JSXAttribute[name.name='className'] > Literal[value=/(^| )[a-z0-9-]+-(page|detail)__(title|head|header)( |$)/]",
+    message:
+      'A hand-rolled page title or header. Use <KornerDetail> (title, subtitle, meta, actions slots). See docs/design.md (Platform primitives, Detail pages).',
+  },
+];
+
+// Composers still to move onto the composer field kit
+// (components/compose_fields.tsx; Korner Standard L13). Take a file off this
+// list in the PR that moves it. Do not add to it.
+const composeBurnDown = [
+  'app/javascript/mastodon/features/albutts/components/album_composer.tsx',
+  'app/javascript/mastodon/features/art/components/art_piece_composer.tsx',
+  'app/javascript/mastodon/features/booth/components/booth_composer.tsx',
+  'app/javascript/mastodon/features/booth/components/edit_form.tsx',
+  'app/javascript/mastodon/features/booth/components/share_form.tsx',
+  'app/javascript/mastodon/features/freethedream/components/hand_over.tsx',
+  'app/javascript/mastodon/features/freethedream/components/item_composer.tsx',
+  'app/javascript/mastodon/features/freethedream/components/mycelium_composer.tsx',
+  'app/javascript/mastodon/features/freethedream/components/project_composer.tsx',
+  'app/javascript/mastodon/features/kalendar/event_composer.tsx',
+  'app/javascript/mastodon/features/karporn/components/kar_composer.tsx',
+  'app/javascript/mastodon/features/kommons/kommons_composer.tsx',
+  'app/javascript/mastodon/features/kommons_tree/components/composer.tsx',
+  'app/javascript/mastodon/features/krew/krew_composer.tsx',
+  'app/javascript/mastodon/features/live/room_composer.tsx',
+  'app/javascript/mastodon/features/map_v2/trek_composer.tsx',
+  'app/javascript/mastodon/features/moments/composer.tsx',
+  'app/javascript/mastodon/features/questions/kuestion_composer.tsx',
+  'app/javascript/mastodon/features/wachuneed/new_listing.tsx',
+  'app/javascript/mastodon/features/wachuneed/shop_item_composer.tsx',
+];
+
+// Every composer: what a korner's Ж-menu "New …", or editing a record,
+// opens.
+const composerFiles = [
+  'app/javascript/mastodon/features/**/*composer*.tsx',
+  'app/javascript/mastodon/features/booth/components/edit_form.tsx',
+  'app/javascript/mastodon/features/booth/components/share_form.tsx',
+  'app/javascript/mastodon/features/freethedream/components/hand_over.tsx',
+  'app/javascript/mastodon/features/wachuneed/new_listing.tsx',
+];
+
 export default tseslint.config([
   baseConfig,
   globalIgnores([
@@ -450,25 +509,32 @@ export default tseslint.config([
     files: ['app/javascript/mastodon/features/**/*.tsx'],
     ignores: kitBurnDown,
     rules: {
+      'no-restricted-syntax': ['error', ...kitSelectors],
+    },
+  },
+  {
+    // The composer field kit (Korner Standard L13; docs/design.md,
+    // Composers). A composer builds its fields from <ComposeTitle>,
+    // <ComposeBody>, <ComposeField> and the rest, so every space's composer
+    // reads alike. A raw text input, textarea, select or checkbox in a
+    // composer is a field styled on its own, which is how fourteen composers
+    // ended up with fourteen looks (audit, 2026-10-23).
+    files: composerFiles,
+    ignores: [
+      ...kitBurnDown,
+      ...composeBurnDown,
+      // A chat box, not a record's composer.
+      'app/javascript/mastodon/features/nudges_messenger/composer.tsx',
+    ],
+    rules: {
       'no-restricted-syntax': [
         'error',
-        {
-          // eslint-disable-next-line no-restricted-syntax
-          selector: 'Literal[value=/•/], JSXText[value=/•/]',
-          // eslint-disable-next-line no-restricted-syntax
-          message: "Use '·' (middle dot) instead of '•' (bullet)",
-        },
+        ...kitSelectors,
         {
           selector:
-            "JSXOpeningElement[name.name='h1']:not(:has(JSXAttribute[name.name='className'][value.value='space-header__title']))",
+            "JSXOpeningElement[name.name=/^(textarea|select)$/], JSXOpeningElement[name.name='input']:not(:has(JSXAttribute[name.name='type'][value.value=/^(file|hidden|radio|range|color)$/]))",
           message:
-            'A page does not draw its own <h1>. Use <KornerDetail> for a detail page (its `title` slot), or let the Frame draw the header. See docs/design.md (Platform primitives, Detail pages).',
-        },
-        {
-          selector:
-            "JSXAttribute[name.name='className'] > Literal[value=/(^| )[a-z0-9-]+-(page|detail)__(title|head|header)( |$)/]",
-          message:
-            'A hand-rolled page title or header. Use <KornerDetail> (title, subtitle, meta, actions slots). See docs/design.md (Platform primitives, Detail pages).',
+            'A composer field comes from the kit: <ComposeTitle>, <ComposeBody>, <ComposeField> with <ComposeInput> / <ComposeTextarea> / <ComposeSelect>, or <ComposeCheck> (components/compose_fields.tsx). See docs/design.md (Composers).',
         },
       ],
     },

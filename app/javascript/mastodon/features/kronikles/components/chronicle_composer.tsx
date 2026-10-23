@@ -12,6 +12,13 @@ import type {
   ApiChronicleJSON,
   ChronicleKind,
 } from 'mastodon/api_types/kronikles';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeSelect,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
@@ -328,96 +335,88 @@ export const ChronicleComposer: React.FC<Props> = ({
         />
       }
     >
-      <div className='kronikles-composer'>
+      <ComposeTitle
+        value={title}
+        onChange={handleTitleChange}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        maxLength={240}
+        disabled={pending}
+      />
+
+      <ComposeField label={intl.formatMessage(messages.kindLabel)}>
+        <ComposeSelect
+          value={kind}
+          onChange={handleKindChange}
+          disabled={pending}
+        >
+          {KINDS.map((k) => (
+            <option key={k} value={k}>
+              {intl.formatMessage(kindMessages[k])}
+            </option>
+          ))}
+        </ComposeSelect>
+      </ComposeField>
+
+      <div className='kronikles-composer__tools'>
+        <button type='button' onClick={handleHeading} disabled={pending}>
+          {intl.formatMessage(messages.headingTool)}
+        </button>
+        <button
+          type='button'
+          onClick={handlePickPicture}
+          disabled={pending || uploading}
+        >
+          {intl.formatMessage(
+            uploading ? messages.pictureUploading : messages.picture,
+          )}
+        </button>
         <input
-          type='text'
-          className='kronikles-composer__title'
-          value={title}
-          onChange={handleTitleChange}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
-          maxLength={240}
-          disabled={pending}
+          ref={fileRef}
+          type='file'
+          accept='image/*'
+          className='kronikles-composer__file'
+          aria-label={intl.formatMessage(messages.picture)}
+          onChange={handlePictureChosen}
         />
-
-        <div className='kronikles-composer__kind'>
-          <label htmlFor='kronikles-composer-kind'>
-            {intl.formatMessage(messages.kindLabel)}
-          </label>
-          <select
-            id='kronikles-composer-kind'
-            value={kind}
-            onChange={handleKindChange}
-            disabled={pending}
-          >
-            {KINDS.map((k) => (
-              <option key={k} value={k}>
-                {intl.formatMessage(kindMessages[k])}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className='kronikles-composer__tools'>
-          <button type='button' onClick={handleHeading} disabled={pending}>
-            {intl.formatMessage(messages.headingTool)}
-          </button>
-          <button
-            type='button'
-            onClick={handlePickPicture}
-            disabled={pending || uploading}
-          >
-            {intl.formatMessage(
-              uploading ? messages.pictureUploading : messages.picture,
-            )}
-          </button>
-          <input
-            ref={fileRef}
-            type='file'
-            accept='image/*'
-            className='kronikles-composer__file'
-            aria-label={intl.formatMessage(messages.picture)}
-            onChange={handlePictureChosen}
-          />
-        </div>
-
-        <textarea
-          ref={bodyRef}
-          className='kronikles-composer__body'
-          value={body}
-          onChange={handleBodyChange}
-          placeholder={intl.formatMessage(messages.bodyPlaceholder)}
-          disabled={pending}
-        />
-
-        {thumbs.some((t) => body.includes(`(picture:${t.id})`)) && (
-          <div className='kronikles-composer__pictures'>
-            <p>{intl.formatMessage(messages.pictureHint)}</p>
-            <ul>
-              {thumbs
-                .filter((t) => body.includes(`(picture:${t.id})`))
-                .map((t) => (
-                  <li key={t.id}>
-                    <img src={t.src} alt='' />
-                    <code>picture:{t.id}</code>
-                  </li>
-                ))}
-            </ul>
-          </div>
-        )}
-
-        {error && <p className='kronikles-composer__error'>{error}</p>}
-
-        {isEdit && onDelete && (
-          <button
-            type='button'
-            className='compose-shell__delete'
-            onClick={onDelete}
-            disabled={pending || deleting}
-          >
-            {intl.formatMessage(messages.deleteChronicle)}
-          </button>
-        )}
       </div>
+
+      <ComposeBody
+        ref={bodyRef}
+        className='kronikles-composer__body'
+        value={body}
+        onChange={handleBodyChange}
+        placeholder={intl.formatMessage(messages.bodyPlaceholder)}
+        disabled={pending}
+      />
+
+      {thumbs.some((t) => body.includes(`(picture:${t.id})`)) && (
+        <div className='kronikles-composer__pictures'>
+          <p>{intl.formatMessage(messages.pictureHint)}</p>
+          <ul>
+            {thumbs
+              .filter((t) => body.includes(`(picture:${t.id})`))
+              .map((t) => (
+                <li key={t.id}>
+                  <img src={t.src} alt='' />
+                  <code>picture:{t.id}</code>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {error && <ComposeHint error>{error}</ComposeHint>}
+
+      {isEdit && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={pending || deleting}
+        >
+          {intl.formatMessage(messages.deleteChronicle)}
+        </button>
+      )}
     </ComposeShell>
   );
 };
