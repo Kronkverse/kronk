@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_140100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -416,6 +416,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_140100) do
     t.bigint "cover_media_attachment_id"
     t.datetime "created_at", null: false
     t.text "description"
+    t.integer "featured_position"
     t.integer "kind", default: 0, null: false
     t.bigint "owner_id", null: false
     t.bigint "status_id"
@@ -427,6 +428,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_140100) do
     t.index ["owner_id"], name: "index_art_pieces_on_owner_id"
     t.index ["status_id"], name: "index_art_pieces_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_art_pieces_on_visibility"
+  end
+
+  create_table "art_portfolios", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "open_for_commissions", default: false, null: false
+    t.text "statement"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_art_portfolios_on_account_id", unique: true
   end
 
   create_table "backups", force: :cascade do |t|
@@ -2699,6 +2709,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_140100) do
   add_foreign_key "art_pieces", "accounts", column: "owner_id", on_delete: :cascade
   add_foreign_key "art_pieces", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "art_pieces", "statuses", on_delete: :nullify
+  add_foreign_key "art_portfolios", "accounts", on_delete: :cascade
   add_foreign_key "backups", "users", on_delete: :nullify
   add_foreign_key "blocks", "accounts", column: "target_account_id", name: "fk_9571bfabc1", on_delete: :cascade
   add_foreign_key "blocks", "accounts", name: "fk_4269e03e65", on_delete: :cascade

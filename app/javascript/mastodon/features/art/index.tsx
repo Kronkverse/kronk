@@ -12,15 +12,22 @@ import {
   useRouteMatch,
 } from 'react-router-dom';
 
-import { apiGetPiece, apiListPieces } from 'mastodon/api/art';
+import { apiRequestGet } from 'mastodon/api';
+import { apiGetPiece, apiGetPortfolio, apiListPieces } from 'mastodon/api/art';
 import type { PiecesScope } from 'mastodon/api/art';
-import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type {
+  ApiArtPieceJSON,
+  ApiArtPortfolioJSON,
+} from 'mastodon/api_types/art';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
+import { useAppSelector } from 'mastodon/store';
 
 import { ArtPieceComposer } from './components/art_piece_composer';
 import { ArtPieceDetail } from './components/art_piece_detail';
+import { ArtPortfolio } from './components/art_portfolio';
 import { artKindLabel } from './kinds';
 
 const messages = defineMessages({
@@ -41,6 +48,14 @@ const messages = defineMessages({
   photos: {
     id: 'art.photos',
     defaultMessage: '{count, plural, one {# photo} other {# photos}}',
+  },
+  yourPortfolio: {
+    id: 'art.your_portfolio',
+    defaultMessage: 'Your portfolio',
+  },
+  portfolioMissing: {
+    id: 'art.portfolio.missing',
+    defaultMessage: "This portfolio isn't here.",
   },
 });
 
@@ -78,6 +93,9 @@ const Art: React.FC<{ multiColumn?: boolean }> = () => {
         <Route path='/hub/art/pieces/:id' exact>
           <PieceDetailRoute />
         </Route>
+        <Route path='/hub/art/@:acct' exact>
+          <PortfolioRoute />
+        </Route>
         <Route path='/hub/art/composer' exact>
           <Directory autoOpenComposer />
         </Route>
@@ -113,7 +131,7 @@ interface DirectoryProps {
 const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const history = useHistory();
-  const { signedIn } = useIdentity();
+  const { signedIn, accountId: myId } = useIdentity();
   const scope = useCurrentScope();
   const [pieces, setPieces] = useState<ApiArtPieceJSON[] | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
@@ -203,6 +221,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
 
   return (
     <div className='art-directory'>
+      {scope === 'mine' && myId && <OwnPortfolioLink accountId={myId} />}
       {signedIn ? (
         <FeedDrum
           reach={scope}
@@ -256,4 +275,63 @@ const PieceDetailRoute: React.FC = () => {
   }
 
   return <ArtPieceDetail piece={piece} onChange={setPiece} />;
+};
+
+// The way from "Mine" to your own portfolio.
+const OwnPortfolioLink: React.FC<{ accountId: string }> = ({ accountId }) => {
+  const intl = useIntl();
+  const acct = useAppSelector((state) => state.accounts.get(accountId)?.acct);
+
+  if (!acct) return null;
+
+  return (
+    <Link to={`/hub/art/@${acct}`} className='art-directory__portfolio-link'>
+      {intl.formatMessage(messages.yourPortfolio)}
+    </Link>
+  );
+};
+
+// /hub/art/@:acct — an artist's portfolio (docs/spaces/art.md, Portfolio).
+const PortfolioRoute: React.FC = () => {
+  const intl = useIntl();
+  const match = useRouteMatch<{ acct: string }>();
+  const [portfolio, setPortfolio] = useState<ApiArtPortfolioJSON | null>(null);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    const guard = { stale: false };
+    setPortfolio(null);
+    setMissing(false);
+    void (async () => {
+      try {
+        const account = await apiRequestGet<ApiAccountJSON>(
+          'v1/accounts/lookup',
+          { acct: match.params.acct },
+        );
+        const data = await apiGetPortfolio(account.id);
+        if (!guard.stale) setPortfolio(data);
+      } catch {
+        if (!guard.stale) setMissing(true);
+      }
+    })();
+    return () => {
+      guard.stale = true;
+    };
+  }, [match.params.acct]);
+
+  if (missing) {
+    return (
+      <p className='space-subtitle'>
+        {intl.formatMessage(messages.portfolioMissing)}
+      </p>
+    );
+  }
+
+  if (!portfolio) {
+    return (
+      <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
+    );
+  }
+
+  return <ArtPortfolio portfolio={portfolio} onChange={setPortfolio} />;
 };
