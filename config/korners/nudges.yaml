@@ -238,6 +238,17 @@ listens:
     interaction: interactive
     cta_label: 'View set'
     cta_route: '/hub/booth/sets/{booth_set_id}'
+  # Someone left a shoutout on your set. About your work, and the listener
+  # need not be a Mate, so directed (like status.replied).
+  - event: booth.set.shouted
+    source_korner: booth
+    verb: shouted
+    directed: true
+    source_type: BoothSet
+    source_id_key: booth_set_id
+    interaction: interactive
+    cta_label: 'View set'
+    cta_route: '/hub/booth/sets/{booth_set_id}'
   # ── Own-content nudges (decisions.md 2026-08-12) ──────────────────
   # Something happened to YOUR post. One recipient — the author — so these are
   # Tier-1 DIRECTED: they fire regardless of Mate status, because a stranger

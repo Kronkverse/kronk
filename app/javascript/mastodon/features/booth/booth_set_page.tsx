@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -22,11 +22,16 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
+import { useBoothPlayback } from './booth_playback_context';
 import { AudioPlayer } from './components/audio_player';
+import type { PlayerMarker } from './components/audio_player';
 import { EditForm } from './components/edit_form';
 import { ShareForm } from './components/share_form';
+import { Shoutouts, useShoutouts } from './components/shoutouts';
 import { Tracklist } from './components/tracklist';
 import { formatDuration } from './format';
+import { kindMessage } from './kinds';
+import { toggleSave } from './save';
 import type { BoothSet } from './types';
 
 // A set's page, on the shared detail shell (`<KornerDetail>`): cover,
@@ -63,6 +68,8 @@ const messages = defineMessages({
   shareToFeed: { id: 'booth.share_to_feed', defaultMessage: 'Share to feed' },
   shared: { id: 'booth.shared', defaultMessage: 'Shared to your feed' },
   editSet: { id: 'booth.page_action.edit', defaultMessage: 'Edit set' },
+  save: { id: 'booth.save', defaultMessage: 'Save' },
+  saved: { id: 'booth.saved', defaultMessage: 'Saved' },
   draft: {
     id: 'booth.set_page.draft',
     defaultMessage: 'Only you can see this set',
@@ -85,6 +92,32 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
   const [sharing, setSharing] = useState(false);
   const [offerShare, setOfferShare] = useState(
     location.state?.justUploaded === true,
+  );
+  const { shoutouts, setShoutouts } = useShoutouts(id);
+  const { playFrom } = useBoothPlayback();
+
+  // Shoutouts pinned to a moment become pins on the player.
+  const markers = useMemo<PlayerMarker[]>(
+    () =>
+      shoutouts.flatMap((s) =>
+        s.at_seconds === null
+          ? []
+          : [
+              {
+                id: s.id,
+                at: s.at_seconds,
+                label: `${s.account.display_name}: ${s.body}`,
+                avatar: s.account.avatar,
+              },
+            ],
+      ),
+    [shoutouts],
+  );
+  const handleMarker = useCallback(
+    (marker: PlayerMarker) => {
+      if (set) playFrom(set, marker.at);
+    },
+    [set, playFrom],
   );
 
   // A late answer for a set you've moved away from is dropped.
@@ -164,6 +197,16 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
     !!set?.is_owner && !editing,
   );
 
+  const handleSave = useCallback(() => {
+    if (!set) return;
+    void toggleSave(set)
+      .then((updated) => {
+        setSet(updated);
+        return undefined;
+      })
+      .catch(() => undefined);
+  }, [set]);
+
   const handleCopyLink = useCallback(() => {
     if (!set) return;
     const url = `${window.location.origin}/booth/sets/${set.id}/embed`;
@@ -235,18 +278,21 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         meta={
           <KornerMeta
             items={[
+              intl.formatMessage(kindMessage(set.kind)),
               set.genres.length > 0 && set.genres.join(', '),
               set.event_name &&
                 (set.event_date
                   ? `${set.event_name}, ${new Date(set.event_date).toLocaleDateString()}`
                   : set.event_name),
               duration,
-              <FormattedMessage
-                key='plays'
-                id='booth.plays'
-                defaultMessage='{count, plural, one {# play} other {# plays}}'
-                values={{ count: set.play_count }}
-              />,
+              set.play_count !== undefined && (
+                <FormattedMessage
+                  key='plays'
+                  id='booth.plays'
+                  defaultMessage='{count, plural, one {# play} other {# plays}}'
+                  values={{ count: set.play_count }}
+                />
+              ),
             ]}
           />
         }
@@ -260,6 +306,15 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
                 onClick={handleStartShare}
               />
             )}
+            {set.saved !== undefined && (
+              <KornerPill
+                label={intl.formatMessage(
+                  set.saved ? messages.saved : messages.save,
+                )}
+                active={set.saved}
+                onClick={handleSave}
+              />
+            )}
             <KornerPill
               icon={LinkIcon}
               iconId='link'
@@ -269,7 +324,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
           </KornerActionBar>
         }
       >
-        <AudioPlayer set={set} />
+        <AudioPlayer set={set} markers={markers} onMarker={handleMarker} />
 
         {/* Who made it: the uploader, then everyone they credited. A
             tagged account is unverified until that person confirms it; a
@@ -321,6 +376,12 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         )}
 
         <Tracklist set={set} />
+
+        <Shoutouts
+          set={set}
+          shoutouts={shoutouts}
+          setShoutouts={setShoutouts}
+        />
       </KornerDetail>
 
       {editing && (

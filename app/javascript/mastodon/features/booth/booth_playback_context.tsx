@@ -18,12 +18,28 @@ interface BoothPlaybackContextValue {
   currentTime: number;
   duration: number;
 
-  play: (set: BoothSet) => void;
+  // The list a set was started from, so the player can carry on to the
+  // next one when it ends (Play next, remembered per browser).
+  upNext: BoothSet | null;
+  autoNext: boolean;
+  setAutoNext: (on: boolean) => void;
+
+  play: (set: BoothSet, queue?: BoothSet[]) => void;
   playFrom: (set: BoothSet, seconds: number) => void;
   toggle: () => void;
   seekPct: (pct: number) => void;
   skip: (delta: number) => void;
   clear: () => void;
+}
+
+const AUTO_NEXT_KEY = 'kronk.booth.play_next';
+
+function readAutoNext(): boolean {
+  try {
+    return window.localStorage.getItem(AUTO_NEXT_KEY) !== '0';
+  } catch {
+    return true;
+  }
 }
 
 const BoothPlaybackContext = createContext<BoothPlaybackContextValue | null>(
@@ -44,10 +60,22 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
   // list timestamp on a set that isn't playing yet). Applied once metadata
   // arrives, then cleared.
   const pendingSeekRef = useRef<number | null>(null);
+  const [queue, setQueue] = useState<BoothSet[]>([]);
+  const [autoNext, setAutoNextState] = useState(readAutoNext);
+
+  const setAutoNext = useCallback((on: boolean) => {
+    setAutoNextState(on);
+    try {
+      window.localStorage.setItem(AUTO_NEXT_KEY, on ? '1' : '0');
+    } catch {
+      // Private mode: it resets next visit.
+    }
+  }, []);
 
   const play = useCallback(
-    (set: BoothSet) => {
+    (set: BoothSet, nextQueue?: BoothSet[]) => {
       const audio = audioRef.current;
+      if (nextQueue) setQueue(nextQueue);
 
       // Same set already loaded — just resume playback without changing state
       if (activeSet?.id === set.id) {
@@ -134,6 +162,24 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
     void api().post(`/api/v1/booth_sets/${activeSet.id}/play`);
   }, [activeSet]);
 
+  // What plays after the current set, if anything: the next one in the
+  // list it was started from.
+  const activeIndex = activeSet
+    ? queue.findIndex((s) => s.id === activeSet.id)
+    : -1;
+  const upNext =
+    activeIndex >= 0 && activeIndex < queue.length - 1
+      ? (queue[activeIndex + 1] ?? null)
+      : null;
+
+  // The ended listener is wired once; it reads the latest choice here.
+  const endedRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    endedRef.current = () => {
+      if (autoNext && upNext) play(upNext);
+    };
+  }, [autoNext, upNext, play]);
+
   // Wire audio element event listeners once
   useEffect(() => {
     const audio = audioRef.current;
@@ -160,6 +206,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
     };
     const onEnded = () => {
       setPlaying(false);
+      endedRef.current?.();
     };
 
     audio.addEventListener('timeupdate', onTime);
@@ -184,6 +231,9 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
     playing,
     currentTime,
     duration,
+    upNext,
+    autoNext,
+    setAutoNext,
     play,
     playFrom,
     toggle,
@@ -215,6 +265,9 @@ export function useBoothPlayback(): BoothPlaybackContextValue {
       playing: false,
       currentTime: 0,
       duration: 0,
+      upNext: null,
+      autoNext: false,
+      setAutoNext: () => undefined,
       play: () => undefined,
       playFrom: () => undefined,
       toggle: () => undefined,
