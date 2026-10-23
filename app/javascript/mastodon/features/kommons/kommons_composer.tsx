@@ -11,6 +11,14 @@ import {
   apiGetKommonsNodes,
 } from 'mastodon/api/kommons_nodes';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeSection,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -26,6 +34,8 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 // proposals (no ?space / ?node) land unattached to any node.
 
 const messages = defineMessages({
+  titleLabel: { id: 'propose.title_label', defaultMessage: 'Title' },
+  bodyLabel: { id: 'propose.body_label', defaultMessage: 'Description' },
   title: { id: 'propose.title', defaultMessage: 'Open a Proposal' },
   titleScoped: {
     id: 'propose.title_scoped',
@@ -464,293 +474,277 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onCancel={onCancel}
       draft={draft}
     >
-      <div className='propose-page'>
-        {isNewKorner ? (
-          // Korner Composer fields — manifest-shape hints captured as
-          // first-class inputs. Title / summary are composed from these
-          // at submit-time so a shipped proposal cleanly maps to a
-          // `config/korners/<slug>.yaml`.
-          <>
-            <label className='propose-page__field'>
-              <span className='propose-page__label'>
-                <FormattedMessage
-                  id='propose.korner_name_label'
-                  defaultMessage='Name'
-                />
-              </span>
-              <p className='propose-page__hint'>
-                <FormattedMessage
-                  id='propose.korner_name_hint'
-                  defaultMessage='The display name the space is known by, in Kronk vocabulary. E.g. Kalendar, Booth, Krews.'
-                />
-              </p>
-              <input
-                type='text'
-                className='propose-page__input'
-                value={kornerName}
-                onChange={handleKornerNameChange}
-                placeholder='Kitchen'
-                maxLength={40}
-                required
-              />
-            </label>
-
-            <label className='propose-page__field'>
-              <span className='propose-page__label'>
-                <FormattedMessage
-                  id='propose.korner_slug_label'
-                  defaultMessage='Slug'
-                />
-              </span>
-              <p className='propose-page__hint'>
-                <FormattedMessage
-                  id='propose.korner_slug_hint'
-                  defaultMessage='One lowercase word — a–z and 0–9 only. This becomes the URL mount at /hub/{slugName} and the manifest filename.'
-                  values={{ slugName: 'slug' }}
-                />
-              </p>
-              <input
-                type='text'
-                className='propose-page__input'
-                value={kornerSlug}
-                onChange={handleKornerSlugChange}
-                placeholder='kitchen'
-                maxLength={30}
-                aria-invalid={kornerSlug.length > 0 && !slugValid}
-                required
-              />
-            </label>
-
-            <label className='propose-page__field'>
-              <span className='propose-page__label'>
-                <FormattedMessage
-                  id='propose.korner_glyph_label'
-                  defaultMessage='Glyph (optional)'
-                />
-              </span>
-              <p className='propose-page__hint'>
-                <FormattedMessage
-                  id='propose.korner_glyph_hint'
-                  defaultMessage='A single hand-picked character that reads as the space (Ƙ, ◉, ✦). Skip if unsure — the community can pick one later.'
-                />
-              </p>
-              <input
-                type='text'
-                className='propose-page__input'
-                value={kornerGlyph}
-                onChange={handleKornerGlyphChange}
-                placeholder='Ķ'
-                maxLength={4}
-              />
-            </label>
-
-            <label className='propose-page__field'>
-              <span className='propose-page__label'>
-                <FormattedMessage
-                  id='propose.korner_icon_label'
-                  defaultMessage='Icon (optional)'
-                />
-              </span>
-              <p className='propose-page__hint'>
-                <FormattedMessage
-                  id='propose.korner_icon_hint'
-                  defaultMessage='A Material Icon name suggestion for the Hub tile — e.g. kitchen, event, favorite. See fonts.google.com/icons.'
-                />
-              </p>
-              <input
-                type='text'
-                className='propose-page__input'
-                value={kornerIcon}
-                onChange={handleKornerIconChange}
-                placeholder='kitchen'
-                maxLength={40}
-              />
-            </label>
-
-            <label className='propose-page__field'>
-              <span className='propose-page__label'>
-                <FormattedMessage
-                  id='propose.korner_purpose_label'
-                  defaultMessage='Purpose'
-                />
-              </span>
-              <p className='propose-page__hint'>
-                <FormattedMessage
-                  id='propose.korner_purpose_hint'
-                  defaultMessage='One line — what this space is for. Reads as the proposal’s summary and eventually as the manifest’s `purpose:` field.'
-                />
-              </p>
-              <input
-                type='text'
-                className='propose-page__input'
-                value={kornerPurpose}
-                onChange={handleKornerPurposeChange}
-                placeholder='To help kronkers share meals and cooking rhythms.'
-                maxLength={200}
-                required
-              />
-            </label>
-          </>
-        ) : (
-          <label className='propose-page__field'>
-            <span className='propose-page__label'>
+      {isNewKorner ? (
+        // Korner Composer fields — manifest-shape hints captured as
+        // first-class inputs. Title / summary are composed from these
+        // at submit-time so a shipped proposal cleanly maps to a
+        // `config/korners/<slug>.yaml`.
+        <>
+          <ComposeField
+            label={
               <FormattedMessage
-                id='propose.title_label'
-                defaultMessage='Title'
+                id='propose.korner_name_label'
+                defaultMessage='Name'
               />
-            </span>
-            <input
-              type='text'
-              className='propose-page__input'
-              value={title}
-              onChange={handleTitleChange}
-              placeholder={intl.formatMessage(messages.titlePlaceholder)}
-              maxLength={240}
+            }
+            hint={
+              <FormattedMessage
+                id='propose.korner_name_hint'
+                defaultMessage='The display name the space is known by, in Kronk vocabulary. E.g. Kalendar, Booth, Krews.'
+              />
+            }
+          >
+            <ComposeInput
+              value={kornerName}
+              onChange={handleKornerNameChange}
+              placeholder='Kitchen'
+              maxLength={40}
+              required
             />
-          </label>
-        )}
+          </ComposeField>
 
-        <label className='propose-page__field'>
-          <span className='propose-page__label'>
-            {isNewKorner ? (
+          <ComposeField
+            label={
               <FormattedMessage
-                id='propose.korner_narrative_label'
-                defaultMessage='What it enables'
+                id='propose.korner_slug_label'
+                defaultMessage='Slug'
               />
-            ) : (
+            }
+            hint={
               <FormattedMessage
-                id='propose.body_label'
-                defaultMessage='Description'
+                id='propose.korner_slug_hint'
+                defaultMessage='One lowercase word — a–z and 0–9 only. This becomes the URL mount at /hub/{slugName} and the manifest filename.'
+                values={{ slugName: 'slug' }}
               />
-            )}
-          </span>
-          {isNewKorner && (
-            <p className='propose-page__hint'>
+            }
+          >
+            <ComposeInput
+              value={kornerSlug}
+              onChange={handleKornerSlugChange}
+              placeholder='kitchen'
+              maxLength={30}
+              aria-invalid={kornerSlug.length > 0 && !slugValid}
+              required
+            />
+          </ComposeField>
+
+          <ComposeField
+            label={
               <FormattedMessage
-                id='propose.korner_narrative_hint'
-                defaultMessage='Who does this space serve, what does it make possible that no existing space can, and what does using it feel like?'
+                id='propose.korner_glyph_label'
+                defaultMessage='Glyph (optional)'
               />
-            </p>
-          )}
-          <textarea
-            className='propose-page__textarea'
+            }
+            hint={
+              <FormattedMessage
+                id='propose.korner_glyph_hint'
+                defaultMessage='A single hand-picked character that reads as the space (Ƙ, ◉, ✦). Skip if unsure — the community can pick one later.'
+              />
+            }
+          >
+            <ComposeInput
+              value={kornerGlyph}
+              onChange={handleKornerGlyphChange}
+              placeholder='Ķ'
+              maxLength={4}
+            />
+          </ComposeField>
+
+          <ComposeField
+            label={
+              <FormattedMessage
+                id='propose.korner_icon_label'
+                defaultMessage='Icon (optional)'
+              />
+            }
+            hint={
+              <FormattedMessage
+                id='propose.korner_icon_hint'
+                defaultMessage='A Material Icon name suggestion for the Hub tile — e.g. kitchen, event, favorite. See fonts.google.com/icons.'
+              />
+            }
+          >
+            <ComposeInput
+              value={kornerIcon}
+              onChange={handleKornerIconChange}
+              placeholder='kitchen'
+              maxLength={40}
+            />
+          </ComposeField>
+
+          <ComposeField
+            label={
+              <FormattedMessage
+                id='propose.korner_purpose_label'
+                defaultMessage='Purpose'
+              />
+            }
+            hint={
+              <FormattedMessage
+                id='propose.korner_purpose_hint'
+                defaultMessage='One line — what this space is for. Reads as the proposal’s summary and eventually as the manifest’s `purpose:` field.'
+              />
+            }
+          >
+            <ComposeInput
+              value={kornerPurpose}
+              onChange={handleKornerPurposeChange}
+              placeholder='To help kronkers share meals and cooking rhythms.'
+              maxLength={200}
+              required
+            />
+          </ComposeField>
+        </>
+      ) : (
+        <ComposeTitle
+          value={title}
+          onChange={handleTitleChange}
+          placeholder={intl.formatMessage(messages.titlePlaceholder)}
+          aria-label={intl.formatMessage(messages.titleLabel)}
+          maxLength={240}
+        />
+      )}
+
+      {isNewKorner ? (
+        <ComposeField
+          label={
+            <FormattedMessage
+              id='propose.korner_narrative_label'
+              defaultMessage='What it enables'
+            />
+          }
+          hint={
+            <FormattedMessage
+              id='propose.korner_narrative_hint'
+              defaultMessage='Who does this space serve, what does it make possible that no existing space can, and what does using it feel like?'
+            />
+          }
+        >
+          <ComposeBody
             value={body}
             onChange={handleBodyChange}
             placeholder={intl.formatMessage(messages.bodyPlaceholder)}
             rows={5}
           />
-        </label>
+        </ComposeField>
+      ) : (
+        <ComposeBody
+          value={body}
+          onChange={handleBodyChange}
+          placeholder={intl.formatMessage(messages.bodyPlaceholder)}
+          aria-label={intl.formatMessage(messages.bodyLabel)}
+          rows={5}
+        />
+      )}
 
-        <fieldset className='propose-page__field'>
-          <span className='propose-page__label'>
-            <FormattedMessage id='propose.steps_label' defaultMessage='Steps' />
-          </span>
-          <p className='propose-page__hint'>
-            <FormattedMessage
-              id='propose.steps_hint'
-              defaultMessage='Break the proposal into steps to tick off as each is done. Optional — add as many as you need.'
-            />
-          </p>
-          <ol className='propose-page__steps'>
-            {steps.map((step, i) => (
-              <li key={i} className='propose-page__step'>
-                <span className='propose-page__step-num'>{i + 1}</span>
-                <input
-                  type='text'
-                  className='propose-page__input'
-                  value={step}
+      <ComposeSection
+        title={
+          <FormattedMessage id='propose.steps_label' defaultMessage='Steps' />
+        }
+      >
+        <ComposeHint>
+          <FormattedMessage
+            id='propose.steps_hint'
+            defaultMessage='Break the proposal into steps to tick off as each is done. Optional — add as many as you need.'
+          />
+        </ComposeHint>
+        <ol className='propose-page__steps'>
+          {steps.map((step, i) => (
+            <li key={i} className='propose-page__step'>
+              <span className='propose-page__step-num'>{i + 1}</span>
+              <ComposeInput
+                value={step}
+                data-index={i}
+                onChange={handleStepChange}
+                placeholder={intl.formatMessage(messages.stepPlaceholder)}
+                maxLength={240}
+              />
+              {steps.length > 1 && (
+                <button
+                  type='button'
+                  className='propose-page__step-remove'
                   data-index={i}
-                  onChange={handleStepChange}
-                  placeholder={intl.formatMessage(messages.stepPlaceholder)}
-                  maxLength={240}
-                />
-                {steps.length > 1 && (
-                  <button
-                    type='button'
-                    className='propose-page__step-remove'
-                    data-index={i}
-                    onClick={removeStep}
-                    aria-label={intl.formatMessage(messages.removeStep)}
-                  >
-                    ×
-                  </button>
-                )}
+                  onClick={removeStep}
+                  aria-label={intl.formatMessage(messages.removeStep)}
+                >
+                  ×
+                </button>
+              )}
+            </li>
+          ))}
+        </ol>
+        <button
+          type='button'
+          className='propose-page__add-step'
+          onClick={addStep}
+        >
+          <FormattedMessage id='propose.add_step' defaultMessage='+ Add step' />
+        </button>
+      </ComposeSection>
+
+      <ComposeSection
+        title={
+          <FormattedMessage
+            id='propose.docs_label'
+            defaultMessage='Design docs'
+          />
+        }
+      >
+        <ComposeHint>
+          <FormattedMessage
+            id='propose.docs_hint'
+            defaultMessage='Attach mockups, briefs, or references (PDF, image, markdown). Optional.'
+          />
+        </ComposeHint>
+        {docs.length > 0 && (
+          <ul className='propose-page__docs'>
+            {docs.map((doc, i) => (
+              <li key={`${doc.name}-${i}`} className='propose-page__doc'>
+                <span className='propose-page__doc-name'>{doc.name}</span>
+                <button
+                  type='button'
+                  className='propose-page__step-remove'
+                  data-index={i}
+                  onClick={removeDoc}
+                  aria-label={intl.formatMessage(messages.removeDoc)}
+                >
+                  ×
+                </button>
               </li>
             ))}
-          </ol>
+          </ul>
+        )}
+        <label className='propose-page__add-step propose-page__add-doc'>
+          <FormattedMessage
+            id='propose.add_doc'
+            defaultMessage='+ Attach a document'
+          />
+          <input
+            type='file'
+            multiple
+            accept='.pdf,.png,.jpg,.jpeg,.gif,.webp,.md,.markdown,.html,.txt'
+            onChange={handleDocs}
+            hidden
+          />
+        </label>
+      </ComposeSection>
+
+      {/* Advisory, not a failure: the composer stays submittable
+          (falls back to unscoped). */}
+      {nodesStatus === 'error' && (
+        <ComposeHint>
+          {intl.formatMessage(messages.nodesError)}{' '}
           <button
             type='button'
-            className='propose-page__add-step'
-            onClick={addStep}
+            className='propose-page__error-retry'
+            onClick={retryLoadNodes}
           >
-            <FormattedMessage
-              id='propose.add_step'
-              defaultMessage='+ Add step'
-            />
+            {intl.formatMessage(messages.nodesRetry)}
           </button>
-        </fieldset>
+        </ComposeHint>
+      )}
 
-        <fieldset className='propose-page__field'>
-          <span className='propose-page__label'>
-            <FormattedMessage
-              id='propose.docs_label'
-              defaultMessage='Design docs'
-            />
-          </span>
-          <p className='propose-page__hint'>
-            <FormattedMessage
-              id='propose.docs_hint'
-              defaultMessage='Attach mockups, briefs, or references (PDF, image, markdown). Optional.'
-            />
-          </p>
-          {docs.length > 0 && (
-            <ul className='propose-page__docs'>
-              {docs.map((doc, i) => (
-                <li key={`${doc.name}-${i}`} className='propose-page__doc'>
-                  <span className='propose-page__doc-name'>{doc.name}</span>
-                  <button
-                    type='button'
-                    className='propose-page__step-remove'
-                    data-index={i}
-                    onClick={removeDoc}
-                    aria-label={intl.formatMessage(messages.removeDoc)}
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <label className='propose-page__add-step propose-page__add-doc'>
-            <FormattedMessage
-              id='propose.add_doc'
-              defaultMessage='+ Attach a document'
-            />
-            <input
-              type='file'
-              multiple
-              accept='.pdf,.png,.jpg,.jpeg,.gif,.webp,.md,.markdown,.html,.txt'
-              onChange={handleDocs}
-              hidden
-            />
-          </label>
-        </fieldset>
-
-        {nodesStatus === 'error' && (
-          <p className='propose-page__error propose-page__error--soft'>
-            {intl.formatMessage(messages.nodesError)}{' '}
-            <button
-              type='button'
-              className='propose-page__error-retry'
-              onClick={retryLoadNodes}
-            >
-              {intl.formatMessage(messages.nodesRetry)}
-            </button>
-          </p>
-        )}
-
-        {error && <p className='propose-page__error'>{error}</p>}
-      </div>
+      {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>
   );
 };

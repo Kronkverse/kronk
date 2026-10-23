@@ -10,6 +10,13 @@ import type {
   KuestionAnswerFormat,
   KuestionProfileFormat,
 } from 'mastodon/api_types/kuestions';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeSection,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useDraft } from 'mastodon/hooks/useDraft';
@@ -302,55 +309,44 @@ export const KuestionComposer: React.FC<Props> = ({
       onCancel={onCancel}
       draft={draft}
     >
-      <div className='kuestions-composer'>
-        <div className='kuestions-composer__stage-dots'>
-          <span className='kuestions-composer__dot kuestions-composer__dot--on' />
-          <span
-            className={`kuestions-composer__dot ${stage >= 1 ? 'kuestions-composer__dot--on' : ''}`}
+      <div className='kuestions-composer__stage-dots'>
+        <span className='kuestions-composer__dot kuestions-composer__dot--on' />
+        <span
+          className={`kuestions-composer__dot ${stage >= 1 ? 'kuestions-composer__dot--on' : ''}`}
+        />
+      </div>
+
+      {stage === 0 && (
+        <ComposeField label={intl.formatMessage(messages.qLabel)}>
+          <ComposeBody
+            value={text}
+            onChange={handleTextChange}
+            maxLength={TITLE_MAX}
+            placeholder={intl.formatMessage(messages.qPlaceholder)}
           />
-        </div>
+          <span className='kuestions-composer__charcount'>
+            {text.length}/{TITLE_MAX}
+          </span>
+        </ComposeField>
+      )}
 
-        {stage === 0 && (
-          <>
-            <label
-              className='kuestions-composer__field-label'
-              htmlFor='kuestions-composer-q'
-            >
-              {intl.formatMessage(messages.qLabel)}
-            </label>
-            <textarea
-              id='kuestions-composer-q'
-              className='kuestions-composer__textarea'
-              value={text}
-              onChange={handleTextChange}
-              maxLength={TITLE_MAX}
-              placeholder={intl.formatMessage(messages.qPlaceholder)}
+      {stage === 1 && (
+        <>
+          {/* Wizard step-back (stage 1 → stage 0). Not a nav back
+              — the Frame's SpaceBadge handles korner nav. Uses the
+              shared KornerPill primitive with a "Previous" label
+              (no arrow) so it reads as wizard-step control, not
+              bespoke back button. Retired from the bespoke
+              `__back` class 2026-09-03. */}
+          <div className='kuestions-composer__wizard-nav'>
+            <KornerPill
+              label={intl.formatMessage(messages.back)}
+              onClick={goStage0}
+              disabled={pending}
             />
-            <div className='kuestions-composer__charcount'>
-              {text.length}/{TITLE_MAX}
-            </div>
-          </>
-        )}
+          </div>
 
-        {stage === 1 && (
-          <>
-            {/* Wizard step-back (stage 1 → stage 0). Not a nav back
-                — the Frame's SpaceBadge handles korner nav. Uses the
-                shared KornerPill primitive with a "Previous" label
-                (no arrow) so it reads as wizard-step control, not
-                bespoke back button. Retired from the bespoke
-                `__back` class 2026-09-03. */}
-            <div className='kuestions-composer__wizard-nav'>
-              <KornerPill
-                label={intl.formatMessage(messages.back)}
-                onClick={goStage0}
-                disabled={pending}
-              />
-            </div>
-
-            <div className='kuestions-composer__field-label'>
-              {intl.formatMessage(messages.kindLabel)}
-            </div>
+          <ComposeSection title={intl.formatMessage(messages.kindLabel)}>
             <div className='kuestions-composer__fmt-grid kuestions-composer__fmt-grid--two'>
               <FmtOption
                 active={kind === 'community'}
@@ -365,10 +361,9 @@ export const KuestionComposer: React.FC<Props> = ({
                 onSelect={setKindProfile}
               />
             </div>
+          </ComposeSection>
 
-            <div className='kuestions-composer__field-label'>
-              {intl.formatMessage(messages.fmtLabel)}
-            </div>
+          <ComposeSection title={intl.formatMessage(messages.fmtLabel)}>
             {kind === 'profile' ? (
               <div className='kuestions-composer__fmt-grid'>
                 {PROFILE_FORMATS.map((f) => (
@@ -402,21 +397,19 @@ export const KuestionComposer: React.FC<Props> = ({
                 />
               </div>
             )}
+          </ComposeSection>
 
-            {kind === 'community' && format === 'mc' && (
-              <McEditor options={mcOptions} onChange={setMcOptions} />
-            )}
+          {kind === 'community' && format === 'mc' && (
+            <McEditor options={mcOptions} onChange={setMcOptions} />
+          )}
 
-            <AskReview text={trimmed} format={format} mcOptions={mcFilled} />
-          </>
-        )}
+          <AskReview text={trimmed} format={format} mcOptions={mcFilled} />
+        </>
+      )}
 
-        {error && (
-          <p className='kuestions-sheet__error' role='alert'>
-            {intl.formatMessage(messages.error)}
-          </p>
-        )}
-      </div>
+      {error && (
+        <ComposeHint error>{intl.formatMessage(messages.error)}</ComposeHint>
+      )}
     </ComposeShell>
   );
 };
@@ -502,10 +495,7 @@ const McEditor: React.FC<McEditorProps> = ({ options, onChange }) => {
   const canAdd = options.length < MC_MAX;
 
   return (
-    <div className='kuestions-composer__mc'>
-      <div className='kuestions-composer__field-label'>
-        {intl.formatMessage(messages.mcLabel)}
-      </div>
+    <ComposeSection title={intl.formatMessage(messages.mcLabel)}>
       <div className='kuestions-composer__mc-list'>
         {options.map((value, idx) => (
           <McInputRow
@@ -527,7 +517,7 @@ const McEditor: React.FC<McEditorProps> = ({ options, onChange }) => {
           {intl.formatMessage(messages.mcAdd)}
         </button>
       )}
-    </div>
+    </ComposeSection>
   );
 };
 
@@ -558,8 +548,7 @@ const McInputRow: React.FC<McInputRowProps> = ({
   }, [index, onRemove]);
   return (
     <div className='kuestions-composer__mc-input'>
-      <input
-        type='text'
+      <ComposeInput
         value={value}
         onChange={handleInput}
         placeholder={intl.formatMessage(messages.mcPlaceholder, {

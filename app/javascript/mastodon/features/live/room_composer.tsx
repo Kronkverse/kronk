@@ -20,6 +20,13 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { apiRequestPost } from 'mastodon/api';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeSection,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KrewMultiSelect } from 'mastodon/components/krew_multi_select';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
@@ -180,65 +187,46 @@ export const RoomComposer: React.FC<Props> = ({
       onCancel={onCancel}
       draft={draft}
     >
-      <div className='huddle-composer'>
-        <label className='huddle-composer__field'>
-          <span className='huddle-composer__label'>
-            {intl.formatMessage(messages.name)}
-          </span>
-          <input
-            type='text'
-            className='huddle-composer__input'
-            value={name}
-            onChange={handleNameChange}
-            maxLength={NAME_MAX}
+      <ComposeTitle
+        value={name}
+        onChange={handleNameChange}
+        placeholder={intl.formatMessage(messages.name)}
+        aria-label={intl.formatMessage(messages.name)}
+        maxLength={NAME_MAX}
+        disabled={busy}
+      />
+
+      <ComposeField
+        label={intl.formatMessage(messages.description)}
+        hint={intl.formatMessage(messages.descriptionHint)}
+      >
+        <ComposeInput
+          value={description}
+          onChange={handleDescriptionChange}
+          maxLength={DESCRIPTION_MAX}
+          disabled={busy}
+        />
+      </ComposeField>
+
+      {availableKrews.length > 0 && (
+        <ComposeSection title={intl.formatMessage(messages.krew)}>
+          <KrewMultiSelect
+            options={availableKrews}
+            selectedIds={chosenKrew ? [chosenKrew.id] : []}
+            onToggle={handleToggleKrew}
             disabled={busy}
           />
-        </label>
+          <ComposeHint>
+            {chosenKrew
+              ? intl.formatMessage(messages.krewChosen, {
+                  krew: chosenKrew.name,
+                })
+              : intl.formatMessage(messages.krewHint)}
+          </ComposeHint>
+        </ComposeSection>
+      )}
 
-        <label className='huddle-composer__field'>
-          <span className='huddle-composer__label'>
-            {intl.formatMessage(messages.description)}
-          </span>
-          <input
-            type='text'
-            className='huddle-composer__input'
-            value={description}
-            onChange={handleDescriptionChange}
-            maxLength={DESCRIPTION_MAX}
-            disabled={busy}
-          />
-          <span className='huddle-composer__hint'>
-            {intl.formatMessage(messages.descriptionHint)}
-          </span>
-        </label>
-
-        {availableKrews.length > 0 && (
-          <div className='huddle-composer__field'>
-            <span className='huddle-composer__label'>
-              {intl.formatMessage(messages.krew)}
-            </span>
-            <KrewMultiSelect
-              options={availableKrews}
-              selectedIds={chosenKrew ? [chosenKrew.id] : []}
-              onToggle={handleToggleKrew}
-              disabled={busy}
-            />
-            <span className='huddle-composer__hint'>
-              {chosenKrew
-                ? intl.formatMessage(messages.krewChosen, {
-                    krew: chosenKrew.name,
-                  })
-                : intl.formatMessage(messages.krewHint)}
-            </span>
-          </div>
-        )}
-
-        {error && (
-          <p className='huddle-composer__error' role='alert'>
-            {error}
-          </p>
-        )}
-      </div>
+      {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>
   );
 };

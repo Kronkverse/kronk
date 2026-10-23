@@ -968,20 +968,7 @@
   padding-top: 0.75rem;
   border-top: 1px solid var(--border-subtle);
 
-  .booth-upload-form__hint {
+  .compose-field__hint {
     flex-basis: 100%;
-  }
-}
-
-.booth-upload-form__check {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  cursor: pointer;
-
-  input {
-    accent-color: var(--accent);
   }
 }

@@ -108,7 +108,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         click_on 'Add an item'
 
         expect(page).to have_css('.compose-shell')
-        within('.compose-shell') { expect(page).to have_field('Name') }
+        within('.compose-shell') { expect(page).to have_field('What is it called?') }
       end
 
       it 'leads from the Wachuneed shelf on the profile to the shop, not from under the profile header' do
@@ -149,7 +149,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       # The shop item composer, in the shared shell over the list.
       within('.compose-shell') do
         expect(page).to have_no_content('What are you posting?')
-        fill_in 'Name', with: 'Water bottle'
+        fill_in 'What is it called?', with: 'Water bottle'
         say_what_it_comes_in
         click_on 'Add item'
       end
@@ -170,13 +170,13 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       visit '/hub/wachuneed/my-shop?item=new'
 
       within('.compose-shell') do
-        fill_in 'Name', with: 'Lip balm'
+        fill_in 'What is it called?', with: 'Lip balm'
         fill_in 'Price (in AUD)', with: '8'
         check 'Add another after this one'
         click_on 'Add item'
 
         expect(page).to have_content('Added Lip balm.')
-        fill_in 'Name', with: 'Hand cream'
+        fill_in 'What is it called?', with: 'Hand cream'
         uncheck 'Add another after this one'
         click_on 'Add item'
       end
@@ -185,7 +185,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
       within('.wachuneed-shop-items__item', text: 'Lip balm') { click_on 'Edit' }
       within('.compose-shell') do
-        expect(page).to have_field('Name', with: 'Lip balm')
+        expect(page).to have_field('What is it called?', with: 'Lip balm')
         fill_in 'Price (in AUD)', with: '9.5'
         click_on 'Save'
       end

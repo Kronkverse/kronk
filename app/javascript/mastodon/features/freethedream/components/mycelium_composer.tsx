@@ -11,6 +11,15 @@ import type {
   FtdMyceliumItem,
   FtdCategory,
 } from 'mastodon/api_types/freethedream';
+import {
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSelect,
+  ComposeTextarea,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
@@ -167,67 +176,45 @@ export const MyceliumComposer: React.FC<Props> = ({
       onCancel={onCancel}
       draft={draft}
     >
-      <div className='freethedream-form'>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.category)}
-          </span>
-          <select
-            className='freethedream__input'
-            value={category}
-            onChange={handleCategory}
-          >
+      <ComposeTitle
+        value={title}
+        onChange={handleTitle}
+        maxLength={160}
+        placeholder={intl.formatMessage(messages.placeholder)}
+        aria-label={intl.formatMessage(messages.what)}
+      />
+      <ComposeRow>
+        <ComposeField label={intl.formatMessage(messages.category)}>
+          <ComposeSelect value={category} onChange={handleCategory}>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {intl.formatMessage(categoryMessages[c])}
               </option>
             ))}
-          </select>
-        </label>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.what)}
-          </span>
-          <input
-            className='freethedream__input'
-            value={title}
-            onChange={handleTitle}
-            maxLength={160}
-            placeholder={intl.formatMessage(messages.placeholder)}
-          />
-        </label>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(
-              category === 'money' ? messages.howMuch : messages.howMany,
-            )}
-          </span>
-          <input
+          </ComposeSelect>
+        </ComposeField>
+        <ComposeField
+          label={intl.formatMessage(
+            category === 'money' ? messages.howMuch : messages.howMany,
+          )}
+        >
+          <ComposeInput
             type='number'
             min={1}
-            className='freethedream__input'
             value={quantity}
             onChange={handleQuantity}
           />
-        </label>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.note)}
-          </span>
-          <textarea
-            className='freethedream__input'
-            rows={2}
-            value={note}
-            onChange={handleNote}
-            maxLength={1000}
-          />
-        </label>
-        {error && (
-          <p className='freethedream__error' role='alert'>
-            {error}
-          </p>
-        )}
-      </div>
+        </ComposeField>
+      </ComposeRow>
+      <ComposeField label={intl.formatMessage(messages.note)}>
+        <ComposeTextarea
+          rows={2}
+          value={note}
+          onChange={handleNote}
+          maxLength={1000}
+        />
+      </ComposeField>
+      {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>
   );
 };

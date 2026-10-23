@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
+import { ComposeBody, ComposeHint } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
@@ -79,21 +80,17 @@ export const ShareForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         <ReachDropdown value={reach} onChange={setReach} disabled={sharing} />
       }
     >
-      <div className='booth-composer'>
-        {error && <div className='booth-upload-form__error'>{error}</div>}
+      {error && <ComposeHint error>{error}</ComposeHint>}
 
-        <label className='booth-upload-form__field'>
-          <textarea
-            value={comment}
-            onChange={handleCommentChange}
-            placeholder={intl.formatMessage(messages.placeholder)}
-            aria-label={intl.formatMessage(messages.placeholder)}
-            rows={3}
-            maxLength={500}
-            disabled={sharing}
-          />
-        </label>
-      </div>
+      <ComposeBody
+        value={comment}
+        onChange={handleCommentChange}
+        placeholder={intl.formatMessage(messages.placeholder)}
+        aria-label={intl.formatMessage(messages.placeholder)}
+        rows={3}
+        maxLength={500}
+        disabled={sharing}
+      />
     </ComposeShell>
   );
 };

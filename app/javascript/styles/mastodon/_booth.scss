@@ -256,16 +256,6 @@ $booth-accent: var(--accent);
 
 // ─── Upload form ──────────────────────────────────────────────────────────────
 
-.booth-upload-form__error {
-  background: color-mix(in srgb, var(--semantic-warning-red) 15%, transparent);
-  border: 1px solid
-    color-mix(in srgb, var(--semantic-warning-red) 40%, transparent);
-  color: var(--semantic-warning-red);
-  border-radius: var(--radius-small);
-  padding: 10px 14px;
-  font-size: 14px;
-}
-
 .booth-upload-form__field {
   display: flex;
   flex-direction: column;
@@ -277,8 +267,9 @@ $booth-accent: var(--accent);
     color: $secondary-text-color;
   }
 
-  input,
-  textarea {
+  // The credits search box (credits_field.tsx); the composer's own fields
+  // come from the kit.
+  input {
     background: $ui-base-color;
     border: 1px solid $ui-base-lighter-color;
     border-radius: var(--radius-small);
@@ -296,11 +287,6 @@ $booth-accent: var(--accent);
     &:disabled {
       opacity: 0.6;
     }
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 80px;
   }
 
   // Raw file inputs render as the browser's default "Choose files" button

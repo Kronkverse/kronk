@@ -3,6 +3,11 @@ import { useCallback, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { apiCreateKommonsProposal } from 'mastodon/api/kommons_nodes';
+import {
+  ComposeBody,
+  ComposeHint,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 
 import type { KommonsNode } from '../data/nodes';
 
@@ -119,33 +124,26 @@ export const Composer: React.FC<Props> = ({ node, onSuccess, onDismiss }) => {
           </dd>
         </dl>
 
-        <label className='kommons-tree__composer-field'>
-          <span>{intl.formatMessage(messages.titleLabel)}</span>
-          <input
-            type='text'
-            value={title}
-            onChange={handleTitleChange}
-            placeholder={intl.formatMessage(messages.titlePlaceholder)}
-            maxLength={240}
-            required
-          />
-        </label>
+        <ComposeTitle
+          value={title}
+          onChange={handleTitleChange}
+          placeholder={intl.formatMessage(messages.titlePlaceholder)}
+          aria-label={intl.formatMessage(messages.titleLabel)}
+          maxLength={240}
+          required
+        />
 
-        <label className='kommons-tree__composer-field'>
-          <span>{intl.formatMessage(messages.bodyLabel)}</span>
-          <textarea
-            value={body}
-            onChange={handleBodyChange}
-            placeholder={intl.formatMessage(messages.bodyPlaceholder)}
-            rows={4}
-            required
-          />
-        </label>
+        <ComposeBody
+          value={body}
+          onChange={handleBodyChange}
+          placeholder={intl.formatMessage(messages.bodyPlaceholder)}
+          aria-label={intl.formatMessage(messages.bodyLabel)}
+          rows={4}
+          required
+        />
 
         {errored && (
-          <p className='kommons-tree__composer-error'>
-            {intl.formatMessage(messages.error)}
-          </p>
+          <ComposeHint error>{intl.formatMessage(messages.error)}</ComposeHint>
         )}
 
         <div className='kommons-tree__composer-actions'>
