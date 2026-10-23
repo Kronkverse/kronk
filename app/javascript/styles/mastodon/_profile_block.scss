@@ -355,7 +355,10 @@
   }
 
   &__country-option {
-    display: block;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
     width: 100%;
     padding: 8px 10px;
     text-align: left;
@@ -371,6 +374,14 @@
     &--active {
       background: color-mix(in srgb, var(--accent) 18%, transparent);
     }
+  }
+
+  // The state or territory (and the people or other name) beside each
+  // suggestion.
+  &__country-option-where {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 12px;
   }
 
   &__bio-error {

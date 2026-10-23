@@ -6,6 +6,7 @@ import { useSaveOwnProfile } from 'mastodon/hooks/useSaveOwnProfile';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
+import type { FirstNationsCountry } from './first_nations_countries';
 import { FIRST_NATIONS_COUNTRIES } from './first_nations_countries';
 
 // The First Nations Country you live on, under your bio while you design your
@@ -34,20 +35,36 @@ const messages = defineMessages({
   },
 });
 
-// Names that start with what's typed come first, then names that contain it.
-const suggestionsFor = (typed: string): string[] => {
-  const query = typed.trim().toLowerCase();
+// Folded for matching: lower case, accents and ŋ read as plain letters, so
+// "yolngu" finds Yolŋu.
+const fold = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/ŋ/g, 'ng')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+// Names (or their other spellings) that start with what's typed come first,
+// then ones that contain it.
+const suggestionsFor = (typed: string): FirstNationsCountry[] => {
+  const query = fold(typed.trim());
   if (!query) return [];
-  const starts: string[] = [];
-  const contains: string[] = [];
-  FIRST_NATIONS_COUNTRIES.forEach((name) => {
-    const lower = name.toLowerCase();
-    if (lower === query) return;
-    if (lower.startsWith(query)) starts.push(name);
-    else if (lower.includes(query)) contains.push(name);
+  const starts: FirstNationsCountry[] = [];
+  const contains: FirstNationsCountry[] = [];
+  FIRST_NATIONS_COUNTRIES.forEach((country) => {
+    const spellings = [country.name, ...(country.also ?? [])].map(fold);
+    if (fold(country.name) === query) return;
+    if (spellings.some((s) => s.startsWith(query))) starts.push(country);
+    else if (spellings.some((s) => s.includes(query))) contains.push(country);
   });
   return [...starts, ...contains].slice(0, SUGGESTION_LIMIT);
 };
+
+// "Noongar · WA", "Eora · NSW & ACT", "VIC".
+const whereOf = (country: FirstNationsCountry) =>
+  [country.group, ...(country.also ?? []), country.region]
+    .filter(Boolean)
+    .join(' · ');
 
 export const ProfileCountryField: React.FC = () => {
   const intl = useIntl();
@@ -104,8 +121,8 @@ export const ProfileCountryField: React.FC = () => {
         setActive((was) => (was <= 0 ? suggestions.length - 1 : was - 1));
       } else if (e.key === 'Enter' && active >= 0) {
         e.preventDefault();
-        const name = suggestions[active];
-        if (name) pick(name);
+        const country = suggestions[active];
+        if (country) pick(country.name);
       } else if (e.key === 'Escape') {
         setOpen(false);
       }
@@ -152,9 +169,9 @@ export const ProfileCountryField: React.FC = () => {
       </label>
       {showing && (
         <ul id={listId} className='profile-block__country-list' role='listbox'>
-          {suggestions.map((name, index) => (
+          {suggestions.map(({ name, ...country }, index) => (
             <li
-              key={name}
+              key={`${name}-${country.region}`}
               id={`${listId}-${index}`}
               role='option'
               aria-selected={index === active}
@@ -167,7 +184,12 @@ export const ProfileCountryField: React.FC = () => {
                 onMouseDown={holdFocus}
                 onClick={handlePick}
               >
-                {name}
+                <span className='profile-block__country-option-name'>
+                  {name}
+                </span>
+                <span className='profile-block__country-option-where'>
+                  {whereOf({ name, ...country })}
+                </span>
               </button>
             </li>
           ))}

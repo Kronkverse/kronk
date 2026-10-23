@@ -107,9 +107,13 @@ Under the bio, **On <name> Country**: the First Nations Country someone says
 they live on (Kommons "Introduce First nation country display", @mangobee,
 2026-10-23). It shows wherever the bio does, to whoever can see the profile.
 While you design your profile it is a field under the bio, **Whose Country do
-you live on?**, that suggests the 382 names on @mangobee's Country map
-(`components/first_nations_countries.ts`, in that map's spellings) as you
-type; any other name can be typed too. It saves when you leave the field, and
+you live on?**, that suggests Countries as you type from @mangobee's list
+(`components/first_nations_countries.ts`; 110 by state and territory, given on
+the Kommons proposal on 2026-10-23 and replacing the names first read off the
+Country map). Each suggestion shows its state or territory, and the people it
+belongs to (the Noongar groups) or its other name; typing that other name
+(Eora, Woiwurrung, Boonwurrung, Bininj, Yolngu) finds it too. Any other name
+can be typed. It saves when you leave the field, and
 a blank one clears it.
 
 It is a name and nothing else: `accounts.first_nations_country` (60
