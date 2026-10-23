@@ -6,7 +6,7 @@ doesn't meet the layers its stage requires is not done. The build steps are in
 [Framework spec (v0.5)](adding_a_korner.md#framework-spec-v05) section.
 
 - **§1** says what each lifecycle stage requires.
-- **§2** is the layers, L1 to L12: the checklist.
+- **§2** is the layers, L1 to L14: the checklist.
 - **§3** says which checks `bin/tootctl korners doctor` runs, and what a human
   must sign off.
 
@@ -309,6 +309,60 @@ leaving Kronk.
 - ◇ An autosave status line sits in its own row below the header, not inside
   it.
 
+### L13 — Composers are one composer
+
+Everything made on Kronk is made in the same composer, so making an album, a
+film or a listing feels like one thing (decisions.md, 2026-10-23, "One
+composer, one Konnect"). A korner supplies its own fields; the platform
+supplies everything else, in this order, top to bottom:
+
+1. **Header**: the korner icon and label, and who sees it (`<ReachDropdown>`
+   as the shell's `headerAction`).
+2. **Media**: the record's pictures, video or cover.
+3. **Title**: `<ComposeTitle>`, the display serif, no box.
+4. **Fields**: `<ComposeBody>` for the main text, then the korner's own
+   fields from the kit: `<ComposeField>` (label, hint, error) around
+   `<ComposeInput>`, `<ComposeTextarea>` or `<ComposeSelect>`;
+   `<ComposeCheck>`; `<ComposeRow>` for short fields side by side;
+   `<ComposeSection>` for a titled group; `<ComposeHint>` for a line about
+   the whole composer.
+5. **Konnect row**: what the record will be Konnected to (L14).
+6. **Drafts line**, then Cancel and the submit button.
+
+- ⚙︎ The composer mounts in `<ComposeShell>` (doctor warning, above).
+- ⚙︎ Its fields come from the kit (`components/compose_fields.tsx`): ESLint
+  fails a raw text `<input>`, `<textarea>`, `<select>` or checkbox in a
+  composer file (`eslint.config.mjs`, `composerFiles`; composers older than
+  the rule are listed as `composeBurnDown` until they move).
+- ◇ The composer adds no wrapper padding, label, input or title styles of its
+  own: the shell's body spaces the fields, and the kit sets every font. A
+  korner's stylesheet sizes only what is truly its own (a Kronikle's tall
+  writing box, Cinema's video picker).
+- ◇ **No location field and no Krew field.** Where something is, is a
+  Konnection to a Map Place; which Krew it belongs to, is a Konnection to the
+  Krew (L14). Who can see it is reach, in the header, and stays separate.
+
+### L14 — Konnect is in the same place everywhere
+
+A Konnection joins two records in different korners (docs/korners/
+adding_a_korner.md, Korner attachments). People find and use it the same way
+in every korner:
+
+- **Composing**: the Konnect row at the foot of the composer, above the
+  drafts line, for every korner that takes Konnections.
+- **On a record's page**: the Konnected section, in the `attached` slot of
+  `<KornerDetail>`: its Konnections both ways as space tiles, and, for
+  whoever looks after the record, a Konnect tile at the end and Diskonnect on
+  each tile. A page doesn't place its own `<AttachmentSection>`.
+- **The words**: Konnect, Konnected, Diskonnect, and New … for making
+  something to Konnect.
+
+- ⚙︎ A korner with records takes Konnections or says why not
+  (`no_attachments:`), and its `konnect:` block is well formed (doctor).
+- ◇ Its composer shows the Konnect row and its detail page uses the `attached`
+  slot. Not every korner does yet: the move is under way korner by korner
+  (decisions.md, 2026-10-23).
+
 ## 3. What the doctor checks
 
 `bin/tootctl korners doctor` (`lib/mastodon/cli/korners.rb`) loads every
@@ -337,7 +391,8 @@ coverage note listing what it can't check.
 | `<h1>`, tab row or tagline literal in the mounted file                                               | L11   | every non-core korner         | warning |
 | Core space hand-rolls its header                                                                     | L11   | core spaces                   | warning |
 | A feature page draws its own `<h1>` or page-title heading (ESLint, in `lint`, not the doctor)        | L11   | every feature file            | error   |
-| A `*composer*.tsx` doesn't use `<ComposeShell>`, or uses `createPortal`, `openModal`, `<ComposeFab>` | —     | every feature file            | warning |
+| A `*composer*.tsx` doesn't use `<ComposeShell>`, or uses `createPortal`, `openModal`, `<ComposeFab>` | L13   | every feature file            | warning |
+| A composer draws a raw text input, textarea, select or checkbox (ESLint, in `lint`, not the doctor)  | L13   | every composer file           | error   |
 | `listens:` names an event no manifest `emits:`                                                       | —     | every manifest                | issue   |
 | `attaches:` entry the target doesn't `accepts:`                                                      | —     | every manifest                | issue   |
 

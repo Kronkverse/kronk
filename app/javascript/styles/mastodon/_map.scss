@@ -1946,7 +1946,8 @@
   }
 }
 
-// The Place composer reuses the trek composer's fields.
+// The Place composer: its fields come from the composer kit; only the pin
+// buttons are its own.
 .place-composer {
   &__pin-actions {
     display: flex;

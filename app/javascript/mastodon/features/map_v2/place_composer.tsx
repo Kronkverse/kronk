@@ -8,6 +8,12 @@ import { apiCreateAttachment } from 'mastodon/api/attachments';
 import { apiCreateMapPlace } from 'mastodon/api/map_places';
 import type { ApiMapPlaceJSON } from 'mastodon/api/map_places';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { MapPinPicker } from 'mastodon/components/map_pin_picker';
@@ -202,62 +208,51 @@ export const PlaceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onCancel={onCancel}
       draft={draft}
     >
-      <div className='trek-composer place-composer'>
-        <label className='trek-composer__field'>
-          <span>{intl.formatMessage(messages.name)}</span>
-          <input
-            type='text'
-            value={name}
-            onChange={onName}
-            placeholder={intl.formatMessage(messages.namePlaceholder)}
-            maxLength={120}
-          />
-        </label>
+      <ComposeTitle
+        value={name}
+        onChange={onName}
+        placeholder={intl.formatMessage(messages.namePlaceholder)}
+        aria-label={intl.formatMessage(messages.name)}
+        maxLength={120}
+      />
 
-        <label className='trek-composer__field'>
-          <span>{intl.formatMessage(messages.address)}</span>
-          <input
-            type='text'
-            value={address}
-            onChange={onAddress}
-            placeholder={intl.formatMessage(messages.addressPlaceholder)}
-            maxLength={500}
-          />
-        </label>
+      <ComposeField label={intl.formatMessage(messages.address)}>
+        <ComposeInput
+          value={address}
+          onChange={onAddress}
+          placeholder={intl.formatMessage(messages.addressPlaceholder)}
+          maxLength={500}
+        />
+      </ComposeField>
 
+      {pin && (
+        <MapPinPreview
+          lng={pin.lng}
+          lat={pin.lat}
+          zoom={pin.zoom}
+          className='place-composer__preview'
+        />
+      )}
+
+      <div className='place-composer__pin-actions'>
+        <KornerPill
+          label={intl.formatMessage(pin ? messages.movePin : messages.pin)}
+          onClick={openPicker}
+        />
         {pin && (
-          <MapPinPreview
-            lng={pin.lng}
-            lat={pin.lat}
-            zoom={pin.zoom}
-            className='place-composer__preview'
-          />
-        )}
-
-        <div className='place-composer__pin-actions'>
           <KornerPill
-            label={intl.formatMessage(pin ? messages.movePin : messages.pin)}
-            onClick={openPicker}
+            label={intl.formatMessage(messages.clearPin)}
+            onClick={clearPin}
           />
-          {pin && (
-            <KornerPill
-              label={intl.formatMessage(messages.clearPin)}
-              onClick={clearPin}
-            />
-          )}
-        </div>
-
-        <p className='trek-composer__hint'>
-          {intl.formatMessage(messages.hint)}
-          {konnect && <> {intl.formatMessage(messages.konnecting)}</>}
-        </p>
-
-        {error && (
-          <p className='trek-composer__error' role='alert'>
-            {error}
-          </p>
         )}
       </div>
+
+      <ComposeHint>
+        {intl.formatMessage(messages.hint)}
+        {konnect && <> {intl.formatMessage(messages.konnecting)}</>}
+      </ComposeHint>
+
+      {error && <ComposeHint error>{error}</ComposeHint>}
 
       {pickerOpen && (
         <MapPinPicker

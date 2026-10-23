@@ -7,6 +7,11 @@ import api from 'mastodon/api';
 import { apiCreateFilm, apiUpdateFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeBody,
+  ComposeHint,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
@@ -256,68 +261,61 @@ export const FilmComposer: React.FC<Props> = ({
         />
       }
     >
-      <div className='cinema-composer'>
-        <input
-          type='text'
-          className='cinema-composer__title'
-          value={title}
-          onChange={handleTitleChange}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
-          maxLength={240}
-          disabled={pending}
-        />
+      <ComposeTitle
+        value={title}
+        onChange={handleTitleChange}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        maxLength={240}
+        disabled={pending}
+      />
 
-        <textarea
-          className='cinema-composer__description'
-          value={description}
-          onChange={handleDescriptionChange}
-          placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-          maxLength={4000}
-          disabled={pending}
-        />
+      <ComposeBody
+        value={description}
+        onChange={handleDescriptionChange}
+        placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+        maxLength={4000}
+        disabled={pending}
+      />
 
-        {!isEdit && (
-          <>
-            <p className='cinema-composer__hint'>
-              {intl.formatMessage(messages.hint)}
-            </p>
+      {!isEdit && (
+        <>
+          <ComposeHint>{intl.formatMessage(messages.hint)}</ComposeHint>
 
-            <button
-              type='button'
-              className='cinema-composer__pick'
-              onClick={handlePickVideo}
-              disabled={pending}
-            >
-              <Icon id='movie' icon={VideoLibraryIcon} />
-              {videoFile
-                ? intl.formatMessage(messages.chosenVideo, {
-                    name: videoFile.name,
-                  })
-                : intl.formatMessage(messages.pickVideo)}
-            </button>
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='video/mp4'
-              hidden
-              onChange={handleFileSelected}
-            />
-          </>
-        )}
-
-        {error && <p className='cinema-composer__error'>{error}</p>}
-
-        {isEdit && onDelete && (
           <button
             type='button'
-            className='compose-shell__delete'
-            onClick={onDelete}
-            disabled={pending || deleting}
+            className='cinema-composer__pick'
+            onClick={handlePickVideo}
+            disabled={pending}
           >
-            {intl.formatMessage(messages.deleteFilm)}
+            <Icon id='movie' icon={VideoLibraryIcon} />
+            {videoFile
+              ? intl.formatMessage(messages.chosenVideo, {
+                  name: videoFile.name,
+                })
+              : intl.formatMessage(messages.pickVideo)}
           </button>
-        )}
-      </div>
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='video/mp4'
+            hidden
+            onChange={handleFileSelected}
+          />
+        </>
+      )}
+
+      {error && <ComposeHint error>{error}</ComposeHint>}
+
+      {isEdit && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={pending || deleting}
+        >
+          {intl.formatMessage(messages.deleteFilm)}
+        </button>
+      )}
     </ComposeShell>
   );
 };

@@ -17,6 +17,36 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-23 — One composer, one Konnect
+
+Tal, after an audit of every composer: "look at the entirety of the site …
+as the network it is, not on a case by case basis … I want composers to be
+standardised, I want the konnect button to be standardised. This is so people
+don't have to go looking for it, they know how to use it across different
+pages and spaces and korners." The audit found 20 composers with 14 field
+styles (labels at 12 to 13px in three weights, titles from 18px bold sans to
+22px serif), a location field in four of them, a Krew field in three, and
+Konnect in some and not others; and 10 of 13 detail pages placing their own
+Konnected section.
+
+**Decision:** the platform owns how things are made and Konnected; a korner
+brings only its own fields.
+
+- One composer: `<ComposeShell>` plus the field kit
+  (`components/compose_fields.tsx`), in a fixed order (Korner Standard L13).
+  ESLint holds every composer to the kit; the ones older than the rule are on
+  a burn-down list.
+- One Konnect: the Konnect row in every composer, drawn by the shell, and the
+  Konnected section in `<KornerDetail>`'s `attached` slot on every record's
+  page (L14).
+- Location and Krews stop being fields. Where something is, is a Konnection
+  to a Map Place (2026-10-23, Map Places); its Krew is a Konnection to the
+  Krew. Reach stays in the header.
+
+Built in steps: the kit and the rule first (Cinema and Kronikles moved as
+the first two), then the shell's Konnect row, then the rest of the composers,
+then pages, then location and Krew fields.
+
 ## 2026-10-23 — Map Places: location is a Konnection
 
 Tal: "for maps, lets fold in konnecting location to it. So instead of a

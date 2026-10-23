@@ -163,53 +163,10 @@
 }
 
 .kronikles-composer {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-
-  &__title {
-    font-size: 22px;
-    font-weight: 700;
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid var(--border-subtle);
-    padding: 8px 0;
-    color: var(--text-primary);
-  }
-
-  &__kind {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    font-size: 13px;
-
-    select {
-      background: var(--surface-primary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-small);
-      padding: 4px 8px;
-    }
-  }
-
+  // A Kronikle is long writing: a taller box and a reading line height.
   &__body {
-    min-height: 400px;
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-medium);
-    padding: 12px 14px;
-    resize: vertical;
-    font-size: 16px;
+    min-height: 25rem;
     line-height: 1.6;
-    font-family: inherit;
-  }
-
-  &__error {
-    color: var(--warning-red);
-    font-size: 13px;
-    margin: 0;
   }
 }
 

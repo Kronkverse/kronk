@@ -103,6 +103,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_kronk_meta.scss',
         'app/javascript/styles/mastodon/_kronk_states.scss',
         'app/javascript/styles/mastodon/_compose_shell.scss',
+        'app/javascript/styles/mastodon/_compose_fields.scss',
         'app/javascript/styles/mastodon/_account_settings.scss',
         'app/javascript/styles/mastodon/_data_settings.scss',
 
