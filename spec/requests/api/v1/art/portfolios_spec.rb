@@ -44,4 +44,13 @@ RSpec.describe 'Art portfolios' do
     expect(ArtPortfolio.featured_pieces_of(artist).map(&:id)).to eq [pieces[2].id, pieces[0].id, pieces[1].id]
     expect(someone_elses.reload.featured_position).to be_nil
   end
+
+  it 'keeps the mediums an artist works in, tidied, and says when a portfolio is set up', :aggregate_failures do
+    get "/api/v1/art/portfolios/#{artist.id}", headers: own_headers
+    expect(response.parsed_body).to include('set_up' => false, 'mediums' => [])
+
+    put '/api/v1/art/portfolio', headers: own_headers, params: { mediums: [' Ceramics ', 'Oil', 'ceramics', ''] }
+
+    expect(response.parsed_body).to include('set_up' => true, 'mediums' => %w(Ceramics Oil))
+  end
 end

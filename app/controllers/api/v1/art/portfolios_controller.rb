@@ -37,7 +37,7 @@ class Api::V1::Art::PortfoliosController < Api::BaseController
   private
 
   def portfolio_params
-    params.permit(:statement, :open_for_commissions, featured_ids: [])
+    params.permit(:statement, :open_for_commissions, featured_ids: [], mediums: [])
   end
 
   def piece_json(piece)
@@ -57,6 +57,10 @@ class Api::V1::Art::PortfoliosController < Api::BaseController
       is_owner: account.id == viewer&.id,
       statement: profile_visible ? portfolio&.statement : nil,
       open_for_commissions: profile_visible && portfolio&.open_for_commissions == true,
+      mediums: profile_visible ? (portfolio&.mediums || []) : [],
+      # Whether the artist has saved one yet; until then their own portfolio
+      # offers the guided set-up.
+      set_up: portfolio.present?,
       featured: featured.map { |piece| piece_json(piece) },
       pieces: pieces.map { |piece| piece_json(piece) },
     }

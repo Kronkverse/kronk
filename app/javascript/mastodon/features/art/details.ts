@@ -42,12 +42,12 @@ const messages = defineMessages({
   in: { id: 'art.details.in', defaultMessage: 'in' },
 });
 
-// "60 × 90 cm", "30 × 30 × 12 cm"; nothing when no dimension is set.
+// "60 × 90 cm" (width × height); nothing when neither is set.
 export const formatSize = (
   intl: IntlShape,
   piece: Pick<ArtPieceDetailsJSON, 'width' | 'height' | 'depth' | 'size_unit'>,
 ): string | null => {
-  const parts = [piece.width, piece.height, piece.depth]
+  const parts = [piece.width, piece.height]
     .filter((n): n is number => typeof n === 'number' && n > 0)
     .map((n) => intl.formatNumber(n, { maximumFractionDigits: 2 }));
   if (parts.length === 0) return null;
