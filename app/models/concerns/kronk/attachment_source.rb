@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# lib/ isn't autoloaded. The spawn registry used to be required by the one
+# spawn factory's initializer (Kalendar → Albutts, retired 2026-10-23), so
+# it is required here, where it is used.
+require 'kronk/attachment_factories'
+
 # Kronk::AttachmentSource — the model-side half of the KornerAttachment
 # primitive (docs/korners/adding_a_korner.md (Korner attachments) §2.4). Include this into
 # a korner's primary AR class and declare the korner slug it represents:

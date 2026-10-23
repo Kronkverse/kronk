@@ -3,9 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe Kronk::AttachmentSource do
-  # Uses the real Event class (Kalendar) as the reference adopter — it
-  # includes the concern in Phase 3. The Albutts side is stubbed to
-  # keep the spec fast and isolated from Album's own validations.
+  # Uses the real Event class (Kalendar) as the reference adopter. No
+  # korner spawns today (Kalendar's "spawn an album" was retired
+  # 2026-10-23), so both manifests are stubbed with a spawn pair keyed on
+  # a boolean Event already has.
 
   let(:account) { Fabricate(:account) }
 
@@ -15,7 +16,16 @@ RSpec.describe Kronk::AttachmentSource do
       title: 'Test event',
       start_time: 2.days.from_now,
       end_time: 2.days.from_now + 2.hours,
-      spawn_album: true
+      invite_only: true
+    )
+  end
+
+  let(:kalendar_manifest) do
+    instance_double(
+      Kronk::KornerRegistry::Manifest,
+      slug: 'kalendar',
+      attaches: [{ 'to' => 'albutts', 'kind' => 'spawn', 'trigger' => 'field:invite_only' }],
+      accepts: []
     )
   end
 
@@ -30,14 +40,13 @@ RSpec.describe Kronk::AttachmentSource do
 
   before do
     Kronk::KornerRegistry.reload!
-    # The kalendar manifest ships with `attaches: [{to: albutts, kind:
-    # spawn, trigger: field:spawn_album}, {to: booth, kind: link, ...}]`
-    # as of this PR, so the concern will iterate them; we don't need to
-    # stub the source manifest, but we do need Albutts' `accepts:` (the
-    # spec block above already fabricates a synthetic one since the real
-    # albutts manifest also gains `accepts:` in this PR).
     allow(Kronk::KornerRegistry).to receive(:find).and_call_original
     allow(Kronk::KornerRegistry).to receive(:model_for).and_call_original
+    allow(Kronk::KornerRegistry).to receive(:find).with('kalendar').and_return(kalendar_manifest)
+    allow(Kronk::KornerRegistry).to receive(:find).with('albutts').and_return(albutts_manifest)
+    # The stubbed manifests have no resources, so say which model each is.
+    allow(Kronk::KornerRegistry).to receive(:model_for).with('kalendar').and_return(Event)
+    allow(Kronk::KornerRegistry).to receive(:model_for).with('albutts').and_return(Album)
   end
 
   describe 'spawn trigger on create' do
@@ -69,7 +78,7 @@ RSpec.describe Kronk::AttachmentSource do
           title: 'No album',
           start_time: 3.days.from_now,
           end_time: 3.days.from_now + 1.hour,
-          spawn_album: false
+          invite_only: false
         )
       end.to_not change(KornerAttachment, :count)
     end

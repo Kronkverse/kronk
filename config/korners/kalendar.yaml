@@ -57,7 +57,6 @@ emits:
       - event_id
       - account_id
       - event_type
-      - spawn_album
   # notification.event_invitation dispatches via the Mastodon
   # notification system rather than the korner event bus; documented
   # here for discoverability of Kalendar's outbound signals.
@@ -72,22 +71,19 @@ emits:
 listens: []
 
 # Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)).
-# Kalendar events source two shapes today:
-#   1. `spawn → albutts` (`field:spawn_album` trigger). Creates a
-#      companion Album via the factory + writes the join row on
-#      Event.create_commit. Cascade-delete on destroy.
-#   2. `link → *` — Kalendar events can freely link to any target
+# Kalendar events source one shape:
+#   `link → *` — Kalendar events can freely link to any target
 #      korner that opts in via `accepts: [{from: '*', kind: 'link'}]`.
 #      This is the "Konnect a korner" catch-all — an event can bind
 #      to a Wachuneed listing (a sale), an Albutts album (an
 #      album launch), a Kommons proposal (a voting deadline), a
 #      Booth set, a Huddle session, etc. No source-side allow-list;
 #      the target korner controls whether it participates.
+# The `spawn → albutts` entry (the "spawn an album" checkbox) was retired
+# 2026-10-23: an event's album is Konnected like anything else. Albums
+# spawned before then still go when their event is deleted
+# (Kronk::AttachmentSource cascades `spawn` rows by kind).
 attaches:
-  - to: albutts
-    kind: spawn
-    trigger: field:spawn_album
-    lifecycle: cascade
   - to: '*'
     kind: link
     trigger: user

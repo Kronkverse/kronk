@@ -38,8 +38,6 @@ class Api::V1::EventsController < Api::BaseController
 
     set_image! if params[:image_id].present?
 
-    @event.requested_reach = event_reach(@event)
-
     # Save event first; create the status outside the transaction.
     # PostStatusService enqueues DistributionWorker via Sidekiq.perform_async,
     # which starts running immediately — before this transaction commits.
@@ -171,7 +169,7 @@ class Api::V1::EventsController < Api::BaseController
       :title, :description, :start_time, :end_time,
       :location_name, :location_url, :event_type,
       :rsvp_enabled, :max_attendees, :recurrence_rule,
-      :spawn_album, :invite_only
+      :invite_only
     )
   end
 
@@ -228,9 +226,8 @@ class Api::V1::EventsController < Api::BaseController
     params[:post_to_feed] != false && params[:post_to_feed] != 'false'
   end
 
-  # The reach the event's post and spawned album get. An event that isn't
-  # posted is seen only by its author and invitees (Event#visible_to?), so
-  # its album is Just me too, or the album would carry its title out.
+  # The reach the event's post gets. An event that isn't posted is seen
+  # only by its author and invitees (Event#visible_to?).
   def event_reach(event)
     return 'self_only' if event.invite_only? || !post_to_feed?
 

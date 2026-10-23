@@ -79,7 +79,11 @@ host if the two are Mates.
 rows and sends an `event_invitation` notification.
 
 **Editing.** The event page (`features/events/event_detail.tsx`) uses the older
-`CreateEventForm` for edits, which also exposes `recurrence_rule`.
+`CreateEventForm` for edits, which also exposes `recurrence_rule`. The
+Konnected section sits right under the form, so an album or a Huddle Room is
+Konnected there, as on the event's page. The form no longer offers "spawn an
+album" or an Event/Huddle type (decisions.md 2026-10-23); it doesn't send
+`event_type`, so an existing event keeps the type it has.
 
 **API:** `/api/v1/events` (index with `filter=upcoming|past|mine|invited`,
 show, create, update, destroy, plus `rsvp`, `attendees`, `invite`,
@@ -100,11 +104,13 @@ profile Kuestion (see [`kuestions.md`](kuestions.md), Profile Kuestions).
 Kalendar is the source side of `korner_attachments`
 (`Kronk::AttachmentSource`):
 
-- **Spawn an album:** `spawn_album` creates a companion Albutts album when the
-  event is created, deleted with it.
 - **Link to anything** that accepts links (`accepts: [{ from: '*', kind: link }]`):
-  a Huddle room, a Wachuneed listing, a Kommons proposal, a Booth set. The
-  composer can also create a new Huddle room and link it in one go.
+  an album, a Huddle room, a Wachuneed listing, a Kommons proposal, a Booth
+  set. The composer can also create a new album or Huddle room and link it in
+  one go.
+- **No spawns.** `spawn_album` (an album made with the event, deleted with it)
+  was retired 2026-10-23; the API ignores it. Albums spawned before then are
+  still deleted with their event (`kind: spawn` rows cascade).
 - **Map:** events whose `location_url` is a parseable OpenStreetMap link show
   as pins on Map (`/api/v1/map/events`), and the event page links to
   `/hub/map?event=<slug>`.
@@ -134,7 +140,11 @@ card is `StatusEventCard`.
   are no event reminders. `default_event_visibility` still lists the retired
   `unlisted` and `private`.
 - **Legacy fields.** `event_type` still has a `huddle` value and `huddle_url`
-  remains on `events` (see `huddle.md`). `max_attendees` has no UI.
+  remains on `events` (see `huddle.md`). The web no longer makes either, but
+  cards, the event page, Map and Nudges still show a `huddle` event as one, and
+  the Android app still creates and edits them (`event_type`) and opens
+  `huddle_url`. Dropping them waits on the app. The `events.spawn_album`
+  column is unused since 2026-10-23. `max_attendees` has no UI.
 - **Two edit paths.** Create uses `EventComposer`, edit uses the older
   `CreateEventForm`. Worth bringing edit onto the composer.
 

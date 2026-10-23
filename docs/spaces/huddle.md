@@ -133,7 +133,9 @@ kalendar`, `target: huddle`, `kind: link`). The old `events.huddle_session_id`
 column was dropped (`DropEventsHuddleSessionId`, after a backfill migration).
 `rake kronk:huddle:backfill` turns legacy `event_type: huddle` events into
 `HuddleSession` rows with that link. The `huddle` value is still in
-`Event.event_type`, and `events.huddle_url` still exists.
+`Event.event_type`, and `events.huddle_url` still exists. The web no
+longer makes Huddle-type events (its edit form lost the type toggle on
+2026-10-23); the Android app still creates and edits them.
 
 ## Data
 

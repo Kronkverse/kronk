@@ -678,7 +678,10 @@ target table depends on the slug; integrity is in the model.
 The three kinds:
 
 - **`spawn`**: created automatically when the source is created, and the
-  target is destroyed with the source (it exists because of it).
+  target is destroyed with the source (it exists because of it). No korner
+  spawns today: Kalendar's "spawn an album" was retired 2026-10-23 in favour
+  of Konnecting the album (decisions.md). Albums it spawned before then still
+  go with their event.
 - **`link`**: added by a person. Deleting the source removes only the row.
 - **`reference`**: a passive mention. Same lifecycle as a link. Nothing
   creates one yet.
@@ -690,21 +693,22 @@ Both sides must consent:
 ```yaml
 # kalendar.yaml: what this korner may attach to (it is the source)
 attaches:
-  - to: albutts
-    kind: spawn
-    trigger: field:spawn_album
-    lifecycle: cascade
   - to: '*'
     kind: link
     trigger: user
     lifecycle: keep
+  # a spawn would name its target and trigger:
+  # - to: albutts
+  #   kind: spawn
+  #   trigger: field:<boolean column>
+  #   lifecycle: cascade
 
 # albutts.yaml: what may attach to this korner (it is the target)
 accepts:
-  - from: kalendar
-    kind: spawn
   - from: '*'
     kind: link
+  # - from: kalendar
+  #   kind: spawn
 ```
 
 `'*'` on either side matches anything. `korners doctor` fails any `attaches`
@@ -714,7 +718,7 @@ entry the target doesn't `accept`, and `KornerAttachment` refuses to save one.
 (decisions.md, 2026-10-21). Albutts, Art, Booth, Cinema, FreeTheDream,
 Huddle, Kalendar, Karporn, Kommons, Krew, Kronikles, Kuestions, Map (its
 Places, decisions.md 2026-10-23) and Wachuneed each carry `attaches: [{ to: '*', kind: link }]` and `accepts: [{ from: '*',
-kind: link }]`; Kalendar also spawns Albutts. A new korner needs four things:
+kind: link }]`. A new korner needs four things:
 both entries, a `path:` on its primary resource (§2.3), and the model concern
 (§2.4). The template has the manifest half. The other way is to opt out in
 the manifest, with the reason:
@@ -900,8 +904,9 @@ end
 ```
 
 The `require` matters: `lib/` isn't autoloaded, and without it the boot fails
-with a `NameError`. The one factory today is `kalendar_albutts.rb`, which also
-publishes the album to the feed and is idempotent.
+with a `NameError`. There are no factories today; the last, `kalendar_albutts.rb`,
+went with "spawn an album" on 2026-10-23 and is in git history
+(`git log --diff-filter=D -- config/initializers/attachment_factories`).
 
 ### 4. React primitives
 
@@ -994,13 +999,12 @@ uses the row like every other composer.
 
 ### 5. Where it is used
 
-| Pair                           | Kind  | How it's made                                                                  |
-| ------------------------------ | ----- | ------------------------------------------------------------------------------ |
-| Kalendar → Albutts             | spawn | Event created with "spawn album" ticked                                        |
-| Kalendar → Huddle              | link  | Linked from the event                                                          |
-| Kalendar → anything            | link  | Event composer's Konnect row, or the event detail page                         |
-| A composer's korner → anything | link  | The composer's Konnect row, or the picker's New … (`?konnect=`), on create     |
-| Any linkable korner → anything | link  | The Attached block on the record's detail page (every linkable korner has one) |
+| Pair                           | Kind | How it's made                                                                  |
+| ------------------------------ | ---- | ------------------------------------------------------------------------------ |
+| Kalendar → Huddle              | link | Linked from the event                                                          |
+| Kalendar → anything            | link | Event composer's Konnect row, or the event detail page                         |
+| A composer's korner → anything | link | The composer's Konnect row, or the picker's New … (`?konnect=`), on create     |
+| Any linkable korner → anything | link | The Attached block on the record's detail page (every linkable korner has one) |
 
 A link always joins two korners: an album can't link to another album
 (decisions.md, 2026-10-22). The picker never offers the record's own korner

@@ -361,41 +361,6 @@ $ev-interested-color: #b8945f;
     }
   }
 
-  &__type-toggle {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-
-  &__type-btn {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 10px;
-    border: 1px solid var(--background-border-color);
-    border-radius: 10px;
-    background: transparent;
-    color: var(--secondary-text-color);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-
-    &:hover {
-      border-color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
-      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
-    }
-
-    &.active {
-      border-color: var(--accent);
-      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
-      background: color-mix(in srgb, var(--accent) 8%, transparent);
-      box-shadow: 0 0 0 1px rgba(110, 95, 184, 8%);
-    }
-  }
-
   &__field {
     margin-bottom: 14px;
 

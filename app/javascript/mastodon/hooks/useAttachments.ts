@@ -19,11 +19,9 @@ import {
 // needs custom rendering (rare — prefer the shared component).
 //
 // Phase 2: read + write link/reference; spawn attachments are
-// framework-only (created by the server-side factory in Phase 3) so
-// the hook doesn't expose an `addSpawn`. If a caller mutates the
-// underlying record in a way the server responds to with a new spawn
-// (e.g. a Kalendar composer's `spawn_album`), call `refresh()` after
-// the record save to pull the newly-materialised row in.
+// framework-only (created by a server-side factory) so the hook
+// doesn't expose an `addSpawn`. No korner spawns today; if one does,
+// call `refresh()` after the record save to pull the new row in.
 //
 // Best-effort error handling matches `useAvailableKrews`: on failure
 // the list is empty and the surface stays usable. Real errors surface
