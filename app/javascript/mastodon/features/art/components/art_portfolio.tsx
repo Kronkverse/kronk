@@ -306,7 +306,7 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
       )}
 
       {shown.length > 0 && (
-        <SpaceGrid layout='masonry' className='art-portfolio__works'>
+        <SpaceGrid className='art-portfolio__works'>
           {shown.map(card)}
         </SpaceGrid>
       )}
