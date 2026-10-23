@@ -274,29 +274,42 @@
   }
 }
 
-// An artist's portfolio (docs/spaces/art.md, Portfolio). The page is
-// <KornerDetail>; this is only what sits inside it.
+// An artist's portfolio (docs/spaces/art.md, Portfolio), kept simple: their
+// picture (a way to their profile) and name, their bio, their mediums, their
+// work, then commissions. The page is <KornerDetail>; this is only what sits
+// inside it.
 .art-portfolio {
-  // The profile picture, small, beside the name.
-  &__title {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
+  .korner-detail__hero {
+    display: flex;
+    justify-content: center;
+    aspect-ratio: auto;
+    background: none;
   }
 
-  &__avatar {
-    flex-shrink: 0;
-    width: 44px;
-    height: 44px;
+  &__picture {
+    display: block;
     border-radius: var(--radius-round);
-    object-fit: cover;
+
+    img {
+      display: block;
+      width: 96px;
+      height: 96px;
+      border-radius: var(--radius-round);
+      object-fit: cover;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
   }
 
-  &__medium-count {
-    margin-left: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    opacity: 0.75;
+  &__heading {
+    margin: 0 0 var(--sp-2, 8px);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 400;
   }
 
   // The first-time set-up card on your own portfolio.
@@ -315,63 +328,17 @@
     }
   }
 
-  // Mediums under the name; tapping one narrows the works to it.
-  // Mediums stay at the top as the works scroll, so switching medium halfway
-  // down is one tap.
-  &__mediums {
-    position: sticky;
-    z-index: 2;
-    top: 0;
-    display: flex;
-    gap: 6px;
-    margin: 0 calc(-1 * var(--sp-4, 16px)) var(--sp-3, 12px);
-    padding: 8px var(--sp-4, 16px);
-    overflow-x: auto;
-    scrollbar-width: none;
-    background: var(--surface-primary);
-    border-block: 1px solid var(--border-subtle);
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  &__medium {
-    flex-shrink: 0;
-    padding: 4px 12px;
-    color: var(--text-secondary);
-    font-family: var(--font-body);
-    font-size: 13px;
-    background: none;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--accent);
-      outline: none;
-    }
-
-    &--on {
-      color: var(--semantic-text-on-accent);
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-  }
-
-  // The statement as gallery wall text: the display serif, a touch larger.
-  &__statement-wrap {
+  &__bio-wrap {
     max-width: 38rem;
-    margin: 0 0 var(--sp-4, 16px);
+    margin: 0 auto var(--sp-4, 16px);
+    text-align: center;
   }
 
-  &__statement {
+  &__bio {
     margin: 0;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 18px;
-    line-height: 1.5;
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.6;
     white-space: pre-line;
 
     &--folded {
@@ -394,55 +361,59 @@
     cursor: pointer;
   }
 
-  // "Open for commissions", said once, beside the way to ask.
-  &__commissions {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 14px;
-    color: var(--accent-text);
+  &__mediums {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 0 var(--sp-4, 16px);
+  }
+
+  &__medium {
+    padding: 4px 12px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
     font-size: 13px;
-    font-weight: 500;
-    border: 1px solid var(--accent);
+    background: none;
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-round);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    &--on {
+      color: var(--semantic-text-on-accent);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
   }
 
-  // The lead piece, whole and full width; the other featured ones two across
-  // under it.
-  &__lead.space-grid--masonry {
-    column-count: 1;
+  &__medium-count {
+    margin-left: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    opacity: 0.75;
   }
 
-  &__featured.space-grid--masonry {
-    column-count: 2;
+  &__works {
+    margin-bottom: var(--sp-5, 24px);
   }
 
-  // A card's status as a dot, not a word: accent for Available, muted for
-  // the rest. The word stays for screen readers.
-  .space-card__tag {
-    inline-size: 10px;
-    block-size: 10px;
-    padding: 0;
-    overflow: hidden;
-    font-size: 0;
-    border: 0;
-    border-radius: var(--radius-round);
-    background: var(--text-muted);
-  }
+  // Commissions close the page.
+  &__commissions {
+    padding: var(--sp-4, 16px) 0 0;
+    border-top: 1px solid var(--border-subtle);
 
-  .space-card__tag--available {
-    background: var(--accent);
-  }
-
-  &__section {
-    margin-bottom: var(--sp-4, 16px);
-  }
-
-  &__heading {
-    margin: 0 0 var(--sp-2, 8px);
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 1.125rem;
-    font-weight: 400;
+    p {
+      margin: 0 0 var(--sp-3, 12px);
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
   }
 }
 

@@ -13,39 +13,44 @@ import type {
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
-import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
-import { availabilityLabel } from '../details';
 import { artKindLabel } from '../kinds';
 
 import { ArtPortfolioEditor } from './art_portfolio_editor';
 
-// An artist's portfolio (docs/spaces/art.md, Portfolio): who they are as an
-// artist, the pieces they lead with, and everything else they've made that
-// reaches you. The artist edits it from the Ж menu (Edit portfolio); an artist
-// open for commissions can be asked through Nudges.
+// An artist's portfolio (docs/spaces/art.md, Portfolio): who they are and
+// what they've made that reaches you, kept simple. The artist edits it from
+// the Ж menu (Edit portfolio); an artist open for commissions can be asked
+// through Nudges.
 
 const messages = defineMessages({
-  subtitle: {
-    id: 'art.portfolio.subtitle_count',
+  toProfile: {
+    id: 'art.portfolio.to_profile',
+    defaultMessage: "{name}'s profile",
+  },
+  commissionsTitle: {
+    id: 'art.portfolio.commissions_title',
+    defaultMessage: 'Commissions',
+  },
+  commissionsOpen: {
+    id: 'art.portfolio.commissions_open',
+    defaultMessage: 'Open for commissions. Ask and they can tell you more.',
+  },
+  commissionsClosed: {
+    id: 'art.portfolio.commissions_closed',
     defaultMessage:
-      'Portfolio · {count, plural, one {# piece} other {# pieces}}',
+      "You're not taking commissions. Switch it on in Edit portfolio and people can ask you here.",
   },
   readMore: { id: 'art.portfolio.read_more', defaultMessage: 'Read more' },
   readLess: { id: 'art.portfolio.read_less', defaultMessage: 'Show less' },
-  commissions: {
-    id: 'art.portfolio.open_for_commissions',
-    defaultMessage: 'Open for commissions',
-  },
   ask: {
     id: 'art.portfolio.ask',
     defaultMessage: 'Ask about a commission',
   },
-  featured: { id: 'art.portfolio.featured', defaultMessage: 'Featured' },
-  allWorks: { id: 'art.portfolio.all_works', defaultMessage: 'All works' },
   emptyOwn: {
     id: 'art.portfolio.empty_own',
     defaultMessage: 'Your portfolio fills as you post pieces.',
@@ -79,8 +84,8 @@ const messages = defineMessages({
   },
 });
 
-// A statement longer than this folds to three lines behind Read more.
-const STATEMENT_FOLD = 220;
+// A bio longer than this folds to three lines behind Read more.
+const BIO_FOLD = 220;
 
 interface Props {
   portfolio: ApiArtPortfolioJSON;
@@ -95,9 +100,9 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
   const [editing, setEditing] = useState<false | 'all' | 'guided'>(false);
   // A piece page's medium chip links here with ?medium=, already filtered.
   const { search } = useLocation();
-  const [statementOpen, setStatementOpen] = useState(false);
-  const toggleStatement = useCallback(() => {
-    setStatementOpen((was) => !was);
+  const [bioOpen, setBioOpen] = useState(false);
+  const toggleBio = useCallback(() => {
+    setBioOpen((was) => !was);
   }, []);
   const [medium, setMedium] = useState<string | null>(() =>
     new URLSearchParams(search).get('medium'),
@@ -179,14 +184,20 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
     count: everyPiece.filter((piece) => pieceIn(piece, name)).length,
   }));
 
+  // One flow of work: the pieces the artist leads with first, then the rest,
+  // newest first.
   const featuredIds = new Set(portfolio.featured.map((piece) => piece.id));
-  const allRest = portfolio.pieces.filter(
-    (piece) => !featuredIds.has(piece.id),
-  );
-  const total = new Set([...featuredIds, ...allRest.map((piece) => piece.id)])
-    .size;
-  const featured = portfolio.featured.filter(inMedium);
-  const rest = allRest.filter(inMedium);
+  const works = [
+    ...portfolio.featured,
+    ...portfolio.pieces.filter((piece) => !featuredIds.has(piece.id)),
+  ];
+  const total = works.length;
+  const shown = works.filter(inMedium);
+
+  // Their artist statement; if they haven't written one, their profile bio.
+  const statement = portfolio.statement?.trim() ?? '';
+  const bio =
+    statement !== '' ? statement : stripHtmlToLine(account.note).trim();
 
   const card = (piece: ApiArtPieceJSON) => (
     <SpaceCard
@@ -195,57 +206,33 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
       image={piece.cover_url}
       title={piece.title}
       meta={[
-        piece.medium?.trim()
-          ? piece.medium.trim()
-          : artKindLabel(intl, piece.kind),
+        piece.mediums[0] ??
+          (piece.medium?.trim()
+            ? piece.medium.trim()
+            : artKindLabel(intl, piece.kind)),
         piece.year_made ? String(piece.year_made) : null,
       ]
         .filter(Boolean)
         .join(' · ')}
-      tag={availabilityLabel(intl, piece.availability) ?? undefined}
-      tagKind={piece.availability}
     />
   );
 
+  // Top to bottom (@mangobee, 2026-10-23: simpler, the artist and the
+  // work): their picture, which goes to their profile, and name; their
+  // bio; their mediums; all their work; then commissions.
   return (
     <KornerDetail
       className='art-portfolio'
-      title={
-        <span className='art-portfolio__title'>
-          <img className='art-portfolio__avatar' src={account.avatar} alt='' />
-          {name}
-        </span>
+      hero={
+        <Link
+          to={`/@${account.acct}`}
+          className='art-portfolio__picture'
+          aria-label={intl.formatMessage(messages.toProfile, { name })}
+        >
+          <img src={account.avatar} alt='' />
+        </Link>
       }
-      subtitle={intl.formatMessage(messages.subtitle, { count: total })}
-      meta={
-        <KornerMeta
-          items={[
-            <Link key='profile' to={`/@${account.acct}`}>
-              @{account.acct}
-            </Link>,
-          ]}
-        />
-      }
-      actions={
-        // Open for commissions is said once, plainly, with the way to ask
-        // beside it (visitors) rather than as one fact among the others.
-        portfolio.open_for_commissions ? (
-          <KornerActionBar>
-            <span className='art-portfolio__commissions'>
-              {intl.formatMessage(messages.commissions)}
-            </span>
-            {!portfolio.is_owner && (
-              <KornerPill
-                label={intl.formatMessage(messages.ask)}
-                icon={ChatIcon}
-                iconId='chat'
-                variant='primary'
-                onClick={ask}
-              />
-            )}
-          </KornerActionBar>
-        ) : undefined
-      }
+      title={name}
     >
       {portfolio.is_owner && !portfolio.set_up && !editing && (
         <section className='art-portfolio__set-up'>
@@ -263,6 +250,28 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
         </section>
       )}
 
+      {bio && (
+        <div className='art-portfolio__bio-wrap'>
+          <p
+            className={`art-portfolio__bio${bioOpen ? '' : ' art-portfolio__bio--folded'}`}
+          >
+            {bio}
+          </p>
+          {bio.length > BIO_FOLD && (
+            <button
+              type='button'
+              className='art-portfolio__read-more'
+              onClick={toggleBio}
+              aria-expanded={bioOpen}
+            >
+              {intl.formatMessage(
+                bioOpen ? messages.readLess : messages.readMore,
+              )}
+            </button>
+          )}
+        </div>
+      )}
+
       {chips.length > 0 && (
         <div
           className='art-portfolio__mediums'
@@ -278,16 +287,16 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
           >
             {intl.formatMessage(messages.allMediums)}
           </button>
-          {chips.map(({ name, count }) => (
+          {chips.map(({ name: chip, count }) => (
             <button
-              key={name}
+              key={chip}
               type='button'
-              value={name}
+              value={chip}
               onClick={pickMedium}
-              aria-pressed={medium === name}
-              className={`art-portfolio__medium${medium === name ? ' art-portfolio__medium--on' : ''}`}
+              aria-pressed={medium === chip}
+              className={`art-portfolio__medium${medium === chip ? ' art-portfolio__medium--on' : ''}`}
             >
-              {name}
+              {chip}
               {count > 0 && (
                 <span className='art-portfolio__medium-count'>{count}</span>
               )}
@@ -296,60 +305,13 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
         </div>
       )}
 
-      {/* The statement as gallery wall text, folded to three lines when
-          it runs long. */}
-      {portfolio.statement && (
-        <div className='art-portfolio__statement-wrap'>
-          <p
-            className={`art-portfolio__statement${statementOpen ? '' : ' art-portfolio__statement--folded'}`}
-          >
-            {portfolio.statement}
-          </p>
-          {portfolio.statement.length > STATEMENT_FOLD && (
-            <button
-              type='button'
-              className='art-portfolio__read-more'
-              onClick={toggleStatement}
-              aria-expanded={statementOpen}
-            >
-              {intl.formatMessage(
-                statementOpen ? messages.readLess : messages.readMore,
-              )}
-            </button>
-          )}
-        </div>
+      {shown.length > 0 && (
+        <SpaceGrid layout='masonry' className='art-portfolio__works'>
+          {shown.map(card)}
+        </SpaceGrid>
       )}
 
-      {featured.length > 0 && (
-        <section className='art-portfolio__section art-portfolio__section--featured'>
-          <h2 className='art-portfolio__heading'>
-            {intl.formatMessage(messages.featured)}
-          </h2>
-          {/* The first featured piece leads, large and whole; the rest sit
-              under it. */}
-          <SpaceGrid layout='masonry' className='art-portfolio__lead'>
-            {featured.slice(0, 1).map(card)}
-          </SpaceGrid>
-          {featured.length > 1 && (
-            <SpaceGrid layout='masonry' className='art-portfolio__featured'>
-              {featured.slice(1).map(card)}
-            </SpaceGrid>
-          )}
-        </section>
-      )}
-
-      {rest.length > 0 && (
-        <section className='art-portfolio__section'>
-          {featured.length > 0 && (
-            <h2 className='art-portfolio__heading'>
-              {intl.formatMessage(messages.allWorks)}
-            </h2>
-          )}
-          <SpaceGrid layout='masonry'>{rest.map(card)}</SpaceGrid>
-        </section>
-      )}
-
-      {medium && total > 0 && featured.length + rest.length === 0 && (
+      {medium && total > 0 && shown.length === 0 && (
         <EmptyState
           title={intl.formatMessage(messages.noneInMedium, { medium })}
         />
@@ -361,6 +323,34 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
             portfolio.is_owner ? messages.emptyOwn : messages.empty,
           )}
         />
+      )}
+
+      {/* Commissions close the page: open, with the way to ask; or, for
+          the artist alone, where to switch them on. */}
+      {(portfolio.open_for_commissions || portfolio.is_owner) && (
+        <section className='art-portfolio__commissions'>
+          <h2 className='art-portfolio__heading'>
+            {intl.formatMessage(messages.commissionsTitle)}
+          </h2>
+          <p>
+            {intl.formatMessage(
+              portfolio.open_for_commissions
+                ? messages.commissionsOpen
+                : messages.commissionsClosed,
+            )}
+          </p>
+          {portfolio.open_for_commissions && !portfolio.is_owner && (
+            <KornerActionBar>
+              <KornerPill
+                label={intl.formatMessage(messages.ask)}
+                icon={ChatIcon}
+                iconId='chat'
+                variant='primary'
+                onClick={ask}
+              />
+            </KornerActionBar>
+          )}
+        </section>
       )}
 
       {editing && (
