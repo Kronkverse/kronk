@@ -19,6 +19,17 @@ import type {
   ArtSizeUnit,
 } from 'mastodon/api_types/art';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeBody,
+  ComposeCheck,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSection,
+  ComposeSelect,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { PhotoDropZone } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
@@ -549,160 +560,142 @@ export const ArtPieceComposer: React.FC<Props> = ({
         />
       }
     >
-      <div className='art-composer'>
-        <input
-          type='text'
-          className='art-composer__title'
-          value={title}
-          onChange={handleTitleChange}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
-          maxLength={240}
-          disabled={pending}
-        />
+      <ComposeTitle
+        className='art-composer__title'
+        value={title}
+        onChange={handleTitleChange}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        maxLength={240}
+        disabled={pending}
+      />
 
-        <div className='art-composer__kind'>
-          <label htmlFor='art-composer-kind'>
-            {intl.formatMessage(messages.kindLabel)}
-          </label>
-          <select
-            id='art-composer-kind'
-            value={kind}
-            onChange={handleKindChange}
+      <ComposeField label={intl.formatMessage(messages.kindLabel)}>
+        <ComposeSelect
+          value={kind}
+          onChange={handleKindChange}
+          disabled={pending}
+        >
+          {kinds.map((k) => (
+            <option key={k} value={k}>
+              {intl.formatMessage(ART_KIND_MESSAGES[k])}
+            </option>
+          ))}
+        </ComposeSelect>
+      </ComposeField>
+
+      <ComposeBody
+        value={description}
+        onChange={handleDescriptionChange}
+        placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+        maxLength={4000}
+        disabled={pending}
+      />
+
+      {/* A group, not a <ComposeField>: a label around the chips would
+          hand a click on its text to the first chip. */}
+      <ComposeSection title={intl.formatMessage(messages.mediums)}>
+        <ComposeHint>{intl.formatMessage(messages.mediumsHint)}</ComposeHint>
+        {offeredMediums.length > 0 && (
+          <div className='art-composer__mediums'>
+            {offeredMediums.map((name) => {
+              const on = details.mediums.includes(name);
+              return (
+                <button
+                  key={name}
+                  type='button'
+                  value={name}
+                  onClick={toggleMedium}
+                  aria-pressed={on}
+                  className={`art-composer__medium${on ? ' art-composer__medium--on' : ''}`}
+                  disabled={pending}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <div className='art-composer__new-medium'>
+          <ComposeInput
+            value={newMedium}
+            onChange={handleNewMedium}
+            onKeyDown={handleNewMediumKey}
+            maxLength={40}
+            placeholder={intl.formatMessage(messages.newMedium)}
+            aria-label={intl.formatMessage(messages.newMedium)}
             disabled={pending}
+          />
+          <button
+            type='button'
+            onClick={addNewMedium}
+            disabled={pending || !newMedium.trim()}
           >
-            {kinds.map((k) => (
-              <option key={k} value={k}>
-                {intl.formatMessage(ART_KIND_MESSAGES[k])}
-              </option>
-            ))}
-          </select>
+            {intl.formatMessage(messages.add)}
+          </button>
         </div>
+      </ComposeSection>
 
-        <textarea
-          className='art-composer__description'
-          value={description}
-          onChange={handleDescriptionChange}
-          placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-          maxLength={4000}
+      <ComposeSection title={intl.formatMessage(messages.details)}>
+        <ComposeField label={intl.formatMessage(messages.medium)}>
+          <ComposeInput
+            name='medium'
+            value={details.medium}
+            onChange={handleDetail}
+            placeholder={intl.formatMessage(messages.mediumPlaceholder)}
+            maxLength={160}
+            disabled={pending}
+          />
+        </ComposeField>
+
+        <ComposeCheck
+          role='switch'
+          label={intl.formatMessage(messages.size)}
+          checked={details.sized}
+          onChange={handleSized}
           disabled={pending}
         />
-
-        <fieldset className='art-composer__details'>
-          <legend>{intl.formatMessage(messages.details)}</legend>
-
-          <div className='art-composer__detail art-composer__detail--wide'>
-            <span>{intl.formatMessage(messages.mediums)}</span>
-            <span className='art-composer__hint'>
-              {intl.formatMessage(messages.mediumsHint)}
-            </span>
-            {offeredMediums.length > 0 && (
-              <div className='art-composer__mediums'>
-                {offeredMediums.map((name) => {
-                  const on = details.mediums.includes(name);
-                  return (
-                    <button
-                      key={name}
-                      type='button'
-                      value={name}
-                      onClick={toggleMedium}
-                      aria-pressed={on}
-                      className={`art-composer__medium${on ? ' art-composer__medium--on' : ''}`}
-                      disabled={pending}
-                    >
-                      {name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            <div className='art-composer__new-medium'>
-              <input
-                type='text'
-                value={newMedium}
-                onChange={handleNewMedium}
-                onKeyDown={handleNewMediumKey}
-                maxLength={40}
-                placeholder={intl.formatMessage(messages.newMedium)}
-                aria-label={intl.formatMessage(messages.newMedium)}
+        {details.sized && (
+          <div className='art-composer__size'>
+            {(['width', 'height'] as const).map((dimension) => (
+              <ComposeInput
+                key={dimension}
+                type='number'
+                inputMode='decimal'
+                name={dimension}
+                value={details[dimension]}
+                onChange={handleDetail}
+                min={0}
+                step='any'
+                placeholder={intl.formatMessage(messages[dimension])}
+                aria-label={intl.formatMessage(messages[dimension])}
                 disabled={pending}
               />
-              <button
-                type='button'
-                onClick={addNewMedium}
-                disabled={pending || !newMedium.trim()}
-              >
-                {intl.formatMessage(messages.add)}
-              </button>
+            ))}
+            <div
+              className='art-composer__unit'
+              role='group'
+              aria-label={intl.formatMessage(messages.unit)}
+            >
+              {(['cm', 'in'] as const).map((unit) => (
+                <button
+                  key={unit}
+                  type='button'
+                  value={unit}
+                  onClick={handleUnit}
+                  aria-pressed={details.size_unit === unit}
+                  className={`art-composer__unit-option${details.size_unit === unit ? ' art-composer__unit-option--on' : ''}`}
+                  disabled={pending}
+                >
+                  {unit}
+                </button>
+              ))}
             </div>
           </div>
+        )}
 
-          <label className='art-composer__detail art-composer__detail--wide'>
-            <span>{intl.formatMessage(messages.medium)}</span>
-            <input
-              type='text'
-              name='medium'
-              value={details.medium}
-              onChange={handleDetail}
-              placeholder={intl.formatMessage(messages.mediumPlaceholder)}
-              maxLength={160}
-              disabled={pending}
-            />
-          </label>
-
-          <div className='art-composer__detail art-composer__detail--wide'>
-            <label className='art-composer__switch'>
-              <input
-                type='checkbox'
-                role='switch'
-                checked={details.sized}
-                onChange={handleSized}
-                disabled={pending}
-              />
-              <span>{intl.formatMessage(messages.size)}</span>
-            </label>
-            {details.sized && (
-              <div className='art-composer__size'>
-                {(['width', 'height'] as const).map((dimension) => (
-                  <input
-                    key={dimension}
-                    type='number'
-                    inputMode='decimal'
-                    name={dimension}
-                    value={details[dimension]}
-                    onChange={handleDetail}
-                    min={0}
-                    step='any'
-                    placeholder={intl.formatMessage(messages[dimension])}
-                    aria-label={intl.formatMessage(messages[dimension])}
-                    disabled={pending}
-                  />
-                ))}
-                <div
-                  className='art-composer__unit'
-                  role='group'
-                  aria-label={intl.formatMessage(messages.unit)}
-                >
-                  {(['cm', 'in'] as const).map((unit) => (
-                    <button
-                      key={unit}
-                      type='button'
-                      value={unit}
-                      onClick={handleUnit}
-                      aria-pressed={details.size_unit === unit}
-                      className={`art-composer__unit-option${details.size_unit === unit ? ' art-composer__unit-option--on' : ''}`}
-                      disabled={pending}
-                    >
-                      {unit}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <label className='art-composer__detail'>
-            <span>{intl.formatMessage(messages.yearMade)}</span>
-            <input
+        <ComposeRow>
+          <ComposeField label={intl.formatMessage(messages.yearMade)}>
+            <ComposeInput
               type='number'
               inputMode='numeric'
               name='year_made'
@@ -712,12 +705,9 @@ export const ArtPieceComposer: React.FC<Props> = ({
               max={new Date().getFullYear() + 1}
               disabled={pending}
             />
-          </label>
-
-          <label className='art-composer__detail'>
-            <span>{intl.formatMessage(messages.edition)}</span>
-            <input
-              type='text'
+          </ComposeField>
+          <ComposeField label={intl.formatMessage(messages.edition)}>
+            <ComposeInput
               name='edition'
               value={details.edition}
               onChange={handleDetail}
@@ -725,77 +715,74 @@ export const ArtPieceComposer: React.FC<Props> = ({
               maxLength={80}
               disabled={pending}
             />
-          </label>
+          </ComposeField>
+        </ComposeRow>
 
-          <label className='art-composer__detail art-composer__detail--wide'>
-            <span>{intl.formatMessage(messages.availability)}</span>
-            <select
-              name='availability'
-              value={details.availability}
-              onChange={handleDetail}
-              disabled={pending}
-            >
-              {AVAILABILITIES.map((value) => (
-                <option key={value} value={value}>
-                  {intl.formatMessage(AVAILABILITY_MESSAGES[value])}
-                </option>
-              ))}
-            </select>
-          </label>
-        </fieldset>
-
-        <p className='art-composer__hint'>
-          {intl.formatMessage(messages.photosHint)}
-        </p>
-
-        {savedPhotos.length + photos.length > 0 && (
-          <ul className='art-composer__photos'>
-            {savedPhotos.map((p) => (
-              <PhotoTile
-                key={`saved-${p.id}`}
-                id={p.id}
-                src={p.url}
-                disabled={pending}
-                onRemove={removeSavedPhoto}
-              />
-            ))}
-            {photos.map((p) => (
-              <PhotoTile
-                key={p.key}
-                id={p.key}
-                src={p.preview}
-                disabled={pending}
-                onRemove={removePhoto}
-              />
-            ))}
-          </ul>
-        )}
-
-        <PhotoDropZone onFiles={handleFiles} disabled={pending} />
-
-        {uploadProgress && uploadProgress.total > 0 && (
-          <p className='art-composer__progress'>
-            {intl.formatMessage(messages.uploading, uploadProgress)}
-          </p>
-        )}
-        {failedCount > 0 && (
-          <p className='art-composer__error'>
-            {intl.formatMessage(messages.failed, { count: failedCount })}
-          </p>
-        )}
-        {error && <p className='art-composer__error'>{error}</p>}
-
-        {isEdit && onDelete && (
-          <button
-            type='button'
-            className='compose-shell__delete'
-            onClick={onDelete}
-            disabled={pending || deleting}
+        <ComposeField label={intl.formatMessage(messages.availability)}>
+          <ComposeSelect
+            name='availability'
+            value={details.availability}
+            onChange={handleDetail}
+            disabled={pending}
           >
-            {intl.formatMessage(messages.deletePiece)}
-          </button>
-        )}
-      </div>
+            {AVAILABILITIES.map((value) => (
+              <option key={value} value={value}>
+                {intl.formatMessage(AVAILABILITY_MESSAGES[value])}
+              </option>
+            ))}
+          </ComposeSelect>
+        </ComposeField>
+      </ComposeSection>
+
+      <ComposeHint>{intl.formatMessage(messages.photosHint)}</ComposeHint>
+
+      {savedPhotos.length + photos.length > 0 && (
+        <ul className='art-composer__photos'>
+          {savedPhotos.map((p) => (
+            <PhotoTile
+              key={`saved-${p.id}`}
+              id={p.id}
+              src={p.url}
+              disabled={pending}
+              onRemove={removeSavedPhoto}
+            />
+          ))}
+          {photos.map((p) => (
+            <PhotoTile
+              key={p.key}
+              id={p.key}
+              src={p.preview}
+              disabled={pending}
+              onRemove={removePhoto}
+            />
+          ))}
+        </ul>
+      )}
+
+      <PhotoDropZone onFiles={handleFiles} disabled={pending} />
+
+      {uploadProgress && uploadProgress.total > 0 && (
+        <ComposeHint>
+          {intl.formatMessage(messages.uploading, uploadProgress)}
+        </ComposeHint>
+      )}
+      {failedCount > 0 && (
+        <ComposeHint error>
+          {intl.formatMessage(messages.failed, { count: failedCount })}
+        </ComposeHint>
+      )}
+      {error && <ComposeHint error>{error}</ComposeHint>}
+
+      {isEdit && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={pending || deleting}
+        >
+          {intl.formatMessage(messages.deletePiece)}
+        </button>
+      )}
     </ComposeShell>
   );
 };
