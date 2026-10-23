@@ -1977,8 +1977,8 @@ Each korner's manifest declares:
 
 ```yaml
 compose:
-  label: "Log a trek" # what the Ж bubble tooltip / a11y label says
-  route: "/hub/map/composer" # canonical shell URL
+  label: 'Log a trek' # what the Ж bubble tooltip / a11y label says
+  route: '/hub/map/composer' # canonical shell URL
 ```
 
 Legacy pre-shell URLs (Albutts: `/new`; Map: `/logger`) resolve to the same
