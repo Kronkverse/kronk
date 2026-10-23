@@ -3085,72 +3085,15 @@
   }
 }
 
-// ── Propose page (/hub/kommons/propose) ────────────────────────────────
-// Kommons composer body — fields inside the shared `<ComposeShell>` at
-// /hub/kommons/composer (opened by the Ж bubble → picker chain, or
-// scoped straight in from a Space page's Ж shortcut). The shell owns
-// the panel, backdrop, header (label + subtitle) and Cancel/Submit
-// footer, so this stack owns only the field visuals. Was the
-// standalone `.propose-page` full-page form until 2026-08-12
-// — the outer stage-geometry (max-width, margin, padding) is retired
-// since the shell provides it, and the `__hero` / `__title` /
-// `__intro` blocks (which fed the local <header>) are retired since
-// the shell renders label + subtitle in its own header.
+// ── Kommons composer (/hub/kommons/composer) ───────────────────────────
+// The proposal's own parts inside the shared `<ComposeShell>`: the steps
+// list and the design-docs list. Every field, label, hint and error comes
+// from the composer field kit (_compose_fields.scss). The class prefix is
+// from the standalone `.propose-page` form this was until 2026-08-12.
 .propose-page {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-
-  &__field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    border: 0;
-    padding: 0;
-    margin: 0;
-  }
-
-  &__label {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted, rgba(255, 255, 255, 60%));
-  }
-
-  &__input,
-  &__textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: var(--radius-small);
-    border: 1px solid var(--border-color, rgba(255, 255, 255, 12%));
-    background: var(--input-background-color, rgba(255, 255, 255, 4%));
-    color: inherit;
-    font-size: 15px;
-    font-family: inherit;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-  }
-
-  &__textarea {
-    resize: vertical;
-    min-height: 140px;
-    line-height: 1.5;
-  }
-
-  &__hint {
-    margin: 0;
-    color: var(--text-muted, rgba(255, 255, 255, 55%));
-    font-size: 13px;
-    line-height: 1.4;
-  }
-
   &__steps {
     list-style: none;
-    margin: 8px 0 0;
+    margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -3162,7 +3105,7 @@
     align-items: center;
     gap: 8px;
 
-    .propose-page__input {
+    .compose-input {
       flex: 1;
     }
   }
@@ -3198,7 +3141,6 @@
 
   &__add-step {
     align-self: flex-start;
-    margin-top: 10px;
     background: none;
     border: 1px dashed var(--border-color, rgba(255, 255, 255, 20%));
     border-radius: var(--radius-small);
@@ -3221,7 +3163,7 @@
 
   &__docs {
     list-style: none;
-    margin: 8px 0 0;
+    margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -3245,19 +3187,7 @@
     white-space: nowrap;
   }
 
-  &__error {
-    margin: 0;
-    color: var(--decision-block);
-    font-size: 14px;
-
-    // Soft variant — the nodes-endpoint failure banner: the composer
-    // remains submittable (falls back to unscoped), so this reads as
-    // an advisory + retry, not a hard failure.
-    &--soft {
-      color: var(--text-secondary);
-    }
-  }
-
+  // The retry on the nodes-endpoint advisory (a <ComposeHint>).
   &__error-retry {
     margin-inline-start: 6px;
     padding: 0;
@@ -3268,9 +3198,6 @@
     text-decoration: underline;
     cursor: pointer;
   }
-
-  // (`.propose-page__actions` / `.propose-page__submit` retired — the
-  // ComposeShell footer bar owns Cancel + primary submit now.)
 }
 
 // Node meta page — inline lifecycle badge next to the URL.

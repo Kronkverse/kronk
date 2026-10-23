@@ -924,13 +924,8 @@
 // ── Composer body ──────────────────────────────────────────────────
 // Outer shell (portal, backdrop, header with title + reach dropdown,
 // footer with Cancel + Share) is provided by `<ComposeShell>` — see
-// _compose_shell.scss. `.moments-composer` is now just the field-flow
-// container inside the shell's body slot.
-.moments-composer {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+// _compose_shell.scss — and its body spaces the fields. The caption and
+// errors come from the composer field kit (_compose_fields.scss).
 
 .moments-composer__section {
   display: flex;
@@ -990,32 +985,6 @@
     opacity: 0.5;
     cursor: default;
   }
-}
-
-.moments-composer__caption {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: var(--radius-medium);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-elevated);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 13px;
-  resize: vertical;
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-}
-
-.moments-composer__error {
-  padding: 8px 12px;
-  border-radius: var(--radius-medium);
-  background: rgb(239 68 68 / 12%);
-  color: var(--warning-red);
-  font-family: var(--font-mono);
-  font-size: 11px;
 }
 
 // ── Image-first stage: hero preview + filmstrip ───────────────────

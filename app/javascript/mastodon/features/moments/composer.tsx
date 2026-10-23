@@ -34,6 +34,10 @@ import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import api, { apiRequestPost } from 'mastodon/api';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
+import {
+  ComposeHint,
+  ComposeTextarea,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import { VoiceRecorder, uploadMediaBlob } from 'mastodon/components/media';
@@ -450,171 +454,165 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         onCancel={onClose}
         headerAction={reachControl}
       >
-        <div className='moments-composer'>
-          {/* hidden file inputs, driven by the picker + strip "+". Camera and
-              Video are separate inputs: a phone browser only opens the camera
-              directly when `accept` names a single kind of media. */}
-          <input
-            ref={cameraInputRef}
-            className='moments-composer__file-input'
-            type='file'
-            accept='image/*'
-            capture='environment'
-            onChange={onCameraChange}
-          />
-          <input
-            ref={videoInputRef}
-            className='moments-composer__file-input'
-            type='file'
-            accept='video/*'
-            capture='environment'
-            onChange={onCameraChange}
-          />
-          <input
-            ref={libraryInputRef}
-            className='moments-composer__file-input'
-            type='file'
-            accept='image/*,video/*'
-            multiple
-            onChange={onLibraryChange}
-          />
+        {/* hidden file inputs, driven by the picker + strip "+". Camera and
+            Video are separate inputs: a phone browser only opens the camera
+            directly when `accept` names a single kind of media. */}
+        <input
+          ref={cameraInputRef}
+          className='moments-composer__file-input'
+          type='file'
+          accept='image/*'
+          capture='environment'
+          onChange={onCameraChange}
+        />
+        <input
+          ref={videoInputRef}
+          className='moments-composer__file-input'
+          type='file'
+          accept='video/*'
+          capture='environment'
+          onChange={onCameraChange}
+        />
+        <input
+          ref={libraryInputRef}
+          className='moments-composer__file-input'
+          type='file'
+          accept='image/*,video/*'
+          multiple
+          onChange={onLibraryChange}
+        />
 
-          <div className='moments-composer__stage'>
-            {recording ? (
-              <div className='moments-composer__recorder'>
-                <VoiceRecorder
-                  onChange={onVoiceChange}
-                  autoUpload={false}
-                  maxSeconds={VOICE_MAX_SECONDS}
-                  disabled={posting}
+        <div className='moments-composer__stage'>
+          {recording ? (
+            <div className='moments-composer__recorder'>
+              <VoiceRecorder
+                onChange={onVoiceChange}
+                autoUpload={false}
+                maxSeconds={VOICE_MAX_SECONDS}
+                disabled={posting}
+              />
+              <button
+                type='button'
+                className='moments-composer__recorder-cancel'
+                onClick={cancelVoice}
+              >
+                <FormattedMessage
+                  id='moments.composer.cancel_voice'
+                  defaultMessage='Cancel'
                 />
-                <button
-                  type='button'
-                  className='moments-composer__recorder-cancel'
-                  onClick={cancelVoice}
-                >
-                  <FormattedMessage
-                    id='moments.composer.cancel_voice'
-                    defaultMessage='Cancel'
-                  />
-                </button>
-              </div>
-            ) : items.length === 0 ? (
-              <div className='moments-composer__picker'>
-                <PickChoice
-                  iconId='photo_camera'
-                  icon={PhotoCameraIcon}
-                  label={intl.formatMessage(messages.camera)}
-                  onClick={openCamera}
-                />
-                <PickChoice
-                  iconId='movie'
-                  icon={MovieIcon}
-                  label={intl.formatMessage(messages.video)}
-                  onClick={openVideo}
-                />
-                <PickChoice
-                  iconId='add_photo_alternate'
-                  icon={AddPhotoAlternateIcon}
-                  label={intl.formatMessage(messages.upload)}
-                  onClick={openLibrary}
-                />
-                <PickChoice
-                  iconId='mic'
-                  icon={MicIcon}
-                  label={intl.formatMessage(messages.voice)}
-                  onClick={startVoice}
-                />
-              </div>
-            ) : (
-              activeItem && (
-                <Hero
-                  item={activeItem}
-                  index={active}
-                  total={items.length}
-                  disabled={posting}
-                  onEdit={openEditorActive}
-                  onTagPeople={openTagPickerActive}
-                  onRemove={removeActive}
-                  onPrev={active > 0 ? goPrev : undefined}
-                  onNext={active < items.length - 1 ? goNext : undefined}
-                />
-              )
-            )}
-          </div>
-
-          {items.length > 0 && (
-            <div className='moments-composer__strip'>
-              {items.map((item, i) => (
-                <Thumb
-                  key={
-                    item.kind === 'media' ? item.url : `voice-${i.toString()}`
-                  }
-                  index={i}
-                  item={item}
-                  active={i === active}
-                  disabled={posting}
-                  onSelect={setActive}
-                  onRemove={removeAt}
-                />
-              ))}
-              <div className='moments-composer__add'>
-                <button
-                  type='button'
-                  className='moments-composer__add-tile'
-                  onClick={toggleAddMenu}
-                  disabled={posting}
-                  aria-label={intl.formatMessage(messages.addMore)}
-                  aria-expanded={addMenuOpen}
-                >
-                  <Icon id='add' icon={AddIcon} />
-                </button>
-                {addMenuOpen && (
-                  <div className='moments-composer__add-menu'>
-                    <AddMenuItem
-                      iconId='photo_camera'
-                      icon={PhotoCameraIcon}
-                      label={intl.formatMessage(messages.camera)}
-                      onClick={openCamera}
-                    />
-                    <AddMenuItem
-                      iconId='movie'
-                      icon={MovieIcon}
-                      label={intl.formatMessage(messages.video)}
-                      onClick={openVideo}
-                    />
-                    <AddMenuItem
-                      iconId='add_photo_alternate'
-                      icon={AddPhotoAlternateIcon}
-                      label={intl.formatMessage(messages.upload)}
-                      onClick={openLibrary}
-                    />
-                    <AddMenuItem
-                      iconId='mic'
-                      icon={MicIcon}
-                      label={intl.formatMessage(messages.voice)}
-                      onClick={startVoice}
-                    />
-                  </div>
-                )}
-              </div>
+              </button>
             </div>
+          ) : items.length === 0 ? (
+            <div className='moments-composer__picker'>
+              <PickChoice
+                iconId='photo_camera'
+                icon={PhotoCameraIcon}
+                label={intl.formatMessage(messages.camera)}
+                onClick={openCamera}
+              />
+              <PickChoice
+                iconId='movie'
+                icon={MovieIcon}
+                label={intl.formatMessage(messages.video)}
+                onClick={openVideo}
+              />
+              <PickChoice
+                iconId='add_photo_alternate'
+                icon={AddPhotoAlternateIcon}
+                label={intl.formatMessage(messages.upload)}
+                onClick={openLibrary}
+              />
+              <PickChoice
+                iconId='mic'
+                icon={MicIcon}
+                label={intl.formatMessage(messages.voice)}
+                onClick={startVoice}
+              />
+            </div>
+          ) : (
+            activeItem && (
+              <Hero
+                item={activeItem}
+                index={active}
+                total={items.length}
+                disabled={posting}
+                onEdit={openEditorActive}
+                onTagPeople={openTagPickerActive}
+                onRemove={removeActive}
+                onPrev={active > 0 ? goPrev : undefined}
+                onNext={active < items.length - 1 ? goNext : undefined}
+              />
+            )
           )}
-
-          {items.length > 0 && (
-            <textarea
-              id='moments-composer-caption'
-              className='moments-composer__caption'
-              value={caption}
-              onChange={onCaptionChange}
-              maxLength={MAX_CAPTION_LENGTH}
-              rows={2}
-              placeholder={intl.formatMessage(messages.captionPlaceholder)}
-            />
-          )}
-
-          {error && <div className='moments-composer__error'>{error}</div>}
         </div>
+
+        {items.length > 0 && (
+          <div className='moments-composer__strip'>
+            {items.map((item, i) => (
+              <Thumb
+                key={item.kind === 'media' ? item.url : `voice-${i.toString()}`}
+                index={i}
+                item={item}
+                active={i === active}
+                disabled={posting}
+                onSelect={setActive}
+                onRemove={removeAt}
+              />
+            ))}
+            <div className='moments-composer__add'>
+              <button
+                type='button'
+                className='moments-composer__add-tile'
+                onClick={toggleAddMenu}
+                disabled={posting}
+                aria-label={intl.formatMessage(messages.addMore)}
+                aria-expanded={addMenuOpen}
+              >
+                <Icon id='add' icon={AddIcon} />
+              </button>
+              {addMenuOpen && (
+                <div className='moments-composer__add-menu'>
+                  <AddMenuItem
+                    iconId='photo_camera'
+                    icon={PhotoCameraIcon}
+                    label={intl.formatMessage(messages.camera)}
+                    onClick={openCamera}
+                  />
+                  <AddMenuItem
+                    iconId='movie'
+                    icon={MovieIcon}
+                    label={intl.formatMessage(messages.video)}
+                    onClick={openVideo}
+                  />
+                  <AddMenuItem
+                    iconId='add_photo_alternate'
+                    icon={AddPhotoAlternateIcon}
+                    label={intl.formatMessage(messages.upload)}
+                    onClick={openLibrary}
+                  />
+                  <AddMenuItem
+                    iconId='mic'
+                    icon={MicIcon}
+                    label={intl.formatMessage(messages.voice)}
+                    onClick={startVoice}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {items.length > 0 && (
+          <ComposeTextarea
+            value={caption}
+            onChange={onCaptionChange}
+            maxLength={MAX_CAPTION_LENGTH}
+            rows={2}
+            placeholder={intl.formatMessage(messages.captionPlaceholder)}
+          />
+        )}
+
+        {error && <ComposeHint error>{error}</ComposeHint>}
       </ComposeShell>
 
       {editorIndex !== null &&

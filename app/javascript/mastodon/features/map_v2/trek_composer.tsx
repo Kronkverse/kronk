@@ -9,6 +9,15 @@ import type {
   TrekReach,
 } from 'mastodon/api/map_treks';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeCheck,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSelect,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
@@ -369,118 +378,107 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       headerAction={reachControl}
       draft={draft}
     >
-      <div className='trek-composer'>
-        <label className='trek-composer__field'>
-          <span>{intl.formatMessage(messages.activity)}</span>
-          <select value={activity} onChange={onActivity}>
-            {ACTIVITIES.map((a) => (
-              <option key={a} value={a}>
-                {intl.formatMessage(messages[a])}
-              </option>
-            ))}
-          </select>
-        </label>
+      <ComposeTitle
+        value={title}
+        onChange={onTitle}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        aria-label={intl.formatMessage(messages.title)}
+        maxLength={120}
+      />
 
-        <label className='trek-composer__field'>
-          <span>{intl.formatMessage(messages.title)}</span>
-          <input
-            type='text'
-            value={title}
-            onChange={onTitle}
-            placeholder={intl.formatMessage(messages.titlePlaceholder)}
-            maxLength={120}
-          />
-        </label>
+      <ComposeField label={intl.formatMessage(messages.activity)}>
+        <ComposeSelect value={activity} onChange={onActivity}>
+          {ACTIVITIES.map((a) => (
+            <option key={a} value={a}>
+              {intl.formatMessage(messages[a])}
+            </option>
+          ))}
+        </ComposeSelect>
+      </ComposeField>
 
-        <div
-          className={`trek-composer__import${dragging ? ' is-dragging' : ''}`}
-          onDragOver={onDragOver}
-          onDragEnter={onDragEnter}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-        >
-          <label className='trek-composer__file'>
-            <span className='trek-composer__file-cta'>
-              <FormattedMessage
-                id='map.logger.import'
-                defaultMessage='Drag a GPS file here, or choose one (GPX or TCX)'
-              />
-            </span>
-            <input
-              type='file'
-              accept='.gpx,.tcx,application/gpx+xml'
-              onChange={onFile}
-            />
-          </label>
-          <p className='trek-composer__hint'>
+      <div
+        className={`trek-composer__import${dragging ? ' is-dragging' : ''}`}
+        onDragOver={onDragOver}
+        onDragEnter={onDragEnter}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+      >
+        <label className='trek-composer__file'>
+          <span className='trek-composer__file-cta'>
             <FormattedMessage
-              id='map.logger.import_hint'
-              defaultMessage='Read on your device — only the route and distance are sent, never heart-rate or device data. The start and finish are trimmed before saving.'
+              id='map.logger.import'
+              defaultMessage='Drag a GPS file here, or choose one (GPX or TCX)'
             />
-          </p>
-          {parsed && fileName && (
-            <p className='trek-composer__parsed'>
-              <FormattedMessage
-                id='map.logger.parsed'
-                defaultMessage='{file}: {points} points · {km} km'
-                values={{
-                  file: fileName,
-                  points: parsed.points.length,
-                  km: (parsed.distance_m / 1000).toFixed(1),
-                }}
-              />{' '}
-              <button type='button' onClick={clearFile}>
-                <FormattedMessage
-                  id='map.logger.clear'
-                  defaultMessage='clear'
-                />
-              </button>
-            </p>
-          )}
-        </div>
-
-        <div className='trek-composer__row'>
-          <label className='trek-composer__field'>
-            <span>{intl.formatMessage(messages.distance)}</span>
-            <input
-              type='number'
-              min='0'
-              step='0.01'
-              value={distanceKm}
-              onChange={onDistance}
-              disabled={parsed !== null}
-            />
-          </label>
-          <label className='trek-composer__field'>
-            <span>{intl.formatMessage(messages.time)}</span>
-            <input
-              type='number'
-              min='0'
-              step='1'
-              value={timeMin}
-              onChange={onTime}
-              disabled={parsed !== null}
-            />
-          </label>
-        </div>
-
-        <label className='trek-composer__field'>
-          <span>{intl.formatMessage(messages.date)}</span>
+          </span>
           <input
-            type='date'
-            value={date}
-            max={localDay(new Date())}
-            onChange={onDate}
+            type='file'
+            accept='.gpx,.tcx,application/gpx+xml'
+            onChange={onFile}
           />
         </label>
-
-        <label className='trek-composer__draft'>
-          <input type='checkbox' checked={isDraft} onChange={onDraftToggle} />
-          <span>{intl.formatMessage(messages.draft)}</span>
-        </label>
-
-        {error && <p className='trek-composer__error'>{error}</p>}
+        <ComposeHint>
+          <FormattedMessage
+            id='map.logger.import_hint'
+            defaultMessage='Read on your device — only the route and distance are sent, never heart-rate or device data. The start and finish are trimmed before saving.'
+          />
+        </ComposeHint>
+        {parsed && fileName && (
+          <p className='trek-composer__parsed'>
+            <FormattedMessage
+              id='map.logger.parsed'
+              defaultMessage='{file}: {points} points · {km} km'
+              values={{
+                file: fileName,
+                points: parsed.points.length,
+                km: (parsed.distance_m / 1000).toFixed(1),
+              }}
+            />{' '}
+            <button type='button' onClick={clearFile}>
+              <FormattedMessage id='map.logger.clear' defaultMessage='clear' />
+            </button>
+          </p>
+        )}
       </div>
+
+      <ComposeRow>
+        <ComposeField label={intl.formatMessage(messages.distance)}>
+          <ComposeInput
+            type='number'
+            min='0'
+            step='0.01'
+            value={distanceKm}
+            onChange={onDistance}
+            disabled={parsed !== null}
+          />
+        </ComposeField>
+        <ComposeField label={intl.formatMessage(messages.time)}>
+          <ComposeInput
+            type='number'
+            min='0'
+            step='1'
+            value={timeMin}
+            onChange={onTime}
+            disabled={parsed !== null}
+          />
+        </ComposeField>
+      </ComposeRow>
+
+      <ComposeField label={intl.formatMessage(messages.date)}>
+        <ComposeInput
+          type='date'
+          value={date}
+          max={localDay(new Date())}
+          onChange={onDate}
+        />
+      </ComposeField>
+
+      <ComposeCheck
+        label={intl.formatMessage(messages.draft)}
+        checked={isDraft}
+        onChange={onDraftToggle}
+      />
+
+      {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>
   );
 };

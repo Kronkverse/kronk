@@ -15,6 +15,16 @@ import type {
   ListingAvailability,
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
+import {
+  ComposeBody,
+  ComposeCheck,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSelect,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
@@ -534,64 +544,54 @@ export const ShopItemComposer: React.FC<Props> = ({
 
       {loading && <LoadingState label={intl.formatMessage(messages.loading)} />}
       {loadError && (
-        <p className='wachuneed__compose-error' role='alert'>
+        <ComposeHint error>
           <FormattedMessage {...messages.loadError} />
-        </p>
+        </ComposeHint>
       )}
 
       {!loading && !loadError && (
-        <div className='wachuneed__compose-form wachuneed-item-form'>
+        <>
           {lastAdded && (
-            <p className='wachuneed__compose-hint' role='status'>
-              <FormattedMessage
-                {...messages.added}
-                values={{ name: lastAdded }}
-              />
-            </p>
+            <div role='status'>
+              <ComposeHint>
+                <FormattedMessage
+                  {...messages.added}
+                  values={{ name: lastAdded }}
+                />
+              </ComposeHint>
+            </div>
           )}
 
           <ListingPhotoField state={photoState} showsChoices={showsChoices} />
 
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.name} />
-            </span>
-            <input
-              type='text'
-              className='wachuneed__compose-input'
-              value={title}
-              onChange={handleTitle}
-              placeholder={intl.formatMessage(messages.namePlaceholder)}
-              maxLength={200}
-            />
-          </label>
+          <ComposeTitle
+            value={title}
+            onChange={handleTitle}
+            placeholder={intl.formatMessage(messages.namePlaceholder)}
+            aria-label={intl.formatMessage(messages.name)}
+            maxLength={200}
+          />
 
           {comesInKinds ? (
-            <p className='wachuneed__compose-hint'>
+            <ComposeHint>
               <FormattedMessage {...messages.priceFromKinds} />
-            </p>
+            </ComposeHint>
           ) : (
-            <div className='wachuneed-item-form__row'>
-              <label className='wachuneed__compose-field'>
-                <span className='wachuneed__compose-label'>
-                  <FormattedMessage {...messages.price} />
-                </span>
-                <input
+            <ComposeRow>
+              <ComposeField label={<FormattedMessage {...messages.price} />}>
+                <ComposeInput
                   type='number'
                   min={0}
                   step={0.01}
-                  className='wachuneed__compose-input'
                   value={price}
                   onChange={handlePrice}
                   placeholder={intl.formatMessage(messages.pricePlaceholder)}
                 />
-              </label>
-              <label className='wachuneed__compose-field'>
-                <span className='wachuneed__compose-label'>
-                  <FormattedMessage {...messages.availability} />
-                </span>
-                <select
-                  className='wachuneed__compose-input'
+              </ComposeField>
+              <ComposeField
+                label={<FormattedMessage {...messages.availability} />}
+              >
+                <ComposeSelect
                   value={availability}
                   onChange={handleAvailability}
                 >
@@ -604,21 +604,14 @@ export const ShopItemComposer: React.FC<Props> = ({
                   <option value='made_to_order'>
                     {intl.formatMessage(messages.madeToOrder)}
                   </option>
-                </select>
-              </label>
-            </div>
+                </ComposeSelect>
+              </ComposeField>
+            </ComposeRow>
           )}
 
           {sections.length > 0 && (
-            <label className='wachuneed__compose-field'>
-              <span className='wachuneed__compose-label'>
-                <FormattedMessage {...messages.section} />
-              </span>
-              <select
-                className='wachuneed__compose-input'
-                value={sectionId}
-                onChange={handleSection}
-              >
+            <ComposeField label={<FormattedMessage {...messages.section} />}>
+              <ComposeSelect value={sectionId} onChange={handleSection}>
                 <option value=''>
                   {intl.formatMessage(messages.sectionNone)}
                 </option>
@@ -627,22 +620,17 @@ export const ShopItemComposer: React.FC<Props> = ({
                     {section.name}
                   </option>
                 ))}
-              </select>
-            </label>
+              </ComposeSelect>
+            </ComposeField>
           )}
 
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.description} />
-            </span>
-            <textarea
-              className='wachuneed__compose-textarea'
-              value={description}
-              onChange={handleDescription}
-              placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-              rows={3}
-            />
-          </label>
+          <ComposeBody
+            value={description}
+            onChange={handleDescription}
+            placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+            aria-label={intl.formatMessage(messages.description)}
+            rows={3}
+          />
 
           <ListingVariantsEditor
             state={variantState}
@@ -650,37 +638,23 @@ export const ShopItemComposer: React.FC<Props> = ({
           />
 
           {!wasAnnounced && (
-            <div className='wachuneed__compose-field'>
-              <label className='wachuneed__compose-check'>
-                <input
-                  type='checkbox'
-                  checked={announced}
-                  onChange={handleAnnounced}
-                />
-                <span>
-                  <FormattedMessage {...messages.announce} />
-                </span>
-              </label>
-              <p className='wachuneed__compose-hint'>
-                <FormattedMessage {...messages.announceHint} />
-              </p>
-            </div>
+            <ComposeCheck
+              label={<FormattedMessage {...messages.announce} />}
+              hint={<FormattedMessage {...messages.announceHint} />}
+              checked={announced}
+              onChange={handleAnnounced}
+            />
           )}
 
           {!editId && (
-            <label className='wachuneed__compose-check'>
-              <input type='checkbox' checked={again} onChange={handleAgain} />
-              <span>
-                <FormattedMessage {...messages.again} />
-              </span>
-            </label>
+            <ComposeCheck
+              label={<FormattedMessage {...messages.again} />}
+              checked={again}
+              onChange={handleAgain}
+            />
           )}
 
-          {error && (
-            <p className='wachuneed__compose-error' role='alert'>
-              {error}
-            </p>
-          )}
+          {error && <ComposeHint error>{error}</ComposeHint>}
 
           {editId && (
             <button
@@ -692,7 +666,7 @@ export const ShopItemComposer: React.FC<Props> = ({
               <FormattedMessage {...messages.takeDown} />
             </button>
           )}
-        </div>
+        </>
       )}
     </ComposeShell>
   );

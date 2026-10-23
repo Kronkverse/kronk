@@ -853,14 +853,14 @@
 // Kuestion composer body — fields inside the shared `<ComposeShell>`
 // at /hub/kuestions/composer (opened by the Ж bubble). The shell
 // provides the panel, backdrop, and Cancel/Submit footer, so this
-// stack owns only the field visuals + the two-stage dot indicator.
+// stack owns only its own parts (the two-stage dot indicator, the
+// format cards, the options list); fields come from the composer kit.
 // Was the standalone `.kuestions-ask` container (rendered inside the
 // full-page Ask panel at /hub/kuestions/ask) until 2026-08-12.
 
 .kuestions-composer__stage-dots {
   display: flex;
   gap: 6px;
-  margin-bottom: 16px;
 }
 
 .kuestions-composer__dot {
@@ -875,45 +875,16 @@
   background: var(--kronk-purple-bright);
 }
 
-.kuestions-composer__field-label {
-  display: block;
-  color: var(--text-secondary);
-  font-size: 12px;
-  margin-bottom: 6px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.kuestions-composer__textarea {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 120px;
-  resize: vertical;
-  padding: 12px 14px;
-  background: var(--surface-primary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  font: inherit;
-
-  &:focus-visible {
-    outline: 2px solid var(--kronk-purple-bright);
-    outline-offset: 0;
-  }
-}
-
 .kuestions-composer__charcount {
   color: var(--text-muted);
   font-size: 11px;
   text-align: right;
-  margin-top: 6px;
 }
 
 .kuestions-composer__fmt-grid {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 16px;
 }
 
 .kuestions-composer__fmt-grid--two {
@@ -957,11 +928,6 @@
   font-size: 12px;
 }
 
-.kuestions-composer__mc {
-  margin-top: 4px;
-  margin-bottom: 12px;
-}
-
 .kuestions-composer__mc-list {
   display: flex;
   flex-direction: column;
@@ -973,19 +939,8 @@
   align-items: center;
   gap: 8px;
 
-  input {
+  .compose-input {
     flex: 1;
-    padding: 10px 12px;
-    background: var(--surface-primary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-md);
-    font: inherit;
-
-    &:focus-visible {
-      outline: 2px solid var(--kronk-purple-bright);
-      outline-offset: 0;
-    }
   }
 }
 
@@ -1007,7 +962,7 @@
 }
 
 .kuestions-composer__mc-add {
-  margin-top: 8px;
+  align-self: flex-start;
   padding: 6px 12px;
   border: 1px dashed var(--border-default);
   border-radius: var(--radius-md);
@@ -1023,7 +978,6 @@
 }
 
 .kuestions-composer__review {
-  margin-top: 8px;
   padding: 12px 14px;
   background: rgb(114 65 255 / 8%);
   border: 1px solid var(--border-subtle);
@@ -1051,7 +1005,6 @@
 // the bespoke-back-link ban; the pill itself owns its own visuals.
 .kuestions-composer__wizard-nav {
   align-self: flex-start;
-  margin-bottom: 12px;
 }
 
 // ── Today panel ─────────────────────────────────────────────────

@@ -4,6 +4,11 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { apiFtdProject } from 'mastodon/api/freethedream';
 import type { FtdAccount } from 'mastodon/api_types/freethedream';
+import {
+  ComposeField,
+  ComposeHint,
+  ComposeSelect,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 
 import { act } from './act';
@@ -81,30 +86,17 @@ export const HandOver: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
     >
-      <div className='freethedream-form'>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.to)}
-          </span>
-          <select
-            className='freethedream__input'
-            value={chosen}
-            onChange={handleChange}
-          >
-            <option value=''>{intl.formatMessage(messages.choose)}</option>
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.display_name} (@{m.acct})
-              </option>
-            ))}
-          </select>
-        </label>
-        {error && (
-          <p className='freethedream__error' role='alert'>
-            {error}
-          </p>
-        )}
-      </div>
+      <ComposeField label={intl.formatMessage(messages.to)}>
+        <ComposeSelect value={chosen} onChange={handleChange}>
+          <option value=''>{intl.formatMessage(messages.choose)}</option>
+          {members.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.display_name} (@{m.acct})
+            </option>
+          ))}
+        </ComposeSelect>
+      </ComposeField>
+      {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>
   );
 };

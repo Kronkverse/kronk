@@ -472,17 +472,25 @@
   background: var(--surface-primary, rgba(255, 255, 255, 4%));
   border: 1px solid var(--accent);
   border-radius: var(--radius-md, 8px);
+
+  // Not inside <ComposeShell>, so the form spaces its own fields, as the
+  // shell's body does (_compose_fields.scss).
+  > form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
 }
 
 .kommons-tree__composer-heading {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .kommons-tree__composer-hint {
-  margin: 0 0 16px;
+  margin: 0;
   color: var(--text-muted, rgba(255, 255, 255, 60%));
   font-size: 13px;
   line-height: 1.4;
@@ -492,7 +500,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 0 0 16px;
+  margin: 0;
   padding: 8px 12px;
   background: var(--surface-hover, rgba(255, 255, 255, 3%));
   border-radius: var(--radius-sm, 4px);
@@ -514,46 +522,6 @@
     font-family: var(--font-mono, monospace);
     color: var(--accent-text);
   }
-}
-
-.kommons-tree__composer-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
-
-  span {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted, rgba(255, 255, 255, 55%));
-  }
-
-  input,
-  textarea {
-    padding: 10px 12px;
-    background: var(--surface-hover, rgba(255, 255, 255, 3%));
-    border: 1px solid var(--surface-border, rgba(255, 255, 255, 10%));
-    border-radius: var(--radius-sm, 4px);
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 14px;
-    resize: vertical;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-  }
-}
-
-.kommons-tree__composer-error {
-  margin: 0 0 12px;
-  padding: 8px 12px;
-  color: var(--decision-block);
-  background: color-mix(in srgb, var(--decision-block) 8%, transparent);
-  border-radius: var(--radius-sm, 4px);
-  font-size: 13px;
 }
 
 .kommons-tree__composer-actions {

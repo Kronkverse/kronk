@@ -10,6 +10,16 @@ import type {
   FtdItemKind,
   FtdRef,
 } from 'mastodon/api_types/freethedream';
+import {
+  ComposeBody,
+  ComposeCheck,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSelect,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
@@ -287,104 +297,66 @@ export const ItemComposer: React.FC<Props> = ({
       onCancel={onCancel}
       draft={draft}
     >
-      <div className='freethedream-form'>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.what)}
-          </span>
-          <input
-            className='freethedream__input'
-            value={title}
-            onChange={handleTitle}
-            maxLength={160}
-            placeholder={intl.formatMessage(placeholderFor[kind])}
-          />
-        </label>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.details)}
-          </span>
-          <textarea
-            className='freethedream__input'
-            rows={3}
-            value={body}
-            onChange={handleBody}
-            maxLength={5000}
-          />
-        </label>
-        {/* Actualise is open-ended (no headcount), and ideas are gone:
-            neither has an amount. */}
-        {kind !== 'idea' && kind !== 'job' && (
-          <div className='freethedream-form__row'>
-            <label className='freethedream-form__field'>
-              <span className='freethedream-form__label'>
-                {intl.formatMessage(messages.category)}
-              </span>
-              <select
-                className='freethedream__input'
-                value={category}
-                onChange={handleCategory}
-              >
-                <option value=''>
-                  {intl.formatMessage(messages.noCategory)}
+      <ComposeTitle
+        value={title}
+        onChange={handleTitle}
+        maxLength={160}
+        placeholder={intl.formatMessage(placeholderFor[kind])}
+        aria-label={intl.formatMessage(messages.what)}
+      />
+      <ComposeBody
+        rows={3}
+        value={body}
+        onChange={handleBody}
+        maxLength={5000}
+        placeholder={intl.formatMessage(messages.details)}
+        aria-label={intl.formatMessage(messages.details)}
+      />
+      {/* Actualise is open-ended (no headcount), and ideas are gone:
+          neither has an amount. */}
+      {kind !== 'idea' && kind !== 'job' && (
+        <ComposeRow>
+          <ComposeField label={intl.formatMessage(messages.category)}>
+            <ComposeSelect value={category} onChange={handleCategory}>
+              <option value=''>
+                {intl.formatMessage(messages.noCategory)}
+              </option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {intl.formatMessage(categoryMessages[c])}
                 </option>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {intl.formatMessage(categoryMessages[c])}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className='freethedream-form__field'>
-              <span className='freethedream-form__label'>
-                {intl.formatMessage(quantityLabel)}
-              </span>
-              <input
-                type='number'
-                min={1}
-                className='freethedream__input'
-                value={quantity}
-                onChange={handleQuantity}
-              />
-            </label>
-            <label className='freethedream-form__field'>
-              <span className='freethedream-form__label'>
-                {intl.formatMessage(messages.unit)}
-              </span>
-              <input
-                className='freethedream__input'
-                value={unit}
-                onChange={handleUnit}
-                maxLength={20}
-                placeholder={intl.formatMessage(messages.unitPlaceholder)}
-              />
-            </label>
-          </div>
-        )}
-        {/* More is better at an event for some things, not all (Tal,
-            2026-10-19): whoever adds a need says. */}
-        {kind === 'need' && (
-          <label className='freethedream-form__choice'>
-            <input
-              type='checkbox'
-              checked={moreWelcome}
-              onChange={handleMoreWelcome}
+              ))}
+            </ComposeSelect>
+          </ComposeField>
+          <ComposeField label={intl.formatMessage(quantityLabel)}>
+            <ComposeInput
+              type='number'
+              min={1}
+              value={quantity}
+              onChange={handleQuantity}
             />
-            <span>
-              {intl.formatMessage(messages.moreWelcome)}
-              <span className='freethedream-form__hint'>
-                {' '}
-                {intl.formatMessage(messages.moreWelcomeHint)}
-              </span>
-            </span>
-          </label>
-        )}
-        {error && (
-          <p className='freethedream__error' role='alert'>
-            {error}
-          </p>
-        )}
-      </div>
+          </ComposeField>
+          <ComposeField label={intl.formatMessage(messages.unit)}>
+            <ComposeInput
+              value={unit}
+              onChange={handleUnit}
+              maxLength={20}
+              placeholder={intl.formatMessage(messages.unitPlaceholder)}
+            />
+          </ComposeField>
+        </ComposeRow>
+      )}
+      {/* More is better at an event for some things, not all (Tal,
+          2026-10-19): whoever adds a need says. */}
+      {kind === 'need' && (
+        <ComposeCheck
+          label={intl.formatMessage(messages.moreWelcome)}
+          hint={intl.formatMessage(messages.moreWelcomeHint)}
+          checked={moreWelcome}
+          onChange={handleMoreWelcome}
+        />
+      )}
+      {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>
   );
 };

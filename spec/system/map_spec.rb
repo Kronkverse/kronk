@@ -65,7 +65,7 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
   it 'logs a trek on the day it happened, not the day it was posted' do
     visit '/hub/map/composer'
 
-    fill_in 'Title', with: 'Coast walk'
+    fill_in 'Morning run', with: 'Coast walk'
     fill_in 'Distance (km)', with: '8'
     fill_in 'When it happened', with: '2026-06-01'
     click_on 'Post it'
