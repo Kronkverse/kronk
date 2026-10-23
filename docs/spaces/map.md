@@ -47,9 +47,11 @@ It is a picture (`app/javascript/images/first-nations-country.webp`, a MapLibre
 `image` source over 111.5°E–155°E, 8.8°S–44.6°S), not data. @mangobee drew
 it in a Lambert conformal conic projection (standard parallels −18° and −36°);
 it was fitted to 21 towns marked on it (about 4 px off on average) and redrawn
-into web mercator, with the white background made clear. The original is on
-the proposal. It shows at 70% and fades out between zoom 7 and 9, where the
-picture would blur. Because it is a picture it can't tell you which Country a
+into web mercator, with the white paper taken out by colour-to-alpha (so the
+lettering keeps no white fringe). The Country colours are baked in at 45%
+while the names, town dots and coastline stay at full strength (@mangobee,
+2026-10-23: calmer, but still readable). It fades out between zoom 7 and 9,
+where the picture would blur. Because it is a picture it can't tell you which Country a
 point is on; see `decisions.md`, 2026-10-23.
 
 ## Presence

@@ -14,7 +14,8 @@ import countryMapUrl from '@/images/first-nations-country.webp';
 // education. It was drawn in a Lambert conformal conic projection (standard
 // parallels -18° and -36°); it was fitted to 21 towns marked on it (about 4px,
 // a few km, off on average) and re-drawn into web mercator so MapLibre can lay
-// it flat over these bounds. The original is on the proposal.
+// it flat over these bounds, with the white paper taken out by colour-to-alpha
+// so the letters keep no white fringe. The original is on the proposal.
 const COUNTRY_BOUNDS: [
   [number, number],
   [number, number],
@@ -33,14 +34,16 @@ const LAYER_ID = 'first-nations-country';
 // Under the Mates' fuzz circles and pins, over the basemap.
 const BENEATH = 'fuzz-fill';
 
-// The picture holds its names down to state level; past that it is blur, so
-// it fades out and the streets come back.
+// The picture carries its own calm: the Country colours are baked in at 45%
+// while the names, town dots and coastline stay at full strength, so the words
+// read without the colour shouting. It holds its names down to state level;
+// past that it is blur, so it fades out and the streets come back.
 const OPACITY: maplibregl.ExpressionSpecification = [
   'interpolate',
   ['linear'],
   ['zoom'],
   7,
-  0.7,
+  1,
   9,
   0,
 ];
