@@ -5,6 +5,7 @@ import {
   apiRequestDelete,
 } from 'mastodon/api';
 import type {
+  ArtPieceDetailsJSON,
   ApiArtPieceJSON,
   ApiArtPiecePhotoJSON,
   ApiArtPortfolioJSON,
@@ -12,7 +13,7 @@ import type {
   ArtKind,
 } from 'mastodon/api_types/art';
 
-interface CreatePieceParams {
+interface CreatePieceParams extends Partial<ArtPieceDetailsJSON> {
   title: string;
   description?: string;
   kind?: ArtKind;
@@ -20,7 +21,7 @@ interface CreatePieceParams {
   cover_media_attachment_id?: string;
 }
 
-interface UpdatePieceParams {
+interface UpdatePieceParams extends Partial<ArtPieceDetailsJSON> {
   title?: string;
   description?: string;
   kind?: ArtKind;

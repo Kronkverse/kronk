@@ -18,6 +18,17 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 - **Photos** — zero or more, ordered by `position`. First photo becomes the piece's cover (unless a `cover_media_attachment` is set explicitly). Photos have an optional caption and no independent favourite / reply surface — all interaction lands on the piece's feed card, not per photo.
 - **Visibility** — the reach ladder: `public / orbit / mates / self_only`. No Krew scoping: single-author works don't need the group-coordination shape that made it useful on Albutts. The enum's integer values leave room to add it without a schema change.
 
+## Piece details
+
+A piece can also say what a gallery label would (Kommons "Portfolio style & Art cards showing media on profile", @mangobee, 2026-10-23). All optional, under **Details** in the composer:
+
+- **Medium and materials** — free text, up to 160 characters ("Oil on linen", "Stoneware, celadon glaze").
+- **Size** — width × height × depth, any of them, in `cm` or `in` (`size_unit`).
+- **Year made**, and **Edition** ("Original", "3 of 25", up to 80 characters).
+- **Status** (`availability`) — _Not for sale_ (the default), _Available_, _Sold_, _Commissioned_, _On show_.
+
+The piece page shows them as one line under the title, "Oil on linen · 60 × 90 cm · 2026 · Original", with the status as a chip when it isn't _Not for sale_. A portfolio card reads the medium (or the kind) and year, and wears the status. The labels live once, in `features/art/details.ts`.
+
 ## Where you see Art
 
 - **`/hub/art` directory** — a grid of piece cards (cover + title + kind + photo count). Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator (`header.rotator: true`), URL-driven segments `/hub/art/{mine,mates}`.

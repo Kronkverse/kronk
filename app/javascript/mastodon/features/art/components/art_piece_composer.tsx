@@ -10,7 +10,13 @@ import {
   apiGetPiece,
   apiUpdatePiece,
 } from 'mastodon/api/art';
-import type { ApiArtPieceJSON, ArtKind } from 'mastodon/api_types/art';
+import type {
+  ApiArtPieceJSON,
+  ArtAvailability,
+  ArtKind,
+  ArtPieceDetailsJSON,
+  ArtSizeUnit,
+} from 'mastodon/api_types/art';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { PhotoDropZone } from 'mastodon/components/media';
@@ -20,6 +26,7 @@ import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 
+import { AVAILABILITIES, AVAILABILITY_MESSAGES } from '../details';
 import { ART_KIND_MESSAGES, sortedArtKinds } from '../kinds';
 
 const messages = defineMessages({
@@ -52,6 +59,27 @@ const messages = defineMessages({
     defaultMessage: 'A note about the work (optional)',
   },
   kindLabel: { id: 'art.composer.kind_label', defaultMessage: 'Kind' },
+  details: { id: 'art.composer.details', defaultMessage: 'Details' },
+  medium: {
+    id: 'art.composer.medium',
+    defaultMessage: 'Medium and materials',
+  },
+  mediumPlaceholder: {
+    id: 'art.composer.medium_placeholder',
+    defaultMessage: 'e.g. Oil on linen',
+  },
+  size: { id: 'art.composer.size', defaultMessage: 'Size' },
+  width: { id: 'art.composer.width', defaultMessage: 'Width' },
+  height: { id: 'art.composer.height', defaultMessage: 'Height' },
+  depth: { id: 'art.composer.depth', defaultMessage: 'Depth' },
+  unit: { id: 'art.composer.unit', defaultMessage: 'Unit' },
+  yearMade: { id: 'art.composer.year_made', defaultMessage: 'Year made' },
+  edition: { id: 'art.composer.edition', defaultMessage: 'Edition' },
+  editionPlaceholder: {
+    id: 'art.composer.edition_placeholder',
+    defaultMessage: 'e.g. Original, or 3 of 25',
+  },
+  availability: { id: 'art.composer.availability', defaultMessage: 'Status' },
   photosHint: {
     id: 'art.composer.photos_hint',
     defaultMessage: 'Add photos of the work — the first one becomes the cover.',
@@ -86,7 +114,48 @@ interface ArtPieceDraftParams {
   kind?: ArtKind;
   visibility?: ReachValue;
   konnections?: KonnectTarget[];
+  details?: DetailsForm;
 }
+
+// The details as the form holds them: every field a string, so an empty
+// box stays empty rather than becoming 0.
+interface DetailsForm {
+  medium: string;
+  width: string;
+  height: string;
+  depth: string;
+  size_unit: ArtSizeUnit;
+  year_made: string;
+  edition: string;
+  availability: ArtAvailability;
+}
+
+const detailsFormOf = (piece?: Partial<ArtPieceDetailsJSON>): DetailsForm => ({
+  medium: piece?.medium ?? '',
+  width: piece?.width?.toString() ?? '',
+  height: piece?.height?.toString() ?? '',
+  depth: piece?.depth?.toString() ?? '',
+  size_unit: piece?.size_unit ?? 'cm',
+  year_made: piece?.year_made?.toString() ?? '',
+  edition: piece?.edition ?? '',
+  availability: piece?.availability ?? 'not_for_sale',
+});
+
+const toNumber = (value: string): number | null => {
+  const n = Number.parseFloat(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+const detailsPayload = (form: DetailsForm): ArtPieceDetailsJSON => ({
+  medium: form.medium.trim() || null,
+  width: toNumber(form.width),
+  height: toNumber(form.height),
+  depth: toNumber(form.depth),
+  size_unit: form.size_unit,
+  year_made: toNumber(form.year_made),
+  edition: form.edition.trim() || null,
+  availability: form.availability,
+});
 
 interface Props {
   onCancel: () => void;
@@ -118,6 +187,9 @@ export const ArtPieceComposer: React.FC<Props> = ({
   const [visibility, setVisibility] = useState<ReachValue>(
     editingPiece?.visibility ?? 'public',
   );
+  const [details, setDetails] = useState<DetailsForm>(() =>
+    detailsFormOf(editingPiece),
+  );
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   // Edit mode: the piece's photos, and the ids to take off on save.
   const [saved, setSaved] = useState(editingPiece?.photos ?? []);
@@ -148,6 +220,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       setDescription(p.description ?? '');
       setKind(p.kind ?? 'painting');
       setVisibility(p.visibility ?? 'public');
+      setDetails(p.details ?? detailsFormOf());
       restoreKonnect(p.konnections);
       // Photos picked for another draft don't belong to this one.
       setPhotos((prev) => {
@@ -172,6 +245,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
         kind,
         visibility,
         konnections: konnect.saved,
+        details,
       },
     },
     hasContent: title.trim() !== '' || description.trim() !== '',
@@ -200,6 +274,15 @@ export const ArtPieceComposer: React.FC<Props> = ({
     },
     [],
   );
+  // One handler for every detail field, keyed by the field's name.
+  const handleDetail = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setDetails((was) => ({ ...was, [name]: value }));
+    },
+    [],
+  );
+
   const handleKindChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setKind(e.target.value as ArtKind);
@@ -274,6 +357,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
             title: title.trim(),
             description: description.trim(),
             kind,
+            ...detailsPayload(details),
           });
           for (const id of removedIds) await apiDeletePhoto(id);
           const failed = await uploadPhotos(editingPiece.id, null);
@@ -307,6 +391,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
           description: description.trim() || undefined,
           kind,
           visibility,
+          ...detailsPayload(details),
         });
       } catch (e) {
         setPending(false);
@@ -331,6 +416,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
     canSubmit,
     commitKonnect,
     description,
+    details,
     editingPiece,
     finishDraft,
     intl,
@@ -405,6 +491,97 @@ export const ArtPieceComposer: React.FC<Props> = ({
           maxLength={4000}
           disabled={pending}
         />
+
+        <fieldset className='art-composer__details'>
+          <legend>{intl.formatMessage(messages.details)}</legend>
+
+          <label className='art-composer__detail art-composer__detail--wide'>
+            <span>{intl.formatMessage(messages.medium)}</span>
+            <input
+              type='text'
+              name='medium'
+              value={details.medium}
+              onChange={handleDetail}
+              placeholder={intl.formatMessage(messages.mediumPlaceholder)}
+              maxLength={160}
+              disabled={pending}
+            />
+          </label>
+
+          <div className='art-composer__detail art-composer__detail--wide'>
+            <span>{intl.formatMessage(messages.size)}</span>
+            <div className='art-composer__size'>
+              {(['width', 'height', 'depth'] as const).map((dimension) => (
+                <input
+                  key={dimension}
+                  type='number'
+                  inputMode='decimal'
+                  name={dimension}
+                  value={details[dimension]}
+                  onChange={handleDetail}
+                  min={0}
+                  step='any'
+                  placeholder={intl.formatMessage(messages[dimension])}
+                  aria-label={intl.formatMessage(messages[dimension])}
+                  disabled={pending}
+                />
+              ))}
+              <select
+                name='size_unit'
+                value={details.size_unit}
+                onChange={handleDetail}
+                aria-label={intl.formatMessage(messages.unit)}
+                disabled={pending}
+              >
+                <option value='cm'>cm</option>
+                <option value='in'>in</option>
+              </select>
+            </div>
+          </div>
+
+          <label className='art-composer__detail'>
+            <span>{intl.formatMessage(messages.yearMade)}</span>
+            <input
+              type='number'
+              inputMode='numeric'
+              name='year_made'
+              value={details.year_made}
+              onChange={handleDetail}
+              min={1}
+              max={new Date().getFullYear() + 1}
+              disabled={pending}
+            />
+          </label>
+
+          <label className='art-composer__detail'>
+            <span>{intl.formatMessage(messages.edition)}</span>
+            <input
+              type='text'
+              name='edition'
+              value={details.edition}
+              onChange={handleDetail}
+              placeholder={intl.formatMessage(messages.editionPlaceholder)}
+              maxLength={80}
+              disabled={pending}
+            />
+          </label>
+
+          <label className='art-composer__detail art-composer__detail--wide'>
+            <span>{intl.formatMessage(messages.availability)}</span>
+            <select
+              name='availability'
+              value={details.availability}
+              onChange={handleDetail}
+              disabled={pending}
+            >
+              {AVAILABILITIES.map((value) => (
+                <option key={value} value={value}>
+                  {intl.formatMessage(AVAILABILITY_MESSAGES[value])}
+                </option>
+              ))}
+            </select>
+          </label>
+        </fieldset>
 
         <p className='art-composer__hint'>
           {intl.formatMessage(messages.photosHint)}

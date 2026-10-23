@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -413,16 +413,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_160000) do
   end
 
   create_table "art_pieces", force: :cascade do |t|
+    t.integer "availability", default: 0, null: false
     t.bigint "cover_media_attachment_id"
     t.datetime "created_at", null: false
+    t.decimal "depth", precision: 8, scale: 2
     t.text "description"
+    t.string "edition", limit: 80
     t.integer "featured_position"
+    t.decimal "height", precision: 8, scale: 2
     t.integer "kind", default: 0, null: false
+    t.string "medium", limit: 160
     t.bigint "owner_id", null: false
+    t.string "size_unit", limit: 2, default: "cm", null: false
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
     t.datetime "updated_at", null: false
     t.integer "visibility", default: 0, null: false
+    t.decimal "width", precision: 8, scale: 2
+    t.integer "year_made"
     t.index ["cover_media_attachment_id"], name: "index_art_pieces_on_cover_media_attachment_id"
     t.index ["kind"], name: "index_art_pieces_on_kind"
     t.index ["owner_id"], name: "index_art_pieces_on_owner_id"

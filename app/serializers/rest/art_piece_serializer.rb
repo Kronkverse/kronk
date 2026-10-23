@@ -5,6 +5,8 @@
 # in REST::ArtPieceSummarySerializer.
 class REST::ArtPieceSerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :kind, :visibility, :photo_count, :created_at
+  # Piece details (docs/spaces/art.md).
+  attributes :medium, :width, :height, :depth, :size_unit, :year_made, :edition, :availability
 
   attribute :cover_url
   attribute :is_owner
@@ -33,6 +35,11 @@ class REST::ArtPieceSerializer < ActiveModel::Serializer
     return false unless current_user&.account_id
 
     object.owner_id == current_user.account_id
+  end
+
+  # Sizes go out as numbers, not decimal strings.
+  %i(width height depth).each do |dimension|
+    define_method(dimension) { object.public_send(dimension)&.to_f }
   end
 
   def created_at

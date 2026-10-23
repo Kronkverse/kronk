@@ -76,6 +76,31 @@
     background: none;
   }
 
+  // The gallery label under the title: medium · size · year · edition,
+  // and the status as a chip.
+  &__facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin: 0 0 var(--sp-3, 12px);
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  &__status {
+    padding: 2px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    color: var(--text-secondary);
+    font-size: 12px;
+
+    &--available {
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+  }
+
   &__cover {
     display: block;
     width: 100%;
@@ -390,4 +415,61 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+// A piece's details in the composer: medium and size across the form,
+// year and edition side by side, then the status.
+.art-composer__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+
+  legend {
+    padding: 0 4px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  input,
+  select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 6px 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    background: var(--surface-variant-background-color);
+    border: 1px solid transparent;
+    border-radius: var(--radius-small);
+
+    &:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+}
+
+.art-composer__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+// Width × height × depth and the unit, in one row that fits a phone.
+.art-composer__size {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 4rem);
+  gap: 6px;
 }

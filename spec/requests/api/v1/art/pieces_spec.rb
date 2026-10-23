@@ -16,5 +16,26 @@ RSpec.describe 'Art pieces' do
       expect(response.parsed_body[:kind]).to eq 'textile'
       expect(ArtPiece.last).to be_textile_kind
     end
+
+    # docs/spaces/art.md, Piece details.
+    it 'keeps what the piece is made of, its size, year, edition and status', :aggregate_failures do
+      post '/api/v1/art/pieces', headers: headers, params: { art_piece: {
+        title: 'Coastline at dusk', kind: 'painting', visibility: 'public',
+        medium: 'Oil on linen', width: '60', height: '90', depth: '', size_unit: 'cm',
+        year_made: '2026', edition: 'Original', availability: 'available'
+      } }
+
+      expect(response).to have_http_status(201)
+      expect(response.parsed_body).to include(
+        'medium' => 'Oil on linen', 'width' => 60.0, 'height' => 90.0, 'depth' => nil,
+        'size_unit' => 'cm', 'year_made' => 2026, 'edition' => 'Original', 'availability' => 'available'
+      )
+    end
+
+    it 'refuses a size unit it does not know' do
+      post '/api/v1/art/pieces', headers: headers, params: { art_piece: { title: 'Pot', kind: 'ceramic', visibility: 'public', size_unit: 'ft' } }
+
+      expect(response).to have_http_status(422)
+    end
   end
 end

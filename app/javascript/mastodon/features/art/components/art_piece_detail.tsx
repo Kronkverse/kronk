@@ -12,6 +12,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
+import { availabilityLabel, pieceFacts } from '../details';
 import { artKindLabel } from '../kinds';
 
 import { ArtPieceComposer } from './art_piece_composer';
@@ -147,6 +148,22 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
       attached={{ korner: 'art', id: piece.id, canManage: piece.is_owner }}
     >
       {confirmDialog}
+
+      {/* The gallery label: medium · size · year · edition, then the
+          status when it's anything but "not for sale". */}
+      {(pieceFacts(intl, piece).length > 0 ||
+        availabilityLabel(intl, piece.availability)) && (
+        <p className='art-piece-detail__facts'>
+          {pieceFacts(intl, piece).join(' · ')}
+          {availabilityLabel(intl, piece.availability) && (
+            <span
+              className={`art-piece-detail__status art-piece-detail__status--${piece.availability}`}
+            >
+              {availabilityLabel(intl, piece.availability)}
+            </span>
+          )}
+        </p>
+      )}
 
       {!heroUrl && (
         <p className='art-piece-detail__empty'>
