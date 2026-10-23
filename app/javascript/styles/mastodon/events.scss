@@ -2349,27 +2349,11 @@ $ev-interested-color: #b8945f;
   }
 }
 
-// Kalendar event composer — the `<ComposeShell>` body form (see
-// features/kalendar/event_composer.tsx). Mirrors the `.krew-composer`
-// treatment (grouped fieldsets + labelled fields on the shell's dark
-// surface) so the two composers read as one family.
-// Who will see the event, when it is for a Krew alone (reach "Me" with
-// Krews ticked). Said in words because the reach button alone reads "Me".
-.event-composer__audience {
-  margin: 0 0 0.9rem;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-medium);
-  background: var(--surface-elevated);
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-}
-
+// Kalendar event composer (features/kalendar/event_composer.tsx). Its
+// fields come from the composer kit (_compose_fields.scss); what is here is
+// the event's own: the cover picker, the date and time pickers' tint, the
+// pin-on-map row and the invitee picker.
 .event-composer {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-
   // Cover-image picker — first block in the composer. When empty,
   // shows a dashed-outline drop target (click to pick a file). When
   // populated, shows the preview thumbnail at 16:9 with an ×-remove
@@ -2482,176 +2466,45 @@ $ev-interested-color: #b8945f;
     }
   }
 
-  &__field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+  // Kronk-tint the native date + time inputs' calendar / clock
+  // picker glyph (Chromium — the small icon at the right edge).
+  // `color-scheme: dark` tells the browser to render the popup in
+  // its dark palette; the icon is a mask, so `filter` recolours it
+  // to the Kronk purple bright. `accent-color` tints the calendar
+  // grid's today/selected highlights when the popup opens. Firefox
+  // ignores the pseudo but honours `color-scheme` + `accent-color`
+  // (Tal 2026-08-14: "both the time and the date should be in
+  // kronk colours").
+  &__when-input[type='date'],
+  &__when-input[type='time'] {
+    color-scheme: dark;
+    accent-color: var(--kronk-purple-accent);
 
-    &--half {
-      flex: 1 1 0;
-      min-width: 0;
-    }
-  }
-
-  &__field-label {
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
-
-  &__field-hint {
-    color: var(--text-muted, var(--secondary-text-color));
-    font-size: 0.75rem;
-    line-height: 1.4;
-  }
-
-  &__input {
-    width: 100%;
-    padding: 0.55rem 0.75rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: var(--surface-primary);
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 0.95rem;
-    transition: border-color var(--dur-fast) var(--ease-out);
-
-    &:focus {
-      outline: none;
-      border-color: var(--kronk-purple-accent);
-      box-shadow: 0 0 0 3px
-        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
-    }
-
-    // Kronk-tint the native date + time inputs' calendar / clock
-    // picker glyph (Chromium — the small icon at the right edge).
-    // `color-scheme: dark` tells the browser to render the popup in
-    // its dark palette; the icon is a mask, so `filter` recolours it
-    // to the Kronk purple bright. `accent-color` tints the calendar
-    // grid's today/selected highlights when the popup opens. Firefox
-    // ignores the pseudo but honours `color-scheme` + `accent-color`
-    // (Tal 2026-08-14: "both the time and the date should be in
-    // kronk colours").
-    &[type='date'],
-    &[type='time'] {
-      color-scheme: dark;
-      accent-color: var(--kronk-purple-accent);
+    // The light theme gets the light picker; its dark icon needs no tint.
+    :root[data-theme='light'] & {
+      color-scheme: light;
 
       &::-webkit-calendar-picker-indicator {
-        // Base icon is white; tint toward Kronk-purple-bright.
-        filter: invert(65%) sepia(65%) saturate(600%) hue-rotate(220deg)
-          brightness(105%);
-        cursor: pointer;
-        opacity: 0.85;
-
-        &:hover {
-          opacity: 1;
-        }
+        filter: none;
       }
     }
-  }
 
-  &__fieldset {
-    padding: 1rem 1.25rem 1.25rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: var(--surface-elevated);
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
+    &::-webkit-calendar-picker-indicator {
+      // Base icon is white; tint toward Kronk-purple-bright.
+      filter: invert(65%) sepia(65%) saturate(600%) hue-rotate(220deg)
+        brightness(105%);
+      cursor: pointer;
+      opacity: 0.85;
 
-  &__legend {
-    padding: 0 0.4rem;
-    color: var(--kronk-purple-bright);
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  &__row {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  // Date + time paired inputs sit side-by-side on the same row so a
-  // "Starts" / "Ends" field reads as one control instead of two.
-  &__datetime {
-    display: flex;
-    gap: 0.5rem;
-
-    > .event-composer__input {
-      flex: 1 1 auto;
-      min-width: 0;
+      &:hover {
+        opacity: 1;
+      }
     }
-  }
-
-  &__radio-row {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  &__radio {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    background: var(--surface-elevated);
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    cursor: pointer;
-
-    &:hover {
-      border-color: var(--kronk-purple-accent);
-      color: var(--text-primary);
-    }
-  }
-
-  &__checkbox {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-  }
-
-  // Toggle block — a checkbox + label + hint arranged vertically so
-  // the "why would I turn this on?" line reads under the switch.
-  // Used for the invite-only toggle; the RSVP toggle stays on the
-  // simpler inline `&__checkbox` shape since it's self-explanatory.
-  &__toggle-block {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  &__toggle-row {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-secondary);
-  }
-
-  &__toggle-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-primary);
   }
 
   // Invitee picker — search + result rows + selected chips. Chip
   // pattern reuses the muted-purple treatment from other Kronk
   // pickers; sizing tighter so several stack cleanly.
-  &__invitees {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-
   &__invitee-chips {
     display: flex;
     flex-wrap: wrap;
@@ -2774,35 +2627,6 @@ $ev-interested-color: #b8945f;
     }
   }
 
-  &__error {
-    margin: 0;
-    padding: 0.6rem 0.85rem;
-    border-radius: var(--radius-medium);
-    background: color-mix(in oklab, $ev-live-color 15%, transparent);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-  }
-
-  // Submit-blocker hint — the "why is Post it greyed out?" answer.
-  // Muted but clearly non-error (no red background). Sits at the
-  // bottom of the composer body next to the error slot so the user
-  // sees it whether they're scrolled to the top or bottom of the
-  // form. Aligned right so it reads as "attached to the submit
-  // button in the shell footer above/below it."
-  &__submit-hint {
-    margin: 0;
-    padding: 0.5rem 0.85rem;
-    border-radius: var(--radius-medium);
-    background: color-mix(
-      in oklab,
-      var(--kronk-purple-accent) 10%,
-      transparent
-    );
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    text-align: right;
-  }
-
   // Pin-on-map row — sits under the map-link input field. Small
   // secondary button that opens `<MapPinPicker>`; once a pin is set,
   // a muted "Pinned at LAT, LNG" readout appears next to a Clear
@@ -2812,7 +2636,6 @@ $ev-interested-color: #b8945f;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 0.3rem;
   }
 
   &__pin-btn {
@@ -2858,12 +2681,6 @@ $ev-interested-color: #b8945f;
     &:hover {
       color: var(--text-primary);
     }
-  }
-
-  // Composer-scoped MapPinPreview — small top margin so the
-  // thumbnail floats below the pin coords/clear row.
-  &__pin-preview {
-    margin-top: 0.5rem;
   }
 }
 

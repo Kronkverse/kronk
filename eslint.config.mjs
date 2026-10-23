@@ -229,7 +229,7 @@ const kitSelectors = [
 // (components/compose_fields.tsx; Korner Standard L13). Take a file off this
 // list in the PR that moves it. Do not add to it.
 const composeBurnDown = [
-  'app/javascript/mastodon/features/kalendar/event_composer.tsx',
+  // Empty since 2026-10-23: every composer is on the kit.
 ];
 
 // Every composer: what a korner's Ж-menu "New …", or editing a record,
