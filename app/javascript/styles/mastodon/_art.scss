@@ -399,8 +399,17 @@
     opacity: 0.75;
   }
 
+  // Every preview the same square, so the grid sits even; each artwork is
+  // fitted whole inside its square (never cropped) on a quiet ground
+  // (@mangobee, 2026-10-23: balanced and equal).
   &__works {
     margin-bottom: var(--sp-5, 24px);
+
+    .standard-card__media img {
+      padding: 6px;
+      box-sizing: border-box;
+      object-fit: contain;
+    }
   }
 
   // Commissions close the page.
