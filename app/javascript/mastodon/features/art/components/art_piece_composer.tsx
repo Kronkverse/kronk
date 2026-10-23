@@ -68,10 +68,9 @@ const messages = defineMessages({
     id: 'art.composer.medium_placeholder',
     defaultMessage: 'e.g. Oil on linen',
   },
-  size: { id: 'art.composer.size', defaultMessage: 'Size' },
+  size: { id: 'art.composer.size', defaultMessage: 'Add size' },
   width: { id: 'art.composer.width', defaultMessage: 'Width' },
   height: { id: 'art.composer.height', defaultMessage: 'Height' },
-  depth: { id: 'art.composer.depth', defaultMessage: 'Depth' },
   unit: { id: 'art.composer.unit', defaultMessage: 'Unit' },
   yearMade: { id: 'art.composer.year_made', defaultMessage: 'Year made' },
   edition: { id: 'art.composer.edition', defaultMessage: 'Edition' },
@@ -121,9 +120,10 @@ interface ArtPieceDraftParams {
 // box stays empty rather than becoming 0.
 interface DetailsForm {
   medium: string;
+  // Size is optional twice over: the switch says whether the piece has one.
+  sized: boolean;
   width: string;
   height: string;
-  depth: string;
   size_unit: ArtSizeUnit;
   year_made: string;
   edition: string;
@@ -132,9 +132,9 @@ interface DetailsForm {
 
 const detailsFormOf = (piece?: Partial<ArtPieceDetailsJSON>): DetailsForm => ({
   medium: piece?.medium ?? '',
+  sized: Boolean(piece?.width ?? piece?.height),
   width: piece?.width?.toString() ?? '',
   height: piece?.height?.toString() ?? '',
-  depth: piece?.depth?.toString() ?? '',
   size_unit: piece?.size_unit ?? 'cm',
   year_made: piece?.year_made?.toString() ?? '',
   edition: piece?.edition ?? '',
@@ -148,9 +148,11 @@ const toNumber = (value: string): number | null => {
 
 const detailsPayload = (form: DetailsForm): ArtPieceDetailsJSON => ({
   medium: form.medium.trim() || null,
-  width: toNumber(form.width),
-  height: toNumber(form.height),
-  depth: toNumber(form.depth),
+  // A piece shows width × height; depth isn't asked for (@mangobee,
+  // 2026-10-23), so saving clears any.
+  width: form.sized ? toNumber(form.width) : null,
+  height: form.sized ? toNumber(form.height) : null,
+  depth: null,
   size_unit: form.size_unit,
   year_made: toNumber(form.year_made),
   edition: form.edition.trim() || null,
@@ -282,6 +284,15 @@ export const ArtPieceComposer: React.FC<Props> = ({
     },
     [],
   );
+
+  const handleSized = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const sized = e.target.checked;
+    setDetails((was) => ({ ...was, sized }));
+  }, []);
+  const handleUnit = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const unit = e.currentTarget.value as ArtSizeUnit;
+    setDetails((was) => ({ ...was, size_unit: unit }));
+  }, []);
 
   const handleKindChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -509,34 +520,54 @@ export const ArtPieceComposer: React.FC<Props> = ({
           </label>
 
           <div className='art-composer__detail art-composer__detail--wide'>
-            <span>{intl.formatMessage(messages.size)}</span>
-            <div className='art-composer__size'>
-              {(['width', 'height', 'depth'] as const).map((dimension) => (
-                <input
-                  key={dimension}
-                  type='number'
-                  inputMode='decimal'
-                  name={dimension}
-                  value={details[dimension]}
-                  onChange={handleDetail}
-                  min={0}
-                  step='any'
-                  placeholder={intl.formatMessage(messages[dimension])}
-                  aria-label={intl.formatMessage(messages[dimension])}
-                  disabled={pending}
-                />
-              ))}
-              <select
-                name='size_unit'
-                value={details.size_unit}
-                onChange={handleDetail}
-                aria-label={intl.formatMessage(messages.unit)}
+            <label className='art-composer__switch'>
+              <input
+                type='checkbox'
+                role='switch'
+                checked={details.sized}
+                onChange={handleSized}
                 disabled={pending}
-              >
-                <option value='cm'>cm</option>
-                <option value='in'>in</option>
-              </select>
-            </div>
+              />
+              <span>{intl.formatMessage(messages.size)}</span>
+            </label>
+            {details.sized && (
+              <div className='art-composer__size'>
+                {(['width', 'height'] as const).map((dimension) => (
+                  <input
+                    key={dimension}
+                    type='number'
+                    inputMode='decimal'
+                    name={dimension}
+                    value={details[dimension]}
+                    onChange={handleDetail}
+                    min={0}
+                    step='any'
+                    placeholder={intl.formatMessage(messages[dimension])}
+                    aria-label={intl.formatMessage(messages[dimension])}
+                    disabled={pending}
+                  />
+                ))}
+                <div
+                  className='art-composer__unit'
+                  role='group'
+                  aria-label={intl.formatMessage(messages.unit)}
+                >
+                  {(['cm', 'in'] as const).map((unit) => (
+                    <button
+                      key={unit}
+                      type='button'
+                      value={unit}
+                      onClick={handleUnit}
+                      aria-pressed={details.size_unit === unit}
+                      className={`art-composer__unit-option${details.size_unit === unit ? ' art-composer__unit-option--on' : ''}`}
+                      disabled={pending}
+                    >
+                      {unit}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <label className='art-composer__detail'>

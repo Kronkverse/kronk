@@ -52,6 +52,25 @@ const messages = defineMessages({
     id: 'art.portfolio.empty',
     defaultMessage: 'No pieces to show yet.',
   },
+  allMediums: { id: 'art.portfolio.all_mediums', defaultMessage: 'All' },
+  mediumsLabel: {
+    id: 'art.portfolio.mediums_label',
+    defaultMessage: 'Mediums',
+  },
+  setUpTitle: {
+    id: 'art.portfolio.set_up_title',
+    defaultMessage: 'Set up your portfolio',
+  },
+  setUpBody: {
+    id: 'art.portfolio.set_up_body',
+    defaultMessage:
+      'Four quick steps: the mediums you work in, a line about your practice, the pieces to lead with, and whether you take commissions. Skip any of them.',
+  },
+  setUpStart: { id: 'art.portfolio.set_up_start', defaultMessage: 'Start' },
+  noneInMedium: {
+    id: 'art.portfolio.none_in_medium',
+    defaultMessage: 'No pieces in {medium} yet.',
+  },
   edit: {
     id: 'art.page_action.edit_portfolio',
     defaultMessage: 'Edit portfolio',
@@ -66,12 +85,22 @@ interface Props {
 export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
   const intl = useIntl();
   const history = useHistory();
-  const [editing, setEditing] = useState(false);
+  // false, or how the editor opens: every section at once, or step by step
+  // (the first-time set-up).
+  const [editing, setEditing] = useState<false | 'all' | 'guided'>(false);
+  const [medium, setMedium] = useState<string | null>(null);
   const { account } = portfolio;
   const name = account.display_name.trim() || account.username;
 
   const startEdit = useCallback(() => {
-    setEditing(true);
+    setEditing('all');
+  }, []);
+  const startSetUp = useCallback(() => {
+    setEditing('guided');
+  }, []);
+  const pickMedium = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const value = e.currentTarget.value;
+    setMedium(value === '' ? null : value);
   }, []);
   const stopEdit = useCallback(() => {
     setEditing(false);
@@ -98,10 +127,28 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
     history.push(`/nudges/with/${account.id}`);
   }, [history, account.id]);
 
+  // A medium chip narrows the works to pieces whose medium (or kind) names
+  // it: "Ceramics" finds "Stoneware ceramics" and anything of the Ceramic
+  // kind.
+  const inMedium = (piece: ApiArtPieceJSON) => {
+    if (!medium) return true;
+    const wanted = medium.toLowerCase();
+    const said =
+      `${piece.medium ?? ''} ${artKindLabel(intl, piece.kind)}`.toLowerCase();
+    return (
+      said.includes(wanted) ||
+      wanted.includes(artKindLabel(intl, piece.kind).toLowerCase())
+    );
+  };
+
   const featuredIds = new Set(portfolio.featured.map((piece) => piece.id));
-  const rest = portfolio.pieces.filter((piece) => !featuredIds.has(piece.id));
-  const total = new Set([...featuredIds, ...rest.map((piece) => piece.id)])
+  const allRest = portfolio.pieces.filter(
+    (piece) => !featuredIds.has(piece.id),
+  );
+  const total = new Set([...featuredIds, ...allRest.map((piece) => piece.id)])
     .size;
+  const featured = portfolio.featured.filter(inMedium);
+  const rest = allRest.filter(inMedium);
 
   const card = (piece: ApiArtPieceJSON) => (
     <SpaceCard
@@ -125,9 +172,6 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
   return (
     <KornerDetail
       className='art-portfolio'
-      hero={
-        <img className='art-portfolio__avatar' src={account.avatar} alt='' />
-      }
       title={name}
       subtitle={intl.formatMessage(messages.subtitle)}
       meta={
@@ -157,30 +201,82 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
         ) : undefined
       }
     >
+      {portfolio.is_owner && !portfolio.set_up && !editing && (
+        <section className='art-portfolio__set-up'>
+          <h2 className='art-portfolio__heading'>
+            {intl.formatMessage(messages.setUpTitle)}
+          </h2>
+          <p>{intl.formatMessage(messages.setUpBody)}</p>
+          <KornerActionBar>
+            <KornerPill
+              label={intl.formatMessage(messages.setUpStart)}
+              variant='primary'
+              onClick={startSetUp}
+            />
+          </KornerActionBar>
+        </section>
+      )}
+
+      {portfolio.mediums.length > 0 && (
+        <div
+          className='art-portfolio__mediums'
+          role='group'
+          aria-label={intl.formatMessage(messages.mediumsLabel)}
+        >
+          <button
+            type='button'
+            value=''
+            onClick={pickMedium}
+            aria-pressed={medium === null}
+            className={`art-portfolio__medium${medium === null ? ' art-portfolio__medium--on' : ''}`}
+          >
+            {intl.formatMessage(messages.allMediums)}
+          </button>
+          {portfolio.mediums.map((name) => (
+            <button
+              key={name}
+              type='button'
+              value={name}
+              onClick={pickMedium}
+              aria-pressed={medium === name}
+              className={`art-portfolio__medium${medium === name ? ' art-portfolio__medium--on' : ''}`}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {portfolio.statement && (
         <p className='art-portfolio__statement'>{portfolio.statement}</p>
       )}
 
-      {portfolio.featured.length > 0 && (
+      {featured.length > 0 && (
         <section className='art-portfolio__section art-portfolio__section--featured'>
           <h2 className='art-portfolio__heading'>
             {intl.formatMessage(messages.featured)}
           </h2>
           <SpaceGrid className='art-portfolio__featured'>
-            {portfolio.featured.map(card)}
+            {featured.map(card)}
           </SpaceGrid>
         </section>
       )}
 
       {rest.length > 0 && (
         <section className='art-portfolio__section'>
-          {portfolio.featured.length > 0 && (
+          {featured.length > 0 && (
             <h2 className='art-portfolio__heading'>
               {intl.formatMessage(messages.allWorks)}
             </h2>
           )}
           <SpaceGrid>{rest.map(card)}</SpaceGrid>
         </section>
+      )}
+
+      {medium && total > 0 && featured.length + rest.length === 0 && (
+        <EmptyState
+          title={intl.formatMessage(messages.noneInMedium, { medium })}
+        />
       )}
 
       {total === 0 && (
@@ -193,6 +289,7 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
 
       {editing && (
         <ArtPortfolioEditor
+          guided={editing === 'guided'}
           portfolio={portfolio}
           onCancel={stopEdit}
           onSaved={saved}

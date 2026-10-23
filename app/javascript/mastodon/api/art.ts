@@ -80,4 +80,5 @@ export const apiUpdatePortfolio = (params: {
   statement?: string;
   open_for_commissions?: boolean;
   featured_ids?: string[];
+  mediums?: string[];
 }) => apiRequestPut<ApiArtPortfolioJSON>('v1/art/portfolio', params);

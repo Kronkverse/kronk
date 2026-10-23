@@ -91,6 +91,10 @@ export interface ApiArtPortfolioJSON {
   is_owner: boolean;
   statement: string | null;
   open_for_commissions: boolean;
+  // The mediums they work in, as chips under their name.
+  mediums: string[];
+  // Whether they've saved a portfolio yet (until then, the set-up).
+  set_up: boolean;
   featured: ApiArtPieceJSON[];
   pieces: ApiArtPieceJSON[];
 }

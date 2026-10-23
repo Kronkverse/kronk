@@ -23,7 +23,7 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 A piece can also say what a gallery label would (Kommons "Portfolio style & Art cards showing media on profile", @mangobee, 2026-10-23). All optional, under **Details** in the composer:
 
 - **Medium and materials** — free text, up to 160 characters ("Oil on linen", "Stoneware, celadon glaze").
-- **Size** — width × height × depth, any of them, in `cm` or `in` (`size_unit`).
+- **Size** — behind an **Add size** switch: width × height, with a `cm` | `in` toggle (`size_unit`). Depth isn't asked for (@mangobee, 2026-10-23); saving a piece clears any.
 - **Year made**, and **Edition** ("Original", "3 of 25", up to 80 characters).
 - **Status** (`availability`) — _Not for sale_ (the default), _Available_, _Sold_, _Commissioned_, _On show_.
 
@@ -38,14 +38,17 @@ The piece page shows them as one line under the title, "Oil on linen · 60 × 90
 
 ## Portfolio
 
-Every artist has a portfolio at **`/hub/art/@:acct`** (Kommons "Portfolio style & Art cards showing media on profile", @mangobee, 2026-10-23). It is `<KornerDetail>`: their avatar, name, _Portfolio_, and a facts line (N pieces · **Open for commissions** when it is on · @acct, linking to the profile). Under it:
+Every artist has a portfolio at **`/hub/art/@:acct`** (Kommons "Portfolio style & Art cards showing media on profile", @mangobee, 2026-10-23). It is `<KornerDetail>` with no picture at its head (@mangobee, 2026-10-23: the avatar there read as a cover photo): their name, _Portfolio_, and a facts line (N pieces · **Open for commissions** when it is on · @acct, linking to the profile). Under it:
 
+- **Mediums** — the ones they work in, as chips (up to 12, each up to 40 characters; `art_portfolios.mediums`). Tapping one narrows the works to pieces whose medium or kind names it; **All** clears it.
 - **Artist statement** — up to 2000 characters, as written.
 - **Featured** — up to three pieces the artist leads with, two across and larger, in the order they picked.
 - **All works** — every other piece that reaches the viewer, newest first, as a `<SpaceGrid>` of `<SpaceCard>`s.
 - **Ask about a commission** — a primary pill, shown to others when the artist is open for commissions. It opens a Nudges conversation with them (`/nudges/with/:id`); nothing about how to reach them is published.
 
-The artist edits it from the Ж menu, **Edit portfolio** (`art_portfolio_editor.tsx`, in the compose shell): the statement, the commissions tick, and the featured pieces, ticked from their own (the order they're ticked is the order they show).
+The artist edits it from the Ж menu, **Edit portfolio** (`art_portfolio_editor.tsx`, in the compose shell): their mediums (tapped from a list of common ones or typed), the statement, the featured pieces, ticked from their own (the order they're ticked is the order they show), and the commissions switch.
+
+**Setting it up.** Until an artist has saved a portfolio (`set_up` in the API), their own portfolio opens with a **Set up your portfolio** card. **Start** walks them through the same four sections one at a time (mediums, statement, featured pieces, commissions) with Back and Next; any step can be left empty.
 
 Ways in: the **Mine** face (_Your portfolio_), the owner's @name on a piece page, and **Portfolio** in the header of a profile's Art shelf.
 

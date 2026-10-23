@@ -301,13 +301,51 @@
 // An artist's portfolio (docs/spaces/art.md, Portfolio). The page is
 // <KornerDetail>; this is only what sits inside it.
 .art-portfolio {
-  &__avatar {
-    display: block;
-    width: 96px;
-    height: 96px;
-    margin: 0 auto;
+  // The first-time set-up card on your own portfolio.
+  &__set-up {
+    margin: 0 0 var(--sp-4, 16px);
+    padding: var(--sp-3, 12px) var(--sp-4, 16px);
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius-medium);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+
+    p {
+      margin: 0 0 var(--sp-2, 8px);
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+
+  // Mediums under the name; tapping one narrows the works to it.
+  &__mediums {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 var(--sp-3, 12px);
+  }
+
+  &__medium {
+    padding: 4px 12px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    background: none;
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-round);
-    object-fit: cover;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    &--on {
+      color: var(--semantic-text-on-accent);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
   }
 
   &__statement {
@@ -338,6 +376,110 @@
 }
 
 .art-portfolio-editor {
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__previous {
+    align-self: flex-start;
+    padding: 0;
+    color: var(--accent-text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  &__chosen,
+  &__suggested {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px 4px 12px;
+    color: var(--semantic-text-on-accent);
+    font-size: 13px;
+    background: var(--accent);
+    border-radius: var(--radius-round);
+
+    button {
+      padding: 0 4px;
+      color: inherit;
+      font-size: 15px;
+      line-height: 1;
+      background: none;
+      border: 0;
+      cursor: pointer;
+    }
+  }
+
+  &__suggestion {
+    padding: 4px 10px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    background: none;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-round);
+    cursor: pointer;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      color: var(--text-primary);
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  &__own {
+    display: flex;
+    gap: 6px;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 10px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      background: var(--surface-variant-background-color);
+      border: 1px solid transparent;
+      border-radius: var(--radius-small);
+
+      &:focus {
+        border-color: var(--accent);
+        outline: none;
+      }
+    }
+
+    button {
+      padding: 6px 14px;
+      color: var(--accent-text);
+      font-family: var(--font-body);
+      font-size: 13px;
+      background: none;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-round);
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+    }
+  }
+
   &__label {
     display: flex;
     flex-direction: column;
@@ -467,9 +609,48 @@
   }
 }
 
-// Width × height × depth and the unit, in one row that fits a phone.
+// "Add size": a switch, then width × height and a cm | in toggle, in one
+// row that fits a phone.
+.art-composer__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+
+  input {
+    width: auto;
+    accent-color: var(--accent);
+  }
+}
+
 .art-composer__size {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 4rem);
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
   gap: 6px;
+  margin-top: 6px;
+}
+
+.art-composer__unit {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+}
+
+.art-composer__unit-option {
+  padding: 4px 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+
+  &--on {
+    color: var(--semantic-text-on-accent);
+    background: var(--accent);
+  }
 }
