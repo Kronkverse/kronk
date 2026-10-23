@@ -6,6 +6,15 @@ import axios from 'axios';
 
 import api from 'mastodon/api';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSection,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { MapPinPicker } from 'mastodon/components/map_pin_picker';
 import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
@@ -847,376 +856,337 @@ export const EventComposer: React.FC<Props> = ({
       draft={draft}
       konnect={konnect}
     >
-      <div className='event-composer'>
-        {reach === 'self_only' && (
-          <p className='event-composer__audience'>
-            {krewNames.length > 0 ? (
-              <FormattedMessage
-                id='kalendar.composer.audience.krews'
-                defaultMessage='Only members of {krews} will see this event.'
-                values={{
-                  krews: intl.formatList(krewNames, { type: 'conjunction' }),
-                }}
-              />
-            ) : (
-              <FormattedMessage
-                id='kalendar.composer.audience.nobody'
-                defaultMessage='Only you will see this event. Tick a Krew in the reach menu to make it theirs.'
-              />
-            )}
-          </p>
-        )}
-        <div className='event-composer__cover'>
-          {imagePreviewUrl ? (
-            <div className='event-composer__cover-preview'>
-              <img
-                src={imagePreviewUrl}
-                alt=''
-                className='event-composer__cover-image'
-              />
-              {imageUploading && (
-                <span className='event-composer__cover-badge'>
-                  <FormattedMessage {...messages.uploadingCover} />
-                </span>
-              )}
-              <button
-                type='button'
-                className='event-composer__cover-remove'
-                onClick={onImageRemove}
-                aria-label={intl.formatMessage(messages.removeCover)}
-              >
-                ×
-              </button>
-            </div>
-          ) : (
-            <>
-              <button
-                type='button'
-                className='event-composer__cover-add'
-                onClick={onCoverAddClick}
-              >
-                <span>
-                  <FormattedMessage {...messages.addCover} />
-                </span>
-                <small>
-                  <FormattedMessage {...messages.cover} />
-                </small>
-              </button>
-              <input
-                ref={coverInputRef}
-                type='file'
-                accept='image/*'
-                onChange={onImageChange}
-                className='event-composer__cover-input'
-              />
-            </>
-          )}
-          {imageError && (
-            <p className='event-composer__error' role='alert'>
-              <FormattedMessage
-                {...messages.coverUploadFailed}
-                values={{ error: imageError }}
-              />
-            </p>
-          )}
-        </div>
-
-        <label className='event-composer__field'>
-          <span className='event-composer__field-label'>
-            {intl.formatMessage(messages.eventTitle)}
-          </span>
-          <input
-            type='text'
-            value={title}
-            onChange={onTitle}
-            placeholder={intl.formatMessage(messages.eventTitlePlaceholder)}
-            required
-            className='event-composer__input'
-          />
-        </label>
-
-        <label className='event-composer__field'>
-          <span className='event-composer__field-label'>
-            {intl.formatMessage(messages.description)}
-          </span>
-          <textarea
-            value={description}
-            onChange={onDescription}
-            placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-            rows={3}
-            className='event-composer__input'
-          />
-        </label>
-
-        <fieldset className='event-composer__fieldset'>
-          <legend className='event-composer__legend'>
-            {intl.formatMessage(messages.when)}
-          </legend>
-          <div className='event-composer__row'>
-            <span className='event-composer__field event-composer__field--half'>
-              <span className='event-composer__field-label'>
-                {intl.formatMessage(messages.starts)}
-              </span>
-              <div className='event-composer__datetime'>
-                <input
-                  type='date'
-                  aria-label={intl.formatMessage(messages.startDate)}
-                  value={startDate}
-                  onChange={onStartDate}
-                  onClick={openPickerOnClick}
-                  required
-                  className='event-composer__input'
-                />
-                <input
-                  type='time'
-                  aria-label={intl.formatMessage(messages.startTime)}
-                  value={startTime}
-                  onChange={onStartTime}
-                  onClick={openPickerOnClick}
-                  required
-                  step={SNAP_MINUTES * 60}
-                  className='event-composer__input'
-                />
-              </div>
-            </span>
-            <span className='event-composer__field event-composer__field--half'>
-              <span className='event-composer__field-label'>
-                {intl.formatMessage(messages.ends)}
-              </span>
-              <div className='event-composer__datetime'>
-                <input
-                  type='date'
-                  aria-label={intl.formatMessage(messages.endDate)}
-                  value={endDate}
-                  onChange={onEndDate}
-                  onClick={openPickerOnClick}
-                  // Constrain end ≥ start (Tal 2026-08-14: "make it
-                  // impossible to select an end date before the start
-                  // date"). The `min` attribute greys out earlier
-                  // dates in the native picker + blocks form
-                  // submission via `checkValidity` — no separate
-                  // client-side validator needed.
-                  min={startDate || undefined}
-                  className='event-composer__input'
-                />
-                <input
-                  type='time'
-                  aria-label={intl.formatMessage(messages.endTime)}
-                  value={endTime}
-                  onChange={onEndTime}
-                  onClick={openPickerOnClick}
-                  step={SNAP_MINUTES * 60}
-                  // Same-day event: end time can't be before start
-                  // time. Only apply the min when the dates match —
-                  // otherwise a next-day end at 08:00 would be
-                  // blocked by a start of 19:00.
-                  min={endDate && endDate === startDate ? startTime : undefined}
-                  className='event-composer__input'
-                />
-              </div>
-            </span>
-          </div>
-        </fieldset>
-
-        {/* Kind (event / huddle) and its `{eventType === 'event' &&}`
-            gate on Where retired 2026-08-17. Huddles are now spawned
-            via the Konnect-a-korner picker (Huddle korner
-            attachment), so this composer only creates in-person
-            events; the address block is always relevant. RSVP is on
-            by default (DB default) and the "Invite-only" toggle
-            retired alongside — audience is a scope-picker decision. */}
-        <fieldset className='event-composer__fieldset'>
-          <legend className='event-composer__legend'>
-            {intl.formatMessage(messages.where)}
-          </legend>
-          <label className='event-composer__field'>
-            <span className='event-composer__field-label'>
-              {intl.formatMessage(messages.address)}
-            </span>
-            <input
-              type='text'
-              value={locationName}
-              onChange={onLocationName}
-              placeholder={intl.formatMessage(messages.addressPlaceholder)}
-              className='event-composer__input'
-            />
-          </label>
-          <label className='event-composer__field'>
-            <span className='event-composer__field-label'>
-              {intl.formatMessage(messages.mapLink)}
-            </span>
-            <input
-              type='url'
-              value={locationUrl}
-              onChange={onLocationUrl}
-              placeholder={intl.formatMessage(messages.mapLinkPlaceholder)}
-              className='event-composer__input'
-            />
-            <small className='event-composer__field-hint'>
-              {intl.formatMessage(messages.mapLinkHint)}
-            </small>
-            <div className='event-composer__pin-row'>
-              <button
-                type='button'
-                className='event-composer__pin-btn'
-                onClick={openPinPicker}
-              >
-                <FormattedMessage {...messages.pinOnMap} />
-              </button>
-              {pinnedLocation && (
-                <>
-                  <span className='event-composer__pin-coords'>
-                    <FormattedMessage
-                      {...messages.pinnedAt}
-                      values={{
-                        lat: pinnedLocation.lat.toFixed(4),
-                        lng: pinnedLocation.lng.toFixed(4),
-                      }}
-                    />
-                  </span>
-                  <button
-                    type='button'
-                    className='event-composer__pin-clear'
-                    onClick={clearPin}
-                  >
-                    <FormattedMessage {...messages.clearPin} />
-                  </button>
-                </>
-              )}
-            </div>
-            {pinnedLocation && (
-              // Re-key on lat/lng so a new pin remounts the preview
-              // — MapPinPreview intentionally doesn't `easeTo` on
-              // prop change (see its comment about avoiding subtle
-              // animations); remount is the explicit "show a new
-              // pin" trigger.
-              <MapPinPreview
-                key={`${pinnedLocation.lat},${pinnedLocation.lng}`}
-                lng={pinnedLocation.lng}
-                lat={pinnedLocation.lat}
-                zoom={pinnedLocation.zoom}
-                className='event-composer__pin-preview'
-              />
-            )}
-          </label>
-        </fieldset>
-
-        {/* Invitee picker — accounts get a nudge with the event on
-            submit. Optional for public/mates events; the natural
-            partner to the invite-only toggle above. Same account
-            search API the event-detail Invite panel uses; the two
-            surfaces stay in shape. */}
-        <div className='event-composer__invitees'>
-          <span className='event-composer__field-label'>
-            {intl.formatMessage(messages.invitePeople)}
-          </span>
-          <small className='event-composer__field-hint'>
-            {intl.formatMessage(messages.inviteHint)}
-          </small>
-          {invitees.size > 0 && (
-            <div className='event-composer__invitee-chips'>
-              {Array.from(invitees.values()).map((account) => (
-                <span key={account.id} className='event-composer__invitee-chip'>
-                  {account.avatar && (
-                    <img
-                      src={account.avatar}
-                      alt=''
-                      className='event-composer__invitee-avatar'
-                    />
-                  )}
-                  <span className='event-composer__invitee-name'>
-                    {account.display_name || account.username}
-                  </span>
-                  <button
-                    type='button'
-                    className='event-composer__invitee-remove'
-                    data-account-id={account.id}
-                    onClick={handleInviteeRemove}
-                    aria-label={intl.formatMessage(messages.inviteeRemove, {
-                      name: account.display_name || account.username,
-                    })}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <div className='event-composer__invitee-search'>
-            <input
-              type='search'
-              value={inviteeQuery}
-              onChange={onInviteeQueryChange}
-              placeholder={intl.formatMessage(
-                messages.inviteeSearchPlaceholder,
-              )}
-              className='event-composer__input'
-              autoComplete='off'
-            />
-            {inviteeQuery.trim().length > 0 && (
-              <div className='event-composer__invitee-results' role='listbox'>
-                {inviteeSearching && (
-                  <div className='event-composer__invitee-state'>
-                    <FormattedMessage {...messages.inviteeSearching} />
-                  </div>
-                )}
-                {!inviteeSearching && inviteeResults.length === 0 && (
-                  <div className='event-composer__invitee-state'>
-                    <FormattedMessage {...messages.inviteeNoResults} />
-                  </div>
-                )}
-                {!inviteeSearching &&
-                  inviteeResults.map((account) => {
-                    const already = invitees.has(account.id);
-                    return (
-                      <button
-                        key={account.id}
-                        type='button'
-                        role='option'
-                        aria-selected={already}
-                        className='event-composer__invitee-result'
-                        data-account-id={account.id}
-                        data-account={JSON.stringify(account)}
-                        onClick={handleInviteeSelect}
-                        disabled={already}
-                      >
-                        {account.avatar && (
-                          <img
-                            src={account.avatar}
-                            alt=''
-                            className='event-composer__invitee-avatar'
-                          />
-                        )}
-                        <span className='event-composer__invitee-name'>
-                          {account.display_name || account.username}
-                        </span>
-                        <span className='event-composer__invitee-acct'>
-                          @{account.acct}
-                        </span>
-                      </button>
-                    );
-                  })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {error && (
-          <p className='event-composer__error' role='alert'>
+      {reach === 'self_only' && (
+        <ComposeHint>
+          {krewNames.length > 0 ? (
             <FormattedMessage
-              id='kalendar.new.error'
-              defaultMessage="Couldn't create the event: {error}"
-              values={{ error }}
+              id='kalendar.composer.audience.krews'
+              defaultMessage='Only members of {krews} will see this event.'
+              values={{
+                krews: intl.formatList(krewNames, { type: 'conjunction' }),
+              }}
             />
-          </p>
+          ) : (
+            <FormattedMessage
+              id='kalendar.composer.audience.nobody'
+              defaultMessage='Only you will see this event. Tick a Krew in the reach menu to make it theirs.'
+            />
+          )}
+        </ComposeHint>
+      )}
+      <div className='event-composer__cover'>
+        {imagePreviewUrl ? (
+          <div className='event-composer__cover-preview'>
+            <img
+              src={imagePreviewUrl}
+              alt=''
+              className='event-composer__cover-image'
+            />
+            {imageUploading && (
+              <span className='event-composer__cover-badge'>
+                <FormattedMessage {...messages.uploadingCover} />
+              </span>
+            )}
+            <button
+              type='button'
+              className='event-composer__cover-remove'
+              onClick={onImageRemove}
+              aria-label={intl.formatMessage(messages.removeCover)}
+            >
+              ×
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              type='button'
+              className='event-composer__cover-add'
+              onClick={onCoverAddClick}
+            >
+              <span>
+                <FormattedMessage {...messages.addCover} />
+              </span>
+              <small>
+                <FormattedMessage {...messages.cover} />
+              </small>
+            </button>
+            <input
+              ref={coverInputRef}
+              type='file'
+              accept='image/*'
+              onChange={onImageChange}
+              className='event-composer__cover-input'
+            />
+          </>
         )}
-
-        {submitBlockerMessage && (
-          <p className='event-composer__submit-hint'>
-            <FormattedMessage {...submitBlockerMessage} />
-          </p>
+        {imageError && (
+          <ComposeHint error>
+            <FormattedMessage
+              {...messages.coverUploadFailed}
+              values={{ error: imageError }}
+            />
+          </ComposeHint>
         )}
       </div>
+
+      <ComposeTitle
+        value={title}
+        onChange={onTitle}
+        placeholder={intl.formatMessage(messages.eventTitlePlaceholder)}
+        aria-label={intl.formatMessage(messages.eventTitle)}
+        required
+      />
+
+      <ComposeBody
+        value={description}
+        onChange={onDescription}
+        placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+        aria-label={intl.formatMessage(messages.description)}
+      />
+
+      <ComposeSection title={intl.formatMessage(messages.when)}>
+        <ComposeField label={intl.formatMessage(messages.starts)}>
+          <ComposeRow>
+            <ComposeInput
+              type='date'
+              aria-label={intl.formatMessage(messages.startDate)}
+              value={startDate}
+              onChange={onStartDate}
+              onClick={openPickerOnClick}
+              required
+              className='event-composer__when-input'
+            />
+            <ComposeInput
+              type='time'
+              aria-label={intl.formatMessage(messages.startTime)}
+              value={startTime}
+              onChange={onStartTime}
+              onClick={openPickerOnClick}
+              required
+              step={SNAP_MINUTES * 60}
+              className='event-composer__when-input'
+            />
+          </ComposeRow>
+        </ComposeField>
+        <ComposeField label={intl.formatMessage(messages.ends)}>
+          <ComposeRow>
+            <ComposeInput
+              type='date'
+              aria-label={intl.formatMessage(messages.endDate)}
+              value={endDate}
+              onChange={onEndDate}
+              onClick={openPickerOnClick}
+              // Constrain end ≥ start (Tal 2026-08-14: "make it
+              // impossible to select an end date before the start
+              // date"). The `min` attribute greys out earlier
+              // dates in the native picker + blocks form
+              // submission via `checkValidity` — no separate
+              // client-side validator needed.
+              min={startDate || undefined}
+              className='event-composer__when-input'
+            />
+            <ComposeInput
+              type='time'
+              aria-label={intl.formatMessage(messages.endTime)}
+              value={endTime}
+              onChange={onEndTime}
+              onClick={openPickerOnClick}
+              step={SNAP_MINUTES * 60}
+              // Same-day event: end time can't be before start
+              // time. Only apply the min when the dates match —
+              // otherwise a next-day end at 08:00 would be
+              // blocked by a start of 19:00.
+              min={endDate && endDate === startDate ? startTime : undefined}
+              className='event-composer__when-input'
+            />
+          </ComposeRow>
+        </ComposeField>
+      </ComposeSection>
+
+      {/* Kind (event / huddle) and its `{eventType === 'event' &&}`
+          gate on Where retired 2026-08-17. Huddles are now spawned
+          via the Konnect-a-korner picker (Huddle korner
+          attachment), so this composer only creates in-person
+          events; the address block is always relevant. RSVP is on
+          by default (DB default) and the "Invite-only" toggle
+          retired alongside — audience is a scope-picker decision. */}
+      <ComposeSection title={intl.formatMessage(messages.where)}>
+        <ComposeField label={intl.formatMessage(messages.address)}>
+          <ComposeInput
+            value={locationName}
+            onChange={onLocationName}
+            placeholder={intl.formatMessage(messages.addressPlaceholder)}
+          />
+        </ComposeField>
+        <ComposeField
+          label={intl.formatMessage(messages.mapLink)}
+          hint={intl.formatMessage(messages.mapLinkHint)}
+        >
+          <ComposeInput
+            type='url'
+            value={locationUrl}
+            onChange={onLocationUrl}
+            placeholder={intl.formatMessage(messages.mapLinkPlaceholder)}
+          />
+        </ComposeField>
+        <div className='event-composer__pin-row'>
+          <button
+            type='button'
+            className='event-composer__pin-btn'
+            onClick={openPinPicker}
+          >
+            <FormattedMessage {...messages.pinOnMap} />
+          </button>
+          {pinnedLocation && (
+            <>
+              <span className='event-composer__pin-coords'>
+                <FormattedMessage
+                  {...messages.pinnedAt}
+                  values={{
+                    lat: pinnedLocation.lat.toFixed(4),
+                    lng: pinnedLocation.lng.toFixed(4),
+                  }}
+                />
+              </span>
+              <button
+                type='button'
+                className='event-composer__pin-clear'
+                onClick={clearPin}
+              >
+                <FormattedMessage {...messages.clearPin} />
+              </button>
+            </>
+          )}
+        </div>
+        {pinnedLocation && (
+          // Re-key on lat/lng so a new pin remounts the preview
+          // — MapPinPreview intentionally doesn't `easeTo` on
+          // prop change (see its comment about avoiding subtle
+          // animations); remount is the explicit "show a new
+          // pin" trigger.
+          <MapPinPreview
+            key={`${pinnedLocation.lat},${pinnedLocation.lng}`}
+            lng={pinnedLocation.lng}
+            lat={pinnedLocation.lat}
+            zoom={pinnedLocation.zoom}
+          />
+        )}
+      </ComposeSection>
+
+      {/* Invitee picker — accounts get a nudge with the event on
+          submit. Same account search API the event-detail Invite
+          panel uses; the two surfaces stay in shape. A div with the
+          kit's field classes rather than <ComposeField>: a label
+          around the chips' and results' buttons would press them
+          when its text is clicked. */}
+      <div className='compose-field'>
+        <span className='compose-field__label'>
+          {intl.formatMessage(messages.invitePeople)}
+        </span>
+        <span className='compose-field__hint'>
+          {intl.formatMessage(messages.inviteHint)}
+        </span>
+        {invitees.size > 0 && (
+          <div className='event-composer__invitee-chips'>
+            {Array.from(invitees.values()).map((account) => (
+              <span key={account.id} className='event-composer__invitee-chip'>
+                {account.avatar && (
+                  <img
+                    src={account.avatar}
+                    alt=''
+                    className='event-composer__invitee-avatar'
+                  />
+                )}
+                <span className='event-composer__invitee-name'>
+                  {account.display_name || account.username}
+                </span>
+                <button
+                  type='button'
+                  className='event-composer__invitee-remove'
+                  data-account-id={account.id}
+                  onClick={handleInviteeRemove}
+                  aria-label={intl.formatMessage(messages.inviteeRemove, {
+                    name: account.display_name || account.username,
+                  })}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className='event-composer__invitee-search'>
+          <ComposeInput
+            type='search'
+            value={inviteeQuery}
+            onChange={onInviteeQueryChange}
+            placeholder={intl.formatMessage(messages.inviteeSearchPlaceholder)}
+            aria-label={intl.formatMessage(messages.invitePeople)}
+            autoComplete='off'
+          />
+          {inviteeQuery.trim().length > 0 && (
+            <div className='event-composer__invitee-results' role='listbox'>
+              {inviteeSearching && (
+                <div className='event-composer__invitee-state'>
+                  <FormattedMessage {...messages.inviteeSearching} />
+                </div>
+              )}
+              {!inviteeSearching && inviteeResults.length === 0 && (
+                <div className='event-composer__invitee-state'>
+                  <FormattedMessage {...messages.inviteeNoResults} />
+                </div>
+              )}
+              {!inviteeSearching &&
+                inviteeResults.map((account) => {
+                  const already = invitees.has(account.id);
+                  return (
+                    <button
+                      key={account.id}
+                      type='button'
+                      role='option'
+                      aria-selected={already}
+                      className='event-composer__invitee-result'
+                      data-account-id={account.id}
+                      data-account={JSON.stringify(account)}
+                      onClick={handleInviteeSelect}
+                      disabled={already}
+                    >
+                      {account.avatar && (
+                        <img
+                          src={account.avatar}
+                          alt=''
+                          className='event-composer__invitee-avatar'
+                        />
+                      )}
+                      <span className='event-composer__invitee-name'>
+                        {account.display_name || account.username}
+                      </span>
+                      <span className='event-composer__invitee-acct'>
+                        @{account.acct}
+                      </span>
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <ComposeHint error>
+          <FormattedMessage
+            id='kalendar.new.error'
+            defaultMessage="Couldn't create the event: {error}"
+            values={{ error }}
+          />
+        </ComposeHint>
+      )}
+
+      {submitBlockerMessage && (
+        <ComposeHint>
+          <FormattedMessage {...submitBlockerMessage} />
+        </ComposeHint>
+      )}
 
       {pinPickerOpen && (
         <MapPinPicker
