@@ -18,6 +18,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 
+import { availabilityLabel } from '../details';
 import { artKindLabel } from '../kinds';
 
 import { ArtPortfolioEditor } from './art_portfolio_editor';
@@ -43,10 +44,6 @@ const messages = defineMessages({
   },
   featured: { id: 'art.portfolio.featured', defaultMessage: 'Featured' },
   allWorks: { id: 'art.portfolio.all_works', defaultMessage: 'All works' },
-  photos: {
-    id: 'art.photos',
-    defaultMessage: '{count, plural, one {# photo} other {# photos}}',
-  },
   emptyOwn: {
     id: 'art.portfolio.empty_own',
     defaultMessage: 'Your portfolio fills as you post pieces.',
@@ -112,10 +109,16 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
       to={`/hub/art/pieces/${piece.id}`}
       image={piece.cover_url}
       title={piece.title}
-      meta={`${artKindLabel(intl, piece.kind)} · ${intl.formatMessage(
-        messages.photos,
-        { count: piece.photo_count },
-      )}`}
+      meta={[
+        piece.medium?.trim()
+          ? piece.medium.trim()
+          : artKindLabel(intl, piece.kind),
+        piece.year_made ? String(piece.year_made) : null,
+      ]
+        .filter(Boolean)
+        .join(' · ')}
+      tag={availabilityLabel(intl, piece.availability) ?? undefined}
+      tagKind={piece.availability}
     />
   );
 

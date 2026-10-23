@@ -40,7 +40,20 @@ class ArtPiece < ApplicationRecord
        { public: 0, mates: 1, orbit: 3, self_only: 4 },
        suffix: :scope
 
+  # Whether the piece can be had (docs/spaces/art.md, Piece details).
+  # New states take the next number.
+  enum :availability,
+       { not_for_sale: 0, available: 1, sold: 2, commissioned: 3, on_show: 4 },
+       prefix: :availability
+
+  SIZE_UNITS = %w(cm in).freeze
+
   validates :title, presence: true, length: { maximum: 240 }
+  validates :medium, length: { maximum: 160 }, allow_blank: true
+  validates :edition, length: { maximum: 80 }, allow_blank: true
+  validates :width, :height, :depth, numericality: { greater_than: 0, less_than: 100_000 }, allow_nil: true
+  validates :size_unit, inclusion: { in: SIZE_UNITS }
+  validates :year_made, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: ->(_) { Time.current.year + 1 } }, allow_nil: true
   validates :description, length: { maximum: 4000 }, allow_blank: true
 
   scope :recent, -> { order(created_at: :desc) }
