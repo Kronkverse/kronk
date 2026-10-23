@@ -297,6 +297,64 @@
     font-size: 11px;
   }
 
+  // The Gallery tile: a square of up to four photos, 2px apart.
+  &__drawn-gallery {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  &__drawn-gallery-cell {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--border-subtle);
+  }
+
+  // One photo fills the square; two split it; three put the first down the
+  // left beside two stacked.
+  &__drawn-gallery--1 &__drawn-gallery-cell {
+    grid-area: 1 / 1 / 3 / 3;
+  }
+
+  &__drawn-gallery--2 &__drawn-gallery-cell {
+    grid-row: 1 / 3;
+  }
+
+  &__drawn-gallery--3 &__drawn-gallery-cell:first-child {
+    grid-row: 1 / 3;
+  }
+
+  &__drawn-gallery-cell &__drawn-photo-play {
+    width: 32px;
+    height: 32px;
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  // The rest of the post, counted on its last photo.
+  &__drawn-gallery-more {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--semantic-text-on-accent);
+    background: rgb(0 0 0 / 45%);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    pointer-events: none;
+  }
+
   &__drawn-excerpt {
     width: 240px;
     padding: var(--sp-3, 12px);
@@ -1104,6 +1162,16 @@
     }
   }
 
+  // The Gallery shows small squares, two and a bit across, rather than one
+  // photo per screen: a person's pictures read as a body of them.
+  &__shelf--drawn-gallery &__drawn-rail {
+    align-items: flex-start;
+  }
+
+  &__shelf--drawn-gallery &__drawn-rail-item {
+    flex: 0 0 44%;
+  }
+
   // Wider Stage: the band stops tracking the viewport (a 1400px-tall window
   // should not produce one enormous album cover) and the rail shows two
   // cards per view, still snapping per card.
@@ -1115,6 +1183,10 @@
 
     &__shelf--band &__drawn-rail-item {
       flex: 0 0 46%;
+    }
+
+    &__shelf--drawn-gallery &__drawn-rail-item {
+      flex: 0 0 30%;
     }
   }
 }
