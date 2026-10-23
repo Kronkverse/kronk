@@ -7,6 +7,7 @@ import {
 import type {
   ApiArtPieceJSON,
   ApiArtPiecePhotoJSON,
+  ApiArtPortfolioJSON,
   ArtVisibility,
   ArtKind,
 } from 'mastodon/api_types/art';
@@ -69,3 +70,13 @@ export const apiUpdatePhoto = (
 
 export const apiDeletePhoto = (photoId: string) =>
   apiRequestDelete<Record<string, never>>(`v1/art/photos/${photoId}`);
+
+// An artist's portfolio, and saving your own (docs/spaces/art.md, Portfolio).
+export const apiGetPortfolio = (accountId: string) =>
+  apiRequestGet<ApiArtPortfolioJSON>(`v1/art/portfolios/${accountId}`);
+
+export const apiUpdatePortfolio = (params: {
+  statement?: string;
+  open_for_commissions?: boolean;
+  featured_ids?: string[];
+}) => apiRequestPut<ApiArtPortfolioJSON>('v1/art/portfolio', params);

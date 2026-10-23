@@ -300,6 +300,9 @@ namespace :api, format: false do
         resources :photos, only: [:create], controller: 'photos'
       end
       resources :art_piece_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
+      # An artist's portfolio: anyone's to read, your own to change.
+      resources :portfolios, only: [:show], controller: 'portfolios'
+      resource :portfolio, only: [:update], controller: 'portfolios'
     end
 
     # Kronikles — single-author long-form written works. Body is

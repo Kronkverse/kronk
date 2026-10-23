@@ -58,3 +58,15 @@ export interface ArtPieceSummaryJSON {
   cover_url: string | null;
   owner_acct: string;
 }
+
+// An artist's portfolio (GET /api/v1/art/portfolios/:account_id;
+// docs/spaces/art.md, Portfolio). `statement` and `open_for_commissions`
+// follow the profile's reach; the pieces are the ones the viewer may see.
+export interface ApiArtPortfolioJSON {
+  account: ApiAccountJSON;
+  is_owner: boolean;
+  statement: string | null;
+  open_for_commissions: boolean;
+  featured: ApiArtPieceJSON[];
+  pieces: ApiArtPieceJSON[];
+}

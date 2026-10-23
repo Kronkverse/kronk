@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { defineMessages, useIntl } from 'react-intl';
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+
+import { Link } from 'react-router-dom';
 
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
@@ -39,6 +41,7 @@ import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
 import { artKindLabel } from 'mastodon/features/art/kinds';
+import { useAppSelector } from 'mastodon/store';
 import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
 // Drawn shelf — a query over the account's posts, resolved at read
@@ -383,6 +386,18 @@ const StatusCard: React.FC<StatusCardProps> = ({ status, render }) => {
 /* eslint-enable @typescript-eslint/no-unsafe-assignment,
                  @typescript-eslint/no-explicit-any */
 
+// The way from a profile's Art shelf to the artist's portfolio
+// (docs/spaces/art.md, Portfolio).
+const PortfolioLink: React.FC<{ accountId: string }> = ({ accountId }) => {
+  const acct = useAppSelector((state) => state.accounts.get(accountId)?.acct);
+  if (!acct) return null;
+  return (
+    <Link to={`/hub/art/@${acct}`} className='profile-shelves__shelf-shop'>
+      <FormattedMessage id='profile.art_portfolio' defaultMessage='Portfolio' />
+    </Link>
+  );
+};
+
 interface ShelfDrawnProps {
   accountId: string;
   section: ApiProfileSectionJSON;
@@ -682,6 +697,10 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
               while arranging: the header is then the handle to drag. */}
           {render === 'wachuneed_card' && !arrange && (
             <ProfileShopLink accountId={accountId} />
+          )}
+          {/* An Art shelf leads on to the artist's portfolio. */}
+          {settings.korner_slug === 'art' && !arrange && (
+            <PortfolioLink accountId={accountId} />
           )}
           {headerExtra}
         </span>

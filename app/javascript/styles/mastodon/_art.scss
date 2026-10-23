@@ -258,3 +258,136 @@
     margin: 0;
   }
 }
+
+// The way from "Mine" to your own portfolio.
+.art-directory__portfolio-link {
+  display: inline-block;
+  margin: 0 12px 4px;
+  color: var(--accent-text);
+  font-size: 14px;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+// An artist's portfolio (docs/spaces/art.md, Portfolio). The page is
+// <KornerDetail>; this is only what sits inside it.
+.art-portfolio {
+  &__avatar {
+    display: block;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__statement {
+    max-width: 38rem;
+    margin: 0 0 var(--sp-4, 16px);
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+
+  &__section {
+    margin-bottom: var(--sp-4, 16px);
+  }
+
+  &__heading {
+    margin: 0 0 var(--sp-2, 8px);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 400;
+  }
+
+  // Featured pieces sit larger: two across at every width.
+  &__featured.space-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.art-portfolio-editor {
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  &__check {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    color: var(--text-primary);
+    font-size: 14px;
+
+    > span {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+  }
+
+  &__featured {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  &__pieces {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__piece {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+
+    input {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+    }
+
+    img,
+    .art-portfolio-editor__blank {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: var(--radius-small);
+      object-fit: cover;
+      background: var(--surface-variant-background-color);
+    }
+
+    &--on {
+      border-color: var(--accent);
+    }
+  }
+
+  &__piece-title {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

@@ -137,7 +137,8 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
             artKindLabel(intl, piece.kind),
             intl.formatMessage(messages.photos, { count: piece.photo_count }),
             intl.formatMessage(VISIBILITY_LABEL[piece.visibility]),
-            <Link key='owner' to={`/@${piece.owner.acct}`}>
+            // The artist's portfolio, where the rest of their work is.
+            <Link key='owner' to={`/hub/art/@${piece.owner.acct}`}>
               @{piece.owner.acct}
             </Link>,
           ]}

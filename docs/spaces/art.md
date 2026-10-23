@@ -25,6 +25,21 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 - **On a profile** — an Art shelf shows each piece as a small square of up to four of its photos (the Gallery's 2×2: one fills it, two split it, three put the first beside two), `+N` on the last when there are more, and the title and kind · photo count under it (`ArtTile` in `shelf_drawn.tsx`; Kommons "Art portfolio", @mangobee, 2026-10-23). It is chosen by the shelf's `korner_slug: 'art'`, not its render: the cutover backfill stored Art shelves as `photo`, which looked for photos on the post and found none, because a piece's photos live on the piece. `REST::ArtPieceSummarySerializer#preview_urls` gives the first four at thumbnail size.
 - **Home feed** — one card per piece lifetime. `StatusArtCard` renders cover + title + `<kind>` + photo count. Later photo additions do not spawn new cards; the standard Status favourite / reply pipeline handles interaction.
 
+## Portfolio
+
+Every artist has a portfolio at **`/hub/art/@:acct`** (Kommons "Portfolio style & Art cards showing media on profile", @mangobee, 2026-10-23). It is `<KornerDetail>`: their avatar, name, _Portfolio_, and a facts line (N pieces · **Open for commissions** when it is on · @acct, linking to the profile). Under it:
+
+- **Artist statement** — up to 2000 characters, as written.
+- **Featured** — up to three pieces the artist leads with, two across and larger, in the order they picked.
+- **All works** — every other piece that reaches the viewer, newest first, as a `<SpaceGrid>` of `<SpaceCard>`s.
+- **Ask about a commission** — a primary pill, shown to others when the artist is open for commissions. It opens a Nudges conversation with them (`/nudges/with/:id`); nothing about how to reach them is published.
+
+The artist edits it from the Ж menu, **Edit portfolio** (`art_portfolio_editor.tsx`, in the compose shell): the statement, the commissions tick, and the featured pieces, ticked from their own (the order they're ticked is the order they show).
+
+Ways in: the **Mine** face (_Your portfolio_), the owner's @name on a piece page, and **Portfolio** in the header of a profile's Art shelf.
+
+Data: `art_portfolios` (one per account, made on first save: `statement`, `open_for_commissions`) and `art_pieces.featured_position` (1–3, nil when not featured; `ArtPortfolio.feature!` keeps only the owner's own pieces, at most three). `GET /api/v1/art/portfolios/:account_id` gives the account, the statement and commissions marker (only to someone who can see the artist's profile), and the featured pieces and the rest (only those `ArtPiece.visible_to` the viewer, up to 60). `PUT /api/v1/art/portfolio` saves your own.
+
 ## Composer
 
 `ArtPieceComposer`, opened via the Ж bubble → **Post a piece**, or by navigating to `/hub/art/composer`. Fields, top to bottom:
