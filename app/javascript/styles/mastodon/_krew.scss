@@ -622,96 +622,23 @@ $krew-column-width: 720px;
 
 // ── new (Start a Krew form) ────────────────────────────────────────
 
-// Krew composer — fields inside the shared `<ComposeShell>` at
-// /hub/krew/composer (opened by the Ж bubble). The shell provides
-// the panel, backdrop, and submit/cancel footer, so this stack owns
-// only the field visuals. Was the full-page `.krew-new` container
-// (`@include krew-column`) until 2026-08-12.
+// Krew composer — inside the shared `<ComposeShell>` at
+// /hub/krew/composer (opened by the Ж bubble). Its fields come from the
+// composer field kit (_compose_fields.scss); this is only what is the
+// Krew's own: the Korner tiles, the access choices and the requirement
+// rows. Was the full-page `.krew-new` container until 2026-08-12.
 .krew-composer {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-
-  &__fieldset {
-    @include krew-card;
-
-    padding: 1.25rem 1.25rem 1.5rem;
-    border: 1px solid var(--border-default);
-  }
-
-  &__legend {
-    padding: 0 0.4rem;
-    color: var(--kronk-purple-bright);
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  &__field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    margin-top: 0.85rem;
-
-    &:first-of-type {
-      margin-top: 0.5rem;
-    }
-  }
-
-  &__field-label {
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
-
-  &__field-hint {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-  }
-
-  &__input {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 0.55rem 0.75rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: var(--surface-primary);
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 0.95rem;
-    transition: border-color var(--dur-fast) var(--ease-out);
-
-    &:focus {
-      outline: none;
-      border-color: var(--kronk-purple-accent);
-      box-shadow: 0 0 0 3px
-        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
-    }
-  }
-
-  &__note {
-    margin: 0 0 0.75rem;
-    padding: 0.6rem 0.85rem;
-    border-left: 3px solid var(--kronk-purple-accent);
-    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    line-height: 1.5;
-    border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
-  }
-
   &__korner-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
     gap: 0.6rem;
-    margin-top: 0.6rem;
   }
 
   // Hub-style selectable tile: a line-art glyph over a capitalised label,
   // matching the Korner squares on the Hub grid. The native checkbox is
-  // hidden; selection is shown by the accent-filled --active state.
-  &__korner-tile {
+  // hidden; selection is shown by the accent-filled --active state. Each
+  // tile is a <ComposeCheck>, so these rules outrank `.compose-check`'s.
+  &__korner-tile.compose-check {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -740,24 +667,38 @@ $krew-column-width: 720px;
       outline: 2px solid var(--kronk-purple-accent);
       outline-offset: 2px;
     }
-
-    &--active {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 15%,
-        transparent
-      );
-      border-color: var(--kronk-purple-accent);
-      color: var(--kronk-purple-bright);
-    }
   }
 
-  &__korner-tile-input {
+  &__korner-tile--active.compose-check {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 15%,
+      transparent
+    );
+    border-color: var(--kronk-purple-accent);
+    color: var(--kronk-purple-bright);
+  }
+
+  &__korner-tile.compose-check input {
     position: absolute;
     opacity: 0;
     pointer-events: none;
     width: 0;
     height: 0;
+    margin: 0;
+  }
+
+  &__korner-tile .compose-check__text {
+    align-items: center;
+  }
+
+  &__korner-tile .compose-check__label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    color: inherit;
+    font-size: inherit;
   }
 
   &__korner-tile-glyph {
@@ -784,7 +725,6 @@ $krew-column-width: 720px;
     }
 
     padding: 0.6rem 0.75rem;
-    margin-top: 0.4rem;
     border: 1px solid transparent;
     border-radius: var(--radius-medium);
     color: var(--text-secondary);
@@ -821,7 +761,6 @@ $krew-column-width: 720px;
     gap: 0.75rem;
     align-items: start;
     padding: 0.85rem;
-    margin-top: 0.5rem;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-medium);
     background: color-mix(in oklab, var(--surface-elevated) 60%, transparent);
@@ -847,7 +786,6 @@ $krew-column-width: 720px;
 
   &__add-req {
     align-self: flex-start;
-    margin-top: 0.75rem;
     padding: 0.45rem 0.9rem;
     border: 1px dashed var(--border-default);
     border-radius: var(--radius-round);
@@ -861,19 +799,6 @@ $krew-column-width: 720px;
       color: var(--kronk-purple-bright);
       border-color: var(--kronk-purple-accent);
     }
-  }
-
-  &__error {
-    padding: 0.85rem;
-    border-radius: var(--radius-medium);
-    background: color-mix(
-      in oklab,
-      var(--semantic-warning-red) 12%,
-      transparent
-    );
-    color: var(--semantic-warning-red);
-    font-size: 0.9rem;
-    text-align: center;
   }
 }
 

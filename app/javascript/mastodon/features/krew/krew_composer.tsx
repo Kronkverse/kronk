@@ -17,6 +17,17 @@ import type {
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
+import {
+  ComposeBody,
+  ComposeCheck,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeSection,
+  ComposeSelect,
+  ComposeTextarea,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { EventSearch } from 'mastodon/components/event_search';
 import type { PickedEvent } from 'mastodon/components/event_search';
@@ -410,187 +421,154 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       draft={draft}
       konnect={konnect}
     >
-      <div className='krew-composer'>
-        <fieldset className='krew-composer__fieldset'>
-          <legend className='krew-composer__legend'>
-            {intl.formatMessage(messages.identity)}
-          </legend>
-
-          <div className='krew-photo-row'>
-            <KrewPhotoField
-              name={name}
-              imageUrl={photoPreview}
-              label={intl.formatMessage(messages.photoChoose)}
-              icon={PhotoCameraIcon}
-              disabled={busy}
-              onPick={handlePhoto}
-            />
-            <div className='krew-photo-row__text'>
-              <span className='krew-photo-row__label'>
-                {intl.formatMessage(messages.photo)}
-              </span>
-              <span>{intl.formatMessage(messages.photoHint)}</span>
-              {photo && (
-                <button
-                  type='button'
-                  className='krew-photo-row__remove'
-                  onClick={handleRemovePhoto}
-                >
-                  {intl.formatMessage(messages.photoRemove)}
-                </button>
-              )}
-            </div>
-          </div>
-
-          <label className='krew-composer__field'>
-            <span className='krew-composer__field-label'>
-              {intl.formatMessage(messages.name)}
+      <ComposeSection title={intl.formatMessage(messages.identity)}>
+        <div className='krew-photo-row'>
+          <KrewPhotoField
+            name={name}
+            imageUrl={photoPreview}
+            label={intl.formatMessage(messages.photoChoose)}
+            icon={PhotoCameraIcon}
+            disabled={busy}
+            onPick={handlePhoto}
+          />
+          <div className='krew-photo-row__text'>
+            <span className='krew-photo-row__label'>
+              {intl.formatMessage(messages.photo)}
             </span>
-            <input
-              type='text'
-              value={name}
-              onChange={handleNameChange}
-              placeholder={intl.formatMessage(messages.namePlaceholder)}
-              required
-              className='krew-composer__input'
-            />
-          </label>
-
-          <label className='krew-composer__field'>
-            <span className='krew-composer__field-label'>
-              {intl.formatMessage(messages.description)}
-            </span>
-            <textarea
-              value={description}
-              onChange={handleDescriptionChange}
-              placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-              rows={3}
-              className='krew-composer__input'
-            />
-          </label>
-        </fieldset>
-
-        <fieldset className='krew-composer__fieldset'>
-          <legend className='krew-composer__legend'>
-            {intl.formatMessage(messages.people)}
-          </legend>
-          <p className='krew-composer__note'>
-            {intl.formatMessage(messages.peopleHint)}
-          </p>
-          <AccountMultiSelect value={invitees} onChange={setInvitees} />
-        </fieldset>
-
-        <fieldset className='krew-composer__fieldset'>
-          <legend className='krew-composer__legend'>
-            {intl.formatMessage(messages.korners)}
-          </legend>
-          <p className='krew-composer__note'>
-            {intl.formatMessage(messages.kornersHint, {
-              name: name.trim() || 'Krew',
-            })}
-          </p>
-          <div className='krew-composer__korner-grid'>
-            {KORNER_OPTIONS.map((k) => (
-              <label
-                key={k}
-                className={`krew-composer__korner-tile ${korners.includes(k) ? 'krew-composer__korner-tile--active' : ''}`}
+            <span>{intl.formatMessage(messages.photoHint)}</span>
+            {photo && (
+              <button
+                type='button'
+                className='krew-photo-row__remove'
+                onClick={handleRemovePhoto}
               >
-                <input
-                  type='checkbox'
-                  value={k}
-                  checked={korners.includes(k)}
-                  onChange={handleKornerToggle}
-                  className='krew-composer__korner-tile-input'
-                />
-                <KrewSpaceIcon
-                  slug={k}
-                  className='krew-composer__korner-tile-glyph'
-                />
-                <span className='krew-composer__korner-tile-name'>{k}</span>
-              </label>
-            ))}
+                {intl.formatMessage(messages.photoRemove)}
+              </button>
+            )}
           </div>
-        </fieldset>
+        </div>
 
-        <fieldset className='krew-composer__fieldset'>
-          <legend className='krew-composer__legend'>
-            {intl.formatMessage(messages.access)}
-          </legend>
+        <ComposeTitle
+          value={name}
+          onChange={handleNameChange}
+          placeholder={intl.formatMessage(messages.namePlaceholder)}
+          aria-label={intl.formatMessage(messages.name)}
+          required
+        />
 
-          <label className='krew-composer__radio'>
-            <input
-              type='radio'
-              name='access'
-              value='open'
-              checked={access === 'open'}
-              onChange={handleAccessChange}
+        <ComposeBody
+          value={description}
+          onChange={handleDescriptionChange}
+          placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+          aria-label={intl.formatMessage(messages.description)}
+          rows={3}
+        />
+      </ComposeSection>
+
+      <ComposeSection title={intl.formatMessage(messages.people)}>
+        <ComposeHint>{intl.formatMessage(messages.peopleHint)}</ComposeHint>
+        <AccountMultiSelect value={invitees} onChange={setInvitees} />
+      </ComposeSection>
+
+      <ComposeSection title={intl.formatMessage(messages.korners)}>
+        <ComposeHint>
+          {intl.formatMessage(messages.kornersHint, {
+            name: name.trim() || 'Krew',
+          })}
+        </ComposeHint>
+        <div className='krew-composer__korner-grid'>
+          {KORNER_OPTIONS.map((k) => (
+            <ComposeCheck
+              key={k}
+              className={`krew-composer__korner-tile ${korners.includes(k) ? 'krew-composer__korner-tile--active' : ''}`}
+              value={k}
+              checked={korners.includes(k)}
+              onChange={handleKornerToggle}
+              label={
+                <>
+                  <KrewSpaceIcon
+                    slug={k}
+                    className='krew-composer__korner-tile-glyph'
+                  />
+                  <span className='krew-composer__korner-tile-name'>{k}</span>
+                </>
+              }
             />
-            <span>{intl.formatMessage(messages.accessOpen)}</span>
-          </label>
+          ))}
+        </div>
+      </ComposeSection>
 
-          <label className='krew-composer__radio'>
-            <input
-              type='radio'
-              name='access'
-              value='approval'
-              checked={access === 'approval'}
-              onChange={handleAccessChange}
+      <ComposeSection title={intl.formatMessage(messages.access)}>
+        <label className='krew-composer__radio'>
+          <input
+            type='radio'
+            name='access'
+            value='open'
+            checked={access === 'open'}
+            onChange={handleAccessChange}
+          />
+          <span>{intl.formatMessage(messages.accessOpen)}</span>
+        </label>
+
+        <label className='krew-composer__radio'>
+          <input
+            type='radio'
+            name='access'
+            value='approval'
+            checked={access === 'approval'}
+            onChange={handleAccessChange}
+          />
+          <span>{intl.formatMessage(messages.accessApproval)}</span>
+        </label>
+
+        <label className='krew-composer__radio'>
+          <input
+            type='radio'
+            name='access'
+            value='invite_only'
+            checked={access === 'invite_only'}
+            onChange={handleAccessChange}
+          />
+          <span>{intl.formatMessage(messages.accessInviteOnly)}</span>
+        </label>
+
+        <label className='krew-composer__radio'>
+          <input
+            type='radio'
+            name='access'
+            value='requirement_gated'
+            checked={access === 'requirement_gated'}
+            onChange={handleAccessChange}
+          />
+          <span>{intl.formatMessage(messages.accessGated)}</span>
+        </label>
+      </ComposeSection>
+
+      {access === 'requirement_gated' && (
+        <ComposeSection title={intl.formatMessage(messages.requirements)}>
+          <ComposeHint>
+            {intl.formatMessage(messages.requirementsHint)}
+          </ComposeHint>
+          {requirements.map((row) => (
+            <RequirementRow
+              key={row.key}
+              row={row}
+              onChange={updateRequirement}
+              onRemove={handleRemoveRequirement}
+              intl={intl}
             />
-            <span>{intl.formatMessage(messages.accessApproval)}</span>
-          </label>
+          ))}
+          <button
+            type='button'
+            onClick={handleAddRequirement}
+            className='krew-composer__add-req'
+          >
+            {intl.formatMessage(messages.addRequirement)}
+          </button>
+        </ComposeSection>
+      )}
 
-          <label className='krew-composer__radio'>
-            <input
-              type='radio'
-              name='access'
-              value='invite_only'
-              checked={access === 'invite_only'}
-              onChange={handleAccessChange}
-            />
-            <span>{intl.formatMessage(messages.accessInviteOnly)}</span>
-          </label>
-
-          <label className='krew-composer__radio'>
-            <input
-              type='radio'
-              name='access'
-              value='requirement_gated'
-              checked={access === 'requirement_gated'}
-              onChange={handleAccessChange}
-            />
-            <span>{intl.formatMessage(messages.accessGated)}</span>
-          </label>
-        </fieldset>
-
-        {access === 'requirement_gated' && (
-          <fieldset className='krew-composer__fieldset'>
-            <legend className='krew-composer__legend'>
-              {intl.formatMessage(messages.requirements)}
-            </legend>
-            <p className='krew-composer__note'>
-              {intl.formatMessage(messages.requirementsHint)}
-            </p>
-            {requirements.map((row) => (
-              <RequirementRow
-                key={row.key}
-                row={row}
-                onChange={updateRequirement}
-                onRemove={handleRemoveRequirement}
-                intl={intl}
-              />
-            ))}
-            <button
-              type='button'
-              onClick={handleAddRequirement}
-              className='krew-composer__add-req'
-            >
-              {intl.formatMessage(messages.addRequirement)}
-            </button>
-          </fieldset>
-        )}
-
-        {error && <p className='krew-composer__error'>{error}</p>}
-      </div>
+      {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>
   );
 };
@@ -655,15 +633,8 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
 
   return (
     <div className='krew-composer__req-row'>
-      <label className='krew-composer__field'>
-        <span className='krew-composer__field-label'>
-          {intl.formatMessage(messages.reqKind)}
-        </span>
-        <select
-          value={row.kind}
-          onChange={handleKindChange}
-          className='krew-composer__input'
-        >
+      <ComposeField label={intl.formatMessage(messages.reqKind)}>
+        <ComposeSelect value={row.kind} onChange={handleKindChange}>
           <option value='attending_event'>
             {intl.formatMessage(messages.reqKindAttendingEvent)}
           </option>
@@ -673,12 +644,15 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
           <option value='vouched_by_member'>
             {intl.formatMessage(messages.reqKindVouched)}
           </option>
-        </select>
-      </label>
+        </ComposeSelect>
+      </ComposeField>
 
       {row.kind === 'attending_event' && (
-        <div className='krew-composer__field'>
-          <span className='krew-composer__field-label'>
+        // The kit's field look on a <div>, not <ComposeField>: its <label>
+        // would hand a click on "Event" to the picker's first control,
+        // which is "Change" once an event is picked.
+        <div className='compose-field'>
+          <span className='compose-field__label'>
             {intl.formatMessage(messages.reqEvent)}
           </span>
           <EventSearch
@@ -690,34 +664,25 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
       )}
 
       {row.kind === 'located_in' && (
-        <label className='krew-composer__field'>
-          <span className='krew-composer__field-label'>
-            {intl.formatMessage(messages.reqRegion)}
-          </span>
-          <input
-            type='text'
+        <ComposeField label={intl.formatMessage(messages.reqRegion)}>
+          <ComposeInput
             data-field='region'
             value={row.region}
             onChange={handleFieldChange}
-            className='krew-composer__input'
           />
-        </label>
+        </ComposeField>
       )}
 
       {row.kind === 'vouched_by_member' && (
-        <label className='krew-composer__field'>
-          <span className='krew-composer__field-label'>
-            {intl.formatMessage(messages.reqVouchParams)}
-          </span>
-          <textarea
+        <ComposeField label={intl.formatMessage(messages.reqVouchParams)}>
+          <ComposeTextarea
             data-field='vouch_params'
             value={row.vouch_params}
             onChange={handleFieldChange}
             rows={2}
             placeholder='{"min": 1}'
-            className='krew-composer__input'
           />
-        </label>
+        </ComposeField>
       )}
 
       <button
