@@ -36,16 +36,32 @@ import {
 // item, and the contract is that a slot is never re-purposed because it
 // happens to look right.
 
+// `layout`: `grid` (the default) is the square tiles above. `masonry` keeps
+// each image's own shape and stacks the tiles in columns, the way work hangs
+// on a gallery wall: for a collection whose images ARE the thing (an artist's
+// portfolio), where cropping a tall painting or a wide panorama to a square
+// would cut the work. Same cards, same slots; only the media's shape and the
+// arrangement change.
 interface SpaceGridProps {
   children: React.ReactNode;
   className?: string;
+  layout?: 'grid' | 'masonry';
 }
 
 export const SpaceGrid: React.FC<SpaceGridProps> = ({
   children,
   className,
+  layout = 'grid',
 }) => (
-  <ul className={className ? `space-grid ${className}` : 'space-grid'}>
+  <ul
+    className={[
+      'space-grid',
+      layout === 'masonry' ? 'space-grid--masonry' : null,
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ')}
+  >
     {children}
   </ul>
 );

@@ -664,7 +664,11 @@ The same card three ways (`variant`):
   `<ProfileCard>` in the Kommunity deck.
 - **`grid`**: media and title, at most one meta line. Two across on a phone,
   four from 720px (`<SpaceGrid>` / `<SpaceCard>` in `space_grid.tsx`). Used by
-  Albutts, Booth, Kalendar events and Wachuneed.
+  Albutts, Booth, Kalendar events and Wachuneed. `<SpaceGrid layout='masonry'>`
+  is the same cards with each image in its own shape, stacked down columns
+  (two on a phone, three from 720px), for a collection whose images are the
+  work itself and a square crop would cut it: an Art portfolio (@mangobee,
+  2026-10-23). A tile without an image keeps the square placeholder.
 
 ### Decisions, and why
 
