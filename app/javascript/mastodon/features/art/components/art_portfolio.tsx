@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
@@ -88,7 +88,11 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
   // false, or how the editor opens: every section at once, or step by step
   // (the first-time set-up).
   const [editing, setEditing] = useState<false | 'all' | 'guided'>(false);
-  const [medium, setMedium] = useState<string | null>(null);
+  // A piece page's medium chip links here with ?medium=, already filtered.
+  const { search } = useLocation();
+  const [medium, setMedium] = useState<string | null>(() =>
+    new URLSearchParams(search).get('medium'),
+  );
   const { account } = portfolio;
   const name = account.display_name.trim() || account.username;
 
@@ -127,19 +131,44 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
     history.push(`/nudges/with/${account.id}`);
   }, [history, account.id]);
 
-  // A medium chip narrows the works to pieces whose medium (or kind) names
-  // it: "Ceramics" finds "Stoneware ceramics" and anything of the Ceramic
-  // kind.
-  const inMedium = (piece: ApiArtPieceJSON) => {
-    if (!medium) return true;
-    const wanted = medium.toLowerCase();
-    const said =
-      `${piece.medium ?? ''} ${artKindLabel(intl, piece.kind)}`.toLowerCase();
+  // A medium chip narrows the works to the pieces put in it. A piece from
+  // before pieces had mediums is matched on its materials and kind instead
+  // ("Ceramics" finds "Stoneware ceramics" and anything of the Ceramic kind).
+  const pieceIn = (piece: ApiArtPieceJSON, name: string) => {
+    const wanted = name.toLowerCase();
+    if (piece.mediums.length > 0)
+      return piece.mediums.some((m) => m.toLowerCase() === wanted);
+    const kind = artKindLabel(intl, piece.kind).toLowerCase();
     return (
-      said.includes(wanted) ||
-      wanted.includes(artKindLabel(intl, piece.kind).toLowerCase())
+      `${piece.medium ?? ''} ${kind}`.toLowerCase().includes(wanted) ||
+      wanted.includes(kind)
     );
   };
+  const inMedium = (piece: ApiArtPieceJSON) =>
+    medium === null || pieceIn(piece, medium);
+
+  // The chips: the portfolio's mediums, then any its pieces use that it
+  // doesn't list, each with how many pieces are in it.
+  const everyPiece = [
+    ...portfolio.featured,
+    ...portfolio.pieces.filter(
+      (piece) => !portfolio.featured.some((f) => f.id === piece.id),
+    ),
+  ];
+  const chipNames = (() => {
+    const seen = new Map<string, string>();
+    [
+      ...portfolio.mediums,
+      ...everyPiece.flatMap((piece) => piece.mediums),
+    ].forEach((name) => {
+      if (!seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name);
+    });
+    return [...seen.values()];
+  })();
+  const chips = chipNames.map((name) => ({
+    name,
+    count: everyPiece.filter((piece) => pieceIn(piece, name)).length,
+  }));
 
   const featuredIds = new Set(portfolio.featured.map((piece) => piece.id));
   const allRest = portfolio.pieces.filter(
@@ -172,7 +201,12 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
   return (
     <KornerDetail
       className='art-portfolio'
-      title={name}
+      title={
+        <span className='art-portfolio__title'>
+          <img className='art-portfolio__avatar' src={account.avatar} alt='' />
+          {name}
+        </span>
+      }
       subtitle={intl.formatMessage(messages.subtitle)}
       meta={
         <KornerMeta
@@ -217,7 +251,7 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
         </section>
       )}
 
-      {portfolio.mediums.length > 0 && (
+      {chips.length > 0 && (
         <div
           className='art-portfolio__mediums'
           role='group'
@@ -232,7 +266,7 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
           >
             {intl.formatMessage(messages.allMediums)}
           </button>
-          {portfolio.mediums.map((name) => (
+          {chips.map(({ name, count }) => (
             <button
               key={name}
               type='button'
@@ -242,6 +276,9 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
               className={`art-portfolio__medium${medium === name ? ' art-portfolio__medium--on' : ''}`}
             >
               {name}
+              {count > 0 && (
+                <span className='art-portfolio__medium-count'>{count}</span>
+              )}
             </button>
           ))}
         </div>

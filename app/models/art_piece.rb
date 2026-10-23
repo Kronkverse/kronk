@@ -48,7 +48,15 @@ class ArtPiece < ApplicationRecord
 
   SIZE_UNITS = %w(cm in).freeze
 
+  MEDIUMS_LIMIT = 6
+
+  # Tidy as picked: trimmed, blanks dropped, no repeats (ignoring case).
+  def mediums=(value)
+    super(Array(value).map { |medium| medium.to_s.squish.first(ArtPortfolio::MEDIUM_LENGTH) }.compact_blank.uniq(&:downcase))
+  end
+
   validates :title, presence: true, length: { maximum: 240 }
+  validates :mediums, length: { maximum: MEDIUMS_LIMIT }
   validates :medium, length: { maximum: 160 }, allow_blank: true
   validates :edition, length: { maximum: 80 }, allow_blank: true
   validates :width, :height, :depth, numericality: { greater_than: 0, less_than: 100_000 }, allow_nil: true
@@ -57,6 +65,11 @@ class ArtPiece < ApplicationRecord
   validates :description, length: { maximum: 4000 }, allow_blank: true
 
   scope :recent, -> { order(created_at: :desc) }
+
+  # A medium a piece is put in joins its artist's portfolio mediums, so the
+  # chips there and the pieces stay in step. Only once they have a portfolio:
+  # before that, setting one up offers the mediums their pieces already use.
+  after_save :add_mediums_to_portfolio, if: :saved_change_to_mediums?
 
   # Reachable adapter — reach visibility (visible_to / visible_to?)
   # lives in the concern; these tell it how an ArtPiece stores its
@@ -70,6 +83,18 @@ class ArtPiece < ApplicationRecord
   end
 
   private
+
+  def add_mediums_to_portfolio
+    portfolio = owner.art_portfolio
+    return if portfolio.nil?
+
+    known = portfolio.mediums.map(&:downcase)
+    missing = mediums.reject { |medium| known.include?(medium.downcase) }
+    return if missing.empty?
+
+    room = ArtPortfolio::MEDIUMS_LIMIT - portfolio.mediums.size
+    portfolio.update(mediums: portfolio.mediums + missing.first([room, 0].max)) if room.positive?
+  end
 
   # Reachable adapter (instance side).
   def reachable_owner_id

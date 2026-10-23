@@ -137,7 +137,20 @@ export const ArtPortfolioEditor: React.FC<Props> = ({
   onSaved,
 }) => {
   const intl = useIntl();
-  const [mediums, setMediums] = useState<string[]>(portfolio.mediums);
+  // Setting up for the first time starts from the mediums their pieces
+  // already use.
+  const [mediums, setMediums] = useState<string[]>(() => {
+    const seen = new Map<string, string>();
+    [
+      ...portfolio.mediums,
+      ...(portfolio.set_up
+        ? []
+        : portfolio.pieces.flatMap((piece) => piece.mediums)),
+    ].forEach((name) => {
+      if (!seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name);
+    });
+    return [...seen.values()].slice(0, MEDIUMS_LIMIT);
+  });
   const [typed, setTyped] = useState('');
   const [statement, setStatement] = useState(portfolio.statement ?? '');
   const [open, setOpen] = useState(portfolio.open_for_commissions);

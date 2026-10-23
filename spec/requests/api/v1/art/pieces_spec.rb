@@ -37,5 +37,19 @@ RSpec.describe 'Art pieces' do
 
       expect(response).to have_http_status(422)
     end
+
+    # docs/spaces/art.md, Mediums: a piece's mediums join its artist's
+    # portfolio mediums.
+    it 'puts the piece in the mediums picked, and adds a new one to the portfolio', :aggregate_failures do
+      user.account.create_art_portfolio!(mediums: %w(Ceramics))
+
+      post '/api/v1/art/pieces', headers: headers, params: { art_piece: {
+        title: 'Moon jar', kind: 'ceramic', visibility: 'public', mediums: ['Ceramics', ' Raku ', 'ceramics']
+      } }
+
+      expect(response).to have_http_status(201)
+      expect(response.parsed_body['mediums']).to eq %w(Ceramics Raku)
+      expect(user.account.art_portfolio.reload.mediums).to eq %w(Ceramics Raku)
+    end
   end
 end

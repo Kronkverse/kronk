@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -8,6 +8,7 @@ import {
   apiCreatePiece,
   apiDeletePhoto,
   apiGetPiece,
+  apiGetPortfolio,
   apiUpdatePiece,
 } from 'mastodon/api/art';
 import type {
@@ -25,6 +26,7 @@ import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useIdentity } from 'mastodon/identity_context';
 
 import { AVAILABILITIES, AVAILABILITY_MESSAGES } from '../details';
 import { ART_KIND_MESSAGES, sortedArtKinds } from '../kinds';
@@ -61,13 +63,24 @@ const messages = defineMessages({
   kindLabel: { id: 'art.composer.kind_label', defaultMessage: 'Kind' },
   details: { id: 'art.composer.details', defaultMessage: 'Details' },
   medium: {
-    id: 'art.composer.medium',
-    defaultMessage: 'Medium and materials',
+    id: 'art.composer.materials',
+    defaultMessage: 'Materials',
   },
   mediumPlaceholder: {
-    id: 'art.composer.medium_placeholder',
-    defaultMessage: 'e.g. Oil on linen',
+    id: 'art.composer.materials_placeholder',
+    defaultMessage: 'e.g. Stoneware, celadon glaze',
   },
+  mediums: { id: 'art.composer.mediums', defaultMessage: 'Medium' },
+  mediumsHint: {
+    id: 'art.composer.mediums_hint',
+    defaultMessage:
+      "Tap the medium it's in; it's how your portfolio sorts your work.",
+  },
+  newMedium: {
+    id: 'art.composer.new_medium',
+    defaultMessage: 'New medium',
+  },
+  add: { id: 'art.composer.add_medium', defaultMessage: 'Add' },
   size: { id: 'art.composer.size', defaultMessage: 'Add size' },
   width: { id: 'art.composer.width', defaultMessage: 'Width' },
   height: { id: 'art.composer.height', defaultMessage: 'Height' },
@@ -120,6 +133,7 @@ interface ArtPieceDraftParams {
 // box stays empty rather than becoming 0.
 interface DetailsForm {
   medium: string;
+  mediums: string[];
   // Size is optional twice over: the switch says whether the piece has one.
   sized: boolean;
   width: string;
@@ -132,6 +146,7 @@ interface DetailsForm {
 
 const detailsFormOf = (piece?: Partial<ArtPieceDetailsJSON>): DetailsForm => ({
   medium: piece?.medium ?? '',
+  mediums: piece?.mediums ?? [],
   sized: Boolean(piece?.width ?? piece?.height),
   width: piece?.width?.toString() ?? '',
   height: piece?.height?.toString() ?? '',
@@ -148,6 +163,7 @@ const toNumber = (value: string): number | null => {
 
 const detailsPayload = (form: DetailsForm): ArtPieceDetailsJSON => ({
   medium: form.medium.trim() || null,
+  mediums: form.mediums,
   // A piece shows width × height; depth isn't asked for (@mangobee,
   // 2026-10-23), so saving clears any.
   width: form.sized ? toNumber(form.width) : null,
@@ -283,6 +299,74 @@ export const ArtPieceComposer: React.FC<Props> = ({
       setDetails((was) => ({ ...was, [name]: value }));
     },
     [],
+  );
+
+  // The artist's mediums to pick from: their portfolio's, and any their
+  // pieces already use (before they've set a portfolio up).
+  const { accountId: myId } = useIdentity();
+  const [knownMediums, setKnownMediums] = useState<string[]>([]);
+  const [newMedium, setNewMedium] = useState('');
+  useEffect(() => {
+    if (!myId) return;
+    const guard = { stale: false };
+    apiGetPortfolio(myId)
+      .then((portfolio) => {
+        if (guard.stale) return undefined;
+        const seen = new Map<string, string>();
+        [
+          ...portfolio.mediums,
+          ...portfolio.pieces.flatMap((piece) => piece.mediums),
+        ].forEach((name) => {
+          if (!seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name);
+        });
+        setKnownMediums([...seen.values()]);
+        return undefined;
+      })
+      .catch(() => undefined);
+    return () => {
+      guard.stale = true;
+    };
+  }, [myId]);
+  const offeredMediums = useMemo(() => {
+    const seen = new Set(knownMediums.map((m) => m.toLowerCase()));
+    return [
+      ...knownMediums,
+      ...details.mediums.filter((m) => !seen.has(m.toLowerCase())),
+    ];
+  }, [knownMediums, details.mediums]);
+  const toggleMedium = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const name = e.currentTarget.value;
+    setDetails((was) => ({
+      ...was,
+      mediums: was.mediums.includes(name)
+        ? was.mediums.filter((m) => m !== name)
+        : [...was.mediums, name].slice(0, 6),
+    }));
+  }, []);
+  const handleNewMedium = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewMedium(e.target.value);
+    },
+    [],
+  );
+  const addNewMedium = useCallback(() => {
+    const name = newMedium.trim().slice(0, 40);
+    if (!name) return;
+    setDetails((was) =>
+      was.mediums.some((m) => m.toLowerCase() === name.toLowerCase())
+        ? was
+        : { ...was, mediums: [...was.mediums, name].slice(0, 6) },
+    );
+    setNewMedium('');
+  }, [newMedium]);
+  const handleNewMediumKey = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addNewMedium();
+      }
+    },
+    [addNewMedium],
   );
 
   const handleSized = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -505,6 +589,52 @@ export const ArtPieceComposer: React.FC<Props> = ({
 
         <fieldset className='art-composer__details'>
           <legend>{intl.formatMessage(messages.details)}</legend>
+
+          <div className='art-composer__detail art-composer__detail--wide'>
+            <span>{intl.formatMessage(messages.mediums)}</span>
+            <span className='art-composer__hint'>
+              {intl.formatMessage(messages.mediumsHint)}
+            </span>
+            {offeredMediums.length > 0 && (
+              <div className='art-composer__mediums'>
+                {offeredMediums.map((name) => {
+                  const on = details.mediums.includes(name);
+                  return (
+                    <button
+                      key={name}
+                      type='button'
+                      value={name}
+                      onClick={toggleMedium}
+                      aria-pressed={on}
+                      className={`art-composer__medium${on ? ' art-composer__medium--on' : ''}`}
+                      disabled={pending}
+                    >
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className='art-composer__new-medium'>
+              <input
+                type='text'
+                value={newMedium}
+                onChange={handleNewMedium}
+                onKeyDown={handleNewMediumKey}
+                maxLength={40}
+                placeholder={intl.formatMessage(messages.newMedium)}
+                aria-label={intl.formatMessage(messages.newMedium)}
+                disabled={pending}
+              />
+              <button
+                type='button'
+                onClick={addNewMedium}
+                disabled={pending || !newMedium.trim()}
+              >
+                {intl.formatMessage(messages.add)}
+              </button>
+            </div>
+          </div>
 
           <label className='art-composer__detail art-composer__detail--wide'>
             <span>{intl.formatMessage(messages.medium)}</span>

@@ -16,7 +16,11 @@ export type ArtSizeUnit = 'cm' | 'in';
 
 // What a piece is made of, how big, when, and its edition. All optional.
 export interface ArtPieceDetailsJSON {
+  // Materials, as written ("Stoneware, celadon glaze").
   medium: string | null;
+  // The mediums it's in, picked from the artist's portfolio mediums: the
+  // category a portfolio's chips sort by.
+  mediums: string[];
   width: number | null;
   height: number | null;
   depth: number | null;
@@ -74,6 +78,7 @@ export interface ApiArtPieceJSON extends ArtPieceDetailsJSON {
 export interface ArtPieceSummaryJSON {
   id: string;
   medium?: string | null;
+  mediums?: string[];
   availability?: ArtAvailability;
   title: string;
   kind: ArtKind;

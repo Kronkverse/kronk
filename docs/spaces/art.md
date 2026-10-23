@@ -22,7 +22,8 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 
 A piece can also say what a gallery label would (Kommons "Portfolio style & Art cards showing media on profile", @mangobee, 2026-10-23). All optional, under **Details** in the composer:
 
-- **Medium and materials** — free text, up to 160 characters ("Oil on linen", "Stoneware, celadon glaze").
+- **Medium** — tapped from the artist's portfolio mediums (or a new one typed, which joins their portfolio too, once they have one; `ArtPiece#add_mediums_to_portfolio`), up to six (`art_pieces.mediums`). It's the category the portfolio's chips sort by, and on the piece page each one links back to the portfolio filtered to it.
+- **Materials** — free text, up to 160 characters ("Stoneware, celadon glaze"; the `medium` column).
 - **Size** — behind an **Add size** switch: width × height, with a `cm` | `in` toggle (`size_unit`). Depth isn't asked for (@mangobee, 2026-10-23); saving a piece clears any.
 - **Year made**, and **Edition** ("Original", "3 of 25", up to 80 characters).
 - **Status** (`availability`) — _Not for sale_ (the default), _Available_, _Sold_, _Commissioned_, _On show_.
@@ -38,9 +39,9 @@ The piece page shows them as one line under the title, "Oil on linen · 60 × 90
 
 ## Portfolio
 
-Every artist has a portfolio at **`/hub/art/@:acct`** (Kommons "Portfolio style & Art cards showing media on profile", @mangobee, 2026-10-23). It is `<KornerDetail>` with no picture at its head (@mangobee, 2026-10-23: the avatar there read as a cover photo): their name, _Portfolio_, and a facts line (N pieces · **Open for commissions** when it is on · @acct, linking to the profile). Under it:
+Every artist has a portfolio at **`/hub/art/@:acct`** (Kommons "Portfolio style & Art cards showing media on profile", @mangobee, 2026-10-23). It is `<KornerDetail>` with no picture at its head (@mangobee, 2026-10-23: the big avatar there read as a cover photo); their profile picture sits small beside their name, then _Portfolio_, and a facts line (N pieces · **Open for commissions** when it is on · @acct, linking to the profile). Under it:
 
-- **Mediums** — the ones they work in, as chips (up to 12, each up to 40 characters; `art_portfolios.mediums`). Tapping one narrows the works to pieces whose medium or kind names it; **All** clears it.
+- **Mediums** — the ones they work in, as chips with a count of the pieces in each (up to 12, each up to 40 characters; `art_portfolios.mediums`, plus any a piece uses that the list doesn't). Tapping one narrows the works to the pieces put in it (`art_pieces.mediums`); a piece from before pieces had mediums is matched on its materials and kind. **All** clears it. `?medium=` opens it filtered.
 - **Artist statement** — up to 2000 characters, as written.
 - **Featured** — up to three pieces the artist leads with, two across and larger, in the order they picked.
 - **All works** — every other piece that reaches the viewer, newest first, as a `<SpaceGrid>` of `<SpaceCard>`s.
