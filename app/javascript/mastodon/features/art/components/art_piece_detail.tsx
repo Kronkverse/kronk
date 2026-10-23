@@ -151,6 +151,22 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
 
       {/* The gallery label: medium · size · year · edition, then the
           status when it's anything but "not for sale". */}
+      {/* Its mediums lead back to the artist's portfolio, filtered to that
+          medium (docs/spaces/art.md, Mediums). */}
+      {piece.mediums.length > 0 && (
+        <div className='art-piece-detail__mediums'>
+          {piece.mediums.map((name) => (
+            <Link
+              key={name}
+              to={`/hub/art/@${piece.owner.acct}?medium=${encodeURIComponent(name)}`}
+              className='art-piece-detail__medium'
+            >
+              {name}
+            </Link>
+          ))}
+        </div>
+      )}
+
       {(pieceFacts(intl, piece).length > 0 ||
         availabilityLabel(intl, piece.availability)) && (
         <p className='art-piece-detail__facts'>

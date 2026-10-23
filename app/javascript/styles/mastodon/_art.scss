@@ -76,6 +76,30 @@
     background: none;
   }
 
+  // A piece's mediums, each a way back to the artist's portfolio filtered
+  // to it.
+  &__mediums {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 var(--sp-2, 8px);
+  }
+
+  &__medium {
+    padding: 3px 12px;
+    color: var(--accent-text);
+    font-size: 13px;
+    text-decoration: none;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-round);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--semantic-text-on-accent);
+      background: var(--accent);
+    }
+  }
+
   // The gallery label under the title: medium · size · year · edition,
   // and the status as a chip.
   &__facts {
@@ -301,6 +325,28 @@
 // An artist's portfolio (docs/spaces/art.md, Portfolio). The page is
 // <KornerDetail>; this is only what sits inside it.
 .art-portfolio {
+  // The profile picture, small, beside the name.
+  &__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__medium-count {
+    margin-left: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    opacity: 0.75;
+  }
+
   // The first-time set-up card on your own portfolio.
   &__set-up {
     margin: 0 0 var(--sp-4, 16px);
@@ -652,5 +698,55 @@
   &--on {
     color: var(--semantic-text-on-accent);
     background: var(--accent);
+  }
+}
+
+// A piece's mediums in the composer: the artist's own, tapped on or off,
+// and a box to add a new one (it joins their portfolio too).
+.art-composer__mediums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.art-composer__medium {
+  padding: 4px 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  cursor: pointer;
+
+  &--on {
+    color: var(--semantic-text-on-accent);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+}
+
+.art-composer__new-medium {
+  display: flex;
+  gap: 6px;
+
+  input {
+    flex: 1;
+  }
+
+  button {
+    padding: 6px 14px;
+    color: var(--accent-text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    background: none;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-round);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
   }
 }

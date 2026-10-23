@@ -6,7 +6,7 @@
 class REST::ArtPieceSerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :kind, :visibility, :photo_count, :created_at
   # Piece details (docs/spaces/art.md).
-  attributes :medium, :width, :height, :depth, :size_unit, :year_made, :edition, :availability
+  attributes :medium, :mediums, :width, :height, :depth, :size_unit, :year_made, :edition, :availability
 
   attribute :cover_url
   attribute :is_owner
