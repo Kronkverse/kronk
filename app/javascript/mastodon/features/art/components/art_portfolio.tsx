@@ -29,11 +29,13 @@ import { ArtPortfolioEditor } from './art_portfolio_editor';
 // open for commissions can be asked through Nudges.
 
 const messages = defineMessages({
-  subtitle: { id: 'art.portfolio.subtitle', defaultMessage: 'Portfolio' },
-  pieces: {
-    id: 'art.portfolio.pieces_count',
-    defaultMessage: '{count, plural, one {# piece} other {# pieces}}',
+  subtitle: {
+    id: 'art.portfolio.subtitle_count',
+    defaultMessage:
+      'Portfolio · {count, plural, one {# piece} other {# pieces}}',
   },
+  readMore: { id: 'art.portfolio.read_more', defaultMessage: 'Read more' },
+  readLess: { id: 'art.portfolio.read_less', defaultMessage: 'Show less' },
   commissions: {
     id: 'art.portfolio.open_for_commissions',
     defaultMessage: 'Open for commissions',
@@ -77,6 +79,9 @@ const messages = defineMessages({
   },
 });
 
+// A statement longer than this folds to three lines behind Read more.
+const STATEMENT_FOLD = 220;
+
 interface Props {
   portfolio: ApiArtPortfolioJSON;
   onChange: (portfolio: ApiArtPortfolioJSON) => void;
@@ -90,6 +95,10 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
   const [editing, setEditing] = useState<false | 'all' | 'guided'>(false);
   // A piece page's medium chip links here with ?medium=, already filtered.
   const { search } = useLocation();
+  const [statementOpen, setStatementOpen] = useState(false);
+  const toggleStatement = useCallback(() => {
+    setStatementOpen((was) => !was);
+  }, []);
   const [medium, setMedium] = useState<string | null>(() =>
     new URLSearchParams(search).get('medium'),
   );
@@ -207,30 +216,33 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
           {name}
         </span>
       }
-      subtitle={intl.formatMessage(messages.subtitle)}
+      subtitle={intl.formatMessage(messages.subtitle, { count: total })}
       meta={
         <KornerMeta
           items={[
-            intl.formatMessage(messages.pieces, { count: total }),
-            portfolio.open_for_commissions
-              ? intl.formatMessage(messages.commissions)
-              : null,
             <Link key='profile' to={`/@${account.acct}`}>
               @{account.acct}
             </Link>,
-          ].filter(Boolean)}
+          ]}
         />
       }
       actions={
-        portfolio.open_for_commissions && !portfolio.is_owner ? (
+        // Open for commissions is said once, plainly, with the way to ask
+        // beside it (visitors) rather than as one fact among the others.
+        portfolio.open_for_commissions ? (
           <KornerActionBar>
-            <KornerPill
-              label={intl.formatMessage(messages.ask)}
-              icon={ChatIcon}
-              iconId='chat'
-              variant='primary'
-              onClick={ask}
-            />
+            <span className='art-portfolio__commissions'>
+              {intl.formatMessage(messages.commissions)}
+            </span>
+            {!portfolio.is_owner && (
+              <KornerPill
+                label={intl.formatMessage(messages.ask)}
+                icon={ChatIcon}
+                iconId='chat'
+                variant='primary'
+                onClick={ask}
+              />
+            )}
           </KornerActionBar>
         ) : undefined
       }
@@ -284,8 +296,28 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
         </div>
       )}
 
+      {/* The statement as gallery wall text, folded to three lines when
+          it runs long. */}
       {portfolio.statement && (
-        <p className='art-portfolio__statement'>{portfolio.statement}</p>
+        <div className='art-portfolio__statement-wrap'>
+          <p
+            className={`art-portfolio__statement${statementOpen ? '' : ' art-portfolio__statement--folded'}`}
+          >
+            {portfolio.statement}
+          </p>
+          {portfolio.statement.length > STATEMENT_FOLD && (
+            <button
+              type='button'
+              className='art-portfolio__read-more'
+              onClick={toggleStatement}
+              aria-expanded={statementOpen}
+            >
+              {intl.formatMessage(
+                statementOpen ? messages.readLess : messages.readMore,
+              )}
+            </button>
+          )}
+        </div>
       )}
 
       {featured.length > 0 && (
@@ -293,9 +325,16 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
           <h2 className='art-portfolio__heading'>
             {intl.formatMessage(messages.featured)}
           </h2>
-          <SpaceGrid className='art-portfolio__featured'>
-            {featured.map(card)}
+          {/* The first featured piece leads, large and whole; the rest sit
+              under it. */}
+          <SpaceGrid layout='masonry' className='art-portfolio__lead'>
+            {featured.slice(0, 1).map(card)}
           </SpaceGrid>
+          {featured.length > 1 && (
+            <SpaceGrid layout='masonry' className='art-portfolio__featured'>
+              {featured.slice(1).map(card)}
+            </SpaceGrid>
+          )}
         </section>
       )}
 
@@ -306,7 +345,7 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
               {intl.formatMessage(messages.allWorks)}
             </h2>
           )}
-          <SpaceGrid>{rest.map(card)}</SpaceGrid>
+          <SpaceGrid layout='masonry'>{rest.map(card)}</SpaceGrid>
         </section>
       )}
 
