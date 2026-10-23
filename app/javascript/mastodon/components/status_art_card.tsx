@@ -17,13 +17,15 @@ const messages = defineMessages({
   },
 });
 
-interface ArtSummary {
+export interface ArtSummary {
   id: string;
   title: string;
   kind: ArtKind;
   visibility: 'public' | 'mates' | 'orbit' | 'self_only';
   photo_count: number;
   cover_url: string | null;
+  // The first few photos at thumbnail size (profile Art tile).
+  preview_urls?: string[];
   owner_acct: string;
 }
 
