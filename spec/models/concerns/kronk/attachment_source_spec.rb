@@ -44,6 +44,9 @@ RSpec.describe Kronk::AttachmentSource do
     allow(Kronk::KornerRegistry).to receive(:model_for).and_call_original
     allow(Kronk::KornerRegistry).to receive(:find).with('kalendar').and_return(kalendar_manifest)
     allow(Kronk::KornerRegistry).to receive(:find).with('albutts').and_return(albutts_manifest)
+    # The stubbed manifests have no resources, so say which model each is.
+    allow(Kronk::KornerRegistry).to receive(:model_for).with('kalendar').and_return(Event)
+    allow(Kronk::KornerRegistry).to receive(:model_for).with('albutts').and_return(Album)
   end
 
   describe 'spawn trigger on create' do
