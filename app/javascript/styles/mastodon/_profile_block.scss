@@ -294,10 +294,12 @@
 
   // "On <name> Country", under the bio.
   &__country {
+    position: relative;
     max-width: 38rem;
     margin: calc(-1 * var(--sp-2, 8px)) 0 0;
     padding: 0 var(--sp-4, 16px) var(--sp-3, 12px);
     color: var(--text-muted);
+    font-family: var(--font-body);
     font-size: 14px;
     line-height: 1.4;
   }
@@ -311,6 +313,7 @@
     flex-direction: column;
     gap: var(--sp-1, 4px);
     color: var(--text-secondary);
+    font-family: var(--font-body);
     font-size: 13px;
   }
 
@@ -318,7 +321,7 @@
     width: 100%;
     padding: var(--sp-2, 8px) var(--sp-3, 12px);
     color: var(--text-primary);
-    font: inherit;
+    font-family: var(--font-body);
     font-size: 15px;
     background: transparent;
     border: 1px dashed var(--border-default);
@@ -329,6 +332,44 @@
       outline: 2px solid var(--accent);
       outline-offset: 1px;
       border-style: solid;
+    }
+  }
+
+  // The Country suggestions, under the field: Kronk's own list in the body
+  // font (a browser <datalist> is drawn in the system font).
+  &__country-list {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% - var(--sp-3, 12px) + 4px);
+    left: var(--sp-4, 16px);
+    right: var(--sp-4, 16px);
+    max-height: 280px;
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    list-style: none;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--elevation-menu);
+  }
+
+  &__country-option {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    text-align: left;
+    background: none;
+    border: 0;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+
+    &:hover,
+    &--active {
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
     }
   }
 
