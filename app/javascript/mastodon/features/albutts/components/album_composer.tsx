@@ -24,6 +24,12 @@ import type {
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
+import {
+  ComposeField,
+  ComposeHint,
+  ComposeSection,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import { KrewMultiSelect } from 'mastodon/components/krew_multi_select';
@@ -274,15 +280,13 @@ const messages = defineMessages({
     id: 'albutts.composer.contribution_restricted',
     defaultMessage: 'People I choose',
   },
-  registerKrew: {
-    id: 'albutts.composer.register_krew',
-    defaultMessage: 'Register as Krew album',
+  // A new album Konnected to one of your Krews is that Krew's album.
+  krewAlbumHint: {
+    id: 'albutts.composer.krew_album_hint',
+    defaultMessage:
+      'Konnected to {krew}, it will be {krew}’s album. Once it’s made, that can’t be undone.',
   },
-  registerKrewHint: {
-    id: 'albutts.composer.register_krew_hint',
-    defaultMessage: 'Once the album is made, this can’t be undone.',
-  },
-  registerKrewOff: {
+  krewAlbumOff: {
     id: 'albutts.composer.register_krew_off',
     defaultMessage: 'Keep it mine',
   },
@@ -433,9 +437,6 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   });
   const contributionOpen = addMode === 'open';
   const chosenAdd = addMode === 'chosen';
-  // Registering a new album as a Krew album, from the composer: it is then
-  // made like one from the Krew's page (`forKrew`).
-  const [registerKrew, setRegisterKrew] = useState<ComposerKrew | null>(null);
   const [audienceKrewIds, setAudienceKrewIds] = useState<string[]>(
     editing?.krews?.map((k) => k.id) ?? [],
   );
@@ -451,22 +452,50 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [coverId, setCoverId] = useState<string | null>(
     editing?.cover_media_attachment_id ?? null,
   );
-  // A Krew album, being made from a Krew's page or edited. It is seen by the
-  // Krew or by everyone, and its members add, so that one choice replaces
-  // reach, Krews and who can add. It isn't kept as a draft.
+  // What a new album will be Konnected to (decisions.md, 2026-10-23). An
+  // album made for a Krew is the Krew's album, Konnected to it already, so
+  // that tile stays put.
+  const konnect = useKonnect('albutts', { sourceHandled: !!newForKrew });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
+  const removeKonnect = konnect.remove;
+  const availableKrews = useAvailableKrews();
+  // A new album Konnected to one of your own Krews is that Krew's album: the
+  // first such Krew in the Konnect row. A Krew you're not in is just a link.
+  // The row is the one place this is decided; dropping the tile, or "Keep
+  // it mine" below, makes it yours again.
+  const konnectedKrew = useMemo<ComposerKrew | undefined>(() => {
+    if (editing || newForKrew) return undefined;
+    for (const target of konnect.pending) {
+      if (target.slug !== 'krew') continue;
+      const krew = availableKrews.find((k) => k.id === target.id);
+      if (krew)
+        return { id: krew.id, name: krew.name, listed: krew.listed ?? false };
+    }
+    return undefined;
+  }, [editing, newForKrew, konnect.pending, availableKrews]);
+  // A Krew album, being made from a Krew's page or for a Konnected Krew, or
+  // edited. It is seen by the Krew or by everyone, and its members add, so
+  // that one choice replaces reach, Krews and who can add. Made from a
+  // Krew's page, it isn't kept as a draft.
   const forKrew = useMemo<ComposerKrew | undefined>(() => {
     if (newForKrew) return newForKrew;
-    if (registerKrew) return registerKrew;
+    if (konnectedKrew) return konnectedKrew;
     const k = editing?.krew_id
       ? editing.krews?.find((x) => x.id === editing.krew_id)
       : undefined;
     return k
       ? { id: k.id, name: k.name, listed: k.listed ?? false }
       : undefined;
-  }, [newForKrew, registerKrew, editing]);
+  }, [newForKrew, konnectedKrew, editing]);
   const [audience, setAudience] = useState<KrewAlbumAudience>(
     editing?.audience ?? 'krew',
   );
+  // Each Krew Konnected in starts seen by the Krew only.
+  const konnectedKrewId = konnectedKrew?.id;
+  useEffect(() => {
+    if (!editing) setAudience('krew');
+  }, [editing, konnectedKrewId]);
   const [giving, setGiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saveError, setSaveError] = useState<'save' | 'delete' | 'give' | null>(
@@ -507,12 +536,6 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
-  // What a new album will be Konnected to (decisions.md, 2026-10-23). An
-  // album made for a Krew is the Krew's album, Konnected to it already, so
-  // that tile stays put.
-  const konnect = useKonnect('albutts', { sourceHandled: !!newForKrew });
-  const restoreKonnect = konnect.restore;
-  const commitKonnect = konnect.commit;
   const [dragging, setDragging] = useState(false);
 
   // Drafts (docs/spaces/albutts.md, Drafts; docs/design.md, Drafts). A new
@@ -649,10 +672,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const handleContributionRestricted = useCallback(() => {
     setAddMode('chosen');
   }, []);
-  const handleRegisterOff = useCallback(() => {
-    setRegisterKrew(null);
-    setAudience('krew');
-  }, []);
+  // Back to a personal album: the Krew leaves the Konnect row.
+  const handleKrewAlbumOff = useCallback(() => {
+    if (konnectedKrewId) removeKonnect({ slug: 'krew', id: konnectedKrewId });
+  }, [konnectedKrewId, removeKonnect]);
 
   const handleContributorAccountsChange = useCallback((next: AccountLite[]) => {
     setContributorAccounts(next);
@@ -1043,6 +1066,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
       setCreatedAlbum(album);
       finishDraft();
+      // A link that fails doesn't undo the album, and isn't the person's to
+      // fix: a Krew album's own Krew is Konnected by the create already, so
+      // its link here comes back refused, which is expected.
       await commitKonnect('albutts', album.id);
 
       // Photos that never uploaded stay out; Retry adds them later.
@@ -1163,20 +1189,6 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   // Album's "who can add" (contribution) is a separate axis that
   // stays inline in the body below, because it's Album-specific
   // rather than a universal composer concern.
-  const availableKrews = useAvailableKrews();
-  const handleRegisterKrew = useCallback(
-    (id: string) => {
-      const krew = availableKrews.find((k) => k.id === id);
-      if (!krew) return;
-      setRegisterKrew({
-        id: krew.id,
-        name: krew.name,
-        listed: krew.listed ?? false,
-      });
-      setAudience('krew');
-    },
-    [availableKrews],
-  );
   const reachValue: ReachValue = REACH_LADDER.includes(visibility as ReachValue)
     ? (visibility as ReachValue)
     : 'public';
@@ -1217,376 +1229,343 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       konnect={editing ? null : konnect}
     >
       {confirmDialog}
-      <div className='albutts-composer'>
-        <label
-          className='albutts-composer__label'
-          htmlFor='albutts-composer-title'
-        >
-          {intl.formatMessage(messages.titleLabel)}
-        </label>
-        <input
-          id='albutts-composer-title'
-          type='text'
-          className='albutts-composer__input'
-          value={title}
-          onChange={handleTitle}
-          maxLength={TITLE_MAX}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
-          disabled={!!createdAlbum}
-        />
+      <ComposeTitle
+        value={title}
+        onChange={handleTitle}
+        maxLength={TITLE_MAX}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        aria-label={intl.formatMessage(messages.titleLabel)}
+        disabled={!!createdAlbum}
+      />
 
-        <label
-          className='albutts-composer__label'
-          htmlFor='albutts-composer-description'
-        >
-          {intl.formatMessage(messages.descriptionLabel)}
-        </label>
-        {/* The caption box, for its @name suggestions: someone named here
-            is told, and the name links to them on the album. */}
-        <CaptionTextarea
-          id='albutts-composer-description'
-          className='albutts-composer__textarea'
-          value={description}
-          onChange={setDescription}
-          maxLength={DESCRIPTION_MAX}
-          rows={3}
-          disabled={!!createdAlbum}
-        />
+      {/* The caption box, for its @name suggestions: someone named here
+          is told, and the name links to them on the album. Dressed as the
+          kit's <ComposeBody>. */}
+      <CaptionTextarea
+        className='compose-input compose-input--body'
+        value={description}
+        onChange={setDescription}
+        placeholder={intl.formatMessage(messages.descriptionLabel)}
+        maxLength={DESCRIPTION_MAX}
+        rows={4}
+        disabled={!!createdAlbum}
+      />
 
-        {editing && editing.photos.length > 0 && (
-          <CoverPicker
-            photos={editing.photos}
-            coverId={coverId ?? firstAdded(editing.photos)}
-            onPick={pickCover}
-            label={intl.formatMessage(messages.coverLabel)}
-            hint={intl.formatMessage(messages.coverHint)}
+      {editing && editing.photos.length > 0 && (
+        <CoverPicker
+          photos={editing.photos}
+          coverId={coverId ?? firstAdded(editing.photos)}
+          onPick={pickCover}
+          label={intl.formatMessage(messages.coverLabel)}
+          hint={intl.formatMessage(messages.coverHint)}
+        />
+      )}
+
+      {!createdAlbum && !editing && (
+        <div
+          className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <input
+            id='albutts-composer-photos'
+            type='file'
+            multiple
+            accept='image/*,video/*'
+            className='albutts-composer__file'
+            onChange={handlePhotosChange}
+            disabled={pending}
           />
-        )}
-
-        {!createdAlbum && !editing && (
-          <div
-            className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+          <label
+            htmlFor='albutts-composer-photos'
+            className='albutts-composer__drop-zone-label'
           >
-            <input
-              id='albutts-composer-photos'
-              type='file'
-              multiple
-              accept='image/*,video/*'
-              className='albutts-composer__file'
-              onChange={handlePhotosChange}
-              disabled={pending}
+            <Icon
+              id='add_photo_alternate'
+              icon={AddPhotoAlternateIcon}
+              className='albutts-composer__drop-zone-icon'
             />
-            <label
-              htmlFor='albutts-composer-photos'
-              className='albutts-composer__drop-zone-label'
-            >
-              <Icon
-                id='add_photo_alternate'
-                icon={AddPhotoAlternateIcon}
-                className='albutts-composer__drop-zone-icon'
-              />
-              <span className='albutts-composer__drop-zone-text'>
-                {dragging
-                  ? intl.formatMessage(messages.photosDropCue)
-                  : photos.length > 0
-                    ? intl.formatMessage(messages.photosPickMore, {
-                        count: photos.length,
-                      })
-                    : intl.formatMessage(messages.photosPick)}
-              </span>
-            </label>
-          </div>
-        )}
-        {photos.length > 0 && (
-          <>
-            {!editing && photos.length > 1 && !createdAlbum && (
-              <p className='albutts-composer__note'>
-                {intl.formatMessage(messages.arrangeHint)}
-              </p>
-            )}
-            <ul className='albutts-composer__picks'>
-              {photos.map((p, index) => (
-                <li
-                  key={p.key}
-                  className={`albutts-composer__pick albutts-composer__pick--${p.status}`}
-                >
-                  <div
-                    className='albutts-composer__pick-thumb'
-                    title={intl.formatMessage(chipMessage(p.status, messages))}
-                  >
-                    <img
-                      className='albutts-composer__pick-img'
-                      src={p.previewUrl}
-                      alt={p.caption !== '' ? p.caption : (p.file?.name ?? '')}
-                    />
-                    <span
-                      className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
-                      aria-hidden
-                    >
-                      {chipGlyph(p.status)}
-                    </span>
-                  </div>
-                  {!editing && photos.length > 1 && (
-                    <PickArrange
-                      photoKey={p.key}
-                      first={index === 0}
-                      last={index === photos.length - 1}
-                      cover={(coverKey ?? photos[0]?.key) === p.key}
-                      disabled={pending || !!createdAlbum}
-                      onMove={movePhoto}
-                      onCover={pickCoverKey}
-                    />
-                  )}
-                  <PickCaptionRow
-                    photoKey={p.key}
-                    caption={p.caption}
-                    disabled={
-                      pending || p.status === 'done' || p.status === 'adding'
-                    }
-                    placeholder={intl.formatMessage(
-                      messages.captionPlaceholder,
-                    )}
-                    onChange={handleCaptionChange}
-                  />
-                </li>
-              ))}
-            </ul>
-            {!createdAlbum && (
-              <button
-                type='button'
-                className='albutts-composer__clear'
-                onClick={handleClearPhotos}
-                disabled={pending}
+            <span className='albutts-composer__drop-zone-text'>
+              {dragging
+                ? intl.formatMessage(messages.photosDropCue)
+                : photos.length > 0
+                  ? intl.formatMessage(messages.photosPickMore, {
+                      count: photos.length,
+                    })
+                  : intl.formatMessage(messages.photosPick)}
+            </span>
+          </label>
+        </div>
+      )}
+      {photos.length > 0 && (
+        <>
+          {!editing && photos.length > 1 && !createdAlbum && (
+            <ComposeHint>
+              {intl.formatMessage(messages.arrangeHint)}
+            </ComposeHint>
+          )}
+          <ul className='albutts-composer__picks'>
+            {photos.map((p, index) => (
+              <li
+                key={p.key}
+                className={`albutts-composer__pick albutts-composer__pick--${p.status}`}
               >
-                {intl.formatMessage(messages.photosClear)}
-              </button>
-            )}
-          </>
-        )}
-
-        {/* Contribution — Album-specific "who can add photos". Reach
-            + krews (the universal composer axis) live in the shell
-            header via `<ReachDropdown>` (see reachControl above).
-            The two-axes ScopePicker retired here 2026-09-09; Album
-            is the only composer whose product model actually needs
-            the second question. */}
-        {forKrew ? (
-          <>
-            <KrewAudienceField
-              krew={forKrew}
-              value={audience}
-              onChange={setAudience}
-              disabled={!!createdAlbum}
-            />
-            {registerKrew && !createdAlbum && (
-              <div className='albutts-composer__contribution-row'>
-                <p className='albutts-composer__note'>
-                  {intl.formatMessage(messages.registerKrewHint)}
-                </p>
-                <div className='albutts-composer__inline-actions'>
-                  <button
-                    type='button'
-                    className='albutts-btn albutts-btn--ghost'
-                    onClick={handleRegisterOff}
-                  >
-                    {intl.formatMessage(messages.registerKrewOff)}
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <fieldset
-            className='albutts-composer__contribution'
-            disabled={!!createdAlbum}
-          >
-            <legend className='albutts-composer__label'>
-              {intl.formatMessage(messages.contributionHeading)}
-            </legend>
-            {isSelfOnly ? (
-              <p className='albutts-composer__note'>
-                {intl.formatMessage(messages.contributionSelfOnlyNote)}
-              </p>
-            ) : (
-              <>
                 <div
-                  className='albutts-composer__contribution-chips'
-                  role='radiogroup'
+                  className='albutts-composer__pick-thumb'
+                  title={intl.formatMessage(chipMessage(p.status, messages))}
                 >
-                  <button
-                    type='button'
-                    role='radio'
-                    aria-checked={addMode === 'me'}
-                    className={`albutts-composer__contribution-chip${addMode === 'me' ? ' albutts-composer__contribution-chip--selected' : ''}`}
-                    onClick={handleContributionMe}
+                  <img
+                    className='albutts-composer__pick-img'
+                    src={p.previewUrl}
+                    alt={p.caption !== '' ? p.caption : (p.file?.name ?? '')}
+                  />
+                  <span
+                    className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
+                    aria-hidden
                   >
-                    {intl.formatMessage(messages.contributionMe)}
-                  </button>
-                  <button
-                    type='button'
-                    role='radio'
-                    aria-checked={contributionOpen}
-                    className={`albutts-composer__contribution-chip${contributionOpen ? ' albutts-composer__contribution-chip--selected' : ''}`}
-                    onClick={handleContributionOpen}
-                  >
-                    {intl.formatMessage(messages.contributionOpen)}
-                  </button>
-                  <button
-                    type='button'
-                    role='radio'
-                    aria-checked={chosenAdd}
-                    className={`albutts-composer__contribution-chip${chosenAdd ? ' albutts-composer__contribution-chip--selected' : ''}`}
-                    onClick={handleContributionRestricted}
-                  >
-                    {intl.formatMessage(messages.contributionRestricted)}
-                  </button>
+                    {chipGlyph(p.status)}
+                  </span>
                 </div>
-                {chosenAdd && (
-                  <div className='albutts-composer__contribution-row'>
-                    <div className='albutts-composer__label'>
-                      {intl.formatMessage(messages.contributorPeople)}
-                    </div>
-                    <AccountMultiSelect
-                      value={contributorAccounts}
-                      onChange={handleContributorAccountsChange}
-                      disabled={!!createdAlbum}
-                    />
-                  </div>
+                {!editing && photos.length > 1 && (
+                  <PickArrange
+                    photoKey={p.key}
+                    first={index === 0}
+                    last={index === photos.length - 1}
+                    cover={(coverKey ?? photos[0]?.key) === p.key}
+                    disabled={pending || !!createdAlbum}
+                    onMove={movePhoto}
+                    onCover={pickCoverKey}
+                  />
                 )}
-              </>
-            )}
-            {!editing && availableKrews.length > 0 && (
-              <div className='albutts-composer__contribution-row'>
-                <div className='albutts-composer__label'>
-                  {intl.formatMessage(messages.registerKrew)}
-                </div>
-                <KrewMultiSelect
-                  options={availableKrews}
-                  selectedIds={[]}
-                  onToggle={handleRegisterKrew}
-                  disabled={!!createdAlbum}
+                <PickCaptionRow
+                  photoKey={p.key}
+                  caption={p.caption}
+                  disabled={
+                    pending || p.status === 'done' || p.status === 'adding'
+                  }
+                  placeholder={intl.formatMessage(messages.captionPlaceholder)}
+                  onChange={handleCaptionChange}
                 />
-              </div>
-            )}
-          </fieldset>
-        )}
+              </li>
+            ))}
+          </ul>
+          {!createdAlbum && (
+            <button
+              type='button'
+              className='albutts-composer__clear'
+              onClick={handleClearPhotos}
+              disabled={pending}
+            >
+              {intl.formatMessage(messages.photosClear)}
+            </button>
+          )}
+        </>
+      )}
 
-        {createdAlbum && photos.length > 0 && (
-          <p className='albutts-composer__progress' aria-live='polite'>
+      {/* Contribution — Album-specific "who can add photos". Reach
+          + krews (the universal composer axis) live in the shell
+          header via `<ReachDropdown>` (see reachControl above).
+          The two-axes ScopePicker retired here 2026-09-09; Album
+          is the only composer whose product model actually needs
+          the second question. */}
+      {forKrew ? (
+        <>
+          <KrewAudienceField
+            krew={forKrew}
+            value={audience}
+            onChange={setAudience}
+            disabled={!!createdAlbum}
+          />
+          {konnectedKrew && !createdAlbum && (
+            <>
+              <ComposeHint>
+                {intl.formatMessage(messages.krewAlbumHint, {
+                  krew: konnectedKrew.name,
+                })}
+              </ComposeHint>
+              <div className='albutts-composer__inline-actions'>
+                <button
+                  type='button'
+                  className='albutts-btn albutts-btn--ghost'
+                  onClick={handleKrewAlbumOff}
+                >
+                  {intl.formatMessage(messages.krewAlbumOff)}
+                </button>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <ComposeSection
+          title={intl.formatMessage(messages.contributionHeading)}
+        >
+          {isSelfOnly ? (
+            <ComposeHint>
+              {intl.formatMessage(messages.contributionSelfOnlyNote)}
+            </ComposeHint>
+          ) : (
+            <>
+              <div
+                className='albutts-composer__contribution-chips'
+                role='radiogroup'
+              >
+                <button
+                  type='button'
+                  role='radio'
+                  aria-checked={addMode === 'me'}
+                  className={`albutts-composer__contribution-chip${addMode === 'me' ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                  onClick={handleContributionMe}
+                  disabled={!!createdAlbum}
+                >
+                  {intl.formatMessage(messages.contributionMe)}
+                </button>
+                <button
+                  type='button'
+                  role='radio'
+                  aria-checked={contributionOpen}
+                  className={`albutts-composer__contribution-chip${contributionOpen ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                  onClick={handleContributionOpen}
+                  disabled={!!createdAlbum}
+                >
+                  {intl.formatMessage(messages.contributionOpen)}
+                </button>
+                <button
+                  type='button'
+                  role='radio'
+                  aria-checked={chosenAdd}
+                  className={`albutts-composer__contribution-chip${chosenAdd ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                  onClick={handleContributionRestricted}
+                  disabled={!!createdAlbum}
+                >
+                  {intl.formatMessage(messages.contributionRestricted)}
+                </button>
+              </div>
+              {chosenAdd && (
+                <ComposeField
+                  label={intl.formatMessage(messages.contributorPeople)}
+                >
+                  <AccountMultiSelect
+                    value={contributorAccounts}
+                    onChange={handleContributorAccountsChange}
+                    disabled={!!createdAlbum}
+                  />
+                </ComposeField>
+              )}
+            </>
+          )}
+        </ComposeSection>
+      )}
+
+      {createdAlbum && photos.length > 0 && (
+        <div aria-live='polite'>
+          <ComposeHint>
             {intl.formatMessage(messages.progressLine, {
               done: doneCount,
               total: photos.length,
               failed: failedCount,
             })}
             {inflightCount > 0 && ' · uploading'}
-          </p>
-        )}
+          </ComposeHint>
+        </div>
+      )}
 
-        {!createdAlbum && uploadFailedCount > 0 && (
-          <>
-            <p className='albutts-composer__error' role='alert'>
-              {intl.formatMessage(messages.uploadFailed, {
-                failed: uploadFailedCount,
-              })}
-            </p>
-            <div className='albutts-composer__inline-actions'>
-              <button
-                type='button'
-                className='albutts-btn albutts-btn--ghost'
-                onClick={handleRetryFailed}
-              >
-                {intl.formatMessage(messages.retryUploads, {
-                  count: uploadFailedCount,
-                })}
-              </button>
-            </div>
-          </>
-        )}
-
-        {rateLimitedUntil !== null && (
-          <p className='albutts-composer__progress' aria-live='polite'>
-            {intl.formatMessage(messages.rateLimited, {
-              time: intl.formatTime(rateLimitedUntil, {
-                hour: 'numeric',
-                minute: '2-digit',
-              }),
+      {!createdAlbum && uploadFailedCount > 0 && (
+        <>
+          <ComposeHint error>
+            {intl.formatMessage(messages.uploadFailed, {
+              failed: uploadFailedCount,
             })}
-          </p>
-        )}
-
-        {error && (
-          <p className='albutts-composer__error' role='alert'>
-            {intl.formatMessage(messages.error)}
-          </p>
-        )}
-        {createdAlbum && failedCount > 0 && !pending && (
-          <p className='albutts-composer__error' role='alert'>
-            {intl.formatMessage(messages.photoErrorPartial, {
-              failed: failedCount,
-            })}
-          </p>
-        )}
-
-        {saveError && (
-          <p className='albutts-composer__error' role='alert'>
-            {intl.formatMessage(
-              saveError === 'save'
-                ? messages.saveError
-                : saveError === 'give'
-                  ? messages.giveError
-                  : messages.deleteError,
-            )}
-          </p>
-        )}
-
-        {editing &&
-          !forKrew &&
-          editing.is_owner &&
-          availableKrews.length > 0 && (
-            <GiveToKrew
-              krews={availableKrews}
-              disabled={giving || pending || deleting}
-              onGive={handleGive}
-            />
-          )}
-
-        {editing && forKrew && !editing.can_delete && (
-          <p className='albutts-composer__note'>
-            {intl.formatMessage(messages.krewNoDelete)}
-          </p>
-        )}
-
-        {editing && (editing.can_delete ?? editing.is_owner) && (
-          <div className='albutts-composer__danger'>
-            <button
-              type='button'
-              className='albutts-composer__delete'
-              onClick={handleDelete}
-              disabled={deleting || pending}
-            >
-              {intl.formatMessage(messages.deleteAlbum)}
-            </button>
-          </div>
-        )}
-
-        {createdAlbum && failedCount > 0 && !pending && (
+          </ComposeHint>
           <div className='albutts-composer__inline-actions'>
             <button
               type='button'
               className='albutts-btn albutts-btn--ghost'
               onClick={handleRetryFailed}
             >
-              {intl.formatMessage(messages.retryFailed, {
-                count: failedCount,
+              {intl.formatMessage(messages.retryUploads, {
+                count: uploadFailedCount,
               })}
             </button>
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+      {rateLimitedUntil !== null && (
+        <div aria-live='polite'>
+          <ComposeHint>
+            {intl.formatMessage(messages.rateLimited, {
+              time: intl.formatTime(rateLimitedUntil, {
+                hour: 'numeric',
+                minute: '2-digit',
+              }),
+            })}
+          </ComposeHint>
+        </div>
+      )}
+
+      {error && (
+        <ComposeHint error>{intl.formatMessage(messages.error)}</ComposeHint>
+      )}
+      {createdAlbum && failedCount > 0 && !pending && (
+        <ComposeHint error>
+          {intl.formatMessage(messages.photoErrorPartial, {
+            failed: failedCount,
+          })}
+        </ComposeHint>
+      )}
+
+      {saveError && (
+        <ComposeHint error>
+          {intl.formatMessage(
+            saveError === 'save'
+              ? messages.saveError
+              : saveError === 'give'
+                ? messages.giveError
+                : messages.deleteError,
+          )}
+        </ComposeHint>
+      )}
+
+      {editing && !forKrew && editing.is_owner && availableKrews.length > 0 && (
+        <GiveToKrew
+          krews={availableKrews}
+          disabled={giving || pending || deleting}
+          onGive={handleGive}
+        />
+      )}
+
+      {editing && forKrew && !editing.can_delete && (
+        <ComposeHint>{intl.formatMessage(messages.krewNoDelete)}</ComposeHint>
+      )}
+
+      {editing && (editing.can_delete ?? editing.is_owner) && (
+        <div className='albutts-composer__danger'>
+          <button
+            type='button'
+            className='albutts-composer__delete'
+            onClick={handleDelete}
+            disabled={deleting || pending}
+          >
+            {intl.formatMessage(messages.deleteAlbum)}
+          </button>
+        </div>
+      )}
+
+      {createdAlbum && failedCount > 0 && !pending && (
+        <div className='albutts-composer__inline-actions'>
+          <button
+            type='button'
+            className='albutts-btn albutts-btn--ghost'
+            onClick={handleRetryFailed}
+          >
+            {intl.formatMessage(messages.retryFailed, {
+              count: failedCount,
+            })}
+          </button>
+        </div>
+      )}
     </ComposeShell>
   );
 };
@@ -1712,9 +1691,8 @@ const CoverPicker: React.FC<CoverPickerProps> = ({
   label,
   hint,
 }) => (
-  <fieldset className='albutts-composer__cover'>
-    <legend className='albutts-composer__label'>{label}</legend>
-    <p className='albutts-composer__note'>{hint}</p>
+  <ComposeSection title={label}>
+    <ComposeHint>{hint}</ComposeHint>
     <ul className='albutts-composer__cover-grid'>
       {photos.map((p) => {
         const media = p.status.media_attachments[0];
@@ -1731,7 +1709,7 @@ const CoverPicker: React.FC<CoverPickerProps> = ({
         );
       })}
     </ul>
-  </fieldset>
+  </ComposeSection>
 );
 
 const CoverOption = memo(function CoverOption({
@@ -1817,10 +1795,7 @@ const KrewAudienceField: React.FC<{
   const canEveryone = krew.listed || value === 'everyone';
 
   return (
-    <fieldset className='albutts-composer__contribution' disabled={disabled}>
-      <legend className='albutts-composer__label'>
-        {intl.formatMessage(messages.krewAudience)}
-      </legend>
+    <ComposeSection title={intl.formatMessage(messages.krewAudience)}>
       <div className='albutts-composer__contribution-chips' role='radiogroup'>
         <button
           type='button'
@@ -1828,6 +1803,7 @@ const KrewAudienceField: React.FC<{
           aria-checked={value === 'krew'}
           className={`albutts-composer__contribution-chip${value === 'krew' ? ' albutts-composer__contribution-chip--selected' : ''}`}
           onClick={chooseKrew}
+          disabled={disabled}
         >
           {intl.formatMessage(messages.krewAudienceKrew, { krew: krew.name })}
         </button>
@@ -1838,20 +1814,21 @@ const KrewAudienceField: React.FC<{
             aria-checked={value === 'everyone'}
             className={`albutts-composer__contribution-chip${value === 'everyone' ? ' albutts-composer__contribution-chip--selected' : ''}`}
             onClick={chooseEveryone}
+            disabled={disabled}
           >
             {intl.formatMessage(messages.krewAudienceEveryone)}
           </button>
         )}
       </div>
       {!canEveryone && (
-        <p className='albutts-composer__note'>
+        <ComposeHint>
           {intl.formatMessage(messages.krewAudienceHidden, { krew: krew.name })}
-        </p>
+        </ComposeHint>
       )}
-      <p className='albutts-composer__note'>
+      <ComposeHint>
         {intl.formatMessage(messages.krewAdds, { krew: krew.name })}
-      </p>
-    </fieldset>
+      </ComposeHint>
+    </ComposeSection>
   );
 };
 

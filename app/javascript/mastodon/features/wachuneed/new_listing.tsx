@@ -17,6 +17,16 @@ import type {
   ListingAvailability,
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
+import {
+  ComposeBody,
+  ComposeCheck,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeSection,
+  ComposeSelect,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { KonnectRow } from 'mastodon/components/konnect_row';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
@@ -589,10 +599,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         )}
 
         <form className='wachuneed__compose-form' onSubmit={handleSubmit}>
-          <fieldset className='wachuneed__compose-field'>
-            <legend className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelKind} />
-            </legend>
+          <ComposeSection title={<FormattedMessage {...messages.labelKind} />}>
             <div className='wachuneed__compose-radio-group'>
               {KIND_OPTIONS.map((opt) => (
                 <label
@@ -610,40 +617,27 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
                 </label>
               ))}
             </div>
-          </fieldset>
+          </ComposeSection>
 
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelTitle} />
-            </span>
-            <input
-              type='text'
-              className='wachuneed__compose-input'
-              value={title}
-              onChange={handleTitleChange}
-              placeholder={intl.formatMessage(messages.placeholderTitle)}
-              required
-              maxLength={200}
-            />
-          </label>
+          <ComposeTitle
+            value={title}
+            onChange={handleTitleChange}
+            placeholder={intl.formatMessage(messages.placeholderTitle)}
+            aria-label={intl.formatMessage(messages.labelTitle)}
+            required
+            maxLength={200}
+          />
 
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelDescription} />
-            </span>
-            <textarea
-              className='wachuneed__compose-textarea'
-              value={description}
-              onChange={handleDescriptionChange}
-              placeholder={intl.formatMessage(messages.placeholderDescription)}
-              rows={4}
-            />
-          </label>
+          <ComposeBody
+            value={description}
+            onChange={handleDescriptionChange}
+            placeholder={intl.formatMessage(messages.placeholderDescription)}
+            aria-label={intl.formatMessage(messages.labelDescription)}
+          />
 
-          <fieldset className='wachuneed__compose-field'>
-            <legend className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelCategory} />
-            </legend>
+          <ComposeSection
+            title={<FormattedMessage {...messages.labelCategory} />}
+          >
             <div className='wachuneed__compose-radio-group'>
               {CATEGORY_OPTIONS.map((opt) => (
                 <label
@@ -661,18 +655,13 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
                 </label>
               ))}
             </div>
-          </fieldset>
+          </ComposeSection>
 
           {showSections && (
-            <label className='wachuneed__compose-field'>
-              <span className='wachuneed__compose-label'>
-                <FormattedMessage {...messages.labelSection} />
-              </span>
-              <select
-                className='wachuneed__compose-input'
-                value={sectionId}
-                onChange={handleSectionChange}
-              >
+            <ComposeField
+              label={<FormattedMessage {...messages.labelSection} />}
+            >
+              <ComposeSelect value={sectionId} onChange={handleSectionChange}>
                 <option value=''>
                   {intl.formatMessage(messages.sectionNone)}
                 </option>
@@ -681,21 +670,16 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
                     {section.name}
                   </option>
                 ))}
-              </select>
-            </label>
+              </ComposeSelect>
+            </ComposeField>
           )}
 
           {kind === 'offer' && (
-            <label className='wachuneed__compose-check'>
-              <input
-                type='checkbox'
-                checked={ongoing}
-                onChange={handleOngoing}
-              />
-              <span>
-                <FormattedMessage {...messages.ongoing} />
-              </span>
-            </label>
+            <ComposeCheck
+              label={<FormattedMessage {...messages.ongoing} />}
+              checked={ongoing}
+              onChange={handleOngoing}
+            />
           )}
 
           {kind === 'offer' && (
@@ -706,23 +690,23 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
           )}
 
           {comesInKinds ? (
-            <p className='wachuneed__compose-hint'>
+            <ComposeHint>
               <FormattedMessage {...messages.priceFromKinds} />
-            </p>
+            </ComposeHint>
           ) : (
-            <label className='wachuneed__compose-field'>
-              <span className='wachuneed__compose-label'>
+            <ComposeField
+              label={
                 <FormattedMessage
                   {...(kind === 'wanted'
                     ? messages.labelBudget
                     : messages.labelPrice)}
                 />
-              </span>
-              <input
+              }
+            >
+              <ComposeInput
                 type='number'
                 min={0}
                 step={0.01}
-                className='wachuneed__compose-input'
                 value={price}
                 onChange={handlePriceChange}
                 placeholder={intl.formatMessage(
@@ -731,19 +715,14 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
                     : messages.placeholderPrice,
                 )}
               />
-            </label>
+            </ComposeField>
           )}
 
           {kind === 'offer' && !comesInKinds && (
-            <label className='wachuneed__compose-field'>
-              <span className='wachuneed__compose-label'>
-                <FormattedMessage {...messages.labelAvailability} />
-              </span>
-              <select
-                className='wachuneed__compose-input'
-                value={availability}
-                onChange={handleAvailability}
-              >
+            <ComposeField
+              label={<FormattedMessage {...messages.labelAvailability} />}
+            >
+              <ComposeSelect value={availability} onChange={handleAvailability}>
                 <option value='available'>
                   {intl.formatMessage(messages.available)}
                 </option>
@@ -753,8 +732,8 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
                 <option value='made_to_order'>
                   {intl.formatMessage(messages.madeToOrder)}
                 </option>
-              </select>
-            </label>
+              </ComposeSelect>
+            </ComposeField>
           )}
 
           {kind === 'offer' && (
@@ -765,58 +744,47 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             />
           )}
 
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelLocation} />
-            </span>
-            <input
-              type='text'
-              className='wachuneed__compose-input'
+          {/* Still a field here; it becomes a Konnection to a Map Place
+              (docs/korners/korner_standard.md, L13). */}
+          <ComposeField
+            label={<FormattedMessage {...messages.labelLocation} />}
+          >
+            <ComposeInput
               value={location}
               onChange={handleLocationChange}
               placeholder={intl.formatMessage(messages.placeholderLocation)}
             />
-          </label>
+          </ComposeField>
 
           <ListingPhotoField state={photoState} showsChoices={showsChoices} />
 
-          <div className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelVisibility} />
-            </span>
+          <ComposeSection
+            title={<FormattedMessage {...messages.labelVisibility} />}
+          >
             <ReachDropdown
               value={visibility}
               onChange={handleVisibility}
               disabled={submitting}
             />
-            <p className='wachuneed__compose-hint'>
+            <ComposeHint>
               <FormattedMessage {...messages.hintVisibility} />
-            </p>
-          </div>
+            </ComposeHint>
+          </ComposeSection>
 
           {/* Only where there is a choice to make: a shop item not yet in
               the feed. An ordinary listing is always posted. */}
           {editing && kind === 'offer' && !wasAnnounced && (
-            <div className='wachuneed__compose-field'>
-              <label className='wachuneed__compose-check'>
-                <input
-                  type='checkbox'
-                  checked={announced}
-                  onChange={handleAnnounced}
-                />
-                <span>
-                  <FormattedMessage {...messages.announce} />
-                </span>
-              </label>
-              <p className='wachuneed__compose-hint'>
-                <FormattedMessage {...messages.announceHint} />
-              </p>
-            </div>
+            <ComposeCheck
+              label={<FormattedMessage {...messages.announce} />}
+              hint={<FormattedMessage {...messages.announceHint} />}
+              checked={announced}
+              onChange={handleAnnounced}
+            />
           )}
 
           {!editing && <KonnectRow konnect={konnect} disabled={submitting} />}
 
-          {error && <p className='wachuneed__compose-error'>{error}</p>}
+          {error && <ComposeHint error>{error}</ComposeHint>}
 
           <button
             type='submit'
@@ -838,9 +806,9 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             <div className='wachuneed__compose-takedown'>
               {askTakeDown ? (
                 <>
-                  <p className='wachuneed__compose-hint'>
+                  <ComposeHint>
                     <FormattedMessage {...messages.takeDownAsk} />
-                  </p>
+                  </ComposeHint>
                   <div className='wachuneed__compose-takedown-actions'>
                     <button
                       type='button'

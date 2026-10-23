@@ -8,6 +8,15 @@ import api from 'mastodon/api';
 import { apiAddPhoto, apiCreateKar, apiUpdateKar } from 'mastodon/api/karporn';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSection,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
@@ -451,166 +460,159 @@ export const KarComposer: React.FC<Props> = ({
         />
       }
     >
-      <div className='karporn-composer'>
-        <input
-          type='text'
-          className='karporn-composer__title'
-          value={title}
-          onChange={handleTitle}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
+      <ComposeTitle
+        value={title}
+        onChange={handleTitle}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        maxLength={240}
+        disabled={pending}
+      />
+
+      <ComposeBody
+        value={description}
+        onChange={handleDescription}
+        placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+        maxLength={4000}
+        disabled={pending}
+      />
+
+      <ComposeRow>
+        <ComposeField label={intl.formatMessage(messages.year)}>
+          <ComposeInput
+            type='number'
+            value={year}
+            onChange={handleYear}
+            min={1885}
+            max={CURRENT_YEAR + 2}
+            step={1}
+            disabled={pending}
+          />
+        </ComposeField>
+        <ComposeField label={intl.formatMessage(messages.make)}>
+          <ComposeInput
+            value={make}
+            onChange={handleMake}
+            maxLength={120}
+            disabled={pending}
+          />
+        </ComposeField>
+        <ComposeField label={intl.formatMessage(messages.model)}>
+          <ComposeInput
+            value={model}
+            onChange={handleModel}
+            maxLength={120}
+            disabled={pending}
+          />
+        </ComposeField>
+      </ComposeRow>
+
+      {/* Still a field here; it becomes a Konnection to a Map Place
+          (docs/korners/korner_standard.md, L13). */}
+      <ComposeSection
+        className='karporn-composer__location'
+        title={
+          <>
+            <Icon id='location_on' icon={LocationOnIcon} />
+            {intl.formatMessage(messages.location)}
+          </>
+        }
+      >
+        <ComposeInput
+          value={locationLabel}
+          onChange={handleLocationLabel}
+          placeholder={intl.formatMessage(messages.locationPlaceholder)}
+          aria-label={intl.formatMessage(messages.location)}
           maxLength={240}
           disabled={pending}
         />
-
-        <textarea
-          className='karporn-composer__description'
-          value={description}
-          onChange={handleDescription}
-          placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-          maxLength={4000}
-          disabled={pending}
-        />
-
-        <div className='karporn-composer__meta'>
-          <label className='karporn-composer__field karporn-composer__field--year'>
-            <span>{intl.formatMessage(messages.year)}</span>
-            <input
-              type='number'
-              value={year}
-              onChange={handleYear}
-              min={1885}
-              max={CURRENT_YEAR + 2}
-              step={1}
-              disabled={pending}
-            />
-          </label>
-          <label className='karporn-composer__field'>
-            <span>{intl.formatMessage(messages.make)}</span>
-            <input
-              type='text'
-              value={make}
-              onChange={handleMake}
-              maxLength={120}
-              disabled={pending}
-            />
-          </label>
-          <label className='karporn-composer__field'>
-            <span>{intl.formatMessage(messages.model)}</span>
-            <input
-              type='text'
-              value={model}
-              onChange={handleModel}
-              maxLength={120}
-              disabled={pending}
-            />
-          </label>
-        </div>
-
-        <fieldset className='karporn-composer__location'>
-          <legend>
-            <Icon id='location_on' icon={LocationOnIcon} />
-            {intl.formatMessage(messages.location)}
-          </legend>
-          <input
-            type='text'
-            className='karporn-composer__location-label'
-            value={locationLabel}
-            onChange={handleLocationLabel}
-            placeholder={intl.formatMessage(messages.locationPlaceholder)}
-            maxLength={240}
-            disabled={pending}
-          />
-          {coords ? (
-            <div className='karporn-composer__coords'>
-              <span>
-                {intl.formatMessage(messages.currentSet)} —{' '}
-                {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
-              </span>
-              <button
-                type='button'
-                onClick={handleClearCoords}
-                disabled={pending}
-              >
-                {intl.formatMessage(messages.currentClear)}
-              </button>
-            </div>
-          ) : (
+        {coords ? (
+          <div className='karporn-composer__coords'>
+            <span>
+              {intl.formatMessage(messages.currentSet)} —{' '}
+              {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+            </span>
             <button
               type='button'
-              className='karporn-composer__use-current'
-              onClick={handleUseCurrent}
+              onClick={handleClearCoords}
               disabled={pending}
             >
-              {intl.formatMessage(messages.useCurrent)}
+              {intl.formatMessage(messages.currentClear)}
             </button>
-          )}
-          {locError && <p className='karporn-composer__error'>{locError}</p>}
-        </fieldset>
-
-        {!isEdit && (
-          <p className='karporn-composer__hint'>
-            {intl.formatMessage(messages.photosHint)}
-          </p>
-        )}
-
-        {photos.length > 0 && (
-          <ul className='karporn-composer__photos'>
-            {photos.map((p) => (
-              <PhotoDraftTile
-                key={p.key}
-                draft={p}
-                disabled={pending}
-                onRemove={removePhoto}
-              />
-            ))}
-          </ul>
-        )}
-
-        {!isEdit && (
-          <>
-            <button
-              type='button'
-              className='karporn-composer__add-photos'
-              onClick={handleAddPhotos}
-              disabled={pending}
-            >
-              <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
-              {intl.formatMessage(messages.addPhotos)}
-            </button>
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='image/*'
-              multiple
-              hidden
-              onChange={handleFilesSelected}
-            />
-          </>
-        )}
-
-        {uploadProgress && uploadProgress.total > 0 && (
-          <p className='karporn-composer__progress'>
-            {intl.formatMessage(messages.uploading, uploadProgress)}
-          </p>
-        )}
-        {failedCount > 0 && (
-          <p className='karporn-composer__error'>
-            {intl.formatMessage(messages.failed, { count: failedCount })}
-          </p>
-        )}
-        {error && <p className='karporn-composer__error'>{error}</p>}
-
-        {isEdit && onDelete && (
+          </div>
+        ) : (
           <button
             type='button'
-            className='compose-shell__delete'
-            onClick={onDelete}
-            disabled={pending || deleting}
+            className='karporn-composer__use-current'
+            onClick={handleUseCurrent}
+            disabled={pending}
           >
-            {intl.formatMessage(messages.deleteKar)}
+            {intl.formatMessage(messages.useCurrent)}
           </button>
         )}
-      </div>
+        {locError && <ComposeHint error>{locError}</ComposeHint>}
+      </ComposeSection>
+
+      {!isEdit && (
+        <ComposeHint>{intl.formatMessage(messages.photosHint)}</ComposeHint>
+      )}
+
+      {photos.length > 0 && (
+        <ul className='karporn-composer__photos'>
+          {photos.map((p) => (
+            <PhotoDraftTile
+              key={p.key}
+              draft={p}
+              disabled={pending}
+              onRemove={removePhoto}
+            />
+          ))}
+        </ul>
+      )}
+
+      {!isEdit && (
+        <>
+          <button
+            type='button'
+            className='karporn-composer__add-photos'
+            onClick={handleAddPhotos}
+            disabled={pending}
+          >
+            <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
+            {intl.formatMessage(messages.addPhotos)}
+          </button>
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='image/*'
+            multiple
+            hidden
+            onChange={handleFilesSelected}
+          />
+        </>
+      )}
+
+      {uploadProgress && uploadProgress.total > 0 && (
+        <ComposeHint>
+          {intl.formatMessage(messages.uploading, uploadProgress)}
+        </ComposeHint>
+      )}
+      {failedCount > 0 && (
+        <ComposeHint error>
+          {intl.formatMessage(messages.failed, { count: failedCount })}
+        </ComposeHint>
+      )}
+      {error && <ComposeHint error>{error}</ComposeHint>}
+
+      {isEdit && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={pending || deleting}
+        >
+          {intl.formatMessage(messages.deleteKar)}
+        </button>
+      )}
     </ComposeShell>
   );
 };
