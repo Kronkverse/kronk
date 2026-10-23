@@ -1860,3 +1860,97 @@
     animation: none;
   }
 }
+
+// ── Places (docs/spaces/map.md, Places) ──────────────────────────────
+// A Place is a location pin glyph, so it reads apart from a Mate's
+// teardrop-with-a-face and an event's squircle.
+.map-place-pin {
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  filter: drop-shadow(
+    0 2px 4px color-mix(in oklab, var(--surface-primary) 70%, transparent)
+  );
+  transition: transform var(--dur-fast) var(--ease-out);
+
+  svg {
+    inline-size: 100%;
+    block-size: 100%;
+    fill: currentColor;
+    stroke: var(--surface-primary);
+    stroke-width: 24;
+  }
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.08);
+    outline: none;
+  }
+}
+
+// The Place card shares the event card's frame (.map-event-card) and
+// adds the address and what's Konnected.
+.map-place-card {
+  &__address {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__konnected {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-block-start: 0.5rem;
+    font-size: 0.8125rem;
+
+    ul {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      max-block-size: 8rem;
+      overflow-y: auto;
+    }
+
+    a {
+      color: var(--text-primary);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--accent-text);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  &__none {
+    color: var(--text-muted);
+  }
+}
+
+// The Place composer reuses the trek composer's fields.
+.place-composer {
+  &__pin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}

@@ -368,6 +368,10 @@ namespace :api, format: false do
       # Map bridge (event_detail's location link routes to
       # /hub/map?event=<slug>, which reads back into this feed).
       get 'events', to: 'events#index'
+
+      # Places — exact spots with an address, Map's linkable record: a
+      # location is a Konnection to one (docs/spaces/map.md, Places).
+      resources :places, only: [:index, :show, :create, :update, :destroy]
     end
 
     namespace :klot do

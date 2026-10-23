@@ -84,6 +84,10 @@ export interface PinnedLocation {
   lng: number;
   lat: number;
   zoom: number;
+  // The search result the pin was dropped on, if it was and the map
+  // hasn't been moved off it since (the Place composer fills its
+  // address from it).
+  label?: string;
 }
 
 interface Props {
@@ -118,6 +122,9 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
   >(null);
   const [searching, setSearching] = useState(false);
   const [resultsOpen, setResultsOpen] = useState(false);
+  // The label of the search result the crosshair sits on; cleared when
+  // the map is clicked elsewhere.
+  const pickedLabelRef = useRef<string | null>(null);
 
   const centreOnMe = useCallback(() => {
     const map = mapRef.current;
@@ -128,6 +135,7 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        pickedLabelRef.current = null;
         map.easeTo({
           center: [pos.coords.longitude, pos.coords.latitude],
           zoom: LOCAL_ZOOM,
@@ -186,7 +194,11 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     // click point." easeTo (not flyTo) keeps the zoom the user has
     // already chosen — click-to-pin at street level should not zoom
     // out to the world.
+    map.on('dragstart', () => {
+      pickedLabelRef.current = null;
+    });
     map.on('click', (e) => {
+      pickedLabelRef.current = null;
       map.easeTo({ center: e.lngLat, duration: 300 });
     });
 
@@ -256,6 +268,7 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     if (!map) return;
     if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return;
     map.easeTo({ center: [r.lng, r.lat], zoom: LOCAL_ZOOM, duration: 600 });
+    pickedLabelRef.current = r.label;
     setResultsOpen(false);
   }, []);
 
@@ -296,7 +309,12 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     const map = mapRef.current;
     if (!map) return;
     const centre = map.getCenter();
-    onPin({ lng: centre.lng, lat: centre.lat, zoom: map.getZoom() });
+    onPin({
+      lng: centre.lng,
+      lat: centre.lat,
+      zoom: map.getZoom(),
+      ...(pickedLabelRef.current ? { label: pickedLabelRef.current } : {}),
+    });
   }, [onPin]);
 
   const dropdown = useMemo(() => {

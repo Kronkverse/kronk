@@ -49,6 +49,9 @@ module Kronk
       'Krew' => ->(viewer) { Krew.where(id: Krew.listed.select(:id)).or(Krew.where(id: viewer.krews.select(:id))) },
       'HuddleSession' => ->(_viewer) { HuddleSession.not_retired.where.not(scope: 'krew') },
       'Question' => ->(_viewer) { Question.active },
+      # A Place is seen through what's Konnected to it (MapPlace#visible_to?);
+      # only ones the viewer made or with a Konnection can pass that check.
+      'MapPlace' => ->(viewer) { MapPlace.made_or_konnected(viewer) },
     }.freeze
 
     # How far back a search looks for records it has to check one by one.

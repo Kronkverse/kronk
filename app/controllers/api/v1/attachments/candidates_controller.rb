@@ -3,7 +3,11 @@
 # Candidate-search endpoint for `<AttachmentPicker>` (spec §4.3).
 #
 #   GET /api/v1/attachments/candidates?korner=<slug>&q=<query>&limit=<n>[&past=1]
-#     → [{ slug, id, title, url[, starts_at] }, ...]  (starts_at: events only)
+#     → [{ slug, id, title, url[, starts_at][, subtitle] }, ...]
+#
+# `starts_at` is an event's start (events only). `subtitle` is a second
+# line, where the model gives one (`attachment_subtitle`: a Map Place's
+# address).
 #
 # Resolves `korner` to its primary AR class via `Kronk::KornerRegistry.model_for`,
 # ILIKEs the query against whichever of {title, name, display_name} the model
@@ -35,8 +39,8 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
     slug = params[:korner].to_s
     klass = Kronk::KornerRegistry.model_for(slug)
     return render(json: { error: "unknown korner '#{slug}'" }, status: 422) unless klass
-    # Only korners that take links can be searched: Map's presence or Klot's
-    # logs are nobody's to pick.
+    # Only korners that take links can be searched: Klot's logs are nobody's
+    # to pick. (Map's linkable record is its Places; presence never is.)
     return render(json: []) unless accepts_links?(slug)
 
     scope   = apply_query(klass.all, klass, params[:q].to_s)
@@ -62,8 +66,11 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
     params[:past].present? ? scope.where(start_time: ...today) : scope.where(start_time: today..)
   end
 
+  # A model with its own `attachment_search` (Map Places: name or address)
+  # searches with it; the rest match their title-ish column.
   def apply_query(scope, klass, query)
     return scope if query.blank?
+    return scope.merge(klass.attachment_search(query)) if klass.respond_to?(:attachment_search)
 
     column = search_column(klass)
     return scope.none unless column
@@ -87,7 +94,8 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
       id: record.id.to_s,
       title: Kronk::KornerRecords.title_of(record),
       url: Kronk::KornerRecords.path_for(slug, record),
-    }
+      subtitle: record.try(:attachment_subtitle).presence,
+    }.compact
     # An event's start, so a picker can say when it is.
     row[:starts_at] = record.start_time&.iso8601 if record.is_a?(Event)
     row

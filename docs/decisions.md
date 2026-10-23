@@ -17,6 +17,37 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-23 — Map Places: location is a Konnection
+
+Tal: "for maps, lets fold in konnecting location to it. So instead of a
+separate 'Location' option, fold that into konnecting via map." Places are
+exact, with addresses, and any creation on Kronk can Konnect to any other.
+
+**Decision:** Map gets a linkable record, the **Place** (`MapPlace`,
+`map_places`): an exact spot with a name and an address. A location is a
+Konnection to a Place, not a field on each space's record. Map's primary
+resource is now `map_places`, and Map takes and makes links like every
+other korner.
+
+- **A Place is seen by whoever can see something Konnected to it, and its
+  maker** (Tal agreed: "a pin anyone who can see the thing it's Konnected
+  to can see"). It has no audience of its own, so a Mates-only party's
+  Place is seen by its Mates, and a Place with nothing Konnected by its
+  maker alone. One you can't see is a 404, like any other record.
+- **Presence stays out.** Where people are right now is still not
+  something to link (2026-10-21): presence and treks are never Map's
+  primary resource, so they never resolve as a Konnection's end.
+- **Its maker looks after it** (edit, delete, what it links out to);
+  anyone who can see it Konnects their own things to it.
+- **Every existing pin moved over**, each Place inheriting its record's
+  audience through the link. Places are shared only within one owner's
+  records, never across owners.
+- The composers' Location fields go in a later step, once Konnect can make
+  a new Place from the picker.
+
+**Supersedes:** Map's opt-out ("Presence is where people are right now…")
+in "Attaching works from every korner, both ways" (2026-10-21).
+
 ## 2026-10-23 — First Nations Country on the Map
 
 A Kommons proposal from @mangobee ("Introduce First nation country display")

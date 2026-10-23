@@ -25,6 +25,7 @@ about:
     - "See your Mates' pins, and ask one for an update if theirs looks old."
     - 'Log a trek from the Ж menu, by hand or from a GPS file. The start and end are trimmed off.'
     - "Publish a trek when you're ready, and see your Mates' treks under Mates' treks."
+    - 'Places are exact spots with an address. Konnect an event, a kar or anything else to one, and whoever can see that thing sees the Place on the map.'
 icon:
   # `australia` is the Kronk-custom map glyph — outline of Australia,
   # sourced from talitamoss.info/files/uploads/australia.svg. Wired into
@@ -44,16 +45,36 @@ security:
     - moderator # nominal; no cross-user moderation actions exist for presence
   federates: false # location is local-only, never federated — by design
 
-# Takes no links, on purpose (decisions.md, 2026-10-21).
-no_attachments: "Presence is where people are right now; it isn't something to link."
+# Konnecting. Map's linkable record is a Place (`map_places`): an exact
+# spot with a name and an address. A Place is seen by whoever can see
+# something Konnected to it, and its maker (MapPlace#visible_to?).
+# A location is a Konnection to a Place, not a field on each korner's
+# record (decisions.md, 2026-10-23, "Map Places: location is a
+# Konnection"). Presence stays out, on purpose: where people are right now
+# isn't something to link (decisions.md, 2026-10-21), so presence_states
+# and treks are never the primary resource and never resolve as a
+# Konnection's end (KornerRegistry.model_for reads only `primary: true`).
+attaches:
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
+accepts:
+  - from: '*'
+    kind: link
 
 resources:
-  - name: presence_states
+  - name: map_places # Places: the linkable record (docs/spaces/map.md, Places)
     primary: true
+    path: /hub/map/places/:id
+  - name: presence_states # one pin per account, Mates-only; never linkable
   - name: treks # recorded activities (draft, or published to Mates)
 
 storage:
-  db_namespace: presence_ # presence_states (Postgres); ephemeral — bounded by expires_at, hard-deleted on remove
+  # presence_states (Postgres); ephemeral — bounded by expires_at,
+  # hard-deleted on remove. Places (`map_places`) and `treks` sit outside
+  # it; the namespace names the presence table it was cut for.
+  db_namespace: presence_
   media_prefix: spaces/map/
 
 feed_projection:
