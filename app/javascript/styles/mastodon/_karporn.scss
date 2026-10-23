@@ -186,95 +186,17 @@
 }
 
 .karporn-composer {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
+  // The kit (components/compose_fields.tsx) draws the fields; what's here
+  // is Karporn's own: the location pin, the photo picks.
+  &__location .compose-section__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 
-  &__title {
-    font-size: 18px;
-    font-weight: 700;
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid var(--border-subtle);
-    padding: 8px 0;
-    color: var(--text-primary);
-  }
-
-  &__description {
-    min-height: 80px;
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-medium);
-    padding: 8px 12px;
-    resize: vertical;
-  }
-
-  &__meta {
-    display: grid;
-    grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr) minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  // The inputs fill their column and no more. They kept their browser
-  // width (a number input's is wide), so Year ran under Make (Kommons
-  // proposal "Karporn details input overlap").
-  &__field {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    gap: 4px;
-    font-size: 12px;
-    opacity: 0.85;
-
-    span {
-      opacity: 0.85;
+    svg {
+      width: 1em;
+      height: 1em;
     }
-
-    input {
-      box-sizing: border-box;
-      width: 100%;
-      min-width: 0;
-      background: var(--surface-primary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-small);
-      padding: 6px 8px;
-      font-size: 14px;
-    }
-  }
-
-  &__location {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-medium);
-    padding: 10px 12px;
-    margin: 0;
-
-    legend {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      opacity: 0.85;
-      padding: 0 4px;
-
-      svg {
-        width: 14px;
-        height: 14px;
-      }
-    }
-  }
-
-  &__location-label {
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-small);
-    padding: 6px 8px;
   }
 
   &__use-current {
@@ -301,12 +223,6 @@
       font-size: 12px;
       text-decoration: underline;
     }
-  }
-
-  &__hint {
-    font-size: 12px;
-    opacity: 0.75;
-    margin: 0;
   }
 
   &__photos {
@@ -356,17 +272,5 @@
     border: 1px dashed color-mix(in oklab, var(--accent), transparent 60%);
     border-radius: var(--radius-small);
     cursor: pointer;
-  }
-
-  &__progress {
-    font-size: 12px;
-    opacity: 0.75;
-    margin: 0;
-  }
-
-  &__error {
-    color: var(--warning-red);
-    font-size: 13px;
-    margin: 0;
   }
 }

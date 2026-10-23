@@ -229,13 +229,9 @@ const kitSelectors = [
 // (components/compose_fields.tsx; Korner Standard L13). Take a file off this
 // list in the PR that moves it. Do not add to it.
 const composeBurnDown = [
-  'app/javascript/mastodon/features/albutts/components/album_composer.tsx',
   'app/javascript/mastodon/features/art/components/art_piece_composer.tsx',
-  'app/javascript/mastodon/features/freethedream/components/project_composer.tsx',
   'app/javascript/mastodon/features/kalendar/event_composer.tsx',
-  'app/javascript/mastodon/features/karporn/components/kar_composer.tsx',
   'app/javascript/mastodon/features/krew/krew_composer.tsx',
-  'app/javascript/mastodon/features/wachuneed/new_listing.tsx',
 ];
 
 // Every composer: what a korner's Ж-menu "New …", or editing a record,

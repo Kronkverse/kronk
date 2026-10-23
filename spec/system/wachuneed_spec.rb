@@ -251,7 +251,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     it 'lets a seller add an option from the suggestions, with what a choice adds' do
       visit '/hub/wachuneed/new'
 
-      fill_in 'Title', with: 'Massage'
+      fill_in 'A short name — what is it?', with: 'Massage'
       choose 'Offerings'
       fill_in 'Price (in AUD)', with: '50'
       click_on 'Length'
