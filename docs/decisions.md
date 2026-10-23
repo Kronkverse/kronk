@@ -17,6 +17,29 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-23 — First Nations Country on the Map
+
+A Kommons proposal from @mangobee ("Introduce First nation country display")
+asked for the Countries of Aboriginal and Torres Strait Islander peoples to be
+shown over Australia on the Map, for education, with the AIATSIS map as the
+reference point for the idea. @mangobee raised it with Tal, who agreed.
+
+**Decision:** a **First Nations Country** switch on the Map lays a picture of
+Country over Australia (`features/map_v2/country_layer.tsx`). The picture is
+@mangobee's own map, shown with their permission and credited to them, with a
+note that the boundaries are approximate and that Country, its names and its
+borders are held by its peoples. It is a picture, not data: re-projected into
+web mercator, fetched only when switched on, faded out past state-level zoom
+where it would blur, and off until a viewer turns it on (the choice is
+remembered per browser).
+
+**Why a picture:** it needs no outside service and nothing stored from one.
+Native Land Digital's API was looked at for the outlines; its terms allow a
+live point lookup but not storing or redistributing its data without
+permission, so a drawn layer from it would wait on that. A picture can't say
+which Country a point is on; telling your Mates the Country your pin is on is
+the proposal's next step, typed in to start with.
+
 ## 2026-10-22 — Setup after signup
 
 A Kommons proposal ("Signup Setup", Tal) asked for more after the thresholds

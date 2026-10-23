@@ -587,6 +587,57 @@
 // a dropdown of avatar bubbles. Tap a bubble → re-centre the map on
 // that mate (handleSelectPin still clamps to ANON_ZOOM - 0.5, so the
 // user zooms OUT to see them — anonymisation is preserved).
+// First Nations Country — its switch sits under the zoom buttons, top right,
+// with the credit and disclaimer beneath it while the layer is on.
+.map-country {
+  position: absolute;
+  top: 88px;
+  right: 10px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: min(260px, calc(100% - 32px));
+
+  &__toggle {
+    padding: 8px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--elevation-floating);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    &--on {
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+  }
+
+  &__note {
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: var(--radius-medium);
+    background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: right;
+    backdrop-filter: blur(10px);
+  }
+}
+
 .map-in-view {
   position: absolute;
   top: 16px;
