@@ -101,6 +101,24 @@ The bio and the Joined · Posts · Mates line are in the profile block above
 (Tal, 2026-10-15: the at-a-glance bar repeated the counts under the photo,
 and the bio read as a loose, unformatted block).
 
+### Country
+
+Under the bio, **On <name> Country**: the First Nations Country someone says
+they live on (Kommons "Introduce First nation country display", @mangobee,
+2026-10-23). It shows wherever the bio does, to whoever can see the profile.
+While you design your profile it is a field under the bio, **Whose Country do
+you live on?**, that suggests the 382 names on @mangobee's Country map
+(`components/first_nations_countries.ts`, in that map's spellings) as you
+type; any other name can be typed too. It saves when you leave the field, and
+a blank one clears it.
+
+It is a name and nothing else: `accounts.first_nations_country` (60
+characters, `Account::FirstNationsCountry`), sent through `update_credentials`
+and shown on the account (`REST::AccountSerializer`, local accounts, hidden
+when suspended). A trailing "Country" is dropped so it is never said twice.
+Nothing about where someone is goes with it; the Map's pin is separate (see
+`map.md`, First Nations Country, for the picture layer).
+
 ### The profile board
 
 `components/profile_board.tsx`. Two zones:

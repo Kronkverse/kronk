@@ -292,6 +292,46 @@
     }
   }
 
+  // "On <name> Country", under the bio.
+  &__country {
+    max-width: 38rem;
+    margin: calc(-1 * var(--sp-2, 8px)) 0 0;
+    padding: 0 var(--sp-4, 16px) var(--sp-3, 12px);
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  &__country--editing {
+    margin-top: 0;
+  }
+
+  &__country-label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1, 4px);
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  &__country-input {
+    width: 100%;
+    padding: var(--sp-2, 8px) var(--sp-3, 12px);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 15px;
+    background: transparent;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-md);
+    box-sizing: border-box;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-style: solid;
+    }
+  }
+
   &__bio-error {
     margin: var(--sp-1, 4px) 0 0;
     font-size: 13px;

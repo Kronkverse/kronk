@@ -168,6 +168,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_140100) do
     t.string "domain"
     t.string "featured_collection_url"
     t.jsonb "fields"
+    t.string "first_nations_country"
     t.string "followers_url", default: "", null: false
     t.string "following_url", default: "", null: false
     t.string "header_content_type"

@@ -24,6 +24,8 @@ export interface BaseApiAccountJSON {
   display_name: string;
   emojis: ApiCustomEmojiJSON[];
   fields: ApiAccountFieldJSON[];
+  // Kronk: the First Nations Country shown under the bio; local accounts only.
+  first_nations_country?: string | null;
   followers_count: number;
   following_count: number;
   mates_count: number;
