@@ -96,6 +96,7 @@ class Account < ApplicationRecord
   include Account::Counters
   include Account::FaspConcern
   include Account::FinderConcern
+  include Account::FirstNationsCountry
   include Account::Header
   include Account::Interactions
   include Account::KornerTuneIn
