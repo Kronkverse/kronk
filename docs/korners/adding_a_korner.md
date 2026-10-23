@@ -982,16 +982,15 @@ pick mode. A composer outside the shell (Wachuneed's new listing) renders
 `<KonnectRow konnect={…} />` itself. `parseKonnectParam(search)` and
 `konnectSearch(slug, id)` read and write the URL param.
 
-Wired in: Albutts' album composer, Art, FreeTheDream's project composer
-(emergences, gangs and fractals), Karporn and Wachuneed's new listing. The
-Kalendar composer reads `?konnect=` (a Krew is its Krew audience; anything
-else is Konnected on create) but still adds more with its own
-`<ComposeAttachBar>`; moving it onto the row is the next step. Editing
+Every composer passes `konnect`: the prop is required, so leaving it out is
+a type error. A composer that makes a record wires `useKonnect` (Albutts,
+Art, Booth, Cinema, FreeTheDream projects, Huddle rooms, Kalendar, Karporn,
+Kommons, Krew, Kronikles, Kuestions, Map places, Wachuneed listings and shop
+items); one that makes nothing new to Konnect passes `null` (editing,
+adding to a record that exists, treks, FreeTheDream items, Moments). Editing
 something already made has no row: its page's Konnected block does that.
-
-At compose time, `<ComposeAttachBar>` (`components/compose_attach_bar.tsx`)
-does the same job inside the Kalendar composer: pick any number of korners,
-then a record in each.
+The Kalendar composer's own "Konnect a korner" bar is gone (2026-10-23): it
+uses the row like every other composer.
 
 ### 5. Where it is used
 
@@ -999,7 +998,7 @@ then a record in each.
 | ------------------------------ | ----- | ------------------------------------------------------------------------------ |
 | Kalendar → Albutts             | spawn | Event created with "spawn album" ticked                                        |
 | Kalendar → Huddle              | link  | Linked from the event                                                          |
-| Kalendar → anything            | link  | Event composer's attach bar, or the event detail page                          |
+| Kalendar → anything            | link  | Event composer's Konnect row, or the event detail page                         |
 | A composer's korner → anything | link  | The composer's Konnect row, or the picker's New … (`?konnect=`), on create     |
 | Any linkable korner → anything | link  | The Attached block on the record's detail page (every linkable korner has one) |
 

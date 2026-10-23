@@ -20,6 +20,8 @@ import {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 // Ask a Kuestion (/hub/kuestions/composer) — the standard
 // `<ComposeShell>` overlay mounted on top of the current Kuestions
@@ -169,6 +171,7 @@ interface KuestionDraftParams {
   kind?: KuestionKind;
   format?: ComposerFormat;
   mcOptions?: string[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -193,6 +196,10 @@ export const KuestionComposer: React.FC<Props> = ({
   const [mcOptions, setMcOptions] = useState<string[]>(['', '']);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // What the new Kuestion will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('kuestions');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   const trimmed = text.trim();
   const mcFilled = mcOptions.filter((o) => o.trim() !== '');
@@ -214,16 +221,19 @@ export const KuestionComposer: React.FC<Props> = ({
       setMcOptions(
         p.mcOptions && p.mcOptions.length >= MC_MIN ? p.mcOptions : ['', ''],
       );
+      restoreKonnect(p.konnections);
       setStage(0);
       setError(null);
     },
-    [initialKind],
+    [initialKind, restoreKonnect],
   );
 
   const draft = useDraft<KuestionDraftParams>({
     korner: 'kuestions',
     kind: 'kuestion',
-    snapshot: { params: { text, kind, format, mcOptions } },
+    snapshot: {
+      params: { text, kind, format, mcOptions, konnections: konnect.saved },
+    },
     hasContent: trimmed !== '' || mcFilled.length > 0,
     apply: applyDraft,
     describe: (d) => d.params.text,
@@ -285,6 +295,7 @@ export const KuestionComposer: React.FC<Props> = ({
           kind,
         });
         finishDraft();
+        await commitKonnect('kuestions', created.id);
         onCreated(created);
         // Parent unmounts us on success — no need to reset here.
       } catch {
@@ -292,7 +303,16 @@ export const KuestionComposer: React.FC<Props> = ({
         setPending(false);
       }
     })();
-  }, [stage, trimmed, format, mcFilled, kind, finishDraft, onCreated]);
+  }, [
+    stage,
+    trimmed,
+    format,
+    mcFilled,
+    kind,
+    finishDraft,
+    commitKonnect,
+    onCreated,
+  ]);
 
   return (
     <ComposeShell
@@ -308,6 +328,7 @@ export const KuestionComposer: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
+      konnect={konnect}
     >
       <div className='kuestions-composer__stage-dots'>
         <span className='kuestions-composer__dot kuestions-composer__dot--on' />

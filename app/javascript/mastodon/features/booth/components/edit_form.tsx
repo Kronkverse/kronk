@@ -232,6 +232,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
 
   return (
     <ComposeShell
+      konnect={null}
       korner='booth'
       label={intl.formatMessage(messages.heading)}
       submitLabel={intl.formatMessage(messages.save)}

@@ -165,6 +165,7 @@ export const MyceliumComposer: React.FC<Props> = ({
 
   return (
     <ComposeShell
+      konnect={null}
       korner='freethedream'
       label={intl.formatMessage(editing ? messages.edit : messages.add)}
       subtitle={intl.formatMessage(messages.subtitle)}

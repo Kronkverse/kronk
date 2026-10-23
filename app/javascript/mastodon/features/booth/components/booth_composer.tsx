@@ -18,6 +18,8 @@ import { ComposeShell } from 'mastodon/components/compose_shell';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useAppDispatch } from 'mastodon/store';
 
 import type { BoothSet } from '../types';
@@ -150,6 +152,7 @@ interface BoothDraftParams {
   tracklistText?: string;
   postToFeed?: boolean;
   reach?: ReachValue;
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -244,6 +247,10 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const audioInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const stageRef = useRef<UploadStage>(null);
+  // What the new set will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('booth');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go, here and on the
   // server, and comes back when the composer opens again.
@@ -259,8 +266,9 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       setTracklistText(p.tracklistText ?? '');
       setPostToFeed(p.postToFeed ?? true);
       setReach(p.reach ?? 'public');
+      restoreKonnect(p.konnections);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<BoothDraftParams>({
@@ -277,6 +285,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         tracklistText,
         postToFeed,
         reach,
+        konnections: konnect.saved,
       },
     },
     hasContent:
@@ -450,6 +459,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           signal: controller.signal,
         });
         finishDraft();
+        await commitKonnect('booth', res.data.id);
 
         // The set exists from here on, so a failed feed post must not read
         // as a failed upload: say so and hand over to the set page.
@@ -508,6 +518,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     intl,
     onCreated,
     finishDraft,
+    commitKonnect,
   ]);
 
   const canSubmit = Boolean(title.trim() && audioFile !== null);
@@ -523,6 +534,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
+      konnect={konnect}
     >
       {error && <ComposeHint error>{error}</ComposeHint>}
 

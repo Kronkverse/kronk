@@ -282,6 +282,7 @@ export const ItemComposer: React.FC<Props> = ({
 
   return (
     <ComposeShell
+      konnect={null}
       korner='freethedream'
       label={label}
       subtitle={

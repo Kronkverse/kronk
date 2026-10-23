@@ -153,7 +153,13 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   const handleMakeNew = useCallback(() => {
     if (!makeNewRoute || sourceId == null) return;
     onClose();
-    history.push(`${makeNewRoute}${konnectSearch(sourceSlug, sourceId)}`);
+    // A location object, not one string: this app's router wrapper folds a
+    // query in a pushed string into the pathname, so the composer route
+    // wouldn't match (it opened the record page for "composer?konnect=…").
+    history.push({
+      pathname: makeNewRoute,
+      search: konnectSearch(sourceSlug, sourceId),
+    });
   }, [makeNewRoute, onClose, history, sourceSlug, sourceId]);
 
   const [query, setQuery] = useState('');

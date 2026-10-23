@@ -60,7 +60,7 @@ RSpec.describe 'Huddle', :inline_jobs, :js, :streaming do
     it 'Konnects the new Room to that Krew' do
       visit "/hub/huddle/composer?krew=#{krew.id}"
 
-      expect(page).to have_css('.krew-multi-select__chip--selected', text: 'Growers')
+      expect(page).to have_css('.konnect-row .space-tile', text: 'Growers')
       fill_in 'Room name', with: 'Seed swap'
       click_on 'Create'
 

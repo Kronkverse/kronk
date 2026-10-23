@@ -32,11 +32,16 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // drafts line under the body only when a draft was picked up. Closing (Cancel, ×, Escape, the backdrop) keeps the draft: the
 // hook saves on the way out, so nothing here asks "are you sure?".
 //
-// Konnect (decisions.md, 2026-10-23): a composer that Konnects what it
-// makes passes its `useKonnect()` result as `konnect`, and the shell draws
-// the Konnect row at the foot of the body, above the drafts line: the
-// records waiting as space tiles, and a Konnect tile to add one. The
-// composer calls `konnect.commit(slug, id)` once its create succeeds.
+// Konnect (decisions.md, 2026-10-23, "One composer, one Konnect"; Korner
+// Standard L14): every composer says what it Konnects. It passes its
+// `useKonnect()` result as `konnect`, and the shell draws the Konnect row
+// at the foot of the body, above the drafts line: the records waiting as
+// space tiles, and a Konnect tile to add one. The composer calls
+// `konnect.commit(slug, id)` once its create succeeds. The prop is required,
+// so a composer can't leave Konnect out by forgetting it; `null` is for the
+// composers that make nothing new to Konnect: editing a record (Konnect it
+// from its page), adding to one that exists (photos to an album), and
+// korners that opt out (`no_attachments:`, e.g. Moments).
 //
 // Multi-composer korners (Maps: Post + Place; Albutts: Album +
 // Contribute) can render a small chip pair via the `switcher` slot
@@ -76,8 +81,9 @@ interface ComposeShellProps {
   // The composer's drafts, from `useDraft()`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   draft?: DraftControls<any>;
-  // The composer's Konnections, from `useKonnect()`.
-  konnect?: KonnectControls;
+  // The composer's Konnections, from `useKonnect()`; `null` when it makes
+  // nothing new to Konnect (see above).
+  konnect: KonnectControls | null;
   children: React.ReactNode;
 }
 

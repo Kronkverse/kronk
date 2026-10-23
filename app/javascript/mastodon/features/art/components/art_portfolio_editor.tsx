@@ -248,6 +248,7 @@ export const ArtPortfolioEditor: React.FC<Props> = ({
 
   return (
     <ComposeShell
+      konnect={null}
       korner='art'
       label={intl.formatMessage(guided ? messages.setUpTitle : messages.title)}
       subtitle={

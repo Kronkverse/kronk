@@ -1214,7 +1214,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       onCancel={onCancel}
       headerAction={forKrew ? undefined : reachControl}
       draft={draft}
-      konnect={editing ? undefined : konnect}
+      konnect={editing ? null : konnect}
     >
       {confirmDialog}
       <div className='albutts-composer'>

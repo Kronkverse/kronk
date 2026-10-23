@@ -447,7 +447,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       onCancel={onCancel}
       onSubmit={submit}
       draft={draft}
-      konnect={isEdit ? undefined : konnect}
+      konnect={isEdit ? null : konnect}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,

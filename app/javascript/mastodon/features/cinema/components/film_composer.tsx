@@ -17,6 +17,8 @@ import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 const messages = defineMessages({
   saveError: {
@@ -74,6 +76,7 @@ interface FilmDraftParams {
   title?: string;
   description?: string;
   visibility?: ReachValue;
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -109,6 +112,10 @@ export const FilmComposer: React.FC<Props> = ({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // What the new film will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('cinema');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: a new film is saved as you go, here and on the server, and
   // comes back when the composer opens again. Editing one doesn't keep one.
@@ -118,18 +125,26 @@ export const FilmComposer: React.FC<Props> = ({
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
       setVisibility(p.visibility ?? 'public');
+      restoreKonnect(p.konnections);
       // A video chosen for another draft doesn't belong to this one.
       setVideoFile(null);
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<FilmDraftParams>({
     korner: 'cinema',
     kind: 'film',
     context: null,
-    snapshot: { params: { title, description, visibility } },
+    snapshot: {
+      params: {
+        title,
+        description,
+        visibility,
+        konnections: konnect.saved,
+      },
+    },
     hasContent: title.trim() !== '' || description.trim() !== '',
     apply: applyDraft,
     describe: (d) => d.params.title,
@@ -212,6 +227,7 @@ export const FilmComposer: React.FC<Props> = ({
           video_media_attachment_id: media.data.id,
         });
         finishDraft();
+        await commitKonnect('cinema', film.id);
         onCreated?.(film);
       } catch (e) {
         setPending(false);
@@ -224,6 +240,7 @@ export const FilmComposer: React.FC<Props> = ({
     })();
   }, [
     canSubmit,
+    commitKonnect,
     description,
     editingFilm,
     finishDraft,
@@ -244,6 +261,7 @@ export const FilmComposer: React.FC<Props> = ({
       onCancel={onCancel}
       onSubmit={submit}
       draft={draft}
+      konnect={isEdit ? null : konnect}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,

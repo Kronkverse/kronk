@@ -68,6 +68,7 @@ export const ShareForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
 
   return (
     <ComposeShell
+      konnect={null}
       korner='booth'
       label={intl.formatMessage(messages.heading)}
       subtitle={`${set.title} — ${set.artist_name}`}

@@ -430,6 +430,7 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
 
   return (
     <ComposeShell
+      konnect={null}
       korner='albutts'
       label={intl.formatMessage(messages.heading)}
       submitLabel={shellSubmitLabel}
