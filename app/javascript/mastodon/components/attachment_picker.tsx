@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
@@ -15,6 +15,8 @@ import { apiSearchAttachmentCandidates } from 'mastodon/api/attachments';
 import { Icon } from 'mastodon/components/icon';
 import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import { useAttachments } from 'mastodon/hooks/useAttachments';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { konnectSearch } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -36,16 +38,19 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 // accepts one. When there are none the modal shows a "This korner
 // cannot attach to anything yet" empty state.
 //
+// Once a space is picked, a space whose manifest says `konnect: { make:
+// true }` also offers its composer ("New album"): the picker closes and the
+// composer opens with `?konnect=<source slug>:<source id>`, so what it makes
+// is Konnected here (decisions.md, 2026-10-23).
+//
+// Inside a composer the record doesn't exist yet, so there is nothing to
+// save a link from: given `onPick`, the picker hands back the record chosen
+// and saves nothing (`<ComposeShell konnect={…}>`, hooks/useKonnect.ts).
+//
 // Kind is set to `link` today (user-added, independent lifecycle).
 // A future update could read the manifest's `kind:` on each entry
 // and offer per-target defaults; keeping it uniform for now to match
 // Phase 3's Kalendar-first adoption.
-
-// From a Krew, Konnect can also make something new for it: the space's own
-// composer opens with the Krew picked (`?krew=<id>`), and what it makes is
-// Konnected to the Krew (Tal 2026-10-22: "from the krew page you can create
-// spaces for the krew to utilise"). These are the composers that take it.
-const KREW_COMPOSERS = ['albutts', 'kalendar', 'huddle'];
 
 const messages = defineMessages({
   heading: {
@@ -66,10 +71,6 @@ const messages = defineMessages({
     defaultMessage: 'Konnect to',
   },
   change: { id: 'attachment_picker.change', defaultMessage: 'Change' },
-  makeNew: {
-    id: 'attachment_picker.make_new',
-    defaultMessage: '{label} for this Krew',
-  },
   searching: {
     id: 'attachment_picker.searching',
     defaultMessage: 'Searching…',
@@ -98,9 +99,14 @@ const messages = defineMessages({
 
 interface AttachmentPickerProps {
   sourceSlug: string;
-  sourceId: string | number;
+  // The record Konnecting. Left out with `onPick`: it isn't made yet.
+  sourceId?: string | number;
   onClose: () => void;
   onAttached?: () => void;
+  // Pick, don't save: the chosen record is handed back instead of linked.
+  onPick?: (target: KonnectTarget) => void;
+  // Records already chosen, left out of the results.
+  exclude?: Pick<KonnectTarget, 'slug' | 'id'>[];
 }
 
 export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
@@ -108,9 +114,11 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   sourceId,
   onClose,
   onAttached,
+  onPick,
+  exclude,
 }) => {
   const intl = useIntl();
-  const { addLink } = useAttachments(sourceSlug, sourceId);
+  const { addLink } = useAttachments(sourceSlug, onPick ? null : sourceId);
   // The korners this record can attach to, wildcards included.
   const targetSlugs = useAttachTargets(sourceSlug);
 
@@ -125,20 +133,28 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     if (!target && targetSlugs.length === 1) setTarget(targetSlugs[0]);
   }, [target, targetSlugs]);
   const targetManifest = useKorner(target?.slug);
+
+  // "New album": the space's own composer, Konnecting what it makes here.
   const history = useHistory();
-  const compose = targetManifest?.compose;
+  // `konnect.route` / `konnect.label` win over `compose:` (a korner whose
+  // Ж-menu composer isn't the one that makes its linkable records).
+  const konnectMake = targetManifest?.konnect;
+  const makeRoute = konnectMake?.route ?? targetManifest?.compose?.route;
+  const makeLabel = konnectMake?.label ?? targetManifest?.compose?.label;
   const makeNew =
-    sourceSlug === 'krew' && target && KREW_COMPOSERS.includes(target.slug)
-      ? compose
+    !onPick &&
+    sourceId != null &&
+    konnectMake?.make === true &&
+    makeRoute &&
+    makeLabel
+      ? { route: makeRoute, label: makeLabel }
       : undefined;
+  const makeNewRoute = makeNew?.route;
   const handleMakeNew = useCallback(() => {
-    if (!makeNew) return;
+    if (!makeNewRoute || sourceId == null) return;
     onClose();
-    history.push({
-      pathname: makeNew.route,
-      search: `?krew=${encodeURIComponent(String(sourceId))}`,
-    });
-  }, [makeNew, onClose, history, sourceId]);
+    history.push(`${makeNewRoute}${konnectSearch(sourceSlug, sourceId)}`);
+  }, [makeNewRoute, onClose, history, sourceSlug, sourceId]);
 
   const [query, setQuery] = useState('');
   // Kalendar offers upcoming events; past ones are a tap away.
@@ -155,16 +171,20 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     inputRef.current?.focus();
   }, [target]);
 
-  // Escape closes.
+  // Escape closes. Over a composer (`onPick`) it closes only the picker:
+  // caught on the way down, so the composer underneath never hears it.
+  const capture = Boolean(onPick);
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !attaching) onClose();
+      if (e.key !== 'Escape') return;
+      if (capture) e.stopPropagation();
+      if (!attaching) onClose();
     };
-    window.addEventListener('keydown', handleKey);
+    window.addEventListener('keydown', handleKey, capture);
     return () => {
-      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener('keydown', handleKey, capture);
     };
-  }, [attaching, onClose]);
+  }, [attaching, onClose, capture]);
 
   // Debounced search — matches the hand-rolled setTimeout pattern used
   // by event_composer.tsx' invitee search.
@@ -208,6 +228,11 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   const handleAttach = useCallback(
     async (row: AttachmentCandidateJSON) => {
       if (!target || attaching) return;
+      if (onPick) {
+        onPick({ slug: target.slug, id: row.id, title: row.title });
+        onClose();
+        return;
+      }
       setAttaching(true);
       setError(null);
       try {
@@ -220,8 +245,15 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
         setAttaching(false);
       }
     },
-    [addLink, attaching, intl, onAttached, onClose, target],
+    [addLink, attaching, intl, onAttached, onClose, onPick, target],
   );
+
+  const excludeKey = (exclude ?? []).map((e) => `${e.slug}/${e.id}`).join(' ');
+  const shown = useMemo(() => {
+    if (!excludeKey) return results;
+    const skip = new Set(excludeKey.split(' '));
+    return results.filter((row) => !skip.has(`${row.slug}/${row.id}`));
+  }, [results, excludeKey]);
 
   const handleQueryChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -324,10 +356,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
                       icon={AddIcon}
                       className='attachment-picker__plus'
                     />
-                    <FormattedMessage
-                      {...messages.makeNew}
-                      values={{ label: makeNew.label }}
-                    />
+                    {makeNew.label}
                   </button>
                 )}
                 <input
@@ -361,12 +390,12 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
                       <FormattedMessage {...messages.searching} />
                     </p>
                   )}
-                  {!searching && results.length === 0 && (
+                  {!searching && shown.length === 0 && (
                     <p className='attachment-picker__status'>
                       <FormattedMessage {...messages.noResults} />
                     </p>
                   )}
-                  {results.map((row) => (
+                  {shown.map((row) => (
                     <CandidateRow
                       key={row.id}
                       row={row}
@@ -486,8 +515,15 @@ const CandidateRow: React.FC<CandidateRowProps> = ({
       disabled={disabled}
     >
       <TargetIcon className='attachment-picker__result-icon' />
-      <span className='attachment-picker__result-title'>
-        {row.title ?? row.id}
+      <span className='attachment-picker__result-text'>
+        <span className='attachment-picker__result-title'>
+          {row.title ?? row.id}
+        </span>
+        {row.subtitle && (
+          <span className='attachment-picker__result-subtitle'>
+            {row.subtitle}
+          </span>
+        )}
       </span>
     </button>
   );

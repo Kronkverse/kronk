@@ -60,6 +60,10 @@ security:
 # shared <ComposeShell> (`?krew=<id>` picks a Krew to Konnect the Room
 # to). Creating goes straight into the new Room's call; cancelling puts
 # the URL back to `/hub/huddle`. `/hub/huddle/new` redirects here.
+# Konnect (decisions.md, 2026-10-23): a Konnection with a Room is only the
+# link. `konnect: { make: true }` waits for RoomComposer to take
+# `?konnect=` through useKonnect (it reads only `?krew=` so far).
+
 compose:
   label: 'New Room'
   route: '/hub/huddle/composer'

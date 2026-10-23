@@ -84,15 +84,34 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(page).to have_css('.attachment-picker', text: 'Konnect something')
   end
 
+  # decisions.md, 2026-10-23: a space whose manifest says `konnect: { make:
+  # true }` offers its composer from the picker, opened to Konnect what it
+  # makes here.
+  it 'makes a new album for the Krew from the Konnect picker' do
+    visit "/hub/krew/#{krew.slug}"
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') do
+      click_on 'Albutts'
+      click_on 'New album'
+    end
+
+    expect(page).to have_current_path("/hub/albutts/composer?konnect=krew:#{krew.id}")
+    within('.compose-shell .konnect-row') do
+      expect(page).to have_css('.space-tile', text: 'Growers')
+      # A Krew album is the Krew's: that Konnection isn't the composer's to drop.
+      expect(page).to have_no_css('.space-tile__remove')
+    end
+  end
+
   it 'makes a new event for the Krew from the Konnect picker' do
     visit "/hub/krew/#{krew.slug}"
     within('.attachment-section') { click_on 'Konnect' }
     within('.attachment-picker') do
       click_on 'Kalendar'
-      click_on 'New event for this Krew'
+      click_on 'New event'
     end
 
-    expect(page).to have_current_path("/hub/kalendar/composer?krew=#{krew.id}")
+    expect(page).to have_current_path("/hub/kalendar/composer?konnect=krew:#{krew.id}")
     expect(page).to have_css('.compose-shell', text: 'New event')
   end
 

@@ -6,7 +6,9 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import { DraftBar } from 'mastodon/components/draft_bar';
 import { Icon } from 'mastodon/components/icon';
+import { KonnectRow } from 'mastodon/components/konnect_row';
 import type { DraftControls } from 'mastodon/hooks/useDraft';
+import type { KonnectControls } from 'mastodon/hooks/useKonnect';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // ComposeShell — the shared floating composer frame every korner's
@@ -29,6 +31,12 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // `useDraft()` result as `draft`. Saving is silent; the shell draws the
 // drafts line under the body only when a draft was picked up. Closing (Cancel, ×, Escape, the backdrop) keeps the draft: the
 // hook saves on the way out, so nothing here asks "are you sure?".
+//
+// Konnect (decisions.md, 2026-10-23): a composer that Konnects what it
+// makes passes its `useKonnect()` result as `konnect`, and the shell draws
+// the Konnect row at the foot of the body, above the drafts line: the
+// records waiting as space tiles, and a Konnect tile to add one. The
+// composer calls `konnect.commit(slug, id)` once its create succeeds.
 //
 // Multi-composer korners (Maps: Post + Place; Albutts: Album +
 // Contribute) can render a small chip pair via the `switcher` slot
@@ -68,6 +76,8 @@ interface ComposeShellProps {
   // The composer's drafts, from `useDraft()`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   draft?: DraftControls<any>;
+  // The composer's Konnections, from `useKonnect()`.
+  konnect?: KonnectControls;
   children: React.ReactNode;
 }
 
@@ -84,6 +94,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
   switcher,
   headerAction,
   draft,
+  konnect,
   children,
 }) => {
   const intl = useIntl();
@@ -147,6 +158,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
 
         <div className='compose-shell__body'>
           {children}
+          {konnect && <KonnectRow konnect={konnect} disabled={submitting} />}
           {draft && (
             <DraftBar draft={draft} disabled={submitting || draft.locked} />
           )}

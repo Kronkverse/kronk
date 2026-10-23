@@ -101,6 +101,18 @@ settings: []
 hub_teaser:
   static: 'Seed an emergence, or join one and bring something to life.'
 
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+  # What a Konnection with these spaces does beyond the link itself.
+  effects:
+    - with: kalendar
+      does: "An event Konnected to an emergence (or one of its gangs) is shared with the emergence's Krew, which joins its audience."
+
 compose:
   label: 'Seed an emergence'
   route: '/hub/freethedream/composer'

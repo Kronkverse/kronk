@@ -48,6 +48,17 @@ accepts:
   - from: '*'
     kind: link
 
+# Konnect: this korner's Konnections and how they work (adding_a_korner.md,
+# Korner attachments §2.6). `make: true` once its composer (`compose.route`)
+# Konnects what it makes with useKonnect, so the Konnect picker offers
+# "New …"; `effects` only for a pair Kronk::AttachmentEffects acts on.
+# `korners doctor` checks both. Leave it out until one is true.
+# konnect:
+#   make: true
+#   effects:
+#     - with: krew
+#       does: 'What a Konnection with a Krew does beyond the link.'
+
 feed_projection:
   card: # not-applicable — set the card name if this korner projects
   status_association: # the Status has_one this korner's record hangs off

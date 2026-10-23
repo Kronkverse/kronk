@@ -309,3 +309,13 @@
 // its sole consumer (Moments) now picks up compose from the Ж bubble
 // via the manifest `compose:` block. See git history for the previous
 // styles if you need them for reference.
+
+// ─── Konnect row ────────────────────────────────────────────────────
+// What a composer will Konnect what it makes to (`<KonnectRow>`, drawn
+// when the composer passes `konnect`): the shared space tiles at the
+// foot of the body, a little closer to the fields than a page section.
+.konnect-row {
+  .korner-section-heading {
+    margin-top: 1.25rem;
+  }
+}

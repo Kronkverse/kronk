@@ -94,6 +94,14 @@ launch:
 # composer opens as an overlay on the directory (features/art/index.tsx
 # switches to a "composer open" state when the URL is /hub/art/composer),
 # so no dedicated top-level route is needed.
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+
 compose:
   label: 'Post a piece'
   route: '/hub/art/composer'

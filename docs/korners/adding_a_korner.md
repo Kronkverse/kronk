@@ -806,7 +806,50 @@ A new pair adds a module with `linked(attachment, actor)` and
 `unlinked(attachment)` (optionally `removable?(attachment)`, which turns a
 destroy into a 422) to `AttachmentEffects.handlers`, and reads the two ends
 with `AttachmentEffects.ends(attachment, '<its slug>')`, never with
-`source_*` / `target_*` directly.
+`source_*` / `target_*` directly. It also lists the pair in a manifest's
+`konnect.effects` (§2.6), or the doctor fails.
+
+#### 2.6 The manifest's Konnections: `konnect:`
+
+Any creation on Kronk can be Konnected to any other (decisions.md,
+2026-10-23). `attaches:` / `accepts:` say a korner may; the optional
+`konnect:` block is the readable list of how its Konnections work:
+
+```yaml
+konnect:
+  # Konnect can make a new one of these from anywhere: the picker's
+  # "New …" opens compose.route with ?konnect=<source slug>:<source id>,
+  # and the composer Konnects what it makes to that source.
+  make: true
+  # What a Konnection with a given space does beyond the link itself.
+  effects:
+    - with: krew
+      does: "The Krew joins the event's audience and the Krew page lists it under Kalendar; …"
+```
+
+- **`make: true`** says the korner's composer Konnects what it makes
+  (`useKonnect`, §4.4). The Konnect picker then offers **New …** (the
+  manifest's `compose.label`) once this space is picked, from any record,
+  and opens `compose.route` with `?konnect=<source slug>:<source id>`. It
+  needs somewhere to go and a label: the manifest's `compose:`, or its own
+  `route:` and `label:` inside `konnect:` when the Ж menu's composer isn't the
+  one that makes the korner's linkable records (Map's composer makes treks;
+  a Place has its own composer). It also needs a korner that takes links. Albutts, Art,
+  FreeTheDream, Kalendar, Karporn and Wachuneed say it today; Huddle will
+  once its Room composer Konnects.
+- **`effects:`** lists, per other korner (`with:`), what a Konnection does
+  beyond being a link (`does:`, one sentence a member could read). It is
+  exactly the pairs in `Kronk::AttachmentEffects` (§2.5): Kalendar ↔ Krew,
+  Kalendar ↔ FreeTheDream, Albutts ↔ Krew. A pair can be listed from either
+  end or both, in that end's words.
+
+`korners doctor` (`Kronk::KornerKonnect`, also run against the real
+manifests by `spec/lib/mastodon/cli/korners_spec.rb`) fails a block that
+isn't that shape, `make: true` with no route (`konnect.route` or
+`compose.route`) or label, or on a korner with
+`no_attachments:`, an `effects` entry whose pair has no handler, and a
+handler whose pair neither korner lists, so the manifests stay the true
+list. `GET /api/v1/korners` serves the block as `konnect` (`ApiKornerJSON`).
 
 ### 3. API
 
@@ -898,7 +941,53 @@ Konnected to.
 
 `components/attachment_picker.tsx`. The modal behind Konnect: the target
 korners as space tiles (Change goes back to them), then a search of the
-chosen korner's records through `candidates`.
+chosen korner's records through `candidates`, each a title over its
+`subtitle` when the korner gives one (a Place's address). When the chosen korner's
+manifest says `konnect: { make: true }` (§2.6), a dashed **New …** button
+(its `konnect.label`, else `compose.label`) sits above the search: it closes the picker and opens
+that composer with `?konnect=<source slug>:<source id>`. From a Krew, New
+album and New event make a Krew album or a Krew event, as `?krew=<id>`
+always did.
+
+Given `onPick`, the picker saves nothing and hands back the record chosen
+(`{ slug, id, title }`), leaving out what `exclude` lists. That is how a
+composer uses it (§4.4), since the record Konnecting doesn't exist yet. It
+offers no New … then, and Escape closes only the picker.
+
+#### 4.4 In a composer: `useKonnect` and the Konnect row
+
+`hooks/useKonnect.ts`. A composer's Konnections, held until what it makes
+exists. `useKonnect(korner, { sourceHandled? })` returns:
+
+- `source`: the record from `?konnect=<slug>:<id>` (or the older
+  `?krew=<id>`, read as `krew:<id>`), and `pending`: it first, then any the
+  person added;
+- `add(target)`, `remove(target)`, `removable(target)`;
+- `saved` and `restore(list)`, to keep them in the composer's draft
+  (`konnections` in its params);
+- `commit(createdSlug, createdId)`: after the create succeeds, POSTs a link
+  from the new record to each pending one. A link that fails is returned in
+  a list, never thrown, so the record is made either way.
+
+`sourceHandled` is for a composer that Konnects the source its own way: an
+album made for a Krew is the Krew's album, and an event made for a Krew is
+posted to it (both keep their link through `AttachmentEffects`). Its tile
+shows but has no ×, and `commit` leaves it out.
+
+Pass the result to `<ComposeShell konnect={…}>` and the shell draws the
+**Konnect row** (`components/konnect_row.tsx`) at the foot of the body,
+above the drafts line: a **Konnected** heading, a space tile per pending
+record with a × (Diskonnect), and a Konnect tile that opens the picker in
+pick mode. A composer outside the shell (Wachuneed's new listing) renders
+`<KonnectRow konnect={…} />` itself. `parseKonnectParam(search)` and
+`konnectSearch(slug, id)` read and write the URL param.
+
+Wired in: Albutts' album composer, Art, FreeTheDream's project composer
+(emergences, gangs and fractals), Karporn and Wachuneed's new listing. The
+Kalendar composer reads `?konnect=` (a Krew is its Krew audience; anything
+else is Konnected on create) but still adds more with its own
+`<ComposeAttachBar>`; moving it onto the row is the next step. Editing
+something already made has no row: its page's Konnected block does that.
 
 At compose time, `<ComposeAttachBar>` (`components/compose_attach_bar.tsx`)
 does the same job inside the Kalendar composer: pick any number of korners,
@@ -911,6 +1000,7 @@ then a record in each.
 | Kalendar → Albutts             | spawn | Event created with "spawn album" ticked                                        |
 | Kalendar → Huddle              | link  | Linked from the event                                                          |
 | Kalendar → anything            | link  | Event composer's attach bar, or the event detail page                          |
+| A composer's korner → anything | link  | The composer's Konnect row, or the picker's New … (`?konnect=`), on create     |
 | Any linkable korner → anything | link  | The Attached block on the record's detail page (every linkable korner has one) |
 
 A link always joins two korners: an album can't link to another album
@@ -986,6 +1076,7 @@ documentation only.
 | `hub_teaser.static`                                                                                                                                                                           | Hub tile and feed settings.                                                                                                                              |
 | `emits`, `listens`                                                                                                                                                                            | Doctor (a `listens` nothing `emits` is an issue); `nudges.yaml`'s `listens:` drives `Nudges::EventRouter`.                                               |
 | `attaches`, `accepts`                                                                                                                                                                         | [Korner attachments](#korner-attachments).                                                                                                               |
+| `konnect` (`make`, `effects`)                                                                                                                                                                 | The Konnect picker's New …; doctor (Korner attachments §2.6).                                                                                            |
 | `nodes`                                                                                                                                                                                       | `Kronk::NodeRegistry`: the Directory and doctor L6.                                                                                                      |
 | `mount`, `core`, `portal`                                                                                                                                                                     | Routing, Hub and doctor (see above).                                                                                                                     |
 | `enforced`                                                                                                                                                                                    | Hub (live vs Coming soon), sidebar, and which doctor checks apply.                                                                                       |

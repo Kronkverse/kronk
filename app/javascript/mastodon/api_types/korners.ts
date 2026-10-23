@@ -40,6 +40,20 @@ export interface ApiKornerComposeJSON {
   route: string;
 }
 
+// A korner's Konnections and how they work (manifest `konnect:`,
+// docs/korners/adding_a_korner.md, Korner attachments §2.6).
+export interface ApiKornerKonnectJSON {
+  // The Konnect picker offers "New …" here: `compose.route` opens with
+  // `?konnect=<source slug>:<source id>` and Konnects what it makes.
+  make?: boolean;
+  // Where "New …" goes and what it says, when not the manifest's
+  // `compose:` (Map's composer makes treks; a Place has its own).
+  route?: string;
+  label?: string;
+  // What a Konnection with a given space does beyond the link itself.
+  effects?: { with: string; does: string }[];
+}
+
 // Manifest `icon:` is normalized server-side into an object shape.
 // Legacy string form is coerced into `{ material }` in
 // Kronk::KornerRegistry#normalize_icon. `text_glyph` was retired
@@ -107,6 +121,7 @@ export interface ApiKornerJSON {
   feed_projection?: Record<string, unknown> | null;
   settings?: ApiKornerSettingJSON[];
   compose?: ApiKornerComposeJSON | null;
+  konnect?: ApiKornerKonnectJSON | null;
   emits?: string[];
   listens?: string[];
   // Cross-korner attachments — `attaches:` names the (target, kind)

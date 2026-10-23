@@ -13,6 +13,8 @@ import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 const messages = defineMessages({
   removePhoto: {
@@ -114,6 +116,7 @@ interface KarDraftParams {
   visibility?: ReachValue;
   locationLabel?: string;
   coords?: { lat: number; lng: number } | null;
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -173,6 +176,10 @@ export const KarComposer: React.FC<Props> = ({
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // What the new car will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('karporn');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go, here and on the
   // server, and comes back when the composer opens again. Editing a car
@@ -188,6 +195,7 @@ export const KarComposer: React.FC<Props> = ({
       setVisibility(p.visibility ?? 'public');
       setLocationLabel(p.locationLabel ?? '');
       setCoords(p.coords ?? null);
+      restoreKonnect(p.konnections);
       setPhotos((prev) => {
         prev.forEach((ph) => {
           URL.revokeObjectURL(ph.preview);
@@ -197,7 +205,7 @@ export const KarComposer: React.FC<Props> = ({
       setLocError(null);
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<KarDraftParams>({
@@ -213,6 +221,7 @@ export const KarComposer: React.FC<Props> = ({
         visibility,
         locationLabel,
         coords,
+        konnections: konnect.saved,
       },
     },
     hasContent:
@@ -374,6 +383,8 @@ export const KarComposer: React.FC<Props> = ({
         return;
       }
 
+      await commitKonnect('karporn', kar.id);
+
       let done = 0;
       let failed = 0;
       for (let i = 0; i < photos.length; i += 1) {
@@ -396,6 +407,7 @@ export const KarComposer: React.FC<Props> = ({
     })();
   }, [
     canSubmit,
+    commitKonnect,
     coords,
     description,
     editingKar,
@@ -427,6 +439,7 @@ export const KarComposer: React.FC<Props> = ({
       submitting={pending}
       canSubmit={canSubmit}
       draft={draft}
+      konnect={isEdit ? undefined : konnect}
       headerAction={
         // Reach is locked while editing: the update endpoints don't
         // re-scope the item's projected feed post, so narrowing reach

@@ -60,6 +60,13 @@ module Kronk
       # of attaching (Moments, Klot, Map, Rose). Every other korner with a
       # primary resource takes them (decisions.md, 2026-10-21).
       :no_attachments,
+      # A korner's Konnections and how they work (decisions.md, 2026-10-23;
+      # docs/korners/adding_a_korner.md, Korner attachments §2.6). Shape:
+      # { 'make' => Bool, 'route' => String?, 'label' => String?,
+      #   'effects' => [{ 'with' => slug, 'does' => String }] }.
+      # Kept as written: `korners doctor` (Kronk::KornerKonnect) checks the
+      # shape, and the client reads `make` to offer "New …" in the picker.
+      :konnect,
       # Hub landing (§4.7)
       :hub_teaser,
       # SpaceNav views (§4 SpaceNav) — the per-korner view switcher the
@@ -269,6 +276,7 @@ module Kronk
           attaches: Array(yaml['attaches']),
           accepts: Array(yaml['accepts']),
           no_attachments: yaml['no_attachments'].presence,
+          konnect: yaml['konnect'],
           hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
           views: extract_views(yaml),
           header: extract_header(yaml),

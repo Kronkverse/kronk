@@ -135,6 +135,22 @@ settings:
     scope: user
     label: Week starts on
 
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+  # What a Konnection with these spaces does beyond the link itself
+  # (Kronk::EventLinks). Only when the event's maker Konnects it and is in
+  # the Krew; a Konnection anyone else makes stays a link.
+  effects:
+    - with: krew
+      does: "The Krew joins the event's audience and the Krew page lists it under Kalendar; the Krew's emergence is Konnected to the event too. Diskonnecting takes it off both."
+    - with: freethedream
+      does: "The emergence's Krew joins the event's audience, as if the event were Konnected to the Krew."
+
 compose:
   label: 'New event'
   # `<ComposeShell>` overlay mounted by the Kalendar directory on the

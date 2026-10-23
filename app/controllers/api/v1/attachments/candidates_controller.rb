@@ -4,6 +4,9 @@
 #
 #   GET /api/v1/attachments/candidates?korner=<slug>&q=<query>&limit=<n>[&past=1]
 #     → [{ slug, id, title, url[, starts_at][, subtitle] }, ...]
+#   GET /api/v1/attachments/candidates?korner=<slug>&id=<id>
+#     → that one record, if the viewer may find it (a composer opened with
+#       `?konnect=<slug>:<id>` shows its title)
 #
 # `starts_at` is an event's start (events only). `subtitle` is a second
 # line, where the model gives one (`attachment_subtitle`: a Map Place's
@@ -43,8 +46,11 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
     # to pick. (Map's linkable record is its Places; presence never is.)
     return render(json: []) unless accepts_links?(slug)
 
-    scope   = apply_query(klass.all, klass, params[:q].to_s)
-    scope   = apply_when(scope, klass)
+    scope = if params[:id].present?
+              klass.where(id: params[:id].to_s)
+            else
+              apply_when(apply_query(klass.all, klass, params[:q].to_s), klass)
+            end
     records = Kronk::KornerRecords.findable(klass, scope, current_account, limit: limit)
 
     render json: records.map { |r| serialize(slug, r) }

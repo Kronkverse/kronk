@@ -72,8 +72,8 @@ export interface AttachmentCandidateJSON {
   url: string;
   // Kalendar events only: when it starts (ISO 8601).
   starts_at?: string;
-  // A second line, where the korner gives one (a Map Place's address).
-  subtitle?: string;
+  // A second line, where the korner has one (a Place's address).
+  subtitle?: string | null;
 }
 
 export const apiSearchAttachmentCandidates = (
@@ -81,10 +81,13 @@ export const apiSearchAttachmentCandidates = (
   query: string,
   limit = 20,
   past = false,
+  // One record by id (a composer's `?konnect=` tile wants its title).
+  id?: string,
 ) =>
   apiRequestGet<AttachmentCandidateJSON[]>('v1/attachments/candidates', {
     korner: targetKorner,
     q: query,
     limit,
     ...(past ? { past: 1 } : {}),
+    ...(id ? { id } : {}),
   });
