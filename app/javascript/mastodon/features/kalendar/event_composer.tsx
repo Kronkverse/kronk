@@ -16,9 +16,6 @@ import {
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { MapPinPicker } from 'mastodon/components/map_pin_picker';
-import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
-import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
@@ -35,7 +32,8 @@ import { useKonnect } from 'mastodon/hooks/useKonnect';
 //
 // Fields mirror the `event_params` permit list in
 // `Api::V1::EventsController#event_params` — title, description, start /
-// end time, location name + url. `event_type` (event | huddle) +
+// end time. Where it is, is a Konnection to a Map Place (the Konnect
+// row), not a field. `event_type` (event | huddle) +
 // `rsvp_enabled` are no longer sent from this composer (Tal
 // 2026-08-17): every event created here is `event`, and RSVP is on
 // by DB default; server permits them but the composer omits them.
@@ -66,45 +64,10 @@ const messages = defineMessages({
   when: { id: 'kalendar.new.when', defaultMessage: 'When' },
   starts: { id: 'kalendar.new.starts', defaultMessage: 'Starts' },
   ends: { id: 'kalendar.new.ends', defaultMessage: 'Ends (optional)' },
-  where: { id: 'kalendar.new.where', defaultMessage: 'Where' },
-  address: {
-    id: 'kalendar.new.address',
-    defaultMessage: 'Address',
-  },
-  addressPlaceholder: {
-    id: 'kalendar.new.address_placeholder',
-    defaultMessage:
-      "A pub, a park, an address — write however you'd text a friend.",
-  },
-  mapLink: {
-    id: 'kalendar.new.map_link',
-    defaultMessage: 'Map link (optional)',
-  },
-  mapLinkHint: {
-    id: 'kalendar.new.map_link_hint',
-    defaultMessage:
-      'A map link people can open in any browser — type one, or use Pin on map below.',
-  },
-  mapLinkPlaceholder: {
-    id: 'kalendar.new.map_link_placeholder',
-    defaultMessage: 'https://…',
-  },
   startDate: { id: 'kalendar.new.start_date', defaultMessage: 'Date' },
   startTime: { id: 'kalendar.new.start_time', defaultMessage: 'Time' },
   endDate: { id: 'kalendar.new.end_date', defaultMessage: 'End date' },
   endTime: { id: 'kalendar.new.end_time', defaultMessage: 'End time' },
-  pinOnMap: {
-    id: 'kalendar.new.pin_on_map',
-    defaultMessage: 'Pin on map',
-  },
-  pinnedAt: {
-    id: 'kalendar.new.pinned_at',
-    defaultMessage: 'Pinned at {lat}, {lng}',
-  },
-  clearPin: {
-    id: 'kalendar.new.clear_pin',
-    defaultMessage: 'Clear pin',
-  },
   create: { id: 'kalendar.new.create', defaultMessage: 'Post it' },
   creating: { id: 'kalendar.new.creating', defaultMessage: 'Posting…' },
   needTitleAndStart: {
@@ -188,8 +151,6 @@ interface CreatePayload {
   description?: string;
   start_time: string;
   end_time?: string;
-  location_name?: string;
-  location_url?: string;
   visibility: ReachValue;
   image_id?: string;
   krew_ids?: string[];
@@ -315,9 +276,6 @@ interface EventDraftParams {
   startTime?: string;
   endDate?: string;
   endTime?: string;
-  locationName?: string;
-  locationUrl?: string;
-  pinnedLocation?: PinnedLocation | null;
   reach?: ReachValue;
   krewIds?: string[];
   invitees?: InviteeAccount[];
@@ -358,18 +316,6 @@ export const EventComposer: React.FC<Props> = ({
   const [startTime, setStartTime] = useState(defaults.startTime);
   const [endDate, setEndDate] = useState(defaults.endDate);
   const [endTime, setEndTime] = useState(defaults.endTime);
-  const [locationName, setLocationName] = useState('');
-  const [locationUrl, setLocationUrl] = useState('');
-  // Pinned coordinates from the MapPinPicker. When set, `location_url`
-  // is derived from these (an OpenStreetMap link that any browser can
-  // open); when cleared, the URL field goes back to whatever the user
-  // typed. Storing coordinates separately from the derived URL lets
-  // the "Clear pin" affordance restore the URL to empty without
-  // touching the user's manual typing.
-  const [pinnedLocation, setPinnedLocation] = useState<PinnedLocation | null>(
-    null,
-  );
-  const [pinPickerOpen, setPinPickerOpen] = useState(false);
   // Event kind + RSVP-enabled toggles retired 2026-08-17. Every
   // event posted from this composer is an in-person event; huddles
   // are now spawned via the Konnect-a-korner picker (Huddle korner
@@ -432,9 +378,6 @@ export const EventComposer: React.FC<Props> = ({
       setStartTime(p.startTime ?? times.startTime);
       setEndDate(p.endDate ?? times.endDate);
       setEndTime(p.endTime ?? times.endTime);
-      setLocationName(p.locationName ?? '');
-      setLocationUrl(p.locationUrl ?? '');
-      setPinnedLocation(p.pinnedLocation ?? null);
       setReach(p.reach ?? (forKrewId ? 'self_only' : 'public'));
       setKrewIds(p.krewIds ?? (forKrewId ? [forKrewId] : []));
       setInvitees(new Map((p.invitees ?? []).map((a) => [a.id, a])));
@@ -459,9 +402,6 @@ export const EventComposer: React.FC<Props> = ({
         startTime,
         endDate,
         endTime,
-        locationName,
-        locationUrl,
-        pinnedLocation,
         reach,
         krewIds,
         invitees: Array.from(invitees.values()),
@@ -472,8 +412,6 @@ export const EventComposer: React.FC<Props> = ({
     hasContent:
       title.trim() !== '' ||
       description.trim() !== '' ||
-      locationName.trim() !== '' ||
-      locationUrl.trim() !== '' ||
       imageMediaId !== null ||
       invitees.size > 0,
     apply: applyDraft,
@@ -554,17 +492,7 @@ export const EventComposer: React.FC<Props> = ({
     },
     [],
   );
-  const onLocationName = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setLocationName(e.target.value);
-  }, []);
-  const onLocationUrl = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => {
-      setLocationUrl(e.target.value);
-    },
-    [],
-  );
+
   const onReach = useCallback((value: ReachValue) => {
     setReach(value);
   }, []);
@@ -735,28 +663,6 @@ export const EventComposer: React.FC<Props> = ({
     coverInputRef.current?.click();
   }, []);
 
-  const openPinPicker = useCallback(() => {
-    setPinPickerOpen(true);
-  }, []);
-  const cancelPinPicker = useCallback(() => {
-    setPinPickerOpen(false);
-  }, []);
-  // Format an OSM URL for the pinned point. Zoom is clamped for
-  // sensible sharing (17 is street-level, higher zooms don't add
-  // clarity for "meet here" purposes).
-  const handlePin = useCallback((pin: PinnedLocation) => {
-    setPinnedLocation(pin);
-    const displayZoom = Math.min(17, Math.max(12, Math.round(pin.zoom)));
-    setLocationUrl(
-      `https://www.openstreetmap.org/?mlat=${pin.lat.toFixed(5)}&mlon=${pin.lng.toFixed(5)}#map=${displayZoom}/${pin.lat.toFixed(5)}/${pin.lng.toFixed(5)}`,
-    );
-    setPinPickerOpen(false);
-  }, []);
-  const clearPin = useCallback(() => {
-    setPinnedLocation(null);
-    setLocationUrl('');
-  }, []);
-
   const submit = useCallback(() => {
     if (!startIso) return;
     setError(null);
@@ -769,10 +675,6 @@ export const EventComposer: React.FC<Props> = ({
     const trimmedDescription = description.trim();
     if (trimmedDescription) payload.description = trimmedDescription;
     if (endIso) payload.end_time = endIso;
-    const trimmedLocationName = locationName.trim();
-    if (trimmedLocationName) payload.location_name = trimmedLocationName;
-    const trimmedLocationUrl = locationUrl.trim();
-    if (trimmedLocationUrl) payload.location_url = trimmedLocationUrl;
     if (imageMediaId) payload.image_id = imageMediaId;
     if (krewIds.length > 0) payload.krew_ids = krewIds;
 
@@ -814,8 +716,6 @@ export const EventComposer: React.FC<Props> = ({
     imageMediaId,
     invitees,
     krewIds,
-    locationName,
-    locationUrl,
     onCreated,
     reach,
     startIso,
@@ -1003,75 +903,10 @@ export const EventComposer: React.FC<Props> = ({
         </ComposeField>
       </ComposeSection>
 
-      {/* Kind (event / huddle) and its `{eventType === 'event' &&}`
-          gate on Where retired 2026-08-17. Huddles are now spawned
-          via the Konnect-a-korner picker (Huddle korner
-          attachment), so this composer only creates in-person
-          events; the address block is always relevant. RSVP is on
-          by default (DB default) and the "Invite-only" toggle
-          retired alongside — audience is a scope-picker decision. */}
-      <ComposeSection title={intl.formatMessage(messages.where)}>
-        <ComposeField label={intl.formatMessage(messages.address)}>
-          <ComposeInput
-            value={locationName}
-            onChange={onLocationName}
-            placeholder={intl.formatMessage(messages.addressPlaceholder)}
-          />
-        </ComposeField>
-        <ComposeField
-          label={intl.formatMessage(messages.mapLink)}
-          hint={intl.formatMessage(messages.mapLinkHint)}
-        >
-          <ComposeInput
-            type='url'
-            value={locationUrl}
-            onChange={onLocationUrl}
-            placeholder={intl.formatMessage(messages.mapLinkPlaceholder)}
-          />
-        </ComposeField>
-        <div className='event-composer__pin-row'>
-          <button
-            type='button'
-            className='event-composer__pin-btn'
-            onClick={openPinPicker}
-          >
-            <FormattedMessage {...messages.pinOnMap} />
-          </button>
-          {pinnedLocation && (
-            <>
-              <span className='event-composer__pin-coords'>
-                <FormattedMessage
-                  {...messages.pinnedAt}
-                  values={{
-                    lat: pinnedLocation.lat.toFixed(4),
-                    lng: pinnedLocation.lng.toFixed(4),
-                  }}
-                />
-              </span>
-              <button
-                type='button'
-                className='event-composer__pin-clear'
-                onClick={clearPin}
-              >
-                <FormattedMessage {...messages.clearPin} />
-              </button>
-            </>
-          )}
-        </div>
-        {pinnedLocation && (
-          // Re-key on lat/lng so a new pin remounts the preview
-          // — MapPinPreview intentionally doesn't `easeTo` on
-          // prop change (see its comment about avoiding subtle
-          // animations); remount is the explicit "show a new
-          // pin" trigger.
-          <MapPinPreview
-            key={`${pinnedLocation.lat},${pinnedLocation.lng}`}
-            lng={pinnedLocation.lng}
-            lat={pinnedLocation.lat}
-            zoom={pinnedLocation.zoom}
-          />
-        )}
-      </ComposeSection>
+      {/* Where it is: a Konnection to a Map Place, in the Konnect row the
+          shell draws (Konnect → Map → New place). The Where section went
+          with "Location fields become Konnect → Map" (decisions.md,
+          2026-10-23). */}
 
       {/* Invitee picker — accounts get a nudge with the event on
           submit. Same account search API the event-detail Invite
@@ -1186,14 +1021,6 @@ export const EventComposer: React.FC<Props> = ({
         <ComposeHint>
           <FormattedMessage {...submitBlockerMessage} />
         </ComposeHint>
-      )}
-
-      {pinPickerOpen && (
-        <MapPinPicker
-          initial={pinnedLocation ?? undefined}
-          onCancel={cancelPinPicker}
-          onPin={handlePin}
-        />
       )}
     </ComposeShell>
   );

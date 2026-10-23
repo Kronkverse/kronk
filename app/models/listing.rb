@@ -8,6 +8,8 @@ class Listing < ApplicationRecord
   include Searchable
   include Reachable
   include Kronk::AttachmentSource
+  # Where it is: its Konnected Place, when its own `location` is empty.
+  include Kronk::RecordPlace::Konnected
   include Kronk::NamedLink
 
   self.attachment_source_slug = 'wachuneed'

@@ -26,6 +26,17 @@ class REST::EventSerializer < ActiveModel::Serializer
     object.status_id&.to_s
   end
 
+  # Its own location, or its Konnected Place's (Event#effective_location_*).
+  # A list preloads the Places (Kronk::RecordPlace.preload); one event on
+  # its own, or inside a status, reads its Place when it has no location.
+  def location_name
+    object.effective_location_name
+  end
+
+  def location_url
+    object.effective_location_url
+  end
+
   # The Krews in the event's audience. With `visibility: self_only` they
   # are the whole of it: an event for those Krews alone.
   def krews

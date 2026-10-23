@@ -16,7 +16,7 @@ Deliberately narrow: this korner is for photos of cars, not car reviews, not cla
 - **Make** — required string, up to 120 chars. Free-form.
 - **Model** — required string, up to 120 chars. Free-form.
 - **Photos** — zero or more, ordered by `position`; first photo becomes the cover unless overridden. Same shape as `ArtPiecePhoto` — captions on the row, no per-photo Status backing.
-- **Location** — optional. Three fields:
+- **Location** — optional: a Konnection to a Map Place (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The composer has no location field; Konnect → Map picks a Place or makes a new one. The serializers read the kar's own old fields first, and the Place (`{ lat, lng, label: <its name> }`) when they are empty. The old fields, still written by the Android app:
   - `location_lat` (decimal 9,6) — nullable
   - `location_lng` (decimal 9,6) — nullable
   - `location_label` (string 240) — nullable, human-readable ("Nürburgring", "Route 66 outside Kingman")
@@ -27,17 +27,12 @@ Deliberately narrow: this korner is for photos of cars, not car reviews, not cla
 
 ## Location UX
 
-The composer's location block is deliberately minimal:
-
-- A free-text **label** input ("Where was it?").
-- A **Use my current location** button that calls `navigator.geolocation.getCurrentPosition` and stores the returned lat/lng (rounded to 6 decimal places — DB `decimal(9,6)` precision). Once captured, the coords are shown ("Coordinates captured — 51.5074, -0.1278") with a clear button.
-
-There is no map picker. A proper one belongs to the Map korner. The label is what shows on the feed card; the coordinates power the "Open in Map" link on the viewer.
+No location block in the composer: where the car was is its Konnected Place, from the Konnect row (Map's **New place** in the picker takes a name, an address and a pin). The label is what shows on the feed card; the coordinates power the "Open in Map" link on the viewer.
 
 ## Where you see Karporn
 
 - **`/hub/karporn` directory** — a grid of kar cards (cover + title + "year make model" + photo count · optional location label). Rotator faces: **All / Mine / Mates'**.
-- **`/hub/karporn/:id` viewer** — title + meta row (`year make model` · photo count · visibility) + optional location chip with an "Open in Map" link when coords are set + owner attribution + cover + photo grid + description. The owner gets **Edit car** in the Ж menu, which opens the create composer in edit mode (title, description, year/make/model, location; no photo picker; reach is shown but locked while editing). **Delete post** sits at the foot of that form, not on the page.
+- **`/hub/karporn/:id` viewer** — title + meta row (`year make model` · photo count · visibility) + optional location chip with an "Open in Map" link when coords are set + owner attribution + cover + photo grid + description. The owner gets **Edit car** in the Ж menu, which opens the create composer in edit mode (title, description, year/make/model; no photo picker; reach is shown but locked while editing). **Delete post** sits at the foot of that form, not on the page.
 - **Home feed** — one card per kar lifetime. `StatusKarpornCard` renders cover + title + `year make model` + photo count + optional location label.
 
 ## Composer
@@ -47,9 +42,8 @@ There is no map picker. A proper one belongs to the Map korner. The label is wha
 1. **Title** (input).
 2. **Description** (textarea).
 3. **Year / Make / Model** — a three-column meta row: year (`<input type="number">` with min/max/step), make, model. Year defaults to `new Date().getFullYear()`.
-4. **Location** — `<fieldset>` with the label input + the geolocation button (or captured coordinates + clear button).
-5. **Add photos** — file picker (multiple, `image/*`), thumbnails with per-tile remove.
-6. **Reach** — `<ReachDropdown>` in the compose-shell header slot.
+4. **Add photos** — file picker (multiple, `image/*`), thumbnails with per-tile remove.
+5. **Reach** — `<ReachDropdown>` in the compose-shell header slot.
 
 On submit: `POST /api/v1/karporn/kars`, then serial `POST /api/v1/media` → `POST /api/v1/karporn/kars/:id/photos` per photo. Same first-photo-is-cover ordering as Art.
 
@@ -81,7 +75,6 @@ Migration `db/migrate/20260911140000_create_karporn.rb`.
 
 - **Map doesn't honour the link.** `/hub/map?lat=&lng=` should drop a pin at those coordinates; today it ignores them.
 - **Make / model autocomplete** — free-text today, so "Porsche" and "porsche" and "porsche " are three different filters if we ever add filtering. If make/model filtering becomes real, either normalise on write or seed a curated list.
-- **Proper map picker** — the "Use my current location" button is the smallest useful thing. A real picker (drop a pin on a map, drag to adjust, reverse-geocode the label) belongs to the Map korner and can share a primitive across korners that want a location — see Wachuneed listings and Moments attach flows.
 - **Cross-post to Albutts** — a Karporn post is also a photo album at its core. Should there be a "post this to Albutts too" affordance? Probably not — Albutts is multi-contributor; Karporn is single-author. Cross-linking via `korner_attachments` is the cheap answer.
 - **Changing reach after posting** — the API accepts it but doesn't re-scope the item's feed post, so the edit form locks it.
 
@@ -90,7 +83,7 @@ Migration `db/migrate/20260911140000_create_karporn.rb`.
 - [`../korners/korner_standard.md`](../korners/korner_standard.md).
 - [`../korners/adding_a_korner.md`](../korners/adding_a_korner.md).
 - [`art.md`](art.md) — the shape Karporn cribs from.
-- [`map.md`](map.md) — the eventual owner of location picking.
+- [`map.md`](map.md) — Places, which a kar's location is a Konnection to.
 
 ## History
 

@@ -25,10 +25,6 @@ const messages = defineMessages({
     id: 'events.form.title_placeholder',
     defaultMessage: 'Event name...',
   },
-  locationPlaceholder: {
-    id: 'events.form.location_placeholder',
-    defaultMessage: 'Where is it?',
-  },
   descriptionPlaceholder: {
     id: 'events.form.description_placeholder',
     defaultMessage: 'Tell people about this event...',
@@ -168,10 +164,6 @@ export const CreateEventForm: React.FC<Props> = ({
   const [startTime, setStartTime] = useState(startInit.time);
   const [endDate, setEndDate] = useState(endInit.date);
   const [endTime, setEndTime] = useState(endInit.time);
-  const [locationName, setLocationName] = useState(
-    editEvent?.location_name ?? '',
-  );
-  const [locationUrl, setLocationUrl] = useState(editEvent?.location_url ?? '');
   const [visibility, setVisibility] = useState<ReachValue>('public');
   const [rsvpEnabled, setRsvpEnabled] = useState(
     editEvent?.rsvp_enabled ?? true,
@@ -198,8 +190,6 @@ export const CreateEventForm: React.FC<Props> = ({
       startTime,
       endDate,
       endTime,
-      locationName,
-      locationUrl,
       visibility,
       rsvpEnabled,
       recurrenceRule,
@@ -211,8 +201,6 @@ export const CreateEventForm: React.FC<Props> = ({
       startTime,
       endDate,
       endTime,
-      locationName,
-      locationUrl,
       visibility,
       rsvpEnabled,
       recurrenceRule,
@@ -226,8 +214,6 @@ export const CreateEventForm: React.FC<Props> = ({
       setStartTime(d.startTime);
       setEndDate(d.endDate);
       setEndTime(d.endTime);
-      setLocationName(d.locationName);
-      setLocationUrl(d.locationUrl);
       setVisibility(d.visibility);
       setRsvpEnabled(d.rsvpEnabled);
       setRecurrenceRule(d.recurrenceRule);
@@ -243,8 +229,6 @@ export const CreateEventForm: React.FC<Props> = ({
   const handleDiscardDraft = useCallback(() => {
     setTitle('');
     setDescription('');
-    setLocationName('');
-    setLocationUrl('');
     setRecurrenceRule('');
     discardDraft();
   }, [discardDraft]);
@@ -309,20 +293,6 @@ export const CreateEventForm: React.FC<Props> = ({
     [],
   );
 
-  const handleLocationNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocationName(e.target.value);
-    },
-    [],
-  );
-
-  const handleLocationUrlChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocationUrl(e.target.value);
-    },
-    [],
-  );
-
   const handleVisibilityChange = useCallback((value: ReachValue) => {
     setVisibility(value);
   }, []);
@@ -377,8 +347,6 @@ export const CreateEventForm: React.FC<Props> = ({
           description,
           start_time: startDateTime,
           end_time: endDateTime,
-          location_name: locationName || null,
-          location_url: locationUrl || null,
           rsvp_enabled: rsvpEnabled,
           recurrence_rule: recurrenceRule || null,
         };
@@ -418,8 +386,6 @@ export const CreateEventForm: React.FC<Props> = ({
       startTime,
       endDate,
       endTime,
-      locationName,
-      locationUrl,
       visibility,
       rsvpEnabled,
       recurrenceRule,
@@ -434,8 +400,6 @@ export const CreateEventForm: React.FC<Props> = ({
   );
 
   const titleInputId = 'event-form-title';
-  const locationInputId = 'event-form-location';
-  const linkInputId = 'event-form-link';
   const descriptionInputId = 'event-form-description';
   const repeatInputId = 'event-form-repeat';
   const rsvpInputId = 'event-form-rsvp';
@@ -578,37 +542,10 @@ export const CreateEventForm: React.FC<Props> = ({
         </div>
       </div>
 
-      <div className='create-event-form__field'>
-        <label htmlFor={locationInputId}>
-          <FormattedMessage
-            id='events.form.location'
-            defaultMessage='Location'
-          />
-        </label>
-        <input
-          id={locationInputId}
-          type='text'
-          value={locationName}
-          onChange={handleLocationNameChange}
-          placeholder={intl.formatMessage(messages.locationPlaceholder)}
-          maxLength={200}
-        />
-      </div>
-
-      <div className='create-event-form__field'>
-        <label htmlFor={linkInputId}>
-          <FormattedMessage id='events.form.link' defaultMessage='Link' />
-        </label>
-        <input
-          id={linkInputId}
-          type='url'
-          value={locationUrl}
-          onChange={handleLocationUrlChange}
-          placeholder='https://...'
-          maxLength={500}
-        />
-      </div>
-
+      {/* No location fields: where an event is, is its Konnected Map
+          Place, Konnected from the event's page (decisions.md,
+          2026-10-23, "Location fields become Konnect → Map"). An edit
+          sends no location, so an older event keeps its own. */}
       <div className='create-event-form__field'>
         <label htmlFor={descriptionInputId}>
           <FormattedMessage

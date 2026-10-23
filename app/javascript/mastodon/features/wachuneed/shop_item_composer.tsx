@@ -233,7 +233,6 @@ export const ShopItemComposer: React.FC<Props> = ({
     useState<ListingVisibility>(shopVisibility);
   // Whether it had already been posted when loaded: that cannot be undone.
   const [wasAnnounced, setWasAnnounced] = useState(false);
-  const [location, setLocation] = useState('');
   const [again, setAgain] = useState(false);
   // The name of the item just added, when carrying on to the next.
   const [lastAdded, setLastAdded] = useState<string | null>(null);
@@ -335,7 +334,6 @@ export const ShopItemComposer: React.FC<Props> = ({
         setVariantState(variantStateFrom(listing.variants));
         setOptionRows(optionRowsFrom(listing.options));
         setOngoing(listing.ongoing !== false);
-        setLocation(listing.location ?? '');
         setAnnounced(listing.announced !== false);
         setWasAnnounced(listing.announced !== false);
         setVisibility(listing.visibility ?? 'public');
@@ -446,7 +444,6 @@ export const ShopItemComposer: React.FC<Props> = ({
           category,
           kind: 'offer',
           state: 'live',
-          location: location.trim() || undefined,
           ...(photoState.ids.length > 0
             ? { media_attachment_ids: photoState.ids }
             : {}),
@@ -494,7 +491,6 @@ export const ShopItemComposer: React.FC<Props> = ({
     photoState,
     showsChoices,
     editId,
-    location,
     again,
     finishDraft,
     commitKonnect,

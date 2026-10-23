@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
-# Map — event pins. Events with a parseable OSM `location_url` surface
-# on the Map as spiral markers, filtered by the caller's visibility on
-# the underlying Event (see `Event#visible_to?` and
-# `Event.visible_to`). Tapping a pin opens a preview card with the
-# essentials + a link to /kalendar/<slug>.
+# Map — event pins. Events with a parseable OSM `location_url`, and
+# events with none that are Konnected to a Place (Kronk::RecordPlace: a
+# location is a Konnection now), surface on the Map as spiral markers,
+# filtered by the caller's visibility on the underlying Event (see
+# `Event#visible_to?` and `Event.visible_to`). An event's own
+# `location_url` wins over its Place. Tapping a pin opens a preview card
+# with the essentials + a link to /kalendar/<slug>.
 #
 #   GET /api/v1/map/events — pins for upcoming events I can see
 #
@@ -34,9 +36,15 @@ class Api::V1::Map::EventsController < Api::BaseController
          .order(:id)
          .not_cancelled
          .where(start_time: ..(Time.now.utc + UPCOMING_WINDOW))
-         .where.not(location_url: [nil, ''])
+         .where(pinned)
          .visible_to(current_account)
          .includes(:account, :status)
+  end
+
+  # An own `location_url`, or a Place Konnected by the event's host.
+  def pinned
+    url = Event.arel_table[:location_url]
+    url.not_eq(nil).and(url.not_eq('')).or(Kronk::RecordPlace.konnected_condition(Event))
   end
 
   # `visible_to` (the scope) only handles invite-only; the event's own reach
@@ -50,11 +58,12 @@ class Api::V1::Map::EventsController < Api::BaseController
 
     MAX_SCANS.times do |page|
       batch = candidate_events.offset(page * MAX_PINS).limit(MAX_PINS).to_a
+      Kronk::RecordPlace.preload(batch.select { |event| event.location_url.blank? })
 
       batch.each do |event|
         next unless event.visible_to?(current_account)
 
-        coords = Kronk::OsmPin.parse(event.location_url)
+        coords = pin_for(event)
         found << [event, coords] if coords
         return found if found.size >= MAX_PINS
       end
@@ -65,6 +74,14 @@ class Api::V1::Map::EventsController < Api::BaseController
     found
   end
 
+  # The event's own pin; or, with no `location_url`, its Place's point.
+  def pin_for(event)
+    return Kronk::OsmPin.parse(event.location_url) if event.location_url.present?
+
+    place = event.konnected_place
+    place && { lat: place.latitude.to_f, lng: place.longitude.to_f, zoom: nil }
+  end
+
   def project(event, coords, going_count)
     {
       id: event.id.to_s,
@@ -72,7 +89,7 @@ class Api::V1::Map::EventsController < Api::BaseController
       title: event.title,
       start_time: event.start_time.iso8601,
       end_time: event.end_time&.iso8601,
-      location_name: event.location_name,
+      location_name: event.effective_location_name,
       event_type: event.event_type,
       lat: coords[:lat],
       lng: coords[:lng],

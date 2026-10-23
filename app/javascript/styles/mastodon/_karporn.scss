@@ -187,44 +187,7 @@
 
 .karporn-composer {
   // The kit (components/compose_fields.tsx) draws the fields; what's here
-  // is Karporn's own: the location pin, the photo picks.
-  &__location .compose-section__title {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-
-    svg {
-      width: 1em;
-      height: 1em;
-    }
-  }
-
-  &__use-current {
-    align-self: flex-start;
-    background: transparent;
-    color: var(--accent-text);
-    border: 1px dashed color-mix(in oklab, var(--accent), transparent 60%);
-    border-radius: var(--radius-small);
-    padding: 4px 10px;
-    cursor: pointer;
-  }
-
-  &__coords {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-
-    button {
-      background: transparent;
-      border: 0;
-      color: var(--accent-text);
-      cursor: pointer;
-      font-size: 12px;
-      text-decoration: underline;
-    }
-  }
-
+  // is Karporn's own: the photo picks.
   &__photos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));

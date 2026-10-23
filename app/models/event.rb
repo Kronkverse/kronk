@@ -7,6 +7,9 @@ class Event < ApplicationRecord
   # korner that accepts it. `Kronk::AttachmentSource` cascades the join
   # rows on destroy (and the albums older events spawned, 2026-10-23).
   include Kronk::AttachmentSource
+  # Where it is: its Konnected Place, when its own location is empty
+  # (`effective_location_name`, `effective_location_url`).
+  include Kronk::RecordPlace::Konnected
   include Kronk::NamedLink
 
   self.attachment_source_slug = 'kalendar'
@@ -18,7 +21,7 @@ class Event < ApplicationRecord
       id: id,
       title: title.to_s,
       description: description.to_s,
-      location_name: location_name.to_s,
+      location_name: effective_location_name.to_s,
       host_acct: account&.acct.to_s,
       account_id: account_id,
       starts_at: start_time&.to_i,
@@ -170,5 +173,17 @@ class Event < ApplicationRecord
 
   def image_url
     image&.file&.url(:small)
+  end
+
+  # Where it is. An event's own `location_name` / `location_url` win (older
+  # events, and the Android app, which still writes them); without them, its
+  # Konnected Place: the Place's name, and an OpenStreetMap link to its
+  # point (Kronk::RecordPlace).
+  def effective_location_name
+    location_name.presence || konnected_place&.name
+  end
+
+  def effective_location_url
+    location_url.presence || Kronk::RecordPlace.osm_url(konnected_place)
   end
 end

@@ -29,7 +29,11 @@ class REST::KarSummarySerializer < ActiveModel::Serializer
   # Only the human label rides in the summary — the feed card doesn't
   # need to plot the pin, just show "somewhere in <label>". Full lat/lng
   # is in the detail response.
+  # Its own label, or, with no location of its own, its Konnected Place's
+  # name.
   def location_label
-    object.location_label
+    return object.location_label if object.location? || object.location_label.present?
+
+    object.konnected_place&.name
   end
 end

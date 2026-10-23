@@ -34,9 +34,13 @@ resolve. `/kalendar/*` 301s to `/hub/kalendar/*`.
 
 **Creating.** The Ж-menu "New event" action opens `/hub/kalendar/composer`
 (`features/kalendar/event_composer.tsx`, on the shared `ComposeShell`). Fields:
-title, description, start and optional end, place name and link (a pinned map
-location fills these), cover image, invitees, reach, Krews, and "Konnect a
-korner" attachments. Every event made here is an in-person event with RSVP on.
+title, description, start and optional end, cover image, invitees, reach,
+Krews, and the Konnect row. Where it is, is a Konnection to a Map Place
+(Konnect → Map → **New place** makes one without leaving the composer;
+decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The event
+reads its `location_name` and `location_url` from that Place when its own are
+empty; older events, and the Android app, keep their own. The edit form has
+no location fields either: Konnect a Place from the event's page. Every event made here is an in-person event with RSVP on.
 
 **Who sees it.** An event posts a companion `Status` (`source_korner:
 'kalendar'`) that carries its reach, using the standard reach ladder and Krews
@@ -111,8 +115,9 @@ Kalendar is the source side of `korner_attachments`
 - **No spawns.** `spawn_album` (an album made with the event, deleted with it)
   was retired 2026-10-23; the API ignores it. Albums spawned before then are
   still deleted with their event (`kind: spawn` rows cascade).
-- **Map:** events whose `location_url` is a parseable OpenStreetMap link show
-  as pins on Map (`/api/v1/map/events`), and the event page links to
+- **Map:** events whose `location_url` is a parseable OpenStreetMap link, or
+  that have none and a Konnected Place, show as pins on Map
+  (`/api/v1/map/events`), and the event page links to
   `/hub/map?event=<slug>`.
 
 `kalendar.event.created` is still published on create, but nothing subscribes.

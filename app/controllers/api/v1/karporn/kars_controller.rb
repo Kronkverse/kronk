@@ -17,7 +17,10 @@ class Api::V1::Karporn::KarsController < Api::BaseController
   def index
     scope = Kar.visible_to(current_account).recent
     scope = narrow_by_scope(scope)
-    render json: scope.limit(clamp_limit), each_serializer: REST::KarSerializer
+    # Where each one is, for kars with no location of their own: two
+    # queries for the page (Kronk::RecordPlace).
+    kars = Kronk::RecordPlace.preload(scope.limit(clamp_limit).to_a)
+    render json: kars, each_serializer: REST::KarSerializer
   end
 
   def show

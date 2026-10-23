@@ -55,7 +55,9 @@ import type { VariantState } from './listing_variants_editor';
 // listing's owner (the server refuses anyone else).
 //
 // Kept intentionally simple in this pass: title + description +
-// category picker + optional price + optional location + photos. The
+// category picker + optional price + photos (where it is: Konnect → Map,
+// a Place; decisions.md 2026-10-23, "Location fields become Konnect →
+// Map"). The
 // 5 interaction modes (buy_now, buy_or_bargain, book_service,
 // contact_to_discuss, workshop_join) are a follow-up — this composer
 // only produces a listing in the `live` state so it lands in the
@@ -176,14 +178,6 @@ const messages = defineMessages({
     id: 'wachuneed.new.field.price_placeholder',
     defaultMessage: 'Leave blank if free or by arrangement',
   },
-  labelLocation: {
-    id: 'wachuneed.new.field.location',
-    defaultMessage: 'Location',
-  },
-  placeholderLocation: {
-    id: 'wachuneed.new.field.location_placeholder',
-    defaultMessage: 'City / remote / by post — how does the exchange happen?',
-  },
   submit: { id: 'wachuneed.new.submit', defaultMessage: 'Publish listing' },
   submitting: {
     id: 'wachuneed.new.submitting',
@@ -269,7 +263,6 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<Category>('creation');
   const [price, setPrice] = useState('');
-  const [location, setLocation] = useState('');
   // Your shop's sections, if you have a shop with any; and the one this
   // listing sits in ('' for none).
   const [shopSections, setShopSections] = useState<ApiShopSectionJSON[]>([]);
@@ -333,7 +326,6 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             ? (listing.price_cents / 100).toFixed(2)
             : '',
         );
-        setLocation(listing.location ?? '');
         setSectionId(listing.shop_section_id ?? '');
         setVisibility(listing.visibility ?? 'public');
         setOptionRows(optionRowsFrom(listing.options));
@@ -464,12 +456,6 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     setPrice(e.currentTarget.value);
   }, []);
 
-  const handleLocationChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setLocation(e.currentTarget.value);
-  }, []);
-
   const handleSubmit = useCallback<React.FormEventHandler<HTMLFormElement>>(
     (e) => {
       e.preventDefault();
@@ -489,7 +475,6 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         description: description.trim() || undefined,
         category,
         kind,
-        location: location.trim() || undefined,
         state: 'live',
         ...(priceCents !== null && Number.isFinite(priceCents)
           ? { price_cents: priceCents, price_currency: 'AUD' }
@@ -549,7 +534,6 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       category,
       kind,
       price,
-      location,
       shopSections,
       showSections,
       sectionId,
@@ -743,18 +727,6 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
               onChange={setOptionRows}
             />
           )}
-
-          {/* Still a field here; it becomes a Konnection to a Map Place
-              (docs/korners/korner_standard.md, L13). */}
-          <ComposeField
-            label={<FormattedMessage {...messages.labelLocation} />}
-          >
-            <ComposeInput
-              value={location}
-              onChange={handleLocationChange}
-              placeholder={intl.formatMessage(messages.placeholderLocation)}
-            />
-          </ComposeField>
 
           <ListingPhotoField state={photoState} showsChoices={showsChoices} />
 

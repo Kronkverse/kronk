@@ -24,6 +24,9 @@ class Api::V1::EventsController < Api::BaseController
     # (Mates, Orbit, a Krew alone) is decided per event, as opening one
     # does, so the list never shows an event its viewer could not open.
     @events = scope.limit(PAGE * 3).select { |event| event.visible_to?(current_account) }.first(PAGE)
+    # Where each one is, for those with no location of their own: two
+    # queries for the page, not two per event.
+    Kronk::RecordPlace.preload(@events)
     render json: @events, each_serializer: REST::EventSerializer
   end
 

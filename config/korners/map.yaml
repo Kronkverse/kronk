@@ -63,6 +63,19 @@ accepts:
   - from: '*'
     kind: link
 
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6). "New place" from the Konnect picker: on a
+# record's page it opens the Place composer with `?konnect=<slug>:<id>`
+# (Map's `compose:` logs a trek, so the route and label are its own); in
+# a composer, where the record isn't made yet, the picker makes the Place
+# itself (components/konnect_new_place.tsx) and picks it. A location is
+# a Konnection to a Place (decisions.md, 2026-10-23, "Location fields
+# become Konnect → Map").
+konnect:
+  make: true
+  route: /hub/map/places/new
+  label: 'New place'
+
 resources:
   - name: map_places # Places: the linkable record (docs/spaces/map.md, Places)
     primary: true

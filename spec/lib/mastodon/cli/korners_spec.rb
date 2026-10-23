@@ -748,7 +748,7 @@ RSpec.describe Mastodon::CLI::Korners do
 
     it 'offers "New …" from the korners whose composers Konnect what they make' do
       makers = Kronk::KornerRegistry.all.select { |m| m.konnect.is_a?(Hash) && m.konnect['make'] == true }.map(&:slug)
-      expect(makers).to contain_exactly('albutts', 'art', 'freethedream', 'kalendar', 'karporn', 'wachuneed')
+      expect(makers).to contain_exactly('albutts', 'art', 'freethedream', 'kalendar', 'karporn', 'map', 'wachuneed')
     end
   end
 end

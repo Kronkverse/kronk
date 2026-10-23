@@ -3,7 +3,6 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
-import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import api from 'mastodon/api';
 import { apiAddPhoto, apiCreateKar, apiUpdateKar } from 'mastodon/api/karporn';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
@@ -14,7 +13,6 @@ import {
   ComposeHint,
   ComposeInput,
   ComposeRow,
-  ComposeSection,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
@@ -38,14 +36,6 @@ const messages = defineMessages({
     id: 'karporn.composer.post_error',
     defaultMessage: 'Could not post the car.',
   },
-  geoUnavailable: {
-    id: 'karporn.composer.geolocation_unavailable',
-    defaultMessage: 'Geolocation not available in this browser.',
-  },
-  geoFailed: {
-    id: 'karporn.composer.geolocation_failed',
-    defaultMessage: 'Could not read your current location.',
-  },
   submit: { id: 'karporn.composer.submit', defaultMessage: 'Post car' },
   submitting: { id: 'karporn.composer.submitting', defaultMessage: 'Posting…' },
   heading: { id: 'karporn.composer.heading', defaultMessage: 'Post a car' },
@@ -67,23 +57,6 @@ const messages = defineMessages({
   year: { id: 'karporn.composer.year', defaultMessage: 'Year' },
   make: { id: 'karporn.composer.make', defaultMessage: 'Make' },
   model: { id: 'karporn.composer.model', defaultMessage: 'Model' },
-  location: { id: 'karporn.composer.location', defaultMessage: 'Location' },
-  locationPlaceholder: {
-    id: 'karporn.composer.location_placeholder',
-    defaultMessage: 'Where was it? (optional)',
-  },
-  useCurrent: {
-    id: 'karporn.composer.use_current',
-    defaultMessage: 'Use my current location',
-  },
-  currentSet: {
-    id: 'karporn.composer.current_set',
-    defaultMessage: 'Coordinates captured',
-  },
-  currentClear: {
-    id: 'karporn.composer.current_clear',
-    defaultMessage: 'Clear coordinates',
-  },
   addPhotos: {
     id: 'karporn.composer.add_photos',
     defaultMessage: 'Add photos',
@@ -123,8 +96,6 @@ interface KarDraftParams {
   make?: string;
   model?: string;
   visibility?: ReachValue;
-  locationLabel?: string;
-  coords?: { lat: number; lng: number } | null;
   konnections?: KonnectTarget[];
 }
 
@@ -132,7 +103,7 @@ interface Props {
   onCancel: () => void;
   onCreated?: (kar: ApiKarJSON) => void;
   // Edit mode: pass the car to prefill the form. Submit then saves the
-  // text + location fields via the update endpoint (photos are managed
+  // text fields via the update endpoint (photos are managed
   // separately, so the photo picker hides) and the form's foot carries
   // Delete.
   kar?: ApiKarJSON;
@@ -142,12 +113,6 @@ interface Props {
 }
 
 const CURRENT_YEAR = new Date().getFullYear();
-
-const initialCoords = (kar?: ApiKarJSON) => {
-  const lat = kar?.location?.lat;
-  const lng = kar?.location?.lng;
-  return lat != null && lng != null ? { lat, lng } : null;
-};
 
 export const KarComposer: React.FC<Props> = ({
   onCancel,
@@ -170,13 +135,6 @@ export const KarComposer: React.FC<Props> = ({
     editingKar?.visibility ?? 'public',
   );
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
-  const [locationLabel, setLocationLabel] = useState(
-    editingKar?.location?.label ?? '',
-  );
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    () => initialCoords(editingKar),
-  );
-  const [locError, setLocError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{
     done: number;
@@ -202,8 +160,6 @@ export const KarComposer: React.FC<Props> = ({
       setMake(p.make ?? '');
       setModel(p.model ?? '');
       setVisibility(p.visibility ?? 'public');
-      setLocationLabel(p.locationLabel ?? '');
-      setCoords(p.coords ?? null);
       restoreKonnect(p.konnections);
       setPhotos((prev) => {
         prev.forEach((ph) => {
@@ -211,7 +167,6 @@ export const KarComposer: React.FC<Props> = ({
         });
         return [];
       });
-      setLocError(null);
       setError(null);
     },
     [restoreKonnect],
@@ -228,8 +183,6 @@ export const KarComposer: React.FC<Props> = ({
         make,
         model,
         visibility,
-        locationLabel,
-        coords,
         konnections: konnect.saved,
       },
     },
@@ -237,9 +190,7 @@ export const KarComposer: React.FC<Props> = ({
       title.trim() !== '' ||
       description.trim() !== '' ||
       make.trim() !== '' ||
-      model.trim() !== '' ||
-      locationLabel.trim() !== '' ||
-      coords !== null,
+      model.trim() !== '',
     apply: applyDraft,
     describe: (d) => d.params.title,
     active: !isEdit,
@@ -276,36 +227,6 @@ export const KarComposer: React.FC<Props> = ({
   const handleModel = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setModel(e.target.value);
   }, []);
-  const handleLocationLabel = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocationLabel(e.target.value);
-    },
-    [],
-  );
-
-  const handleUseCurrent = useCallback(() => {
-    setLocError(null);
-    if (!('geolocation' in navigator)) {
-      setLocError(intl.formatMessage(messages.geoUnavailable));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({
-          lat: Number(pos.coords.latitude.toFixed(6)),
-          lng: Number(pos.coords.longitude.toFixed(6)),
-        });
-      },
-      () => {
-        setLocError(intl.formatMessage(messages.geoFailed));
-      },
-      { maximumAge: 60_000, timeout: 8_000 },
-    );
-  }, [intl]);
-  const handleClearCoords = useCallback(() => {
-    setCoords(null);
-  }, []);
-
   const handleAddPhotos = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -345,9 +266,6 @@ export const KarComposer: React.FC<Props> = ({
             year: Number.parseInt(year, 10),
             make: make.trim(),
             model: model.trim(),
-            location_lat: coords?.lat ?? null,
-            location_lng: coords?.lng ?? null,
-            location_label: locationLabel.trim() || null,
           });
           onUpdated?.(updated);
         } catch (e) {
@@ -377,9 +295,6 @@ export const KarComposer: React.FC<Props> = ({
           make: make.trim(),
           model: model.trim(),
           visibility,
-          location_lat: coords?.lat,
-          location_lng: coords?.lng,
-          location_label: locationLabel.trim() || undefined,
         });
       } catch (e) {
         setPending(false);
@@ -417,12 +332,10 @@ export const KarComposer: React.FC<Props> = ({
   }, [
     canSubmit,
     commitKonnect,
-    coords,
     description,
     editingKar,
     finishDraft,
     intl,
-    locationLabel,
     make,
     model,
     onCreated,
@@ -505,52 +418,6 @@ export const KarComposer: React.FC<Props> = ({
           />
         </ComposeField>
       </ComposeRow>
-
-      {/* Still a field here; it becomes a Konnection to a Map Place
-          (docs/korners/korner_standard.md, L13). */}
-      <ComposeSection
-        className='karporn-composer__location'
-        title={
-          <>
-            <Icon id='location_on' icon={LocationOnIcon} />
-            {intl.formatMessage(messages.location)}
-          </>
-        }
-      >
-        <ComposeInput
-          value={locationLabel}
-          onChange={handleLocationLabel}
-          placeholder={intl.formatMessage(messages.locationPlaceholder)}
-          aria-label={intl.formatMessage(messages.location)}
-          maxLength={240}
-          disabled={pending}
-        />
-        {coords ? (
-          <div className='karporn-composer__coords'>
-            <span>
-              {intl.formatMessage(messages.currentSet)} —{' '}
-              {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
-            </span>
-            <button
-              type='button'
-              onClick={handleClearCoords}
-              disabled={pending}
-            >
-              {intl.formatMessage(messages.currentClear)}
-            </button>
-          </div>
-        ) : (
-          <button
-            type='button'
-            className='karporn-composer__use-current'
-            onClick={handleUseCurrent}
-            disabled={pending}
-          >
-            {intl.formatMessage(messages.useCurrent)}
-          </button>
-        )}
-        {locError && <ComposeHint error>{locError}</ComposeHint>}
-      </ComposeSection>
 
       {!isEdit && (
         <ComposeHint>{intl.formatMessage(messages.photosHint)}</ComposeHint>
