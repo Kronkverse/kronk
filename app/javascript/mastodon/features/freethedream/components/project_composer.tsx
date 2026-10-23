@@ -383,7 +383,7 @@ export const ProjectComposer: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
-      konnect={editing ? undefined : konnect}
+      konnect={editing ? null : konnect}
     >
       <div className='freethedream-form'>
         <label className='freethedream-form__field'>

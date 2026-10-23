@@ -76,6 +76,7 @@ export const HandOver: React.FC<Props> = ({
 
   return (
     <ComposeShell
+      konnect={null}
       korner='freethedream'
       label={intl.formatMessage(messages.title)}
       subtitle={intl.formatMessage(messages.subtitle, { title })}

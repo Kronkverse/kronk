@@ -67,7 +67,9 @@ export const PlacePage: React.FC<{ id: string }> = ({ id }) => {
   }, [id]);
 
   const seeOnMap = useCallback(() => {
-    history.push(`/hub/map?place=${id}`);
+    // A location object: a query inside a pushed string lands in the
+    // pathname here.
+    history.push({ pathname: '/hub/map', search: `?place=${id}` });
   }, [history, id]);
 
   const handleDelete = useCallback(() => {

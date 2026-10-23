@@ -860,8 +860,9 @@ Nudges keep a per-device draft per conversation instead
 
 #### Konnect
 
-Any creation Konnects to any other (decisions.md, 2026-10-23), and most
-composers offer it. `useKonnect(korner)` (`hooks/useKonnect.ts`) holds what
+Any creation Konnects to any other (decisions.md, 2026-10-23), and every
+composer that makes a record offers it: `konnect` is a required prop of
+`<ComposeShell>`, so a composer can't leave it out by forgetting. `useKonnect(korner)` (`hooks/useKonnect.ts`) holds what
 the new record will be Konnected to: the record it was opened from
 (`?konnect=<slug>:<id>`, which the Konnect picker's **New …** sends) and any
 the person adds. Pass it to `<ComposeShell konnect={…}>`: the shell draws the
@@ -871,8 +872,12 @@ with a × to drop it, then a dashed Konnect tile that opens the picker in its
 pick-don't-save mode). Tiles reflow; nothing scrolls sideways. After the
 create succeeds the composer calls `konnect.commit(<its slug>, <new id>)`;
 a link that fails never fails the create. Keep `konnect.saved` in the draft
-(`konnections`) and `restore` it in `apply`. A composer that is editing
-something already made passes no `konnect`. The korner's manifest then says
+(`konnections`) and `restore` it in `apply`. A composer that makes nothing
+new to Konnect passes `konnect={null}`: editing a record (Konnect it from its
+page), adding to one that exists (photos to an album, a hand-over), a record
+that isn't its korner's linkable one (a trek, a FreeTheDream item), or a
+korner that opts out (`no_attachments:`, Moments). Location and a Krew come
+through Konnect too, not fields of their own (Korner Standard L13). The korner's manifest then says
 `konnect: { make: true }` so the picker offers its composer
 (docs/korners/adding_a_korner.md, Korner attachments §2.6 and §4.4).
 

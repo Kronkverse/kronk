@@ -5,10 +5,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import axios from 'axios';
 
 import api from 'mastodon/api';
-import { apiCreateAttachment } from 'mastodon/api/attachments';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
-import { ComposeAttachBar } from 'mastodon/components/compose_attach_bar';
-import type { PendingConnection } from 'mastodon/components/compose_attach_bar';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { MapPinPicker } from 'mastodon/components/map_pin_picker';
 import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
@@ -17,6 +14,7 @@ import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 // Kalendar — event composer. First implementation, mounted directly
@@ -132,10 +130,6 @@ const messages = defineMessages({
     id: 'kalendar.new.cover_upload_failed',
     defaultMessage: "Couldn't upload the image: {error}",
   },
-  attachHeading: {
-    id: 'kalendar.new.attach_heading',
-    defaultMessage: 'Konnect a korner',
-  },
   invitePeople: {
     id: 'kalendar.new.invite_people',
     defaultMessage: 'Invite people',
@@ -178,58 +172,6 @@ export interface CreatedEvent {
   visibility?: string | null;
   title?: string;
   image_url?: string | null;
-}
-
-// Companion-record creators for the Konnect-a-korner "create new"
-// sections. Each takes the freshly-created event + the pending
-// connection's mini-form fields and returns the new target
-// record's id (so the caller can bind it via /api/v1/attachments).
-// Reach follows the event's visibility strictly (Tal 2026-08-16 —
-// no override at the attachment level).
-async function createCompanionAlbum(
-  event: CreatedEvent,
-  conn: PendingConnection,
-): Promise<string | null> {
-  // Fall through empty-string title → event title → literal
-  // fallback. `??` doesn't do the empty-string coalesce, so an
-  // explicit `.length` check is the safer path.
-  const composerTitle = conn.createTitle?.trim() ?? '';
-  const eventTitle = event.title ?? '';
-  const title =
-    composerTitle.length > 0
-      ? composerTitle
-      : eventTitle.length > 0
-        ? eventTitle
-        : 'Album';
-  const body: Record<string, unknown> = {
-    album: {
-      title,
-      visibility: event.visibility ?? 'public',
-      ...(conn.createCoverId
-        ? { cover_media_attachment_id: conn.createCoverId }
-        : {}),
-    },
-  };
-  const res = await api().post<{ id: string }>('/api/v1/albutts/albums', body);
-  return res.data.id;
-}
-
-async function createCompanionHuddle(
-  event: CreatedEvent,
-  conn: PendingConnection,
-): Promise<string | null> {
-  const composerTitle = conn.createTitle?.trim() ?? '';
-  const eventTitle = event.title ?? '';
-  const name =
-    composerTitle.length > 0
-      ? composerTitle
-      : eventTitle.length > 0
-        ? eventTitle
-        : 'Huddle';
-  const res = await api().post<{ id: string }>('/api/v1/huddle/rooms', {
-    name,
-  });
-  return res.data.id;
 }
 
 interface CreatePayload {
@@ -356,8 +298,7 @@ const extractApiError = (e: unknown): string => {
 };
 
 // What an event draft keeps (docs/design.md, Drafts). The cover image goes
-// as an upload id alongside. Konnected korners aren't kept yet: their
-// mini-forms are their own.
+// as an upload id alongside.
 interface EventDraftParams {
   title?: string;
   description?: string;
@@ -371,6 +312,7 @@ interface EventDraftParams {
   reach?: ReachValue;
   krewIds?: string[];
   invitees?: InviteeAccount[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -387,14 +329,15 @@ export const EventComposer: React.FC<Props> = ({
   forKrewId,
 }) => {
   const intl = useIntl();
-  // Opened from the Konnect picker (`?konnect=<slug>:<id>`): the event is
-  // Konnected to that record once made. A Krew is the Krew audience
-  // (`forKrewId`), which keeps its own link (EventLinks.posted). The
-  // composer's own attach bar is still the way to add more; moving it onto
-  // the shared Konnect row is a follow-up.
-  const { commit: commitKonnect } = useKonnect('kalendar', {
+  // What the new event will be Konnected to (decisions.md, 2026-10-23):
+  // the record it was opened for (`?konnect=<slug>:<id>`) and any the
+  // person adds in the Konnect row. A Krew it was opened for is the Krew
+  // audience (`forKrewId`), which keeps its own link (EventLinks.posted).
+  const konnect = useKonnect('kalendar', {
     sourceHandled: !!forKrewId,
   });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -452,17 +395,6 @@ export const EventComposer: React.FC<Props> = ({
   const [krewIds, setKrewIds] = useState<string[]>(
     forKrewId ? [forKrewId] : [],
   );
-  // connections — the compose-time "Konnect a korner" intents
-  // captured by `<ComposeAttachBar>` (docs/korners/adding_a_korner.md (Korner attachments)).
-  // Two shapes per entry:
-  //   * mode: 'create' — inline mini-form for a new record in the
-  //     target korner (Albutts: title + cover; Huddle: title). On
-  //     submit we POST the target's create endpoint (inheriting the
-  //     event's visibility) then POST /api/v1/attachments.
-  //   * mode: 'link' — the user picked an existing record via the
-  //     inline search. On submit we POST /api/v1/attachments
-  //     directly.
-  const [connections, setConnections] = useState<PendingConnection[]>([]);
   // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
   // user has picked from the search results. Stored as a Map keyed
   // by id so we can render chips with names/avatars (search results
@@ -497,12 +429,13 @@ export const EventComposer: React.FC<Props> = ({
       setReach(p.reach ?? (forKrewId ? 'self_only' : 'public'));
       setKrewIds(p.krewIds ?? (forKrewId ? [forKrewId] : []));
       setInvitees(new Map((p.invitees ?? []).map((a) => [a.id, a])));
+      restoreKonnect(p.konnections);
       const cover = d?.media_attachments[0];
       setImageMediaId(cover?.id ?? null);
       setImagePreviewUrl(cover?.preview_url ?? cover?.url ?? null);
       setImageError(null);
     },
-    [forKrewId],
+    [forKrewId, restoreKonnect],
   );
 
   const draft = useDraft<EventDraftParams>({
@@ -523,6 +456,7 @@ export const EventComposer: React.FC<Props> = ({
         reach,
         krewIds,
         invitees: Array.from(invitees.values()),
+        konnections: konnect.saved,
       },
       mediaIds: imageMediaId ? [imageMediaId] : [],
     },
@@ -705,23 +639,6 @@ export const EventComposer: React.FC<Props> = ({
     });
   }, []);
 
-  const onConnectionAdd = useCallback((connection: PendingConnection) => {
-    setConnections((prev) => [...prev, connection]);
-  }, []);
-
-  const onConnectionUpdate = useCallback(
-    (id: string, patch: Partial<PendingConnection>) => {
-      setConnections((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, ...patch } : c)),
-      );
-    },
-    [],
-  );
-
-  const onConnectionRemove = useCallback((id: string) => {
-    setConnections((prev) => prev.filter((c) => c.id !== id));
-  }, []);
-
   // Force the native date/time picker open on click. Chromium supports
   // `HTMLInputElement.showPicker()` since v99 — without this, some
   // browsers only open the picker when the user clicks the tiny
@@ -851,13 +768,6 @@ export const EventComposer: React.FC<Props> = ({
     if (krewIds.length > 0) payload.krew_ids = krewIds;
 
     const inviteeIds = Array.from(invitees.keys());
-    // Snapshot for the post-create side-effect walk. Filter out
-    // link-mode connections that never picked a target (empty search)
-    // and create-mode connections that are still empty forms.
-    const pendingConnections = connections.filter((c) => {
-      if (c.mode === 'link') return Boolean(c.linkTargetId);
-      return true;
-    });
 
     void (async () => {
       try {
@@ -878,41 +788,6 @@ export const EventComposer: React.FC<Props> = ({
           }
         }
 
-        // Walk pending connections. For each:
-        //   * link: POST /api/v1/attachments with source event id +
-        //     picked target id.
-        //   * create: POST the target korner's own create endpoint
-        //     (Albutts /api/v1/albutts/albums or Huddle
-        //     /api/v1/huddle/rooms) with fields from the mini-form,
-        //     inheriting the event's visibility. Then POST the
-        //     KornerAttachment binding it to the source event.
-        // Same soft-failure story as invitees — the event is real;
-        // partial success is surfaced through the error strip but
-        // still returns the user to the detail page (they can retry
-        // from the AttachmentSection's picker there).
-        for (const conn of pendingConnections) {
-          try {
-            let targetId: string | null = null;
-            if (conn.mode === 'link') {
-              targetId = conn.linkTargetId ?? null;
-            } else if (conn.targetSlug === 'albutts') {
-              targetId = await createCompanionAlbum(res.data, conn);
-            } else if (conn.targetSlug === 'huddle') {
-              targetId = await createCompanionHuddle(res.data, conn);
-            }
-            if (!targetId) continue;
-
-            await apiCreateAttachment({
-              source_slug: 'kalendar',
-              source_id: res.data.id,
-              target_slug: conn.targetSlug,
-              target_id: targetId,
-              kind: 'link',
-            });
-          } catch (attachErr: unknown) {
-            setError(extractApiError(attachErr));
-          }
-        }
         await commitKonnect('kalendar', res.data.id);
         finishDraft();
         onCreated(res.data);
@@ -924,7 +799,6 @@ export const EventComposer: React.FC<Props> = ({
     })();
   }, [
     commitKonnect,
-    connections,
     description,
     endIso,
     finishDraft,
@@ -971,6 +845,7 @@ export const EventComposer: React.FC<Props> = ({
       onCancel={onCancel}
       headerAction={reachControl}
       draft={draft}
+      konnect={konnect}
     >
       <div className='event-composer'>
         {reach === 'self_only' && (
@@ -1224,28 +1099,6 @@ export const EventComposer: React.FC<Props> = ({
               />
             )}
           </label>
-        </fieldset>
-
-        {/* "Konnect a korner" — the compose-time inter-korner
-            attach surface (docs/korners/adding_a_korner.md (Korner attachments)). The
-            bar reads Kalendar's `attaches:` manifest to know which
-            spaces are reachable, then stacks an inline mini-form
-            per picked connection. Create-mode (Albutts, Huddle)
-            POSTs the target's own create endpoint on submit;
-            link-mode POSTs KornerAttachment directly. Reach is
-            strict-inherited from the event. */}
-        <fieldset className='event-composer__fieldset'>
-          <legend className='event-composer__legend'>
-            {intl.formatMessage(messages.attachHeading)}
-          </legend>
-          <ComposeAttachBar
-            sourceSlug='kalendar'
-            connections={connections}
-            onAdd={onConnectionAdd}
-            onUpdate={onConnectionUpdate}
-            onRemove={onConnectionRemove}
-            disabled={busy}
-          />
         </fieldset>
 
         {/* Invitee picker — accounts get a nudge with the event on

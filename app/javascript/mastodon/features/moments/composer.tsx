@@ -443,6 +443,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   return (
     <>
       <ComposeShell
+        konnect={null}
         korner='moments'
         label={intl.formatMessage(shellMessages.title)}
         subtitle={intl.formatMessage(shellMessages.subtitle)}

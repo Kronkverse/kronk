@@ -21,6 +21,8 @@ import {
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
 
 // Kommons — open a proposal. The shared `<ComposeShell>` overlay at
@@ -90,6 +92,7 @@ interface ProposalDraftParams {
   kornerGlyph?: string;
   kornerIcon?: string;
   kornerPurpose?: string;
+  konnections?: KonnectTarget[];
 }
 
 // A draft hangs off the space or page it proposes a change to. Node ids
@@ -218,6 +221,11 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [kornerGlyph, setKornerGlyph] = useState('');
   const [kornerIcon, setKornerIcon] = useState('');
   const [kornerPurpose, setKornerPurpose] = useState('');
+  // What the new proposal will be Konnected to (decisions.md, 2026-10-23).
+  // Both kinds of proposal make a Proposal, so both Konnect.
+  const konnect = useKonnect('kommons');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go, here and on the
   // server, and comes back when the composer opens again. A new-korner
@@ -233,10 +241,11 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       setKornerGlyph(p.kornerGlyph ?? '');
       setKornerIcon(p.kornerIcon ?? '');
       setKornerPurpose(p.kornerPurpose ?? '');
+      restoreKonnect(p.konnections);
       setDocs([]);
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<ProposalDraftParams>({
@@ -253,8 +262,9 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             kornerGlyph,
             kornerIcon,
             kornerPurpose,
+            konnections: konnect.saved,
           }
-        : { title, body, steps },
+        : { title, body, steps, konnections: konnect.saved },
     },
     hasContent:
       (isNewKorner
@@ -422,6 +432,7 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           await api().post(`/api/v1/proposals/${created.id}/attachments`, form);
         }
         finishDraft();
+        await commitKonnect('kommons', created.id);
         onCreated(created.id);
         // Parent unmounts us on success — no need to reset state.
         return undefined;
@@ -440,6 +451,7 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     docs,
     targetNodeId,
     finishDraft,
+    commitKonnect,
     onCreated,
     isNewKorner,
     kornerName,
@@ -473,6 +485,7 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
+      konnect={konnect}
     >
       {isNewKorner ? (
         // Korner Composer fields — manifest-shape hints captured as

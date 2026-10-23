@@ -439,7 +439,7 @@ export const KarComposer: React.FC<Props> = ({
       submitting={pending}
       canSubmit={canSubmit}
       draft={draft}
-      konnect={isEdit ? undefined : konnect}
+      konnect={isEdit ? null : konnect}
       headerAction={
         // Reach is locked while editing: the update endpoints don't
         // re-scope the item's projected feed post, so narrowing reach

@@ -21,6 +21,8 @@ import { ComposeShell } from 'mastodon/components/compose_shell';
 import { EventSearch } from 'mastodon/components/event_search';
 import type { PickedEvent } from 'mastodon/components/event_search';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 import { KrewPhotoField } from './krew_photo_field';
 import { KrewSpaceIcon } from './krew_space_icon';
@@ -192,6 +194,7 @@ interface KrewDraftParams {
   korners?: KrewKornerSlug[];
   requirements?: DraftRequirement[];
   invitees?: AccountLite[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -231,6 +234,10 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // What the new Krew will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('krew');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go, here and on the
   // server, and comes back when the composer opens again.
@@ -243,17 +250,26 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       setKorners(p.korners ?? []);
       setRequirements(p.requirements ?? []);
       setInvitees(p.invitees ?? []);
+      restoreKonnect(p.konnections);
       setPhoto(null);
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<KrewDraftParams>({
     korner: 'krew',
     kind: 'krew',
     snapshot: {
-      params: { name, description, access, korners, requirements, invitees },
+      params: {
+        name,
+        description,
+        access,
+        korners,
+        requirements,
+        invitees,
+        konnections: konnect.saved,
+      },
     },
     hasContent:
       name.trim() !== '' ||
@@ -357,6 +373,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           ? await apiSetKrewImage(created.id, photo).catch(() => created)
           : created;
         finishDraft();
+        await commitKonnect('krew', created.id);
         onCreated(withPhoto);
         // Note: on success, the parent unmounts us — no need to reset
         // state or clear `busy` here.
@@ -368,6 +385,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   }, [
     invitees,
     access,
+    commitKonnect,
     description,
     effectiveSlug,
     finishDraft,
@@ -390,6 +408,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onSubmit={submit}
       onCancel={onCancel}
       draft={draft}
+      konnect={konnect}
     >
       <div className='krew-composer'>
         <fieldset className='krew-composer__fieldset'>

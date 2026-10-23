@@ -1,18 +1,15 @@
 // RoomComposer — "New Room", Huddle's composer (the Ж menu's compose
 // action, config/korners/huddle.yaml `compose:`). Drawn in the shared
-// <ComposeShell> like every korner's composer: a name, a line about the
-// Room, and optionally a Krew to Konnect it to. No icon: Kronk has no
-// emoji, and every Room's tile wears the Huddle glyph (decisions.md,
-// 2026-10-22).
+// <ComposeShell> like every korner's composer: a name and a line about the
+// Room. No icon: Kronk has no emoji, and every Room's tile wears the Huddle
+// glyph (decisions.md, 2026-10-22).
 //
-// The Krew is a link, not a gate. `POST /api/v1/huddle/rooms` with
-// `krew_id` makes the Room and Konnects it to that Krew in one request, so
-// it shows on the Krew's page; the Room itself stays open to everyone.
-// Members-only Krew Huddles are not built (docs/spaces/huddle.md).
-//
-// Arriving from a Krew (`/hub/huddle/composer?krew=<id>`) picks that Krew
-// to start with. Only Krews you're in are offered (useAvailableKrews), and
-// only one shown as picked is sent.
+// A Krew comes through Konnect like any other record (decisions.md,
+// 2026-10-23, "One composer, one Konnect"): arriving from a Krew
+// (`?krew=<id>` or `?konnect=krew:<id>`) puts it in the Konnect row, the
+// person can add one there, and the Room is linked to each once it exists.
+// The link is not a gate: the Room stays open to everyone. Members-only
+// Krew Huddles are not built (docs/spaces/huddle.md).
 
 import { useCallback, useState } from 'react';
 
@@ -24,13 +21,12 @@ import {
   ComposeField,
   ComposeHint,
   ComposeInput,
-  ComposeSection,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { KrewMultiSelect } from 'mastodon/components/krew_multi_select';
-import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 export interface CreatedRoom {
   id: string;
@@ -40,7 +36,7 @@ export interface CreatedRoom {
 interface RoomDraftParams {
   name?: string;
   description?: string;
-  krewId?: string | null;
+  konnections?: KonnectTarget[];
 }
 
 const NAME_MAX = 80;
@@ -61,17 +57,6 @@ const messages = defineMessages({
     id: 'huddle.composer.description_hint',
     defaultMessage: 'Optional. One line.',
   },
-  krew: { id: 'huddle.composer.krew', defaultMessage: 'Konnect to a Krew' },
-  krewHint: {
-    id: 'huddle.composer.krew_hint',
-    defaultMessage:
-      'Optional. The Room shows on the Krew’s page and stays open to everyone.',
-  },
-  krewChosen: {
-    id: 'huddle.composer.krew_chosen',
-    defaultMessage:
-      'Konnected to {krew}. It shows on their page; anyone can still join.',
-  },
   create: { id: 'huddle.composer.create', defaultMessage: 'Create' },
   creating: { id: 'huddle.composer.creating', defaultMessage: 'Creating…' },
   error: {
@@ -81,7 +66,8 @@ const messages = defineMessages({
 });
 
 interface Props {
-  // Arriving from a Krew's page: Konnect to that Krew to start with.
+  // Arriving from a Krew's page: the draft is that Krew's (the Krew itself
+  // comes through Konnect, from the same `?krew=`).
   forKrewId?: string | null;
   onCancel: () => void;
   onCreated: (room: CreatedRoom) => void;
@@ -93,39 +79,40 @@ export const RoomComposer: React.FC<Props> = ({
   onCreated,
 }) => {
   const intl = useIntl();
-  const availableKrews = useAvailableKrews();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [krewId, setKrewId] = useState<string | null>(forKrewId ?? null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // What the new Room will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('huddle');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   const applyDraft = useCallback(
     (d: ApiComposerDraftJSON<RoomDraftParams> | null) => {
       const p = d?.params ?? {};
       setName(p.name ?? '');
       setDescription(p.description ?? '');
-      setKrewId(p.krewId ?? forKrewId ?? null);
+      restoreKonnect(p.konnections);
       setError(null);
     },
-    [forKrewId],
+    [restoreKonnect],
   );
 
   const draft = useDraft<RoomDraftParams>({
     korner: 'huddle',
     kind: 'room',
     context: forKrewId ? `krew:${forKrewId}` : null,
-    snapshot: { params: { name, description, krewId } },
+    snapshot: {
+      params: { name, description, konnections: konnect.saved },
+    },
     hasContent: name.trim() !== '' || description.trim() !== '',
     apply: applyDraft,
     describe: (d) => d.params.name,
     paused: busy,
   });
   const finishDraft = draft.finish;
-
-  // Only a Krew you're in, and so one shown as picked, is sent.
-  const chosenKrew = availableKrews.find((k) => k.id === krewId) ?? null;
 
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,10 +126,6 @@ export const RoomComposer: React.FC<Props> = ({
     },
     [],
   );
-  // One Krew at most: tapping the picked one takes it off.
-  const handleToggleKrew = useCallback((id: string) => {
-    setKrewId((prev) => (prev === id ? null : id));
-  }, []);
 
   const trimmedName = name.trim();
   const canSubmit = trimmedName.length > 0 && !busy;
@@ -154,10 +137,10 @@ export const RoomComposer: React.FC<Props> = ({
     void apiRequestPost<CreatedRoom>('v1/huddle/rooms', {
       name: trimmedName,
       description: description.trim() || undefined,
-      krew_id: chosenKrew?.id,
     })
-      .then((created) => {
+      .then(async (created) => {
         finishDraft();
+        await commitKonnect('huddle', created.id);
         onCreated(created);
       })
       .catch(() => {
@@ -168,7 +151,7 @@ export const RoomComposer: React.FC<Props> = ({
     canSubmit,
     trimmedName,
     description,
-    chosenKrew,
+    commitKonnect,
     finishDraft,
     onCreated,
     intl,
@@ -186,6 +169,7 @@ export const RoomComposer: React.FC<Props> = ({
       onSubmit={submit}
       onCancel={onCancel}
       draft={draft}
+      konnect={konnect}
     >
       <ComposeTitle
         value={name}
@@ -207,24 +191,6 @@ export const RoomComposer: React.FC<Props> = ({
           disabled={busy}
         />
       </ComposeField>
-
-      {availableKrews.length > 0 && (
-        <ComposeSection title={intl.formatMessage(messages.krew)}>
-          <KrewMultiSelect
-            options={availableKrews}
-            selectedIds={chosenKrew ? [chosenKrew.id] : []}
-            onToggle={handleToggleKrew}
-            disabled={busy}
-          />
-          <ComposeHint>
-            {chosenKrew
-              ? intl.formatMessage(messages.krewChosen, {
-                  krew: chosenKrew.name,
-                })
-              : intl.formatMessage(messages.krewHint)}
-          </ComposeHint>
-        </ComposeSection>
-      )}
 
       {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>

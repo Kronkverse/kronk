@@ -1,10 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { useLocation } from 'react-router-dom';
-
-import { apiCreateAttachment } from 'mastodon/api/attachments';
 import { apiCreateMapPlace } from 'mastodon/api/map_places';
 import type { ApiMapPlaceJSON } from 'mastodon/api/map_places';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
@@ -20,16 +17,19 @@ import { MapPinPicker } from 'mastodon/components/map_pin_picker';
 import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
 import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 // Map — the Place composer, /hub/map/places/new. A Place is an exact
 // spot with a name and an address (docs/spaces/map.md, Places). Pin it
 // with the shared <MapPinPicker> (search an address, or tap the map), or
 // give an address alone and the server finds it.
 //
-// Opened from a Konnect with `?konnect=<slug>:<id>` (the record being
-// Konnected, e.g. `kalendar:12`), it links that record to the new Place
-// once it's made, so "New place" in the picker ends with the event
-// Konnected to it.
+// Konnect works as in every composer (useKonnect): opened from a Konnect
+// with `?konnect=<slug>:<id>` (the record being Konnected, e.g.
+// `kalendar:12`), that record waits in the Konnect row and the new Place is
+// linked to it once it's made, so "New place" in the picker ends with the
+// event Konnected to it.
 
 const messages = defineMessages({
   label: { id: 'map.place_composer.label', defaultMessage: 'New place' },
@@ -66,19 +66,11 @@ const messages = defineMessages({
   },
 });
 
-// `?konnect=<slug>:<id>` → the record to link the new Place from.
-export const parseKonnectParam = (
-  search: string,
-): { slug: string; id: string } | null => {
-  const raw = new URLSearchParams(search).get('konnect');
-  const match = raw ? /^([a-z0-9-]+):(\d+)$/.exec(raw) : null;
-  return match?.[1] && match[2] ? { slug: match[1], id: match[2] } : null;
-};
-
 interface PlaceDraftParams {
   name?: string;
   address?: string;
   pin?: PinnedLocation | null;
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -94,11 +86,9 @@ const errorText = (err: unknown): string => {
 
 export const PlaceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
-  const location = useLocation();
-  const konnect = useMemo(
-    () => parseKonnectParam(location.search),
-    [location.search],
-  );
+  // What the new Place will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('map');
+  const { source, restore: restoreKonnect, commit: commitKonnect } = konnect;
 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -113,17 +103,20 @@ export const PlaceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       setName(p.name ?? '');
       setAddress(p.address ?? '');
       setPin(p.pin ?? null);
+      restoreKonnect(p.konnections);
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<PlaceDraftParams>({
     korner: 'map',
     kind: 'place',
     // One draft line per record being Konnected (`konnect:kalendar-12`).
-    context: konnect ? `konnect:${konnect.slug}-${konnect.id}` : null,
-    snapshot: { params: { name, address, pin } },
+    context: source ? `konnect:${source.slug}-${source.id}` : null,
+    snapshot: {
+      params: { name, address, pin, konnections: konnect.saved },
+    },
     hasContent: name.trim() !== '' || address.trim() !== '' || pin !== null,
     apply: applyDraft,
     describe: (d) => d.params.name,
@@ -174,18 +167,10 @@ export const PlaceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       ...(pin ? { latitude: pin.lat, longitude: pin.lng } : {}),
     })
       .then(async (place) => {
-        if (konnect) {
-          // The Place stands even if the link doesn't take (say the
-          // record isn't theirs to Konnect); they land on its page.
-          await apiCreateAttachment({
-            source_slug: konnect.slug,
-            source_id: konnect.id,
-            target_slug: 'map',
-            target_id: place.id,
-            kind: 'link',
-          }).catch(() => undefined);
-        }
         finishDraft();
+        // The Place stands even if a link doesn't take (say the record
+        // isn't theirs to Konnect); they land on its page.
+        await commitKonnect('map', place.id);
         onCreated(place);
       })
       .catch((err: unknown) => {
@@ -194,7 +179,16 @@ export const PlaceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         );
         setSaving(false);
       });
-  }, [canSubmit, name, address, pin, konnect, finishDraft, onCreated, intl]);
+  }, [
+    canSubmit,
+    name,
+    address,
+    pin,
+    commitKonnect,
+    finishDraft,
+    onCreated,
+    intl,
+  ]);
 
   return (
     <ComposeShell
@@ -207,6 +201,7 @@ export const PlaceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onSubmit={submit}
       onCancel={onCancel}
       draft={draft}
+      konnect={konnect}
     >
       <ComposeTitle
         value={name}
@@ -249,7 +244,7 @@ export const PlaceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
       <ComposeHint>
         {intl.formatMessage(messages.hint)}
-        {konnect && <> {intl.formatMessage(messages.konnecting)}</>}
+        {source && <> {intl.formatMessage(messages.konnecting)}</>}
       </ComposeHint>
 
       {error && <ComposeHint error>{error}</ComposeHint>}

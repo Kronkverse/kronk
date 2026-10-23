@@ -111,6 +111,7 @@ export const ArtPortfolioEditor: React.FC<Props> = ({
 
   return (
     <ComposeShell
+      konnect={null}
       korner='art'
       label={intl.formatMessage(messages.title)}
       onCancel={onCancel}

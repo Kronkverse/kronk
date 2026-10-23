@@ -23,6 +23,8 @@ import { ComposeShell } from 'mastodon/components/compose_shell';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 const messages = defineMessages({
   submit: { id: 'kronikles.composer.submit', defaultMessage: 'Publish' },
@@ -105,6 +107,7 @@ interface ChronicleDraftParams {
   body?: string;
   kind?: ChronicleKind;
   visibility?: ReachValue;
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -138,6 +141,10 @@ export const ChronicleComposer: React.FC<Props> = ({
   );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // What the new Kronikle will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('kronikles');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Pictures between paragraphs (Tal 2026-10-12). A picture is uploaded
   // on its own and the body names it on a line: `![caption](picture:<id>)`.
@@ -162,6 +169,7 @@ export const ChronicleComposer: React.FC<Props> = ({
       setBody(p.body ?? '');
       setKind(p.kind ?? 'essay');
       setVisibility(p.visibility ?? 'public');
+      restoreKonnect(p.konnections);
       setThumbs(
         (d?.media_attachments ?? []).map((m) => ({
           id: m.id,
@@ -170,7 +178,7 @@ export const ChronicleComposer: React.FC<Props> = ({
       );
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<ChronicleDraftParams>({
@@ -178,7 +186,13 @@ export const ChronicleComposer: React.FC<Props> = ({
     kind: 'chronicle',
     context: null,
     snapshot: {
-      params: { title, body, kind, visibility },
+      params: {
+        title,
+        body,
+        kind,
+        visibility,
+        konnections: konnect.saved,
+      },
       mediaIds: thumbs
         .filter((t) => body.includes(`(picture:${t.id})`))
         .map((t) => t.id),
@@ -284,6 +298,7 @@ export const ChronicleComposer: React.FC<Props> = ({
         } else {
           const created = await apiCreateChronicle({ ...params, visibility });
           finishDraft();
+          await commitKonnect('kronikles', created.id);
           onCreated?.(created);
         }
       } catch (e) {
@@ -300,6 +315,7 @@ export const ChronicleComposer: React.FC<Props> = ({
   }, [
     canSubmit,
     body,
+    commitKonnect,
     editingChronicle,
     finishDraft,
     kind,
@@ -318,6 +334,7 @@ export const ChronicleComposer: React.FC<Props> = ({
       onCancel={onCancel}
       onSubmit={submit}
       draft={draft}
+      konnect={isEdit ? null : konnect}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,

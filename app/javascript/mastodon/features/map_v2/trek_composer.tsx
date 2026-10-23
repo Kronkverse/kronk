@@ -365,6 +365,7 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
   return (
     <ComposeShell
+      konnect={null}
       korner='map'
       label={intl.formatMessage(messages.label)}
       submitLabel={intl.formatMessage(

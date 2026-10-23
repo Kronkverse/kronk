@@ -30,6 +30,8 @@ import { LoadingState } from 'mastodon/components/loading_state';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 import { optionRowsFrom, optionRowsToPayload } from './listing_options_editor';
 import type { OptionRow } from './listing_options_editor';
@@ -186,6 +188,7 @@ interface ItemDraftParams {
   announced?: boolean;
   visibility?: ListingVisibility;
   photoShows?: Record<string, string>;
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -236,6 +239,10 @@ export const ShopItemComposer: React.FC<Props> = ({
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const photoState = useListingPhotos();
   const { load: loadPhotos } = photoState;
+  // What the new item will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('wachuneed');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   const [loading, setLoading] = useState(!!editId);
   const [loadError, setLoadError] = useState(false);
@@ -262,6 +269,7 @@ export const ShopItemComposer: React.FC<Props> = ({
       setVariantState(p.variantState ?? EMPTY_VARIANTS);
       setAnnounced(p.announced ?? false);
       setVisibility(p.visibility ?? shopVisibility);
+      restoreKonnect(p.konnections);
       const shows = p.photoShows ?? {};
       loadPhotos(
         (d?.media_attachments ?? []).map((m) => ({
@@ -272,7 +280,7 @@ export const ShopItemComposer: React.FC<Props> = ({
       );
       setError(null);
     },
-    [loadPhotos, shopVisibility],
+    [loadPhotos, restoreKonnect, shopVisibility],
   );
 
   const draft = useDraft<ItemDraftParams>({
@@ -290,6 +298,7 @@ export const ShopItemComposer: React.FC<Props> = ({
         announced,
         visibility,
         photoShows: photoState.showsPayload(showsChoices),
+        konnections: konnect.saved,
       },
       mediaIds: photoState.ids,
     },
@@ -431,7 +440,7 @@ export const ShopItemComposer: React.FC<Props> = ({
           return;
         }
 
-        await apiCreateWachuneedListing({
+        const listing = await apiCreateWachuneedListing({
           ...fields,
           title: name,
           category,
@@ -443,6 +452,7 @@ export const ShopItemComposer: React.FC<Props> = ({
             : {}),
         });
         finishDraft();
+        await commitKonnect('wachuneed', listing.id);
 
         if (again) {
           // The next item: the same section and category, the rest clean.
@@ -455,6 +465,7 @@ export const ShopItemComposer: React.FC<Props> = ({
           setAnnounced(false);
           setVisibility(shopVisibility);
           loadPhotos([]);
+          restoreKonnect(null);
           setLastAdded(name);
           setBusy(false);
         }
@@ -486,6 +497,8 @@ export const ShopItemComposer: React.FC<Props> = ({
     location,
     again,
     finishDraft,
+    commitKonnect,
+    restoreKonnect,
     loadPhotos,
     onSaved,
     errorAdd,
@@ -532,6 +545,7 @@ export const ShopItemComposer: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
+      konnect={editId ? null : konnect}
       headerAction={
         <ReachDropdown
           value={visibility}

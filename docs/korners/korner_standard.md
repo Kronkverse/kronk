@@ -359,9 +359,11 @@ in every korner:
 
 - ⚙︎ A korner with records takes Konnections or says why not
   (`no_attachments:`), and its `konnect:` block is well formed (doctor).
-- ◇ Its composer shows the Konnect row and its detail page uses the `attached`
-  slot. Not every korner does yet: the move is under way korner by korner
-  (decisions.md, 2026-10-23).
+- ⚙︎ Every composer says what it Konnects: `<ComposeShell>`'s `konnect` prop
+  is required (TypeScript), `useKonnect()` for a composer that makes a record,
+  `null` for one that makes nothing new to Konnect (docs/design.md, Konnect).
+- ◇ Its detail page uses the `attached` slot. Not every page does yet: the
+  move is under way page by page (decisions.md, 2026-10-23).
 
 ## 3. What the doctor checks
 
