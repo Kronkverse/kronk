@@ -10,7 +10,14 @@
 
 Kommunity lets a member see Kronk as a whole rather than as a timeline,
 and find people they don't know yet. It has three views, cycled by the
-header rotator: **Orb** (default), **Discover** and **Everyone**.
+header rotator, in this order: **Discover** (the landing view, bare
+`/hub/kommunity`), **Everyone** (`/hub/kommunity/everyone`) and **Orb**
+(`/hub/kommunity/orb`). The order is Tal's Kommons proposal "Landing Page"
+([#117483791865274639](https://kronk.info/hub/kommons/p/117483791865274639),
+node `kommunity.index`): "Kommunity landing page should be the 'Discover'
+page, the Orb should be last. Also having a straight up list should be a
+middle page, with a full list of 'Visible' Users (if they choose to be
+visible)". Until then the Orb was the landing view.
 
 **Kronk-local only.** Remote accounts are out of scope by design. The
 korner owns no tables; it reads accounts and follows.
@@ -107,32 +114,33 @@ badge itself is the shared one (`hub.md`, Updates).
 
 ## Everyone
 
-The whole directory, at `/hub/kommunity/everyone`
-(`features/kommunity/everyone.tsx`, Tal 2026-10-26: "build the list"). A
-plain vertical list of the shared `<Account>` rows, the same row the Mates
-tab uses: tap one for the profile, and it carries its own Mate button. A
+The middle view, at `/hub/kommunity/everyone`
+(`features/kommunity/everyone.tsx`): "a full list of 'Visible' Users (if
+they choose to be visible)" (proposal "Landing Page", above). A plain
+vertical list of the shared `<Account>` rows, the same row the Mates tab
+uses: tap one for the profile, and it carries its own Mate button. A
 search field at the top filters by name or handle; "Load more"
 (`<KornerPill>`) at the foot fetches the next page. Nothing found is an
 `<EmptyState>`.
 
 `GET /api/v1/kommunity/everyone?q=&limit=&offset=`
-(`Api::V1::Kommunity::EveryoneController`). Who is on it:
+(`Api::V1::Kommunity::EveryoneController`). Who is on it is exactly the
+people who chose to be visible to the viewer,
+`Account.kommunity_discoverable_to(viewer)`:
 
-- anyone findable by everyone (`kommunity_discoverability: everyone`);
-- anyone findable by Orbit (`orbit`) when the viewer is a Mate of one of
-  their Mates, the same Orbit test Discover uses
-  (`Account.kommunity_discoverable_to`);
-- the viewer's own Mates, and everyone who shares a Krew with the viewer,
-  **whatever their findability**, `nobody` included: they already know
-  each other, which is the rule the Krews layer already follows.
+- findability `everyone`: listed for every signed-in member;
+- findability `orbit`: listed when the viewer is in their Orbit (a Mate,
+  or a Mate of one of their Mates), the same Orbit test Discover uses;
+- findability `nobody`: **never listed**, Mates and Krew members
+  included. Being someone's Mate doesn't override their choice.
 
 It leaves out the viewer, anyone blocked or muted either way, and anyone
 who isn't an active member (the same guard as Discover: local, not
 suspended, silenced, memorialised or moved, has signed in). Pending Mate
 requests stay in, both ways: it is a directory, not a to-do list.
 
-**The difference from Discover** is that Mates are here. Discover is for
-meeting people; Everyone is for finding anyone you're allowed to.
+**The difference from Discover** is that Mates who chose to be visible
+are here. Discover is for meeting people; Everyone is the list.
 
 Ordered by display name, falling back to the username when there is none,
 case-insensitive. No ranking: alphabetical is the one order a directory

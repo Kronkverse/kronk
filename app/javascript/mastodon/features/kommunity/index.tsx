@@ -1,6 +1,6 @@
-// Kommunity — the whole-graph orb view, the Discover drawer and the
-// Everyone list. A
-// first-class Kronk korner at /hub/kommunity. Sits inside the shared
+// Kommunity — the Discover drawer (landing), the Everyone list and the
+// whole-graph Orb, in that order (Tal's Kommons proposal "Landing Page",
+// #117483791865274639). A first-class Kronk korner at /hub/kommunity. Sits inside the shared
 // KornerShell so AutoSpaceBadge, AutoSpaceHeader, and
 // AutoSpaceViewPicker do the chrome (Standard L11) — this file only
 // declares the views + mounts them.
@@ -18,9 +18,8 @@ const OrbView = () => <KronkOrb />;
 // lists"). Rotator key stays `discover` so the manifest + saved
 // links keep working.
 const DiscoverView = () => <KommunityDrawer />;
-// Everyone — the whole alphabetical directory, Mates included (Tal
-// 2026-10-26). Discover is for meeting new people; this is for finding
-// anyone you're allowed to.
+// Everyone — the whole alphabetical directory of people who chose to be
+// visible to you. Discover is for meeting new people; this is the list.
 const EveryoneView = () => <KommunityEveryone />;
 
 export const Kommunity = () => (
@@ -28,11 +27,11 @@ export const Kommunity = () => (
     slug='kommunity'
     label='Kommunity'
     className='kommunity'
-    defaultView='orb'
+    defaultView='discover'
     views={{
-      orb: OrbView,
       discover: DiscoverView,
       everyone: EveryoneView,
+      orb: OrbView,
     }}
   />
 );

@@ -33,6 +33,7 @@ RSpec.describe 'Kommunity everyone list' do
 
   describe 'GET /api/v1/kommunity/everyone' do
     let!(:orbit_fof)       { member('orbit_fof', findable: :orbit) }
+    let!(:open_mate)       { member('open_mate') }
     let!(:hidden_mate)     { member('hidden_mate', findable: :nobody) }
     let!(:hidden_krewmate) { member('hidden_krewmate', findable: :nobody) }
     let!(:requested)       { member('requested') }
@@ -46,8 +47,9 @@ RSpec.describe 'Kommunity everyone list' do
       member('orbit_stranger', findable: :orbit)
       Fabricate(:account, username: 'never_signed_in').user.update!(current_sign_in_at: nil)
 
+      mate!(viewer, open_mate)
       mate!(viewer, hidden_mate)
-      mate!(hidden_mate, orbit_fof)
+      mate!(open_mate, orbit_fof)
 
       krew = Krew.create!(slug: 'walkers', name: 'Walkers', access: 'open')
       [viewer, hidden_krewmate].each { |a| KrewMembership.find_or_create_by!(krew: krew, account: a) }
@@ -58,13 +60,25 @@ RSpec.describe 'Kommunity everyone list' do
       viewer.mute!(muted)
     end
 
-    it 'lists everyone the viewer may find, Mates and Krew members included' do
+    it 'lists only people who chose to be visible to the viewer' do
       get '/api/v1/kommunity/everyone', headers: headers
 
       expect(response).to have_http_status(200)
       expect(listed).to contain_exactly(
-        'open_stranger', 'orbit_fof', 'hidden_mate', 'hidden_krewmate', 'requested'
+        'open_stranger', 'open_mate', 'orbit_fof', 'requested'
       )
+    end
+
+    it 'lists a Mate who is findable by everyone' do
+      get '/api/v1/kommunity/everyone', headers: headers
+
+      expect(listed).to include('open_mate')
+    end
+
+    it 'leaves out a Mate or Krew member who chose nobody' do
+      get '/api/v1/kommunity/everyone', headers: headers
+
+      expect(listed).to_not include('hidden_mate', 'hidden_krewmate')
     end
 
     it 'leaves out the viewer' do

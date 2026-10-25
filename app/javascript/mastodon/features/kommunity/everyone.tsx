@@ -11,15 +11,16 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { useAppDispatch } from 'mastodon/store';
 
-// Kommunity Everyone (Tal 2026-10-26: "build the list"). The whole
-// directory of people the viewer may find, alphabetical, one shared
+// Kommunity Everyone, the middle view (Tal's Kommons proposal "Landing
+// Page", #117483791865274639: "a full list of 'Visible' Users (if they
+// choose to be visible)"). The whole directory, alphabetical, one shared
 // `<Account>` row each — the same row the Mates tab uses, so a tap opens
 // the profile and the row carries its own Mate button.
 //
 // Who is on it is decided by the server (Api::V1::Kommunity::
-// EveryoneController): findable by everyone, findable by Orbit when you
-// are in it, your Mates, and people in your Krews. Unlike Discover, Mates
-// are here: this is a directory, not a place to meet someone new.
+// EveryoneController): findable by everyone, or by Orbit when you are in
+// it. Someone who chose nobody is never here, Mates included. Unlike
+// Discover, visible Mates are listed: this is a directory.
 //
 // The search field filters by name or handle on the server, debounced.
 // Paging is offset-based (an alphabetical list has no id cursor), with
@@ -40,7 +41,7 @@ const messages = defineMessages({
   emptyBody: {
     id: 'kommunity.everyone.empty_body',
     defaultMessage:
-      'People appear here when they choose to be findable, become your Mates, or share a Krew with you.',
+      'People appear here when they choose to be visible to you in their privacy settings.',
   },
   noMatch: {
     id: 'kommunity.everyone.no_match',

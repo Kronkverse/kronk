@@ -1,25 +1,21 @@
 # frozen_string_literal: true
 
-# Kommunity — Everyone, the full directory of Kronkers the viewer may find
-# (Tal 2026-10-26: "build the list"). One alphabetical list, unlike the
-# Discover layers, which are for meeting people you don't know yet:
+# Kommunity — Everyone, the full directory of Kronkers who chose to be
+# visible to the viewer. Tal's Kommons proposal "Landing Page"
+# (#117483791865274639): "having a straight up list should be a middle
+# page, with a full list of 'Visible' Users (if they choose to be
+# visible)".
 #
 #   GET /api/v1/kommunity/everyone?q=&limit=&offset=
 #
-# Who is on it (docs/spaces/kommunity.md, Everyone):
-#
-#   • anyone whose `kommunity_discoverability` lets the viewer find them
-#     (`Account.kommunity_discoverable_to`: `everyone`, or `orbit` when the
-#     viewer is a Mate of one of their Mates — the same Orbit test the
-#     Discover layers use),
-#   • the viewer's own Mates, and
-#   • people who share a Krew with the viewer,
-#
-# whatever those last two chose for findability: they already know each
-# other. Mates are included here, which is the difference from Discover.
-# Everyone else is the same active-member guard the layers use (local, not
-# suspended / silenced / memorial / moved, has signed in), minus the viewer
-# and anyone blocked or muted either way.
+# Who is on it (docs/spaces/kommunity.md, Everyone) is exactly
+# `Account.kommunity_discoverable_to(viewer)`: findability `everyone`, or
+# `orbit` when the viewer is in their Orbit (a Mate, or a Mate of one of
+# their Mates). Findability `nobody` never appears, Mates or not. That
+# scope also carries the active-member guard (local, not suspended /
+# silenced / memorial / moved, has signed in) and leaves out the viewer
+# and anyone blocked or muted either way. Mates who chose to be visible
+# are listed, unlike Discover.
 #
 # Ordered by display name, falling back to username, so it reads as a
 # directory. An alphabetical order has no id cursor, so it pages by
@@ -50,29 +46,7 @@ class Api::V1::Kommunity::EveryoneController < Api::BaseController
   private
 
   def visible_scope
-    base = base_scope
-
-    base.where(id: Account.kommunity_discoverable_to(current_account).select(:id))
-        .or(base.where(id: current_account.mates.select(:id)))
-        .or(base.where(id: krew_member_ids))
-  end
-
-  # Same guard as LayersController#base_discoverable_scope and
-  # `Account.kommunity_discoverable_to`: who counts as a community member.
-  # `excluded_from_timeline_account_ids` is blocks both ways plus mutes.
-  def base_scope
-    Account.local
-           .without_suspended
-           .without_silenced
-           .without_memorial
-           .where(moved_to_account_id: nil)
-           .where(id: User.approved.enabled.ever_signed_in.select(:account_id))
-           .where.not(id: current_account.id)
-           .where.not(id: current_account.excluded_from_timeline_account_ids)
-  end
-
-  def krew_member_ids
-    KrewMembership.where(krew_id: current_account.krews.select(:id)).select(:account_id)
+    Account.kommunity_discoverable_to(current_account)
   end
 
   def searched(scope)

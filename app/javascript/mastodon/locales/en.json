@@ -1809,7 +1809,7 @@
   "kommunity.drawer.kronkers": "Kronkers",
   "kommunity.drawer.orbit": "Orbit",
   "kommunity.everyone.empty": "No one to show yet.",
-  "kommunity.everyone.empty_body": "People appear here when they choose to be findable, become your Mates, or share a Krew with you.",
+  "kommunity.everyone.empty_body": "People appear here when they choose to be visible to you in their privacy settings.",
   "kommunity.everyone.error": "Could not load the list.",
   "kommunity.everyone.load_more": "Load more",
   "kommunity.everyone.no_match": "No one matches “{query}”.",
