@@ -1042,10 +1042,12 @@ move.
 
 ### State indicators
 
-| Primitive        | What it does                                                                                          | Where                                                                |
-| ---------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<EmptyState>`   | The "nothing here yet" pattern: muted title, optional body, optional CTA. No icon (the badge has it). | `components/empty_state.tsx`, `styles/mastodon/_kronk_states.scss`   |
-| `<LoadingState>` | Mastodon's `<LoadingIndicator>` in Kronk layout, with an optional label, inline.                      | `components/loading_state.tsx`, `styles/mastodon/_kronk_states.scss` |
+| Primitive                            | What it does                                                                                                        | Where                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<EmptyState>`                       | The "nothing here yet" pattern: muted title, optional body, optional CTA. No icon (the badge has it).               | `components/empty_state.tsx`, `styles/mastodon/_kronk_states.scss`   |
+| `<LoadingState>`                     | Mastodon's `<LoadingIndicator>` in Kronk layout, with an optional label, inline.                                    | `components/loading_state.tsx`, `styles/mastodon/_kronk_states.scss` |
+| `<SilentErrorBoundary>`              | Renders nothing in place of a child that throws, so one self-contained piece (a feed card) can't take down the app. | `components/silent_error_boundary.tsx`                               |
+| `<MapNeedsWebGL>`, `supportsWebGL()` | What a map shows without WebGL, and the check every MapLibre map makes first (docs/spaces/map.md, Without WebGL).   | `components/map_needs_webgl.tsx`, `features/map_v2/basemap.ts`       |
 
 ### Inter-korner communication
 
