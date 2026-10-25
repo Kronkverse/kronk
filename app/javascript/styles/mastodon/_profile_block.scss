@@ -238,6 +238,17 @@
     }
   }
 
+  // The Mates count, when it opens the Mates list.
+  &__count-link {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
   &__joined {
     color: var(--text-muted);
   }
