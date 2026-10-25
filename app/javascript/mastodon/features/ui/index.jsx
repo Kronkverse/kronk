@@ -529,9 +529,11 @@ class SwitchingColumnsArea extends PureComponent {
             <Redirect from='/accounts/:id/following' to='/@:id' />
             <Redirect from='/users/:acct/followers' to='/@:acct' />
             <Redirect from='/users/:acct/following' to='/@:acct' />
-            {/* The Mates list is off for now (Tal 2026-10-18). Must sit before
-                the /@:acct/:statusId wildcard so `mates` isn't a status id. */}
-            <Redirect from='/@:acct/mates' to='/@:acct' exact />
+            {/* The Mates list, under the profile block, for the member and
+                their Mates only (Tal 2026-10-26; docs/spaces/profile.md).
+                Must sit before the /@:acct/:statusId wildcard so `mates`
+                isn't a status id. */}
+            <WrappedRoute path='/@:acct/mates' exact component={ProfileSpace} content={children} />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />

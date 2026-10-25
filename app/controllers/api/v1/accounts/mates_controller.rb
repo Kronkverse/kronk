@@ -14,12 +14,13 @@
 #   * `Api::V1::Accounts::MatualsController` — mates in *common* between the
 #     viewer and the target, returned as a capped preview for the profile card.
 #
-# Privacy follows the followers list: `hide_collections` hides the list from
-# everyone but the owner, blocked viewers see nothing, and accounts the
-# viewer has muted/blocked are filtered out of the results. On top of that,
-# only someone who may see the profile (`Account#profile_visible_to?`) gets
-# the list, so nobody signed out does; who may see whose Mates is not
-# settled yet (docs/spaces/profile.md).
+# Who sees it (Tal, 2026-10-26, docs/spaces/profile.md): the member
+# themselves and their Mates, nobody else. Anyone else, signed out included,
+# gets an empty list (the count, `mates_count`, stays public on the profile).
+# A Mate can still be shut out: `hide_collections` hides the list from
+# everyone but the owner, a viewer the member blocks sees nothing, and so
+# does one who may not see the profile (`Account#profile_visible_to?`).
+# Accounts the viewer has muted or blocked are filtered out of the results.
 class Api::V1::Accounts::MatesController < Api::BaseController
   before_action -> { authorize_if_got_token! :read, :'read:accounts' }
   before_action :set_account
@@ -41,12 +42,20 @@ class Api::V1::Accounts::MatesController < Api::BaseController
     return [] if hide_results?
 
     scope = default_accounts
-    scope = scope.not_excluded_by_account(current_account) unless current_account.nil? || current_account.id == @account.id
+    scope = scope.not_excluded_by_account(current_account) unless owner?
     scope.merge(paginated_follows).to_a
   end
 
   def hide_results?
-    @account.unavailable? || (@account.hides_followers? && current_account&.id != @account.id) || !@account.profile_visible_to?(current_account)
+    return true if @account.unavailable?
+    return false if owner?
+    return true if current_account.nil? || @account.hides_followers?
+
+    !@account.mate?(current_account) || !@account.profile_visible_to?(current_account)
+  end
+
+  def owner?
+    current_account.present? && current_account.id == @account.id
   end
 
   # Mates are the mutual half of the followers list. Starting from the same

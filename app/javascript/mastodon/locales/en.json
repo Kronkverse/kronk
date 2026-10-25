@@ -2327,6 +2327,7 @@
   "mate_request.accept": "Accept",
   "mate_request.reject": "Decline",
   "mates_tab.error": "Couldn't load Mates. Try again in a moment.",
+  "mates_tab.hidden": "Only their Mates can see who their Mates are.",
   "mates_tab.list.empty": "No Mates yet.",
   "mates_tab.list.load_more": "Load more",
   "mates_tab.title": "Mates",

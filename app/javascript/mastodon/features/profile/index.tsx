@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { fetchAccount, lookupAccount } from 'mastodon/actions/accounts';
@@ -14,6 +14,8 @@ import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ProfileBlock } from 'mastodon/components/profile_block';
 import { ProfileGatedHint } from 'mastodon/components/profile_gated_hint';
 import AccountTimeline from 'mastodon/features/account_timeline';
+import { MatesFace } from 'mastodon/features/mates_tab';
+import { MatesHidden } from 'mastodon/features/mates_tab/hidden';
 import { ProfileFace } from 'mastodon/features/profile_shelves';
 import { ViewAsBar } from 'mastodon/features/profile_shelves/components/view_as_bar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
@@ -25,11 +27,12 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 // block (cover, photo, name, counts, bio), the Profile face under it
 // (answers, shelves), then their timeline under that. One page, read
 // top to bottom (Tal 2026-10-18); the old Profile / Timeline / Mates
-// drum is gone, and `/@:acct/posts` and `/@:acct/mates` redirect here.
+// drum is gone, and `/@:acct/posts` redirects here.
 //
-// The Mates list is off for now, until it is settled who may see whose
-// Mates (Tal 2026-10-18). `features/mates_tab` is kept for when it
-// comes back.
+// `/@:acct/mates` is the same page with the Mates list under the block
+// in place of the face and timeline, reached from the Mates count. Only
+// the member and their Mates see it (Tal 2026-10-26); anyone else gets
+// a line saying so, and an empty list from the server.
 
 const messages = defineMessages({
   title: { id: 'column.profile', defaultMessage: 'Profile' },
@@ -45,6 +48,8 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const { acct, id } = useParams<RouteParams>();
+  const { pathname } = useLocation();
+  const onMates = !!acct && pathname.endsWith('/mates');
 
   const accountId = useAppSelector(
     (state) =>
@@ -52,6 +57,9 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
   const account = useAppSelector((state) =>
     accountId ? state.accounts.get(accountId) : undefined,
+  );
+  const relationship = useAppSelector((state) =>
+    accountId ? state.relationships.get(accountId) : undefined,
   );
   const gated = useAppSelector(
     (state) =>
@@ -117,7 +125,7 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       iconId: 'edit',
     },
     startEditing,
-    isSelf && !gated && !editing && !viewAs,
+    isSelf && !gated && !editing && !viewAs && !onMates,
   );
 
   const title = account?.display_name
@@ -128,6 +136,19 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   // timeline under it would only be in the way (and show your own view).
   const showTimeline = !editing && !viewAs;
 
+  // Who may see the Mates list: you, and your Mates unless you hide your
+  // connections. The same rule as the server's and as the Mates count's
+  // link in ProfileBlock. Until the relationship arrives, wait.
+  const canSeeMates =
+    isSelf || (!!relationship?.mate && !account?.hide_collections);
+  const matesUnknown = !isSelf && !!me && !relationship;
+  // An empty display name falls back to the username.
+  const backLabel = account
+    ? account.display_name !== ''
+      ? account.display_name
+      : account.username
+    : handle;
+
   return (
     <Column bindToDocument={!multiColumn} label={title}>
       <ColumnBackButton />
@@ -137,13 +158,25 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       {accountId ? (
-        <ProfileBlock accountId={accountId} minimal={gated} editing={editing} />
+        <ProfileBlock
+          accountId={accountId}
+          minimal={gated}
+          editing={editing && !onMates}
+        />
       ) : (
         <LoadingIndicator />
       )}
 
       {gated && accountId ? (
         <ProfileGatedHint accountId={accountId} />
+      ) : onMates ? (
+        !accountId || matesUnknown ? (
+          <LoadingIndicator />
+        ) : canSeeMates ? (
+          <MatesFace acct={handle} backLabel={backLabel} />
+        ) : (
+          <MatesHidden acct={handle} backLabel={backLabel} />
+        )
       ) : (
         <>
           {viewAs && <ViewAsBar value={viewAs} onChange={changeViewAs} />}
