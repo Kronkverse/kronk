@@ -17,6 +17,26 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — The Mates list is for Mates
+
+Tal: "mates list visible to their mates only." The list had been off since
+2026-10-18 (Profile: one page) until it was settled who may see whose Mates.
+
+**Decision:** `/@:acct/mates` is back, shown to the person themselves and to
+their Mates. Everyone else, signed out included, gets an empty list from
+`GET /api/v1/accounts/:id/mates` and no link on the Mates count; the count
+stays visible to everyone who sees the profile. `hide_collections` still
+hides the list from everyone but the owner, Mates included, and a profile
+the viewer may not see hides it too.
+
+**Why:** who someone's Mates are is close to who they are; their Mates are
+already inside that circle, a stranger isn't. The count says how connected
+someone is without saying with whom. Detail: `docs/spaces/profile.md` (The
+Mates list).
+
+**Supersedes:** 2026-10-18 (the list off), and the older rule that anyone
+who could see the profile could see the list.
+
 ## 2026-10-25 — Konnect is the one way into a Krew's spaces
 
 Tal, checking Konnect on shadow: "I'm seeing 'Add a space' and 'Konnect'
@@ -43,26 +63,6 @@ but not made.
   visibility scopes were merged in and replaced the id condition, so the
   tile named the newest Krew or event the viewer could see. They are id
   subqueries now (`Kronk::KornerRecords.findable`).
-
-## 2026-10-26 — The Mates list is for Mates
-
-Tal: "mates list visible to their mates only." The list had been off since
-2026-10-18 (Profile: one page) until it was settled who may see whose Mates.
-
-**Decision:** `/@:acct/mates` is back, shown to the person themselves and to
-their Mates. Everyone else, signed out included, gets an empty list from
-`GET /api/v1/accounts/:id/mates` and no link on the Mates count; the count
-stays visible to everyone who sees the profile. `hide_collections` still
-hides the list from everyone but the owner, Mates included, and a profile
-the viewer may not see hides it too.
-
-**Why:** who someone's Mates are is close to who they are; their Mates are
-already inside that circle, a stranger isn't. The count says how connected
-someone is without saying with whom. Detail: `docs/spaces/profile.md` (The
-Mates list).
-
-**Supersedes:** 2026-10-18 (the list off), and the older rule that anyone
-who could see the profile could see the list.
 
 ## 2026-10-25 — Konnections carry audience: Same as
 
