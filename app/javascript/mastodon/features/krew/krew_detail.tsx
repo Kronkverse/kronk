@@ -22,7 +22,6 @@ import {
   apiAcceptKrewJoinRequest,
   apiDeclineKrewJoinRequest,
   apiInviteToKrew,
-  apiAttachKorner,
   KREW_PAGE_SPACES,
 } from 'mastodon/api/krew';
 import type {
@@ -30,7 +29,6 @@ import type {
   ApiKrewActivityLineJSON,
   ApiKrewJSON,
   ApiKrewJoinRequestJSON,
-  KrewKornerSlug,
 } from 'mastodon/api/krew';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
@@ -128,7 +126,6 @@ const messages = defineMessages({
   decline: { id: 'krew.detail.request_decline', defaultMessage: 'Decline' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
   konnect: { id: 'krew.detail.konnect', defaultMessage: 'Konnect' },
-  addSpace: { id: 'krew.detail.add_space', defaultMessage: 'Add a space' },
   editKrew: { id: 'krew.detail.edit', defaultMessage: 'Edit Krew' },
   changeImage: {
     id: 'krew.detail.change_image',
@@ -433,25 +430,6 @@ const SpaceTile: React.FC<{
   );
 };
 
-// A tile in the "add a space" tray — attaches the Korner on click.
-const AddableTile: React.FC<{
-  slug: KrewKornerSlug;
-  onAttach: (slug: KrewKornerSlug) => void;
-}> = ({ slug, onAttach }) => {
-  const korner = useKorner(slug);
-  const handle = useCallback(() => {
-    onAttach(slug);
-  }, [slug, onAttach]);
-  return (
-    <li>
-      <button type='button' className='space-tile' onClick={handle}>
-        <KrewSpaceIcon slug={slug} className='space-tile__glyph' />
-        <span className='space-tile__name'>{korner?.name ?? slug}</span>
-      </button>
-    </li>
-  );
-};
-
 export const KrewDetail = () => {
   const intl = useIntl();
   const { id } = useParams<{ id?: string }>();
@@ -465,7 +443,6 @@ export const KrewDetail = () => {
   const [members, setMembers] = useState<ApiAccountJSON[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
   const [requests, setRequests] = useState<ApiKrewJoinRequestJSON[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [invitees, setInvitees] = useState<AccountLite[]>([]);
@@ -473,12 +450,8 @@ export const KrewDetail = () => {
   const [activity, setActivity] = useState<ApiKrewActivityJSON | null>(null);
   // Which space is open below the grid. Nothing is, on arrival.
   const [openSpace, setOpenSpace] = useState<OpenSpace>(null);
-  // A space just added through Add a space opens with its "Link one of
-  // yours" list already open, since linking is what adding it was for.
-  const [linkOpen, setLinkOpen] = useState<'albutts' | 'kalendar' | null>(null);
   useEffect(() => {
     setOpenSpace(null);
-    setLinkOpen(null);
   }, [id]);
 
   const refetch = useCallback(async () => {
@@ -628,33 +601,6 @@ export const KrewDetail = () => {
       });
   }, [id, invitees, intl]);
 
-  const toggleAdd = useCallback(() => {
-    setAddOpen((v) => !v);
-  }, []);
-
-  const handleAttach = useCallback(
-    (slug: KrewKornerSlug) => {
-      if (!id) return;
-      setBusy(true);
-      apiAttachKorner(id, slug)
-        .then(refetch)
-        .then(() => {
-          if (slug === 'albutts' || slug === 'kalendar') {
-            setOpenSpace(slug);
-            setLinkOpen(slug);
-          }
-        })
-        .catch((e: unknown) => {
-          setError(e instanceof Error ? e.message : String(e));
-        })
-        .finally(() => {
-          setBusy(false);
-          setAddOpen(false);
-        });
-    },
-    [id, refetch],
-  );
-
   const handleImageChange = useCallback(
     (file: File | null) => {
       if (!file || !id) return;
@@ -678,12 +624,6 @@ export const KrewDetail = () => {
   const asksToJoin = krew?.access === 'approval' && !hasInviteLink;
   const needsInvite = krew?.access === 'invite_only' && !hasInviteLink;
   const canJoinNow = Boolean(krew) && !asksToJoin && !needsInvite;
-  const korners = krew?.korners;
-  const attachable = useMemo(
-    () =>
-      korners ? KREW_PAGE_SPACES.filter((slug) => !korners.includes(slug)) : [],
-    [korners],
-  );
   const shownSpaces = krew
     ? KREW_PAGE_SPACES.filter((slug) => krew.korners.includes(slug))
     : [];
@@ -697,56 +637,29 @@ export const KrewDetail = () => {
   }, []);
   const toggleSpace = useCallback((space: 'albutts' | 'kalendar') => {
     setOpenSpace((now) => (now === space ? null : space));
-    setLinkOpen(null);
   }, []);
 
   // Konnect opens the picker straight away (Tal 2026-10-22: no extra step).
-  // Turning on a space the Krew doesn't have yet is its own tile, Add a
-  // space, with a tray of those spaces.
+  // It is also how a space gets onto the page: Konnecting or making an album
+  // or an event turns that space on (decisions.md, 2026-10-25).
   const renderKonnect = useCallback(
     (openPicker: () => void) => (
-      <>
-        {attachable.length > 0 && (
-          <li>
-            <button
-              type='button'
-              className='space-tile space-tile--action'
-              onClick={toggleAdd}
-              aria-expanded={addOpen}
-            >
-              <span className='space-tile__glyph' aria-hidden='true'>
-                <Icon id='add' icon={AddIcon} />
-              </span>
-              <span className='space-tile__name'>
-                <FormattedMessage {...messages.addSpace} />
-              </span>
-            </button>
-          </li>
-        )}
-        <li>
-          <button
-            type='button'
-            className='space-tile space-tile--action'
-            onClick={openPicker}
-          >
-            <span className='space-tile__glyph' aria-hidden='true'>
-              <Icon id='link' icon={LinkIcon} />
-            </span>
-            <span className='space-tile__name'>
-              <FormattedMessage {...messages.konnect} />
-            </span>
-          </button>
-        </li>
-      </>
+      <li>
+        <button
+          type='button'
+          className='space-tile space-tile--action'
+          onClick={openPicker}
+        >
+          <span className='space-tile__glyph' aria-hidden='true'>
+            <Icon id='link' icon={LinkIcon} />
+          </span>
+          <span className='space-tile__name'>
+            <FormattedMessage {...messages.konnect} />
+          </span>
+        </button>
+      </li>
     ),
-    [toggleAdd, addOpen, attachable.length],
-  );
-  const tray = addOpen && attachable.length > 0 && (
-    <ul className='space-tiles space-tiles--tray'>
-      {attachable.map((slug) => (
-        <AddableTile key={slug} slug={slug} onAttach={handleAttach} />
-      ))}
-    </ul>
+    [],
   );
 
   // A member sees the Krew's albums and events in the Albutts and Kalendar
@@ -944,7 +857,7 @@ export const KrewDetail = () => {
             {isMember && <Happening activity={activity} />}
 
             {/* One section of tiles: the Krew's spaces, then what it's
-                Konnected to elsewhere, then Add a space and Konnect. */}
+                Konnected to elsewhere, then Konnect. */}
             <AttachmentSection
               korner='krew'
               recordId={krew.id}
@@ -967,9 +880,7 @@ export const KrewDetail = () => {
                   : undefined
               }
               renderKonnect={renderKonnect}
-            >
-              {tray}
-            </AttachmentSection>
+            />
 
             {openNow === 'people' && (
               <section className='krew-detail__section krew-detail__people'>
@@ -1058,19 +969,11 @@ export const KrewDetail = () => {
             )}
 
             {isMember && openNow === 'kalendar' && (
-              <KrewEvents
-                krewId={krew.id}
-                canLink={!krew.archived}
-                openLink={linkOpen === 'kalendar'}
-              />
+              <KrewEvents krewId={krew.id} canLink={!krew.archived} />
             )}
 
             {isMember && openNow === 'albutts' && (
-              <KrewAlbums
-                krewId={krew.id}
-                canLink={!krew.archived}
-                openLink={linkOpen === 'albutts'}
-              />
+              <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
             )}
 
             {isMember && activity && (

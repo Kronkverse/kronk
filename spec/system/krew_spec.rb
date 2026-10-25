@@ -47,34 +47,18 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(plus_moon).to eq 'Post to Growers'
   end
 
-  it 'has a tile for each space with a Krew part, then Add a space and Konnect' do
+  # decisions.md, 2026-10-25: Konnect is the one way in. A space's tile shows
+  # once the Krew has it; there is no separate Add a space.
+  it 'has a tile for each space the Krew has, then Konnect' do
     krew.krew_korners.find_by(korner: 'kalendar').destroy
     visit "/hub/krew/#{krew.slug}"
 
     expect(page).to have_css('.space-tile', text: 'Albutts')
+    expect(page).to have_no_css('.space-tile', text: 'Kalendar')
     # Map has no Krew part yet, so it has no tile.
     expect(page).to have_no_css('.space-tile', text: 'Map')
-    tiles = all('.attachment-section > .space-tiles > li')
-    expect(tiles[-2]).to have_text(/Add a space/i)
-    expect(tiles.last).to have_text(/Konnect/i)
-  end
-
-  it 'opens a space added from the page with its link list ready' do
-    krew.krew_korners.find_by(korner: 'kalendar').destroy
-    visit "/hub/krew/#{krew.slug}"
-    within('.attachment-section') { click_on 'Add a space' }
-    within('.space-tiles--tray') { click_on 'Kalendar' }
-
-    expect(page).to have_css('.space-tile--open', text: 'Kalendar')
-    expect(page).to have_text('You have nothing coming up to link.')
-    expect(page).to have_button('Link a past event')
-  end
-
-  it 'leaves out Add a space once every space with a Krew part is in' do
-    visit "/hub/krew/#{krew.slug}"
-
-    expect(page).to have_css('.space-tile', text: 'Konnect')
     expect(page).to have_no_css('.space-tile', text: /Add a space/i)
+    expect(all('.attachment-section > .space-tiles > li').last).to have_text(/Konnect/i)
   end
 
   it 'opens the Konnect picker straight from Konnect' do
@@ -113,6 +97,23 @@ RSpec.describe 'Krew page', :js, :streaming do
 
     expect(page).to have_current_path("/hub/kalendar/composer?konnect=krew:#{krew.id}")
     expect(page).to have_css('.compose-shell', text: 'New event')
+  end
+
+  it 'makes a new Huddle room for the Krew from the Konnect picker' do
+    # The Huddle lobby under the composer asks the Jitsi host who is in, a
+    # server this suite does not run (as in huddle_spec).
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    visit "/hub/krew/#{krew.slug}"
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') do
+      click_on 'Huddle'
+      click_on 'New Room'
+    end
+
+    expect(page).to have_current_path("/hub/huddle/composer?konnect=krew:#{krew.id}")
+    within('.compose-shell .konnect-row') do
+      expect(page).to have_css('.space-tile', text: 'Growers')
+    end
   end
 
   it 'opens the Krew albums in place, made with the + moon' do
