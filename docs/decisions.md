@@ -17,6 +17,33 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — Every Krew shows how it lets people in
+
+Kommons proposal "Krews Type"
+(https://kronk.info/hub/kommons/p/117482707167518494): "There should be a
+icon which shows if krews are open/closed etc. Maybe also there should be a
+button for 'Join/apply' etc for visible krews, or a 'Member' if you're
+already a part of the krew."
+
+**Decision:** every Krew row (Yours and Discover) and the Krew page carry a
+small muted icon beside the name for its access: open (`lock_open`), asks
+to join (`person_add`), has requirements (`list_alt`), invite-only
+(`lock`), each with its name as the label. On Discover the row's way in is
+Join, Ask to join, or "See what's needed" (to the Krew page, where the
+requirements are) for a requirement-gated Krew; a Krew you're in says
+"Member" (was "You're in"), and one you've asked to join says "Asked to
+join". Yours has no action column: everything there is yours. The Krew
+page now lists a requirement-gated Krew's requirements to someone not in
+it ("To join:"), so "See what's needed" lands on the answer.
+
+**Why:** the only marker was a ⚿ glyph for invite-only, and invite-only
+Krews aren't listed in Discover, so in practice no row said how to get in
+until you opened it, and a requirement-gated row showed nothing at all. An
+icon from the shared material set, not a glyph, keeps it in family.
+
+**Supersedes:** the ⚿ invite-only glyph, "You're in", and the
+requirement-gated row with no action.
+
 ## 2026-10-26 — The Mates list is for Mates
 
 Tal: "mates list visible to their mates only." The list had been off since

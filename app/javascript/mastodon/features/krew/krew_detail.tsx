@@ -43,6 +43,7 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
+import { KrewAccessMark, requirementSummary } from './krew_access_mark';
 import { KrewAlbums } from './krew_albums';
 import { KrewChat } from './krew_chat';
 import { KrewEvents } from './krew_events';
@@ -91,6 +92,10 @@ const messages = defineMessages({
     id: 'krew.detail.withdraw',
     defaultMessage: 'Take back my request',
   },
+  needsHeading: {
+    id: 'krew.detail.needs_heading',
+    defaultMessage: 'To join:',
+  },
   inviteOnlyHint: {
     id: 'krew.detail.invite_only_hint',
     defaultMessage: 'You need an invite from someone in this Krew to join.',
@@ -135,7 +140,6 @@ const messages = defineMessages({
     id: 'krew.events.new',
     defaultMessage: 'New event for this Krew',
   },
-  inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
   happening: {
     id: 'krew.detail.happening',
@@ -768,15 +772,10 @@ export const KrewDetail = () => {
               <div className='krew-detail__identity'>
                 <h1 className='krew-detail__name'>
                   {krew.name}
-                  {krew.access === 'invite_only' && (
-                    <span
-                      className='krew-detail__marker'
-                      aria-label={intl.formatMessage(messages.inviteOnly)}
-                      title={intl.formatMessage(messages.inviteOnly)}
-                    >
-                      ⚿
-                    </span>
-                  )}
+                  <KrewAccessMark
+                    access={krew.access}
+                    className='krew-detail__marker'
+                  />
                 </h1>
                 <div className='krew-detail__submeta'>
                   <span className='krew-detail__slug'>@{krew.slug}</span>
@@ -836,6 +835,20 @@ export const KrewDetail = () => {
                     </p>
                   </>
                 )}
+                {krew.access === 'requirement_gated' &&
+                  !hasInviteLink &&
+                  krew.requirements.length > 0 && (
+                    <div className='krew-detail__needs'>
+                      <p className='krew-detail__section-hint'>
+                        <FormattedMessage {...messages.needsHeading} />
+                      </p>
+                      <ul className='krew-detail__needs-list'>
+                        {krew.requirements.map((req) => (
+                          <li key={req.id}>{requirementSummary(req, intl)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 {canJoinNow && (
                   <button
                     type='button'

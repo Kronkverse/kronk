@@ -25,10 +25,9 @@ import type {
   KrewAccess,
   KrewKornerSlug,
   KrewRequirementInput,
-  ApiKrewRequirementJSON,
 } from 'mastodon/api/krew';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
-import { EventSearch, eventLabel } from 'mastodon/components/event_search';
+import { EventSearch } from 'mastodon/components/event_search';
 import type { PickedEvent } from 'mastodon/components/event_search';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
@@ -38,6 +37,7 @@ import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useKorner } from 'mastodon/hooks/useKorner';
 
+import { requirementSummary } from './krew_access_mark';
 import { KrewPhotoField } from './krew_photo_field';
 import { KrewSpaceIcon } from './krew_space_icon';
 
@@ -205,18 +205,6 @@ const messages = defineMessages({
   },
   reqEvent: { id: 'krew.settings.req_event', defaultMessage: 'Event' },
   reqAdd: { id: 'krew.settings.req_add', defaultMessage: 'Add requirement' },
-  reqRowLocatedIn: {
-    id: 'krew.settings.req_row.located_in',
-    defaultMessage: 'Located in {value}',
-  },
-  reqRowGoingTo: {
-    id: 'krew.settings.req_row.going_to',
-    defaultMessage: 'Going to {event}',
-  },
-  reqRowVouched: {
-    id: 'krew.settings.req_row.vouched_by_member',
-    defaultMessage: 'Vouched by a member',
-  },
   reqRemove: { id: 'krew.settings.req_remove', defaultMessage: 'Remove' },
 });
 
@@ -290,27 +278,6 @@ const ACCESS_CHOICES: {
 // feature-flagged pending DIDs — so it's readable in the list but not
 // added from this UI.
 type SettableReqKind = 'located_in' | 'attending_event';
-
-// Human-readable rendering for an existing requirement row. Falls back
-// to the raw kind label if the value slot is empty.
-const requirementSummary = (
-  req: ApiKrewRequirementJSON,
-  intl: ReturnType<typeof useIntl>,
-): string => {
-  switch (req.kind) {
-    case 'located_in':
-      return intl.formatMessage(messages.reqRowLocatedIn, {
-        value: req.region ?? '—',
-      });
-    case 'attending_event':
-      // Named only for someone who can see the event; "An event" otherwise.
-      return intl.formatMessage(messages.reqRowGoingTo, {
-        event: eventLabel(intl, req.event ?? null),
-      });
-    case 'vouched_by_member':
-      return intl.formatMessage(messages.reqRowVouched);
-  }
-};
 
 export const KrewSettings = () => {
   const intl = useIntl();

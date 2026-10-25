@@ -7,8 +7,10 @@ import { Link, useHistory, useLocation } from 'react-router-dom';
 import { apiGetKrews, apiJoinKrew } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { FeedDrum } from 'mastodon/components/feed_drum';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { Stage } from 'mastodon/components/stage';
 
+import { KrewAccessMark } from './krew_access_mark';
 import { KrewComposer } from './krew_composer';
 
 // Krews landing (/hub/krew). Two lenses per docs/spaces/krew.md:
@@ -44,14 +46,14 @@ const messages = defineMessages({
     id: 'krew.empty.discover_body',
     defaultMessage: 'Be the first — gather one and others can join.',
   },
-  inviteOnly: {
-    id: 'krew.marker.invite_only',
-    defaultMessage: 'Invite-only',
-  },
   join: { id: 'krew.row.join', defaultMessage: 'Join' },
   askToJoin: { id: 'krew.row.ask_to_join', defaultMessage: 'Ask to join' },
   asked: { id: 'krew.row.asked', defaultMessage: 'Asked to join' },
-  youreIn: { id: 'krew.row.youre_in', defaultMessage: "You're in" },
+  member: { id: 'krew.row.member', defaultMessage: 'Member' },
+  seeWhatsNeeded: {
+    id: 'krew.row.see_whats_needed',
+    defaultMessage: "See what's needed",
+  },
 });
 
 type Lens = 'yours' | 'discover';
@@ -77,20 +79,24 @@ const relativeTime = (iso: string | null): string => {
 
 // What the Discover row offers beside the Krew. Open Krews join in one tap;
 // an `approval` Krew takes a request that any member can accept. A
-// requirement-gated Krew has no button here: its page says what is needed.
+// requirement-gated Krew is checked on its page, so the row sends you there.
 const KrewRowAction: React.FC<{
   krew: ApiKrewJSON;
   onJoin: (krew: ApiKrewJSON) => void;
   busy: boolean;
 }> = ({ krew, onJoin, busy }) => {
+  const history = useHistory();
   const handleJoin = useCallback(() => {
     onJoin(krew);
   }, [krew, onJoin]);
+  const handleSeeNeeded = useCallback(() => {
+    history.push(`/hub/krew/${krew.slug}`);
+  }, [history, krew.slug]);
 
   if (krew.viewer_role) {
     return (
       <span className='krew-page__row-state'>
-        <FormattedMessage {...messages.youreIn} />
+        <FormattedMessage {...messages.member} />
       </span>
     );
   }
@@ -101,19 +107,27 @@ const KrewRowAction: React.FC<{
       </span>
     );
   }
+  if (krew.access === 'requirement_gated') {
+    return (
+      <KornerPill
+        label={<FormattedMessage {...messages.seeWhatsNeeded} />}
+        onClick={handleSeeNeeded}
+      />
+    );
+  }
   if (krew.access !== 'open' && krew.access !== 'approval') return null;
 
   return (
-    <button
-      type='button'
-      className='krew-detail__btn krew-detail__btn--primary'
+    <KornerPill
+      variant='primary'
+      label={
+        <FormattedMessage
+          {...(krew.access === 'open' ? messages.join : messages.askToJoin)}
+        />
+      }
       onClick={handleJoin}
       disabled={busy}
-    >
-      <FormattedMessage
-        {...(krew.access === 'open' ? messages.join : messages.askToJoin)}
-      />
-    </button>
+    />
   );
 };
 
@@ -145,15 +159,10 @@ const KrewRow: React.FC<{
         <div className='krew-page__row-body'>
           <div className='krew-page__row-title'>
             <h3 className='krew-page__row-name'>{krew.name}</h3>
-            {krew.access === 'invite_only' && (
-              <span
-                className='krew-page__row-marker'
-                aria-label={intl.formatMessage(messages.inviteOnly)}
-                title={intl.formatMessage(messages.inviteOnly)}
-              >
-                ⚿
-              </span>
-            )}
+            <KrewAccessMark
+              access={krew.access}
+              className='krew-page__row-marker'
+            />
           </div>
           {krew.description && (
             <p className='krew-page__row-desc'>{krew.description}</p>
