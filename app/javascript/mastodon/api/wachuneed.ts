@@ -66,6 +66,9 @@ export interface CreateListingParams {
   announced?: boolean;
   // Who can see it, and so who can message you about it.
   visibility?: ListingVisibility;
+  // The Krews it is for, on top of its reach (KrewAudienceParams); left
+  // out, its Krews stay as they are.
+  krew_ids?: string[];
   // Which choice a photo shows, by media id. Read with the photos.
   photo_variants?: Record<string, string>;
   // Optional photos — media_attachment_ids returned from

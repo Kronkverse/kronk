@@ -1,4 +1,9 @@
-import { apiRequestDelete, apiRequestGet, apiRequestPost } from 'mastodon/api';
+import {
+  apiRequestDelete,
+  apiRequestGet,
+  apiRequestPatch,
+  apiRequestPost,
+} from 'mastodon/api';
 
 // KornerAttachment REST surface — the cross-korner join primitive
 // (docs/korners/adding_a_korner.md (Korner attachments) §3.1). Phase 2: the thin client
@@ -7,13 +12,29 @@ import { apiRequestDelete, apiRequestGet, apiRequestPost } from 'mastodon/api';
 
 export type AttachmentKind = 'spawn' | 'link' | 'reference';
 
+// Who can see a record (Korner attachments §2.7; decisions.md, 2026-10-25
+// "Konnections carry audience: Same as"): a reach tier plus the Krews it is
+// for. Krews the viewer may not see named are only counted
+// (`hidden_krews`). `followable`: another record could take this audience.
+export interface AttachmentAudience {
+  tier: 'public' | 'mates' | 'orbit' | 'self_only' | null;
+  krews: { id: string; name: string; slug: string }[];
+  hidden_krews: number;
+  followable: boolean;
+}
+
 export interface AttachmentEndpointPreview {
   slug: string;
   id: string | null;
   title: string | null;
   url: string | null;
   missing?: boolean;
+  // Null for a korner without an audience (a Krew, a proposal).
+  audience?: AttachmentAudience | null;
 }
+
+// The end of a Konnection that leads, when the other follows its audience.
+export type AudienceFollowsEnd = 'source' | 'target';
 
 export interface ApiAttachmentJSON {
   id: string;
@@ -24,6 +45,8 @@ export interface ApiAttachmentJSON {
   kind: AttachmentKind;
   metadata: Record<string, unknown> | null;
   created_at: string;
+  // 'target': the source follows the target's audience.
+  audience_follows?: AudienceFollowsEnd | null;
   source: AttachmentEndpointPreview;
   target: AttachmentEndpointPreview;
 }
@@ -56,6 +79,35 @@ export const apiGetAttachmentsByTarget = (slug: string, id: string) =>
 
 export const apiCreateAttachment = (input: CreateAttachmentInput) =>
   apiRequestPost<ApiAttachmentJSON>('v1/attachments', input);
+
+// Set or clear Same as on a link: the end that leads, or null to stop.
+export const apiUpdateAttachmentAudience = (
+  id: string,
+  audienceFollows: AudienceFollowsEnd | null,
+) =>
+  apiRequestPatch<ApiAttachmentJSON>(`v1/attachments/${id}`, {
+    audience_follows: audienceFollows,
+  });
+
+// A composer's look at a record it could follow, before its own exists:
+// that record's audience and title, and whether a new record in
+// `forKorner`, made by the viewer, can follow it (`followable`, else
+// `reason`).
+export interface AttachmentAudienceLookup extends AttachmentAudience {
+  title: string | null;
+  reason: string | null;
+}
+
+export const apiGetAttachmentAudience = (
+  korner: string,
+  id: string,
+  forKorner: string,
+) =>
+  apiRequestGet<AttachmentAudienceLookup>('v1/attachments/audience', {
+    korner,
+    id,
+    for: forKorner,
+  });
 
 export const apiDeleteAttachment = (id: string) =>
   apiRequestDelete(`v1/attachments/${id}`);

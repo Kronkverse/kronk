@@ -13,7 +13,7 @@ Direct MP4 upload: the video is a plain `MediaAttachment` uploaded via `POST /ap
 - **Title** — required, up to 240 chars.
 - **Description** — optional, up to 4000 chars. Plain text.
 - **Video** — required (the controller rejects a create without `video_media_attachment_id`; the column itself is nullable). One `MediaAttachment`. The video isn't updatable via `PATCH` — a new video means a new film.
-- **Visibility** — `public / orbit / mates / self_only`. No krew scoping.
+- **Visibility** — `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25).
 
 ## Where you see Cinema
 
@@ -33,7 +33,7 @@ Direct MP4 upload: the video is a plain `MediaAttachment` uploaded via `POST /ap
 On submit, the two-step upload:
 
 1. `POST /api/v1/media` with the MP4 (multipart form).
-2. `POST /api/v1/cinema/films` with `film[video_media_attachment_id]` set to the returned media id, plus the title / description / visibility.
+2. `POST /api/v1/cinema/films` with `film[video_media_attachment_id]` set to the returned media id, plus the title / description / visibility, and `krew_ids` (top level) for its Krews.
 
 If step 1 fails (network, upload cap, format rejection) the film row isn't created — the user retries the whole submission.
 

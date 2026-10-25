@@ -4,11 +4,13 @@
 # is stored as raw markdown (no length limit); rendering happens
 # client-side. Kind labels the work as poetry / short story / essay /
 # letter / journal / other — a display badge, not a schema constraint,
-# so re-labeling is a plain update. Krew scoping isn't offered in v1;
-# the four reach tiers are the whole visibility axis.
+# so re-labeling is a plain update. Its audience is the reach ladder
+# plus any Krews it is for (`record_krews`, Kronk::KrewAudience).
 class Chronicle < ApplicationRecord
   include Reachable
   include Kronk::AttachmentSource
+  include Kronk::AudienceBearer
+  include Kronk::KrewAudience
 
   self.attachment_source_slug = 'kronikles'
 
@@ -31,9 +33,8 @@ class Chronicle < ApplicationRecord
        { essay: 0, short_story: 1, poetry: 2, letter: 3, journal: 4, other: 5 },
        suffix: :kind
 
-  # Reach ladder. Krew is not offered on Kronikles in v1 — long-form
-  # authorship doesn't share the group-coordination shape that made krew
-  # scoping useful on Albutts.
+  # Reach ladder. Krews are an additive axis on top (Kronk::KrewAudience,
+  # 2026-10-25: every korner with an audience can be for a Krew).
   enum :visibility,
        { public: 0, mates: 1, orbit: 3, self_only: 4 },
        suffix: :scope
@@ -48,13 +49,13 @@ class Chronicle < ApplicationRecord
 
   # Reachable adapter — reach visibility (visible_to / visible_to?)
   # lives in the concern; these tell it how a Chronicle stores its
-  # owner and (that it has no) krew scoping.
+  # owner and its Krews.
   def self.reachable_owner_column
     :owner_id
   end
 
-  def self.reachable_krew_scope(_krew_ids)
-    none
+  def self.reachable_krew_scope(krew_ids)
+    audience_krew_scope(krew_ids)
   end
 
   # Short preview for the feed card / directory — first ~240 chars of
@@ -91,7 +92,7 @@ class Chronicle < ApplicationRecord
     owner
   end
 
-  def reachable_krew_member?(_viewer)
-    false
+  def reachable_krew_member?(viewer)
+    audience_krew_member?(viewer)
   end
 end

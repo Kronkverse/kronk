@@ -73,6 +73,8 @@ export interface ApiArtPieceJSON extends ArtPieceDetailsJSON {
   created_at: string;
   owner: ApiAccountJSON;
   photos: ApiArtPiecePhotoJSON[];
+  // The Krews it is for, on top of its reach, named where you may see them.
+  krews?: { id: string; name: string; slug?: string }[];
 }
 
 export interface ArtPieceSummaryJSON {

@@ -26,7 +26,8 @@ module Cinema
       status = PostStatusService.new.call(
         @film.owner,
         text: @film.title,
-        visibility: FILM_TO_STATUS_VISIBILITY.fetch(@film.visibility, 'public')
+        visibility: FILM_TO_STATUS_VISIBILITY.fetch(@film.visibility, 'public'),
+        krew_ids: @film.krew_ids
       )
 
       @film.update_columns(status_id: status.id)

@@ -4,6 +4,7 @@ import {
   apiRequestPut,
   apiRequestDelete,
 } from 'mastodon/api';
+import { withAudienceKrews as withKrews } from 'mastodon/api/krew';
 import type {
   ApiKarJSON,
   ApiKarPhotoJSON,
@@ -53,11 +54,21 @@ export const apiListKars = (scope: KarsScope = 'all') =>
 export const apiGetKar = (id: string) =>
   apiRequestGet<ApiKarJSON>(`v1/karporn/kars/${id}`);
 
-export const apiCreateKar = (params: CreateKarParams) =>
-  apiRequestPost<ApiKarJSON>('v1/karporn/kars', { kar: params });
+export const apiCreateKar = (params: CreateKarParams, krewIds?: string[]) =>
+  apiRequestPost<ApiKarJSON>(
+    'v1/karporn/kars',
+    withKrews({ kar: params }, krewIds),
+  );
 
-export const apiUpdateKar = (id: string, params: UpdateKarParams) =>
-  apiRequestPut<ApiKarJSON>(`v1/karporn/kars/${id}`, { kar: params });
+export const apiUpdateKar = (
+  id: string,
+  params: UpdateKarParams,
+  krewIds?: string[],
+) =>
+  apiRequestPut<ApiKarJSON>(
+    `v1/karporn/kars/${id}`,
+    withKrews({ kar: params }, krewIds),
+  );
 
 export const apiDeleteKar = (id: string) =>
   apiRequestDelete<Record<string, never>>(`v1/karporn/kars/${id}`);
