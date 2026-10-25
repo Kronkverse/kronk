@@ -2,8 +2,9 @@
 
 require 'rails_helper'
 
-# docs/design.md, Signup and the thresholds (Setup): after signup, five
-# skippable steps save the theme, a bio, the default reach, mates and push.
+# docs/design.md, Signup and the thresholds (Setup): after signup, one page
+# saves the theme, a bio, the default reach, mates and push as they're
+# picked, and Continue goes Home.
 RSpec.describe 'Setup after signup', :js, :streaming do
   include ProfileStories
 
@@ -18,37 +19,35 @@ RSpec.describe 'Setup after signup', :js, :streaming do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
   end
 
-  it 'saves the theme and a bio' do
+  it 'saves the theme, back at the look section, and a bio' do
     visit '/setup'
-    expect(page).to have_css('.space-header__title', text: 'How Kronk looks')
+    expect(page).to have_css('.space-header__title', text: 'Make Kronk yours')
+    expect(page).to have_css('.setup__heading', text: 'How Kronk looks')
+    expect(page).to have_no_button('Next')
 
-    click_on 'Light'
+    within('#look') { click_on 'Light' }
     expect(page).to have_css('html[data-theme="light"]')
-    expect(page).to have_css('.setup__choice[aria-pressed="true"]', text: 'Light')
+    expect(page).to have_css('#look .setup__choice[aria-pressed="true"]', text: 'Light')
+    expect(page.evaluate_script('window.location.hash')).to eq '#look'
     expect(bob.reload.settings['theme']).to eq 'mastodon-light'
 
-    click_on 'Next'
-    expect(page).to have_css('.space-header__title', text: 'About you')
-    find('.profile-block__bio-input').fill_in(with: 'Grows tomatoes')
-    click_on 'Next'
+    within('#about') { find('.profile-block__bio-input').fill_in(with: 'Grows tomatoes') }
+    find('#reach .setup__heading').click
     Timeout.timeout(Capybara.default_max_wait_time) do
       sleep 0.1 until bob.account.reload.note.include?('Grows tomatoes')
     end
   end
 
-  it 'saves the default reach, then goes Home after notifications' do
-    visit '/setup#reach'
-    expect(page).to have_css('.space-header__title', text: 'Who sees your posts')
-    click_on 'Mates'
+  it 'saves the default reach, then Continue goes Home' do
+    visit '/setup'
+    within('#reach') { click_on 'Mates' }
     Timeout.timeout(Capybara.default_max_wait_time) do
       sleep 0.1 until bob.reload.settings['default_privacy'] == 'mates'
     end
 
-    click_on 'Next'
-    expect(page).to have_css('.space-header__title', text: 'A few people')
-    click_on 'Next'
-    expect(page).to have_css('.space-header__title', text: 'Notifications')
-    within('.setup__actions') { click_on 'Go Home' }
+    expect(page).to have_css('.setup__heading', text: 'A few people')
+    expect(page).to have_css('.setup__heading', text: 'Notifications')
+    click_on 'Continue'
     expect(page).to have_current_path('/home')
   end
 end

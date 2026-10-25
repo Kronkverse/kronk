@@ -19,28 +19,21 @@ import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 
-// Setup — the short steps a new member lands on after signup
-// (docs/design.md, Signup and the thresholds; decisions.md, 2026-10-22
-// "Setup after signup"): how Kronk looks, a line about you, who sees your
-// posts by default, a few people to mate, and notifications on this device. Every step can be skipped and every choice
-// changed later in Settings. Finishing goes to Home with a full load, so
-// the theme picked here is the one the app opens in and the first-run
-// walkthrough starts from there.
+// Setup — the one page a new member lands on after signup (docs/design.md,
+// Signup and the thresholds; decisions.md, 2026-10-22 "Setup after
+// signup"): how Kronk looks, a line about you, who sees your posts by
+// default, a few people to mate, and notifications on this device. Each
+// choice saves as it is picked; anything left alone can be changed later in
+// Settings. Continue goes to Home with a full load, so the theme picked here
+// is the one the app opens in and the first-run walkthrough starts there.
 //
 // It writes through the same endpoints and pieces as Settings → Appearance,
 // Settings → Posting, the profile's bio and Settings → Notifications;
 // nothing here is stored anywhere else.
 
-const STEPS = ['look', 'about', 'reach', 'people', 'notify'] as const;
-type Step = (typeof STEPS)[number];
-
 const messages = defineMessages({
   title: { id: 'setup.title', defaultMessage: 'Make Kronk yours' },
-  stepOf: { id: 'setup.step_of', defaultMessage: 'Step {n} of {total}' },
-  next: { id: 'setup.next', defaultMessage: 'Next' },
-  back: { id: 'setup.back', defaultMessage: 'Back' },
-  skip: { id: 'setup.skip', defaultMessage: 'Skip setup' },
-  finish: { id: 'setup.finish', defaultMessage: 'Go Home' },
+  continue: { id: 'setup.continue', defaultMessage: 'Continue' },
   later: {
     id: 'setup.later',
     defaultMessage: 'You can change any of this later in Settings.',
@@ -156,11 +149,6 @@ interface Payload {
   values: Record<string, unknown>;
 }
 
-const stepFromHash = (): Step => {
-  const hash = window.location.hash.replace('#', '');
-  return (STEPS as readonly string[]).includes(hash) ? (hash as Step) : 'look';
-};
-
 // A full load, so Home opens in the chosen theme and the tour starts.
 const goHome = () => {
   window.location.assign('/home');
@@ -232,7 +220,7 @@ const LookStep: React.FC = () => {
   const handleTheme = useCallback(
     (theme: string) => {
       if (values?.theme === theme) return;
-      // The theme is a different stylesheet: reload into this step to see it.
+      // The theme is a different stylesheet: reload, back at this section.
       void save('theme', theme).then(() => {
         window.location.hash = 'look';
         window.location.reload();
@@ -348,38 +336,31 @@ const PeopleStep: React.FC = () => {
   );
 };
 
-const STEP_COPY: Record<Step, [MessageDescriptor, MessageDescriptor]> = {
-  look: [messages.lookTitle, messages.lookIntro],
-  about: [messages.aboutTitle, messages.aboutIntro],
-  reach: [messages.reachTitle, messages.reachIntro],
-  people: [messages.peopleTitle, messages.peopleIntro],
-  notify: [messages.notifyTitle, messages.notifyIntro],
+const Section: React.FC<{
+  id: string;
+  title: MessageDescriptor;
+  intro: MessageDescriptor;
+  children: React.ReactNode;
+}> = ({ id, title, intro, children }) => {
+  const intl = useIntl();
+  return (
+    <section id={id} className='setup__section'>
+      <h2 className='setup__heading'>{intl.formatMessage(title)}</h2>
+      <p className='setup__intro'>{intl.formatMessage(intro)}</p>
+      {children}
+    </section>
+  );
 };
 
 export const Setup: React.FC = () => {
   const intl = useIntl();
-  const [step, setStep] = useState<Step>(stepFromHash);
-  const index = STEPS.indexOf(step);
-  const last = index === STEPS.length - 1;
-
-  const goTo = useCallback((next: Step) => {
-    window.history.replaceState(null, '', `#${next}`);
-    setStep(next);
-  }, []);
-
-  const handleNext = useCallback(() => {
-    const next = STEPS[index + 1];
-    if (!next) goHome();
-    else goTo(next);
-  }, [index, goTo]);
-
-  const handleBack = useCallback(() => {
-    const prev = STEPS[index - 1];
-    if (prev) goTo(prev);
-  }, [index, goTo]);
-
-  const [title, intro] = STEP_COPY[step];
   const heading = intl.formatMessage(messages.title);
+
+  // Back from the reload a theme pick does: at the look section.
+  useEffect(() => {
+    if (window.location.hash === '#look')
+      document.getElementById('look')?.scrollIntoView();
+  }, []);
 
   return (
     <Stage label={heading}>
@@ -389,40 +370,48 @@ export const Setup: React.FC = () => {
 
       <div className='scrollable setup'>
         <SettingsSpaceHeader
-          title={intl.formatMessage(title)}
-          tagline={intl.formatMessage(intro)}
+          title={heading}
+          tagline={intl.formatMessage(messages.later)}
         />
-        <p className='setup__progress'>
-          {intl.formatMessage(messages.stepOf, {
-            n: index + 1,
-            total: STEPS.length,
-          })}
-        </p>
-        <div className='setup__body'>
-          {step === 'look' && <LookStep />}
-          {step === 'about' && <ProfileBioField />}
-          {step === 'reach' && <ReachStep />}
-          {step === 'people' && <PeopleStep />}
-          {step === 'notify' && <PushPrompt variant='settings' />}
-        </div>
+        <Section
+          id='look'
+          title={messages.lookTitle}
+          intro={messages.lookIntro}
+        >
+          <LookStep />
+        </Section>
+        <Section
+          id='about'
+          title={messages.aboutTitle}
+          intro={messages.aboutIntro}
+        >
+          <ProfileBioField />
+        </Section>
+        <Section
+          id='reach'
+          title={messages.reachTitle}
+          intro={messages.reachIntro}
+        >
+          <ReachStep />
+        </Section>
+        <Section
+          id='people'
+          title={messages.peopleTitle}
+          intro={messages.peopleIntro}
+        >
+          <PeopleStep />
+        </Section>
+        <Section
+          id='notify'
+          title={messages.notifyTitle}
+          intro={messages.notifyIntro}
+        >
+          <PushPrompt variant='settings' />
+        </Section>
 
-        <div className='setup__actions'>
-          {index > 0 && (
-            <button type='button' className='setup__back' onClick={handleBack}>
-              {intl.formatMessage(messages.back)}
-            </button>
-          )}
-          {!last && (
-            <button type='button' className='setup__skip' onClick={goHome}>
-              {intl.formatMessage(messages.skip)}
-            </button>
-          )}
-          <button type='button' className='setup__next' onClick={handleNext}>
-            {intl.formatMessage(last ? messages.finish : messages.next)}
-          </button>
-        </div>
-
-        <p className='setup__later'>{intl.formatMessage(messages.later)}</p>
+        <button type='button' className='setup__continue' onClick={goHome}>
+          {intl.formatMessage(messages.continue)}
+        </button>
       </div>
     </Stage>
   );
