@@ -169,6 +169,22 @@ namespace :api, format: false do
       resource :observation, only: [:show]
     end
 
+    # Live sets: go live, end, and tell your feed (docs/spaces/booth.md).
+    resources :booth_lives, only: [:index, :show, :create, :update, :destroy] do
+      # What's live now, for the home feed's banner.
+      collection do
+        get :now
+      end
+      member do
+        post :start
+        post :finish
+        post :share
+        # "Remind me" when a scheduled set goes live.
+        post :remind
+        delete :remind, action: :unremind
+      end
+    end
+
     resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :play
@@ -176,12 +192,19 @@ namespace :api, format: false do
         # The person tagged as an artist on a set: confirm it, or come off it.
         post :confirm_credit
         delete :credit, action: :remove_credit
+        # Keep a set in My sets → Saved.
+        post :save
+        delete :save, action: :unsave
       end
+
+      # Shoutouts: listeners' notes on a set, pinned to a moment or not.
+      resources :shoutouts, controller: 'booth_shoutouts', only: [:index, :create]
     end
 
     # Previews of links to things on Kronk, as the viewer sees them
     # (Kronk::LinkPreview).
     resources :link_previews, only: [:index]
+    resources :booth_shoutouts, only: [:destroy]
 
     # KornerAttachment REST surface (docs/korners/adding_a_korner.md (Korner attachments) §3.1).
     # Distinct from the proposal-nested `attachments` resource below — this

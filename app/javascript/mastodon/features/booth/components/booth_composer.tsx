@@ -22,11 +22,13 @@ import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useAppDispatch } from 'mastodon/store';
 
-import type { BoothSet } from '../types';
+import type { BoothKind, BoothSet } from '../types';
 
+import { ComposerSwitch } from './composer_switch';
 import { CreditsField, creditsPayload } from './credits_field';
 import type { CreditDraft } from './credits_field';
 import { GenreTagInput } from './genre_tag_input';
+import { KindSelect } from './kind_select';
 
 // Booth — upload a set. The shared `<ComposeShell>` overlay opened
 // by the Ж bubble at /hub/booth/composer (legacy /hub/booth/new
@@ -231,6 +233,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
+  const [kind, setKind] = useState<BoothKind>('mix');
   const [description, setDescription] = useState('');
   const [tracklistText, setTracklistText] = useState('');
   const [postToFeed, setPostToFeed] = useState(true);
@@ -448,6 +451,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           collaborators: creditsPayload(credits),
           audio_id: audioId,
           genres,
+          kind,
         };
         if (eventName) payload.event_name = eventName;
         if (eventDate) payload.event_date = eventDate;
@@ -508,6 +512,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     eventName,
     eventDate,
     genres,
+    kind,
     description,
     tracklistText,
     audioFile,
@@ -527,6 +532,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     <ComposeShell
       korner='booth'
       label={intl.formatMessage(messages.shellLabel)}
+      switcher={<ComposerSwitch mode='upload' />}
       submitLabel={intl.formatMessage(messages.submit)}
       submittingLabel={intl.formatMessage(messages.submitting)}
       submitting={submitting}
@@ -645,6 +651,8 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               </span>
             )}
           </div>
+
+          <KindSelect value={kind} onChange={setKind} />
 
           {/* A tag picker (chips and suggestion buttons), not one control,
               so it isn't wrapped in <ComposeField>'s <label>. */}

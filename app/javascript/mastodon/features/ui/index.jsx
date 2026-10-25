@@ -323,7 +323,7 @@ class SwitchingColumnsArea extends PureComponent {
             {/* Native Booth. The non-exact /hub/booth match also catches the
                 lens sub-paths (/hub/booth/musik, /artists, …); the component
                 reads the lens from the URL. Set detail is matched above. */}
-            <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
+            <WrappedRoute path={["/booth", "/hub/booth", "/hub/booth/live/:id"]} component={Booth} content={children} />
             {signedIn && <WrappedRoute path='/settings' exact stage component={SettingsHub} content={children} />}
             {signedIn && <WrappedRoute path='/settings/you' exact stage component={SettingsYou} content={children} />}
             {signedIn && <WrappedRoute path='/hub/settings' exact component={SettingsKorners} content={children} />}

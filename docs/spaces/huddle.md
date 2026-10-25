@@ -8,7 +8,8 @@ a Jitsi server, embedded in the page with the Jitsi iframe API. The server is
 configuration, not code: `JITSI_DOMAIN` (default `meet.talitamoss.info`) is
 read once in `config/initializers/1_kronk_jitsi.rb` and reaches the CSP,
 Kalendar's Huddle events and the web client (`jitsiDomain` in
-`initial_state.ts`). This doc describes what is built as of 2026-10-05.
+`initial_state.ts`). The Booth's live sets use the same server, in rooms
+of their own (`docs/spaces/booth.md`, Live sets). This doc describes what is built as of 2026-10-05.
 
 ## Three categories of Huddle
 

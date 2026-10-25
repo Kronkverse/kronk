@@ -38,6 +38,11 @@ class BoothSet < ApplicationRecord
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :booth_set
   # Everyone credited besides the uploader, in the order the uploader gave.
   has_many :credits, -> { order(:position, :id) }, class_name: 'BoothSetArtist', inverse_of: :booth_set, dependent: :destroy
+  has_many :saves, class_name: 'BoothSetSave', inverse_of: :booth_set, dependent: :delete_all
+  has_many :shoutouts, class_name: 'BoothShoutout', inverse_of: :booth_set, dependent: :delete_all
+
+  # What a set is. Filterable in Musik; existing sets are mixes.
+  KINDS = %w(mix live_recording track podcast spoken_word).freeze
 
   # How many people an uploader can credit on one set.
   MAX_CREDITS = 10
@@ -89,6 +94,7 @@ class BoothSet < ApplicationRecord
   validates :description, length: { maximum: 5000 }
   validates :event_name, length: { maximum: 200 }
   validates :genres, length: { maximum: 10 }
+  validates :kind, inclusion: { in: KINDS }
   validate :tracklist_must_be_well_formed
 
   # Track list (docs/spaces/booth.md, "Track list"): ordered entries of
