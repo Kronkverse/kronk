@@ -104,7 +104,9 @@ RSpec.describe 'API V1 Accounts Mates' do
       user.account.block!(alice)
       get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }, headers: headers
 
-      expect(response.parsed_body.size).to eq 0
+      # The viewer is a Mate too, so they still see themselves.
+      expect(response.parsed_body)
+        .to contain_exactly(hash_including(id: viewer.id.to_s))
     end
 
     context 'when the requesting user is blocked' do
