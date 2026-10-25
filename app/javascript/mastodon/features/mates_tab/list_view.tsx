@@ -1,7 +1,7 @@
-// Mates list view — the only face of /@:acct/mates.
+// Mates list view — the list on /@:acct/mates.
 //
 // A plain list of the subject's Mates: one shared `<Account>` row per
-// person, in the standard `.stage-column` measure. Tap a row → their
+// person, inside the page's `.stage-column`. Tap a row → their
 // profile; the row carries its own relationship button and menu because
 // it is the same component every other people-list on Kronk uses.
 //
@@ -18,7 +18,10 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Account } from 'mastodon/components/account';
-import { LoadingIndicator } from 'mastodon/components/loading_indicator';
+import { EmptyState } from 'mastodon/components/empty_state';
+import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerPill } from 'mastodon/components/korner_pill';
+import { LoadingState } from 'mastodon/components/loading_state';
 
 const messages = defineMessages({
   empty: {
@@ -47,33 +50,26 @@ export const MatesListView: React.FC<MatesListViewProps> = ({
   const intl = useIntl();
 
   if (accountIds.length === 0) {
-    return (
-      <div className='mates-list__empty'>
-        {intl.formatMessage(messages.empty)}
-      </div>
-    );
+    return <EmptyState title={intl.formatMessage(messages.empty)} />;
   }
 
   return (
-    <div className='stage-column'>
-      <div className='stage-column__inner mates-list'>
-        {accountIds.map((id) => (
-          <Account key={id} id={id} withMenu={false} />
-        ))}
+    <div className='mates-list'>
+      {accountIds.map((id) => (
+        <Account key={id} id={id} withMenu={false} />
+      ))}
 
-        {hasMore &&
-          (loadingMore ? (
-            <LoadingIndicator />
-          ) : (
-            <button
-              type='button'
-              className='mates-list__more'
+      {hasMore &&
+        (loadingMore ? (
+          <LoadingState />
+        ) : (
+          <KornerActionBar align='center'>
+            <KornerPill
+              label={intl.formatMessage(messages.loadMore)}
               onClick={onLoadMore}
-            >
-              {intl.formatMessage(messages.loadMore)}
-            </button>
-          ))}
-      </div>
+            />
+          </KornerActionBar>
+        ))}
     </div>
   );
 };
