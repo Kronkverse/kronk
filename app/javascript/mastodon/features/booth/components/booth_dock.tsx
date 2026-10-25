@@ -20,13 +20,15 @@ const messages = defineMessages({
     defaultMessage: 'Forward 15 seconds',
   },
   close: { id: 'booth.dock.close', defaultMessage: 'Close player' },
+  playNext: { id: 'booth.dock.play_next', defaultMessage: 'Play next' },
+  upNext: { id: 'booth.dock.up_next', defaultMessage: 'Up next: {title}' },
 });
 
 // BoothDock — the fixed bottom transport for the Booth page, built on the
 // shared playback context (survives lens switches). Art, title/artist, a
 // back-15/play/forward-15 transport, a seekable waveform scrubber with
-// elapsed/total, and a close. There is no queue yet, so the side buttons
-// seek ±15s rather than change track.
+// elapsed/total, Play next (the grid a set was started from carries on)
+// and a close. The side buttons seek ±15s.
 
 const initial = (s: string): string =>
   (s.trim().charAt(0) || 'B').toUpperCase();
@@ -43,6 +45,9 @@ function formatTime(seconds: number): string {
 export const BoothDock: React.FC = () => {
   const intl = useIntl();
   const {
+    upNext,
+    autoNext,
+    setAutoNext,
     activeSet,
     playing,
     currentTime,
@@ -59,6 +64,12 @@ export const BoothDock: React.FC = () => {
   const handleForward = useCallback(() => {
     skip(15);
   }, [skip]);
+  const handleAutoNext = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setAutoNext(e.target.checked);
+    },
+    [setAutoNext],
+  );
 
   if (!activeSet) return null;
 
@@ -135,6 +146,22 @@ export const BoothDock: React.FC = () => {
             onSeek={seekPct}
           />
           <span className='booth-dock__time'>{formatTime(total)}</span>
+        </div>
+
+        <div className='booth-dock__next'>
+          <label>
+            <input
+              type='checkbox'
+              checked={autoNext}
+              onChange={handleAutoNext}
+            />
+            {intl.formatMessage(messages.playNext)}
+          </label>
+          {autoNext && upNext && (
+            <span className='booth-dock__up-next'>
+              {intl.formatMessage(messages.upNext, { title: upNext.title })}
+            </span>
+          )}
         </div>
 
         <button

@@ -19,8 +19,18 @@ const messages = defineMessages({
   },
 });
 
+// A shoutout pinned to a moment, drawn on the progress bar.
+export interface PlayerMarker {
+  id: string;
+  at: number;
+  label: string;
+  avatar: string;
+}
+
 interface Props {
   set: BoothSet;
+  markers?: PlayerMarker[];
+  onMarker?: (marker: PlayerMarker) => void;
 }
 
 function formatTime(seconds: number): string {
@@ -34,7 +44,29 @@ function formatTime(seconds: number): string {
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
-export const AudioPlayer: React.FC<Props> = ({ set }) => {
+const MarkerPin: React.FC<{
+  marker: PlayerMarker;
+  left: number;
+  onSelect?: (marker: PlayerMarker) => void;
+}> = ({ marker, left, onSelect }) => {
+  const handleClick = useCallback(() => {
+    onSelect?.(marker);
+  }, [onSelect, marker]);
+  return (
+    <button
+      type='button'
+      className='booth-player__marker'
+      style={{ left: `${left}%` }}
+      title={marker.label}
+      aria-label={marker.label}
+      onClick={handleClick}
+    >
+      <img src={marker.avatar} alt='' />
+    </button>
+  );
+};
+
+export const AudioPlayer: React.FC<Props> = ({ set, markers, onMarker }) => {
   const intl = useIntl();
   const {
     activeSet,
@@ -170,6 +202,20 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
               style={{ left: `${progressPct}%` }}
             />
           </div>
+          {markers && displayDuration > 0 && (
+            <div className='booth-player__markers'>
+              {markers
+                .filter((m) => m.at <= displayDuration)
+                .map((m) => (
+                  <MarkerPin
+                    key={m.id}
+                    marker={m}
+                    left={(m.at / displayDuration) * 100}
+                    onSelect={onMarker}
+                  />
+                ))}
+            </div>
+          )}
           <div className='booth-player__times'>
             <span>{formatTime(displayTime)}</span>
             <span>

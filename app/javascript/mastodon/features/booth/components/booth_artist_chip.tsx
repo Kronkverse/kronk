@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 
 // BoothArtistChip — a roster tile in the Booth Artists lens. Shows the
-// artist's face (or initial, for someone who is not on Kronk), name, and a
-// derived "N sets · P plays" stat (computed client-side from the loaded
-// sets — no dedicated backend). Clicking opens the artist detail view.
+// artist's face (or initial, for someone who is not on Kronk), name, and
+// how many sets they're on. No plays: those are for the artist, not a
+// ranking. Clicking opens the artist detail view.
 
 export interface BoothArtist {
   // What the artist's page is addressed by: `@acct` for a Kronk account,
@@ -14,18 +14,15 @@ export interface BoothArtist {
   acct?: string;
   avatar?: string;
   setCount: number;
-  totalPlays: number;
 }
 
 export const artistInitial = (s: string): string =>
   (s.trim().charAt(0) || 'B').toUpperCase();
 
-// Shared "N sets · P plays" label — used by both the roster chip and the
-// artist-detail hero. Plain strings match the Booth card's convention
-// (e.g. `{play_count} plays`).
+// Shared "N sets" label — used by both the roster chip and the
+// artist-detail hero.
 export const artistStatLabel = (artist: BoothArtist): string =>
-  `${artist.setCount} ${artist.setCount === 1 ? 'set' : 'sets'} · ` +
-  `${artist.totalPlays.toLocaleString()} plays`;
+  `${artist.setCount} ${artist.setCount === 1 ? 'set' : 'sets'}`;
 
 interface Props {
   artist: BoothArtist;

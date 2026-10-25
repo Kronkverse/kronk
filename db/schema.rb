@@ -480,6 +480,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
     t.index ["status_id"], name: "index_bookmarks_on_status_id"
   end
 
+  create_table "booth_live_reminders", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "booth_live_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "booth_live_id"], name: "index_booth_live_reminders_on_account_id_and_booth_live_id", unique: true
+    t.index ["account_id"], name: "index_booth_live_reminders_on_account_id"
+    t.index ["booth_live_id"], name: "index_booth_live_reminders_on_booth_live_id"
+  end
+
+  create_table "booth_lives", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.datetime "ended_at"
+    t.string "genres", default: [], null: false, array: true
+    t.string "room_key", null: false
+    t.datetime "started_at"
+    t.datetime "starts_at", null: false
+    t.bigint "status_id"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_lives_on_account_id"
+    t.index ["room_key"], name: "index_booth_lives_on_room_key", unique: true
+    t.index ["starts_at"], name: "index_booth_lives_on_starts_at"
+  end
+
   create_table "booth_set_artists", force: :cascade do |t|
     t.bigint "account_id"
     t.bigint "booth_set_id", null: false
@@ -491,6 +518,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
     t.index ["account_id"], name: "index_booth_set_artists_on_account_id"
     t.index ["booth_set_id", "account_id"], name: "index_booth_set_artists_on_booth_set_id_and_account_id", unique: true, where: "(account_id IS NOT NULL)"
     t.index ["booth_set_id"], name: "index_booth_set_artists_on_booth_set_id"
+  end
+
+  create_table "booth_set_saves", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "booth_set_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "booth_set_id"], name: "index_booth_set_saves_on_account_id_and_booth_set_id", unique: true
+    t.index ["account_id"], name: "index_booth_set_saves_on_account_id"
+    t.index ["booth_set_id"], name: "index_booth_set_saves_on_booth_set_id"
   end
 
   create_table "booth_sets", force: :cascade do |t|
@@ -505,6 +542,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
     t.datetime "event_date"
     t.string "event_name"
     t.string "genres", default: [], null: false, array: true
+    t.string "kind", default: "mix", null: false
     t.integer "play_count", default: 0, null: false
     t.boolean "published", default: true, null: false
     t.bigint "shared_status_id"
@@ -517,6 +555,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
     t.index ["cover_attachment_id"], name: "index_booth_sets_on_cover_attachment_id"
     t.index ["shared_status_id"], name: "index_booth_sets_on_shared_status_id", unique: true
     t.index ["status_id"], name: "index_booth_sets_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "booth_shoutouts", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "at_seconds"
+    t.text "body", null: false
+    t.bigint "booth_set_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_shoutouts_on_account_id"
+    t.index ["booth_set_id", "created_at"], name: "index_booth_shoutouts_on_booth_set_id_and_created_at"
+    t.index ["booth_set_id"], name: "index_booth_shoutouts_on_booth_set_id"
   end
 
   create_table "budget_items", force: :cascade do |t|
@@ -2735,11 +2785,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
   add_foreign_key "blocks", "accounts", name: "fk_4269e03e65", on_delete: :cascade
   add_foreign_key "bookmarks", "accounts", on_delete: :cascade
   add_foreign_key "bookmarks", "statuses", on_delete: :cascade
+  add_foreign_key "booth_live_reminders", "accounts", on_delete: :cascade
+  add_foreign_key "booth_live_reminders", "booth_lives", column: "booth_live_id", on_delete: :cascade
+  add_foreign_key "booth_lives", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "booth_sets", on_delete: :cascade
+  add_foreign_key "booth_set_saves", "accounts", on_delete: :cascade
+  add_foreign_key "booth_set_saves", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_sets", "accounts", on_delete: :cascade
   add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
+  add_foreign_key "booth_shoutouts", "accounts", on_delete: :cascade
+  add_foreign_key "booth_shoutouts", "booth_sets", on_delete: :cascade
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
