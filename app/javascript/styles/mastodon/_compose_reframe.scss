@@ -15,8 +15,13 @@
 }
 
 // ── header row: identity + audience ──────────────────────────
+// Wraps rather than overlaps: when the row is too narrow for the name,
+// the day's Kuestion and the pills, the pills drop to a line of their
+// own, right-aligned, together. Nothing in the row shrinks under its
+// neighbour (Tal, 2026-10-26: the Kuestion was sitting on the name).
 .compose-form__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 4px 0 10px;
@@ -28,11 +33,26 @@
   }
 }
 
+// Takes only the room the name and pills leave (basis 0, so a long
+// prompt can't squeeze the name), and needs 120px of it to stay on the
+// first line. Empty when there's no prompt, and then it claims nothing.
 .compose-form__head-spacer {
   display: flex;
   justify-content: center;
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1 1 0;
+  min-width: 120px;
+
+  &:empty {
+    min-width: 0;
+  }
+}
+
+.compose-form__head-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-inline-start: auto;
 }
 
 // Kuestions' daily prompt, faint between who's posting and the reach
