@@ -164,6 +164,17 @@ launch: # retrospective — Kommons predates launch cards
 # The Ж menu's Post button while inside Kommons. Kommons' native create action
 # IS proposing: a proposal is Kommons content. On a Space page the composer
 # scopes the proposal to that space (the bubble appends ?space=<slug>).
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+  # Straight to the composer: the page picker in front of it would drop
+  # the `?konnect=`. The proposal is about what it is Konnected to.
+  route: /hub/kommons/composer
+
 compose:
   label: 'Open a Proposal'
   # Unscoped entry: the target picker (choose which page the proposal is
