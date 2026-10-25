@@ -892,6 +892,61 @@ korner's manifest then says
 `konnect: { make: true }` so the picker offers its composer
 (docs/korners/adding_a_korner.md, Korner attachments §2.6 and §4.4).
 
+**Same as** (decisions.md, 2026-10-25): a record Konnected to another can
+take its audience and follow it. What the server gives a tile or composer:
+
+- Each Konnection row (`GET /api/v1/attachments`) has `audience_follows`
+  (`'target'`, `'source'` or `null`: the end that leads) and, on both
+  previews, `audience: { tier, krews: [{ id, name, slug }], hidden_krews,
+followable }`.
+- A supported record's own JSON (album, film, kar, kronikle, art piece,
+  listing detail) has `audience_follows: { slug, id, title, url } | null`,
+  the leader (`hidden: true` and no id or title when the viewer can't see
+  it). Its audience is its `visibility` plus `krews` (albums, events, and
+  since 2026-10-25 films, kars, kronikles, art pieces and listing details;
+  each composer sends its Krews as top-level `krew_ids`, as the album
+  composer does).
+- Before the record exists, `GET /api/v1/attachments/audience?korner=&id=&for=<own korner>`
+  says whether "Same as <title>" can be offered (`followable`, else
+  `reason`). Offer it, and default to it, when the Konnected record is
+  Everyone or Krews; never for Mates or Orbit. Booth sets have no audience
+  control.
+- **Mismatch notes.** With both ends' audiences in hand, a tile on record
+  A says when people who see the other end, B, can't open A. If A is
+  `public`, they all can. Otherwise each of B's Krews that is not among A's
+  can't ("Growers can't open your album"), and if B is `public`, not
+  everyone who sees B can. Mates and Orbit can't be compared across owners,
+  so they never make a note.
+
+What the person sees (`hooks/useSameAs.ts`, `components/audience_marker.tsx`):
+
+- **Who sees this.** In the album, film, kar, kronikle, art piece and
+  listing composers, the reach control (`<ReachDropdown sameAs>`) opens on
+  a "Same as <title>" row for each Konnect-row record the server says it
+  can follow, naming that record's audience ("Growers", "Growers and
+  Climbers", "Everyone"). It is on by default when the composer opened from
+  the record (`?konnect=`), or when the first such record is added before
+  reach was touched; the button then reads "Same as <title>". Choosing it
+  copies the leader's tier and Krews into the composer's own (so the record
+  is right the moment it's made, and the tiers and Krews below show the
+  copy); choosing any tier or Krew turns it off. One leads at most. On
+  create the record is sent with that reach, and its link with
+  `metadata: { audience: 'same' }`. Not offered while editing, for a Krew
+  album, or by composers without a reach control (Booth).
+- **Every Konnected tile** (a composer's Konnect row and a page's Konnected
+  block) says who sees its record, quietly under the title: "Everyone",
+  "Mates", "Orbit", "Just me", "Invited" (an invite-only event), "Growers",
+  "Growers + Climbers", "Growers + 2 Krews" for Krews you can't see. The
+  one this record follows has an accent border and a "Same as" line.
+- **On a record's page**, whoever looks after a record that can follow
+  gets a link button beside a tile's ×: "Make audience the same as …" where
+  it could follow that record, "Stop following …" where it does, each
+  confirmed with what changes (`PATCH`, `audience_follows`).
+- **Notes**, under the grid, for the same person on the same pages: one
+  line per Konnected record whose people can't open this one, with "Make
+  it Same as <title>" where following it would mend it. An event's page
+  (events lead, never follow) and a Krew's show the markers only.
+
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of
 `_compose_shell.scss`, so a full-width field's padding stays inside the

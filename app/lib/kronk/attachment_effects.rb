@@ -4,7 +4,8 @@
 # (Korner attachments) §2.5). Most links are only a row in
 # `korner_attachments`. A few pairs keep something else in step with the
 # row: an event or album linked to a Krew joins the Krew's audience, so the
-# Krew's members can open it and the Krew page lists it.
+# Krew's members can open it and the Krew page lists it; so does a film,
+# kar, kronikle, art piece or listing (Kronk::RecordKrewLinks).
 #
 # Every way of linking such a pair goes through here, so the row and what
 # follows from it always agree: the Attach picker from either end, the
@@ -25,7 +26,7 @@ module Kronk
         %w(kalendar krew) => Kronk::EventLinks,
         %w(freethedream kalendar) => Kronk::EventLinks,
         %w(albutts krew) => Kronk::AlbumLinks,
-      }
+      }.merge(Kronk::RecordKrewLinks::SLUGS.to_h { |slug| [[slug, 'krew'].sort, Kronk::RecordKrewLinks] })
     end
 
     def handler_for(attachment)

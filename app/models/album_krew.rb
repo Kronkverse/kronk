@@ -9,6 +9,9 @@
 # A Krew in an album's audience is linked to it: each row keeps a korner
 # attachment beside it (Kronk::AlbumLinks), so the album and the Krew show
 # each other in their Attached blocks however the Krew got there.
+#
+# The album's audience changed, so what follows it changes too
+# (Kronk::Audience), unless the album itself is going.
 class AlbumKrew < ApplicationRecord
   belongs_to :album
   belongs_to :krew
@@ -17,4 +20,12 @@ class AlbumKrew < ApplicationRecord
 
   after_create  { Kronk::AlbumLinks.audience_added(self) }
   after_destroy { Kronk::AlbumLinks.audience_removed(self) }
+  after_create  :album_audience_changed
+  after_destroy :album_audience_changed, unless: -> { destroyed_by_association&.active_record == Album }
+
+  private
+
+  def album_audience_changed
+    Kronk::Audience.changed(album)
+  end
 end

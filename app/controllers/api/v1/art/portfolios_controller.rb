@@ -41,7 +41,7 @@ class Api::V1::Art::PortfoliosController < Api::BaseController
   end
 
   def piece_json(piece)
-    REST::ArtPieceSerializer.new(piece, scope: current_user, scope_name: :current_user).as_json
+    REST::ArtPieceSerializer.new(piece, scope: current_user, scope_name: :current_user, list: true).as_json
   end
 
   def portfolio_json(account)

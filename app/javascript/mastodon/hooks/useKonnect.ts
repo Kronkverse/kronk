@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
+import type { AttachmentAudienceLookup } from 'mastodon/api/attachments';
 import {
   apiCreateAttachment,
+  apiGetAttachmentAudience,
   apiSearchAttachmentCandidates,
 } from 'mastodon/api/attachments';
 
@@ -24,6 +26,12 @@ import {
 //     which Konnects the new record to each. A link that fails is collected
 //     and returned, never thrown: the record is made either way.
 //
+//
+// Each one's audience is looked up as it arrives (`audiences`, for its
+// tile's marker and for "Same as": `useSameAs` lets the composer's reach
+// follow one of them, its `leader`, and `commit` then asks for that link
+// with `metadata: { audience: 'same' }`; decisions.md, 2026-10-25).
+//
 // A composer that already Konnects the source its own way (an album made
 // for a Krew is the Krew's album) passes `sourceHandled`: the tile shows,
 // can't be dropped, and `commit` leaves it to the composer.
@@ -32,7 +40,12 @@ export interface KonnectTarget {
   slug: string;
   id: string;
   title?: string | null;
+  // A draft's mark on the one whose audience the record follows.
+  same?: boolean;
 }
+
+export const konnectKey = (t: Pick<KonnectTarget, 'slug' | 'id'>) =>
+  `${t.slug}/${t.id}`;
 
 export interface KonnectFailure {
   target: KonnectTarget;
@@ -55,8 +68,19 @@ export interface KonnectControls {
   restore: (saved: KonnectTarget[] | null | undefined) => void;
   // What a draft keeps: the pending ones the composer doesn't handle.
   saved: KonnectTarget[];
-  // Konnect the record just made to each pending one.
-  commit: (createdSlug: string, createdId: string) => Promise<KonnectFailure[]>;
+  // Each pending one's audience, by `konnectKey`, once looked up (null
+  // when it couldn't be): whether this composer's record could follow it.
+  audiences: Record<string, AttachmentAudienceLookup | null>;
+  // The pending one whose audience the record will follow ("Same as"), set
+  // by `useSameAs`; null otherwise.
+  leader: KonnectTarget | null;
+  // Konnect the record just made to each pending one; `follow` is the one
+  // whose audience it follows, if any.
+  commit: (
+    createdSlug: string,
+    createdId: string,
+    follow?: Pick<KonnectTarget, 'slug' | 'id'> | null,
+  ) => Promise<KonnectFailure[]>;
 }
 
 export interface UseKonnectOptions {
@@ -192,8 +216,42 @@ export const useKonnect = (
     [visible, sourceHandled, source],
   );
 
+  // Each pending one's audience, as seen from a new record here.
+  const [audiences, setAudiences] = useState<
+    Record<string, AttachmentAudienceLookup | null>
+  >({});
+  const asked = useRef(new Set<string>());
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  useEffect(() => {
+    visible.forEach((target) => {
+      const key = konnectKey(target);
+      if (asked.current.has(key)) return;
+      asked.current.add(key);
+      apiGetAttachmentAudience(target.slug, target.id, korner)
+        .then((audience) => {
+          if (mounted.current)
+            setAudiences((prev) => ({ ...prev, [key]: audience }));
+          return undefined;
+        })
+        .catch(() => {
+          if (mounted.current)
+            setAudiences((prev) => ({ ...prev, [key]: null }));
+        });
+    });
+  }, [visible, korner]);
+
   const commit = useCallback(
-    async (createdSlug: string, createdId: string) => {
+    async (
+      createdSlug: string,
+      createdId: string,
+      follow?: Pick<KonnectTarget, 'slug' | 'id'> | null,
+    ) => {
       const results = await Promise.allSettled(
         toCommit
           .filter((t) => t.slug !== createdSlug)
@@ -205,6 +263,9 @@ export const useKonnect = (
                 target_slug: target.slug,
                 target_id: target.id,
                 kind: 'link',
+                ...(follow && same(follow, target)
+                  ? { metadata: { audience: 'same' } }
+                  : {}),
               });
               return null;
             } catch (error) {
@@ -228,6 +289,8 @@ export const useKonnect = (
     remove,
     restore,
     saved: toCommit,
+    audiences,
+    leader: null,
     commit,
   };
 };

@@ -30,7 +30,9 @@ import {
 import { KonnectRow } from 'mastodon/components/konnect_row';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useSameAs } from 'mastodon/hooks/useSameAs';
 
 import {
   ListingOptionsEditor,
@@ -295,9 +297,9 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const { load: loadPhotos } = photoState;
   const [loadingListing, setLoadingListing] = useState(editing);
   const [loadError, setLoadError] = useState(false);
-  // What a new listing will be Konnected to (decisions.md, 2026-10-23).
-  const konnect = useKonnect('wachuneed');
-  const commitKonnect = konnect.commit;
+  // The Krews it's for, on top of its reach (decisions.md, 2026-10-25).
+  const [krewIds, setKrewIds] = useState<string[]>([]);
+  const availableKrews = useAvailableKrews();
 
   useEffect(() => {
     if (!editId) return;
@@ -328,6 +330,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         );
         setSectionId(listing.shop_section_id ?? '');
         setVisibility(listing.visibility ?? 'public');
+        setKrewIds(listing.krews?.map((k) => k.id) ?? []);
         setOptionRows(optionRowsFrom(listing.options));
         loadPhotos(listing.photos ?? []);
         setLoadingListing(false);
@@ -443,6 +446,28 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     setVisibility(value);
     visibilityPicked.current = true;
   }, []);
+  const handleToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
+  const applyAudience = useCallback(
+    (tier: ListingVisibility, ids: string[] | null) => {
+      setVisibility(tier);
+      visibilityPicked.current = true;
+      if (ids) setKrewIds(ids);
+    },
+    [],
+  );
+  // What a new listing will be Konnected to (decisions.md, 2026-10-23),
+  // and whose audience it may follow ("Same as", 2026-10-25).
+  const { konnect, reach } = useSameAs(useKonnect('wachuneed'), {
+    enabled: !editing,
+    apply: applyAudience,
+    onChange: handleVisibility,
+    onToggleKrew: handleToggleKrew,
+  });
+  const commitKonnect = konnect.commit;
 
   const handleCategoryChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
@@ -490,6 +515,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         availability,
         announced,
         visibility,
+        krew_ids: krewIds,
         photo_variants: photoState.showsPayload(showsChoices),
       };
 
@@ -543,6 +569,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       availability,
       announced,
       visibility,
+      krewIds,
       showsChoices,
       history,
       intl,
@@ -735,8 +762,13 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
           >
             <ReachDropdown
               value={visibility}
-              onChange={handleVisibility}
+              onChange={reach.onChange}
               disabled={submitting}
+              krews={availableKrews}
+              selectedKrewIds={krewIds}
+              onToggleKrew={reach.onToggleKrew}
+              sameAs={reach.sameAs}
+              onSameAs={reach.onSameAs}
             />
             <ComposeHint>
               <FormattedMessage {...messages.hintVisibility} />

@@ -668,7 +668,7 @@ moved onto it; their old columns are gone.
 | `source_slug`, `source_id` | The source korner's slug and its primary record id. |
 | `target_slug`, `target_id` | The same for the target.                            |
 | `kind`                     | `spawn`, `link` or `reference`.                     |
-| `metadata`                 | jsonb, optional.                                    |
+| `metadata`                 | jsonb, optional. `audience_follows`: §2.7.          |
 | `created_by_account_id`    | Who made it.                                        |
 
 Unique on all five endpoint-and-kind columns, so the same pair can carry a
@@ -791,11 +791,12 @@ members can open it and the Krew page lists it (decisions.md, 2026-10-22).
 those pairs, keyed by the **unordered** pair of slugs, so a link behaves the
 same whichever end made it (album → krew or krew → album):
 
-| Pair                     | Handler             | What follows                                                                      |
-| ------------------------ | ------------------- | --------------------------------------------------------------------------------- |
-| kalendar ↔ krew         | `Kronk::EventLinks` | The Krew joins the event's post audience; the Krew's emergence gets the event too |
-| kalendar ↔ freethedream | `Kronk::EventLinks` | The emergence's Krew joins the event's post audience                              |
-| albutts ↔ krew          | `Kronk::AlbumLinks` | The Krew joins the album's audience (`album_krews`) and its posts'                |
+| Pair                                                   | Handler                  | What follows                                                                      |
+| ------------------------------------------------------ | ------------------------ | --------------------------------------------------------------------------------- |
+| kalendar ↔ krew                                       | `Kronk::EventLinks`      | The Krew joins the event's post audience; the Krew's emergence gets the event too |
+| kalendar ↔ freethedream                               | `Kronk::EventLinks`      | The emergence's Krew joins the event's post audience                              |
+| albutts ↔ krew                                        | `Kronk::AlbumLinks`      | The Krew joins the album's audience (`album_krews`) and its posts'                |
+| art / cinema / karporn / kronikles / wachuneed ↔ krew | `Kronk::RecordKrewLinks` | The Krew joins the record's audience (`record_krews`) and its post's              |
 
 The audience only widens when the record's owner makes the link and is in
 the Krew; a link anyone else makes stays a link. Every way of linking such a
@@ -812,6 +813,18 @@ destroy into a 422) to `AttachmentEffects.handlers`, and reads the two ends
 with `AttachmentEffects.ends(attachment, '<its slug>')`, never with
 `source_*` / `target_*` directly. It also lists the pair in a manifest's
 `konnect.effects` (§2.6), or the doctor fails.
+
+A korner whose records can be for Krews and has no Krew column of its own
+uses the shared one: include `Kronk::KrewAudience` in its model (it adds
+`record_krews` and `krews`, keyed by the korner slug and record id), point
+Reachable's `reachable_krew_scope` / `reachable_krew_member?` at
+`audience_krew_scope` / `audience_krew_member?`, pass `krew_ids:
+record.krew_ids` when it posts its feed card, include `KrewAudienceParams`
+in its controller (`sync_krew_audience!(record)` after create and update:
+top-level `krew_ids`, as albums take), serialize `krews` as albums do, add
+its slug to `Kronk::RecordKrewLinks::SLUGS`, and list the pair in
+`krew.yaml`'s `konnect.effects`. Each `RecordKrew` keeps a Konnection to its
+Krew beside it, as `AlbumKrew` does.
 
 #### 2.6 The manifest's Konnections: `konnect:`
 
@@ -844,7 +857,8 @@ konnect:
 - **`effects:`** lists, per other korner (`with:`), what a Konnection does
   beyond being a link (`does:`, one sentence a member could read). It is
   exactly the pairs in `Kronk::AttachmentEffects` (§2.5): Kalendar ↔ Krew,
-  Kalendar ↔ FreeTheDream, Albutts ↔ Krew. A pair can be listed from either
+  Kalendar ↔ FreeTheDream, Albutts ↔ Krew, and Krew with Art, Cinema,
+  Karporn, Kronikles and Wachuneed. A pair can be listed from either
   end or both, in that end's words.
 
 `korners doctor` (`Kronk::KornerKonnect`, also run against the real
@@ -854,6 +868,53 @@ isn't that shape, `make: true` with no route (`konnect.route` or
 `no_attachments:`, an `effects` entry whose pair has no handler, and a
 handler whose pair neither korner lists, so the manifests stay the true
 list. `GET /api/v1/korners` serves the block as `konnect` (`ApiKornerJSON`).
+
+#### 2.7 Same as: a Konnection that carries audience
+
+A link can say that one end's audience **follows** the other's
+(decisions.md, 2026-10-25). The row's `metadata.audience_follows` names
+the end that leads: `'target'` (the source follows the target) or
+`'source'` (the target follows the source). A record follows one leader at
+most; setting a new follow drops its old one. Clients never write the key
+into `metadata` themselves (create strips it); they ask for it (§3.1).
+
+`Kronk::Audience` (`app/lib/kronk/audience.rb`) reads and writes every
+korner's audience as `{ tier:, krew_ids: }`, through one adapter per
+korner, each using the model's own columns so `visible_to?` and the
+`visible_to` scopes are unchanged:
+
+| Korner                                              | Adapter        | Reads / writes                                                                                            |
+| --------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------- |
+| albutts                                             | `Album`        | `visibility` + `album_krews` (each a Krew Konnection, §2.5), its posts' reach and Krews; not a Krew album |
+| cinema, karporn, kronikles, art                     | `KrewReach`    | `visibility` + `record_krews` (Kronk::KrewAudience) and its post's Krews                                  |
+| wachuneed                                           | `ListingReach` | as `KrewReach`, and its feed card's reach (`PublishListing#rescope`)                                      |
+| kalendar                                            | `Event`        | reads its post's reach and `statuses_krews`; invite-only or unposted is not followable; never written     |
+| booth                                               | `Booth`        | public once published; never followed, never written                                                      |
+| kommons, kuestions, krew, huddle, map, freethedream | none           | can't follow or be followed                                                                               |
+
+- **Followable** (`Audience.followable?`): `public`, or `self_only` with
+  Krews. Mates, Orbit and owner-only are the leader's owner's, so no.
+- **Set** (`follow_error` says why not): the follower's korner writes an
+  audience, the leader's is followable, a Krew audience goes only to a korner
+  with Krews whose owner is in all of them, and no circle. Then `follow!`
+  copies it (`fit`).
+- **Follow**: a leader's change reaches its followers synchronously
+  (`Audience.changed` → `propagate`, down a chain to `MAX_DEPTH`, each record
+  once). Models include `Kronk::AudienceBearer` (an `after_update` on
+  `visibility`); `AlbumKrew` reports Krew changes; an event's are reported
+  by `EventLinks` (Krew links) and the events controller (re-posting).
+  A copy never widens: a leader that is no longer followable holds its
+  followers at `self_only`, and Krews a follower can't carry are left out. A
+  public leader leaves the follower's own Krews alone.
+- **Stop**: clearing the flag or Diskonnecting leaves the audience as it is.
+  A change the follow didn't make (the owner's edit) clears it
+  (`Audience.changed`, told apart by `Audience.write`).
+
+A new korner joins by adding an adapter to `Audience::ADAPTERS`
+(`read`, `read_many`, `write`, `fixed_reason`, `krews?`) and including
+`Kronk::AudienceBearer` in its model, or reporting changes itself with
+`Kronk::Audience.changed(record)` where its audience isn't a `visibility`
+column.
 
 ### 3. API
 
@@ -865,8 +926,10 @@ list. `GET /api/v1/korners` serves the block as `konnect` (`ApiKornerJSON`).
 GET    /api/v1/attachments?source=<slug>/<id>   rows from a record
 GET    /api/v1/attachments?target=<slug>/<id>   rows to a record
 POST   /api/v1/attachments                      { source_slug, source_id, target_slug, target_id, kind, metadata? }
+PATCH  /api/v1/attachments/:id                  { audience_follows: 'target' | 'source' | null }
 DELETE /api/v1/attachments/:id
 GET    /api/v1/attachments/candidates?korner=<slug>&q=<query>
+GET    /api/v1/attachments/audience?korner=<slug>&id=<id>[&for=<slug>]
 ```
 
 - Lists return newest first, at most 80, and only rows where the viewer can
@@ -878,7 +941,23 @@ GET    /api/v1/attachments/candidates?korner=<slug>&q=<query>
   owner.
 - Each row serialises with a small `source` and `target` preview: `slug`,
   `id`, `title`, and `url` (the record's page, from `path:`), or
-  `missing: true`.
+  `missing: true`. Each preview also has `audience` (below), and each row
+  `audience_follows` (`'target'`, `'source'` or `null`, §2.7).
+- **Same as** (§2.7): create with `metadata: { audience: 'same' }` makes the
+  source follow the target. `PATCH` sets or clears it later
+  (`audience_follows`, or the shortcut `audience: 'same' | null`, where the
+  end you look after follows). Only whoever looks after the follower may
+  (403); a leader that can't be followed is a 422 with the reason, and on
+  create nothing is made.
+- An `audience` is `{ tier, krews: [{ id, name, slug }], hidden_krews,
+followable }`: Krews the viewer may not see named are only counted
+  (`Kronk::VisibleKrews`); `null` for a korner without one. The index reads
+  every row's in a fixed number of queries (`Audience.summaries`).
+- `audience` (the endpoint) is a composer's look at a record it could
+  follow, before its own record exists: the same fields plus `title`,
+  `followable` and `reason` (why not; for a new record in `for`'s korner,
+  made by the viewer, when `for` is given). A record the viewer can't see
+  is a 404.
 - `candidates` searches the target korner's primary model by
   `title`/`name`/`display_name`, limited to what the viewer can see and,
   where narrower, what they may find (`FOUND_BY`: an invite-only Krew only
@@ -1025,6 +1104,7 @@ the detail.
 | Create a `spawn`              | The framework only, on the source author's behalf.                                                                                                                                               |
 | Create a `link` / `reference` | Whoever looks after the source record and can see the target, if both manifests consent. A proposal's proposer or claimer; anyone in a Krew. A target they can't see answers 404, as if missing. |
 | See an attachment             | Someone who can see both records.                                                                                                                                                                |
+| Set or clear Same as          | Whoever looks after the follower, who can see the leader (§2.7).                                                                                                                                 |
 | Remove an attachment          | Its creator, the source owner or the target owner, unless the pair says no (a Krew album and its own Krew, §2.5).                                                                                |
 | Source destroyed              | `spawn`: target destroyed. Others: row removed.                                                                                                                                                  |
 | Target destroyed              | Row removed.                                                                                                                                                                                     |

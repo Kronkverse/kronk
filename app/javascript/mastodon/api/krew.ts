@@ -7,6 +7,15 @@ import {
 } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 
+// The Krews a film, kar, kronikle or art piece is for, on top of its reach,
+// sent top level beside the record's own params as albums send theirs
+// (KrewAudienceParams on the server): left out, the record's Krews stay as
+// they are; an empty list removes them.
+export const withAudienceKrews = (
+  body: Record<string, unknown>,
+  krewIds?: string[],
+) => (krewIds ? { ...body, krew_ids: krewIds } : body);
+
 export type KrewAccess =
   | 'open'
   | 'approval'
