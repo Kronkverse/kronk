@@ -882,12 +882,13 @@ page), adding to one that exists (photos to an album, a hand-over), a record
 that isn't its korner's linkable one (a trek, a FreeTheDream item), or a
 korner that opts out (`no_attachments:`, Moments). Location and a Krew come
 through Konnect too, not fields of their own (Korner Standard L13): where a
-thing is, is a Konnection to a Map Place. In a composer's picker Map offers
-**New place**, a small form inside the picker (`components/konnect_new_place.tsx`:
-name, optional address, a pin) that makes the Place and picks it without
-leaving the composer; whatever reads a location falls back to the Konnected
-Place (`Kronk::RecordPlace`, decisions.md, 2026-10-23, "Location fields
-become Konnect → Map"). The korner's manifest then says
+thing is, is a Konnection to a Map Place. In a composer's picker, Map opens
+the map straight away (`components/konnect_map.tsx`): existing Places listed
+above the search results, or a pin plus a name and an address you can type,
+which makes the Place and picks it without leaving the composer; whatever
+reads a location falls back to the Konnected Place (`Kronk::RecordPlace`,
+decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The
+korner's manifest then says
 `konnect: { make: true }` so the picker offers its composer
 (docs/korners/adding_a_korner.md, Korner attachments §2.6 and §4.4).
 
@@ -982,7 +983,7 @@ move.
 | `useAttachments(slug, id)`         | Read, create and remove cross-korner attachments (`spawn` / `link` / `reference`) for a record.                                                                                                                                                                                                 | `hooks/useAttachments.ts`, `api/attachments.ts`                                                               |
 | `<AttachmentSection>`              | The Konnected block on a detail page: Konnections both ways as space tiles, a Konnect tile and × for whoever looks after the record; silent when empty. `leading` puts a page's own tiles in the same grid (the Krew page's Spaces).                                                            | `components/attachment_section.tsx`, `styles/mastodon/_space_tiles.scss`                                      |
 | Space tiles, section heading       | `.space-tiles` / `.space-tile` (icon over name, `--action` dashed, `--open`, `__remove` ×) and `.korner-section-heading`, the one heading for a detail page's sections (Spaces, Konnected, People, Going).                                                                                      | `styles/mastodon/_space_tiles.scss`                                                                           |
-| `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. New … opens a `konnect.make` korner's composer with `?konnect=`; `onPick` returns the record instead (composers), where Map's New place makes the Place in the picker. | `components/attachment_picker.tsx`                                                                            |
+| `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. New … opens a `konnect.make` korner's composer with `?konnect=`; `onPick` returns the record instead (composers), where Map opens the map to pick a Place or make one. | `components/attachment_picker.tsx`                                                                            |
 | `konnect:` in manifests            | A korner's Konnections: `make` (the picker offers its composer) and `effects` (what a Konnection with a space does, matching `Kronk::AttachmentEffects`). Checked by `korners doctor`.                                                                                                          | `config/korners/*.yaml`, `app/lib/kronk/korner_konnect.rb`                                                    |
 | `<EventSearch>`                    | A form field that picks one Kalendar event: the same candidates search, upcoming first with a "Show past events" toggle, the pick as a chip (title and date) with Change. Krew requirements use it.                                                                                             | `components/event_search.tsx`                                                                                 |
 

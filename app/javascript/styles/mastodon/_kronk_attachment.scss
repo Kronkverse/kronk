@@ -532,25 +532,19 @@
   }
 }
 
-// "New place" inside the Konnect picker of a composer: the Place's name,
-// address and pin, made here and picked (components/konnect_new_place.tsx).
-.konnect-new-place {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-
-  &__pin {
+// Konnect → Map's details under the map: the Place's name and address
+// (components/konnect_map.tsx).
+.konnect-map {
+  &__actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: flex-end;
     gap: 0.5rem;
   }
 
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
+  &__note {
+    margin-inline-end: auto;
   }
 }
 
