@@ -330,8 +330,10 @@ class ComposeForm extends ImmutablePureComponent {
             <div className='compose-form__head-spacer'>
               <ComposeDailyPrompt />
             </div>
-            <KategoryPicker />
-            {!this.props.isInReply && <ComposeReachDropdown />}
+            <div className='compose-form__head-tools'>
+              <KategoryPicker />
+              {!this.props.isInReply && <ComposeReachDropdown />}
+            </div>
           </div>
 
 
