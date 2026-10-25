@@ -1,17 +1,24 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
-import { apiAddPhoto, apiCreatePiece, apiUpdatePiece } from 'mastodon/api/art';
+import {
+  apiAddPhoto,
+  apiCreatePiece,
+  apiDeletePhoto,
+  apiGetPiece,
+  apiUpdatePiece,
+} from 'mastodon/api/art';
 import type { ApiArtPieceJSON, ArtKind } from 'mastodon/api_types/art';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { Icon } from 'mastodon/components/icon';
+import { PhotoDropZone } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
+
+import { ART_KIND_MESSAGES, sortedArtKinds } from '../kinds';
 
 const messages = defineMessages({
   removePhoto: {
@@ -43,7 +50,6 @@ const messages = defineMessages({
     defaultMessage: 'A note about the work (optional)',
   },
   kindLabel: { id: 'art.composer.kind_label', defaultMessage: 'Kind' },
-  addPhotos: { id: 'art.composer.add_photos', defaultMessage: 'Add photos' },
   photosHint: {
     id: 'art.composer.photos_hint',
     defaultMessage: 'Add photos of the work — the first one becomes the cover.',
@@ -57,26 +63,6 @@ const messages = defineMessages({
     defaultMessage:
       "Piece saved, but {count, plural, one {# photo} other {# photos}} didn't upload. Try again from the piece's page.",
   },
-});
-
-const KINDS: readonly ArtKind[] = [
-  'painting',
-  'sculpture',
-  'print',
-  'drawing',
-  'ceramic',
-  'photograph',
-  'other',
-];
-
-const kindMessages = defineMessages({
-  painting: { id: 'art.kind.painting', defaultMessage: 'Painting' },
-  sculpture: { id: 'art.kind.sculpture', defaultMessage: 'Sculpture' },
-  print: { id: 'art.kind.print', defaultMessage: 'Print' },
-  drawing: { id: 'art.kind.drawing', defaultMessage: 'Drawing' },
-  ceramic: { id: 'art.kind.ceramic', defaultMessage: 'Ceramic' },
-  photograph: { id: 'art.kind.photograph', defaultMessage: 'Photograph' },
-  other: { id: 'art.kind.other', defaultMessage: 'Other' },
 });
 
 interface PhotoDraft {
@@ -102,10 +88,9 @@ interface ArtPieceDraftParams {
 interface Props {
   onCancel: () => void;
   onCreated?: (piece: ApiArtPieceJSON) => void;
-  // Edit mode: pass the piece to prefill the form. Submit then saves
-  // the text fields via the update endpoint (photos are managed
-  // separately, so the photo picker hides) and the form's foot carries
-  // the piece's Delete action.
+  // Edit mode: pass the piece to prefill the form, its photos included.
+  // Submit saves the text fields, takes off the photos you removed and
+  // uploads the ones you added; the form's foot carries Delete.
   piece?: ApiArtPieceJSON;
   onUpdated?: (piece: ApiArtPieceJSON) => void;
   onDelete?: () => void;
@@ -131,6 +116,13 @@ export const ArtPieceComposer: React.FC<Props> = ({
     editingPiece?.visibility ?? 'public',
   );
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  // Edit mode: the piece's photos, and the ids to take off on save.
+  const [saved, setSaved] = useState(editingPiece?.photos ?? []);
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const savedPhotos = useMemo(
+    () => saved.filter((p) => !removedIds.includes(p.id)),
+    [saved, removedIds],
+  );
   const [pending, setPending] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{
     done: number;
@@ -138,7 +130,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
   } | null>(null);
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const kinds = useMemo(() => sortedArtKinds(intl), [intl]);
 
   // Drafts: a new piece is saved as you go, here and on the server, and
   // comes back when the composer opens again. Editing one doesn't keep one.
@@ -199,25 +191,14 @@ export const ArtPieceComposer: React.FC<Props> = ({
     [],
   );
 
-  const handleAddPhotos = useCallback(() => {
-    fileInputRef.current?.click();
+  const handleFiles = useCallback((files: File[]) => {
+    const drafts: PhotoDraft[] = files.map((file) => ({
+      key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setPhotos((prev) => [...prev, ...drafts]);
   }, []);
-
-  const handleFilesSelected = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files ?? []);
-      if (files.length === 0) return;
-      const drafts: PhotoDraft[] = files.map((file) => ({
-        key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        file,
-        preview: URL.createObjectURL(file),
-      }));
-      setPhotos((prev) => [...prev, ...drafts]);
-      // Allow re-picking the same file in a subsequent tap
-      e.target.value = '';
-    },
-    [],
-  );
 
   const removePhoto = useCallback((key: string) => {
     setPhotos((prev) => {
@@ -227,6 +208,44 @@ export const ArtPieceComposer: React.FC<Props> = ({
     });
   }, []);
 
+  const removeSavedPhoto = useCallback((id: string) => {
+    setRemovedIds((prev) => [...prev, id]);
+  }, []);
+
+  // Uploads each picked photo and adds it to the piece, in order (the
+  // first photo is the cover, so a pool would race it). Returns how many
+  // failed. With no starting position the server adds each at the end.
+  const uploadPhotos = useCallback(
+    async (pieceId: string, from: number | null) => {
+      setFailedCount(0);
+      setUploadProgress(
+        photos.length > 0 ? { done: 0, total: photos.length } : null,
+      );
+      let done = 0;
+      let failed = 0;
+      for (let i = 0; i < photos.length; i += 1) {
+        const draft = photos[i];
+        if (!draft) continue;
+        try {
+          const form = new FormData();
+          form.append('file', draft.file);
+          const media = await api().post<MediaResponse>('/api/v1/media', form);
+          await apiAddPhoto(pieceId, {
+            media_id: media.data.id,
+            ...(from === null ? {} : { position: from + i }),
+          });
+          done += 1;
+        } catch {
+          failed += 1;
+        }
+        setUploadProgress({ done: done + failed, total: photos.length });
+      }
+      setFailedCount(failed);
+      return failed;
+    },
+    [photos],
+  );
+
   const submit = useCallback(() => {
     if (!canSubmit) return;
     setPending(true);
@@ -235,11 +254,22 @@ export const ArtPieceComposer: React.FC<Props> = ({
     if (editingPiece) {
       void (async () => {
         try {
-          const updated = await apiUpdatePiece(editingPiece.id, {
+          await apiUpdatePiece(editingPiece.id, {
             title: title.trim(),
             description: description.trim(),
             kind,
           });
+          for (const id of removedIds) await apiDeletePhoto(id);
+          const failed = await uploadPhotos(editingPiece.id, null);
+          const updated = await apiGetPiece(editingPiece.id);
+          if (failed > 0) {
+            // Stay open so the failure is seen, showing what did save.
+            setSaved(updated.photos);
+            setRemovedIds([]);
+            setPhotos([]);
+            setPending(false);
+            return;
+          }
           onUpdated?.(updated);
         } catch (e) {
           setPending(false);
@@ -252,11 +282,6 @@ export const ArtPieceComposer: React.FC<Props> = ({
       })();
       return;
     }
-
-    setFailedCount(0);
-    setUploadProgress(
-      photos.length > 0 ? { done: 0, total: photos.length } : null,
-    );
 
     void (async () => {
       let piece: ApiArtPieceJSON;
@@ -279,28 +304,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       }
       finishDraft();
 
-      // Serial uploads — Art pieces typically have a handful of photos, and
-      // ordering matters (first upload = cover). A pool would race ordering.
-      let done = 0;
-      let failed = 0;
-      for (let i = 0; i < photos.length; i += 1) {
-        const draft = photos[i];
-        if (!draft) continue;
-        try {
-          const form = new FormData();
-          form.append('file', draft.file);
-          const media = await api().post<MediaResponse>('/api/v1/media', form);
-          await apiAddPhoto(piece.id, {
-            media_id: media.data.id,
-            position: i,
-          });
-          done += 1;
-        } catch {
-          failed += 1;
-        }
-        setUploadProgress({ done: done + failed, total: photos.length });
-      }
-      setFailedCount(failed);
+      await uploadPhotos(piece.id, 0);
       // Re-fetch is unnecessary — the piece row exists; the detail page
       // will fetch fresh photo rows on mount. Hand the caller the piece
       // and let it navigate.
@@ -315,8 +319,9 @@ export const ArtPieceComposer: React.FC<Props> = ({
     kind,
     onCreated,
     onUpdated,
-    photos,
+    removedIds,
     title,
+    uploadPhotos,
     visibility,
   ]);
 
@@ -365,9 +370,9 @@ export const ArtPieceComposer: React.FC<Props> = ({
             onChange={handleKindChange}
             disabled={pending}
           >
-            {KINDS.map((k) => (
+            {kinds.map((k) => (
               <option key={k} value={k}>
-                {intl.formatMessage(kindMessages[k])}
+                {intl.formatMessage(ART_KIND_MESSAGES[k])}
               </option>
             ))}
           </select>
@@ -382,18 +387,26 @@ export const ArtPieceComposer: React.FC<Props> = ({
           disabled={pending}
         />
 
-        {!isEdit && (
-          <p className='art-composer__hint'>
-            {intl.formatMessage(messages.photosHint)}
-          </p>
-        )}
+        <p className='art-composer__hint'>
+          {intl.formatMessage(messages.photosHint)}
+        </p>
 
-        {photos.length > 0 && (
+        {savedPhotos.length + photos.length > 0 && (
           <ul className='art-composer__photos'>
+            {savedPhotos.map((p) => (
+              <PhotoTile
+                key={`saved-${p.id}`}
+                id={p.id}
+                src={p.url}
+                disabled={pending}
+                onRemove={removeSavedPhoto}
+              />
+            ))}
             {photos.map((p) => (
-              <PhotoDraftTile
+              <PhotoTile
                 key={p.key}
-                draft={p}
+                id={p.key}
+                src={p.preview}
                 disabled={pending}
                 onRemove={removePhoto}
               />
@@ -401,27 +414,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
           </ul>
         )}
 
-        {!isEdit && (
-          <>
-            <button
-              type='button'
-              className='art-composer__add-photos'
-              onClick={handleAddPhotos}
-              disabled={pending}
-            >
-              <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
-              {intl.formatMessage(messages.addPhotos)}
-            </button>
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='image/*'
-              multiple
-              hidden
-              onChange={handleFilesSelected}
-            />
-          </>
-        )}
+        <PhotoDropZone onFiles={handleFiles} disabled={pending} />
 
         {uploadProgress && uploadProgress.total > 0 && (
           <p className='art-composer__progress'>
@@ -450,25 +443,29 @@ export const ArtPieceComposer: React.FC<Props> = ({
   );
 };
 
-interface PhotoDraftTileProps {
-  draft: PhotoDraft;
+// A photo in the picker: one already on the piece (edit mode) or one
+// picked on this device. × takes it off.
+interface PhotoTileProps {
+  id: string;
+  src: string | null;
   disabled: boolean;
-  onRemove: (key: string) => void;
+  onRemove: (id: string) => void;
 }
 
-const PhotoDraftTile: React.FC<PhotoDraftTileProps> = ({
-  draft,
+const PhotoTile: React.FC<PhotoTileProps> = ({
+  id,
+  src,
   disabled,
   onRemove,
 }) => {
   const intl = useIntl();
   const handleClick = useCallback(() => {
-    onRemove(draft.key);
-  }, [onRemove, draft.key]);
+    onRemove(id);
+  }, [onRemove, id]);
 
   return (
     <li className='art-composer__photo'>
-      <img src={draft.preview} alt='' />
+      {src && <img src={src} alt='' />}
       <button
         type='button'
         className='art-composer__photo-remove'

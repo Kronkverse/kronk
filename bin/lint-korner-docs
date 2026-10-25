@@ -29,7 +29,6 @@ docs_dir      = File.expand_path('../docs/spaces', __dir__)
 # here as its doc lands is the win state.
 grandfathered = %w(
   krew
-  welcome
 ).freeze
 
 missing = []

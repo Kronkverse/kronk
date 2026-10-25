@@ -14,6 +14,7 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
   attribute :label, if: -> { object.seeded? }
   attribute :group, if: -> { object.seeded? }
   attribute :my_answer, if: :with_my_answer?
+  attribute :new_answers_count, if: :with_new_answers?
 
   belongs_to :account, key: :asker, serializer: REST::AccountSerializer
 
@@ -59,6 +60,23 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
     return mine unless object.profile?
 
     mine.merge(pinned: answer.pinned?, visibility_scope: answer.visibility_scope, size: answer.size)
+  end
+
+  # Answers from others the viewer may see that came in since they last
+  # opened this Kuestion, or since they answered or asked it if they never
+  # have (the Answered list's corner count).
+  def new_answers_count
+    since = [
+      QuestionSeenMarker.find_by(account_id: viewer.id, question_id: object.id)&.seen_at,
+      object.answers.find_by(account_id: viewer.id)&.created_at,
+      (object.created_at if asked_by_me),
+    ].compact.max
+    return 0 if since.nil?
+
+    Kuestions::VisibilityGate.visible_answers(object, viewer)
+                             .where.not(account_id: viewer.id)
+                             .where(Answer.arel_table[:created_at].gt(since))
+                             .count
   end
 
   def answers_count
@@ -118,6 +136,10 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
   # Public: AMS calls `if:` conditions with public_send.
   def with_my_answer?
     instance_options[:with_my_answer] == true
+  end
+
+  def with_new_answers?
+    with_my_answer? && viewer.present? && object.community?
   end
 
   private

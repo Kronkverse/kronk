@@ -7,6 +7,27 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.3 "Rose"] - 2026-10-25
+
+- Own replies stay out of the feed (#2276)
+- Post page is its feed card (#2277)
+- Straight to the feed (#2278)
+- Kommunity new-member badge (#2280)
+- E2E ignores an empty Huddle (#2284)
+- Huddle banner counts through Kronk (#2285)
+- No more Since you were last here (#2281)
+- Kuestions answered under the deck (#2286)
+- Daily Kuestion in the post box (#2295)
+- Deleted accounts leave their Krews (#2296)
+- Light pages on the stars (#2298)
+- Art photos upload (#2297)
+- Kuestions daily prompt settings read (#2303)
+- Composer panel stays put (#2308)
+- Art composer and piece page (#2307)
+- First Nations Country on the profile (#2319)
+- Country field in Kronk's font (#2323)
+- Country list from mangobee (#2328)
+
 ### [2.1.2 "Rose"] - 2026-10-21
 
 - Thing Bringing How many box (#2235)

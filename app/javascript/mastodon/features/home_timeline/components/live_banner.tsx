@@ -3,11 +3,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
-import { jitsiDomain } from 'mastodon/initial_state';
+import { apiRequestGet } from 'mastodon/api';
 
-// Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
-const JITSI_DOMAIN = jitsiDomain;
-const ROOM_NAME = 'huddle';
+// How many are in the Main Huddle, from Kronk's own count
+// (GET /api/v1/huddle/count). It used to ask the Jitsi server from every
+// browser, which answers an empty room with a 404 that the browser logs as
+// a failed load on every poll.
 const POLL_INTERVAL = 15000;
 
 export const LiveBanner: React.FC = () => {
@@ -17,31 +18,11 @@ export const LiveBanner: React.FC = () => {
 
   const checkRoom = useCallback(async () => {
     try {
-      const url =
-        'https://' +
-        JITSI_DOMAIN +
-        '/room-size?room=' +
-        ROOM_NAME +
-        '&domain=meet.jitsi';
-      const sizeRes = await fetch(url);
-
-      if (sizeRes.status === 404) {
-        setVisible(false);
-        setParticipantCount(0);
-        return;
-      }
-
-      if (sizeRes.ok) {
-        const sizeData = (await sizeRes.json()) as { participants: number };
-        const count = sizeData.participants;
-        setParticipantCount(count);
-
-        if (count > 0) {
-          setVisible(true);
-        } else {
-          setVisible(false);
-        }
-      }
+      const { participants } = await apiRequestGet<{ participants: number }>(
+        'v1/huddle/count',
+      );
+      setParticipantCount(participants);
+      setVisible(participants > 0);
     } catch {
       setVisible(false);
     }

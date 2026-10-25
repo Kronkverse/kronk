@@ -3,7 +3,6 @@ import { createReducer } from '@reduxjs/toolkit';
 import {
   fetchKorners,
   setKornerSeen,
-  setKornerSinceLastVisit,
   setKornerTunedIn,
 } from 'mastodon/actions/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
@@ -15,11 +14,7 @@ const initialState: Record<string, ApiKornerJSON> = {};
 export const kornersReducer = createReducer(initialState, (builder) => {
   builder.addCase(fetchKorners.fulfilled, (state, { payload }) => {
     for (const manifest of payload) {
-      // A refetch keeps what this session's visit cleared.
-      const since = state[manifest.slug]?.since_last_visit;
-      state[manifest.slug] = since
-        ? { ...manifest, since_last_visit: since }
-        : manifest;
+      state[manifest.slug] = manifest;
     }
   });
   builder.addCase(setKornerTunedIn, (state, { payload }) => {
@@ -32,11 +27,5 @@ export const kornersReducer = createReducer(initialState, (builder) => {
     korner.unread_count = payload.all
       ? 0
       : Math.max(0, (korner.unread_count ?? 0) - 1);
-  });
-  builder.addCase(setKornerSinceLastVisit, (state, { payload }) => {
-    const korner = state[payload.slug];
-    if (!korner) return;
-    if (payload.since) korner.since_last_visit = payload.since;
-    else delete korner.since_last_visit;
   });
 });

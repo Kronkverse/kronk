@@ -99,6 +99,12 @@ Each account chooses its findability with `kommunity_discoverability`
 `GET /api/v1/kommunity/discover`, is kept for external callers; the SPA
 doesn't use it. `/directory` redirects to `/hub/kommunity/discover`.
 
+**New members.** Kommunity's badge (on its tile and in the side nav) counts
+people who joined since you last opened it and whom you could find here:
+findable by everyone, or by your Orbit if you're in it. Opening Kommunity
+clears it. `KommunityStream` in `lib/kronk/korner_content_streams.rb`; the
+badge itself is the shared one (`hub.md`, Updates).
+
 ## Files
 
 - `config/korners/kommunity.yaml` — manifest.

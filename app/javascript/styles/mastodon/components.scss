@@ -3996,18 +3996,6 @@ a.account__display-name {
     }
   }
 
-  .navigation-panel__invite-button {
-    justify-content: center;
-    width: calc(100% - 8px);
-    margin: 4px;
-    padding: 8px;
-
-    span,
-    & > :not(svg, .icon) {
-      display: none;
-    }
-  }
-
   .navigation-bar,
   .search,
   .navigation-panel__banner,

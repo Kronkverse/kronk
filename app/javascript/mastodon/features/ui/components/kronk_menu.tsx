@@ -383,7 +383,6 @@ export const spaceSlugForPath = (pathname: string): string | null => {
   if (NUDGES_RE.test(pathname)) return 'nudges';
   if (PROFILE_RE.test(pathname)) return 'profile';
   if (/^\/settings(?:\/|$)/.test(pathname)) return 'settings';
-  if (/^\/welcome(?:\/|$)/.test(pathname)) return 'welcome';
   return null;
 };
 

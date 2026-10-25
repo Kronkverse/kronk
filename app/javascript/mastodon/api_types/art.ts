@@ -4,9 +4,8 @@ import type { ApiAccountJSON } from './accounts';
 // Krew is not offered on Art in v1 (single-author korner).
 export type ArtVisibility = 'public' | 'orbit' | 'mates' | 'self_only';
 
-// Physical-work discipline. Matches ArtPiece#kind in the Ruby model.
-// `other` is the escape hatch (assemblage, textile, installation, …)
-// until the taxonomy earns more slots.
+// What kind of work a piece is. Matches ArtPiece#kind in the Ruby model;
+// the names people see are in features/art/kinds.ts.
 export type ArtKind =
   | 'painting'
   | 'sculpture'
@@ -14,7 +13,19 @@ export type ArtKind =
   | 'drawing'
   | 'ceramic'
   | 'photograph'
-  | 'other';
+  | 'other'
+  | 'textile'
+  | 'illustration'
+  | 'collage'
+  | 'mixed_media'
+  | 'installation'
+  | 'mural'
+  | 'glass'
+  | 'jewellery'
+  | 'woodwork'
+  | 'metalwork'
+  | 'calligraphy'
+  | 'papercraft';
 
 export interface ApiArtPiecePhotoJSON {
   id: string;

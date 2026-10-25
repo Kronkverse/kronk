@@ -90,6 +90,7 @@ theme.
 | `--text-on-accent`                                      | `#ffffff`                   | Text on the accent                    |
 | `--surface-primary`                                     | `#191b22`                   | Page background                       |
 | `--surface-elevated`                                    | `#292938`                   | Cards, menus, raised panels           |
+| `--surface-stage`                                       | `transparent`               | The page panel inside the Stage       |
 | `--border-default`                                      | `#47368b`                   | Borders on interactive surfaces       |
 | `--border-subtle`                                       | `#2a2740`                   | Hairlines, the Membrane wire          |
 | `--text-primary` / `--text-secondary` / `--text-muted`  | `#ece9f5` / … / …           | Text, strongest to faintest           |
@@ -498,6 +499,10 @@ the route unmounts, the slot falls back to the manifest title.
   shared archetypes for a Stage child (`_kronk_stage.scss`; decisions.md,
   2026-08-13).
 - Wide multi-column layouts are the korner's decision, not the Frame's.
+- **Background:** `--surface-stage`. It is transparent in dark, so the starfield
+  shows through. In light it is a pale panel tinted from `--accent`, because
+  the Kosmos is dark in every theme and the light theme's dark text would
+  vanish on it.
 
 #### RightBand
 
@@ -775,12 +780,13 @@ with `app/`, `config/` or `styles/`.
 
 ### Compose + confirmation
 
-| Primitive                                | What it does                                                                                                                            | Where                                                                                                |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer. | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
-| `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                               | `features/ui/components/kronk_menu.tsx`                                                              |
-| `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.              | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
-| `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                 | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
+| Primitive                                | What it does                                                                                                                                                                                                                                                                                 | Where                                                                                                |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer.                                                                                                                                                      | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
+| `<PhotoDropZone>`                        | **Every photo upload uses it.** A box you drop photos on or click to choose them; filters to `accept` and marks the drop handled so the main post box doesn't also take it. `__tests__/photo_drop_zone_guard.test.ts` fails a new raw photo input; the older ones are on its burn-down list. | `components/media/photo_drop_zone.tsx`, `styles/mastodon/_media_capture.scss`                        |
+| `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                                                                                                                                                                                    | `features/ui/components/kronk_menu.tsx`                                                              |
+| `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.                                                                                                                                                                   | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
+| `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                                                                                                                                                                      | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
 
 #### Drafts
 

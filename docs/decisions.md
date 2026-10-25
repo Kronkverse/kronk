@@ -17,6 +17,29 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — Kommunity's badge counts new members
+
+Nobody heard when someone joined Kronk; the only sign-up notice was
+Mastodon's, for moderators (Kommons, "Kommunity": "How do we know when new
+people sign up?"). Tal wanted it to show on the space's icon.
+
+**Decision:** Kommunity's unread badge counts members who joined since you
+last opened it, among those you could find there (their own findability
+decides). It uses the shared badge, so opening Kommunity clears it. No nudge
+and no push.
+
+## 2026-10-21 — The app opens on the feed
+
+The welcome page (`/welcome`: a salutation and three doors, Post, Feed and
+Invite, decided 2026-08-31) stood between opening the app and the feed once
+every session. Tal asked for it to go, so the app goes straight to the feed.
+
+**Decision:** the welcome page, its manifest and its styles are removed. `/`
+lands signed-in phone-width users on `/home`, and `/welcome` redirects there
+(on the server, and in the app for a cached shell), so old links still work.
+Posting is still in the Ж menu. Invite lives in `/me` and nowhere else
+(Tal), so the deck sidebar's Invite button went too.
+
 ## 2026-10-21 — Fomo noto: "People are huddling", and nudges from no one
 
 Kommons "Fomo noto" (Tal): a push when people are in the Huddle, at a number

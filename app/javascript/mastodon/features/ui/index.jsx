@@ -127,7 +127,6 @@ import {
   KornerSettings,
   FeedSettings,
   StyleGuide,
-  Greeting,
   SettingsHub,
   SettingsYou,
   SettingsKorners,
@@ -203,21 +202,7 @@ class SwitchingColumnsArea extends PureComponent {
       if (forceOnboarding) {
         redirect = <Redirect from='/' to='/start' exact />;
       } else if (singleColumn) {
-        // Kronk greeting (Tal 2026-08-31): on the first fresh app
-        // open of every session, land on the spare welcome page
-        // before the feed. `sessionStorage` clears when the tab
-        // closes, so a real cold-start / new session shows the
-        // greeting; a same-session refresh does not.
-        // sessionStorage can throw in privacy modes / disabled
-        // storage, so guard with a try/catch and fall back to the
-        // historical /home landing on failure.
-        let greeted = false;
-        try {
-          greeted = window.sessionStorage.getItem('kronk:greeted') === 'yes';
-        } catch {
-          greeted = true;
-        }
-        redirect = <Redirect from='/' to={greeted ? '/home' : '/welcome'} exact />;
+        redirect = <Redirect from='/' to='/home' exact />;
       } else {
         redirect = <Redirect from='/' to='/deck/getting-started' exact />;
       }
@@ -411,7 +396,8 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
-            <WrappedRoute path='/welcome' exact component={Greeting} content={children} />
+            {/* The welcome page is gone (Tal 2026-10-21): the app opens on the feed. */}
+            <Redirect from='/welcome' to='/home' exact />
             {/* Order matters: /composer must precede /:id (or the viewer
                 reads "composer" as a Moment id and shows "This Moment is
                 gone."), and /:id must precede the bare /hub/moments so the

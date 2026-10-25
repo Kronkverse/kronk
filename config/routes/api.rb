@@ -77,6 +77,8 @@ namespace :api, format: false do
       resources :rooms, only: [:index, :create] do
         member { post :join }
       end
+      # The Main Huddle's head-count, for the home feed's banner.
+      resource :count, only: [:show]
     end
     resource :token_balance, only: [:show]
 
@@ -855,6 +857,7 @@ namespace :api, format: false do
       resources :answers, only: [:create], module: :kuestions
       resource  :answer,  only: [:update, :destroy], module: :kuestions, controller: :my_answers
       resource  :skip,    only: [:create, :destroy], module: :kuestions
+      resource  :seen,    only: [:create], module: :kuestions
     end
   end
 

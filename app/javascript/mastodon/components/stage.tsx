@@ -4,7 +4,6 @@ import type { Ref } from 'react';
 import { scrollTop } from 'mastodon/scroll';
 import { isDevelopment } from 'mastodon/utils/environment';
 
-import { SinceLastVisit } from './since_last_visit';
 import { SpaceHeaderOverrideProvider } from './space_header_override';
 import { SpaceHeaderRow } from './space_header_row';
 
@@ -109,7 +108,6 @@ export const Stage = forwardRef<StageRef, StageProps>(
           className='kronk-stage'
         >
           <SpaceHeaderRow />
-          <SinceLastVisit />
           {children}
         </div>
       </SpaceHeaderOverrideProvider>

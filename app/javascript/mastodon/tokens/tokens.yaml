@@ -60,6 +60,16 @@ semantic:
   text-on-accent: { dark: '#ffffff', light: '#ffffff' } # white on the purple accent; theme-invariant (accent is purple in both themes)
   surface-primary: { dark: '#191b22', light: '#ffffff' }
   surface-elevated: { dark: '#292938', light: '#f5f4f9' }
+  # The panel a page sits on inside the Stage. The Kosmos starfield behind
+  # it is dark in every theme, so dark needs no panel, but dark text on the
+  # bare starfield would vanish in light. Light gets a pale panel tinted
+  # from --accent, so it follows a member's purple shade (Tal 2026-10-22:
+  # the Krew name and event dates were dark-on-dark in the light theme).
+  surface-stage:
+    {
+      dark: 'transparent',
+      light: 'color-mix(in oklab, var(--semantic-surface-primary) 94%, var(--accent))',
+    }
   border-default: { dark: '#47368b', light: '#ddd9e8' }
   border-subtle: { dark: '#2a2740', light: '#e8e5f0' } # Membrane wire, hairline dividers
   text-primary: { dark: '#ece9f5', light: '#191b22' }

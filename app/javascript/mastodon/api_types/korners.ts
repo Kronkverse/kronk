@@ -1,5 +1,3 @@
-import type { ApiStatusJSON } from './statuses';
-
 // The manifest JSON shape returned by /api/v1/korners.
 // Mirrors Kronk::KornerRegistry::Manifest#to_h from the Ruby side.
 //
@@ -174,16 +172,4 @@ export interface ApiKornerJSON {
   // your own feed. Absent/undefined for anonymous callers (treated as 0).
   // See lib/kronk/korner_seen.rb.
   unread_count?: number;
-  // Client-held, never sent by GET: what opening the korner in this session
-  // cleared, for "since you were last here" (<SinceLastVisit>). `count` is
-  // every update cleared; `status_ids` the newest of them, already imported.
-  since_last_visit?: { count: number; status_ids: string[] };
-}
-
-// POST /api/v1/korners/:slug/seen — the badge is cleared, and the answer says
-// what that cleared (Api::V1::KornersController#mark_seen).
-export interface ApiKornerSeenJSON {
-  slug: string;
-  unread_count: number;
-  since_last_visit: { count: number; statuses: ApiStatusJSON[] };
 }

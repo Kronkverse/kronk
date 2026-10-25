@@ -280,3 +280,62 @@
     }
   }
 }
+
+// ── Photo drop zone ──────────────────────────────────────────────
+// <PhotoDropZone>: every photo upload's box. The whole box is the label,
+// so a click opens the picker and a drag from the desktop lands on it.
+// Accent-tinted with a dashed border so it reads as a control.
+.photo-drop-zone {
+  position: relative;
+  border: 1.5px dashed var(--accent);
+  border-radius: var(--radius-medium);
+  background: color-mix(in oklab, var(--accent), transparent 92%);
+  transition:
+    border-color 120ms ease-out,
+    background 120ms ease-out,
+    transform 120ms ease-out;
+
+  &:hover:not(#{&}--dragging):not(#{&}--disabled) {
+    border-style: solid;
+    background: color-mix(in oklab, var(--accent), transparent 82%);
+  }
+
+  &--dragging {
+    border-style: solid;
+    background: color-mix(in oklab, var(--accent), transparent 72%);
+    transform: scale(1.01);
+  }
+
+  &--disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  &__input {
+    display: none;
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 22px 16px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  &__icon {
+    width: 28px;
+    height: 28px;
+    color: var(--accent-text);
+  }
+
+  &__text {
+    font-size: 14px;
+    font-weight: 600;
+  }
+}

@@ -349,7 +349,9 @@ export function submitCompose(successCallback) {
         dispatch(importFetchedStatus({ ...response.data }));
       }
 
-      if (statusId === null && response.data.visibility !== 'direct') {
+      // Replies never reach a home feed server-side (FanOutOnWriteService
+      // #deliver_to_self!), so don't put one there locally either.
+      if (statusId === null && response.data.in_reply_to_id === null && response.data.visibility !== 'direct') {
         insertIfOnline('home');
       }
 

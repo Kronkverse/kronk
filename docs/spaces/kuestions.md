@@ -23,6 +23,10 @@ or skipped, **newest first**. No personalisation, no Kategory filter. Your
 own asks stay in your deck until you answer or skip them, so you can weigh
 in on your own question.
 
+When you're caught up, the deck shows a short "All caught up" and your
+Answered list underneath (the same rows as the Answered view), so it is
+never an empty box.
+
 Views (manifest `views:`, cycled by the header rotator): **Deck**,
 **Today** (the daily prompt), **Answered** and **Profile** (see Profile
 Kuestions below). The composer opens as the
@@ -33,7 +37,12 @@ legacy alias). Settings live at `/hub/kuestions/settings`.
 (`GET /api/v2/kuestions?filter=involved`), newest first, each row showing
 your own answer (`my_answer`). Your asks read "You asked"; one you haven't
 answered gets **Answer your own**. A new ask lands here. Tapping a row opens
-the reveal sheet. Yours, a separate view of your asks, merged into Answered
+the reveal sheet. A row carries a count in its top-right corner of the
+answers that came in since you last opened it (`new_answers_count`): only
+answers from others that you may see, counted from when you last opened
+it, or from your answer or your ask if you never have. Opening a row
+calls `POST /api/v2/kuestions/:id/seen`, which keeps one
+`question_seen_markers` row per person and Kuestion. Yours, a separate view of your asks, merged into Answered
 on 2026-10-12 to make room for a Profile view; `/hub/kuestions/yours` still
 opens Answered.
 
@@ -183,8 +192,13 @@ per calendar day by hashing the date, so everyone sees the same prompt and
 no per-user state is stored. Replying makes a normal Status: no Kuestion
 object, no answer count, no aggregate.
 
-The prompt shows on the **Today** view (`today_panel.tsx`) and nowhere
-else.
+The prompt shows on the **Today** view (`today_panel.tsx`) and in the
+post box's top bar, between who's posting and the reach picker: faint,
+with the Kuestions icon (`compose_daily_prompt.tsx`). Tapping it starts
+the post with the prompt; the post is a normal post. It shows only on a
+fresh post (not a comment or an edit), only while you're tuned in to
+Kuestions, and only with **Daily prompt in my post box** on (Tal,
+2026-10-22).
 
 ## Code
 
@@ -208,13 +222,10 @@ else.
   aggregate intact, is undecided.
 - **Editing answers.** `PATCH /api/v2/kuestions/:id/answer` exists, but
   nothing in the Deck or Answered calls it yet.
-- **Settings nothing reads.** `unlock_confirmation`,
-  `hide_answered_questions` and `daily_prompt_in_post_box` are saved from
-  the settings page, but no code reads them: answering never asks first,
-  the deck already leaves out what you answered, and the prompt is not in
-  any post box. The Home inline composer that used the prompt as its
-  placeholder was taken off Home (#1210), and its component was deleted
-  (#2167); it never read the setting.
+- **Settings nothing reads.** `unlock_confirmation` and
+  `hide_answered_questions` are saved from the settings page, but no code
+  reads them: answering never asks first, and the deck already leaves out
+  what you answered.
 - **Stale comments.** `app/controllers/api/v2/kuestions_controller.rb`
   and `config/routes/api.rb` still say `/api/v1/questions` is kept for the
   transition; that route is gone.

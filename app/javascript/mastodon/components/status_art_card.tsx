@@ -1,8 +1,10 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import PaletteIcon from '@/material-icons/400-24px/palette.svg?react';
+import type { ArtKind } from 'mastodon/api_types/art';
 import { CardTitle, CardMeta } from 'mastodon/components/standard_card';
 import { StatusKornerCard } from 'mastodon/components/status_korner_card';
+import { artKindLabel } from 'mastodon/features/art/kinds';
 
 const messages = defineMessages({
   badge: {
@@ -15,31 +17,10 @@ const messages = defineMessages({
   },
 });
 
-// The kind values match ArtPiece#kind in the Ruby model. Display copy
-// is capitalised for the card meta row; en-US canonical spellings used
-// throughout ("photograph" not "photo" so it doesn't collide with the
-// photo-count label above).
-const KIND_LABELS: Record<ArtSummary['kind'], string> = {
-  painting: 'Painting',
-  sculpture: 'Sculpture',
-  print: 'Print',
-  drawing: 'Drawing',
-  ceramic: 'Ceramic',
-  photograph: 'Photograph',
-  other: 'Work',
-};
-
 interface ArtSummary {
   id: string;
   title: string;
-  kind:
-    | 'painting'
-    | 'sculpture'
-    | 'print'
-    | 'drawing'
-    | 'ceramic'
-    | 'photograph'
-    | 'other';
+  kind: ArtKind;
   visibility: 'public' | 'mates' | 'orbit' | 'self_only';
   photo_count: number;
   cover_url: string | null;
@@ -72,7 +53,7 @@ export const StatusArtCard: React.FC<{ piece: ArtSummary }> = ({ piece }) => {
       <div className='status-korner-card__body status-art-card__body'>
         <CardTitle className='status-art-card__title'>{piece.title}</CardTitle>
         <CardMeta className='status-art-card__meta'>
-          {KIND_LABELS[piece.kind]}
+          {artKindLabel(intl, piece.kind)}
           {' · '}
           {intl.formatMessage(messages.photos, { count: piece.photo_count })}
         </CardMeta>

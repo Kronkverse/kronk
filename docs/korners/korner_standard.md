@@ -37,7 +37,7 @@ promises. Don't promise more than the korner does.
 > under construction stays `enforced: false` with its node at `soon`, which
 > keeps it off the sidebar and shows it as "Coming soon" on the Hub.
 
-**Core spaces** (`core: true`: feed, hub, nudges, profile, settings, welcome)
+**Core spaces** (`core: true`: feed, hub, nudges, profile, settings)
 are platform surfaces with manifests, not korners. They declare their own
 `mount:`, have no Hub tile, can't be tuned out of, and the korner layers below
 don't apply to them (the doctor skips them, apart from a header check). A

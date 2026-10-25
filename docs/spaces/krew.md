@@ -86,7 +86,9 @@ back out. Past events count.
   the Krew's Nudges chat (`Nudges::Conversation.invite_to_krew!`). Nobody is
   added without accepting.
 - **Leaving** is free and immediate. When the last member leaves, the Krew
-  archives itself (`Krew#leave!`, from the Krew or its chat).
+  archives itself (`Krew#leave!`, from the Krew or its chat). Deleting an
+  account leaves its Krews the same way, and drops its join requests
+  (`DeleteAccountService#leave_krews!`).
 - `KrewMembership#source` records how someone joined: `direct`, `invite`, or
   `rsvp_auto` (nothing writes `rsvp_auto` yet; see [Open](#open)).
 

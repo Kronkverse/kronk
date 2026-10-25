@@ -20,6 +20,7 @@ import { FollowButton } from 'mastodon/components/follow_button';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 import { ProfileBioField } from 'mastodon/components/profile_bio_field';
+import { ProfileCountryField } from 'mastodon/components/profile_country_field';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { MemorialNote } from 'mastodon/features/account_timeline/components/memorial_note';
@@ -565,9 +566,25 @@ export const ProfileBlock: React.FC<Props> = ({
           2026-08-16). */}
       {(!bare || (gated && !hidden && !minimal)) &&
         (editable ? (
-          <ProfileBioField />
+          <>
+            <ProfileBioField />
+            <ProfileCountryField />
+          </>
         ) : (
-          <AccountBio accountId={accountId} className='profile-block__bio' />
+          <>
+            <AccountBio accountId={accountId} className='profile-block__bio' />
+            {/* The First Nations Country they live on, under the bio and
+                seen wherever it is (docs/spaces/profile.md, Country). */}
+            {account.first_nations_country && (
+              <p className='profile-block__country'>
+                <FormattedMessage
+                  id='profile_block.country'
+                  defaultMessage='On {name} Country'
+                  values={{ name: account.first_nations_country }}
+                />
+              </p>
+            )}
+          </>
         ))}
 
       {canShare && (

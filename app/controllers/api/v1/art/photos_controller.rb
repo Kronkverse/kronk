@@ -15,10 +15,10 @@ class Api::V1::Art::PhotosController < Api::BaseController
 
     permitted = photo_params
     media_id  = permitted[:media_id]
-    raise Mastodon::UnprocessableEntityError, 'media_id is required' if media_id.blank?
+    raise Mastodon::ValidationError, 'media_id is required' if media_id.blank?
 
     media = MediaAttachment.find(media_id)
-    raise Mastodon::UnprocessableEntityError, "media #{media_id} was uploaded by another account" unless media.account_id == current_account.id
+    raise Mastodon::ValidationError, "media #{media_id} was uploaded by another account" unless media.account_id == current_account.id
 
     # Position appends to the end unless the caller supplies one. Using
     # (max + 1) rather than photos.count keeps ordering stable if a
@@ -55,7 +55,7 @@ class Api::V1::Art::PhotosController < Api::BaseController
   private
 
   def set_piece
-    @piece = ArtPiece.find(params[:art_piece_id])
+    @piece = ArtPiece.find(params[:piece_id])
   end
 
   def set_photo

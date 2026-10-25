@@ -55,19 +55,20 @@ function countDescendants(node) {
   return node.children.reduce((sum, child) => sum + 1 + countDescendants(child), 0);
 }
 
-// Build a recursive reply tree from a flat list of descendants
-function buildReplyTree(descendants, parentId, depth = 0) {
-  if (depth >= MAX_DEPTH) return [];
+// Build a recursive reply tree from a flat list of descendants. A feed card
+// shows the first few; `all` (the post's own page) shows every reply.
+function buildReplyTree(descendants, parentId, all = false, depth = 0) {
+  if (!all && depth >= MAX_DEPTH) return [];
 
   const limit = depth === 0 ? MAX_DIRECT_REPLIES : MAX_NESTED_REPLIES;
   const directReplies = descendants
     .filter(s => s.in_reply_to_id === parentId)
     .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-    .slice(0, limit);
+    .slice(0, all ? undefined : limit);
 
   return directReplies.map(reply => ({
     ...reply,
-    children: buildReplyTree(descendants, reply.id, depth + 1),
+    children: buildReplyTree(descendants, reply.id, all, depth + 1),
   }));
 }
 
@@ -273,6 +274,7 @@ class StatusReplies extends PureComponent {
     statusAcct: PropTypes.string.isRequired,
     statusVisibility: PropTypes.string,
     repliesCount: PropTypes.number,
+    all: PropTypes.bool,
     currentAccount: ImmutablePropTypes.map,
     dispatch: PropTypes.func.isRequired,
     intl: PropTypes.object.isRequired,
@@ -280,6 +282,7 @@ class StatusReplies extends PureComponent {
 
   static defaultProps = {
     repliesCount: 0,
+    all: false,
     statusVisibility: 'public',
   };
 
@@ -308,7 +311,7 @@ class StatusReplies extends PureComponent {
 
     const cached = contextCache.get(statusId);
     if (!force && cached && cached.count === repliesCount && Date.now() - cached.at < CONTEXT_TTL_MS) {
-      this.setState({ loading: false, replies: buildReplyTree(cached.descendants, statusId) });
+      this.setState({ loading: false, replies: buildReplyTree(cached.descendants, statusId, this.props.all) });
       return;
     }
 
@@ -322,7 +325,7 @@ class StatusReplies extends PureComponent {
       dispatch(importFetchedStatuses(descendants));
 
       // Build recursive reply tree
-      const tree = buildReplyTree(descendants, statusId);
+      const tree = buildReplyTree(descendants, statusId, this.props.all);
 
       this.setState({
         loading: false,
@@ -406,7 +409,7 @@ class StatusReplies extends PureComponent {
   };
 
   render() {
-    const { repliesCount, currentAccount, intl, statusId } = this.props;
+    const { repliesCount, currentAccount, intl, statusId, all } = this.props;
     const { loading, replies, replyText, submitting } = this.state;
 
     // Don't show anything if no replies and not signed in
@@ -438,7 +441,7 @@ class StatusReplies extends PureComponent {
                   ))}
                 </div>
               )}
-              {repliesCount > replies.length && replies.length > 0 && (
+              {!all && repliesCount > replies.length && replies.length > 0 && (
                 <Link
                   to={`/statuses/${statusId}`}
                   className='status-replies__view-all'

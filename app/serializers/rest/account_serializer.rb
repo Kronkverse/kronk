@@ -20,6 +20,9 @@ class REST::AccountSerializer < ActiveModel::Serializer
 
   attribute :memorial, if: :memorial?
 
+  # Kronk: the First Nations Country shown under the bio (Account::FirstNationsCountry).
+  attribute :first_nations_country, if: :local?
+
   class AccountDecorator < SimpleDelegator
     def self.model_name
       Account.model_name
@@ -150,6 +153,10 @@ class REST::AccountSerializer < ActiveModel::Serializer
 
   def noindex
     object.user_prefers_noindex?
+  end
+
+  def first_nations_country
+    object.unavailable? ? nil : object.first_nations_country
   end
 
   delegate :suspended?, :silenced?, :local?, :memorial?, to: :object

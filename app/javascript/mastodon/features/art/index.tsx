@@ -21,6 +21,7 @@ import { useIdentity } from 'mastodon/identity_context';
 
 import { ArtPieceComposer } from './components/art_piece_composer';
 import { ArtPieceDetail } from './components/art_piece_detail';
+import { artKindLabel } from './kinds';
 
 const messages = defineMessages({
   title: { id: 'art.title', defaultMessage: 'Art' },
@@ -187,7 +188,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
               <div className='art-card__body'>
                 <div className='art-card__title'>{p.title}</div>
                 <div className='art-card__meta'>
-                  {p.kind}
+                  {artKindLabel(intl, p.kind)}
                   {' · '}
                   {intl.formatMessage(messages.photos, {
                     count: p.photo_count,
