@@ -122,6 +122,35 @@
   // The Konnected block: its heading and tiles are the shared kit
   // (`_space_tiles.scss`).
   margin-block-start: 0.5rem;
+
+  // An honest note under the grid, for whoever looks after the record:
+  // a Konnected record's people who can't open this one.
+  &__note {
+    margin: 0.6rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.35;
+
+    &--error {
+      color: var(--semantic-warning-red);
+    }
+  }
+
+  // Its one-tap mend: "Make it Same as …".
+  &__note-fix {
+    margin-inline-start: 0.4rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
 }
 
 // AttachmentPicker — the modal behind the Konnected block's Konnect
@@ -532,25 +561,19 @@
   }
 }
 
-// "New place" inside the Konnect picker of a composer: the Place's name,
-// address and pin, made here and picked (components/konnect_new_place.tsx).
-.konnect-new-place {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-
-  &__pin {
+// Konnect → Map's details under the map: the Place's name and address
+// (components/konnect_map.tsx).
+.konnect-map {
+  &__actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: flex-end;
     gap: 0.5rem;
   }
 
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
+  &__note {
+    margin-inline-end: auto;
   }
 }
 

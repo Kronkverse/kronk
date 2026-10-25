@@ -31,7 +31,8 @@ module Art
       status = PostStatusService.new.call(
         @piece.owner,
         text: @piece.title,
-        visibility: PIECE_TO_STATUS_VISIBILITY.fetch(@piece.visibility, 'public')
+        visibility: PIECE_TO_STATUS_VISIBILITY.fetch(@piece.visibility, 'public'),
+        krew_ids: @piece.krew_ids
       )
 
       @piece.update_columns(status_id: status.id)

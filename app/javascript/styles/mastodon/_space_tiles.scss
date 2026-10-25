@@ -152,6 +152,82 @@
   -webkit-box-orient: vertical;
 }
 
+// Who sees the tile's record ("Everyone", "Growers + Climbers"), quiet,
+// under its name (components/audience_marker.tsx).
+.space-tile__audience {
+  max-inline-size: 100%;
+  margin-block-start: -0.3rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// "Same as": this record's audience follows the tile's.
+.space-tile__same {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-block-start: -0.35rem;
+  color: var(--kronk-purple-bright);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.15;
+
+  .icon {
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+  }
+}
+
+.space-tile--leads {
+  border-color: color-mix(
+    in oklab,
+    var(--kronk-purple-accent) 55%,
+    var(--border-default)
+  );
+}
+
+// Same as on a record's page: make or stop, beside the ×.
+.space-tile__follow {
+  position: absolute;
+  inset-block-start: 4px;
+  inset-inline-start: 4px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+
+  .icon {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  &--on {
+    color: var(--kronk-purple-bright);
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 18%,
+      transparent
+    );
+  }
+}
+
 // The small × that takes a tile out, in its corner.
 .space-tile__remove {
   position: absolute;

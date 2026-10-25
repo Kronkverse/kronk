@@ -4,15 +4,16 @@
 # of it (multiple angles / details of the same piece). Unlike an
 # Albutts Album, an ArtPiece is single-contributor by design: photos
 # of a sculpture from different angles are still authored by the
-# artist. Krew scoping is not implemented in v1 (the model returns
-# empty relations for the Reachable adapter) — the four reach tiers
-# public/orbit/mates/self_only are the whole visibility axis.
+# artist. Its audience is the reach ladder plus any Krews it is for
+# (`record_krews`, Kronk::KrewAudience).
 #
 # See docs/korners/art (TBD) and config/korners/art.yaml.
 class ArtPiece < ApplicationRecord
   include Reachable
   include Kronk::OwnUploads
   include Kronk::AttachmentSource
+  include Kronk::AudienceBearer
+  include Kronk::KrewAudience
 
   self.attachment_source_slug = 'art'
 
@@ -35,7 +36,7 @@ class ArtPiece < ApplicationRecord
        },
        suffix: :kind
 
-  # Reach ladder. Krew is not offered in v1 (see class comment).
+  # Reach ladder. Krews are an additive axis on top (see class comment).
   enum :visibility,
        { public: 0, mates: 1, orbit: 3, self_only: 4 },
        suffix: :scope
@@ -73,13 +74,13 @@ class ArtPiece < ApplicationRecord
 
   # Reachable adapter — reach visibility (visible_to / visible_to?)
   # lives in the concern; these tell it how an ArtPiece stores its
-  # owner and (that it has no) krew scoping.
+  # owner and its Krews.
   def self.reachable_owner_column
     :owner_id
   end
 
-  def self.reachable_krew_scope(_krew_ids)
-    none
+  def self.reachable_krew_scope(krew_ids)
+    audience_krew_scope(krew_ids)
   end
 
   private
@@ -105,7 +106,7 @@ class ArtPiece < ApplicationRecord
     owner
   end
 
-  def reachable_krew_member?(_viewer)
-    false
+  def reachable_krew_member?(viewer)
+    audience_krew_member?(viewer)
   end
 end

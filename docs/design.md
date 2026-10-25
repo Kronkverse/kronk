@@ -882,14 +882,70 @@ page), adding to one that exists (photos to an album, a hand-over), a record
 that isn't its korner's linkable one (a trek, a FreeTheDream item), or a
 korner that opts out (`no_attachments:`, Moments). Location and a Krew come
 through Konnect too, not fields of their own (Korner Standard L13): where a
-thing is, is a Konnection to a Map Place. In a composer's picker Map offers
-**New place**, a small form inside the picker (`components/konnect_new_place.tsx`:
-name, optional address, a pin) that makes the Place and picks it without
-leaving the composer; whatever reads a location falls back to the Konnected
-Place (`Kronk::RecordPlace`, decisions.md, 2026-10-23, "Location fields
-become Konnect → Map"). The korner's manifest then says
+thing is, is a Konnection to a Map Place. In a composer's picker, Map opens
+the map straight away (`components/konnect_map.tsx`): existing Places listed
+above the search results, or a pin plus a name and an address you can type,
+which makes the Place and picks it without leaving the composer; whatever
+reads a location falls back to the Konnected Place (`Kronk::RecordPlace`,
+decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The
+korner's manifest then says
 `konnect: { make: true }` so the picker offers its composer
 (docs/korners/adding_a_korner.md, Korner attachments §2.6 and §4.4).
+
+**Same as** (decisions.md, 2026-10-25): a record Konnected to another can
+take its audience and follow it. What the server gives a tile or composer:
+
+- Each Konnection row (`GET /api/v1/attachments`) has `audience_follows`
+  (`'target'`, `'source'` or `null`: the end that leads) and, on both
+  previews, `audience: { tier, krews: [{ id, name, slug }], hidden_krews,
+followable }`.
+- A supported record's own JSON (album, film, kar, kronikle, art piece,
+  listing detail) has `audience_follows: { slug, id, title, url } | null`,
+  the leader (`hidden: true` and no id or title when the viewer can't see
+  it). Its audience is its `visibility` plus `krews` (albums, events, and
+  since 2026-10-25 films, kars, kronikles, art pieces and listing details;
+  each composer sends its Krews as top-level `krew_ids`, as the album
+  composer does).
+- Before the record exists, `GET /api/v1/attachments/audience?korner=&id=&for=<own korner>`
+  says whether "Same as <title>" can be offered (`followable`, else
+  `reason`). Offer it, and default to it, when the Konnected record is
+  Everyone or Krews; never for Mates or Orbit. Booth sets have no audience
+  control.
+- **Mismatch notes.** With both ends' audiences in hand, a tile on record
+  A says when people who see the other end, B, can't open A. If A is
+  `public`, they all can. Otherwise each of B's Krews that is not among A's
+  can't ("Growers can't open your album"), and if B is `public`, not
+  everyone who sees B can. Mates and Orbit can't be compared across owners,
+  so they never make a note.
+
+What the person sees (`hooks/useSameAs.ts`, `components/audience_marker.tsx`):
+
+- **Who sees this.** In the album, film, kar, kronikle, art piece and
+  listing composers, the reach control (`<ReachDropdown sameAs>`) opens on
+  a "Same as <title>" row for each Konnect-row record the server says it
+  can follow, naming that record's audience ("Growers", "Growers and
+  Climbers", "Everyone"). It is on by default when the composer opened from
+  the record (`?konnect=`), or when the first such record is added before
+  reach was touched; the button then reads "Same as <title>". Choosing it
+  copies the leader's tier and Krews into the composer's own (so the record
+  is right the moment it's made, and the tiers and Krews below show the
+  copy); choosing any tier or Krew turns it off. One leads at most. On
+  create the record is sent with that reach, and its link with
+  `metadata: { audience: 'same' }`. Not offered while editing, for a Krew
+  album, or by composers without a reach control (Booth).
+- **Every Konnected tile** (a composer's Konnect row and a page's Konnected
+  block) says who sees its record, quietly under the title: "Everyone",
+  "Mates", "Orbit", "Just me", "Invited" (an invite-only event), "Growers",
+  "Growers + Climbers", "Growers + 2 Krews" for Krews you can't see. The
+  one this record follows has an accent border and a "Same as" line.
+- **On a record's page**, whoever looks after a record that can follow
+  gets a link button beside a tile's ×: "Make audience the same as …" where
+  it could follow that record, "Stop following …" where it does, each
+  confirmed with what changes (`PATCH`, `audience_follows`).
+- **Notes**, under the grid, for the same person on the same pages: one
+  line per Konnected record whose people can't open this one, with "Make
+  it Same as <title>" where following it would mend it. An event's page
+  (events lead, never follow) and a Krew's show the markers only.
 
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of
@@ -982,7 +1038,7 @@ move.
 | `useAttachments(slug, id)`         | Read, create and remove cross-korner attachments (`spawn` / `link` / `reference`) for a record.                                                                                                                                                                                                 | `hooks/useAttachments.ts`, `api/attachments.ts`                                                               |
 | `<AttachmentSection>`              | The Konnected block on a detail page: Konnections both ways as space tiles, a Konnect tile and × for whoever looks after the record; silent when empty. `leading` puts a page's own tiles in the same grid (the Krew page's Spaces).                                                            | `components/attachment_section.tsx`, `styles/mastodon/_space_tiles.scss`                                      |
 | Space tiles, section heading       | `.space-tiles` / `.space-tile` (icon over name, `--action` dashed, `--open`, `__remove` ×) and `.korner-section-heading`, the one heading for a detail page's sections (Spaces, Konnected, People, Going).                                                                                      | `styles/mastodon/_space_tiles.scss`                                                                           |
-| `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. New … opens a `konnect.make` korner's composer with `?konnect=`; `onPick` returns the record instead (composers), where Map's New place makes the Place in the picker. | `components/attachment_picker.tsx`                                                                            |
+| `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. New … opens a `konnect.make` korner's composer with `?konnect=`; `onPick` returns the record instead (composers), where Map opens the map to pick a Place or make one. | `components/attachment_picker.tsx`                                                                            |
 | `konnect:` in manifests            | A korner's Konnections: `make` (the picker offers its composer) and `effects` (what a Konnection with a space does, matching `Kronk::AttachmentEffects`). Checked by `korners doctor`.                                                                                                          | `config/korners/*.yaml`, `app/lib/kronk/korner_konnect.rb`                                                    |
 | `<EventSearch>`                    | A form field that picks one Kalendar event: the same candidates search, upcoming first with a "Show past events" toggle, the pick as a chip (title and date) with Change. Krew requirements use it.                                                                                             | `components/event_search.tsx`                                                                                 |
 
@@ -1028,18 +1084,18 @@ crossing in the same transaction as the account, turns on follower approval
 for the new account, and lands the member on `/setup`. Email confirmation
 is a reminder nudge, not a gate (`decisions.md`, 2026-08-16).
 
-**Setup** (`features/setup`, `decisions.md` 2026-10-22). Five short steps in
-the SPA, each saved as it is picked, with **Back**, **Next** and **Skip
-setup**: _How Kronk looks_ (Dark, Light or Match my device, then the shade
-slider; picking a theme reloads into the step, since the theme is its own
-stylesheet), _About you_ (the profile's bio field, `<ProfileBioField>`),
+**Setup** (`features/setup`, `decisions.md` 2026-10-22). One page in the
+SPA, a short section per choice, each saved as it is picked; whatever is left
+alone waits for Settings: _How Kronk looks_ (Dark, Light or Match my device,
+then the shade slider; picking a theme reloads the page back at this section,
+`#look`, since the theme is its own stylesheet), _About you_ (the profile's bio field, `<ProfileBioField>`),
 _Who sees your posts_ (the default reach, widest first), _A few people_ (up
 to eight suggestions with a mate button) and _Notifications_ (the
 `<PushPrompt>` from Settings → Notifications: turn on, or what this device
 can't do). They write through `/api/v1/settings/appearance`,
 `/api/v1/settings/posting` and `update_credentials`, the same as Settings
-and the profile. **Go Home** loads `/home` in full, where the walkthrough starts; the
-walkthrough never starts over `/setup`. Only a fresh signup is sent there.
+and the profile. One **Continue** at the foot loads `/home` in full, where
+the walkthrough starts; the walkthrough never starts over `/setup`. Only a fresh signup is sent there.
 
 **Existing members.** Anyone whose `thresholds_version` is nil or below the
 current version is redirected to `/auth/thresholds` on any signed-in HTML

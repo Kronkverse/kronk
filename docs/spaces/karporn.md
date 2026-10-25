@@ -23,11 +23,11 @@ Deliberately narrow: this korner is for photos of cars, not car reviews, not cla
 
   Lat/lng have to arrive together; a bare lat or lng without its pair is rejected by the model's `location_coords_are_paired` validator. The label can stand alone (just a place name, no pin).
 
-- **Visibility** — `public / orbit / mates / self_only`. No krew scoping.
+- **Visibility** — `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25).
 
 ## Location UX
 
-No location block in the composer: where the car was is its Konnected Place, from the Konnect row (Map's **New place** in the picker takes a name, an address and a pin). The label is what shows on the feed card; the coordinates power the "Open in Map" link on the viewer.
+No location block in the composer: where the car was is its Konnected Place, from the Konnect row (Map in the picker opens the map: an existing Place, or a pin with a name and an address). The label is what shows on the feed card; the coordinates power the "Open in Map" link on the viewer.
 
 ## Where you see Karporn
 

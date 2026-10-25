@@ -218,6 +218,8 @@ class Api::V1::EventsController < Api::BaseController
       @event.update!(status: nil)
     end
     create_status_for_event!(@event) unless @event.invite_only?
+    # Its audience is its post's, so what follows it moves with it.
+    Kronk::Audience.changed(@event)
   end
 
   def event_full?

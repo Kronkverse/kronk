@@ -35,6 +35,8 @@ export interface ApiChronicleJSON {
   pictures: ChroniclePictureJSON[];
   created_at: string;
   owner: ApiAccountJSON;
+  // The Krews it is for, on top of its reach, named where you may see them.
+  krews?: { id: string; name: string; slug?: string }[];
 }
 
 export interface ChronicleSummaryJSON {

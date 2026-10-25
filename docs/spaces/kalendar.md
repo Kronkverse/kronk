@@ -36,7 +36,7 @@ resolve. `/kalendar/*` 301s to `/hub/kalendar/*`.
 (`features/kalendar/event_composer.tsx`, on the shared `ComposeShell`). Fields:
 title, description, start and optional end, cover image, invitees, reach,
 Krews, and the Konnect row. Where it is, is a Konnection to a Map Place
-(Konnect → Map → **New place** makes one without leaving the composer;
+(Konnect → Map opens the map to pick or make one without leaving the composer;
 decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The event
 reads its `location_name` and `location_url` from that Place when its own are
 empty; older events, and the Android app, keep their own. The edit form has

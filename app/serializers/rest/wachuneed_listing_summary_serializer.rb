@@ -36,6 +36,26 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attribute :visibility, if: :detail?
   attribute :can_message, if: :detail?
 
+  # The Krews it is for, on top of its reach (Kronk::KrewAudience), named
+  # only where the viewer may see them; the same shape as an album's.
+  has_many :krews, serializer: REST::KrewSerializer, if: -> { detail? && krews? }
+
+  def krews?
+    object.record_krews.exists?
+  end
+
+  def krews
+    Kronk::VisibleKrews.filter(object.krews.to_a, instance_options[:viewer])
+  end
+
+  # "Same as": the record whose audience this one follows
+  # (Kronk::Audience.leader_preview), or nil. Detail only.
+  attribute :audience_follows, if: :detail?
+
+  def audience_follows
+    Kronk::Audience.leader_preview(object, instance_options[:viewer])
+  end
+
   def detail?
     instance_options[:include_account].present?
   end

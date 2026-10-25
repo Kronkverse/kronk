@@ -33,10 +33,12 @@ import {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { PhotoDropZone } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { REACH_ORDER, ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useSameAs } from 'mastodon/hooks/useSameAs';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { AVAILABILITIES, AVAILABILITY_MESSAGES } from '../details';
@@ -136,6 +138,7 @@ interface ArtPieceDraftParams {
   description?: string;
   kind?: ArtKind;
   visibility?: ReachValue;
+  krew_ids?: string[];
   konnections?: KonnectTarget[];
   details?: DetailsForm;
 }
@@ -235,8 +238,31 @@ export const ArtPieceComposer: React.FC<Props> = ({
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const kinds = useMemo(() => sortedArtKinds(intl), [intl]);
-  // What the new piece will be Konnected to (decisions.md, 2026-10-23).
-  const konnect = useKonnect('art');
+  // The Krews it's for, on top of its reach (decisions.md, 2026-10-25).
+  const [krewIds, setKrewIds] = useState<string[]>(
+    editingPiece?.krews?.map((k) => k.id) ?? [],
+  );
+  const availableKrews = useAvailableKrews();
+  const handleToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
+  const applyAudience = useCallback(
+    (tier: ReachValue, ids: string[] | null) => {
+      setVisibility(tier);
+      if (ids) setKrewIds(ids);
+    },
+    [],
+  );
+  // What the new piece will be Konnected to (decisions.md, 2026-10-23),
+  // and whose audience it may follow ("Same as", 2026-10-25).
+  const { konnect, reach } = useSameAs(useKonnect('art'), {
+    enabled: !isEdit,
+    apply: applyAudience,
+    onChange: setVisibility,
+    onToggleKrew: handleToggleKrew,
+  });
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
@@ -249,6 +275,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       setDescription(p.description ?? '');
       setKind(p.kind ?? 'painting');
       setVisibility(p.visibility ?? 'public');
+      setKrewIds(p.krew_ids ?? []);
       setDetails(p.details ?? detailsFormOf());
       restoreKonnect(p.konnections);
       // Photos picked for another draft don't belong to this one.
@@ -273,6 +300,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
         description,
         kind,
         visibility,
+        krew_ids: krewIds,
         konnections: konnect.saved,
         details,
       },
@@ -459,12 +487,16 @@ export const ArtPieceComposer: React.FC<Props> = ({
     if (editingPiece) {
       void (async () => {
         try {
-          await apiUpdatePiece(editingPiece.id, {
-            title: title.trim(),
-            description: description.trim(),
-            kind,
-            ...detailsPayload(details),
-          });
+          await apiUpdatePiece(
+            editingPiece.id,
+            {
+              title: title.trim(),
+              description: description.trim(),
+              kind,
+              ...detailsPayload(details),
+            },
+            krewIds,
+          );
           for (const id of removedIds) await apiDeletePhoto(id);
           const failed = await uploadPhotos(editingPiece.id, null);
           const updated = await apiGetPiece(editingPiece.id);
@@ -492,13 +524,16 @@ export const ArtPieceComposer: React.FC<Props> = ({
     void (async () => {
       let piece: ApiArtPieceJSON;
       try {
-        piece = await apiCreatePiece({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          kind,
-          visibility,
-          ...detailsPayload(details),
-        });
+        piece = await apiCreatePiece(
+          {
+            title: title.trim(),
+            description: description.trim() || undefined,
+            kind,
+            visibility,
+            ...detailsPayload(details),
+          },
+          krewIds,
+        );
       } catch (e) {
         setPending(false);
         setUploadProgress(null);
@@ -527,6 +562,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
     finishDraft,
     intl,
     kind,
+    krewIds,
     onCreated,
     onUpdated,
     removedIds,
@@ -552,11 +588,20 @@ export const ArtPieceComposer: React.FC<Props> = ({
       headerAction={
         // Reach is locked while editing: the update endpoints don't
         // re-scope the item's projected feed post, so narrowing reach
-        // here would only look private (no reach without consent).
+        // here would only look private (no reach without consent). Its
+        // Krews can still change: the server moves its post with them.
         <ReachDropdown
           value={visibility}
-          onChange={setVisibility}
-          disabled={pending || isEdit}
+          onChange={reach.onChange}
+          disabled={pending}
+          hide={
+            isEdit ? REACH_ORDER.filter((r) => r !== visibility) : undefined
+          }
+          krews={availableKrews}
+          selectedKrewIds={krewIds}
+          onToggleKrew={reach.onToggleKrew}
+          sameAs={reach.sameAs}
+          onSameAs={reach.onSameAs}
         />
       }
     >

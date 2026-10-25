@@ -17,6 +17,63 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-25 — Konnections carry audience: Same as
+
+Tal: an album, a film or anything Konnected to an event should be able to
+have the audience "Same as <that event>", and keep it as the event changes.
+
+**Decision:** a record has two relationships, kept apart. **Belonging** is
+who can see it, its audience: Everyone, a reach tier, or Krews (an event
+made within Growers is seen by Growers alone). **Konnections** are pointers
+between records. A Konnection may also carry audience: one end **follows**
+the other's.
+
+- **Following copies, then follows.** The follower takes the leader's
+  audience at once, and again whenever it changes: the event opens to
+  everyone, or adds a Krew, and the album does too. Chains follow down (an
+  album following an event, a film following the album), never round in a
+  circle. A record follows one leader at most.
+- **Switching back is always open.** Taking the flag off or Diskonnecting
+  stops the follow and the record keeps the audience it has; its owner
+  changing its audience by hand stops it too.
+- **What can be followed:** an audience of Everyone, or of Krews alone.
+  Mates and Orbit are relative to the leader's owner, so nobody else's
+  record can have them, and neither can an invite-only event or one for its
+  maker alone: the API refuses those (422), and the composer doesn't offer
+  them. A leader that later narrows to one of them holds its followers to
+  their owners until it opens again: a copy never widens.
+- **A follower carries what it can, and setting it is honest.** A Krew
+  audience reaches a korner that has Krews (all of them now, below), and
+  only Krews its owner is in. Setting a follow is refused unless the follower can carry the
+  whole audience, so "Same as" never says more than it does; a later change
+  it can't carry in full narrows it instead.
+- **Every korner with an audience can be for a Krew** (Tal: "they should all
+  have the screens"). Films, kars, kronikles, art pieces and listings get
+  Krews on top of their reach, as albums have: a member sees the record
+  whatever its tier, its feed post carries the Krews, the composer's reach
+  control sets them (`krew_ids`, as albums send), and each Krew is a
+  Konnection to it, both ways, as with albums ("its Krew is a Konnection to
+  the Krew", 2026-10-23). They live in one table, `record_krews` (korner
+  slug, record id, Krew), not five: the five rules are the same, and a new
+  korner joins without a migration. Albums keep `album_krews` (it also says
+  who may contribute) and Moments their single `krew_id`.
+- **Events lead, never follow:** an event's audience is its post's, set
+  when it is posted. **Booth sets** are always public: they can be
+  Konnected, but never follow and are never followed. Moments take no
+  Konnections, so neither.
+- Anyone who can see a record can Konnect to it, as before. Only whoever
+  looks after the follower sets or clears its follow.
+- **Seen, and the default when it fits** (Tal: "really visible and
+  intuitive"). A composer opened from a record it can follow starts on
+  "Same as <that record>", and the person can always pick their own
+  audience instead. Every Konnected tile says who sees its record, and a
+  record's owner is told, in one line, when people who see a Konnected
+  record can't open theirs. docs/design.md, Konnect, has the screens.
+
+How: `Kronk::Audience` (one adapter per korner),
+`metadata.audience_follows` on the link row; docs/korners/adding_a_korner.md
+(Korner attachments §2.7).
+
 ## 2026-10-23 — Location fields become Konnect → Map
 
 The last step of "Map Places: location is a Konnection" (below): Konnect can
@@ -176,6 +233,10 @@ spaces were the others, left for later).
 Each choice saves as it is made, through the same endpoints as Settings, and
 every step can be skipped. Existing members aren't sent there; Settings has
 the same choices. The walkthrough starts on Home after.
+
+2026-10-25: one page, not five steps (Tal: "they should all be on one page
+… a single 'Continue' button so people can select and integrate with what
+they want to, and just leave the rest for later"). No Back, Next or Skip.
 
 ## 2026-10-22 — Konnect can make something new
 

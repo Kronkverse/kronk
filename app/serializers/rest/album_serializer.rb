@@ -38,6 +38,14 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   has_many   :photos, serializer: REST::AlbumPhotoSerializer, unless: :list?
   has_many   :krews, serializer: REST::KrewSerializer, if: :krews?
 
+  # "Same as": the record whose audience this one follows
+  # (Kronk::Audience.leader_preview), or nil. Left out of lists.
+  attribute :audience_follows, unless: :list?
+
+  def audience_follows
+    Kronk::Audience.leader_preview(object, current_user&.account)
+  end
+
   def id
     object.id.to_s
   end

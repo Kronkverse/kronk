@@ -2,12 +2,14 @@
 
 # Cinema — a single short film by one author. Video rides the standard
 # `MediaAttachment` (uploaded via `POST /api/v1/media`, referenced here
-# by id). Krew scoping isn't offered in v1; the four reach tiers are
-# the whole visibility axis.
+# by id). Its audience is the reach ladder plus any Krews it is for
+# (`record_krews`, Kronk::KrewAudience).
 class Film < ApplicationRecord
   include Reachable
   include Kronk::OwnUploads
   include Kronk::AttachmentSource
+  include Kronk::AudienceBearer
+  include Kronk::KrewAudience
 
   self.attachment_source_slug = 'cinema'
 
@@ -42,8 +44,8 @@ class Film < ApplicationRecord
     :owner_id
   end
 
-  def self.reachable_krew_scope(_krew_ids)
-    none
+  def self.reachable_krew_scope(krew_ids)
+    audience_krew_scope(krew_ids)
   end
 
   private
@@ -56,7 +58,7 @@ class Film < ApplicationRecord
     owner
   end
 
-  def reachable_krew_member?(_viewer)
-    false
+  def reachable_krew_member?(viewer)
+    audience_krew_member?(viewer)
   end
 end

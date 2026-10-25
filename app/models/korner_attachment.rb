@@ -50,11 +50,44 @@ class KornerAttachment < ApplicationRecord
   scope :to_target,   ->(slug, id) { where(target_slug: slug, target_id: id) }
 
   def source_record
-    resolve_record(source_slug, source_id)
+    return @source_record if defined?(@source_record)
+
+    @source_record = resolve_record(source_slug, source_id)
   end
 
   def target_record
-    resolve_record(target_slug, target_id)
+    return @target_record if defined?(@target_record)
+
+    @target_record = resolve_record(target_slug, target_id)
+  end
+
+  # Load both ends of many rows with one query per korner, for lists.
+  def self.preload_records(attachments)
+    wanted = Hash.new { |hash, slug| hash[slug] = Set.new }
+    attachments.each do |attachment|
+      wanted[attachment.source_slug] << attachment.source_id
+      wanted[attachment.target_slug] << attachment.target_id
+    end
+    found = wanted.to_h do |slug, ids|
+      klass = Kronk::KornerRegistry.model_for(slug)
+      [slug, klass ? klass.where(id: ids.to_a).index_by(&:id) : {}]
+    end
+    attachments.each do |attachment|
+      attachment.instance_variable_set(:@source_record, found[attachment.source_slug][attachment.source_id])
+      attachment.instance_variable_set(:@target_record, found[attachment.target_slug][attachment.target_id])
+    end
+  end
+
+  # Whichever end's audience follows the other's ("Same as",
+  # Kronk::Audience): 'source', 'target', or nil.
+  def audience_follower
+    Kronk::Audience.follower_end(self)
+  end
+
+  def reload(*)
+    remove_instance_variable(:@source_record) if defined?(@source_record)
+    remove_instance_variable(:@target_record) if defined?(@target_record)
+    super
   end
 
   private

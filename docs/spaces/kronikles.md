@@ -13,7 +13,7 @@ Deliberately single-author. Multi-author writing is a real thing but not this sh
 - **Title** — required, up to 240 chars.
 - **Body** — required. Raw markdown, **no length limit**. Stored as plain text; rendered client-side.
 - **Kind** — required. One of `essay / short_story / poetry / letter / journal / other`. Displayed as a badge on the feed card and reader meta row; `other` is the escape hatch.
-- **Visibility** — the reach ladder: `public / orbit / mates / self_only`. No Krew scoping.
+- **Visibility** — the reach ladder: `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25).
 
 The kind is a **label, not a schema constraint** — re-classifying an essay as a short story is a plain `PATCH` on the row, no data reshape.
 

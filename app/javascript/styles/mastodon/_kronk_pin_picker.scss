@@ -106,20 +106,40 @@
     z-index: 5;
     max-height: 15rem;
     overflow-y: auto;
-    margin: 0;
     padding: 0.25rem 0;
-    list-style: none;
     background: var(--surface-elevated);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-medium);
     box-shadow: 0 12px 32px rgb(0 0 0 / 40%);
+  }
 
-    &--state {
-      padding: 0.75rem 0.85rem;
-      color: var(--text-muted, var(--secondary-text-color));
-      font-size: 0.85rem;
-      text-align: center;
-    }
+  &__results-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__results-state {
+    margin: 0;
+    padding: 0.75rem 0.85rem;
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  // "Places": the existing ones, above the search results (Konnect → Map).
+  &__results-heading {
+    margin: 0;
+    padding: 0.35rem 0.85rem 0.15rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__result-sub {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
   }
 
   &__result {
@@ -311,6 +331,15 @@
     border-top: 1px solid var(--border-default);
     display: flex;
     justify-content: flex-end;
+    gap: 0.6rem;
+  }
+
+  // Live (Konnect → Map): the Place's name and address under the map.
+  &__details {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border-default);
+    display: flex;
+    flex-direction: column;
     gap: 0.6rem;
   }
 
