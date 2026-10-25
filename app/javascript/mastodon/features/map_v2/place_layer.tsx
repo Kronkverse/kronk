@@ -20,8 +20,10 @@ import { Icon } from 'mastodon/components/icon';
 // Places layer — draws Map Places (exact spots with an address, Map's
 // linkable record) on the Mates map, beside the event layer. Tapping
 // one opens a card listing what's Konnected to it, both ways, with a
-// link to the Place's page. Owns the `?place=<id>` deep link, which
-// flies the map to that Place and opens its card.
+// link to the Place's page. Owns the `?map_place=<id>` deep link, which
+// flies the map to that Place and opens its card. Not `?place=`: that
+// already means "open your own pin's search" (`?place=1`, the link in the
+// "update your pin" nudge, mates_view.tsx), and Place 1 would collide.
 //
 // Places load for the part of the world in view, and again when the
 // map settles somewhere new.
@@ -84,7 +86,7 @@ export const PlaceLayer: React.FC<Props> = ({ map, ready }) => {
   const location = useLocation();
 
   const requestedId = useMemo(
-    () => new URLSearchParams(location.search).get('place'),
+    () => new URLSearchParams(location.search).get('map_place'),
     [location.search],
   );
 
@@ -130,7 +132,7 @@ export const PlaceLayer: React.FC<Props> = ({ map, ready }) => {
     };
   }, [places, map, ready]);
 
-  // ── ?place=<id> deep link ─────────────────────────────────────────
+  // ── ?map_place=<id> deep link ─────────────────────────────────────────
   // Flies there; the Place then loads with the rest in view.
   useEffect(() => {
     if (!map || !ready || !requestedId) return;
