@@ -90,6 +90,23 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
     expect(page).to have_css('.compose-shell .konnect-row .space-tile', text: 'Bondi Pavilion')
   end
 
+  # decisions.md, 2026-10-25: Map opens straight away on a record's page
+  # too, not a search list first, and Konnects the Place it picks.
+  it "Konnects a Place from an event's page through the map" do
+    place = MapPlace.create!(name: 'Bondi Pavilion', address: 'Queen Elizabeth Dr, Bondi Beach', latitude: -33.891, longitude: 151.277, account: bob.account)
+    event = Event.create!(account: bob.account, title: 'Swim', start_time: 2.days.from_now, end_time: 2.days.from_now + 1.hour)
+    visit "/hub/kalendar/#{event.id}"
+
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') { click_on 'Map' }
+    expect(page).to have_no_css('.attachment-picker__search')
+    within('.map-pin-picker') { click_on 'Bondi Pavilion' }
+
+    expect(page).to have_no_css('.attachment-picker')
+    expect(page).to have_css('.attachment-section .space-tile', text: 'Bondi Pavilion')
+    expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id)).to exist
+  end
+
   # No Places yet, so no list to close first: one Escape closes the map.
   it 'closes the map back to the spaces on Escape, leaving the composer open' do
     visit '/hub/kalendar/composer'
