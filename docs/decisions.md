@@ -17,6 +17,33 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-25 — Konnect is the one way into a Krew's spaces
+
+Tal, checking Konnect on shadow: "I'm seeing 'Add a space' and 'Konnect'
+in the krew space? isnt that still a double up?", and New album from one
+Krew showed another Krew's name, and a Huddle could be linked from a Krew
+but not made.
+
+**Decision:**
+
+- **No Add a space on the Krew page.** Konnecting or making an album or an
+  event already turns that space on (`AlbumLinks`, `EventLinks`), so the
+  tile only added an empty space. The page has its spaces' tiles, what it
+  is Konnected to, then Konnect. Krew settings still turns spaces on and
+  off. Supersedes "Add a space is the last tile" (2026-10-18) and Add a
+  space beside Konnect (2026-10-22).
+- **Every composer that Konnects is offered as New ….** Booth, Cinema,
+  Huddle, Kommons, Krew, Kronikles and Kuestions read `?konnect=` since
+  "Konnect in every composer" but their manifests never said
+  `make: true`, so the picker couldn't make one. They do now. Booth's says
+  Upload a set (Go live has no Konnect yet); Kommons goes straight to its
+  composer, past the page picker that would drop the `?konnect=`.
+- **A record looked up by id is that record.** The Konnect tile names its
+  source by asking the candidates search for one id; the Krew and event
+  visibility scopes were merged in and replaced the id condition, so the
+  tile named the newest Krew or event the viewer could see. They are id
+  subqueries now (`Kronk::KornerRecords.findable`).
+
 ## 2026-10-25 — Konnections carry audience: Same as
 
 Tal: an album, a film or anything Konnected to an event should be able to

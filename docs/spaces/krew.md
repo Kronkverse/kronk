@@ -70,11 +70,13 @@ or `when=past`; plain `filter=mine` is still every event you made).
   it and is in the Krew; a link anyone else makes stays a link.
 - **One place on the page.** The Krew page has one section of tiles,
   **Spaces**: its Albutts and Kalendar tiles, then whatever else it's
-  Konnected to (an art piece, a proposal…), then **Add a space** (a tray of
-  the spaces a Krew can turn on) and **Konnect**, which opens the Konnect
-  picker straight away. Pick a space there whose composer Konnects what it
-  makes (its manifest says `konnect: { make: true }`: Albutts, Kalendar,
-  Art…) and the picker also offers **New …**, which opens that composer
+  Konnected to (an art piece, a proposal…), then **Konnect**, which opens
+  the Konnect picker straight away. There is no separate Add a space:
+  Konnecting or making an album or event turns that space on, and Krew
+  settings still turns spaces on and off (decisions.md, 2026-10-25). Pick
+  a space there whose composer Konnects what it makes (its manifest says
+  `konnect: { make: true }`: Albutts, Kalendar, Huddle, Art…) and the
+  picker also offers **New …**, which opens that composer
   with `?konnect=krew:<id>`, so what it makes is Konnected to the Krew; a
   new album or event is the Krew's own (decisions.md, 2026-10-23). Albums
   and events stay in their tiles and aren't repeated as Konnected tiles
@@ -182,11 +184,9 @@ All in `app/javascript/mastodon/features/krew/`.
     **opens it in place** below the grid, one at a time; tapping it again
     closes it. Nothing is open on arrival. **Albutts** shows the Krew's
     albums (`krew_albums.tsx`), **Kalendar** what is coming up for the
-    Krew and what's been (`krew_events.tsx`). Last, **Add a space** offers
-    the spaces not attached yet. Adding one opens it straight away with its
-    "Link one of your …" list open, since linking is usually why. Once
-    every space with a Krew part is added, a line says more join as each
-    is built for it, in place of the tile.
+    Krew and what's been (`krew_events.tsx`). Last, **Konnect**: a space
+    gets its tile once something is Konnected or made in it, or once it is
+    turned on in Settings.
   - **Chat**: the Krew's chat from Nudges, read and written on the page
     (`krew_chat.tsx`, the messenger's `ConversationView` without its
     header), with "Open in Nudges" beside the heading. It is marked read
@@ -208,7 +208,7 @@ All in `app/javascript/mastodon/features/krew/`.
   a sole member; while others are in, Membership says a Krew is archived
   when its last member leaves. Requirements to join show only while Access
   is Requirement-gated. Spaces are the Krew page's icon tiles, each with a ×
-  to take it out, plus Add a space (the same tray as on the page).
+  to take it out, plus Add a space (a tray of the spaces it can turn on).
 
 **Chat.** Each Krew has one group conversation in Nudges
 (`Nudges::Conversation` kind `krew`, members only). The Krew page gets its

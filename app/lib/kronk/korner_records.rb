@@ -87,9 +87,12 @@ module Kronk
     # by one over the newest SEARCH_WINDOW.
     def findable(klass, scope, viewer, limit:)
       found = FOUND_BY[klass.name]
-      scope = scope.merge(found.call(viewer)) if found
+      # As id subqueries, not `merge`: merge lets the second relation's
+      # condition on a column replace the first's, so a Krew or an event
+      # looked up by id came back as whichever one the viewer finds first.
+      scope = scope.where(id: found.call(viewer).select(:id)) if found
       scope = scope.order(created_at: :desc)
-      return scope.merge(klass.visible_to(viewer)).limit(limit).to_a if klass.respond_to?(:visible_to)
+      return scope.where(id: klass.visible_to(viewer).select(:id)).limit(limit).to_a if klass.respond_to?(:visible_to)
 
       scope.limit(SEARCH_WINDOW).select { |record| visible?(record, viewer) }.first(limit)
     end

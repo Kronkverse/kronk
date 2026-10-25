@@ -55,6 +55,29 @@ RSpec.describe 'Attachments::Candidates' do
       expect(response.parsed_body.pluck('title')).to eq ['Last picnic']
     end
 
+    # A composer opened with `?konnect=<slug>:<id>` looks its source up by id
+    # for the tile's title. The visibility scopes used to replace the id
+    # condition, so the tile named the newest Krew or event instead.
+    it 'looks a Krew up by id, not the newest one the viewer can find' do
+      mine = Krew.create!(slug: 'mainframe', name: 'Mainframe', access: 'open')
+      mine.krew_memberships.create!(account: user.account, role: 'member', source: 'direct')
+      newer = Krew.create!(slug: 'mayhem', name: 'Mayhem New Years', access: 'open')
+      newer.krew_memberships.create!(account: user.account, role: 'member', source: 'direct')
+
+      get "/api/v1/attachments/candidates?korner=krew&id=#{mine.id}", headers: headers
+
+      expect(response.parsed_body.pluck('title')).to eq ['Mainframe']
+    end
+
+    it 'looks an event up by id, not the newest one the viewer can see' do
+      first = Event.create!(account: user.account, title: 'Dawn swim', start_time: 3.days.from_now, end_time: 3.days.from_now + 1.hour)
+      Event.create!(account: user.account, title: 'Dusk swim', start_time: 4.days.from_now, end_time: 4.days.from_now + 1.hour)
+
+      get "/api/v1/attachments/candidates?korner=kalendar&id=#{first.id}", headers: headers
+
+      expect(response.parsed_body.pluck('title')).to eq ['Dawn swim']
+    end
+
     it 'says when each Kalendar event starts' do
       event = Event.create!(account: user.account, title: 'Dawn swim', start_time: 3.days.from_now, end_time: 3.days.from_now + 1.hour)
 

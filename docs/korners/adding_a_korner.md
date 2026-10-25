@@ -851,9 +851,11 @@ konnect:
   needs somewhere to go and a label: the manifest's `compose:`, or its own
   `route:` and `label:` inside `konnect:` when the Ж menu's composer isn't the
   one that makes the korner's linkable records (Map's composer makes treks;
-  a Place has its own composer). It also needs a korner that takes links. Albutts, Art,
-  FreeTheDream, Kalendar, Karporn and Wachuneed say it today; Huddle will
-  once its Room composer Konnects.
+  a Place has its own composer). It also needs a korner that takes links.
+  Every korner whose composer calls `useKonnect` says it: Albutts, Art,
+  Booth, Cinema, FreeTheDream, Huddle, Kalendar, Karporn, Kommons, Krew,
+  Kronikles, Kuestions, Map and Wachuneed. A composer that Konnects but
+  isn't offered as New … is a gap (decisions.md, 2026-10-25).
 - **`effects:`** lists, per other korner (`with:`), what a Konnection does
   beyond being a link (`does:`, one sentence a member could read). It is
   exactly the pairs in `Kronk::AttachmentEffects` (§2.5): Kalendar ↔ Krew,
