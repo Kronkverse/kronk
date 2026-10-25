@@ -116,3 +116,24 @@ export const ensurePmtilesProtocol = () => {
   maplibregl.addProtocol('pmtiles', protocol.tile);
   pmtilesRegistered = true;
 };
+
+// Whether this browser can give MapLibre a WebGL context. Some devices and
+// browsers turn WebGL off (a hardened privacy mode, a blocklisted GPU driver,
+// a remote desktop), and MapLibre's constructor then throws "Failed to
+// initialize WebGL". Every map checks this first and shows its fallback
+// instead (docs/spaces/map.md, "Without WebGL"). Cached: the answer doesn't
+// change within a page load. It can still say yes and the map fail, so map
+// creation is wrapped in try/catch as well.
+let webglSupported: boolean | null = null;
+export const supportsWebGL = (): boolean => {
+  if (webglSupported !== null) return webglSupported;
+  try {
+    const canvas = document.createElement('canvas');
+    webglSupported = Boolean(
+      canvas.getContext('webgl2') ?? canvas.getContext('webgl'),
+    );
+  } catch {
+    webglSupported = false;
+  }
+  return webglSupported;
+};

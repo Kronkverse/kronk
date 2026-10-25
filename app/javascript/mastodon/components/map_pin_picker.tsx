@@ -21,7 +21,11 @@ import {
   ensurePmtilesProtocol,
   HOME_CENTER,
   HOME_ZOOM,
+  supportsWebGL,
 } from 'mastodon/features/map_v2/basemap';
+
+import { KornerPill } from './korner_pill';
+import { MapNeedsWebGL } from './map_needs_webgl';
 
 // MapPinPicker — a portal-mounted picker overlay that shows the shared
 // Kronk basemap with a movable centre crosshair. Three ways to place
@@ -52,6 +56,10 @@ import {
 // name and address) take the footer's place, so there is no "Pin here".
 // `searchPlaces` lists existing Places above the search results, before
 // typing too; picking one calls `onPickPlace`.
+//
+// Without WebGL there is no map to aim: the map area says so, and the
+// search and "Centre on me" still work — picking a result or locating
+// pins that spot straight away (docs/spaces/map.md, "Without WebGL").
 
 const messages = defineMessages({
   title: {
@@ -86,6 +94,10 @@ const messages = defineMessages({
     defaultMessage: 'No matches. Try a different search.',
   },
   places: { id: 'map_pin_picker.places', defaultMessage: 'Places' },
+  noMapHint: {
+    id: 'map_pin_picker.no_map_hint',
+    defaultMessage: 'Search above, or use your current location.',
+  },
 });
 
 // An existing Place offered above the search results.
@@ -146,6 +158,7 @@ export const MapPinPicker: React.FC<Props> = ({
   const searchRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [locating, setLocating] = useState(false);
+  const [noMap, setNoMap] = useState(() => !supportsWebGL());
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<
     ApiGeocodeResultJSON[] | null
@@ -193,32 +206,57 @@ export const MapPinPicker: React.FC<Props> = ({
     centreOnMe(true);
   }, [centreOnMe]);
 
+  // No map: locate, then pin where the person is.
+  const locateAndPin = useCallback(() => {
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        onPin({
+          lng: pos.coords.longitude,
+          lat: pos.coords.latitude,
+          zoom: LOCAL_ZOOM,
+        });
+      },
+      () => {
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
+    );
+  }, [onPin]);
+
   useEffect(() => {
     searchRef.current?.focus();
   }, []);
 
   useEffect(() => {
-    ensurePmtilesProtocol();
     const container = containerRef.current;
-    if (!container || mapRef.current) return;
+    if (noMap || !container || mapRef.current) return;
+    ensurePmtilesProtocol();
 
-    const map = new maplibregl.Map({
-      container,
-      center: initial ? [initial.lng, initial.lat] : HOME_CENTER,
-      zoom: initial?.zoom ?? HOME_ZOOM,
-      attributionControl: { compact: true },
-      style: {
-        version: 8,
-        sources: {
-          protomaps: {
-            type: 'vector',
-            url: BASEMAP_URL,
-            attribution: '© OpenStreetMap',
+    let map: maplibregl.Map;
+    try {
+      map = new maplibregl.Map({
+        container,
+        center: initial ? [initial.lng, initial.lat] : HOME_CENTER,
+        zoom: initial?.zoom ?? HOME_ZOOM,
+        attributionControl: { compact: true },
+        style: {
+          version: 8,
+          sources: {
+            protomaps: {
+              type: 'vector',
+              url: BASEMAP_URL,
+              attribution: '© OpenStreetMap',
+            },
           },
+          layers: basemapLayers(),
         },
-        layers: basemapLayers(),
-      },
-    });
+      });
+    } catch {
+      setNoMap(true);
+      return;
+    }
 
     map.addControl(
       new maplibregl.NavigationControl({ showCompass: false }),
@@ -266,7 +304,7 @@ export const MapPinPicker: React.FC<Props> = ({
       map.remove();
       mapRef.current = null;
     };
-  }, [initial, centreOnMe]);
+  }, [initial, centreOnMe, noMap]);
 
   // Debounced geocoder query via Kronk's server-side proxy at
   // `/api/v1/map/geocode` (see `mastodon/api/map.ts`). Same endpoint
@@ -347,20 +385,30 @@ export const MapPinPicker: React.FC<Props> = ({
       setResultsOpen(true);
   }, [searchResults, placeResults]);
 
-  const pickResult = useCallback((r: ApiGeocodeResultJSON) => {
-    const map = mapRef.current;
-    if (!map) return;
-    if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return;
-    map.easeTo({ center: [r.lng, r.lat], zoom: LOCAL_ZOOM, duration: 600 });
-    pickedLabelRef.current = r.label;
-    setResultsOpen(false);
-    reportRef.current?.({
-      lng: r.lng,
-      lat: r.lat,
-      zoom: LOCAL_ZOOM,
-      label: r.label,
-    });
-  }, []);
+  const pickResult = useCallback(
+    (r: ApiGeocodeResultJSON) => {
+      if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return;
+      const map = mapRef.current;
+      if (!map) {
+        // With no map there's no centre to confirm, so a pick is the pin.
+        if (noMap) {
+          setResultsOpen(false);
+          onPin({ lng: r.lng, lat: r.lat, zoom: LOCAL_ZOOM, label: r.label });
+        }
+        return;
+      }
+      map.easeTo({ center: [r.lng, r.lat], zoom: LOCAL_ZOOM, duration: 600 });
+      pickedLabelRef.current = r.label;
+      setResultsOpen(false);
+      reportRef.current?.({
+        lng: r.lng,
+        lat: r.lat,
+        zoom: LOCAL_ZOOM,
+        label: r.label,
+      });
+    },
+    [noMap, onPin],
+  );
 
   const handleResultClick = useCallback<
     React.MouseEventHandler<HTMLButtonElement>
@@ -530,37 +578,50 @@ export const MapPinPicker: React.FC<Props> = ({
             {dropdown}
           </div>
         </header>
-        <div className='map-pin-picker__map' ref={containerRef}>
-          <span className='map-pin-picker__crosshair' aria-hidden='true' />
-          <button
-            type='button'
-            className='map-pin-picker__locate'
-            onClick={centreOnMeClick}
-            disabled={locating}
-          >
-            {locating ? (
-              <FormattedMessage {...messages.centreOnMeBusy} />
-            ) : (
-              <FormattedMessage {...messages.centreOnMe} />
-            )}
-          </button>
-          {!live && (
-            /* Floating primary confirm chip on the map itself. After
+        {noMap ? (
+          <div className='map-pin-picker__no-map'>
+            <MapNeedsWebGL body={intl.formatMessage(messages.noMapHint)} />
+            <KornerPill
+              label={intl.formatMessage(
+                locating ? messages.centreOnMeBusy : messages.centreOnMe,
+              )}
+              onClick={locateAndPin}
+              disabled={locating}
+            />
+          </div>
+        ) : (
+          <div className='map-pin-picker__map' ref={containerRef}>
+            <span className='map-pin-picker__crosshair' aria-hidden='true' />
+            <button
+              type='button'
+              className='map-pin-picker__locate'
+              onClick={centreOnMeClick}
+              disabled={locating}
+            >
+              {locating ? (
+                <FormattedMessage {...messages.centreOnMeBusy} />
+              ) : (
+                <FormattedMessage {...messages.centreOnMe} />
+              )}
+            </button>
+            {!live && (
+              /* Floating primary confirm chip on the map itself. After
               the user searches / geolocates / clicks-to-pin, their
               attention is on the map — the footer confirm is out of
               visual focus (Tal 2026-08-14: "no way to select it
               once i've centered the cross on the location"). Two
               paths to confirm, same action; keyboard users still
               land on the footer via tab order. */
-            <button
-              type='button'
-              className='map-pin-picker__floating-confirm'
-              onClick={handlePin}
-            >
-              <FormattedMessage {...messages.confirm} />
-            </button>
-          )}
-        </div>
+              <button
+                type='button'
+                className='map-pin-picker__floating-confirm'
+                onClick={handlePin}
+              >
+                <FormattedMessage {...messages.confirm} />
+              </button>
+            )}
+          </div>
+        )}
         {live ? (
           <footer className='map-pin-picker__details'>{children}</footer>
         ) : (
@@ -572,13 +633,15 @@ export const MapPinPicker: React.FC<Props> = ({
             >
               <FormattedMessage {...messages.cancel} />
             </button>
-            <button
-              type='button'
-              className='map-pin-picker__confirm'
-              onClick={handlePin}
-            >
-              <FormattedMessage {...messages.confirm} />
-            </button>
+            {!noMap && (
+              <button
+                type='button'
+                className='map-pin-picker__confirm'
+                onClick={handlePin}
+              >
+                <FormattedMessage {...messages.confirm} />
+              </button>
+            )}
           </footer>
         )}
       </div>
