@@ -186,12 +186,17 @@ and `longitude` as exact decimals, `account_id` of its maker).
   trek (`compose:`); the Place composer is reached from a Konnect (the
   manifest's `konnect: { make: true, route: /hub/map/places/new, label:
 'New place' }`), or by its URL.
-- **New place, from a composer.** Composers have no location fields
+- **A Place, from a composer.** Composers have no location fields
   (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). In
-  a composer's Konnect picker, Map offers **New place**: a small form in
-  the picker (`components/konnect_new_place.tsx`: name, an optional
-  address, **Pin on the map**) makes the Place at once and picks it, and
-  the record links to it when it posts. It needs an address or a pin.
+  a composer's Konnect picker, picking Map opens the map at once
+  (`components/konnect_map.tsx` on `<MapPinPicker>`), search box focused.
+  Existing Places are listed above the search results (before typing too)
+  and picked as they are. Otherwise a search result, a tap or "Centre on
+  me" drops the pin, and the Name and Address under the map (filled from a
+  search result, typed by hand where OpenStreetMap doesn't know the
+  street) make the Place at once with **Add place** and pick it; the
+  record links to it when it posts. It needs an address or a pin. Escape
+  or Cancel closes the map back to the spaces.
 - **Where a record is.** Whatever reads a location falls back to the
   record's Konnected Place when its own old fields are empty
   (`Kronk::RecordPlace`; own fields still win, for older records and the

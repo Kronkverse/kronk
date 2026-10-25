@@ -12,9 +12,8 @@ import type {
   AttachmentKind,
 } from 'mastodon/api/attachments';
 import { apiSearchAttachmentCandidates } from 'mastodon/api/attachments';
-import type { ApiMapPlaceJSON } from 'mastodon/api/map_places';
 import { Icon } from 'mastodon/components/icon';
-import { KonnectNewPlace } from 'mastodon/components/konnect_new_place';
+import { KonnectMap } from 'mastodon/components/konnect_map';
 import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import { useAttachments } from 'mastodon/hooks/useAttachments';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
@@ -52,8 +51,8 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 // There, "New …" can't open another composer (the person is mid-compose),
 // except for one space: Map. Where a thing is is a Konnection to a Place
 // (decisions.md, 2026-10-23, "Location fields become Konnect → Map"), so
-// Map's "New place" opens a small form right here (<KonnectNewPlace>),
-// makes the Place at once and hands it back as the pick.
+// picking Map opens the map right here (<KonnectMap>): an existing Place,
+// or a new one made at once and handed back as the pick.
 //
 // Kind is set to `link` today (user-added, independent lifecycle).
 // A future update could read the manifest's `kind:` on each entry
@@ -157,14 +156,9 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     makeLabel
       ? { route: makeRoute, label: makeLabel }
       : undefined;
-  // Map, in a composer: "New place" makes the Place inside the picker.
-  const makePlace =
-    onPick && target?.slug === 'map' && konnectMake?.make === true && makeLabel
-      ? makeLabel
-      : undefined;
-  const [placeForm, setPlaceForm] = useState(false);
-  // The pin picker over the place form takes Escape for itself.
-  const [pinning, setPinning] = useState(false);
+  // Map, in a composer: the map opens over the picker, which leaves Escape
+  // to it.
+  const mapping = Boolean(onPick) && target?.slug === 'map';
   const makeNewRoute = makeNew?.route;
   const handleMakeNew = useCallback(() => {
     if (!makeNewRoute || sourceId == null) return;
@@ -198,18 +192,15 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   const capture = Boolean(onPick);
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || pinning) return;
+      if (e.key !== 'Escape' || mapping) return;
       if (capture) e.stopPropagation();
-      if (attaching) return;
-      // One Escape, one step: out of the place form, then the picker.
-      if (placeForm) setPlaceForm(false);
-      else onClose();
+      if (!attaching) onClose();
     };
     window.addEventListener('keydown', handleKey, capture);
     return () => {
       window.removeEventListener('keydown', handleKey, capture);
     };
-  }, [attaching, onClose, capture, pinning, placeForm]);
+  }, [attaching, onClose, capture, mapping]);
 
   // Debounced search — matches the hand-rolled setTimeout pattern used
   // by event_composer.tsx' invitee search.
@@ -295,21 +286,23 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     setTarget(undefined);
     setQuery('');
     setPast(false);
-    setPlaceForm(false);
   }, []);
 
-  const openPlaceForm = useCallback(() => {
-    setPlaceForm(true);
-  }, []);
-  const closePlaceForm = useCallback(() => {
-    setPlaceForm(false);
-  }, []);
-  const handlePlaceMade = useCallback(
-    (place: ApiMapPlaceJSON) => {
-      onPick?.({ slug: 'map', id: place.id, title: place.name });
+  // Closing the map goes back to the spaces, or out if Map is the only one.
+  const closeMap = useCallback(() => {
+    if (targetSlugs.length > 1) clearTarget();
+    else onClose();
+  }, [targetSlugs.length, clearTarget, onClose]);
+  const handleMapPick = useCallback(
+    (picked: KonnectTarget) => {
+      onPick?.(picked);
       onClose();
     },
     [onPick, onClose],
+  );
+  const excludedPlaces = useMemo(
+    () => (exclude ?? []).filter((e) => e.slug === 'map').map((e) => e.id),
+    [exclude],
   );
 
   const handleBackdrop = useCallback(() => {
@@ -382,30 +375,14 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
               </>
             )}
 
-            {target && makePlace && placeForm ? (
-              <KonnectNewPlace
-                onMade={handlePlaceMade}
-                onBack={closePlaceForm}
-                onPinning={setPinning}
-                onBusy={setAttaching}
+            {mapping ? (
+              <KonnectMap
+                onPicked={handleMapPick}
+                onCancel={closeMap}
+                exclude={excludedPlaces}
               />
             ) : target ? (
               <>
-                {makePlace && (
-                  <button
-                    type='button'
-                    className='attachment-picker__spawn'
-                    onClick={openPlaceForm}
-                    disabled={attaching}
-                  >
-                    <Icon
-                      id='add'
-                      icon={AddIcon}
-                      className='attachment-picker__plus'
-                    />
-                    {makePlace}
-                  </button>
-                )}
                 {makeNew && (
                   <button
                     type='button'

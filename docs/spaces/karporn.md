@@ -27,7 +27,7 @@ Deliberately narrow: this korner is for photos of cars, not car reviews, not cla
 
 ## Location UX
 
-No location block in the composer: where the car was is its Konnected Place, from the Konnect row (Map's **New place** in the picker takes a name, an address and a pin). The label is what shows on the feed card; the coordinates power the "Open in Map" link on the viewer.
+No location block in the composer: where the car was is its Konnected Place, from the Konnect row (Map in the picker opens the map: an existing Place, or a pin with a name and an address). The label is what shows on the feed card; the coordinates power the "Open in Map" link on the viewer.
 
 ## Where you see Karporn
 

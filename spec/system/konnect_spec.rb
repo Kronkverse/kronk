@@ -65,15 +65,43 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
     expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id)).to exist
   end
 
+  # Konnect → Map opens the map at once; with no pin, the address is
+  # looked up.
   def new_place_in_picker(name, address)
-    within('.attachment-picker') do
-      click_on 'Map'
-      click_on 'New place'
+    within('.attachment-picker') { click_on 'Map' }
+    within('.map-pin-picker') do
       fill_in 'Name', with: name
-      fill_in 'Address (optional)', with: address
+      fill_in 'Address', with: address
       click_on 'Add place'
     end
     expect(page).to have_no_css('.attachment-picker')
+    expect(page).to have_no_css('.map-pin-picker')
+  end
+
+  it "picks an existing Place from the map's list" do
+    MapPlace.create!(name: 'Bondi Pavilion', address: 'Queen Elizabeth Dr, Bondi Beach', latitude: -33.891, longitude: 151.277, account: bob.account)
+    visit '/hub/kalendar/composer'
+
+    within('.compose-shell') { within('.konnect-row') { click_on 'Konnect' } }
+    within('.attachment-picker') { click_on 'Map' }
+    within('.map-pin-picker') { click_on 'Bondi Pavilion' }
+
+    expect(page).to have_no_css('.map-pin-picker')
+    expect(page).to have_css('.compose-shell .konnect-row .space-tile', text: 'Bondi Pavilion')
+  end
+
+  # No Places yet, so no list to close first: one Escape closes the map.
+  it 'closes the map back to the spaces on Escape, leaving the composer open' do
+    visit '/hub/kalendar/composer'
+
+    within('.compose-shell') { within('.konnect-row') { click_on 'Konnect' } }
+    within('.attachment-picker') { click_on 'Map' }
+    expect(page).to have_css('.map-pin-picker')
+    find('.map-pin-picker__search-input').send_keys(:escape)
+
+    expect(page).to have_no_css('.map-pin-picker')
+    expect(page).to have_css('.attachment-picker .space-tile', text: 'Map')
+    expect(page).to have_css('.compose-shell')
   end
 
   it 'opens on the record it was made from, which can be dropped' do
