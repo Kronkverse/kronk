@@ -62,6 +62,19 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.place-control')
   end
 
+  # `?place=1` is the "update your pin" link; a Map Place has its own
+  # `?map_place=<id>`, so Place 1 can't hijack it.
+  it 'keeps the pin link and a Place link apart, even for Place 1' do
+    place = MapPlace.create!(id: 1, name: 'Bondi Pavilion', address: 'Queen Elizabeth Dr, Bondi Beach', latitude: -33.891, longitude: 151.277, account: bob.account)
+
+    visit '/hub/map?place=1'
+    expect(page).to have_css('.place-control')
+    expect(page).to have_no_css('.map-place-card')
+
+    visit "/hub/map?map_place=#{place.id}"
+    expect(page).to have_css('.map-place-card', text: 'Bondi Pavilion')
+  end
+
   it 'logs a trek on the day it happened, not the day it was posted' do
     visit '/hub/map/composer'
 

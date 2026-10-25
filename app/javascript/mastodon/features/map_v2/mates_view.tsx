@@ -706,7 +706,7 @@ export const MatesView: React.FC = () => {
         <CountryLayer map={mapRef.current} ready={ready} />
 
         {/* Places — exact spots with an address that things Konnect
-            to (docs/spaces/map.md, Places). Reads `?place=<id>`. */}
+            to (docs/spaces/map.md, Places). Reads `?map_place=<id>`. */}
         <PlaceLayer map={mapRef.current} ready={ready} />
       </div>
     </div>
