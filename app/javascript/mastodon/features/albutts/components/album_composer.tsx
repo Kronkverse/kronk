@@ -42,6 +42,7 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useSameAs } from 'mastodon/hooks/useSameAs';
 
 import { CaptionTextarea } from './caption_textarea';
 
@@ -455,10 +456,8 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   // What a new album will be Konnected to (decisions.md, 2026-10-23). An
   // album made for a Krew is the Krew's album, Konnected to it already, so
   // that tile stays put.
-  const konnect = useKonnect('albutts', { sourceHandled: !!newForKrew });
-  const restoreKonnect = konnect.restore;
-  const commitKonnect = konnect.commit;
-  const removeKonnect = konnect.remove;
+  const baseKonnect = useKonnect('albutts', { sourceHandled: !!newForKrew });
+  const removeKonnect = baseKonnect.remove;
   const availableKrews = useAvailableKrews();
   // A new album Konnected to one of your own Krews is that Krew's album: the
   // first such Krew in the Konnect row. A Krew you're not in is just a link.
@@ -466,14 +465,14 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   // it mine" below, makes it yours again.
   const konnectedKrew = useMemo<ComposerKrew | undefined>(() => {
     if (editing || newForKrew) return undefined;
-    for (const target of konnect.pending) {
+    for (const target of baseKonnect.pending) {
       if (target.slug !== 'krew') continue;
       const krew = availableKrews.find((k) => k.id === target.id);
       if (krew)
         return { id: krew.id, name: krew.name, listed: krew.listed ?? false };
     }
     return undefined;
-  }, [editing, newForKrew, konnect.pending, availableKrews]);
+  }, [editing, newForKrew, baseKonnect.pending, availableKrews]);
   // A Krew album, being made from a Krew's page or for a Konnected Krew, or
   // edited. It is seen by the Krew or by everyone, and its members add, so
   // that one choice replaces reach, Krews and who can add. Made from a
@@ -496,6 +495,41 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   useEffect(() => {
     if (!editing) setAudience('krew');
   }, [editing, konnectedKrewId]);
+
+  const handleVisibilityChange = useCallback((next: ReachValue) => {
+    setVisibility(next as AlbumVisibility);
+  }, []);
+
+  const handleToggleAudienceKrew = useCallback((id: string) => {
+    setAudienceKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+    // If a krew leaves the audience it can't remain a contributor (you must
+    // be able to see an album to add to it). No-op when adding.
+    setContributorKrewIds((prev) => prev.filter((x) => x !== id));
+  }, []);
+
+  // "Same as" a Konnected record (decisions.md, 2026-10-25): its audience
+  // becomes the album's reach and Krews. Not for a Krew album, whose
+  // audience is its Krew's.
+  const applyAudience = useCallback(
+    (tier: ReachValue, ids: string[] | null) => {
+      setVisibility(tier as AlbumVisibility);
+      if (ids) {
+        setAudienceKrewIds(ids);
+        setContributorKrewIds((prev) => prev.filter((x) => ids.includes(x)));
+      }
+    },
+    [],
+  );
+  const { konnect, reach: sameAsReach } = useSameAs(baseKonnect, {
+    enabled: !editing && !forKrew,
+    apply: applyAudience,
+    onChange: handleVisibilityChange,
+    onToggleKrew: handleToggleAudienceKrew,
+  });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
   const [giving, setGiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saveError, setSaveError] = useState<'save' | 'delete' | 'give' | null>(
@@ -648,19 +682,6 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value.slice(0, TITLE_MAX));
-  }, []);
-
-  const handleVisibilityChange = useCallback((next: ReachValue) => {
-    setVisibility(next as AlbumVisibility);
-  }, []);
-
-  const handleToggleAudienceKrew = useCallback((id: string) => {
-    setAudienceKrewIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-    // If a krew leaves the audience it can't remain a contributor (you must
-    // be able to see an album to add to it). No-op when adding.
-    setContributorKrewIds((prev) => prev.filter((x) => x !== id));
   }, []);
 
   const handleContributionMe = useCallback(() => {
@@ -1195,7 +1216,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const reachControl = (
     <ReachDropdown
       value={reachValue}
-      onChange={handleVisibilityChange}
+      onChange={sameAsReach.onChange}
       // Reach is fixed once the album exists: changing it wouldn't
       // re-scope the photo posts already in it (docs/spaces/albutts.md,
       // Open questions), so narrowing it would only look private. Editing
@@ -1208,7 +1229,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       }
       krews={availableKrews}
       selectedKrewIds={audienceKrewIds}
-      onToggleKrew={handleToggleAudienceKrew}
+      onToggleKrew={sameAsReach.onToggleKrew}
+      sameAs={sameAsReach.sameAs}
+      onSameAs={sameAsReach.onSameAs}
     />
   );
   const isSelfOnly = reachValue === 'self_only';

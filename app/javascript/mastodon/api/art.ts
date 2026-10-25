@@ -4,6 +4,7 @@ import {
   apiRequestPut,
   apiRequestDelete,
 } from 'mastodon/api';
+import { withAudienceKrews as withKrews } from 'mastodon/api/krew';
 import type {
   ArtPieceDetailsJSON,
   ApiArtPieceJSON,
@@ -47,11 +48,21 @@ export const apiListPieces = (scope: PiecesScope = 'all') =>
 export const apiGetPiece = (id: string) =>
   apiRequestGet<ApiArtPieceJSON>(`v1/art/pieces/${id}`);
 
-export const apiCreatePiece = (params: CreatePieceParams) =>
-  apiRequestPost<ApiArtPieceJSON>('v1/art/pieces', { art_piece: params });
+export const apiCreatePiece = (params: CreatePieceParams, krewIds?: string[]) =>
+  apiRequestPost<ApiArtPieceJSON>(
+    'v1/art/pieces',
+    withKrews({ art_piece: params }, krewIds),
+  );
 
-export const apiUpdatePiece = (id: string, params: UpdatePieceParams) =>
-  apiRequestPut<ApiArtPieceJSON>(`v1/art/pieces/${id}`, { art_piece: params });
+export const apiUpdatePiece = (
+  id: string,
+  params: UpdatePieceParams,
+  krewIds?: string[],
+) =>
+  apiRequestPut<ApiArtPieceJSON>(
+    `v1/art/pieces/${id}`,
+    withKrews({ art_piece: params }, krewIds),
+  );
 
 export const apiDeletePiece = (id: string) =>
   apiRequestDelete<Record<string, never>>(`v1/art/pieces/${id}`);

@@ -4,10 +4,13 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import type { AttachmentAudience } from 'mastodon/api/attachments';
 import { AttachmentPicker } from 'mastodon/components/attachment_picker';
+import { AudienceMarker } from 'mastodon/components/audience_marker';
 import { Icon } from 'mastodon/components/icon';
 import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import type { KonnectControls, KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { konnectKey } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -17,7 +20,8 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // (`<AttachmentSection>`): one per record waiting, with a × to drop it, and
 // a Konnect tile that opens the picker in its pick-don't-save mode, since
 // the record isn't made yet. `useKonnect` holds the list and Konnects it
-// after the create.
+// after the create. Each tile says who sees its record (`<AudienceMarker>`),
+// and the one whose audience the new record will follow says "Same as".
 
 const messages = defineMessages({
   konnect: { id: 'konnect_row.konnect', defaultMessage: 'Konnect' },
@@ -55,8 +59,13 @@ export const KonnectRow: React.FC<KonnectRowProps> = ({
       <ul className='space-tiles'>
         {konnect.pending.map((target) => (
           <PendingTile
-            key={`${target.slug}/${target.id}`}
+            key={konnectKey(target)}
             target={target}
+            audience={konnect.audiences[konnectKey(target)]}
+            leads={
+              !!konnect.leader &&
+              konnectKey(konnect.leader) === konnectKey(target)
+            }
             removable={konnect.removable(target)}
             disabled={disabled}
             onRemove={konnect.remove}
@@ -96,6 +105,8 @@ export const KonnectRow: React.FC<KonnectRowProps> = ({
 
 interface PendingTileProps {
   target: KonnectTarget;
+  audience: AttachmentAudience | null | undefined;
+  leads: boolean;
   removable: boolean;
   disabled: boolean;
   onRemove: (target: KonnectTarget) => void;
@@ -105,6 +116,8 @@ interface PendingTileProps {
 // a link: following it would leave the composer.
 const PendingTile: React.FC<PendingTileProps> = ({
   target,
+  audience,
+  leads,
   removable,
   disabled,
   onRemove,
@@ -120,9 +133,12 @@ const PendingTile: React.FC<PendingTileProps> = ({
 
   return (
     <li>
-      <span className='space-tile space-tile--static'>
+      <span
+        className={`space-tile space-tile--static${leads ? ' space-tile--leads' : ''}`}
+      >
         <KornerIcon className='space-tile__glyph' />
         <span className='space-tile__name'>{title}</span>
+        <AudienceMarker audience={audience} slug={target.slug} leads={leads} />
       </span>
 
       {removable && (

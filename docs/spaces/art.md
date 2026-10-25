@@ -16,7 +16,7 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 - **Description** — optional, up to 4000 chars. Plain text.
 - **Kind** — required. One of painting, drawing, illustration, print, photograph, collage, mixed media, sculpture, installation, ceramic, glass, textile, jewellery, woodwork, metalwork, papercraft, calligraphy, mural or street art, and other (`ArtPiece#kind`). The names people see live once, in `features/art/kinds.ts`, which the composer, the page, the grid and the feed card all read; the picker lists them by name with Other last. A new kind takes the next enum number in the model and a name there.
 - **Photos** — zero or more, ordered by `position`. First photo becomes the piece's cover (unless a `cover_media_attachment` is set explicitly). Photos have an optional caption and no independent favourite / reply surface — all interaction lands on the piece's feed card, not per photo.
-- **Visibility** — the reach ladder: `public / orbit / mates / self_only`. No Krew scoping: single-author works don't need the group-coordination shape that made it useful on Albutts. The enum's integer values leave room to add it without a schema change.
+- **Visibility** — the reach ladder: `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25).
 
 ## Piece details
 
@@ -101,7 +101,7 @@ Storage: photos ride the shared `MediaAttachment` pipeline. No Art-owned media p
 
 - [`../korners/korner_standard.md`](../korners/korner_standard.md) — Standard §L1 identity, §L11 Frame adherence.
 - [`../korners/adding_a_korner.md`](../korners/adding_a_korner.md) — the build walkthrough.
-- [`albutts.md`](albutts.md) — the multi-contributor cousin whose pattern Art reuses (minus contributor roster and krew scoping).
+- [`albutts.md`](albutts.md) — the multi-contributor cousin whose pattern Art reuses (minus the contributor roster).
 - [`kronikles.md`](kronikles.md) / [`cinema.md`](cinema.md) — the sibling korners that took the discipline splits.
 
 ## History

@@ -11,6 +11,8 @@
 # Naming history: marketplace → wachuneed (2026-07-21) →
 # mARTketplace/martketplace (2026-07-24) → wachuneed (2026-09-07).
 class Api::V1::Wachuneed::ListingsController < Api::BaseController
+  include KrewAudienceParams
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :close]
   before_action :require_user!
@@ -63,6 +65,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
       @listing.save!
       attach_media!(@listing, media_attachment_ids_param)
     end
+    sync_krew_audience!(@listing)
 
     # Project a live listing into the feed + the owner's profile by
     # creating its companion Status (the `wachuneed_card`). After the
@@ -95,6 +98,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
       end
     end
 
+    sync_krew_audience!(@listing)
     # The companion Status carries the title as its text; keep it in step.
     @listing.status&.update_column(:text, @listing.title) if @listing.saved_change_to_title?
     # And its reach, when the seller changed who can see the listing.

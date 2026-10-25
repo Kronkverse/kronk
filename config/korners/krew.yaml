@@ -122,6 +122,16 @@ konnect:
       does: "The Krew joins the event's audience and lists it under Kalendar; the Krew's emergence is Konnected to the event too."
     - with: albutts
       does: "The Krew joins the album's audience and lists it under Albutts."
+    - with: art
+      does: "The Krew joins the art piece's audience, so its members can open it."
+    - with: cinema
+      does: "The Krew joins the film's audience, so its members can open it."
+    - with: karporn
+      does: "The Krew joins the kar's audience, so its members can open it."
+    - with: kronikles
+      does: "The Krew joins the kronikle's audience, so its members can open it."
+    - with: wachuneed
+      does: "The Krew joins the listing's audience, so its members can open it."
 
 compose:
   label: 'Gather a Krew'

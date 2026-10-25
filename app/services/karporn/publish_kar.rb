@@ -26,7 +26,8 @@ module Karporn
       status = PostStatusService.new.call(
         @kar.owner,
         text: @kar.title,
-        visibility: KAR_TO_STATUS_VISIBILITY.fetch(@kar.visibility, 'public')
+        visibility: KAR_TO_STATUS_VISIBILITY.fetch(@kar.visibility, 'public'),
+        krew_ids: @kar.krew_ids
       )
 
       @kar.update_columns(status_id: status.id)

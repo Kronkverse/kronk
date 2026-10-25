@@ -59,6 +59,7 @@ module Kronk
     def unlink!(event, krew)
       StatusKrews.remove(event.status_id, krew.id)
       group_links(event, krew).delete_all
+      Kronk::Audience.changed(event)
     end
 
     # The event's post was just made, or made again (turning invite-only
@@ -91,6 +92,8 @@ module Kronk
       return unless event.account_id == actor.id && krew.member?(actor) && !krew.archived?
 
       StatusKrews.add(event.status_id, krew.id)
+      # What follows the event's audience follows the Krew too (Kronk::Audience).
+      Kronk::Audience.changed(event)
       # The Krew page lists events under its Kalendar space, and an
       # emergence's Krew starts with none, so the event would be linked but
       # out of sight.
