@@ -1,4 +1,5 @@
-// Kommunity — the whole-graph orb view + the Discover list. A
+// Kommunity — the whole-graph orb view, the Discover drawer and the
+// Everyone list. A
 // first-class Kronk korner at /hub/kommunity. Sits inside the shared
 // KornerShell so AutoSpaceBadge, AutoSpaceHeader, and
 // AutoSpaceViewPicker do the chrome (Standard L11) — this file only
@@ -7,6 +8,7 @@
 import { KornerShell } from 'mastodon/components/korner_shell';
 
 import { KommunityDrawer } from './drawer';
+import { KommunityEveryone } from './everyone';
 import { KronkOrb } from './orb';
 
 const OrbView = () => <KronkOrb />;
@@ -16,6 +18,10 @@ const OrbView = () => <KronkOrb />;
 // lists"). Rotator key stays `discover` so the manifest + saved
 // links keep working.
 const DiscoverView = () => <KommunityDrawer />;
+// Everyone — the whole alphabetical directory, Mates included (Tal
+// 2026-10-26). Discover is for meeting new people; this is for finding
+// anyone you're allowed to.
+const EveryoneView = () => <KommunityEveryone />;
 
 export const Kommunity = () => (
   <KornerShell
@@ -23,7 +29,11 @@ export const Kommunity = () => (
     label='Kommunity'
     className='kommunity'
     defaultView='orb'
-    views={{ orb: OrbView, discover: DiscoverView }}
+    views={{
+      orb: OrbView,
+      discover: DiscoverView,
+      everyone: EveryoneView,
+    }}
   />
 );
 

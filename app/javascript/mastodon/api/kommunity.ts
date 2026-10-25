@@ -1,4 +1,4 @@
-import { apiRequestGet } from 'mastodon/api';
+import api, { apiRequestGet, getLinks } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 
 // Kommunity discover-drawer layer endpoints. Same paginated account
@@ -27,3 +27,31 @@ export const apiGetKommunityLayer = (
     `v1/kommunity/${layer}`,
     buildQuery(maxId, limit),
   );
+
+// Kommunity Everyone — the full alphabetical directory of people the
+// viewer may find (Api::V1::Kommunity::EveryoneController). Paged by
+// offset; the next page's offset comes from the Link header, or `null`
+// when there is none.
+export const apiGetKommunityEveryone = async (
+  query: string,
+  offset: number,
+  limit = 40,
+): Promise<{ accounts: ApiAccountJSON[]; nextOffset: number | null }> => {
+  const params: Record<string, string> = {
+    limit: String(limit),
+    offset: String(offset),
+  };
+  if (query) params.q = query;
+
+  const response = await api().get<ApiAccountJSON[]>(
+    '/api/v1/kommunity/everyone',
+    { params },
+  );
+  const next = getLinks(response).refs.find((link) => link.rel === 'next');
+  const nextParam = next ? new URL(next.uri).searchParams.get('offset') : null;
+
+  return {
+    accounts: response.data,
+    nextOffset: nextParam ? Number(nextParam) : null,
+  };
+};

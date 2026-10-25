@@ -17,6 +17,30 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — Kommunity: an Everyone list
+
+Tal: "build the list". Discover shows only people you don't know yet; there
+was nowhere to see everyone you can find, Mates included, in one place.
+
+**Decision:** Kommunity gets a third view, **Everyone**
+(`/hub/kommunity/everyone`, `GET /api/v1/kommunity/everyone`): one vertical,
+alphabetical list of shared account rows with a name-or-handle search.
+
+- **Who is on it.** Findability decides for strangers: `everyone` is listed,
+  `orbit` is listed when the viewer is a Mate of one of their Mates (the
+  Orbit test Discover already uses), `nobody` is not. The viewer's Mates
+  and people in a Krew with the viewer are listed whatever they chose:
+  findability is about being found by people you don't know, and these
+  people know you. Blocks and mutes, either way, take someone off.
+- **Mates are in.** That is what separates it from Discover, which stays a
+  place for meeting someone new.
+- **Alphabetical**, by display name then username. Not by activity: a
+  directory ordered by anything else is ranking the community for you.
+  So it pages by offset rather than an id cursor.
+- **Named Everyone**, not Kronkers, which is already a Discover layer.
+
+---
+
 ## 2026-10-27 — Konnect shares only what its owner chose
 
 An audit of Konnect found links reaching further than their makers

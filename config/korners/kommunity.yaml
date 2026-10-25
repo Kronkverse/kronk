@@ -21,12 +21,13 @@ tagline: 'The community, seen from inside.'
 # What the i moon's pop-up says (SpaceInfoDialog). A first draft
 # (2026-10-16), for Tal to edit on shadow.
 about:
-  what: "Kronk seen whole: everyone and their connections drawn as an orb you can spin and explore. Plus Discover, for finding people you don't know yet."
+  what: "Kronk seen whole: everyone and their connections drawn as an orb you can spin and explore. Plus Discover, for finding people you don't know yet, and Everyone, the whole list from A to Z."
   why: 'A timeline only shows your own corner. Kommunity shows the whole community from inside, and helps you find your next Mate.'
   how:
     - 'Drag the Orb to spin it, and pinch or scroll to zoom.'
     - 'Tap someone to light up their connections.'
     - "Turn to Discover to meet people: those open to being found, your Mates' Mates, and people in your Krews."
+    - 'Turn to Everyone for the whole list, Mates included, A to Z, with search.'
     - "Send a Mate request from someone's card."
     - 'Choose who can find you in your privacy settings.'
 icon:
@@ -89,6 +90,9 @@ enforced: true
 #            `kommunity_discoverability` (everyone/orbit/nobody)
 #            gates whether they appear (docs/spaces/kommunity.md
 #            — new list surface, 2026-08-05).
+#   everyone the whole alphabetical directory of people the viewer
+#            may find, Mates and Krew members included, with
+#            search (Tal 2026-10-26).
 views:
   - { key: orb, label: Orb, tagline: 'Everyone, seen from inside' }
   - {
@@ -96,8 +100,9 @@ views:
       label: Discover,
       tagline: 'People who chose to be findable',
     }
+  - { key: everyone, label: Everyone, tagline: 'Everyone you can find, A to Z' }
 header:
-  # Title itself cycles through Orb ↔ Discover with the shared
+  # Title itself cycles through Orb → Discover → Everyone with the shared
   # ScopeTitle rotator (same as /home, Map, Kalendar, Albutts,
   # Kommons). Tal 2026-08-19: bring the title selector into Kommunity.
   # Was `picker: menu` before this — the dropdown didn't read as a
