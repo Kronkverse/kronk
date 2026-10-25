@@ -47,7 +47,7 @@ only place identity is drawn.
 ("You're Mates", "Blocking", …), and a row of actions:
 
 - the relationship button (`FollowButton`: Mate? / Mating… / Accept). Once you
-  are Mates, Unmate lives on the per-person settings screen, not here;
+  are Mates it shows nothing, here or anywhere else it is used;
 - **Nudge**, a link to `/nudges/<accountId>`;
 - **Rose** (see [`rose.md`](rose.md));
 - **Share**, which opens the shared `<ShareSheet>`.
@@ -356,6 +356,14 @@ migration that says "will be backfilled later" isn't finished.
 person, reached from the Ж menu's Settings while you're on their profile. It
 has: mute, block, your private note about them, remove Mate, and report. On
 your own profile it points you at your account's Privacy settings instead.
+
+**Unmate lives only here.** No list row, hover card, profile peek card or
+profile block offers it: `FollowButton` and the peek card's `MateIconButton`
+render nothing for someone who is already your Mate. Ending a Mateship is a
+deliberate act on one person, not a button beside every name in a list
+(Kommons proposal
+[#117481297515130656](https://kronk.info/hub/kommons/p/117481297515130656),
+2026-10-25).
 
 ## Cutover
 

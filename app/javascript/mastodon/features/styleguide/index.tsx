@@ -709,14 +709,6 @@ export const StyleGuide = () => (
               </p>
             </div>
             <div className='profile-card__actions'>
-              <button
-                type='button'
-                className='profile-card__icon profile-card__icon--mate profile-card__icon--mate'
-                aria-label='Unmate'
-                title='Mates'
-              >
-                <Icon id='mate' icon={CheckIcon} />
-              </button>
               <a
                 className='profile-card__icon profile-card__icon--open'
                 href='/styleguide#profile-card'
