@@ -171,7 +171,8 @@ and `longitude` as exact decimals, `account_id` of its maker).
 - **On the Map.** A Places layer (`place_layer.tsx`) draws the Places in
   view as pin glyphs, reloading as the map moves. Tapping one opens a card
   with its address and what's Konnected to it (both ways), and a link to
-  its page. `/hub/map?place=<id>` flies to a Place and opens its card.
+  its page. `/hub/map?map_place=<id>` flies to a Place and opens its card
+  (not `?place=`, which opens your own pin's search: `?place=1`).
 - **Its page** (`place_page.tsx`) is a `<KornerDetail>`: the pin as hero
   (`<MapPinPreview>`), the address, who added it, See on the map, Delete
   for its maker, and the Konnected block.
