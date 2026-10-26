@@ -442,3 +442,20 @@
     }
   }
 }
+
+// What a Konnected record is ("event", "Krew"), under a tile's title and
+// over a card's: records in one situation often share a title
+// (hooks/useRecordName; decisions.md, 2026-10-26).
+.space-tile__kind,
+.konnected-card__kind {
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.space-tile__kind {
+  margin-block-start: -0.35rem;
+}

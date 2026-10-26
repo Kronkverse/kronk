@@ -55,6 +55,7 @@ class REST::KornerAttachmentSerializer < ActiveModel::Serializer
       slug: slug,
       id: record.id.to_s,
       title: record_title(record),
+      noun: Kronk::KornerRecords.noun_for(slug, record),
       url: record_url(slug, record),
       audience: audience_of(slug, record),
       preview: Kronk::KonnectedPreview.for(slug, record),

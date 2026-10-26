@@ -689,6 +689,21 @@ RSpec.describe Mastodon::CLI::Korners do
       expect(issues_for(manifest('a', konnect: { 'effects' => [effect('b')] }), manifest('b', konnect: { 'effects' => [effect('a')] }))).to be_empty
     end
 
+    # decisions.md, 2026-10-26: four records called Ember read the same
+    # unless each says what it is.
+    it 'fails a korner that takes links without a noun for its records' do
+      takes_links = Kronk::KornerRegistry::Manifest.new(slug: 'c', konnect: { 'make' => false }, accepts: [{ 'from' => '*', 'kind' => 'link' }])
+      named = Kronk::KornerRegistry::Manifest.new(slug: 'd', konnect: { 'noun' => 'thing' }, accepts: [{ 'from' => '*', 'kind' => 'link' }])
+
+      expect(issues_for(takes_links, named, manifest('a', konnect: { 'effects' => [effect('b')] }), manifest('b')))
+        .to contain_exactly(a_string_matching(/c: takes links but has no `konnect.noun`/))
+    end
+
+    it 'fails a noun that is not a word' do
+      expect(issues_for(manifest('a', konnect: { 'noun' => ' ', 'effects' => [effect('b')] }), manifest('b')))
+        .to include(a_string_matching(/a: `konnect.noun` must be a non-empty string/))
+    end
+
     it 'fails a handled pair that neither manifest lists' do
       expect(issues_for(manifest('a'), manifest('b'))).to include(a_string_matching(/a ↔ b: .*Kronk::PairLinks.*neither manifest lists it/))
     end
@@ -744,6 +759,15 @@ RSpec.describe Mastodon::CLI::Korners do
     it 'lists every pair Kronk::AttachmentEffects acts on, and only those' do
       issues = Kronk::KornerKonnect.issues(Kronk::KornerRegistry.all)
       expect(issues).to be_empty, issues.join("\n")
+    end
+
+    it 'names the records of every korner that takes links' do
+      takers = Kronk::KornerRegistry.all.select { |m| Array(m.accepts).any? { |e| e.is_a?(Hash) && e['kind'].to_s == 'link' } }
+      expect(takers.to_h { |m| [m.slug, m.konnect&.dig('noun')] }).to eq(
+        'albutts' => 'album', 'art' => 'art piece', 'booth' => 'set', 'cinema' => 'film', 'freethedream' => 'emergence',
+        'huddle' => 'room', 'kalendar' => 'event', 'karporn' => 'kar', 'kommons' => 'proposal', 'krew' => 'Krew',
+        'kronikles' => 'kronikle', 'kuestions' => 'Kuestion', 'map' => 'place', 'wachuneed' => 'listing'
+      )
     end
 
     it 'offers "New …" from the korners whose composers Konnect what they make' do

@@ -834,6 +834,8 @@ Any creation on Kronk can be Konnected to any other (decisions.md,
 
 ```yaml
 konnect:
+  # What one of its records is called beside its title ("the Ember event").
+  noun: event
   # Konnect can make a new one of these from anywhere: the picker's
   # "New …" opens compose.route with ?konnect=<source slug>:<source id>,
   # and the composer Konnects what it makes to that source.
@@ -844,6 +846,14 @@ konnect:
       does: "The Krew joins the event's audience and the Krew page lists it under Kalendar; …"
 ```
 
+- **`noun`** is what one of its records is called. Wherever Kronk names
+  a record (Konnected cards and tiles, the Konnect row, Same as, pop-ups and
+  notes) it says the title and the noun: "the Ember event", "the Ember
+  Krew". The records around one situation often share a title, so a title
+  alone can't tell them apart (decisions.md, 2026-10-26). Every korner that
+  takes links needs one (`korners doctor`). The attachments and candidates
+  APIs send each record's own `noun` (a FreeTheDream gang says gang), and
+  `hooks/useRecordName.ts` does the naming.
 - **`make: true`** says the korner's composer Konnects what it makes
   (`useKonnect`, §4.4). The Konnect picker then offers **New …** (the
   manifest's `compose.label`) once this space is picked, from any record,

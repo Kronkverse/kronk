@@ -13,6 +13,7 @@ import type { KonnectControls, KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { konnectKey } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useRecordName } from 'mastodon/hooks/useRecordName';
 
 // KonnectRow — what a composer will Konnect what it makes to, drawn by
 // `<ComposeShell konnect={…}>` at the foot of its body (docs/design.md,
@@ -123,9 +124,13 @@ const PendingTile: React.FC<PendingTileProps> = ({
   onRemove,
 }) => {
   const intl = useIntl();
+  const names = useRecordName();
   const KornerIcon = useKornerIcon(target.slug);
   const manifest = useKorner(target.slug);
   const title = target.title ?? manifest?.name ?? target.slug;
+  // What it is (hooks/useRecordName): under the title, and in the × label.
+  const noun = names.noun(target.slug, target.noun);
+  const named = names.the(target);
 
   const handleRemove = useCallback(() => {
     onRemove(target);
@@ -138,6 +143,7 @@ const PendingTile: React.FC<PendingTileProps> = ({
       >
         <KornerIcon className='space-tile__glyph' />
         <span className='space-tile__name'>{title}</span>
+        {noun && <span className='space-tile__kind'>{noun}</span>}
         <AudienceMarker audience={audience} slug={target.slug} leads={leads} />
       </span>
 
@@ -147,8 +153,8 @@ const PendingTile: React.FC<PendingTileProps> = ({
           className='space-tile__remove'
           onClick={handleRemove}
           disabled={disabled}
-          aria-label={intl.formatMessage(messages.drop, { title })}
-          title={intl.formatMessage(messages.drop, { title })}
+          aria-label={intl.formatMessage(messages.drop, { title: named })}
+          title={intl.formatMessage(messages.drop, { title: named })}
         >
           <Icon id='close' icon={CloseIcon} />
         </button>

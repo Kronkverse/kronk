@@ -17,6 +17,26 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — A record is named with what it is
+
+Tal, testing on shadow with an Ember Krew, an Ember event, an Ember
+emergence and an Ember album: a pop-up said (paraphrased) "Ember is
+connected to Ember". "If an event is happening and has an adjacent krew
+and other spaces, all wanting the same name, we need to find a better way
+to indicate which space is being referred to."
+
+**Decision:** wherever Kronk names a record, it says what the record is:
+"the Ember event", "the Ember Krew", "the Ember album". Each korner that
+takes links declares its word (`konnect.noun`), and `korners doctor`
+requires it. The server sends each record's own word, so a FreeTheDream
+gang says gang, not emergence. Konnected cards, tiles and the composer's
+Konnect row show the word under the title. Same as, pop-ups, notes and
+button labels say it in full (`hooks/useRecordName.ts`).
+
+Getting around stays in the Konnected section (Tal chose this over a strip
+under every title or a shared hub page): its cards (2026-10-26, below)
+are how you move between the records of one situation.
+
 ## 2026-10-26 — Konnected records show themselves
 
 Tal, on shadow: "when they're konnected, instead of just a tile under

@@ -40,6 +40,8 @@ export interface KonnectTarget {
   slug: string;
   id: string;
   title?: string | null;
+  // What it is beside its title, when the server said ("gang").
+  noun?: string | null;
   // A draft's mark on the one whose audience the record follows.
   same?: boolean;
 }
@@ -118,23 +120,32 @@ export const useKonnect = (
   const sourceSlug = parsed?.slug;
   const sourceId = parsed?.id;
   const [sourceTitle, setSourceTitle] = useState<string | null>(null);
+  const [sourceNoun, setSourceNoun] = useState<string | null>(null);
 
   const source = useMemo<KonnectTarget | null>(
     () =>
       sourceSlug && sourceId
-        ? { slug: sourceSlug, id: sourceId, title: sourceTitle }
+        ? {
+            slug: sourceSlug,
+            id: sourceId,
+            title: sourceTitle,
+            noun: sourceNoun,
+          }
         : null,
-    [sourceSlug, sourceId, sourceTitle],
+    [sourceSlug, sourceId, sourceTitle, sourceNoun],
   );
 
   // The source's title, for its tile: the URL carries only its id.
   useEffect(() => {
     setSourceTitle(null);
+    setSourceNoun(null);
     if (!sourceSlug || !sourceId) return undefined;
     let cancelled = false;
     apiSearchAttachmentCandidates(sourceSlug, '', 1, false, sourceId)
       .then((rows) => {
-        if (!cancelled) setSourceTitle(rows[0]?.title ?? null);
+        if (cancelled) return;
+        setSourceTitle(rows[0]?.title ?? null);
+        setSourceNoun(rows[0]?.noun ?? null);
       })
       .catch(() => undefined);
     return () => {

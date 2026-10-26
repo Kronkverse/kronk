@@ -46,6 +46,8 @@ export const hasCard = (
 interface Props {
   slug: string;
   title: string;
+  // What it is ("event", "Krew"), over its title.
+  noun: string | null;
   url: string | null;
   preview: KonnectedPreviewJSON;
   // This record's audience follows the card's ("Same as").
@@ -59,6 +61,7 @@ interface Props {
 export const KonnectedCard: React.FC<Props> = ({
   slug,
   title,
+  noun,
   url,
   preview,
   leads,
@@ -137,6 +140,7 @@ export const KonnectedCard: React.FC<Props> = ({
     <>
       {media && <div className='konnected-card__media'>{media}</div>}
       <div className='konnected-card__text'>
+        {noun && <span className='konnected-card__kind'>{noun}</span>}
         <span className='konnected-card__title'>
           <KornerIcon className='konnected-card__glyph' />
           <span>{title}</span>
