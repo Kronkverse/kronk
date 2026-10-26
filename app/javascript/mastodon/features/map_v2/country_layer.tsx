@@ -152,8 +152,16 @@ const widthAt = (props: CountryProps, zoom: number) => {
   return Math.sqrt(props.area * stretch) * perDegree;
 };
 
+// Names wait until the map is zoomed in a step from where it opens: at
+// Australia-wide only Mardu fits, and one name on its own reads as if it
+// were picked (@mangobee, 2026-10-26). From zoom 4 a couple of dozen come in
+// together, and more as you go closer.
+const NAMES_FROM_ZOOM = 4;
+
 const nameFits = (props: CountryProps, zoom: number) =>
-  props.name !== '' && widthAt(props, zoom) > props.name.length * 7 + 8;
+  props.name !== '' &&
+  zoom >= NAMES_FROM_ZOOM &&
+  widthAt(props, zoom) > props.name.length * 7 + 8;
 
 interface Props {
   map: maplibregl.Map | null;
@@ -314,8 +322,9 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
   );
 
   useEffect(() => {
-    if (!map || !countries) return;
+    if (!map || !ready || !countries) return;
     const previous = picked?.id;
+    if (!map.getSource(SOURCE_ID)) return;
     if (previous !== undefined) {
       map.setFeatureState(
         { source: SOURCE_ID, id: previous },
@@ -330,7 +339,7 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
         );
       }
     };
-  }, [map, countries, picked]);
+  }, [map, ready, countries, picked]);
 
   useEffect(() => {
     if (!map || !ready || !countries || !on) return;
