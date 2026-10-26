@@ -113,13 +113,12 @@ class MapPlace < ApplicationRecord
   # Its maker, or anyone who can see something its maker Konnected it to
   # (as Kronk::KornerRecords decides for that record's korner), while the
   # maker is still here.
-  def visible_to?(viewer, links: nil)
+  def visible_to?(viewer)
     return false if viewer.nil?
     return true if account_id.present? && account_id == viewer.id
     return false if account.nil? || account.unavailable?
 
-    links ||= maker_konnections
-    links.any? do |link|
+    maker_konnections.any? do |link|
       other = link.target_slug == 'map' ? link.source_record : link.target_record
       !other.is_a?(MapPlace) && Kronk::KornerRecords.visible?(other, viewer)
     end
