@@ -21,11 +21,16 @@ import { ArtQuickViewer } from './art_quick_viewer';
 const messages = defineMessages({
   description: {
     id: 'art.detail.description',
-    defaultMessage: 'About this piece',
+    defaultMessage: 'About the artwork',
   },
   emptyPhotos: {
     id: 'art.detail.empty_photos',
     defaultMessage: 'No photos yet.',
+  },
+  mediums: { id: 'art.detail.mediums', defaultMessage: 'Mediums' },
+  morePictures: {
+    id: 'art.detail.more_pictures',
+    defaultMessage: 'More pictures',
   },
   fullScreen: {
     id: 'art.detail.full_screen',
@@ -76,16 +81,13 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [photoAt, setPhotoAt] = useState(0);
-  const [viewing, setViewing] = useState(false);
-  const pickPhoto = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    setPhotoAt(Number(e.currentTarget.value));
-  }, []);
-  const openViewer = useCallback(() => {
-    setViewing(true);
+  // Which picture the full-screen viewer has open.
+  const [viewing, setViewing] = useState<number | null>(null);
+  const openViewer = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setViewing(Number(e.currentTarget.value));
   }, []);
   const closeViewer = useCallback(() => {
-    setViewing(false);
+    setViewing(null);
   }, []);
 
   // Edit lives in the Ж menu (docs/design.md): the owner gets an Edit
@@ -130,52 +132,36 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
     });
   }, [deleting, intl, piece.id, history, confirmThen]);
 
-  // The photo on show heads the page, whole; thumbnails under it switch it,
-  // and tapping it opens it full screen in the quick viewer.
+  // Top to bottom (@mangobee, 2026-10-26): the main picture, whole; the
+  // title; About the artwork; its mediums and details; then every other
+  // picture. Any picture opens full screen in the quick viewer.
   const photos = piece.photos.filter((photo) => photo.url);
-  const shown = photos[Math.min(photoAt, photos.length - 1)];
-  const heroUrl = shown?.url ?? piece.cover_url;
+  const [main, ...more] = photos;
+  const mainUrl = main?.url ?? piece.cover_url;
+  const facts = pieceFacts(intl, piece);
+  const status = availabilityLabel(intl, piece.availability);
 
   return (
     <KornerDetail
       className='art-piece-detail'
       hero={
-        heroUrl ? (
+        mainUrl ? (
           <div className='art-piece-detail__media'>
             <button
               type='button'
+              value={0}
               className='art-piece-detail__cover-button'
               onClick={openViewer}
               aria-label={intl.formatMessage(messages.fullScreen)}
             >
               <img
                 className='art-piece-detail__cover'
-                src={heroUrl}
-                alt={shown?.caption ?? ''}
+                src={mainUrl}
+                alt={main?.caption ?? ''}
               />
             </button>
-            {photos.length > 1 && (
-              <div className='art-piece-detail__thumbs'>
-                {photos.map((photo, i) => (
-                  <button
-                    key={photo.id}
-                    type='button'
-                    value={i}
-                    onClick={pickPhoto}
-                    aria-pressed={photo.id === shown?.id}
-                    aria-label={intl.formatMessage(messages.photoAt, {
-                      at: i + 1,
-                      total: photos.length,
-                    })}
-                    className={`art-piece-detail__thumb${photo.id === shown?.id ? ' art-piece-detail__thumb--on' : ''}`}
-                  >
-                    <img src={photo.url ?? ''} alt='' loading='lazy' />
-                  </button>
-                ))}
-              </div>
-            )}
-            {shown?.caption && (
-              <p className='art-piece-detail__caption'>{shown.caption}</p>
+            {main?.caption && (
+              <p className='art-piece-detail__caption'>{main.caption}</p>
             )}
           </div>
         ) : null
@@ -188,7 +174,6 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
             <Link key='owner' to={`/hub/art/@${piece.owner.acct}`}>
               @{piece.owner.acct}
             </Link>,
-            piece.year_made ? String(piece.year_made) : null,
             // Who can see it: the artist's to know.
             piece.is_owner
               ? intl.formatMessage(VISIBILITY_LABEL[piece.visibility])
@@ -200,54 +185,89 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
     >
       {confirmDialog}
 
-      {/* Its mediums lead back to the artist's portfolio, filtered to that
-          medium (docs/spaces/art.md, Mediums). */}
-      {piece.mediums.length > 0 && (
-        <div className='art-piece-detail__mediums'>
-          {piece.mediums.map((name) => (
-            <Link
-              key={name}
-              to={`/hub/art/@${piece.owner.acct}?medium=${encodeURIComponent(name)}`}
-              className='art-piece-detail__medium'
-            >
-              {name}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* The gallery label: materials · size · year · edition, then the
-          status when it's anything but "not for sale". */}
-      {(pieceFacts(intl, piece).length > 0 ||
-        availabilityLabel(intl, piece.availability)) && (
-        <p className='art-piece-detail__facts'>
-          {pieceFacts(intl, piece).join(' · ')}
-          {availabilityLabel(intl, piece.availability) && (
-            <span
-              className={`art-piece-detail__status art-piece-detail__status--${piece.availability}`}
-            >
-              {availabilityLabel(intl, piece.availability)}
-            </span>
-          )}
-        </p>
-      )}
-
-      {!heroUrl && (
+      {!mainUrl && (
         <EmptyState title={intl.formatMessage(messages.emptyPhotos)} />
       )}
 
       {piece.description && (
-        <section className='art-piece-detail__description'>
-          <h2>{intl.formatMessage(messages.description)}</h2>
-          <p>{piece.description}</p>
+        <section className='art-piece-detail__section'>
+          <h2 className='art-piece-detail__heading'>
+            {intl.formatMessage(messages.description)}
+          </h2>
+          <p className='art-piece-detail__description'>{piece.description}</p>
         </section>
       )}
 
-      {viewing && (
+      {/* Its mediums lead back to the artist's portfolio, filtered to that
+          medium (docs/spaces/art.md, Mediums); under them the gallery
+          label: materials · size · year · edition, and the status. */}
+      {(piece.mediums.length > 0 || facts.length > 0 || status) && (
+        <section className='art-piece-detail__section'>
+          <h2 className='art-piece-detail__heading'>
+            {intl.formatMessage(messages.mediums)}
+          </h2>
+          {piece.mediums.length > 0 && (
+            <div className='art-piece-detail__mediums'>
+              {piece.mediums.map((name) => (
+                <Link
+                  key={name}
+                  to={`/hub/art/@${piece.owner.acct}?medium=${encodeURIComponent(name)}`}
+                  className='art-piece-detail__medium'
+                >
+                  {name}
+                </Link>
+              ))}
+            </div>
+          )}
+          {(facts.length > 0 || status) && (
+            <p className='art-piece-detail__facts'>
+              {facts.join(' · ')}
+              {status && (
+                <span
+                  className={`art-piece-detail__status art-piece-detail__status--${piece.availability}`}
+                >
+                  {status}
+                </span>
+              )}
+            </p>
+          )}
+        </section>
+      )}
+
+      {more.length > 0 && (
+        <section className='art-piece-detail__section'>
+          <h2 className='art-piece-detail__heading'>
+            {intl.formatMessage(messages.morePictures)}
+          </h2>
+          <ul className='art-piece-detail__more'>
+            {more.map((photo, i) => (
+              <li key={photo.id}>
+                <button
+                  type='button'
+                  value={i + 1}
+                  onClick={openViewer}
+                  className='art-piece-detail__more-photo'
+                  aria-label={intl.formatMessage(messages.photoAt, {
+                    at: i + 2,
+                    total: photos.length,
+                  })}
+                >
+                  <img src={photo.url ?? ''} alt='' loading='lazy' />
+                </button>
+                {photo.caption && (
+                  <p className='art-piece-detail__caption'>{photo.caption}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {viewing !== null && (
         <ArtQuickViewer
           pieces={[piece]}
           initialIndex={0}
-          initialPhoto={shown ? Math.max(0, photos.indexOf(shown)) : 0}
+          initialPhoto={viewing}
           medium={null}
           onPiecePage
           onClose={closeViewer}
