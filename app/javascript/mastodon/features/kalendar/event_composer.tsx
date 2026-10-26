@@ -421,7 +421,8 @@ export const EventComposer: React.FC<Props> = ({
   );
   // An older event's own typed address, until the person removes it.
   const ownLocation = editing?.own_location;
-  const hasOwnLocation = !!(ownLocation?.name ?? ownLocation?.url);
+  const ownLocationText = ownLocation?.name ?? ownLocation?.url ?? null;
+  const hasOwnLocation = !!ownLocationText;
   const [ownLocationRemoved, setOwnLocationRemoved] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -1067,7 +1068,7 @@ export const EventComposer: React.FC<Props> = ({
           </span>
           <span className='event-composer__own-location-row'>
             <span className='event-composer__own-location-text'>
-              {ownLocation.name ?? ownLocation.url}
+              {ownLocationText}
             </span>
             <button
               type='button'
