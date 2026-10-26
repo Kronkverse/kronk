@@ -39,7 +39,7 @@ class AlbumPhoto < ApplicationRecord
   # but the serializer looks).
   POST_PARTS = [
     :application, :status_stat, :tags, :preloadable_poll, :krews, :quote, :preview_cards_status,
-    :event, :proposal, :booth_set, :listing, :trek, :question, :album, :album_photo_batch, :art_piece, :chronicle, :film, :kar,
+    :event, :proposal, :booth_set, :booth_live, :listing, :trek, :question, :album, :album_photo_batch, :art_piece, :chronicle, :film, :kar,
     { media_attachments: :media_tags, account: [:account_stat, { user: :role }], active_mentions: :account }
   ].freeze
 

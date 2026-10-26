@@ -20,7 +20,7 @@ class BoothLive < ApplicationRecord
   enum :visibility,
        { public: 0, mates: 1, orbit: 3, self_only: 4 },
        suffix: :scope
-  belongs_to :status, optional: true
+  belongs_to :status, optional: true, inverse_of: :booth_live
   has_many :reminders, class_name: 'BoothLiveReminder', inverse_of: :booth_live, dependent: :delete_all
 
   validates :title, presence: true, length: { maximum: 200 }

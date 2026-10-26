@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — A korner's post is your words and its card
+
+Tal: going live posted "a generated text as a post 'Live now in the
+Booth:...' which is a little out of spec for kronk in general, It also
+shows a text link to the live space, but this is unnecessary given the
+little card in the post links to the space anyway."
+
+**Decision:** a post a korner makes for a record is the person's own words,
+or the record's title if they wrote none, as albums, art, kronikles and
+listings already post. The record's card shows what it is and links to it,
+so the text never carries generated copy or the record's URL. The Booth
+was the exception twice. A live set's Tell my feed now posts that way and
+gets its own feed card (StatusBoothLiveCard): it says Live now, when it
+starts, or that it has ended, and opens the room. Sharing a set does the
+same with its existing card, dropping "title — artist" and the link. The
+card that appeared before was the general link preview for the URL.
+
 ## 2026-10-26 — First Nations Country as shapes, not a picture
 
 **Decision:** the Map's First Nations Country layer is drawn from shapes

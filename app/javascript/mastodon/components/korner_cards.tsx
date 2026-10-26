@@ -23,6 +23,7 @@ import {
 } from './status_albutts_card';
 import { StatusArtCard } from './status_art_card';
 import { StatusBoothCard } from './status_booth_card';
+import { StatusBoothLiveCard } from './status_booth_live_card';
 import { StatusCinemaCard } from './status_cinema_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKarpornCard } from './status_karporn_card';
@@ -82,6 +83,12 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     slug: 'booth',
     assocField: 'booth_set',
     card: (s) => <StatusBoothCard set={dataFrom(s, 'booth_set')} />,
+  },
+  {
+    // A live set's "Tell my feed" post.
+    slug: 'booth',
+    assocField: 'booth_live',
+    card: (s) => <StatusBoothLiveCard live={dataFrom(s, 'booth_live')} />,
   },
   {
     slug: 'map',
