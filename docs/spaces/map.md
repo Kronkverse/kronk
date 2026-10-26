@@ -40,23 +40,40 @@ provider.
 ### First Nations Country
 
 A **First Nations Country** button under the zoom buttons (Kommons, @mangobee,
-2026-10-23) lays a map of the Countries of Aboriginal and Torres Strait
-Islander peoples over Australia, under the pins. Off until you turn it on; the
-choice is kept in your browser (`kronk.map.country_layer`). While it is on, a
-note under the button says the boundaries are approximate. It carries no
-on-map credit (@mangobee, 2026-10-26: take the credit line away).
+2026-10-23) draws the Countries of Aboriginal and Torres Strait Islander
+peoples over Australia, under the pins. Off until you turn it on; the choice is
+kept in your browser (`kronk.map.country_layer`). While it is on, a note under
+the button says the boundaries are approximate. It carries no on-map credit
+(@mangobee, 2026-10-26: take the credit line away).
 
-It is a picture (`app/javascript/images/first-nations-country.webp`, a MapLibre
-`image` source over 111.5°E–155°E, 8.8°S–44.6°S), not data. @mangobee drew
-it in a Lambert conformal conic projection (standard parallels −18° and −36°);
-it was fitted to 21 towns marked on it (about 4 px off on average) and redrawn
-into web mercator, with the white paper taken out by colour-to-alpha (so the
-lettering keeps no white fringe). The Country colours are baked in at 75%
-while the names, town dots and coastline stay at full strength (@mangobee,
-2026-10-23: calmer, but still readable; then 75%, and the picture redrawn
-at 3600 px wide with lossless edges so the small names pixelate less). It fades out between zoom 7 and 9,
-where the picture would blur. Because it is a picture it can't tell you which Country a
-point is on; see `decisions.md`, 2026-10-23.
+The Countries are shapes you can tap (Kommons "Interactive Map Build",
+@mangobee, 2026-10-26, Option 2): `app/javascript/images/first-nations-countries.geojson`,
+fetched only once the layer is turned on, drawn as a MapLibre `geojson` source
+with a fill in each Country's own colour, thin borders, and the tapped Country
+outlined. They are crisp at every zoom and stay on down to street level (the
+fill calms as you zoom in).
+
+- **Tap a Country** for its card: "<name> Country", and, when the name is on
+  the Country list (`first_nations_countries.ts`), its region, group and other
+  spellings; other names written on the same shape; the boundaries note.
+- **Find a Country**: a search box under the button matches any of those
+  names and flies there.
+- **From a profile**: "On <name> Country" links to `/hub/map?country=<name>`,
+  which turns the layer on and opens that Country.
+- **Names** are drawn in Kronk's own type as small markers, each shown only
+  when it fits inside its Country at that zoom (the basemap has no glyphs).
+
+The shapes were traced from @mangobee's own map (shown with their permission
+for education; the original is on the proposal): each colour area taken off
+the picture, re-projected from its Lambert conformal conic (standard parallels
+−18° and −36°, fitted to 21 towns marked on it, about 4 px off on average)
+and simplified as one coverage so neighbours share borders; names read off the
+map and matched to the Country list where they can be. Each shape carries
+`id`, `name`, `colour`, `also` (other names on the same shape), `label`,
+`bbox` and `area`. It is a first pass for @mangobee to check: a few small
+coastal Countries (Tiwi, Cobourg, the tip of Cape York) and most of Tasmania
+are coarse or unnamed, and some names placed from the sea may be on the wrong
+shape. A shape with no name shows "Not named yet".
 
 ## Presence
 
