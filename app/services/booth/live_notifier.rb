@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-# "Someone is live in the Booth": a nudge to everyone tuned in to the Booth
-# when a musician goes live (docs/spaces/booth.md, Live sets), the way
+# "Someone is live in the Booth": a nudge, when a musician goes live, to
+# the people in the reach they picked (everyone tuned in to the Booth, their
+# Mates, their Orbit; Just me tells nobody but people who tapped Remind me) (docs/spaces/booth.md, Live sets), the way
 # Huddle::FomoNotifier tells people the Huddle is gathering. Skipped for the
 # host, anyone tuned out of the Booth and anyone who turned the row
 # (booth.went_live) off, except people who tapped Remind me on this set:
@@ -33,7 +34,9 @@ class Booth::LiveNotifier
 
     User.confirmed.approved.enabled.account_not_suspended.includes(:account).find_each.filter_map do |user|
       next if user.account_id == @booth_live.account_id
-      next if tuned_out.include?(user.account_id) && !reminded.include?(user.account_id)
+      next user.account if reminded.include?(user.account_id)
+      next if tuned_out.include?(user.account_id)
+      next unless @booth_live.visible_to?(user.account)
 
       user.account
     end

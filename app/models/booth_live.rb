@@ -7,10 +7,19 @@
 # started, and one that never started drops off MISSED_AFTER after its
 # start time, so a closed tab can't leave a ghost "live now".
 class BoothLive < ApplicationRecord
+  # Who sees it in the Booth and on their home feed, and who is nudged when
+  # it goes live: the reach the host picked, as for a post (Reachable;
+  # decisions.md, 2026-10-26). Just me tells only people who asked.
+  include Reachable
+
   STALE_AFTER = 12.hours
   MISSED_AFTER = 6.hours
 
   belongs_to :account
+
+  enum :visibility,
+       { public: 0, mates: 1, orbit: 3, self_only: 4 },
+       suffix: :scope
   belongs_to :status, optional: true
   has_many :reminders, class_name: 'BoothLiveReminder', inverse_of: :booth_live, dependent: :delete_all
 
@@ -29,6 +38,27 @@ class BoothLive < ApplicationRecord
   # What the Booth lists: live now first, then what's coming, soonest first.
   def self.listing
     live.order(started_at: :desc).to_a + upcoming.order(:starts_at).to_a
+  end
+
+  # Reachable's adapter. A live set has no Krew axis.
+  def self.reachable_owner_column
+    :account_id
+  end
+
+  def self.reachable_krew_scope(_krew_ids)
+    none
+  end
+
+  def reachable_owner_id
+    account_id
+  end
+
+  def reachable_owner
+    account
+  end
+
+  def reachable_krew_member?(_viewer)
+    false
   end
 
   def state

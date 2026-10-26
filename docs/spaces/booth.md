@@ -245,19 +245,26 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
 - **Where it shows.** A **Live** view between Musik and Artists (manifest
   `views:`), with Live now and Coming up (`components/live_view.tsx`), and
   a **Live now** strip at the top of Musik while anything is live.
-- **Telling people**, the way Huddle does (Fomo noto, `docs/spaces/huddle.md`):
+- **Telling people** is the host's choice, as for any post (decisions.md,
+  2026-10-26). Tell my feed and its reach in Go live set the set's own
+  `visibility` (Reachable: Everyone, Mates, Orbit), and the banner, the Live
+  view, the Live now strip, the set's page and the nudge all reach those
+  people and no one else. With Tell my feed off it is Just me: only people
+  who tapped Remind me are told. Sets from before the choice reach everyone.
   - **The home feed.** While a set is live, a banner sits at the top of
-    every member's home feed, above the posts, in the same `LiveBanner`
+    the home feed of everyone in its reach, above the posts, in the same `LiveBanner`
     as the Huddle's: "Rosa is live in the Booth: Friday Warm-up · Listen
     in" (one banner per set; three or more become one). It reads
-    `GET /api/v1/booth_lives/now` every 30 seconds, which is empty for
-    anyone tuned out of the Booth.
+    `GET /api/v1/booth_lives/now` every 30 seconds, which lists only sets
+    in the viewer's reach and is empty for anyone tuned out of the Booth.
   - **A nudge.** Going live queues `Booth::LiveNotifyWorker`, and
-    `Booth::LiveNotifier` nudges everyone tuned in to the Booth, the host
-    aside: "{who} is live in the Booth now", Listen in opening the room.
+    `Booth::LiveNotifier` nudges everyone in the set's reach who is tuned in
+    to the Booth, the host aside: "{who} is live in the Booth now", Listen in opening the room.
     It is skipped for anyone tuned out of the Booth or with the row
     (`booth.went_live`, Nudges::MuteCatalogue) off; push follows the row's
-    Push switch and quiet hours. Ending the set takes those nudges back.
+    Push switch and quiet hours. Whether to hear about live sets at all is
+    each person's: that row, or tuning out of the Booth. Ending the set
+    takes those nudges back.
   - **The host's own feed.** Tell my feed posts at the reach they pick,
     as before.
 
@@ -317,11 +324,6 @@ subject to the Mates gate.
   a second Booth record type, a change to the shared system in its own
   PR; an `event_id` column on `booth_lives` would go against
   `docs/decisions.md` (2026-08-14).
-- **Live sets: telling everyone.** The banner and the "is live" nudge
-  reach every member tuned in to the Booth by default, following Huddle's
-  Fomo noto (agreed in Kommons for the Huddle). Whether the Booth should
-  do the same by default, or only for Mates, or only after a Booth
-  Kommons proposal, is for the community to confirm.
 - **Events.** Event-linked discovery (sets showing for people who RSVP'd)
   isn't built beyond the attachment link, and the set page doesn't show
   the Kalendar event that links to it: `<AttachmentSection>` reads only a

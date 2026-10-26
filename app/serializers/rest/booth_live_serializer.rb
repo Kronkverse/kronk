@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class REST::BoothLiveSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :genres, :state, :room_key,
+  attributes :visibility, :id, :title, :description, :genres, :state, :room_key,
              :starts_at, :started_at, :ended_at, :is_owner, :reminded
 
   belongs_to :account, serializer: REST::AccountSerializer

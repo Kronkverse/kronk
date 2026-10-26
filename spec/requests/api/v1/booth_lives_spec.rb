@@ -53,6 +53,30 @@ RSpec.describe 'API V1 Booth Lives' do
 
       expect(response.parsed_body).to eq []
     end
+
+    # decisions.md, 2026-10-26: a set reaches who its host picked.
+    it 'leaves out a set for Mates to someone who is not one, there and everywhere', :aggregate_failures do
+      live.update!(visibility: :mates)
+
+      get '/api/v1/booth_lives/now', headers: headers
+      expect(response.parsed_body).to eq []
+
+      get '/api/v1/booth_lives', headers: headers
+      expect(response.parsed_body.pluck('id')).to_not include(live.id.to_s)
+
+      get "/api/v1/booth_lives/#{live.id}", headers: headers
+      expect(response).to have_http_status(404)
+    end
+
+    it 'shows a set for Mates to a Mate' do
+      live.update!(visibility: :mates)
+      live.account.follow!(user.account)
+      user.account.follow!(live.account)
+
+      get '/api/v1/booth_lives/now', headers: headers
+
+      expect(response.parsed_body.pluck('id')).to eq [live.id.to_s]
+    end
   end
 
   describe 'going live' do

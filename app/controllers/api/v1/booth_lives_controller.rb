@@ -12,7 +12,7 @@ class Api::V1::BoothLivesController < Api::BaseController
   before_action :authorize_owner!, only: [:update, :destroy, :start, :finish, :share]
 
   def index
-    lives = BoothLive.includes(:account).listing
+    lives = BoothLive.visible_to(current_account).includes(:account).listing
     reminded = BoothLiveReminder.where(account: current_account, booth_live_id: lives.map(&:id)).pluck(:booth_live_id).to_set
     render json: lives, each_serializer: REST::BoothLiveSerializer, reminded_ids: reminded
   end
@@ -22,7 +22,7 @@ class Api::V1::BoothLivesController < Api::BaseController
   def now
     return render json: [] if KornerTuneOut.exists?(account_id: current_account.id, korner_slug: 'booth')
 
-    render json: BoothLive.includes(:account).live.order(started_at: :desc).limit(5), each_serializer: REST::BoothLiveSerializer
+    render json: BoothLive.visible_to(current_account).includes(:account).live.order(started_at: :desc).limit(5), each_serializer: REST::BoothLiveSerializer
   end
 
   def show
@@ -93,8 +93,10 @@ class Api::V1::BoothLivesController < Api::BaseController
 
   private
 
+  # Out of its reach, a set isn't there (the room key is the way in).
   def set_booth_live
     @booth_live = BoothLive.find(params[:id])
+    raise ActiveRecord::RecordNotFound unless @booth_live.visible_to?(current_account)
   end
 
   def authorize_owner!
@@ -102,7 +104,7 @@ class Api::V1::BoothLivesController < Api::BaseController
   end
 
   def booth_live_params
-    params.permit(:title, :description, genres: [])
+    params.permit(:title, :description, :visibility, genres: [])
   end
 
   def starts_at_param
