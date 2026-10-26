@@ -20,6 +20,7 @@ import {
 import type { ApiTrekJSON, TrekReach } from 'mastodon/api/map_treks';
 import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
+import { MapNeedsWebGL } from 'mastodon/components/map_needs_webgl';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
@@ -30,7 +31,12 @@ import {
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useAppDispatch } from 'mastodon/store';
 
-import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
+import {
+  BASEMAP_URL,
+  basemapLayers,
+  ensurePmtilesProtocol,
+  supportsWebGL,
+} from './basemap';
 
 // Map — Treks lens. Lists the caller's own treks and their Mates' published
 // treks (Mates-gated server-side), with a detail view drawing the privacy-
@@ -86,27 +92,35 @@ const metric = (trek: ApiTrekJSON) => {
 const TrekRouteMap: React.FC<{ route: [number, number][] }> = ({ route }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  // No WebGL, or MapLibre failed to start: say so in the map's place.
+  const [noMap, setNoMap] = useState(() => !supportsWebGL());
 
   useEffect(() => {
-    ensurePmtilesProtocol();
     const container = containerRef.current;
-    if (!container || mapRef.current || route.length < 2) return;
+    if (noMap || !container || mapRef.current || route.length < 2) return;
+    ensurePmtilesProtocol();
 
-    const map = new maplibregl.Map({
-      container,
-      style: {
-        version: 8,
-        sources: {
-          protomaps: {
-            type: 'vector',
-            url: BASEMAP_URL,
-            attribution: '© OpenStreetMap',
+    let map: maplibregl.Map;
+    try {
+      map = new maplibregl.Map({
+        container,
+        style: {
+          version: 8,
+          sources: {
+            protomaps: {
+              type: 'vector',
+              url: BASEMAP_URL,
+              attribution: '© OpenStreetMap',
+            },
           },
+          layers: basemapLayers(),
         },
-        layers: basemapLayers(),
-      },
-      attributionControl: { compact: true },
-    });
+        attributionControl: { compact: true },
+      });
+    } catch {
+      setNoMap(true);
+      return;
+    }
     mapRef.current = map;
     const resizeObserver = new ResizeObserver(() => {
       map.resize();
@@ -155,7 +169,9 @@ const TrekRouteMap: React.FC<{ route: [number, number][] }> = ({ route }) => {
       map.remove();
       mapRef.current = null;
     };
-  }, [route]);
+  }, [route, noMap]);
+
+  if (noMap) return <MapNeedsWebGL />;
 
   return <div ref={containerRef} className='trek-detail__map' />;
 };

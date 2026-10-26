@@ -140,7 +140,12 @@ export const EventCard: React.FC<{
           })}
         >
           <Suspense fallback={null}>
-            <MapPinPreview lat={pin.lat} lng={pin.lng} zoom={pin.zoom} />
+            <MapPinPreview
+              lat={pin.lat}
+              lng={pin.lng}
+              zoom={pin.zoom}
+              label={event.location_name}
+            />
           </Suspense>
         </Link>
       )}

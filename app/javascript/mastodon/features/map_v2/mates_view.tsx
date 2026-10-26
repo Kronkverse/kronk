@@ -17,6 +17,7 @@ import {
 } from 'mastodon/api/map';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
+import { MapNeedsWebGL } from 'mastodon/components/map_needs_webgl';
 
 import {
   BASEMAP_URL,
@@ -24,6 +25,7 @@ import {
   HOME_ZOOM,
   basemapLayers,
   ensurePmtilesProtocol,
+  supportsWebGL,
 } from './basemap';
 import { CountryLayer } from './country_layer';
 import { EventLayer } from './event_layer';
@@ -190,6 +192,8 @@ export const MatesView: React.FC = () => {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const [ready, setReady] = useState(false);
+  // No WebGL, or MapLibre failed to start: the view says so instead.
+  const [noMap, setNoMap] = useState(() => !supportsWebGL());
   const [pins, setPins] = useState<ApiPresencePinJSON[]>([]);
   const [selfPin, setSelfPin] = useState<ApiPresencePinJSON | null>(null);
 
@@ -258,27 +262,33 @@ export const MatesView: React.FC = () => {
 
   // ── Map init ──────────────────────────────────────────────────────
   useEffect(() => {
-    ensurePmtilesProtocol();
     const container = containerRef.current;
-    if (!container || mapRef.current) return;
+    if (noMap || !container || mapRef.current) return;
+    ensurePmtilesProtocol();
 
-    const map = new maplibregl.Map({
-      container,
-      center: focus ?? HOME_CENTER,
-      zoom: focus ? FOCUS_ZOOM : HOME_ZOOM,
-      attributionControl: { compact: true },
-      style: {
-        version: 8,
-        sources: {
-          protomaps: {
-            type: 'vector',
-            url: BASEMAP_URL,
-            attribution: '© OpenStreetMap',
+    let map: maplibregl.Map;
+    try {
+      map = new maplibregl.Map({
+        container,
+        center: focus ?? HOME_CENTER,
+        zoom: focus ? FOCUS_ZOOM : HOME_ZOOM,
+        attributionControl: { compact: true },
+        style: {
+          version: 8,
+          sources: {
+            protomaps: {
+              type: 'vector',
+              url: BASEMAP_URL,
+              attribution: '© OpenStreetMap',
+            },
           },
+          layers: basemapLayers(),
         },
-        layers: basemapLayers(),
-      },
-    });
+      });
+    } catch {
+      setNoMap(true);
+      return;
+    }
 
     map.addControl(
       new maplibregl.NavigationControl({ showCompass: false }),
@@ -333,7 +343,7 @@ export const MatesView: React.FC = () => {
       setReady(false);
     };
     // focus never changes (a useState with no setter), so this still runs once.
-  }, [focus]);
+  }, [focus, noMap]);
 
   // ── Fetch + poll presence ─────────────────────────────────────────
   const refresh = useCallback(() => {
@@ -625,6 +635,8 @@ export const MatesView: React.FC = () => {
   const closeInView = useCallback(() => {
     setInViewOpen(false);
   }, []);
+
+  if (noMap) return <MapNeedsWebGL />;
 
   return (
     <div className='map-mates'>

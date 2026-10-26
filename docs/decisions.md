@@ -17,6 +17,25 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — Maps fall back without WebGL; feed cards can't crash the app
+
+Kommons "error report on login"
+(https://kronk.info/hub/kommons/p/117504037032494231): on a device without
+WebGL, an event card's map preview on Home threw "Failed to initialize
+WebGL", and nothing between it and the app-level error boundary caught it,
+so the whole app showed the error page.
+
+**Decision:** a map without WebGL says so instead of throwing. Every MapLibre
+map checks `supportsWebGL()` and catches a failed construction; the pin
+preview becomes a plain box with the place's name, full maps show an
+`<EmptyState>`, and the pin picker keeps its search working
+(`docs/spaces/map.md`, Without WebGL). Separately, every korner card in the
+feed renders inside `<SilentErrorBoundary>`: one bad card disappears from its
+post, the rest of the page stays. Silent rather than an error card because a
+post's text still carries it, and a broken card has nothing useful to show.
+
+---
+
 ## 2026-10-26 — Kommunity: Discover first, an Everyone list, Orb last
 
 Tal's Kommons proposal "Landing Page"

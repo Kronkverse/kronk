@@ -1,4 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import { defineMessages, useIntl } from 'react-intl';
 
 import * as maplibregl from 'maplibre-gl';
 // MapLibre CSS — see `map_pin_picker.tsx` for the full rationale.
@@ -11,6 +13,7 @@ import {
   basemapLayers,
   BASEMAP_URL,
   ensurePmtilesProtocol,
+  supportsWebGL,
 } from 'mastodon/features/map_v2/basemap';
 
 // MapPinPreview — a non-interactive read-only mini-map showing a
@@ -27,6 +30,19 @@ import {
 // visual language as `<MapPinPicker>`'s crosshair) rather than a
 // full MapLibre marker; the map is fixed to the pin's coordinates
 // so the overlay always sits on the right spot.
+//
+// Without WebGL (turned off in the browser, or MapLibre failing to start)
+// there is no map: the preview becomes a plain box with the place's
+// `label`, if the caller has one, and a note that the map can't show
+// here. It never throws — it sits in feed cards, and a throw there used
+// to reach the app-level error page (docs/spaces/map.md, "Without WebGL").
+
+const messages = defineMessages({
+  noMap: {
+    id: 'map_pin_preview.no_map',
+    defaultMessage: 'No map: this browser has WebGL turned off.',
+  },
+});
 
 interface Props {
   lng: number;
@@ -34,6 +50,8 @@ interface Props {
   // The zoom saved with the pin (see PinnedLocation.zoom). If absent
   // we default to street-level.
   zoom?: number;
+  // The place's name or address, shown when there's no map to draw.
+  label?: string | null;
   className?: string;
 }
 
@@ -43,34 +61,43 @@ export const MapPinPreview: React.FC<Props> = ({
   lng,
   lat,
   zoom,
+  label,
   className,
 }) => {
+  const intl = useIntl();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const [noMap, setNoMap] = useState(() => !supportsWebGL());
 
   useEffect(() => {
-    ensurePmtilesProtocol();
     const container = containerRef.current;
-    if (!container || mapRef.current) return;
+    if (noMap || !container || mapRef.current) return;
+    ensurePmtilesProtocol();
 
-    const map = new maplibregl.Map({
-      container,
-      center: [lng, lat],
-      zoom: zoom ?? DEFAULT_ZOOM,
-      interactive: false,
-      attributionControl: { compact: true },
-      style: {
-        version: 8,
-        sources: {
-          protomaps: {
-            type: 'vector',
-            url: BASEMAP_URL,
-            attribution: '© OpenStreetMap',
+    let map: maplibregl.Map;
+    try {
+      map = new maplibregl.Map({
+        container,
+        center: [lng, lat],
+        zoom: zoom ?? DEFAULT_ZOOM,
+        interactive: false,
+        attributionControl: { compact: true },
+        style: {
+          version: 8,
+          sources: {
+            protomaps: {
+              type: 'vector',
+              url: BASEMAP_URL,
+              attribution: '© OpenStreetMap',
+            },
           },
+          layers: basemapLayers(),
         },
-        layers: basemapLayers(),
-      },
-    });
+      });
+    } catch {
+      setNoMap(true);
+      return;
+    }
 
     // Defensive resize once the style loads. If the container was
     // measured at 0×0 during React's first paint (rare but possible
@@ -101,11 +128,24 @@ export const MapPinPreview: React.FC<Props> = ({
     // `map.easeTo` on prop change) adds render cost + a subtle
     // animation the caller often doesn't want.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [noMap]);
+
+  const classes = `map-pin-preview${className ? ` ${className}` : ''}`;
+
+  if (noMap) {
+    return (
+      <div className={`${classes} map-pin-preview--no-map`}>
+        {label && <p className='map-pin-preview__label'>{label}</p>}
+        <p className='map-pin-preview__note'>
+          {intl.formatMessage(messages.noMap)}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
-      className={`map-pin-preview${className ? ` ${className}` : ''}`}
+      className={classes}
       role='img'
       aria-label={`Map showing pinned location at ${lat.toFixed(4)}, ${lng.toFixed(4)}`}
     >

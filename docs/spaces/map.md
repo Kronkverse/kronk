@@ -37,6 +37,27 @@ The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
 DO Spaces, drawn in Kronk colours (`basemap.ts`). No third-party map
 provider.
 
+### Without WebGL
+
+MapLibre draws with WebGL, and some browsers have it turned off (a hardened
+privacy mode, a blocked GPU driver, a remote desktop). Its constructor then
+throws "Failed to initialize WebGL". Every map checks `supportsWebGL()`
+(`basemap.ts`) first and wraps map creation in try/catch, then falls back:
+
+- **Pin previews** (`<MapPinPreview>`, in feed event cards, event and Place
+  pages, profile locations) become a plain box with the place's name, when
+  the caller passes `label`, and a "no map" note.
+- **The Mates map and a trek's route** show `<MapNeedsWebGL>`, an
+  `<EmptyState>` saying the map needs WebGL.
+- **The pin picker** shows the same note in the map's place; search and
+  "Centre on me" still work, and choosing a result or locating pins that
+  spot at once.
+
+Feed korner cards also sit in a `<SilentErrorBoundary>`
+(`components/korner_cards.tsx`), so any card that throws drops out of its
+post rather than reaching the app-level error page. From Kommons "error
+report on login" (https://kronk.info/hub/kommons/p/117504037032494231).
+
 ### First Nations Country
 
 A **First Nations Country** button under the zoom buttons (Kommons, @mangobee,
