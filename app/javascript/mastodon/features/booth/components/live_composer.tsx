@@ -47,11 +47,18 @@ const messages = defineMessages({
   tellFeed: { id: 'booth.live.tell_feed', defaultMessage: 'Tell my feed' },
   tellFeedNow: {
     id: 'booth.live.tell_feed_now',
-    defaultMessage: 'Posts “Live now” with a link when you go live.',
+    defaultMessage:
+      'Posts “Live now” with a link when you go live. The same people see it in the Booth and get a nudge.',
   },
   tellFeedLater: {
     id: 'booth.live.tell_feed_later',
-    defaultMessage: 'Posts that you’re playing, with a link to the room.',
+    defaultMessage:
+      'Posts that you’re playing, with a link to the room. The same people see it in the Booth and get a nudge when you go live.',
+  },
+  tellNobody: {
+    id: 'booth.live.tell_nobody',
+    defaultMessage:
+      'Only people who tap Remind me are told, and only you see it in the Booth.',
   },
   submitNow: { id: 'booth.live.submit_now', defaultMessage: 'Get ready' },
   submitLater: { id: 'booth.live.submit_later', defaultMessage: 'Schedule' },
@@ -141,6 +148,9 @@ export const LiveComposer: React.FC<Props> = ({ onCreated, onCancel }) => {
           description,
           genres,
           starts_at: start?.toISOString(),
+          // Who is told: the reach of the post, or no one but those who
+          // asked (decisions.md, 2026-10-26).
+          visibility: tellFeed ? reach : 'self_only',
         });
         if (later && tellFeed) {
           await api()
@@ -285,7 +295,11 @@ export const LiveComposer: React.FC<Props> = ({ onCreated, onCancel }) => {
         )}
         <ComposeHint>
           {intl.formatMessage(
-            when === 'now' ? messages.tellFeedNow : messages.tellFeedLater,
+            !tellFeed
+              ? messages.tellNobody
+              : when === 'now'
+                ? messages.tellFeedNow
+                : messages.tellFeedLater,
           )}
         </ComposeHint>
       </div>

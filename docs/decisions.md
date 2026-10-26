@@ -34,6 +34,23 @@ people on a Country are later steps.
 **Supersedes:** the picture layer (`first-nations-country.webp`) of
 2026-10-23.
 
+## 2026-10-26 — Who is told a set is live is the host's choice
+
+The Booth's live sets told everyone tuned in to the Booth, like Huddle's
+Fomo noto, and #2339 left that for Tal to confirm. Tal: "Like all posts,
+this should be a choice when posting. And also notifications should be a
+choice from people."
+
+**Decision:** a live set has a reach (`booth_lives.visibility`, the reach
+ladder through Reachable). It is the reach the host gives Tell my feed in Go
+live, and Just me when Tell my feed is off. The home feed banner, the Live
+view, the Live now strip, the set's page and the "is live" nudge reach
+those people only. Anyone who tapped Remind me is still told. The people
+told keep their choice: the Booth's "Someone goes live" notification row
+and tuning out of the Booth, both already there. Sets from before keep
+reaching everyone, which is what they did. The rest of #2339 is left for
+its author to refine (Tal: "minimise adjustments").
+
 ## 2026-10-26 — A space explains itself in About this space
 
 Tal: "the booth has an info banner, it should be in the info part of the
