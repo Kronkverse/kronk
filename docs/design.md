@@ -290,7 +290,9 @@ no Invite.
   space in is a manifest edit. A section with nothing written is left out;
   without `about.why` the manifest's `purpose` stands in. Which space a page
   belongs to is `spaceSlugForPath` in `kronk_menu.tsx`; the search page and
-  `/kronk` pages have none, so no i moon.
+  `/kronk` pages have none, so no i moon. It is the one place a space
+  explains itself: no first-visit banners or "how it works" strips on the
+  page itself (Tal, 2026-10-26). What one would say goes in `about.how`.
 - **Share** is a built-in moon on every page, Settings and Nudges included
   (Tal, 2026-10-13; everywhere since 2026-10-17: "someone might want to
   share where a settings option is"). `kronk_menu.tsx` opens

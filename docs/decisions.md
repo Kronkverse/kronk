@@ -17,6 +17,19 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — A space explains itself in About this space
+
+Tal: "the booth has an info banner, it should be in the info part of the
+floating kronk bubble."
+
+**Decision:** About this space (the Ж bubble's i, `<SpaceInfoDialog>`, from
+the manifest's `about:`) is the one place a space says what it is and how it
+works. No space puts a first-visit banner or a "how it works" strip on its
+own page. The Booth's "How the Booth works" strip is gone, and its points
+(upload, get heard, credit, go live, save) are in `booth.yaml`'s
+`about.how`. It was the only one. An empty state that links to the composer
+is not an explainer, so it stays.
+
 ## 2026-10-26 — A record is named with what it is
 
 Tal, testing on shadow with an Ember Krew, an Ember event, an Ember
