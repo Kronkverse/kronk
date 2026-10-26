@@ -160,25 +160,31 @@ Place, not a field on each space's record (decisions.md, 2026-10-23).
 Model: `MapPlace` (`map_places`: `name` up to 120, `address`, `latitude`
 and `longitude` as exact decimals, `account_id` of its maker).
 
-- **A Place is seen by whoever can see something Konnected to it, and its
-  maker** (`MapPlace#visible_to?`, Tal 2026-10-23). It has no audience of
-  its own: a Place linked from a Mates-only party is seen by that party's
-  Mates, one linked from a public event by every member, and one with
-  nothing Konnected by its maker alone. "Can see" is the linked record's
-  own rule (`Kronk::KornerRecords.visible?`). One you can't see answers
+- **A Place is seen by its maker, and by whoever can see something its
+  maker Konnected it to** (`MapPlace#visible_to?`, Tal 2026-10-23;
+  decisions.md 2026-10-27). It has no audience of its own: a Place its
+  maker linked from their Mates-only party is seen by that party's Mates,
+  one linked from a public event by every member, and one with no such
+  link by its maker alone. A link someone else makes to it never widens
+  it. A suspended or deleted maker's Places are seen by nobody else.
+  "Can see" is the linked record's own rule
+  (`Kronk::KornerRecords.visible?`). One you can't see answers
   404 everywhere (its page, `GET /places/:id`, the map, the Konnect
   picker), so a guessed id says nothing. It says where something is, never
   who is there: presence (people's pins) is separate, Mates-only and
   coarsened, and never takes part in Konnecting.
 - **Its maker looks after it**: they edit and delete it and decide what it
   links out to. Anyone who can see a Place can Konnect their own record to
-  it (which widens who sees it to that record's audience). If the maker's
-  account goes, the Place stays (`account_id` is nulled).
+  it; that doesn't widen who sees the Place, and doesn't make it the
+  record's location (below). Deleting the maker's account deletes their
+  Places and their Konnections (`DeleteAccountService`); a row whose
+  `account_id` is nulled is seen by nobody.
 - **How lists check it.** Who sees a linked event or album has no SQL
-  form, so a list reads Places the viewer made or that have any
-  Konnection (`made_or_konnected`, at most 1000 rows, after the box or
-  search narrows them), loads their Konnections in one query, and checks
-  each in Ruby (`MapPlace.visible_among`). The Konnect picker does the
+  form, so a list reads Places the viewer made or that have a Konnection
+  their maker made (`made_or_konnected`, at most 1000 rows, after the box
+  or search narrows them), loads those Konnections in one query and their
+  other ends in one per korner (`MapPlace.preload_konnections`), and
+  checks each in Ruby (`MapPlace.visible_among`). The Konnect picker does the
   same through `KornerRecords::FOUND_BY`.
 - **Konnecting.** `map.yaml`'s primary resource is `map_places` (`path:
 /hub/map/places/:id`), with `attaches:`/`accepts:` links to and from
@@ -222,8 +228,11 @@ and `longitude` as exact decimals, `account_id` of its maker).
   Android app): an event's `location_name` (the Place's name) and
   `location_url` (an OpenStreetMap link to its point), a kar's `location`
   (`{ lat, lng, label }`), a listing's `location`, and the event pins
-  below. Only a link the record's owner made counts, either way round;
-  the oldest wins. Lists read the Places in two queries
+  below. Only the record's owner's own Place counts, and only through a
+  link they made, either way round; the oldest wins. Someone else's Place
+  Konnected to the record shows in its Konnected section but isn't its
+  location: the Place is read live, so its maker could otherwise move the
+  record by editing theirs (decisions.md, 2026-10-27). Lists read the Places in two queries
   (`Kronk::RecordPlace.preload`); an event inside a status reads its own
   when it has no location.
 - **Pins moved over.** Migration `20261023140100` gave every pinned event

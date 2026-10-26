@@ -20,6 +20,15 @@ RSpec.describe 'API V1 Krews create — invites' do
     }.merge(extra)
   end
 
+  # Konnect is the one way into a Krew's spaces (decisions.md, 2026-10-25),
+  # so the composer's old list of spaces turns none on.
+  it 'ignores a list of spaces sent with it' do
+    create_krew(korner_attachments: %w(albutts kalendar))
+
+    expect(response).to have_http_status(200)
+    expect(Krew.find_by(slug: 'snowgum-skip').krew_korners).to be_empty
+  end
+
   it 'adds each invited account to the krew chat as a pending request' do
     create_krew(invite_account_ids: [invitee.id])
     expect(response).to have_http_status(200)

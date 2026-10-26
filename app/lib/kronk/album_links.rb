@@ -13,7 +13,7 @@
 #
 # The Krew only becomes an audience when the album's owner links it and is
 # in the Krew, as the Krew's own Link button requires. A link someone else
-# makes stays a link. A Krew album (`albums.krew_id`) is its Krew's for
+# makes stays a link, and taking it off leaves the audience alone. A Krew album (`albums.krew_id`) is its Krew's for
 # good, so that link can't be taken off; it can be linked to other Krews
 # like any record, but its audience stays its own Krew's.
 module Kronk
@@ -26,11 +26,14 @@ module Kronk
       share(album, krew, actor) if album && krew
     end
 
-    # After `attachment` was removed.
+    # After `attachment` was removed. Only the owner's link put the album
+    # in the Krew's audience, so only removing that one (with no other of
+    # theirs left) takes it out.
     def unlinked(attachment)
       album, krew = resolve(attachment)
       return if album.nil? || krew.nil? || album.krew_id == krew.id
-      return if AttachmentEffects.between('albutts', album.id, 'krew', krew.id).exists?
+      return unless attachment.created_by_account_id == album.owner_id
+      return if AttachmentEffects.between('albutts', album.id, 'krew', krew.id).exists?(created_by_account_id: album.owner_id)
 
       remove(album, krew)
     end

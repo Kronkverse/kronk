@@ -151,6 +151,7 @@ class DeleteAccountService < BaseService
   def purge_content!
     settle_proposals!
     leave_krews!
+    purge_map_places!
     purge_user!
     purge_profile!
     purge_statuses!
@@ -194,6 +195,14 @@ class DeleteAccountService < BaseService
     end
 
     KrewJoinRequest.where(account_id: @account.id).delete_all
+  end
+
+  # Kronk — a Map Place is an exact spot, often someone's home, and it
+  # outlived its maker: kept accounts kept their rows, and their links out
+  # to other people's records kept them on show. They go with the account
+  # (`destroy`, so their Konnections go too, Kronk::AttachmentSource).
+  def purge_map_places!
+    MapPlace.where(account_id: @account.id).find_each(&:destroy)
   end
 
   def purge_statuses!

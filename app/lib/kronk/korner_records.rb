@@ -49,8 +49,9 @@ module Kronk
       'Krew' => ->(viewer) { Krew.where(id: Krew.listed.select(:id)).or(Krew.where(id: viewer.krews.select(:id))) },
       'HuddleSession' => ->(_viewer) { HuddleSession.not_retired.where.not(scope: 'krew') },
       'Question' => ->(_viewer) { Question.active },
-      # A Place is seen through what's Konnected to it (MapPlace#visible_to?);
-      # only ones the viewer made or with a Konnection can pass that check.
+      # A Place is seen through what its maker Konnected it to
+      # (MapPlace#visible_to?); only ones the viewer made or with such a
+      # Konnection can pass that check.
       'MapPlace' => ->(viewer) { MapPlace.made_or_konnected(viewer) },
     }.freeze
 
@@ -82,19 +83,23 @@ module Kronk
     end
 
     # Up to `limit` records of `klass` the viewer can see, newest first, out
-    # of `scope` (already narrowed by a search). A model with a
-    # `visible_to` scope filters in the database; the rest are checked one
-    # by one over the newest SEARCH_WINDOW.
+    # of `scope` (already narrowed by a search). A model's `visible_to`
+    # scope narrows what's read but never decides: Event's only settles
+    # invite-only, and a Mates-only or unposted event passes it. So every
+    # record is checked one by one (`visible?`), over the newest
+    # SEARCH_WINDOW of what the scope lets through. A model that can check
+    # a list at once (`select_visible`: a Map Place reads its Konnections
+    # for the whole list) does.
     def findable(klass, scope, viewer, limit:)
       found = FOUND_BY[klass.name]
       # As id subqueries, not `merge`: merge lets the second relation's
       # condition on a column replace the first's, so a Krew or an event
       # looked up by id came back as whichever one the viewer finds first.
       scope = scope.where(id: found.call(viewer).select(:id)) if found
-      scope = scope.order(created_at: :desc)
-      return scope.where(id: klass.visible_to(viewer).select(:id)).limit(limit).to_a if klass.respond_to?(:visible_to)
-
-      scope.limit(SEARCH_WINDOW).select { |record| visible?(record, viewer) }.first(limit)
+      scope = scope.where(id: klass.visible_to(viewer).select(:id)) if klass.respond_to?(:visible_to)
+      records = scope.order(created_at: :desc).limit(SEARCH_WINDOW).to_a
+      visible = klass.respond_to?(:select_visible) ? klass.select_visible(records, viewer) : records.select { |record| visible?(record, viewer) }
+      visible.first(limit)
     end
 
     # What `record` is called beside its title ("the Ember event"): its

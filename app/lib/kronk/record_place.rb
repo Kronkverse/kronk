@@ -8,12 +8,17 @@
 # fields are empty, so old records and the Android app, which still writes
 # them, keep working: own fields win.
 #
-# Only a link its owner made counts. Anyone who can see a record can't set
-# where it is: a Place's maker may link their Place out to any record they
-# can see, and that link Konnects the two, but it doesn't move the record.
-# A record → Place link is always its owner's (only an owner links from
-# their record), a Place → record one only when the record's owner made it.
-# With several, the oldest wins.
+# Only the owner's own Place, linked by them, counts (decisions.md,
+# 2026-10-23 and 2026-10-27). Anyone who can see a record can't set where
+# it is: a Place's maker may link their Place out to any record they can
+# see, and that link Konnects the two, but it doesn't move the record. And
+# a record's owner may Konnect someone else's Place, which shows in its
+# Konnected section but isn't its location: the Place is read live, so its
+# maker could otherwise move (or empty) the record's location by editing
+# theirs, and the record would hand its own audience the address of a
+# Place they can't otherwise see. A record → Place link is always its
+# owner's (only an owner links from their record), a Place → record one
+# only when the record's owner made it. With several, the oldest wins.
 #
 #   Kronk::RecordPlace.for(event)          # => MapPlace or nil
 #   Kronk::RecordPlace.preload(events)     # two queries for a whole list
@@ -67,31 +72,38 @@ module Kronk
       scope = record_to_place(slug, ids).or(place_to_record(slug, ids)).where(kind: KornerAttachment::KIND_LINK)
       links = scope.order(:created_at, :id).pluck(:source_slug, :source_id, :target_id, :created_by_account_id)
 
-      chosen = {}
-      links.each do |source_slug, source_id, target_id, made_by|
+      pairs = links.filter_map do |source_slug, source_id, target_id, made_by|
         record_id, place_id = source_slug == MAP ? [target_id, source_id] : [source_id, target_id]
-        next if chosen.key?(record_id) || made_by.nil? || made_by != owners[record_id]
-
-        chosen[record_id] = place_id
+        [record_id, place_id] if made_by.present? && made_by == owners[record_id]
       end
-      return {} if chosen.empty?
+      return {} if pairs.empty?
 
-      places = MapPlace.where(id: chosen.values.uniq).index_by(&:id)
-      chosen.transform_values { |place_id| places[place_id] }.compact
+      places = MapPlace.where(id: pairs.map(&:last).uniq).index_by(&:id)
+      chosen = {}
+      pairs.each do |record_id, place_id|
+        place = places[place_id]
+        next if chosen.key?(record_id) || place.nil? || place.account_id != owners[record_id]
+
+        chosen[record_id] = place
+      end
+      chosen
     end
 
-    # The SQL for "has a Place its owner Konnected", for `model`'s table:
-    # an EXISTS over the links either way, with the owner check. For a scope
-    # that has to find records by their Place (the Map's event pins).
+    # The SQL for "has a Place of its owner's that they Konnected", for
+    # `model`'s table: an EXISTS over the links either way, with both owner
+    # checks. For a scope that has to find records by their Place (the
+    # Map's event pins).
     def konnected_condition(model)
       slug = model.attachment_source_slug
       table = model.arel_table
       links = KornerAttachment.arel_table
+      places = MapPlace.arel_table
       owner = table[owner_column(model)]
       base = KornerAttachment.where(kind: KornerAttachment::KIND_LINK).where(links[:created_by_account_id].eq(owner))
+      owners_place = ->(place_id) { MapPlace.where(places[:id].eq(place_id)).where(places[:account_id].eq(owner)).arel.exists }
 
-      from_record = base.where(source_slug: slug, target_slug: MAP).where(links[:source_id].eq(table[:id]))
-      from_place = base.where(source_slug: MAP, target_slug: slug).where(links[:target_id].eq(table[:id]))
+      from_record = base.where(source_slug: slug, target_slug: MAP).where(links[:source_id].eq(table[:id])).where(owners_place.call(links[:target_id]))
+      from_place = base.where(source_slug: MAP, target_slug: slug).where(links[:target_id].eq(table[:id])).where(owners_place.call(links[:source_id]))
       from_record.arel.exists.or(from_place.arel.exists)
     end
 
