@@ -17,6 +17,35 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — Kommunity: Discover first, an Everyone list, Orb last
+
+Tal's Kommons proposal "Landing Page"
+([#117483791865274639](https://kronk.info/hub/kommons/p/117483791865274639),
+on `kommunity.index`): "Kommunity landing page should be the 'Discover'
+page, the Orb should be last. Also having a straight up list should be a
+middle page, with a full list of 'Visible' Users (if they choose to be
+visible)".
+
+**Decision:** Kommunity's views are **Discover** (the landing view, bare
+`/hub/kommunity`), **Everyone** (new, `/hub/kommunity/everyone`,
+`GET /api/v1/kommunity/everyone`) and **Orb**, in that order. Supersedes
+Orb as the landing view.
+
+- **Everyone lists only people who chose to be visible to you**:
+  findability `everyone`, or `orbit` when you are in their Orbit
+  (`Account.kommunity_discoverable_to`, the test Discover already uses).
+  `nobody` is never listed, even for their Mates or Krew: being someone's
+  Mate doesn't override their choice. Blocks and mutes, either way, take
+  someone off.
+- **Visible Mates are in.** That is what separates it from Discover, which
+  stays a place for meeting someone new.
+- **Alphabetical**, by display name then username, with a name-or-handle
+  search. Not by activity: a directory ordered by anything else is ranking
+  the community for you. So it pages by offset rather than an id cursor.
+- **Named Everyone**, not Kronkers, which is already a Discover layer.
+
+---
+
 ## 2026-10-27 — Konnect shares only what its owner chose
 
 An audit of Konnect found links reaching further than their makers

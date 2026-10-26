@@ -9,8 +9,15 @@
 ## Purpose
 
 Kommunity lets a member see Kronk as a whole rather than as a timeline,
-and find people they don't know yet. It has two views, cycled by the
-header rotator: **Orb** (default) and **Discover**.
+and find people they don't know yet. It has three views, cycled by the
+header rotator, in this order: **Discover** (the landing view, bare
+`/hub/kommunity`), **Everyone** (`/hub/kommunity/everyone`) and **Orb**
+(`/hub/kommunity/orb`). The order is Tal's Kommons proposal "Landing Page"
+([#117483791865274639](https://kronk.info/hub/kommons/p/117483791865274639),
+node `kommunity.index`): "Kommunity landing page should be the 'Discover'
+page, the Orb should be last. Also having a straight up list should be a
+middle page, with a full list of 'Visible' Users (if they choose to be
+visible)". Until then the Orb was the landing view.
 
 **Kronk-local only.** Remote accounts are out of scope by design. The
 korner owns no tables; it reads accounts and follows.
@@ -105,14 +112,51 @@ findable by everyone, or by your Orbit if you're in it. Opening Kommunity
 clears it. `KommunityStream` in `lib/kronk/korner_content_streams.rb`; the
 badge itself is the shared one (`hub.md`, Updates).
 
+## Everyone
+
+The middle view, at `/hub/kommunity/everyone`
+(`features/kommunity/everyone.tsx`): "a full list of 'Visible' Users (if
+they choose to be visible)" (proposal "Landing Page", above). A plain
+vertical list of the shared `<Account>` rows, the same row the Mates tab
+uses: tap one for the profile, and it carries its own Mate button. A
+search field at the top filters by name or handle; "Load more"
+(`<KornerPill>`) at the foot fetches the next page. Nothing found is an
+`<EmptyState>`.
+
+`GET /api/v1/kommunity/everyone?q=&limit=&offset=`
+(`Api::V1::Kommunity::EveryoneController`). Who is on it is exactly the
+people who chose to be visible to the viewer,
+`Account.kommunity_discoverable_to(viewer)`:
+
+- findability `everyone`: listed for every signed-in member;
+- findability `orbit`: listed when the viewer is in their Orbit (a Mate,
+  or a Mate of one of their Mates), the same Orbit test Discover uses;
+- findability `nobody`: **never listed**, Mates and Krew members
+  included. Being someone's Mate doesn't override their choice.
+
+It leaves out the viewer, anyone blocked or muted either way, and anyone
+who isn't an active member (the same guard as Discover: local, not
+suspended, silenced, memorialised or moved, has signed in). Pending Mate
+requests stay in, both ways: it is a directory, not a to-do list.
+
+**The difference from Discover** is that Mates who chose to be visible
+are here. Discover is for meeting people; Everyone is the list.
+
+Ordered by display name, falling back to the username when there is none,
+case-insensitive. No ranking: alphabetical is the one order a directory
+can have without choosing for the reader. An alphabetical list has no id
+cursor, so it pages by `offset` (40 a page, 80 at most), with the next
+page in the Link header (`rel="next"`).
+
 ## Files
 
 - `config/korners/kommunity.yaml` — manifest.
 - `app/javascript/mastodon/features/kommunity/` — `index.tsx` (mount),
-  `orb.tsx`, `drawer.tsx`, `profile_card_deck.tsx`.
+  `orb.tsx`, `drawer.tsx`, `profile_card_deck.tsx`, `everyone.tsx`.
 - `app/javascript/mastodon/features/kosmos/orb_geometry.ts` — shared with
   Kosmos.
-- `app/controllers/api/v1/kommunity/` — `orb`, `layers`, `discover`.
+- `app/controllers/api/v1/kommunity/` — `orb`, `layers`, `everyone`,
+  `discover`.
 - `app/javascript/styles/mastodon/_kommunity.scss`.
 
 ## Open
