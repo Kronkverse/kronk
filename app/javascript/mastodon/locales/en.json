@@ -315,6 +315,7 @@
   "art.detail.photo_at": "Photo {at} of {total}",
   "art.detail.read_less": "Show less",
   "art.detail.read_more": "Read more",
+  "art.detail.to_portfolio": "{name}'s portfolio",
   "art.detail.visibility_mates": "Mates",
   "art.detail.visibility_orbit": "Orbit",
   "art.detail.visibility_public": "Kronk",
