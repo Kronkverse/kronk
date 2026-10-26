@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useLocation } from 'react-router-dom';
+
 import type { DraftComposer } from 'mastodon/api/drafts';
 import {
   apiDiscardDraft,
@@ -7,6 +9,7 @@ import {
   apiSaveDraft,
 } from 'mastodon/api/drafts';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import { parseKonnectParam } from 'mastodon/hooks/useKonnect';
 
 // useDraft — drafts for any composer (docs/design.md, Drafts).
 //
@@ -18,6 +21,10 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 //     it was last touched within RESUME_WINDOW (closed a moment ago and
 //     opened again). An older draft stays parked: the composer opens clean
 //     and the drafts line offers it. `resumed` says one was applied.
+//     Opened from a record to make something Konnected to it
+//     (`?konnect=`, the Konnect picker's New …), it always opens clean:
+//     that is a new thing for that record, and a draft's own Konnections
+//     coming back would make it something else (decisions.md, 2026-10-25).
 //   - As you write it saves twice: on this device straight away (so a
 //     crash, a closed tab or no signal loses nothing) and to the server
 //     shortly after (so the draft is on your other devices). Opening
@@ -188,6 +195,10 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   applyRef.current = options.apply;
   const resumeRef = useRef(options.resume);
   resumeRef.current = options.resume;
+  const { search } = useLocation();
+  const openedFromRecord = parseKonnectParam(search) !== null;
+  const openedFromRecordRef = useRef(openedFromRecord);
+  openedFromRecordRef.current = openedFromRecord;
 
   const [drafts, setDrafts] = useState<ApiComposerDraftJSON<P>[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -286,7 +297,12 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
           !!newest &&
           Date.now() - Date.parse(newest.updated_at) < RESUME_WINDOW;
         const first =
-          newest && recent && (resumeRef.current?.() ?? true) ? newest : null;
+          newest &&
+          recent &&
+          !openedFromRecordRef.current &&
+          (resumeRef.current?.() ?? true)
+            ? newest
+            : null;
         if (first) applyRef.current(first);
         setResumed(!!first);
         setPicked(!!first);
