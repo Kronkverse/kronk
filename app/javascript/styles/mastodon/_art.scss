@@ -18,6 +18,16 @@
     background: none;
   }
 
+  // Everything centred under the title, like the portfolio (@mangobee,
+  // 2026-10-26); the More pictures grid keeps its columns.
+  .korner-detail__meta .korner-meta {
+    justify-content: center;
+  }
+
+  .korner-detail__body {
+    text-align: center;
+  }
+
   // The artist's picture under the title; it opens their portfolio.
   &__artist {
     display: inline-flex;
@@ -48,6 +58,7 @@
   &__mediums {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 6px;
     margin: 0 0 var(--sp-2, 8px);
   }
@@ -73,6 +84,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 6px 10px;
     margin: 0;
     color: var(--text-secondary);
@@ -144,7 +156,7 @@
   // The artist's words, like a gallery label: no heading, a little larger.
   &__about {
     max-width: 40rem;
-    margin: 0 0 var(--sp-4, 16px);
+    margin: 0 auto var(--sp-4, 16px);
   }
 
   &__description {
