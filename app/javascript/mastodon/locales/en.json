@@ -2994,7 +2994,7 @@
   "propose.docs_hint": "Attach mockups, briefs, or references (PDF, image, markdown). Optional.",
   "propose.docs_label": "Design docs",
   "propose.intro": "A proposal is how Kronk changes. Say what should be different and why — others can back it, question it, and help build it.",
-  "propose.intro_new_korner": "A Korner is a space in Kronk — Kalendar, Kommons, Booth. Say what this new space is for, who it serves, and what one action it makes possible. Others can back the idea; a shipped proposal ends with a new manifest under config/korners/.",
+  "propose.intro_new_korner": "A Korner is a space in Kronk — Kalendar, Kommons, Booth. Say what this new space is for, who it serves, and what one action it makes possible. Others can back the idea.",
   "propose.korner_glyph_hint": "A single hand-picked character that reads as the space (Ƙ, ◉, ✦). Skip if unsure — the community can pick one later.",
   "propose.korner_glyph_label": "Glyph (optional)",
   "propose.korner_icon_hint": "A Material Icon name suggestion for the Hub tile — e.g. kitchen, event, favorite. See fonts.google.com/icons.",
