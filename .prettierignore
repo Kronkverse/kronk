@@ -91,3 +91,6 @@ AUTHORS.md
 
 # Ignore config YAML files that include ERB/ruby code prettier does not understand
 /config/email.yml
+
+# The First Nations Country shapes (generated, one line)
+app/javascript/images/*.geojson

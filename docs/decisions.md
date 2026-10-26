@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — First Nations Country as shapes, not a picture
+
+**Decision:** the Map's First Nations Country layer is drawn from shapes
+traced off @mangobee's map (`first-nations-countries.geojson`), not the
+picture laid over Australia. Each Country can be tapped for a card, found by
+name, and opened from a profile's "On <name> Country".
+
+**Why:** a picture can't say which Country a point is on, blurs past state
+level, and its names can't be fixed without redrawing it (the limit noted on
+2026-10-23). Shapes stay sharp at every zoom and carry their names as data.
+Kommons "Interactive Map Build" (@mangobee) chose this, Option 2, over keeping
+the picture with invisible shapes on top; community-edited borders and the
+people on a Country are later steps.
+
+**Supersedes:** the picture layer (`first-nations-country.webp`) of
+2026-10-23.
+
 ## 2026-10-26 — A space explains itself in About this space
 
 Tal: "the booth has an info banner, it should be in the info part of the
