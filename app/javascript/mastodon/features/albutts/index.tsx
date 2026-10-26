@@ -30,6 +30,7 @@ import { Icon } from 'mastodon/components/icon';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { parseKonnectParam } from 'mastodon/hooks/useKonnect';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { useIdentity } from 'mastodon/identity_context';
 
@@ -221,14 +222,16 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     [history],
   );
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
+    // Opened from a record (`?konnect=`, a Krew's included): back to it.
+    if (returnToSource('/hub/albutts')) return;
     // If we arrived via the composer route (`/composer` or the legacy
     // `/new`), drop back to the plain directory URL so the composer
     // doesn't reopen on refresh.
-    if (composerKrew) history.replace(`/hub/krew/${composerKrew.slug}`);
-    else if (autoOpenComposer) history.replace('/hub/albutts');
-  }, [autoOpenComposer, composerKrew, history]);
+    if (autoOpenComposer) history.replace('/hub/albutts');
+  }, [autoOpenComposer, history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: ApiAlbumJSON) => {

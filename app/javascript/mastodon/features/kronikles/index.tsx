@@ -17,6 +17,7 @@ import type { ChroniclesScope } from 'mastodon/api/kronikles';
 import type { ApiChronicleJSON } from 'mastodon/api_types/kronikles';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { ChronicleComposer } from './components/chronicle_composer';
@@ -128,10 +129,13 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     [history],
   );
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/kronikles')) return;
     if (autoOpenComposer) history.replace('/hub/kronikles');
-  }, [autoOpenComposer, history]);
+  }, [autoOpenComposer, history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: ApiChronicleJSON) => {

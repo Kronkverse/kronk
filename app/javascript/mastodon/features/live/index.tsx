@@ -21,6 +21,8 @@ import {
   setJitsiSession,
   setJitsiSlot,
 } from 'mastodon/features/huddle_pip/jitsi_session';
+import { parseKonnectParam } from 'mastodon/hooks/useKonnect';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -187,9 +189,10 @@ const jitsiWrapperStyle: React.CSSProperties = {
 // `autoOpenComposer` is set by the `/hub/huddle/composer` route (the Ж
 // menu's compose target for this korner — see config/korners/
 // huddle.yaml; `/hub/huddle/new` redirects there). While it's set the
-// New Room composer is open over the lobby; `?krew=<id>` picks a Krew to
-// Konnect the Room to. Cancelling puts the URL back to `/hub/huddle`,
-// creating goes into the new Room.
+// New Room composer is open over the lobby; `?konnect=krew:<id>` (or the
+// older `?krew=<id>`) Konnects the Room to a Krew and keys its draft to
+// that Krew. Cancelling goes back to the record it was opened from, or to
+// `/hub/huddle`; creating goes into the new Room.
 const Live: React.FC<{
   multiColumn?: boolean;
   autoOpenComposer?: boolean;
@@ -198,12 +201,15 @@ const Live: React.FC<{
   const dispatch = useAppDispatch();
   const history = useHistory();
   const location = useLocation();
-  const composerKrewId = autoOpenComposer
-    ? new URLSearchParams(location.search).get('krew')
+  const konnectFrom = autoOpenComposer
+    ? parseKonnectParam(location.search)
     : null;
+  const composerKrewId = konnectFrom?.slug === 'krew' ? konnectFrom.id : null;
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
+    if (returnToSource('/hub/huddle')) return;
     history.replace('/hub/huddle');
-  }, [history]);
+  }, [history, returnToSource]);
   const handleRoomCreated = useCallback(
     (room: CreatedRoom) => {
       history.push(`/hub/huddle/room/${room.id}`);

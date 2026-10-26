@@ -17,6 +17,7 @@ import type { FilmsScope } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { FilmComposer } from './components/film_composer';
@@ -123,10 +124,13 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     [history],
   );
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/cinema')) return;
     if (autoOpenComposer) history.replace('/hub/cinema');
-  }, [autoOpenComposer, history]);
+  }, [autoOpenComposer, history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: ApiFilmJSON) => {
