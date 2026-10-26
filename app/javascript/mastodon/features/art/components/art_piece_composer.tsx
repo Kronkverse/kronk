@@ -107,7 +107,8 @@ const messages = defineMessages({
   availability: { id: 'art.composer.availability', defaultMessage: 'Status' },
   photosHint: {
     id: 'art.composer.photos_hint',
-    defaultMessage: 'Add photos of the work — the first one becomes the cover.',
+    defaultMessage:
+      'Add as many photos of the work as you like. The first is its main picture.',
   },
   uploading: {
     id: 'art.composer.uploading',

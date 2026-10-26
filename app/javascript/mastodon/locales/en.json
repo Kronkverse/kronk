@@ -310,6 +310,8 @@
   "art.detail.description": "About this piece",
   "art.detail.empty_photos": "No photos yet.",
   "art.detail.full_screen": "See it full screen",
+  "art.detail.mediums": "Mediums",
+  "art.detail.more_pictures": "More pictures",
   "art.detail.photo_at": "Photo {at} of {total}",
   "art.detail.visibility_mates": "Mates",
   "art.detail.visibility_orbit": "Orbit",
