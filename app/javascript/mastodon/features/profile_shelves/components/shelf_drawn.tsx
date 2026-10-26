@@ -40,7 +40,7 @@ import { StatusKommonsCard } from 'mastodon/components/status_kommons_card';
 import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
-import { artKindLabel } from 'mastodon/features/art/kinds';
+import { pieceCardLine } from 'mastodon/features/art/details';
 import { useAppSelector } from 'mastodon/store';
 import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
@@ -103,10 +103,6 @@ const messages = defineMessages({
   more: {
     id: 'profile_shelves.drawn.photo_more',
     defaultMessage: '+{count}',
-  },
-  artPhotos: {
-    id: 'profile_shelves.drawn.art_photos',
-    defaultMessage: '{count, plural, one {# photo} other {# photos}}',
   },
 });
 
@@ -256,51 +252,30 @@ const GalleryTile: React.FC<PhotoTileProps> = ({ status }) => {
   );
 };
 
-// An Art piece on a profile: up to four of its photos in the Gallery's
-// square (one fills it, two split it, three put the first beside two, four
-// make a 2×2), the count of the rest on the last, and the title and kind
-// under it (docs/spaces/art.md, On a profile).
+// An Art piece on a profile: its cover, shown whole in a square, as it is in
+// the Art space and on a portfolio, and its title and card line (medium,
+// year) under it (docs/spaces/art.md, On a profile).
 const ArtTile: React.FC<{ piece: ArtSummary }> = ({ piece }) => {
   const intl = useIntl();
-  const photos = (
-    piece.preview_urls?.length
-      ? piece.preview_urls
-      : piece.cover_url
-        ? [piece.cover_url]
-        : []
-  ).slice(0, GALLERY_CELLS);
-  const more = piece.photo_count - photos.length;
+  const cover = piece.cover_url ?? piece.preview_urls?.[0];
   return (
     <a
       className='profile-shelves__drawn-card profile-shelves__drawn-art'
       href={`/hub/art/pieces/${piece.id}`}
     >
-      {photos.length > 0 && (
-        <span
-          className={`profile-shelves__drawn-gallery profile-shelves__drawn-gallery--${photos.length}`}
-        >
-          {photos.map((url, index) => (
-            <span key={url} className='profile-shelves__drawn-gallery-cell'>
-              <img
-                alt=''
-                src={url}
-                className='profile-shelves__drawn-photo-img'
-                loading='lazy'
-              />
-              {more > 0 && index === photos.length - 1 && (
-                <span className='profile-shelves__drawn-gallery-more'>
-                  {intl.formatMessage(messages.more, { count: more })}
-                </span>
-              )}
-            </span>
-          ))}
+      {cover && (
+        <span className='profile-shelves__drawn-art-frame'>
+          <img
+            alt=''
+            src={cover}
+            className='profile-shelves__drawn-art-img'
+            loading='lazy'
+          />
         </span>
       )}
       <span className='profile-shelves__drawn-art-title'>{piece.title}</span>
       <span className='profile-shelves__drawn-art-meta'>
-        {artKindLabel(intl, piece.kind)}
-        {' · '}
-        {intl.formatMessage(messages.artPhotos, { count: piece.photo_count })}
+        {pieceCardLine(intl, piece)}
       </span>
     </a>
   );

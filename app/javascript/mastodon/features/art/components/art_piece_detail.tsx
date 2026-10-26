@@ -7,15 +7,16 @@ import { Link, useHistory } from 'react-router-dom';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeletePiece } from 'mastodon/api/art';
 import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
+import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
 import { availabilityLabel, pieceFacts } from '../details';
-import { artKindLabel } from '../kinds';
 
 import { ArtPieceComposer } from './art_piece_composer';
+import { ArtQuickViewer } from './art_quick_viewer';
 
 const messages = defineMessages({
   description: {
@@ -26,9 +27,13 @@ const messages = defineMessages({
     id: 'art.detail.empty_photos',
     defaultMessage: 'No photos yet.',
   },
-  photos: {
-    id: 'art.detail.photos_count',
-    defaultMessage: '{count, plural, one {# photo} other {# photos}}',
+  fullScreen: {
+    id: 'art.detail.full_screen',
+    defaultMessage: 'See it full screen',
+  },
+  photoAt: {
+    id: 'art.detail.photo_at',
+    defaultMessage: 'Photo {at} of {total}',
   },
   editPiece: { id: 'art.page_action.edit', defaultMessage: 'Edit piece' },
   deleteConfirm: {
@@ -71,6 +76,17 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [photoAt, setPhotoAt] = useState(0);
+  const [viewing, setViewing] = useState(false);
+  const pickPhoto = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setPhotoAt(Number(e.currentTarget.value));
+  }, []);
+  const openViewer = useCallback(() => {
+    setViewing(true);
+  }, []);
+  const closeViewer = useCallback(() => {
+    setViewing(false);
+  }, []);
 
   // Edit lives in the Ж menu (docs/design.md): the owner gets an Edit
   // piece moon, opening the create composer in edit mode. Delete sits
@@ -114,34 +130,69 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
     });
   }, [deleting, intl, piece.id, history, confirmThen]);
 
-  // The first photo is the cover: it heads the page, and the rest follow
-  // under the title. (The grid used to repeat it under the cover.)
-  const [cover, ...rest] = piece.photos;
-  const heroUrl = cover?.url ?? piece.cover_url;
+  // The photo on show heads the page, whole; thumbnails under it switch it,
+  // and tapping it opens it full screen in the quick viewer.
+  const photos = piece.photos.filter((photo) => photo.url);
+  const shown = photos[Math.min(photoAt, photos.length - 1)];
+  const heroUrl = shown?.url ?? piece.cover_url;
 
   return (
     <KornerDetail
       className='art-piece-detail'
       hero={
         heroUrl ? (
-          <img
-            className='art-piece-detail__cover'
-            src={heroUrl}
-            alt={cover?.caption ?? ''}
-          />
+          <div className='art-piece-detail__media'>
+            <button
+              type='button'
+              className='art-piece-detail__cover-button'
+              onClick={openViewer}
+              aria-label={intl.formatMessage(messages.fullScreen)}
+            >
+              <img
+                className='art-piece-detail__cover'
+                src={heroUrl}
+                alt={shown?.caption ?? ''}
+              />
+            </button>
+            {photos.length > 1 && (
+              <div className='art-piece-detail__thumbs'>
+                {photos.map((photo, i) => (
+                  <button
+                    key={photo.id}
+                    type='button'
+                    value={i}
+                    onClick={pickPhoto}
+                    aria-pressed={photo.id === shown?.id}
+                    aria-label={intl.formatMessage(messages.photoAt, {
+                      at: i + 1,
+                      total: photos.length,
+                    })}
+                    className={`art-piece-detail__thumb${photo.id === shown?.id ? ' art-piece-detail__thumb--on' : ''}`}
+                  >
+                    <img src={photo.url ?? ''} alt='' loading='lazy' />
+                  </button>
+                ))}
+              </div>
+            )}
+            {shown?.caption && (
+              <p className='art-piece-detail__caption'>{shown.caption}</p>
+            )}
+          </div>
         ) : null
       }
       title={piece.title}
       meta={
         <KornerMeta
           items={[
-            artKindLabel(intl, piece.kind),
-            intl.formatMessage(messages.photos, { count: piece.photo_count }),
-            intl.formatMessage(VISIBILITY_LABEL[piece.visibility]),
             // The artist's portfolio, where the rest of their work is.
             <Link key='owner' to={`/hub/art/@${piece.owner.acct}`}>
               @{piece.owner.acct}
             </Link>,
+            piece.year_made ? String(piece.year_made) : null,
+            // Who can see it: the artist's to know.
+            piece.is_owner
+              ? intl.formatMessage(VISIBILITY_LABEL[piece.visibility])
+              : null,
           ]}
         />
       }
@@ -149,8 +200,6 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
     >
       {confirmDialog}
 
-      {/* The gallery label: medium · size · year · edition, then the
-          status when it's anything but "not for sale". */}
       {/* Its mediums lead back to the artist's portfolio, filtered to that
           medium (docs/spaces/art.md, Mediums). */}
       {piece.mediums.length > 0 && (
@@ -167,6 +216,8 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
         </div>
       )}
 
+      {/* The gallery label: materials · size · year · edition, then the
+          status when it's anything but "not for sale". */}
       {(pieceFacts(intl, piece).length > 0 ||
         availabilityLabel(intl, piece.availability)) && (
         <p className='art-piece-detail__facts'>
@@ -182,28 +233,7 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
       )}
 
       {!heroUrl && (
-        <p className='art-piece-detail__empty'>
-          {intl.formatMessage(messages.emptyPhotos)}
-        </p>
-      )}
-
-      {rest.length > 0 && (
-        <ul className='art-piece-detail__grid'>
-          {rest.map((photo) => (
-            <li key={photo.id} className='art-piece-detail__grid-item'>
-              {photo.url ? (
-                <img src={photo.url} alt={photo.caption ?? ''} />
-              ) : (
-                <div className='art-piece-detail__grid-item--dark' />
-              )}
-              {photo.caption && (
-                <figcaption className='art-piece-detail__caption'>
-                  {photo.caption}
-                </figcaption>
-              )}
-            </li>
-          ))}
-        </ul>
+        <EmptyState title={intl.formatMessage(messages.emptyPhotos)} />
       )}
 
       {piece.description && (
@@ -211,6 +241,17 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
           <h2>{intl.formatMessage(messages.description)}</h2>
           <p>{piece.description}</p>
         </section>
+      )}
+
+      {viewing && (
+        <ArtQuickViewer
+          pieces={[piece]}
+          initialIndex={0}
+          initialPhoto={shown ? Math.max(0, photos.indexOf(shown)) : 0}
+          medium={null}
+          onPiecePage
+          onClose={closeViewer}
+        />
       )}
 
       {editing && (

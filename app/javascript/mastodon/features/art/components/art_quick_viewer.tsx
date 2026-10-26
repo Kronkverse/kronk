@@ -45,6 +45,10 @@ interface Props {
   initialIndex: number;
   // The medium the portfolio is narrowed to, named beside the count.
   medium: string | null;
+  // Which of the first piece's photos to open on.
+  initialPhoto?: number;
+  // Opened from the piece's own page: no way "to" it, and no count.
+  onPiecePage?: boolean;
   onClose: () => void;
 }
 
@@ -52,12 +56,14 @@ export const ArtQuickViewer: React.FC<Props> = ({
   pieces,
   initialIndex,
   medium,
+  initialPhoto = 0,
+  onPiecePage = false,
   onClose,
 }) => {
   const intl = useIntl();
   const history = useHistory();
   const [index, setIndex] = useState(initialIndex);
-  const [photo, setPhoto] = useState(0);
+  const [photo, setPhoto] = useState(initialPhoto);
   const touchX = useRef<number | null>(null);
 
   const piece = pieces[index];
@@ -137,10 +143,11 @@ export const ArtQuickViewer: React.FC<Props> = ({
     >
       <div className='art-viewer__top'>
         <span className='art-viewer__count'>
-          {intl.formatMessage(messages.counter, {
-            at: index + 1,
-            total: pieces.length,
-          })}
+          {pieces.length > 1 &&
+            intl.formatMessage(messages.counter, {
+              at: index + 1,
+              total: pieces.length,
+            })}
           {medium && ` · ${medium}`}
         </span>
         <IconButton
@@ -216,21 +223,25 @@ export const ArtQuickViewer: React.FC<Props> = ({
         {facts.length > 0 && (
           <p className='art-viewer__facts'>{facts.join(' · ')}</p>
         )}
-        <KornerActionBar>
-          <KornerPill
-            label={intl.formatMessage(messages.open)}
-            variant='primary'
-            onClick={open}
-          />
-          {!piece.is_owner && (
-            <KornerPill
-              label={intl.formatMessage(messages.ask)}
-              icon={ChatIcon}
-              iconId='chat'
-              onClick={ask}
-            />
-          )}
-        </KornerActionBar>
+        {(!onPiecePage || !piece.is_owner) && (
+          <KornerActionBar>
+            {!onPiecePage && (
+              <KornerPill
+                label={intl.formatMessage(messages.open)}
+                variant='primary'
+                onClick={open}
+              />
+            )}
+            {!piece.is_owner && (
+              <KornerPill
+                label={intl.formatMessage(messages.ask)}
+                icon={ChatIcon}
+                iconId='chat'
+                onClick={ask}
+              />
+            )}
+          </KornerActionBar>
+        )}
       </div>
     </div>,
     document.body,
