@@ -21,6 +21,7 @@ import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 import { artKindLabel } from '../kinds';
 
 import { ArtPortfolioEditor } from './art_portfolio_editor';
+import { ArtQuickViewer } from './art_quick_viewer';
 
 // An artist's portfolio (docs/spaces/art.md, Portfolio): who they are and
 // what they've made that reaches you, kept simple. The artist edits it from
@@ -107,6 +108,8 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
   const [medium, setMedium] = useState<string | null>(() =>
     new URLSearchParams(search).get('medium'),
   );
+  // Which of the pieces on show the quick viewer has open.
+  const [viewing, setViewing] = useState<number | null>(null);
   const { account } = portfolio;
   const name = account.display_name.trim() || account.username;
 
@@ -198,6 +201,27 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
   const statement = portfolio.statement?.trim() ?? '';
   const bio =
     statement !== '' ? statement : stripHtmlToLine(account.note).trim();
+
+  // Tapping a piece opens it in the quick viewer; the card stays a link to
+  // the piece's page, so a new tab or a modified click still goes there.
+  const openViewer = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
+        return;
+      const link = (e.target as HTMLElement).closest('a');
+      const id = /\/hub\/art\/pieces\/([^/?#]+)/.exec(
+        link?.getAttribute('href') ?? '',
+      )?.[1];
+      const at = shown.findIndex((piece) => piece.id === id);
+      if (at < 0) return;
+      e.preventDefault();
+      setViewing(at);
+    },
+    [shown],
+  );
+  const closeViewer = useCallback(() => {
+    setViewing(null);
+  }, []);
 
   const card = (piece: ApiArtPieceJSON) => (
     <SpaceCard
@@ -306,9 +330,21 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
       )}
 
       {shown.length > 0 && (
-        <SpaceGrid className='art-portfolio__works'>
-          {shown.map(card)}
-        </SpaceGrid>
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- catches the cards' own link clicks; Enter on a card is a click too
+        <div onClick={openViewer}>
+          <SpaceGrid className='art-portfolio__works'>
+            {shown.map(card)}
+          </SpaceGrid>
+        </div>
+      )}
+
+      {viewing !== null && (
+        <ArtQuickViewer
+          pieces={shown}
+          initialIndex={viewing}
+          medium={medium}
+          onClose={closeViewer}
+        />
       )}
 
       {medium && total > 0 && shown.length === 0 && (
