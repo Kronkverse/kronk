@@ -24,6 +24,30 @@ RSpec.describe Booth::LiveNotifier do
     expect(live_nudges_for(host)).to be_empty
   end
 
+  # decisions.md, 2026-10-26: who is told is the host's choice, as for a post.
+  it 'nudges only the Mates of a host who went live for Mates', :aggregate_failures do
+    host.follow!(ana)
+    ana.follow!(host)
+    bob
+    booth_live.update!(visibility: :mates)
+
+    described_class.new(booth_live).call
+
+    expect(live_nudges_for(ana).count).to eq 1
+    expect(live_nudges_for(bob)).to be_empty
+  end
+
+  it 'tells nobody but whoever asked to be reminded when the host told no one', :aggregate_failures do
+    ana
+    BoothLiveReminder.create!(booth_live: booth_live, account: bob)
+    booth_live.update!(visibility: :self_only)
+
+    described_class.new(booth_live).call
+
+    expect(live_nudges_for(ana)).to be_empty
+    expect(live_nudges_for(bob).count).to eq 1
+  end
+
   it 'says who went live, with Listen in opening the room' do
     ana
 
