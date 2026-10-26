@@ -684,28 +684,6 @@
     margin-top: 12px;
   }
 
-  &__input,
-  &__textarea {
-    width: 100%;
-    background: var(--surface-variant-background-color);
-    border: 1px solid transparent;
-    border-radius: var(--radius-medium);
-    padding: 10px 12px;
-    font-size: 14px;
-    font-family: inherit;
-    color: inherit;
-
-    &:focus {
-      border-color: var(--accent);
-      outline: none;
-    }
-  }
-
-  &__textarea {
-    min-height: 76px;
-    resize: vertical;
-  }
-
   &__file {
     // The raw file input renders as the browser's default "Choose files"
     // button. Hide it — the drop-zone label below is the click surface.
@@ -1020,12 +998,6 @@
     }
   }
 
-  &__contribution-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
   &__note {
     font-size: 12px;
     color: var(--text-muted);
@@ -1035,12 +1007,6 @@
   // The visibility button strip is now the shared
   // `.korner-visibility-picker` component; it lives in
   // _korner_visibility_picker.scss.
-
-  &__hint {
-    margin-top: 6px;
-    font-size: 12px;
-    opacity: 0.7;
-  }
 
   &__error {
     margin-top: 10px;
@@ -1059,17 +1025,8 @@
     margin-top: 12px;
   }
 
-  // Edit mode: the cover row. A wrapping grid that scrolls down inside
+  // Edit mode: the cover row, a wrapping grid that scrolls down inside
   // itself for a big album, never sideways (phone rule).
-  &__cover {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-
   &__cover-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));

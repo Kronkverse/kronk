@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
+import type { MessageDescriptor } from 'react-intl';
 
+import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 
@@ -28,16 +30,25 @@ import { BoothComposer } from './components/booth_composer';
 import { BoothDock } from './components/booth_dock';
 import { BoothGridCard } from './components/booth_grid_card';
 import { EditForm } from './components/edit_form';
+import { LiveComposer } from './components/live_composer';
+import type { LiveCreated } from './components/live_composer';
+import { LiveCard, LiveNowStrip, LiveView } from './components/live_view';
 import { ShareForm } from './components/share_form';
-import type { BoothCredit, BoothSet } from './types';
+import { KINDS, kindMessage } from './kinds';
+import type { BoothCredit, BoothKind, BoothSet } from './types';
+import { useBoothLives } from './use_booth_lives';
 import { useBoothSets } from './use_booth_sets';
+import type { BoothSort } from './use_booth_sets';
 
-// The Booth — Musik (every set, searchable by title, artist or genre)
-// and Artists (the people behind them). Both are views of the manifest
+// The Booth — Musik (every set, searchable and sortable), Live (sets
+// played live on Huddle's Jitsi server, now and coming up), My sets (your
+// own sets, live sets and saved sets) and Artists (the people behind
+// them). Both are views of the manifest
 // (`config/korners/booth.yaml`), routed by `<KornerShell>` from the URL
 // segment after `/hub/booth`; the Frame draws the title rotator.
 //
-// Uploading is the Ж menu's "Upload a set" (`/hub/booth/composer`); the
+// Uploading and going live are the Ж menu's "Upload or go live"
+// (`/hub/booth/composer`, `/composer/live` for Go live); the
 // how-it-works strip and the empty state point at it too, because a
 // musician arriving for the first time shouldn't have to find the Ж
 // before they know what the Booth is for.
@@ -64,7 +75,38 @@ const messages = defineMessages({
     defaultMessage: 'Search sets, artists or genres',
   },
   clearSearch: { id: 'booth.search_clear', defaultMessage: 'Clear search' },
-  allGenres: { id: 'booth.genre_all', defaultMessage: 'All' },
+  allGenres: { id: 'booth.genre_all', defaultMessage: 'All genres' },
+  allKinds: { id: 'booth.kind_all', defaultMessage: 'All kinds' },
+  kindLabel: { id: 'booth.filter.kind', defaultMessage: 'Kind' },
+  sortChosen: {
+    id: 'booth.filter.sort_chosen',
+    defaultMessage: 'Sort: {sort}',
+  },
+  kindChosen: {
+    id: 'booth.filter.kind_chosen',
+    defaultMessage: 'Kind: {kind}',
+  },
+  genreLabel: { id: 'booth.filter.genre', defaultMessage: 'Genre' },
+  genreChosen: {
+    id: 'booth.filter.genre_chosen',
+    defaultMessage: 'Genre: {genre}',
+  },
+  kinds: { id: 'booth.kinds', defaultMessage: 'Kinds' },
+  sortLabel: { id: 'booth.sort', defaultMessage: 'Sort' },
+  firstListens: { id: 'booth.first_listens', defaultMessage: 'First listens' },
+  firstListensBody: {
+    id: 'booth.first_listens_body',
+    defaultMessage:
+      'New this month and barely heard yet. Be one of the first to listen, and leave a shoutout.',
+  },
+  seeAll: { id: 'booth.first_listens_all', defaultMessage: 'See all' },
+  everything: {
+    id: 'booth.first_listens_back',
+    defaultMessage: 'Back to all sets',
+  },
+  sortNewest: { id: 'booth.sort.newest', defaultMessage: 'Newest' },
+  sortFewest: { id: 'booth.sort.fewest', defaultMessage: 'Fewest listens' },
+  sortLongest: { id: 'booth.sort.longest', defaultMessage: 'Longest' },
   genres: { id: 'booth.genres', defaultMessage: 'Genres' },
   loadMore: { id: 'booth.load_more', defaultMessage: 'Load more sets' },
   artistsEmpty: {
@@ -72,38 +114,51 @@ const messages = defineMessages({
     defaultMessage: 'No artists yet — publish a set to appear here.',
   },
   shared: { id: 'booth.shared', defaultMessage: 'Shared to your feed' },
-  introTitle: {
-    id: 'booth.intro.title',
-    defaultMessage: 'How the Booth works',
+  goLive: { id: 'booth.live.go_live', defaultMessage: 'Go live' },
+  mineSets: { id: 'booth.mine.sets', defaultMessage: 'Sets' },
+  minePlays: { id: 'booth.mine.plays', defaultMessage: 'Plays' },
+  mineLives: { id: 'booth.mine.lives', defaultMessage: 'Live sets coming' },
+  mineSaved: { id: 'booth.mine.saved', defaultMessage: 'Saved' },
+  mineSetsHeading: {
+    id: 'booth.mine.sets_heading',
+    defaultMessage: 'Your sets',
   },
-  introUpload: {
-    id: 'booth.intro.upload',
+  mineSetsEmpty: {
+    id: 'booth.mine.sets_empty',
+    defaultMessage: 'You haven’t uploaded a set yet',
+  },
+  mineLivesHeading: {
+    id: 'booth.mine.lives_heading',
+    defaultMessage: 'Your live sets',
+  },
+  mineLivesEmpty: {
+    id: 'booth.mine.lives_empty',
+    defaultMessage: 'No live sets planned',
+  },
+  mineSavedHeading: { id: 'booth.mine.saved_heading', defaultMessage: 'Saved' },
+  mineSavedEmpty: {
+    id: 'booth.mine.saved_empty',
+    defaultMessage: 'Nothing saved yet',
+  },
+  mineSavedEmptyBody: {
+    id: 'booth.mine.saved_empty_body',
     defaultMessage:
-      'Upload a set from the Ж menu: the audio file, a title and a cover. That’s all it needs.',
+      'Tap ♡ on any set to keep it here. Only you see what you save.',
   },
-  introShare: {
-    id: 'booth.intro.share',
-    defaultMessage:
-      'Every member can find it here. Post it to your feed as you upload, or later from the set’s page, so your people hear it.',
-  },
-  introCredit: {
-    id: 'booth.intro.credit',
-    defaultMessage:
-      'Credit who you played with. Once they confirm, the set shows under their name in Artists too.',
-  },
-  introDismiss: { id: 'booth.intro.dismiss', defaultMessage: 'Got it' },
 });
 
-const INTRO_KEY = 'kronk.booth.intro_dismissed';
 const GENRE_CHIPS = 8;
+type FilterKey = 'sort' | 'kind' | 'genre';
 
-function readIntroDismissed(): boolean {
-  try {
-    return window.localStorage.getItem(INTRO_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
+const SORTS: readonly BoothSort[] = ['newest', 'fewest', 'longest'];
+const SORT_MESSAGES: Record<BoothSort, MessageDescriptor> = {
+  newest: messages.sortNewest,
+  fewest: messages.sortFewest,
+  longest: messages.sortLongest,
+};
+
+// How many First listens show up front before "See all".
+const FIRST_SHELF = 4;
 
 // The artist detail path is `/hub/booth/artists/<encoded-key>`; the
 // roster is bare `/hub/booth/artists`. Returns the decoded key (`@acct` for
@@ -124,11 +179,11 @@ const creditKey = (credit: BoothCredit): string =>
   credit.account ? `@${credit.account.acct}` : (credit.name ?? '').trim();
 
 // Group the loaded sets into an artist roster: one entry per person, with
-// set count + summed play count. A person is whoever uploaded a set or was
-// credited on one (Tal 2026-10-12): a Kronk account, or a plain name for
-// someone who is not on Kronk. The line an uploader typed on a set from
-// before credits existed is not an artist. Sorted by set count then plays,
-// both descending.
+// their set count. A person is whoever uploaded a set or was credited on
+// one (Tal 2026-10-12): a Kronk account, or a plain name for someone who is
+// not on Kronk. The line an uploader typed on a set from before credits
+// existed is not an artist. Sorted by set count, then name; never by
+// plays, which are the artist's own business.
 function deriveArtists(sets: BoothSet[]): BoothArtist[] {
   const byKey = new Map<string, BoothArtist>();
   for (const set of sets) {
@@ -138,7 +193,6 @@ function deriveArtists(sets: BoothSet[]): BoothArtist[] {
       const existing = byKey.get(key);
       if (existing) {
         existing.setCount += 1;
-        existing.totalPlays += set.play_count;
       } else {
         byKey.set(key, {
           key,
@@ -146,13 +200,12 @@ function deriveArtists(sets: BoothSet[]): BoothArtist[] {
           acct: credit.account?.acct,
           avatar: credit.account?.avatar,
           setCount: 1,
-          totalPlays: set.play_count,
         });
       }
     }
   }
   return [...byKey.values()].sort(
-    (a, b) => b.setCount - a.setCount || b.totalPlays - a.totalPlays,
+    (a, b) => b.setCount - a.setCount || a.name.localeCompare(b.name),
   );
 }
 
@@ -171,12 +224,14 @@ function topGenres(sets: BoothSet[]): string[] {
 }
 
 // A grid of sets, with the owner's Edit / Share to feed flows from each
-// card's menu. Both views use it.
+// card's menu. Every view uses it. Pressing play on a card queues the
+// grid it's in, for Play next.
 const SetGallery: React.FC<{
   sets: BoothSet[];
   onReplace: (set: BoothSet) => void;
   onRemove: (id: string) => void;
-}> = ({ sets, onReplace, onRemove }) => {
+  badge?: string;
+}> = ({ sets, onReplace, onRemove, badge }) => {
   const history = useHistory();
   const dispatch = useAppDispatch();
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
@@ -217,6 +272,9 @@ const SetGallery: React.FC<{
             onEdit={setEditingSet}
             onDelete={onRemove}
             onShare={setSharingSet}
+            onChange={onReplace}
+            queue={sets}
+            badge={badge}
           />
         ))}
       </SpaceGrid>
@@ -238,58 +296,21 @@ const SetGallery: React.FC<{
   );
 };
 
-// First-visit explainer: three lines on what the Booth is for and how a
-// set gets heard. Dismissed once per browser.
-const BoothIntro: React.FC = () => {
-  const intl = useIntl();
-  const [dismissed, setDismissed] = useState(readIntroDismissed);
-
-  const handleDismiss = useCallback(() => {
-    setDismissed(true);
-    try {
-      window.localStorage.setItem(INTRO_KEY, '1');
-    } catch {
-      // Private mode: it comes back next visit, which is fine.
-    }
-  }, []);
-
-  if (dismissed) return null;
-
-  return (
-    <section className='booth-intro' aria-labelledby='booth-intro-title'>
-      <h2 id='booth-intro-title' className='booth-intro__title'>
-        {intl.formatMessage(messages.introTitle)}
-      </h2>
-      <ol className='booth-intro__steps'>
-        <li>{intl.formatMessage(messages.introUpload)}</li>
-        <li>{intl.formatMessage(messages.introShare)}</li>
-        <li>{intl.formatMessage(messages.introCredit)}</li>
-      </ol>
-      <div className='booth-intro__actions'>
-        <Link to='/hub/booth/composer' className='booth-intro__cta'>
-          {intl.formatMessage(messages.upload)}
-        </Link>
-        <button
-          type='button'
-          className='booth-intro__dismiss'
-          onClick={handleDismiss}
-        >
-          {intl.formatMessage(messages.introDismiss)}
-        </button>
-      </div>
-    </section>
-  );
-};
-
 const MusikView: React.FC = () => {
   const intl = useIntl();
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
   const [genre, setGenre] = useState<string | null>(null);
+  const [kind, setKind] = useState<BoothKind | null>(null);
+  const [sort, setSort] = useState<BoothSort>('newest');
   const [genreChips, setGenreChips] = useState<string[]>([]);
+  // "See all" on First listens turns the grid into that list.
+  const [allFirst, setAllFirst] = useState(false);
   const { sets, loading, loadingMore, hasMore, loadMore, replace, remove } =
-    useBoothSets({ query, genre });
-  const filtering = query !== '' || genre !== null;
+    useBoothSets({ query, genre, kind, sort, firstListens: allFirst });
+  const filtering = query !== '' || genre !== null || kind !== null || allFirst;
+  const first = useBoothSets({ firstListens: true });
+  const firstBadge = intl.formatMessage(messages.firstListens);
 
   // Typing settles for a moment before it searches.
   useEffect(() => {
@@ -317,12 +338,70 @@ const MusikView: React.FC = () => {
   const handleGenre = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     setGenre(e.currentTarget.dataset.genre ?? null);
   }, []);
+  const handleKind = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setKind((e.currentTarget.dataset.kind as BoothKind | undefined) ?? null);
+  }, []);
+  const handleSort = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setSort(
+      (e.currentTarget.dataset.sort as BoothSort | undefined) ?? 'newest',
+    );
+  }, []);
+  // One filter panel open at a time; tapping its pill again closes it.
+  const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
+  const handleToggle = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const key = e.currentTarget.dataset.filter as FilterKey;
+    setOpenFilter((open) => (open === key ? null : key));
+  }, []);
+  const handleAllFirst = useCallback(() => {
+    setAllFirst(true);
+  }, []);
+  const handleEverything = useCallback(() => {
+    setAllFirst(false);
+  }, []);
 
   const nothingAtAll = !loading && !filtering && sets.length === 0;
 
   return (
     <>
-      <BoothIntro />
+      <LiveNowStrip />
+
+      {/* First listens: recent sets few people have heard yet, up front so
+          new voices get a first audience instead of a chart. */}
+      {!filtering && first.sets.length > 0 && (
+        <section className='booth-first'>
+          <div className='booth-first__head'>
+            <h2 className='booth-first__title'>
+              {intl.formatMessage(messages.firstListens)}
+            </h2>
+            <p>{intl.formatMessage(messages.firstListensBody)}</p>
+            {first.sets.length > FIRST_SHELF && (
+              <KornerPill
+                label={intl.formatMessage(messages.seeAll)}
+                onClick={handleAllFirst}
+              />
+            )}
+          </div>
+          <SetGallery
+            sets={first.sets.slice(0, FIRST_SHELF)}
+            onReplace={first.replace}
+            onRemove={first.remove}
+            badge={firstBadge}
+          />
+        </section>
+      )}
+
+      {allFirst && (
+        <div className='booth-first__head'>
+          <h2 className='booth-first__title'>
+            {intl.formatMessage(messages.firstListens)}
+          </h2>
+          <p>{intl.formatMessage(messages.firstListensBody)}</p>
+          <KornerPill
+            label={intl.formatMessage(messages.everything)}
+            onClick={handleEverything}
+          />
+        </div>
+      )}
 
       {!nothingAtAll && (
         <div className='booth-filters'>
@@ -345,34 +424,141 @@ const MusikView: React.FC = () => {
               </button>
             )}
           </div>
-          {genreChips.length > 1 && (
-            <div
-              className='booth-genres'
-              role='group'
-              aria-label={intl.formatMessage(messages.genres)}
-            >
+          {/* Sort, Kind and Genre on one line, closed to start so the
+              grid comes first. Each pill names its choice; opening one shows
+              its chips in a panel under the row, one at a time. */}
+          <div className='booth-filterbar'>
+            <div className='booth-filterbar__toggles'>
               <button
                 type='button'
-                className='booth-genres__chip'
-                aria-pressed={genre === null}
-                onClick={handleGenre}
+                className={classNames('booth-filterbar__toggle', {
+                  'booth-filterbar__toggle--set': sort !== 'newest',
+                })}
+                aria-expanded={openFilter === 'sort'}
+                aria-controls='booth-filter-panel'
+                data-filter='sort'
+                onClick={handleToggle}
               >
-                {intl.formatMessage(messages.allGenres)}
+                {intl.formatMessage(messages.sortChosen, {
+                  sort: intl.formatMessage(SORT_MESSAGES[sort]),
+                })}
               </button>
-              {genreChips.map((g) => (
+              <button
+                type='button'
+                className={classNames('booth-filterbar__toggle', {
+                  'booth-filterbar__toggle--set': kind !== null,
+                })}
+                aria-expanded={openFilter === 'kind'}
+                aria-controls='booth-filter-panel'
+                data-filter='kind'
+                onClick={handleToggle}
+              >
+                {kind
+                  ? intl.formatMessage(messages.kindChosen, {
+                      kind: intl.formatMessage(kindMessage(kind)),
+                    })
+                  : intl.formatMessage(messages.kindLabel)}
+              </button>
+              {genreChips.length > 1 && (
                 <button
-                  key={g}
+                  type='button'
+                  className={classNames('booth-filterbar__toggle', {
+                    'booth-filterbar__toggle--set': genre !== null,
+                  })}
+                  aria-expanded={openFilter === 'genre'}
+                  aria-controls='booth-filter-panel'
+                  data-filter='genre'
+                  onClick={handleToggle}
+                >
+                  {genre
+                    ? intl.formatMessage(messages.genreChosen, { genre })
+                    : intl.formatMessage(messages.genreLabel)}
+                </button>
+              )}
+            </div>
+
+            {openFilter === 'sort' && (
+              <div
+                id='booth-filter-panel'
+                className='booth-genres'
+                role='group'
+                aria-label={intl.formatMessage(messages.sortLabel)}
+              >
+                {SORTS.map((s) => (
+                  <button
+                    key={s}
+                    type='button'
+                    className='booth-genres__chip'
+                    aria-pressed={sort === s}
+                    data-sort={s}
+                    onClick={handleSort}
+                  >
+                    {intl.formatMessage(SORT_MESSAGES[s])}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {openFilter === 'kind' && (
+              <div
+                id='booth-filter-panel'
+                className='booth-genres'
+                role='group'
+                aria-label={intl.formatMessage(messages.kinds)}
+              >
+                <button
                   type='button'
                   className='booth-genres__chip'
-                  aria-pressed={genre === g}
-                  data-genre={g}
+                  aria-pressed={kind === null}
+                  onClick={handleKind}
+                >
+                  {intl.formatMessage(messages.allKinds)}
+                </button>
+                {KINDS.map((k) => (
+                  <button
+                    key={k}
+                    type='button'
+                    className='booth-genres__chip'
+                    aria-pressed={kind === k}
+                    data-kind={k}
+                    onClick={handleKind}
+                  >
+                    {intl.formatMessage(kindMessage(k))}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {openFilter === 'genre' && genreChips.length > 1 && (
+              <div
+                id='booth-filter-panel'
+                className='booth-genres'
+                role='group'
+                aria-label={intl.formatMessage(messages.genres)}
+              >
+                <button
+                  type='button'
+                  className='booth-genres__chip'
+                  aria-pressed={genre === null}
                   onClick={handleGenre}
                 >
-                  {g}
+                  {intl.formatMessage(messages.allGenres)}
                 </button>
-              ))}
-            </div>
-          )}
+                {genreChips.map((g) => (
+                  <button
+                    key={g}
+                    type='button'
+                    className='booth-genres__chip'
+                    aria-pressed={genre === g}
+                    data-genre={g}
+                    onClick={handleGenre}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -398,7 +584,12 @@ const MusikView: React.FC = () => {
       )}
 
       {!loading && sets.length > 0 && (
-        <SetGallery sets={sets} onReplace={replace} onRemove={remove} />
+        <SetGallery
+          sets={sets}
+          onReplace={replace}
+          onRemove={remove}
+          badge={allFirst ? firstBadge : undefined}
+        />
       )}
 
       {!loading && hasMore && (
@@ -411,6 +602,120 @@ const MusikView: React.FC = () => {
         </KornerActionBar>
       )}
     </>
+  );
+};
+
+// My sets: a musician's own corner of the Booth. Their sets (drafts
+// included) with plays, the live sets they've planned, and the sets
+// they've saved. Saved is private to them.
+const MySetsView: React.FC = () => {
+  const intl = useIntl();
+  const mine = useBoothSets({ scope: 'mine' });
+  const saved = useBoothSets({ scope: 'saved' });
+  const { lives } = useBoothLives();
+  const myLives = lives.filter((l) => l.is_owner);
+  const plays = mine.sets.reduce((sum, s) => sum + (s.play_count ?? 0), 0);
+  const savedReplace = saved.replace;
+  const savedRemove = saved.remove;
+
+  // Unsaving from this list takes the set out of it.
+  const handleSavedChange = useCallback(
+    (set: BoothSet) => {
+      if (set.saved) savedReplace(set);
+      else savedRemove(set.id);
+    },
+    [savedReplace, savedRemove],
+  );
+
+  if (mine.loading || saved.loading) {
+    return <LoadingState label={intl.formatMessage(messages.loading)} />;
+  }
+
+  const count = (n: number, more: boolean) => (more ? `${n}+` : String(n));
+
+  return (
+    <div className='booth-mine'>
+      <dl className='booth-mine__stats'>
+        <div>
+          <dt>{intl.formatMessage(messages.mineSets)}</dt>
+          <dd>{count(mine.sets.length, mine.hasMore)}</dd>
+        </div>
+        <div>
+          <dt>{intl.formatMessage(messages.minePlays)}</dt>
+          <dd>{intl.formatNumber(plays)}</dd>
+        </div>
+        <div>
+          <dt>{intl.formatMessage(messages.mineLives)}</dt>
+          <dd>{myLives.length}</dd>
+        </div>
+        <div>
+          <dt>{intl.formatMessage(messages.mineSaved)}</dt>
+          <dd>{count(saved.sets.length, saved.hasMore)}</dd>
+        </div>
+      </dl>
+
+      <section>
+        <h2 className='booth-set__section-title'>
+          {intl.formatMessage(messages.mineSetsHeading)}
+        </h2>
+        {mine.sets.length > 0 ? (
+          <SetGallery
+            sets={mine.sets}
+            onReplace={mine.replace}
+            onRemove={mine.remove}
+          />
+        ) : (
+          <EmptyState
+            title={intl.formatMessage(messages.mineSetsEmpty)}
+            action={
+              <Link to='/hub/booth/composer'>
+                {intl.formatMessage(messages.upload)}
+              </Link>
+            }
+          />
+        )}
+      </section>
+
+      <section>
+        <h2 className='booth-set__section-title'>
+          {intl.formatMessage(messages.mineLivesHeading)}
+        </h2>
+        {myLives.length > 0 ? (
+          <ul className='booth-mine__lives'>
+            {myLives.map((l) => (
+              <LiveCard key={l.id} live={l} />
+            ))}
+          </ul>
+        ) : (
+          <EmptyState
+            title={intl.formatMessage(messages.mineLivesEmpty)}
+            action={
+              <Link to='/hub/booth/composer/live'>
+                {intl.formatMessage(messages.goLive)}
+              </Link>
+            }
+          />
+        )}
+      </section>
+
+      <section>
+        <h2 className='booth-set__section-title'>
+          {intl.formatMessage(messages.mineSavedHeading)}
+        </h2>
+        {saved.sets.length > 0 ? (
+          <SetGallery
+            sets={saved.sets}
+            onReplace={handleSavedChange}
+            onRemove={savedRemove}
+          />
+        ) : (
+          <EmptyState
+            title={intl.formatMessage(messages.mineSavedEmpty)}
+            body={intl.formatMessage(messages.mineSavedEmptyBody)}
+          />
+        )}
+      </section>
+    </div>
   );
 };
 
@@ -508,6 +813,8 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     signedIn &&
     (location.pathname.startsWith('/hub/booth/composer') ||
       location.pathname.startsWith('/hub/booth/new'));
+  const goingLive =
+    composing && location.pathname.startsWith('/hub/booth/composer/live');
 
   // A new set lands on its own page. If it went out to the feed, say so;
   // if not, the page offers to share it.
@@ -522,6 +829,15 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     history.push('/hub/booth');
   }, [history]);
 
+  // A live set opens its room: the host's get-ready panel for "now", the
+  // scheduled page for "later".
+  const handleLiveCreated = useCallback(
+    ({ live, announce }: LiveCreated) => {
+      history.push(`/hub/booth/live/${live.id}`, { announce });
+    },
+    [history],
+  );
+
   return (
     <KornerShell
       slug='booth'
@@ -530,6 +846,8 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
       defaultView='musik'
       views={{
         musik: () => <MusikView />,
+        live: () => <LiveView />,
+        mine: () => <MySetsView />,
         artists: () => <ArtistsView />,
       }}
     >
@@ -538,7 +856,13 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
         <meta name='robots' content='noindex' />
       </Helmet>
 
-      {composing && (
+      {goingLive && (
+        <LiveComposer
+          onCreated={handleLiveCreated}
+          onCancel={handleCancelUpload}
+        />
+      )}
+      {composing && !goingLive && (
         <BoothComposer
           onCreated={handleCreated}
           onCancel={handleCancelUpload}

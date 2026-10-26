@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { useHistory, useLocation } from 'react-router-dom';
 
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import {
@@ -23,6 +24,8 @@ import {
 import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
+import { RoomComposer } from './room_composer';
+import type { CreatedRoom } from './room_composer';
 import { RoomsList } from './rooms_list';
 
 const messages = defineMessages({
@@ -181,16 +184,32 @@ const jitsiWrapperStyle: React.CSSProperties = {
   position: 'relative',
 };
 
-// `autoOpenNewRoom` is set by the `/hub/huddle/new` route (the Ж
+// `autoOpenComposer` is set by the `/hub/huddle/composer` route (the Ж
 // menu's compose target for this korner — see config/korners/
-// huddle.yaml). When true, RoomsList opens its create form on mount
-// and cleans the URL back to `/hub/huddle`.
+// huddle.yaml; `/hub/huddle/new` redirects there). While it's set the
+// New Room composer is open over the lobby; `?krew=<id>` picks a Krew to
+// Konnect the Room to. Cancelling puts the URL back to `/hub/huddle`,
+// creating goes into the new Room.
 const Live: React.FC<{
   multiColumn?: boolean;
-  autoOpenNewRoom?: boolean;
-}> = ({ autoOpenNewRoom }) => {
+  autoOpenComposer?: boolean;
+}> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
+  const history = useHistory();
+  const location = useLocation();
+  const composerKrewId = autoOpenComposer
+    ? new URLSearchParams(location.search).get('krew')
+    : null;
+  const closeComposer = useCallback(() => {
+    history.replace('/hub/huddle');
+  }, [history]);
+  const handleRoomCreated = useCallback(
+    (room: CreatedRoom) => {
+      history.push(`/hub/huddle/room/${room.id}`);
+    },
+    [history],
+  );
   // The call area on this page: the call is drawn over it.
   const slotRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<JitsiApi | null>(null);
@@ -563,7 +582,7 @@ const Live: React.FC<{
                 lobby. The "New Room" affordance is the Ж menu (see
                 config/korners/huddle.yaml `compose:`); this list
                 is discovery only. Phase 9.6. */}
-            <RoomsList autoOpenCreate={autoOpenNewRoom} />
+            <RoomsList />
           </div>
         ) : (
           <div style={inRoomContainerStyle}>
@@ -591,6 +610,14 @@ const Live: React.FC<{
           </div>
         )}
       </div>
+
+      {autoOpenComposer && (
+        <RoomComposer
+          forKrewId={composerKrewId}
+          onCancel={closeComposer}
+          onCreated={handleRoomCreated}
+        />
+      )}
 
       <Helmet>
         <title>{intl.formatMessage(messages.heading)}</title>

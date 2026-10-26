@@ -86,17 +86,6 @@ RSpec.describe 'Audit review fixes' do
     end
   end
 
-  it "gives an event that isn't posted a Just me album" do
-    post '/api/v1/events', headers: headers_for(alice),
-                           params: { title: 'Quiet party', start_time: 2.days.from_now.iso8601, spawn_album: true, post_to_feed: false }
-    expect(response).to have_http_status(200)
-
-    album = KornerAttachment.from_source('kalendar', response.parsed_body['id'].to_i)
-                            .find_by(target_slug: 'albutts', kind: 'spawn')
-                            .target_record
-    expect(album.visibility).to eq 'self_only'
-  end
-
   it 'hides profile content from someone the owner blocked' do
     mate!(alice, bob)
     expect(ProfileVisibility.reach_allows?('mates', owner: alice.account, viewer: bob.account)).to be true

@@ -33,6 +33,10 @@ export const apiGetWachugotListings = () =>
 
 // Detail endpoint — returns a single listing with poster account
 // attached (used by /hub/wachuneed/listings/:id).
+// A listing's page, by name (decisions.md, 2026-10-22).
+export const listingPath = (listing: { id: string; slug?: string }) =>
+  `/hub/wachuneed/listings/${listing.slug ?? listing.id}`;
+
 export const apiGetWachuneedListing = (id: string) =>
   apiRequestGet<ApiListingJSON>(`v1/wachuneed/listings/${id}`);
 
@@ -62,6 +66,9 @@ export interface CreateListingParams {
   announced?: boolean;
   // Who can see it, and so who can message you about it.
   visibility?: ListingVisibility;
+  // The Krews it is for, on top of its reach (KrewAudienceParams); left
+  // out, its Krews stay as they are.
+  krew_ids?: string[];
   // Which choice a photo shows, by media id. Read with the photos.
   photo_variants?: Record<string, string>;
   // Optional photos — media_attachment_ids returned from

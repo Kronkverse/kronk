@@ -290,7 +290,9 @@ no Invite.
   space in is a manifest edit. A section with nothing written is left out;
   without `about.why` the manifest's `purpose` stands in. Which space a page
   belongs to is `spaceSlugForPath` in `kronk_menu.tsx`; the search page and
-  `/kronk` pages have none, so no i moon.
+  `/kronk` pages have none, so no i moon. It is the one place a space
+  explains itself: no first-visit banners or "how it works" strips on the
+  page itself (Tal, 2026-10-26). What one would say goes in `about.how`.
 - **Share** is a built-in moon on every page, Settings and Nudges included
   (Tal, 2026-10-13; everywhere since 2026-10-17: "someone might want to
   share where a settings option is"). `kronk_menu.tsx` opens
@@ -355,7 +357,12 @@ The visual points:
 - **No colour field.** Identity is name and icon.
 - **Feed projection.** `feed_projection.card` names the korner's feed card
   (for example `kommons_card`, rendered by `StatusKommonsCard`). Every feed card
-  sits on `<StatusKornerCard>` and the [Card standard](#card-standard).
+  sits on `<StatusKornerCard>` and the [Card standard](#card-standard). A
+  korner's post is the person's own words, or the record's title when they
+  wrote none, linked to the record (its `status_id`, stamped
+  `source_korner`). The card is the link: the post never carries generated
+  copy ("Live now in the Booth: …") or the record's URL in its text
+  (decisions.md, 2026-10-26).
 - **Settings.** `/hub/<slug>/settings`, built from the widget kit (§4.1).
 - **Header.** The Frame draws the badge, title, tagline and view switch from the
   manifest (`views:`, `header:`). See [Frame](#frame).
@@ -664,7 +671,11 @@ The same card three ways (`variant`):
   `<ProfileCard>` in the Kommunity deck.
 - **`grid`**: media and title, at most one meta line. Two across on a phone,
   four from 720px (`<SpaceGrid>` / `<SpaceCard>` in `space_grid.tsx`). Used by
-  Albutts, Booth, Kalendar events and Wachuneed.
+  Albutts, Booth, Kalendar events and Wachuneed. `<SpaceGrid layout='masonry'>`
+  is the same cards with each image in its own shape, stacked down columns
+  (two on a phone, three from 720px), for a collection whose images are the
+  work itself and a square crop would cut it: an Art portfolio (@mangobee,
+  2026-10-23). A tile without an image keeps the square placeholder.
 
 ### Decisions, and why
 
@@ -780,13 +791,15 @@ with `app/`, `config/` or `styles/`.
 
 ### Compose + confirmation
 
-| Primitive                                | What it does                                                                                                                                                                                                                                                                                 | Where                                                                                                |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer.                                                                                                                                                      | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
-| `<PhotoDropZone>`                        | **Every photo upload uses it.** A box you drop photos on or click to choose them; filters to `accept` and marks the drop handled so the main post box doesn't also take it. `__tests__/photo_drop_zone_guard.test.ts` fails a new raw photo input; the older ones are on its burn-down list. | `components/media/photo_drop_zone.tsx`, `styles/mastodon/_media_capture.scss`                        |
-| `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                                                                                                                                                                                    | `features/ui/components/kronk_menu.tsx`                                                              |
-| `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.                                                                                                                                                                   | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
-| `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                                                                                                                                                                      | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
+| Primitive                                | What it does                                                                                                                                                                                                                                                                                        | Where                                                                                                |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer. `draft={useDraft()}` adds the drafts line; `konnect={useKonnect()}` adds the Konnect row above it.                                                          | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
+| Composer field kit                       | `<ComposeTitle>`, `<ComposeBody>`, `<ComposeField>` with `<ComposeInput>` / `<ComposeTextarea>` / `<ComposeSelect>`, `<ComposeCheck>`, `<ComposeRow>`, `<ComposeSection>`, `<ComposeHint>`: every composer's fields, one look (title in the serif, the rest in the body sans). Korner Standard L13. | `components/compose_fields.tsx`, `styles/mastodon/_compose_fields.scss`                              |
+| `useKonnect()` + `<KonnectRow>`          | A composer's Konnections: `?konnect=<slug>:<id>` arrives as the first, the row's Konnect tile picks more, `commit(slug, id)` links them once the record is made. See Konnect, below.                                                                                                                | `hooks/useKonnect.ts`, `components/konnect_row.tsx`. decisions.md, 2026-10-23                        |
+| `<PhotoDropZone>`                        | **Every photo upload uses it.** A box you drop photos on or click to choose them; filters to `accept` and marks the drop handled so the main post box doesn't also take it. `__tests__/photo_drop_zone_guard.test.ts` fails a new raw photo input; the older ones are on its burn-down list.        | `components/media/photo_drop_zone.tsx`, `styles/mastodon/_media_capture.scss`                        |
+| `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                                                                                                                                                                                           | `features/ui/components/kronk_menu.tsx`                                                              |
+| `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.                                                                                                                                                                          | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
+| `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                                                                                                                                                                             | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
 
 #### Drafts
 
@@ -809,7 +822,11 @@ its korner, kind and context, a `snapshot` (`params`, plus finished uploads by
 id), `hasContent`, `apply(draft | null)` to put a draft into its fields (null
 blanks them), and `describe(draft)` for the chip's label. The hook:
 
-- lists this composer's drafts on open and applies the newest;
+- lists this composer's drafts on open and applies the newest if it was
+  touched in the last half hour (`RESUME_WINDOW`); older, the composer opens
+  clean and the draft waits in the line. `resume()` can decline it too, as
+  the post composer does when opened holding a mention; `resumed` says one
+  was applied;
 - saves on the device straight away and to the server after a pause; opening
   again, a device copy newer than the server's wins and is sent up;
 - saves on the way out, so closing never loses anything; a draft emptied by
@@ -819,17 +836,26 @@ blanks them), and `describe(draft)` for the chip's label. The hook:
   composer edits something already posted.
 
 Pass its result to `<ComposeShell draft={…}>`, which draws `<DraftBar>`
-(`components/draft_bar.tsx`) above the body: a chip per draft, Start another,
-Discard draft (asks first) and Saved. A composer never draws its own.
+(`components/draft_bar.tsx`) at the bottom of the body, above the submit.
+**Drafts are quiet** (decisions.md, 2026-10-22): saving says nothing. A
+composer closed less than half an hour ago opens on its draft, with the
+line _Picked up where you left off · Start fresh · Discard_ (Start fresh
+keeps the draft and blanks the box; Discard asks first), plus _Other drafts
+(N)_ when there are more, which opens them as chips to switch to. Opened
+later, it opens clean and the line is just _Drafts (N)_, to pick one up. No
+drafts, no line. A composer never draws its own.
 
 **Every composer** saves drafts this way (2026-10-19). Korner and kind:
-`feed`/`post` (only a plain new post, never a reply or an edit; the post
-composer isn't in the shell, so it draws `<DraftBar>` itself),
+`feed`/`post` (only a plain new post, never a reply or an edit; opened to
+post to a Krew, context `krew:<id>`; the post composer isn't in the shell, so
+it draws `<DraftBar>` itself, under the box),
 `kalendar`/`event` (a Krew's: context `krew:<id>`), `albutts`/`album`,
 `albutts`/`contribute` (context `album:<id>`), `wachuneed`/`item`,
 `kronikles`/`chronicle`, `art`/`piece`, `cinema`/`film`, `karporn`/`kar`,
 `kommons`/`proposal` and `korner_proposal` (context `node:` or `space:`),
-`krew`/`krew`, `map`/`trek`, `freethedream`/`asset`, `item` (context `need:`
+`krew`/`krew`, `huddle`/`room` (opened from a Krew, context `krew:<id>`),
+`map`/`trek` and `place` (context `konnect:<slug>-<id>` when opened from a
+Konnect), `freethedream`/`asset`, `item` (context `need:`
 or `project:`) and `project`, `booth`/`upload`, `kuestions`/`kuestion`.
 
 What a draft can't keep yet: files a composer only uploads when you post. The
@@ -842,6 +868,91 @@ picked, as albums do.
 
 Nudges keep a per-device draft per conversation instead
 (`hooks/useComposerDraft.ts`): a message box, not a composer of things.
+
+#### Konnect
+
+Any creation Konnects to any other (decisions.md, 2026-10-23), and every
+composer that makes a record offers it: `konnect` is a required prop of
+`<ComposeShell>`, so a composer can't leave it out by forgetting. `useKonnect(korner)` (`hooks/useKonnect.ts`) holds what
+the new record will be Konnected to: the record it was opened from
+(`?konnect=<slug>:<id>`, which the Konnect picker's **New …** sends) and any
+the person adds. Pass it to `<ComposeShell konnect={…}>`: the shell draws the
+**Konnect row** at the foot of the body, above the drafts line, in the same
+space tiles as a page's Konnected block (`.space-tiles`, one tile per record
+with a × to drop it, then a dashed Konnect tile that opens the picker in its
+pick-don't-save mode). Tiles reflow; nothing scrolls sideways. After the
+create succeeds the composer calls `konnect.commit(<its slug>, <new id>)`;
+a link that fails never fails the create. Keep `konnect.saved` in the draft
+(`konnections`) and `restore` it in `apply`. A composer that makes nothing
+new to Konnect passes `konnect={null}`: editing a record (Konnect it from its
+page), adding to one that exists (photos to an album, a hand-over), a record
+that isn't its korner's linkable one (a trek, a FreeTheDream item), or a
+korner that opts out (`no_attachments:`, Moments). Location and a Krew come
+through Konnect too, not fields of their own (Korner Standard L13): where a
+thing is, is a Konnection to a Map Place. In a composer's picker, Map opens
+the map straight away (`components/konnect_map.tsx`): existing Places listed
+above the search results, or a pin plus a name and an address you can type,
+which makes the Place and picks it without leaving the composer; whatever
+reads a location falls back to the Konnected Place (`Kronk::RecordPlace`,
+decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The
+korner's manifest then says
+`konnect: { make: true }` so the picker offers its composer
+(docs/korners/adding_a_korner.md, Korner attachments §2.6 and §4.4).
+
+**Same as** (decisions.md, 2026-10-25): a record Konnected to another can
+take its audience and follow it. What the server gives a tile or composer:
+
+- Each Konnection row (`GET /api/v1/attachments`) has `audience_follows`
+  (`'target'`, `'source'` or `null`: the end that leads) and, on both
+  previews, `audience: { tier, krews: [{ id, name, slug }], hidden_krews,
+followable }`.
+- A supported record's own JSON (album, film, kar, kronikle, art piece,
+  listing detail) has `audience_follows: { slug, id, title, url } | null`,
+  the leader (`hidden: true` and no id or title when the viewer can't see
+  it). Its audience is its `visibility` plus `krews` (albums, events, and
+  since 2026-10-25 films, kars, kronikles, art pieces and listing details;
+  each composer sends its Krews as top-level `krew_ids`, as the album
+  composer does).
+- Before the record exists, `GET /api/v1/attachments/audience?korner=&id=&for=<own korner>`
+  says whether "Same as <title>" can be offered (`followable`, else
+  `reason`). Offer it, and default to it, when the Konnected record is
+  Everyone or Krews; never for Mates or Orbit. Booth sets have no audience
+  control.
+- **Mismatch notes.** With both ends' audiences in hand, a tile on record
+  A says when people who see the other end, B, can't open A. If A is
+  `public`, they all can. Otherwise each of B's Krews that is not among A's
+  can't ("Growers can't open your album"), and if B is `public`, not
+  everyone who sees B can. Mates and Orbit can't be compared across owners,
+  so they never make a note.
+
+What the person sees (`hooks/useSameAs.ts`, `components/audience_marker.tsx`):
+
+- **Who sees this.** In the album, film, kar, kronikle, art piece and
+  listing composers, the reach control (`<ReachDropdown sameAs>`) opens on
+  a "Same as <title>" row for each Konnect-row record the server says it
+  can follow, naming that record's audience ("Growers", "Growers and
+  Climbers", "Everyone"). It is on by default when the composer opened from
+  the record (`?konnect=`), or when the first such record is added before
+  reach was touched; the button then reads "Same as <title>". Choosing it
+  copies the leader's tier and Krews into the composer's own (so the record
+  is right the moment it's made, and the tiers and Krews below show the
+  copy); choosing any tier or Krew turns it off. One leads at most. On
+  create the record is sent with that reach, and its link with
+  `metadata: { audience: 'same' }`. Not offered while editing, for a Krew
+  album, or by composers without a reach control (Booth).
+- **Every Konnected tile** (a composer's Konnect row and a page's Konnected
+  block) says who sees its record, quietly under the title: "Everyone",
+  "Mates", "Orbit", "Just me", "Invited" (an invite-only event), "Growers",
+  "Growers + Climbers", "Growers + 2 Krews" for Krews you can't see. The
+  one this record follows has an accent border and a "Same as" line.
+- **On a record's page**, whoever looks after a record that can follow
+  gets a link button beside a tile's ×: "Make audience the same as …" where
+  it could follow that record, "Stop following …" where it does, each
+  confirmed with what changes (`PATCH`, `audience_follows`).
+- **Notes**, under the grid, for the same person on the same pages: one
+  line per Konnected record whose people can't open this one, with "Make
+  it Same as <title>" where following it would mend it. An event's page
+  (events lead, never follow) and a Krew's show the markers only.
 
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of
@@ -905,11 +1016,11 @@ redone: FreeTheDream's (#2101, redone in #2114) and Wachuneed's shop page
 are listed as `kitBurnDown` in `eslint.config.mjs` and come off it as they
 move.
 
-| Primitive        | What it does                                                                                                                                                                                                | Where                                                                |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`, and `attached` (the record, for the "Attached" block). On `.stage-column`. | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
-| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                                                                               | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
-| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                                                                               | `components/back_to_korner.tsx`                                      |
+| Primitive        | What it does                                                                                                                                                                                               | Where                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`, and `attached` (the record, for the Konnected block). On `.stage-column`. | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
+| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                                                                              | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
+| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                                                                              | `components/back_to_korner.tsx`                                      |
 
 ### Actions
 
@@ -927,13 +1038,16 @@ move.
 
 ### Inter-korner communication
 
-| Primitive                          | What it does                                                                                                             | Where                                                                                                         |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `emits:` / `listens:` in manifests | Declared signals between korners, loaded by the registry.                                                                | `config/initializers/kronk_korner_registry.rb`. Contract: `docs/korners/adding_a_korner.md`                   |
-| Nudges pipeline                    | The notification path every korner sends alerts through.                                                                 | `features/nudges_messenger/`, `app/models/notification.rb`. Spec: [`docs/spaces/nudges.md`](spaces/nudges.md) |
-| `useAttachments(slug, id)`         | Read, create and remove cross-korner attachments (`spawn` / `link` / `reference`) for a record.                          | `hooks/useAttachments.ts`, `api/attachments.ts`                                                               |
-| `<AttachmentSection>`              | The "Attached" block on a detail page: links both ways; remove for whoever looks after the record; silent when empty.    | `components/attachment_section.tsx`, `styles/mastodon/_kronk_attachment.scss`                                 |
-| `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. | `components/attachment_picker.tsx`                                                                            |
+| Primitive                          | What it does                                                                                                                                                                                                                                                                                                                                                 | Where                                                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `emits:` / `listens:` in manifests | Declared signals between korners, loaded by the registry.                                                                                                                                                                                                                                                                                                    | `config/initializers/kronk_korner_registry.rb`. Contract: `docs/korners/adding_a_korner.md`                   |
+| Nudges pipeline                    | The notification path every korner sends alerts through.                                                                                                                                                                                                                                                                                                     | `features/nudges_messenger/`, `app/models/notification.rb`. Spec: [`docs/spaces/nudges.md`](spaces/nudges.md) |
+| `useAttachments(slug, id)`         | Read, create and remove cross-korner attachments (`spawn` / `link` / `reference`) for a record.                                                                                                                                                                                                                                                              | `hooks/useAttachments.ts`, `api/attachments.ts`                                                               |
+| `<AttachmentSection>`              | The Konnected block on a detail page: Konnections both ways as space tiles, or as cards (`<KonnectedCard>`) for records with something to show (a Place's map, an album's photos, an event's date), a Konnect tile and × for whoever looks after the record; silent when empty. `leading` puts a page's own tiles in the same grid (the Krew page's Spaces). | `components/attachment_section.tsx`, `components/konnected_card.tsx`, `styles/mastodon/_space_tiles.scss`     |
+| Space tiles, section heading       | `.space-tiles` / `.space-tile` (icon over name, `--action` dashed, `--open`, `__remove` ×) and `.korner-section-heading`, the one heading for a detail page's sections (Spaces, Konnected, People, Going).                                                                                                                                                   | `styles/mastodon/_space_tiles.scss`                                                                           |
+| `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. New … opens a `konnect.make` korner's composer with `?konnect=`; `onPick` returns the record instead (composers), where Map opens the map to pick a Place or make one.                                                              | `components/attachment_picker.tsx`                                                                            |
+| `konnect:` in manifests            | A korner's Konnections: `make` (the picker offers its composer) and `effects` (what a Konnection with a space does, matching `Kronk::AttachmentEffects`). Checked by `korners doctor`.                                                                                                                                                                       | `config/korners/*.yaml`, `app/lib/kronk/korner_konnect.rb`                                                    |
+| `<EventSearch>`                    | A form field that picks one Kalendar event: the same candidates search, upcoming first with a "Show past events" toggle, the pick as a chip (title and date) with Change. Krew requirements use it.                                                                                                                                                          | `components/event_search.tsx`                                                                                 |
 
 ### Where the spread bites
 
@@ -974,8 +1088,21 @@ driven by `entrypoints/signup.ts`):
 `Auth::RegistrationsController#create` refuses the whole signup (422, no
 user created) unless all three vows are present. On success it records the
 crossing in the same transaction as the account, turns on follower approval
-for the new account, and lands the member on `/`. Email confirmation is a
-reminder nudge, not a gate (`decisions.md`, 2026-08-16).
+for the new account, and lands the member on `/setup`. Email confirmation
+is a reminder nudge, not a gate (`decisions.md`, 2026-08-16).
+
+**Setup** (`features/setup`, `decisions.md` 2026-10-22). One page in the
+SPA, a short section per choice, each saved as it is picked; whatever is left
+alone waits for Settings: _How Kronk looks_ (Dark, Light or Match my device,
+then the shade slider; picking a theme reloads the page back at this section,
+`#look`, since the theme is its own stylesheet), _About you_ (the profile's bio field, `<ProfileBioField>`),
+_Who sees your posts_ (the default reach, widest first), _A few people_ (up
+to eight suggestions with a mate button) and _Notifications_ (the
+`<PushPrompt>` from Settings → Notifications: turn on, or what this device
+can't do). They write through `/api/v1/settings/appearance`,
+`/api/v1/settings/posting` and `update_credentials`, the same as Settings
+and the profile. One **Continue** at the foot loads `/home` in full, where
+the walkthrough starts; the walkthrough never starts over `/setup`. Only a fresh signup is sent there.
 
 **Existing members.** Anyone whose `thresholds_version` is nil or below the
 current version is redirected to `/auth/thresholds` on any signed-in HTML

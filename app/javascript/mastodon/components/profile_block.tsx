@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
@@ -574,14 +574,19 @@ export const ProfileBlock: React.FC<Props> = ({
           <>
             <AccountBio accountId={accountId} className='profile-block__bio' />
             {/* The First Nations Country they live on, under the bio and
-                seen wherever it is (docs/spaces/profile.md, Country). */}
+                seen wherever it is (docs/spaces/profile.md, Country); it opens
+                that Country on the Map. */}
             {account.first_nations_country && (
               <p className='profile-block__country'>
-                <FormattedMessage
-                  id='profile_block.country'
-                  defaultMessage='On {name} Country'
-                  values={{ name: account.first_nations_country }}
-                />
+                <Link
+                  to={`/hub/map?country=${encodeURIComponent(account.first_nations_country)}`}
+                >
+                  <FormattedMessage
+                    id='profile_block.country'
+                    defaultMessage='On {name} Country'
+                    values={{ name: account.first_nations_country }}
+                  />
+                </Link>
               </p>
             )}
           </>

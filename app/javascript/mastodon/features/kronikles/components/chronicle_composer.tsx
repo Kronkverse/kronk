@@ -12,10 +12,21 @@ import type {
   ApiChronicleJSON,
   ChronicleKind,
 } from 'mastodon/api_types/kronikles';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeSelect,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { REACH_ORDER, ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useSameAs } from 'mastodon/hooks/useSameAs';
 
 const messages = defineMessages({
   submit: { id: 'kronikles.composer.submit', defaultMessage: 'Publish' },
@@ -98,6 +109,8 @@ interface ChronicleDraftParams {
   body?: string;
   kind?: ChronicleKind;
   visibility?: ReachValue;
+  krew_ids?: string[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -131,6 +144,33 @@ export const ChronicleComposer: React.FC<Props> = ({
   );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The Krews it's for, on top of its reach (decisions.md, 2026-10-25).
+  const [krewIds, setKrewIds] = useState<string[]>(
+    editingChronicle?.krews?.map((k) => k.id) ?? [],
+  );
+  const availableKrews = useAvailableKrews();
+  const handleToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
+  const applyAudience = useCallback(
+    (tier: ReachValue, ids: string[] | null) => {
+      setVisibility(tier);
+      if (ids) setKrewIds(ids);
+    },
+    [],
+  );
+  // What the new Kronikle will be Konnected to (decisions.md, 2026-10-23),
+  // and whose audience it may follow ("Same as", 2026-10-25).
+  const { konnect, reach } = useSameAs(useKonnect('kronikles'), {
+    enabled: !isEdit,
+    apply: applyAudience,
+    onChange: setVisibility,
+    onToggleKrew: handleToggleKrew,
+  });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Pictures between paragraphs (Tal 2026-10-12). A picture is uploaded
   // on its own and the body names it on a line: `![caption](picture:<id>)`.
@@ -155,6 +195,8 @@ export const ChronicleComposer: React.FC<Props> = ({
       setBody(p.body ?? '');
       setKind(p.kind ?? 'essay');
       setVisibility(p.visibility ?? 'public');
+      setKrewIds(p.krew_ids ?? []);
+      restoreKonnect(p.konnections);
       setThumbs(
         (d?.media_attachments ?? []).map((m) => ({
           id: m.id,
@@ -163,7 +205,7 @@ export const ChronicleComposer: React.FC<Props> = ({
       );
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<ChronicleDraftParams>({
@@ -171,7 +213,14 @@ export const ChronicleComposer: React.FC<Props> = ({
     kind: 'chronicle',
     context: null,
     snapshot: {
-      params: { title, body, kind, visibility },
+      params: {
+        title,
+        body,
+        kind,
+        visibility,
+        krew_ids: krewIds,
+        konnections: konnect.saved,
+      },
       mediaIds: thumbs
         .filter((t) => body.includes(`(picture:${t.id})`))
         .map((t) => t.id),
@@ -273,10 +322,16 @@ export const ChronicleComposer: React.FC<Props> = ({
       try {
         if (editingChronicle) {
           // Reach is locked while editing — see the ReachDropdown below.
-          onUpdated?.(await apiUpdateChronicle(editingChronicle.id, params));
+          onUpdated?.(
+            await apiUpdateChronicle(editingChronicle.id, params, krewIds),
+          );
         } else {
-          const created = await apiCreateChronicle({ ...params, visibility });
+          const created = await apiCreateChronicle(
+            { ...params, visibility },
+            krewIds,
+          );
           finishDraft();
+          await commitKonnect('kronikles', created.id);
           onCreated?.(created);
         }
       } catch (e) {
@@ -293,9 +348,11 @@ export const ChronicleComposer: React.FC<Props> = ({
   }, [
     canSubmit,
     body,
+    commitKonnect,
     editingChronicle,
     finishDraft,
     kind,
+    krewIds,
     onCreated,
     onUpdated,
     title,
@@ -311,6 +368,7 @@ export const ChronicleComposer: React.FC<Props> = ({
       onCancel={onCancel}
       onSubmit={submit}
       draft={draft}
+      konnect={isEdit ? null : konnect}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,
@@ -320,104 +378,105 @@ export const ChronicleComposer: React.FC<Props> = ({
       headerAction={
         // Reach is locked while editing: the update endpoints don't
         // re-scope the item's projected feed post, so narrowing reach
-        // here would only look private (no reach without consent).
+        // here would only look private (no reach without consent). Its
+        // Krews can still change: the server moves its post with them.
         <ReachDropdown
           value={visibility}
-          onChange={setVisibility}
-          disabled={pending || isEdit}
+          onChange={reach.onChange}
+          disabled={pending}
+          hide={
+            isEdit ? REACH_ORDER.filter((r) => r !== visibility) : undefined
+          }
+          krews={availableKrews}
+          selectedKrewIds={krewIds}
+          onToggleKrew={reach.onToggleKrew}
+          sameAs={reach.sameAs}
+          onSameAs={reach.onSameAs}
         />
       }
     >
-      <div className='kronikles-composer'>
+      <ComposeTitle
+        value={title}
+        onChange={handleTitleChange}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        maxLength={240}
+        disabled={pending}
+      />
+
+      <ComposeField label={intl.formatMessage(messages.kindLabel)}>
+        <ComposeSelect
+          value={kind}
+          onChange={handleKindChange}
+          disabled={pending}
+        >
+          {KINDS.map((k) => (
+            <option key={k} value={k}>
+              {intl.formatMessage(kindMessages[k])}
+            </option>
+          ))}
+        </ComposeSelect>
+      </ComposeField>
+
+      <div className='kronikles-composer__tools'>
+        <button type='button' onClick={handleHeading} disabled={pending}>
+          {intl.formatMessage(messages.headingTool)}
+        </button>
+        <button
+          type='button'
+          onClick={handlePickPicture}
+          disabled={pending || uploading}
+        >
+          {intl.formatMessage(
+            uploading ? messages.pictureUploading : messages.picture,
+          )}
+        </button>
         <input
-          type='text'
-          className='kronikles-composer__title'
-          value={title}
-          onChange={handleTitleChange}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
-          maxLength={240}
-          disabled={pending}
+          ref={fileRef}
+          type='file'
+          accept='image/*'
+          className='kronikles-composer__file'
+          aria-label={intl.formatMessage(messages.picture)}
+          onChange={handlePictureChosen}
         />
-
-        <div className='kronikles-composer__kind'>
-          <label htmlFor='kronikles-composer-kind'>
-            {intl.formatMessage(messages.kindLabel)}
-          </label>
-          <select
-            id='kronikles-composer-kind'
-            value={kind}
-            onChange={handleKindChange}
-            disabled={pending}
-          >
-            {KINDS.map((k) => (
-              <option key={k} value={k}>
-                {intl.formatMessage(kindMessages[k])}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className='kronikles-composer__tools'>
-          <button type='button' onClick={handleHeading} disabled={pending}>
-            {intl.formatMessage(messages.headingTool)}
-          </button>
-          <button
-            type='button'
-            onClick={handlePickPicture}
-            disabled={pending || uploading}
-          >
-            {intl.formatMessage(
-              uploading ? messages.pictureUploading : messages.picture,
-            )}
-          </button>
-          <input
-            ref={fileRef}
-            type='file'
-            accept='image/*'
-            className='kronikles-composer__file'
-            aria-label={intl.formatMessage(messages.picture)}
-            onChange={handlePictureChosen}
-          />
-        </div>
-
-        <textarea
-          ref={bodyRef}
-          className='kronikles-composer__body'
-          value={body}
-          onChange={handleBodyChange}
-          placeholder={intl.formatMessage(messages.bodyPlaceholder)}
-          disabled={pending}
-        />
-
-        {thumbs.some((t) => body.includes(`(picture:${t.id})`)) && (
-          <div className='kronikles-composer__pictures'>
-            <p>{intl.formatMessage(messages.pictureHint)}</p>
-            <ul>
-              {thumbs
-                .filter((t) => body.includes(`(picture:${t.id})`))
-                .map((t) => (
-                  <li key={t.id}>
-                    <img src={t.src} alt='' />
-                    <code>picture:{t.id}</code>
-                  </li>
-                ))}
-            </ul>
-          </div>
-        )}
-
-        {error && <p className='kronikles-composer__error'>{error}</p>}
-
-        {isEdit && onDelete && (
-          <button
-            type='button'
-            className='compose-shell__delete'
-            onClick={onDelete}
-            disabled={pending || deleting}
-          >
-            {intl.formatMessage(messages.deleteChronicle)}
-          </button>
-        )}
       </div>
+
+      <ComposeBody
+        ref={bodyRef}
+        className='kronikles-composer__body'
+        value={body}
+        onChange={handleBodyChange}
+        placeholder={intl.formatMessage(messages.bodyPlaceholder)}
+        disabled={pending}
+      />
+
+      {thumbs.some((t) => body.includes(`(picture:${t.id})`)) && (
+        <div className='kronikles-composer__pictures'>
+          <p>{intl.formatMessage(messages.pictureHint)}</p>
+          <ul>
+            {thumbs
+              .filter((t) => body.includes(`(picture:${t.id})`))
+              .map((t) => (
+                <li key={t.id}>
+                  <img src={t.src} alt='' />
+                  <code>picture:{t.id}</code>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {error && <ComposeHint error>{error}</ComposeHint>}
+
+      {isEdit && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={pending || deleting}
+        >
+          {intl.formatMessage(messages.deleteChronicle)}
+        </button>
+      )}
     </ComposeShell>
   );
 };

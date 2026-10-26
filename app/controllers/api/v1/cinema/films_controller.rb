@@ -9,6 +9,8 @@
 # action authorisation (update / destroy) requires the caller be the
 # owner.
 class Api::V1::Cinema::FilmsController < Api::BaseController
+  include KrewAudienceParams
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy]
   before_action :require_user!, except: [:index, :show]
@@ -22,7 +24,7 @@ class Api::V1::Cinema::FilmsController < Api::BaseController
   def index
     scope = Film.visible_to(current_account).recent
     scope = narrow_by_scope(scope)
-    render json: scope.limit(clamp_limit), each_serializer: REST::FilmSerializer
+    render json: scope.limit(clamp_limit), each_serializer: REST::FilmSerializer, list: true
   end
 
   def show
@@ -41,6 +43,7 @@ class Api::V1::Cinema::FilmsController < Api::BaseController
     @film = current_account.owned_films.new(film_params)
 
     if @film.save
+      sync_krew_audience!(@film)
       Cinema::PublishFilm.new(@film).call
       render json: @film.reload, serializer: REST::FilmSerializer, status: 201
     else
@@ -52,6 +55,7 @@ class Api::V1::Cinema::FilmsController < Api::BaseController
     authorize_owner!
 
     if @film.update(film_params_for_update)
+      sync_krew_audience!(@film)
       render json: @film.reload, serializer: REST::FilmSerializer
     else
       render json: { error: @film.errors.full_messages.to_sentence }, status: :unprocessable_entity

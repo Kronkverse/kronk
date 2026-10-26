@@ -17,14 +17,20 @@ const messages = defineMessages({
   },
 });
 
-interface ArtSummary {
+export interface ArtSummary {
   id: string;
   title: string;
   kind: ArtKind;
   visibility: 'public' | 'mates' | 'orbit' | 'self_only';
   photo_count: number;
   cover_url: string | null;
+  // The first few photos at thumbnail size (profile Art tile).
+  preview_urls?: string[];
   owner_acct: string;
+  // For the card line (features/art/details.ts, pieceCardLine).
+  medium?: string | null;
+  mediums?: string[];
+  year_made?: number | null;
 }
 
 export const StatusArtCard: React.FC<{ piece: ArtSummary }> = ({ piece }) => {

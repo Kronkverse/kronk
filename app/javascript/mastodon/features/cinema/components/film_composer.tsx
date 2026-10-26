@@ -7,11 +7,20 @@ import api from 'mastodon/api';
 import { apiCreateFilm, apiUpdateFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeBody,
+  ComposeHint,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { REACH_ORDER, ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useSameAs } from 'mastodon/hooks/useSameAs';
 
 const messages = defineMessages({
   saveError: {
@@ -69,6 +78,8 @@ interface FilmDraftParams {
   title?: string;
   description?: string;
   visibility?: ReachValue;
+  krew_ids?: string[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -100,10 +111,37 @@ export const FilmComposer: React.FC<Props> = ({
   const [visibility, setVisibility] = useState<ReachValue>(
     editingFilm?.visibility ?? 'public',
   );
+  // The Krews it's for, on top of its reach (decisions.md, 2026-10-25).
+  const [krewIds, setKrewIds] = useState<string[]>(
+    editingFilm?.krews?.map((k) => k.id) ?? [],
+  );
+  const availableKrews = useAvailableKrews();
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
+  const applyAudience = useCallback(
+    (tier: ReachValue, ids: string[] | null) => {
+      setVisibility(tier);
+      if (ids) setKrewIds(ids);
+    },
+    [],
+  );
+  // What the new film will be Konnected to (decisions.md, 2026-10-23), and
+  // whose audience it may follow ("Same as", 2026-10-25).
+  const { konnect, reach } = useSameAs(useKonnect('cinema'), {
+    enabled: !isEdit,
+    apply: applyAudience,
+    onChange: setVisibility,
+    onToggleKrew: handleToggleKrew,
+  });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: a new film is saved as you go, here and on the server, and
   // comes back when the composer opens again. Editing one doesn't keep one.
@@ -113,18 +151,28 @@ export const FilmComposer: React.FC<Props> = ({
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
       setVisibility(p.visibility ?? 'public');
+      setKrewIds(p.krew_ids ?? []);
+      restoreKonnect(p.konnections);
       // A video chosen for another draft doesn't belong to this one.
       setVideoFile(null);
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<FilmDraftParams>({
     korner: 'cinema',
     kind: 'film',
     context: null,
-    snapshot: { params: { title, description, visibility } },
+    snapshot: {
+      params: {
+        title,
+        description,
+        visibility,
+        krew_ids: krewIds,
+        konnections: konnect.saved,
+      },
+    },
     hasContent: title.trim() !== '' || description.trim() !== '',
     apply: applyDraft,
     describe: (d) => d.params.title,
@@ -176,10 +224,11 @@ export const FilmComposer: React.FC<Props> = ({
       setError(null);
       void (async () => {
         try {
-          const updated = await apiUpdateFilm(editingFilm.id, {
-            title: title.trim(),
-            description: description.trim(),
-          });
+          const updated = await apiUpdateFilm(
+            editingFilm.id,
+            { title: title.trim(), description: description.trim() },
+            krewIds,
+          );
           onUpdated?.(updated);
         } catch (e) {
           setPending(false);
@@ -200,13 +249,17 @@ export const FilmComposer: React.FC<Props> = ({
         const form = new FormData();
         form.append('file', videoFile);
         const media = await api().post<MediaResponse>('/api/v1/media', form);
-        const film = await apiCreateFilm({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          visibility,
-          video_media_attachment_id: media.data.id,
-        });
+        const film = await apiCreateFilm(
+          {
+            title: title.trim(),
+            description: description.trim() || undefined,
+            visibility,
+            video_media_attachment_id: media.data.id,
+          },
+          krewIds,
+        );
         finishDraft();
+        await commitKonnect('cinema', film.id);
         onCreated?.(film);
       } catch (e) {
         setPending(false);
@@ -219,10 +272,12 @@ export const FilmComposer: React.FC<Props> = ({
     })();
   }, [
     canSubmit,
+    commitKonnect,
     description,
     editingFilm,
     finishDraft,
     intl,
+    krewIds,
     onCreated,
     onUpdated,
     title,
@@ -239,6 +294,7 @@ export const FilmComposer: React.FC<Props> = ({
       onCancel={onCancel}
       onSubmit={submit}
       draft={draft}
+      konnect={isEdit ? null : konnect}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,
@@ -248,76 +304,78 @@ export const FilmComposer: React.FC<Props> = ({
       headerAction={
         // Reach is locked while editing: the update endpoints don't
         // re-scope the item's projected feed post, so narrowing reach
-        // here would only look private (no reach without consent).
+        // here would only look private (no reach without consent). Its
+        // Krews can still change: the server moves its post with them.
         <ReachDropdown
           value={visibility}
-          onChange={setVisibility}
-          disabled={pending || isEdit}
+          onChange={reach.onChange}
+          disabled={pending}
+          hide={
+            isEdit ? REACH_ORDER.filter((r) => r !== visibility) : undefined
+          }
+          krews={availableKrews}
+          selectedKrewIds={krewIds}
+          onToggleKrew={reach.onToggleKrew}
+          sameAs={reach.sameAs}
+          onSameAs={reach.onSameAs}
         />
       }
     >
-      <div className='cinema-composer'>
-        <input
-          type='text'
-          className='cinema-composer__title'
-          value={title}
-          onChange={handleTitleChange}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
-          maxLength={240}
-          disabled={pending}
-        />
+      <ComposeTitle
+        value={title}
+        onChange={handleTitleChange}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        maxLength={240}
+        disabled={pending}
+      />
 
-        <textarea
-          className='cinema-composer__description'
-          value={description}
-          onChange={handleDescriptionChange}
-          placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-          maxLength={4000}
-          disabled={pending}
-        />
+      <ComposeBody
+        value={description}
+        onChange={handleDescriptionChange}
+        placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+        maxLength={4000}
+        disabled={pending}
+      />
 
-        {!isEdit && (
-          <>
-            <p className='cinema-composer__hint'>
-              {intl.formatMessage(messages.hint)}
-            </p>
+      {!isEdit && (
+        <>
+          <ComposeHint>{intl.formatMessage(messages.hint)}</ComposeHint>
 
-            <button
-              type='button'
-              className='cinema-composer__pick'
-              onClick={handlePickVideo}
-              disabled={pending}
-            >
-              <Icon id='movie' icon={VideoLibraryIcon} />
-              {videoFile
-                ? intl.formatMessage(messages.chosenVideo, {
-                    name: videoFile.name,
-                  })
-                : intl.formatMessage(messages.pickVideo)}
-            </button>
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='video/mp4'
-              hidden
-              onChange={handleFileSelected}
-            />
-          </>
-        )}
-
-        {error && <p className='cinema-composer__error'>{error}</p>}
-
-        {isEdit && onDelete && (
           <button
             type='button'
-            className='compose-shell__delete'
-            onClick={onDelete}
-            disabled={pending || deleting}
+            className='cinema-composer__pick'
+            onClick={handlePickVideo}
+            disabled={pending}
           >
-            {intl.formatMessage(messages.deleteFilm)}
+            <Icon id='movie' icon={VideoLibraryIcon} />
+            {videoFile
+              ? intl.formatMessage(messages.chosenVideo, {
+                  name: videoFile.name,
+                })
+              : intl.formatMessage(messages.pickVideo)}
           </button>
-        )}
-      </div>
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='video/mp4'
+            hidden
+            onChange={handleFileSelected}
+          />
+        </>
+      )}
+
+      {error && <ComposeHint error>{error}</ComposeHint>}
+
+      {isEdit && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={pending || deleting}
+        >
+          {intl.formatMessage(messages.deleteFilm)}
+        </button>
+      )}
     </ComposeShell>
   );
 };

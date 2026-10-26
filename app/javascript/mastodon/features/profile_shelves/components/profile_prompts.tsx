@@ -4,7 +4,11 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import type { ApiDrawnPresetJSON } from 'mastodon/api/profile_library';
-import { apiGetProfileLibrary, shelfKeyOf } from 'mastodon/api/profile_library';
+import {
+  apiGetProfileLibrary,
+  glyphSlugOf,
+  shelfKeyOf,
+} from 'mastodon/api/profile_library';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import {
   apiCreateProfileSection,
@@ -109,7 +113,7 @@ const KornerPrompt: React.FC<{
 
   return (
     <PromptCard
-      slug={preset.korner_slug}
+      slug={glyphSlugOf(preset)}
       title={intl.formatMessage(messages.korner, { name: preset.name })}
       hint={intl.formatMessage(messages.kornerCount, { count: preset.count })}
       onClick={handleClick}

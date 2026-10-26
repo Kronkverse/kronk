@@ -26,6 +26,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { act } from './act';
@@ -35,9 +36,9 @@ import { GroupTiles } from './groups';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import { KrewRow } from './krew_row';
-import { ProjectAside, Yours } from './overview';
+import { ProjectAside, ProjectEvent, Yours } from './overview';
 import { ProjectComposer } from './project_composer';
-import { Loading, Section, useLoaded } from './shared';
+import { itemPath, Loading, projectPath, Section, useLoaded } from './shared';
 import { Talk } from './talk';
 import { Updates } from './updates';
 import {
@@ -50,7 +51,7 @@ import {
 
 // An emergence, a gang or a fractal, on one page. An emergence's landing
 // page is what's yours, its gangs, cards into each list of work
-// (work_page.tsx) that you swipe through, its Krew and a live Activity,
+// (work_page.tsx), its Krew and a live Activity,
 // with its event, joining and talk beside them (Tal, 2026-10-15).
 //
 // A gang's page is its overview at a lower level (Tal, 2026-10-15): who's
@@ -101,6 +102,11 @@ const messages = defineMessages({
     id: 'freethedream.remove_project.body',
     defaultMessage: 'It goes for everyone, with everything in it.',
   },
+  cantRemoveYet: {
+    id: 'freethedream.remove_project.not_yet',
+    defaultMessage:
+      "Others have things in here, so it can't be removed while they do.",
+  },
   upForGrabs: {
     id: 'freethedream.up_for_grabs',
     defaultMessage:
@@ -114,6 +120,7 @@ type Composer = 'section' | 'edit' | 'hand_over' | 'offer' | null;
 export const ProjectPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data: project, failed, set } = useLoaded(id, () => apiFtdProject(id));
+  useNamedLink(id, project?.slug);
 
   if (!project) return <Loading failed={failed} />;
   return <ProjectView key={project.id} project={project} onChange={set} />;
@@ -225,11 +232,7 @@ const ProjectView: React.FC<{
     const parent = project.ancestors[project.ancestors.length - 1];
     void act(
       apiFtdRemoveProject(project.id).then(() => {
-        history.push(
-          parent
-            ? `/hub/freethedream/p/${parent.id}`
-            : '/hub/freethedream/mine',
-        );
+        history.push(parent ? projectPath(parent) : '/hub/freethedream/mine');
       }),
     );
   }, [project.id, project.ancestors, history]);
@@ -266,15 +269,13 @@ const ProjectView: React.FC<{
   // fractal's to its gang. An emergence's goes to all of FreeTheDream.
   const parent = project.ancestors[project.ancestors.length - 1];
   useSpaceBack(
-    parent
-      ? { href: `/hub/freethedream/p/${parent.id}`, label: parent.title }
-      : null,
+    parent ? { href: projectPath(parent), label: parent.title } : null,
   );
   const canAddInside = project.level !== 'fractal' && project.can.add;
 
   const goRoot = useCallback(() => {
-    history.push(`/hub/freethedream/p/${project.root.id}`);
-  }, [history, project.root.id]);
+    history.push(projectPath(project.root));
+  }, [history, project.root]);
 
   const actions = (
     <KornerActionBar className='freethedream-owner-actions'>
@@ -354,6 +355,16 @@ const ProjectView: React.FC<{
         korner: 'freethedream',
         id: project.id,
         canManage: project.can.edit,
+        // The event card beside the work already shows the linked event,
+        // and an emergence's Krew row its Krew.
+        exclude: [
+          ...(project.event
+            ? [{ slug: 'kalendar', id: project.event.id }]
+            : []),
+          ...(project.top && project.krew
+            ? [{ slug: 'krew', id: project.krew.id }]
+            : []),
+        ],
       }}
       hero={
         project.top && cover ? (
@@ -387,7 +398,7 @@ const ProjectView: React.FC<{
                 defaultMessage='Started from the idea {idea}'
                 values={{
                   idea: (
-                    <Link to={`/hub/freethedream/i/${project.source_idea.id}`}>
+                    <Link to={itemPath(project.source_idea)}>
                       {project.source_idea.title}
                     </Link>
                   ),
@@ -466,9 +477,7 @@ const ProjectView: React.FC<{
                   <ul className='freethedream-links'>
                     {project.depends_on.map((d) => (
                       <li key={d.id}>
-                        <Link to={`/hub/freethedream/p/${d.id}`}>
-                          {d.title}
-                        </Link>
+                        <Link to={projectPath(d)}>{d.title}</Link>
                         {project.can.edit && (
                           <button
                             type='button'
@@ -507,9 +516,7 @@ const ProjectView: React.FC<{
                     {project.needed_by.map((d, i) => (
                       <span key={d.id}>
                         {i > 0 && ', '}
-                        <Link to={`/hub/freethedream/p/${d.id}`}>
-                          {d.title}
-                        </Link>
+                        <Link to={projectPath(d)}>{d.title}</Link>
                       </span>
                     ))}
                   </p>
@@ -524,6 +531,9 @@ const ProjectView: React.FC<{
                 onChange={onChange}
                 refresh={refresh}
               />
+            )}
+            {!project.top && (
+              <ProjectEvent project={project} refresh={refresh} />
             )}
             {!project.top && (
               <Updates
@@ -542,6 +552,11 @@ const ProjectView: React.FC<{
               onQuoteDone={clearQuote}
             />
             {actions}
+            {project.others_inside && (
+              <p className='freethedream__quiet'>
+                {intl.formatMessage(messages.cantRemoveYet)}
+              </p>
+            )}
           </aside>
         </div>
       </>

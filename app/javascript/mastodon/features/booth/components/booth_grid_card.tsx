@@ -16,6 +16,8 @@ import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { useBoothPlayback } from '../booth_playback_context';
 import { formatDuration } from '../format';
+import { kindMessage } from '../kinds';
+import { toggleSave } from '../save';
 import type { BoothSet } from '../types';
 
 // BoothGridCard — the Musik-lens gallery tile. Cover with a waveform
@@ -54,6 +56,8 @@ const messages = defineMessages({
   share: { id: 'booth.share_to_feed', defaultMessage: 'Share to feed' },
   edit: { id: 'booth.card.edit', defaultMessage: 'Edit' },
   delete: { id: 'booth.card.delete', defaultMessage: 'Delete' },
+  save: { id: 'booth.save', defaultMessage: 'Save' },
+  unsave: { id: 'booth.unsave', defaultMessage: 'Remove from saved' },
   deleteTitle: {
     id: 'booth.card.delete_title',
     defaultMessage: 'Delete “{title}”?',
@@ -84,6 +88,12 @@ interface Props {
   onEdit: (set: BoothSet) => void;
   onDelete: (id: string) => void;
   onShare: (set: BoothSet) => void;
+  // The list this card is in: pressing play queues it for Play next.
+  queue?: BoothSet[];
+  // The set after a save or unsave, so the list can update.
+  onChange?: (set: BoothSet) => void;
+  // A label over the cover, e.g. "First listens".
+  badge?: string;
 }
 
 export const BoothGridCard: React.FC<Props> = ({
@@ -92,6 +102,9 @@ export const BoothGridCard: React.FC<Props> = ({
   onEdit,
   onDelete,
   onShare,
+  queue,
+  onChange,
+  badge,
 }) => {
   const intl = useIntl();
   const { play, toggle, activeSet, playing } = useBoothPlayback();
@@ -115,10 +128,23 @@ export const BoothGridCard: React.FC<Props> = ({
       if (isActive) {
         toggle();
       } else {
-        play(set);
+        play(set, queue);
       }
     },
-    [isActive, toggle, play, set],
+    [isActive, toggle, play, set, queue],
+  );
+
+  const handleSave = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      void toggleSave(set)
+        .then((updated) => {
+          onChange?.(updated);
+          return undefined;
+        })
+        .catch(() => undefined);
+    },
+    [set, onChange],
   );
 
   const handleMenuToggle = useCallback((e: React.MouseEvent) => {
@@ -229,12 +255,29 @@ export const BoothGridCard: React.FC<Props> = ({
             ))}
           </span>
           {duration && <span className='booth-card__dur'>{duration}</span>}
+          {badge && <span className='booth-card__badge'>{badge}</span>}
+          {set.saved !== undefined && (
+            <button
+              type='button'
+              className='booth-card__save'
+              onClick={handleSave}
+              aria-pressed={set.saved}
+              aria-label={intl.formatMessage(
+                set.saved ? messages.unsave : messages.save,
+              )}
+            >
+              {set.saved ? '♥' : '♡'}
+            </button>
+          )}
         </CardMedia>
 
         <CardTitle className='booth-card__title'>{set.title}</CardTitle>
 
         <CardMeta className='booth-card__meta'>
           <span className='booth-card__artist'>{set.artist_name}</span>
+          <span className='booth-card__tag'>
+            {intl.formatMessage(kindMessage(set.kind))}
+          </span>
           {set.genres[0] && (
             <span className='booth-card__tag'>{set.genres[0]}</span>
           )}
@@ -243,13 +286,15 @@ export const BoothGridCard: React.FC<Props> = ({
               {set.event_name}
             </span>
           )}
-          <span className='booth-card__plays'>
-            <FormattedMessage
-              id='booth.plays'
-              defaultMessage='{count, plural, one {# play} other {# plays}}'
-              values={{ count: set.play_count }}
-            />
-          </span>
+          {set.play_count !== undefined && (
+            <span className='booth-card__plays'>
+              <FormattedMessage
+                id='booth.plays'
+                defaultMessage='{count, plural, one {# play} other {# plays}}'
+                values={{ count: set.play_count }}
+              />
+            </span>
+          )}
         </CardMeta>
 
         <button

@@ -17,7 +17,6 @@ const FRONTEND_ROOT = path.resolve(__dirname, '..');
 
 const BURN_DOWN = new Set([
   'components/avatar_header_input.tsx',
-  'components/compose_attach_bar.tsx',
   'components/profile_block.tsx',
   'features/albutts/components/album_composer.tsx',
   'features/albutts/components/contribute_composer.tsx',

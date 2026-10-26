@@ -9,7 +9,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   STARTER_MAX = 20
 
   def index
-    scope = Freethedream::Project.top_level.includes(:owner).recent
+    scope = Freethedream::Project.top_level.includes(:owner, :cover).recent
     scope = scope.where(id: Freethedream::Membership.where(account_id: current_account.id).select(:project_id)) if params[:scope] == 'mine'
     render json: scope.limit(100).map { |project| view.project_summary(project) }
   end
@@ -104,7 +104,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   private
 
   def set_project
-    @project = Freethedream::Project.find(params[:id])
+    @project = Freethedream::Project.by_link!(params[:id])
   end
 
   # A new emergence can start with its first gangs, a gang with its

@@ -28,6 +28,9 @@ security:
     - moderator
   federates: false # nudges never federate — private by design
 
+# Takes no links, on purpose (decisions.md, 2026-10-22).
+no_attachments: 'A nudge is a private message to one person, not a record to link.'
+
 resources:
   - name: nudges # a Nudge is emitted as a notification, threaded via nudge_messages
     primary: true
@@ -229,6 +232,17 @@ listens:
   - event: booth.set.tagged
     source_korner: booth
     verb: tagged
+    directed: true
+    source_type: BoothSet
+    source_id_key: booth_set_id
+    interaction: interactive
+    cta_label: 'View set'
+    cta_route: '/hub/booth/sets/{booth_set_id}'
+  # Someone left a shoutout on your set. About your work, and the listener
+  # need not be a Mate, so directed (like status.replied).
+  - event: booth.set.shouted
+    source_korner: booth
+    verb: shouted
     directed: true
     source_type: BoothSet
     source_id_key: booth_set_id

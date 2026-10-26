@@ -34,9 +34,13 @@ resolve. `/kalendar/*` 301s to `/hub/kalendar/*`.
 
 **Creating.** The Ж-menu "New event" action opens `/hub/kalendar/composer`
 (`features/kalendar/event_composer.tsx`, on the shared `ComposeShell`). Fields:
-title, description, start and optional end, place name and link (a pinned map
-location fills these), cover image, invitees, reach, Krews, and "Konnect a
-korner" attachments. Every event made here is an in-person event with RSVP on.
+title, description, start and optional end, cover image, invitees, reach,
+Krews, and the Konnect row. Where it is, is a Konnection to a Map Place
+(Konnect → Map opens the map to pick or make one without leaving the composer;
+decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The event
+reads its `location_name` and `location_url` from that Place when its own are
+empty; older events, and the Android app, keep their own. The edit form has
+no location fields either: Konnect a Place from the event's page. Every event made here is an in-person event with RSVP on.
 
 **Who sees it.** An event posts a companion `Status` (`source_korner:
 'kalendar'`) that carries its reach, using the standard reach ladder and Krews
@@ -65,8 +69,10 @@ audience. Each event carries `krews` (id and name) in the API.
 There is no anonymous access; every event endpoint needs a sign-in.
 
 **URLs.** An event lives at `/hub/kalendar/<slug>`, the slug made from the
-title on create and never changed afterwards. Slugs that would shadow a face or
-route (`Event::RESERVED_SLUGS`) get a `-1` suffix. Numeric ids still work.
+title (`Kronk::NamedLink`, decisions.md 2026-10-22). A rename takes a new slug
+and the old one keeps opening the page. Slugs that would shadow a face or route
+(`Event::RESERVED_SLUGS`), or that are a bare number, get a `-1` suffix.
+Numeric ids still work. An event the viewer can't see answers 404.
 
 **RSVP.** `going`, `interested`, `not_going` (`EventRsvp`), shown as Going,
 Interested and Can't go. `going_count` / `interested_count` are cached on the
@@ -77,7 +83,11 @@ host if the two are Mates.
 rows and sends an `event_invitation` notification.
 
 **Editing.** The event page (`features/events/event_detail.tsx`) uses the older
-`CreateEventForm` for edits, which also exposes `recurrence_rule`.
+`CreateEventForm` for edits, which also exposes `recurrence_rule`. The
+Konnected section sits right under the form, so an album or a Huddle Room is
+Konnected there, as on the event's page. The form no longer offers "spawn an
+album" or an Event/Huddle type (decisions.md 2026-10-23); it doesn't send
+`event_type`, so an existing event keeps the type it has.
 
 **API:** `/api/v1/events` (index with `filter=upcoming|past|mine|invited`,
 show, create, update, destroy, plus `rsvp`, `attendees`, `invite`,
@@ -98,13 +108,16 @@ profile Kuestion (see [`kuestions.md`](kuestions.md), Profile Kuestions).
 Kalendar is the source side of `korner_attachments`
 (`Kronk::AttachmentSource`):
 
-- **Spawn an album:** `spawn_album` creates a companion Albutts album when the
-  event is created, deleted with it.
 - **Link to anything** that accepts links (`accepts: [{ from: '*', kind: link }]`):
-  a Huddle room, a Wachuneed listing, a Kommons proposal, a Booth set. The
-  composer can also create a new Huddle room and link it in one go.
-- **Map:** events whose `location_url` is a parseable OpenStreetMap link show
-  as pins on Map (`/api/v1/map/events`), and the event page links to
+  an album, a Huddle room, a Wachuneed listing, a Kommons proposal, a Booth
+  set. The composer can also create a new album or Huddle room and link it in
+  one go.
+- **No spawns.** `spawn_album` (an album made with the event, deleted with it)
+  was retired 2026-10-23; the API ignores it. Albums spawned before then are
+  still deleted with their event (`kind: spawn` rows cascade).
+- **Map:** events whose `location_url` is a parseable OpenStreetMap link, or
+  that have none and a Konnected Place, show as pins on Map
+  (`/api/v1/map/events`), and the event page links to
   `/hub/map?event=<slug>`.
 
 `kalendar.event.created` is still published on create, but nothing subscribes.
@@ -132,7 +145,11 @@ card is `StatusEventCard`.
   are no event reminders. `default_event_visibility` still lists the retired
   `unlisted` and `private`.
 - **Legacy fields.** `event_type` still has a `huddle` value and `huddle_url`
-  remains on `events` (see `huddle.md`). `max_attendees` has no UI.
+  remains on `events` (see `huddle.md`). The web no longer makes either, but
+  cards, the event page, Map and Nudges still show a `huddle` event as one, and
+  the Android app still creates and edits them (`event_type`) and opens
+  `huddle_url`. Dropping them waits on the app. The `events.spawn_album`
+  column is unused since 2026-10-23. `max_attendees` has no UI.
 - **Two edit paths.** Create uses `EventComposer`, edit uses the older
   `CreateEventForm`. Worth bringing edit onto the composer.
 

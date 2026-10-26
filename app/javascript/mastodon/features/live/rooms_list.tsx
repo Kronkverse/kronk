@@ -4,31 +4,28 @@
 // links each Room card to `/hub/huddle/room/:id`, which goes straight
 // into that Room's call.
 //
-// The "New Room" action is NOT rendered here — it lives on the Ж
-// floating Kronk menu (see config/korners/huddle.yaml `compose:` +
-// docs/korners/adding_a_korner.md §11.5, "Never build a per-page
-// 'Add' / 'New X' / 'Create' button"). Tapping "New Room" on the Ж
-// menu routes the user to `/hub/huddle/new`, which mounts this
-// component with `autoOpenCreate` — we open the inline create form
-// on mount. Creating takes you straight into the new Room; cancelling
-// puts the URL back to `/hub/huddle`.
+// Discovery only. "New Room" is the Ж menu's compose action
+// (config/korners/huddle.yaml `compose:`), which opens RoomComposer
+// (room_composer.tsx) in the shared <ComposeShell>. Every tile wears the
+// Huddle korner's own icon: Rooms have no emoji (decisions.md,
+// 2026-10-22).
 //
-// See docs/spaces/huddle.md § Three categories of Huddle. Phase 9.6
-// discovery slice — no Krew Huddles here yet (Phase 9.1 / 9.2).
+// See docs/spaces/huddle.md § Three categories of Huddle.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-import { apiRequestGet, apiRequestPost } from 'mastodon/api';
+import { apiRequestGet } from 'mastodon/api';
+import { Icon } from 'mastodon/components/icon';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 interface HuddleRoomJSON {
   id: string;
   name: string;
   description: string | null;
-  icon: string | null;
   session_url: string;
   occupancy: number;
   last_active_at: string | null;
@@ -39,26 +36,6 @@ const messages = defineMessages({
   heading: {
     id: 'huddle.rooms.heading',
     defaultMessage: 'Rooms',
-  },
-  namePrompt: {
-    id: 'huddle.rooms.name_prompt',
-    defaultMessage: 'Room name',
-  },
-  descriptionPrompt: {
-    id: 'huddle.rooms.description_prompt',
-    defaultMessage: 'What is this room for? (optional)',
-  },
-  iconPrompt: {
-    id: 'huddle.rooms.icon_prompt',
-    defaultMessage: 'Emoji (optional)',
-  },
-  create: {
-    id: 'huddle.rooms.create',
-    defaultMessage: 'Create',
-  },
-  cancel: {
-    id: 'huddle.rooms.cancel',
-    defaultMessage: 'Cancel',
   },
   empty: {
     id: 'huddle.rooms.empty',
@@ -73,19 +50,11 @@ const messages = defineMessages({
   },
 });
 
-export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
-  autoOpenCreate,
-}) => {
+export const RoomsList: React.FC = () => {
   const intl = useIntl();
-  const history = useHistory();
+  const HuddleIcon = useKornerIcon('huddle');
   const [rooms, setRooms] = useState<HuddleRoomJSON[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(Boolean(autoOpenCreate));
-  const [creating, setCreating] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [icon, setIcon] = useState('');
-  const [error, setError] = useState<string | null>(null);
 
   const fetchRooms = useCallback(async () => {
     setLoading(true);
@@ -104,64 +73,6 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
     void fetchRooms();
   }, [fetchRooms]);
 
-  // The Ж menu routes here as `/hub/huddle/new`. The URL stays that way
-  // while the form is open and goes back to `/hub/huddle` when it closes.
-  // It used to be cleaned on mount, but the two paths are separate routes,
-  // so that replace remounted the korner with the form shut: it flashed
-  // for a frame and nobody could create a Room.
-  const createRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (showCreate) createRef.current?.scrollIntoView({ block: 'center' });
-  }, [showCreate]);
-
-  const handleCancel = useCallback(() => {
-    setShowCreate(false);
-    setName('');
-    setDescription('');
-    setIcon('');
-    setError(null);
-    if (autoOpenCreate) history.replace('/hub/huddle');
-  }, [autoOpenCreate, history]);
-  const handleNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setName(e.target.value);
-    },
-    [],
-  );
-  const handleDescriptionChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setDescription(e.target.value);
-    },
-    [],
-  );
-  const handleIconChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setIcon(e.target.value);
-    },
-    [],
-  );
-
-  const handleCreate = useCallback(async () => {
-    const trimmedName = name.trim();
-    if (!trimmedName || creating) return;
-    setCreating(true);
-    setError(null);
-    try {
-      const created = await apiRequestPost<HuddleRoomJSON>('v1/huddle/rooms', {
-        name: trimmedName,
-        description: description.trim() || undefined,
-        icon: icon.trim() || undefined,
-      });
-      history.push(`/hub/huddle/room/${created.id}`);
-    } catch {
-      setError('Could not create the Room. Try again?');
-      setCreating(false);
-    }
-  }, [name, description, icon, creating, history]);
-  const handleCreateClick = useCallback(() => {
-    void handleCreate();
-  }, [handleCreate]);
-
   return (
     <section className='huddle-rooms'>
       <header className='huddle-rooms__header'>
@@ -170,55 +81,7 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
         </h2>
       </header>
 
-      {showCreate && (
-        <div className='huddle-rooms__create' ref={createRef}>
-          <input
-            type='text'
-            className='huddle-rooms__input'
-            placeholder={intl.formatMessage(messages.namePrompt)}
-            value={name}
-            onChange={handleNameChange}
-            maxLength={80}
-          />
-          <input
-            type='text'
-            className='huddle-rooms__input'
-            placeholder={intl.formatMessage(messages.descriptionPrompt)}
-            value={description}
-            onChange={handleDescriptionChange}
-            maxLength={200}
-          />
-          <input
-            type='text'
-            className='huddle-rooms__input huddle-rooms__input--icon'
-            placeholder={intl.formatMessage(messages.iconPrompt)}
-            value={icon}
-            onChange={handleIconChange}
-            maxLength={8}
-          />
-          {error && <p className='huddle-rooms__error'>{error}</p>}
-          <div className='huddle-rooms__create-actions'>
-            <button
-              type='button'
-              className='huddle-rooms__cancel'
-              onClick={handleCancel}
-              disabled={creating}
-            >
-              {intl.formatMessage(messages.cancel)}
-            </button>
-            <button
-              type='button'
-              className='huddle-rooms__submit'
-              onClick={handleCreateClick}
-              disabled={creating || name.trim().length === 0}
-            >
-              {intl.formatMessage(messages.create)}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {!loading && rooms.length === 0 && !showCreate && (
+      {!loading && rooms.length === 0 && (
         <p className='huddle-rooms__empty'>
           {intl.formatMessage(messages.empty)}
         </p>
@@ -231,7 +94,9 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
               to={`/hub/huddle/room/${r.id}`}
               className='huddle-rooms__card-link'
             >
-              <span className='huddle-rooms__card-icon'>{r.icon ?? '💬'}</span>
+              <span className='huddle-rooms__card-icon' aria-hidden='true'>
+                <Icon id='huddle' icon={HuddleIcon} />
+              </span>
               <span className='huddle-rooms__card-body'>
                 <span className='huddle-rooms__card-name'>{r.name}</span>
                 {r.description && (

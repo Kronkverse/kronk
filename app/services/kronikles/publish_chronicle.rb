@@ -31,7 +31,8 @@ module Kronikles
       status = PostStatusService.new.call(
         @chronicle.owner,
         text: @chronicle.title,
-        visibility: CHRONICLE_TO_STATUS_VISIBILITY.fetch(@chronicle.visibility, 'public')
+        visibility: CHRONICLE_TO_STATUS_VISIBILITY.fetch(@chronicle.visibility, 'public'),
+        krew_ids: @chronicle.krew_ids
       )
 
       @chronicle.update_columns(status_id: status.id)

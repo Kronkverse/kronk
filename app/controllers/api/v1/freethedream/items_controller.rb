@@ -107,7 +107,7 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
   private
 
   def set_item
-    @item = Freethedream::Item.find(params[:id])
+    @item = Freethedream::Item.by_link!(params[:id])
   end
 
   # The section an item first went into.

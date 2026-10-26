@@ -8,7 +8,6 @@ import type {
   FtdAccount,
   FtdCategory,
   FtdItemKind,
-  FtdProgress,
   FtdRef,
 } from 'mastodon/api_types/freethedream';
 
@@ -71,6 +70,16 @@ export const errorOf = (e: unknown): string | null => {
   }
   return null;
 };
+
+// A project's page, by name (decisions.md, 2026-10-22). `rest` is a list
+// under it, like '/actualise'.
+export const projectPath = (
+  project: { id: string; slug?: string },
+  rest = '',
+): string => `/hub/freethedream/p/${project.slug ?? project.id}${rest}`;
+
+export const itemPath = (item: { id: string; slug?: string }): string =>
+  `/hub/freethedream/i/${item.slug ?? item.id}`;
 
 // Load something by key; `reload` fetches again, `set` replaces it with a
 // fresh copy an action returned.
@@ -164,7 +173,7 @@ export const Crumbs: React.FC<{ trail: FtdRef[] }> = ({ trail }) =>
               ›
             </span>
           )}
-          <Link to={`/hub/freethedream/p/${step.id}`}>{step.title}</Link>
+          <Link to={projectPath(step)}>{step.title}</Link>
         </span>
       ))}
     </nav>
@@ -354,39 +363,3 @@ export const CategoryChips: React.FC<{
 const chipMessages = defineMessages({
   label: { id: 'freethedream.category.label', defaultMessage: 'Kind of thing' },
 });
-
-// "18 of 42 sorted · 3 jobs open", with a thin bar.
-export const ProgressLine: React.FC<{ progress: FtdProgress }> = ({
-  progress,
-}) => {
-  if (progress.total === 0) return null;
-  const all = progress.sorted === progress.total;
-  return (
-    <div className='freethedream-progress-line'>
-      <span>
-        {all ? (
-          <FormattedMessage
-            id='freethedream.progress.all'
-            defaultMessage='Everything sorted'
-          />
-        ) : (
-          <FormattedMessage
-            id='freethedream.progress.line'
-            defaultMessage='{sorted} of {total} sorted{jobs, plural, =0 {} one { · # with nobody on it} other { · # with nobody on it}}'
-            values={{
-              sorted: progress.sorted,
-              total: progress.total,
-              jobs: progress.open_jobs,
-            }}
-          />
-        )}
-      </span>
-      <span className='freethedream-progress__bar' aria-hidden='true'>
-        <span
-          className='freethedream-progress__fill'
-          style={{ width: `${(progress.sorted / progress.total) * 100}%` }}
-        />
-      </span>
-    </div>
-  );
-};

@@ -6,7 +6,9 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import { DraftBar } from 'mastodon/components/draft_bar';
 import { Icon } from 'mastodon/components/icon';
+import { KonnectRow } from 'mastodon/components/konnect_row';
 import type { DraftControls } from 'mastodon/hooks/useDraft';
+import type { KonnectControls } from 'mastodon/hooks/useKonnect';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // ComposeShell — the shared floating composer frame every korner's
@@ -26,9 +28,20 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // submit button should be enabled + which label it wears mid-flight.
 //
 // Drafts (docs/design.md, Drafts): a composer that keeps drafts passes its
-// `useDraft()` result as `draft`, and the shell draws the Drafts row above
-// the body. Closing (Cancel, ×, Escape, the backdrop) keeps the draft: the
+// `useDraft()` result as `draft`. Saving is silent; the shell draws the
+// drafts line under the body only when a draft was picked up. Closing (Cancel, ×, Escape, the backdrop) keeps the draft: the
 // hook saves on the way out, so nothing here asks "are you sure?".
+//
+// Konnect (decisions.md, 2026-10-23, "One composer, one Konnect"; Korner
+// Standard L14): every composer says what it Konnects. It passes its
+// `useKonnect()` result as `konnect`, and the shell draws the Konnect row
+// at the foot of the body, above the drafts line: the records waiting as
+// space tiles, and a Konnect tile to add one. The composer calls
+// `konnect.commit(slug, id)` once its create succeeds. The prop is required,
+// so a composer can't leave Konnect out by forgetting it; `null` is for the
+// composers that make nothing new to Konnect: editing a record (Konnect it
+// from its page), adding to one that exists (photos to an album), and
+// korners that opt out (`no_attachments:`, e.g. Moments).
 //
 // Multi-composer korners (Maps: Post + Place; Albutts: Album +
 // Contribute) can render a small chip pair via the `switcher` slot
@@ -68,6 +81,9 @@ interface ComposeShellProps {
   // The composer's drafts, from `useDraft()`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   draft?: DraftControls<any>;
+  // The composer's Konnections, from `useKonnect()`; `null` when it makes
+  // nothing new to Konnect (see above).
+  konnect: KonnectControls | null;
   children: React.ReactNode;
 }
 
@@ -84,6 +100,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
   switcher,
   headerAction,
   draft,
+  konnect,
   children,
 }) => {
   const intl = useIntl();
@@ -146,10 +163,11 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
         {switcher && <div className='compose-shell__switcher'>{switcher}</div>}
 
         <div className='compose-shell__body'>
+          {children}
+          {konnect && <KonnectRow konnect={konnect} disabled={submitting} />}
           {draft && (
             <DraftBar draft={draft} disabled={submitting || draft.locked} />
           )}
-          {children}
         </div>
 
         <footer className='compose-shell__footer'>

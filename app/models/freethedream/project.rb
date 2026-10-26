@@ -13,6 +13,7 @@
 module Freethedream
   class Project < ApplicationRecord
     include Kronk::AttachmentSource
+    include Kronk::NamedLink
 
     self.attachment_source_slug = 'freethedream'
 
@@ -88,20 +89,23 @@ module Freethedream
       account.present?
     end
 
-    # The Kalendar event an in-person project happens at, and the link to
-    # it: [event, attachment], or nil. The link is a korner attachment from
-    # the event (kalendar -> freethedream). Anyone can link their own event
-    # to any project, so only an event made by someone in the project
-    # counts; the newest such link wins.
+    # The Kalendar event an in-person project or gang happens at, and the
+    # link to it: [event, attachment], or nil. The link is a korner
+    # attachment between the event and the project. Anyone can link
+    # their own event to any project, so only an event made by someone in
+    # the emergence counts; the newest such link wins.
     def event_link
-      return nil unless top?
-
-      links = KornerAttachment.to_target('freethedream', id).where(source_slug: 'kalendar', kind: KornerAttachment::KIND_LINK).order(created_at: :desc)
-      events = Event.where(id: links.map(&:source_id)).index_by(&:id)
-      members = Membership.member.where(project_id: id).pluck(:account_id)
+      # Made from either end: the event's Attach or the emergence's.
+      links = KornerAttachment.where(kind: KornerAttachment::KIND_LINK)
+      links = links.where(source_slug: 'kalendar', target_slug: 'freethedream', target_id: id)
+                   .or(links.where(source_slug: 'freethedream', source_id: id, target_slug: 'kalendar'))
+                   .order(created_at: :desc).to_a
+      event_id = ->(link) { Kronk::AttachmentEffects.ends(link, 'kalendar').first }
+      events = Event.where(id: links.map(&event_id)).index_by(&:id)
+      members = Membership.member.where(project_id: top_id).pluck(:account_id)
 
       links.each do |link|
-        event = events[link.source_id]
+        event = events[event_id.call(link)]
         return [event, link] if event && !event.cancelled? && members.include?(event.account_id)
       end
       nil
@@ -229,9 +233,13 @@ module Freethedream
     end
 
     # Remove this part and everything in it. Items that are also placed
-    # somewhere outside it stay there.
+    # somewhere outside it stay there. The parts inside go through Rails,
+    # deepest first, rather than the database's parent_id cascade, so each
+    # one's links (a gang's Kalendar event) go with it
+    # (Kronk::AttachmentSource#cleanup_kronk_attachments).
     def remove!
-      subtree_ids = [id] + descendants.map(&:id)
+      parts = descendants
+      subtree_ids = [id] + parts.map(&:id)
       gone = item_ids_within(subtree_ids)
       gone -= Placement.where(item_id: gone).where.not(project_id: subtree_ids).pluck(:item_id) unless top?
 
@@ -240,6 +248,7 @@ module Freethedream
         Comment.where(subject_type: Item.name, subject_id: gone).delete_all
         Comment.where(subject_type: Project.name, subject_id: subtree_ids).delete_all
         Item.where(id: gone).delete_all
+        parts.reverse_each(&:destroy!)
         destroy!
       end
     end

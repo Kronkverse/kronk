@@ -88,7 +88,7 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
   end
 
   def with_listing_link(body, listing)
-    link = "#{root_url}hub/wachuneed/listings/#{listing.id}"
+    link = "#{root_url}hub/wachuneed/listings/#{listing.slug}"
     return body if body.include?(link)
 
     [body.presence, link].compact.join("\n\n")

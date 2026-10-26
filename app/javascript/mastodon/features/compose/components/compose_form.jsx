@@ -313,7 +313,6 @@ class ComposeForm extends ImmutablePureComponent {
 
         <div className={classNames('compose-form__highlightable', { active: highlighted })} ref={this.setRef}>
           <EditIndicator />
-          <ComposeDraft />
 
           {/* Header — identity (avatar + name) with the audience dropdown to the
               right, mirroring how a post's author + reach read in the feed. The
@@ -384,6 +383,7 @@ class ComposeForm extends ImmutablePureComponent {
           <PollForm />
           <ComposeVoiceRecorder open={voiceOpen} onClose={this.handleCloseVoice} />
           <ComposeQuotedStatus />
+          <ComposeDraft />
 
           <div className='compose-form__footer'>
             <div className='compose-form__actions'>

@@ -12,6 +12,26 @@ class REST::KarSerializer < ActiveModel::Serializer
   belongs_to :owner, serializer: REST::AccountSerializer
   has_many   :photos, serializer: REST::KarPhotoSerializer
 
+  # The Krews it is for, on top of its reach (Kronk::KrewAudience), named
+  # only where the viewer may see them; the same shape as an album's.
+  has_many :krews, serializer: REST::KrewSerializer, if: :krews?
+
+  def krews?
+    object.record_krews.exists?
+  end
+
+  def krews
+    Kronk::VisibleKrews.filter(object.krews.to_a, current_user&.account)
+  end
+
+  # "Same as": the record whose audience this one follows
+  # (Kronk::Audience.leader_preview), or nil. Left out of lists.
+  attribute :audience_follows, unless: -> { instance_options[:list] }
+
+  def audience_follows
+    Kronk::Audience.leader_preview(object, current_user&.account)
+  end
+
   def id
     object.id.to_s
   end
@@ -41,9 +61,20 @@ class REST::KarSerializer < ActiveModel::Serializer
 
   # Nil when unset, otherwise a compact { lat, lng, label } shape. Lat +
   # lng ride as floats — decimal(9,6) fits inside JSON number precision.
+  # A kar's own pin or label wins (older kars, the Android app); without
+  # one, its Konnected Place (Kronk::RecordPlace), labelled with its name.
   def location
-    return nil unless object.location? || object.location_label.present?
+    return own_location if object.location? || object.location_label.present?
 
+    place = object.konnected_place
+    return nil if place.nil?
+
+    { lat: place.latitude&.to_f, lng: place.longitude&.to_f, label: place.name }.compact
+  end
+
+  private
+
+  def own_location
     {
       lat: object.location_lat&.to_f,
       lng: object.location_lng&.to_f,

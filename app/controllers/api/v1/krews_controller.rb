@@ -236,7 +236,7 @@ class Api::V1::KrewsController < Api::BaseController
       at: line.at.iso8601,
       account: ActiveModelSerializers::SerializableResource.new(line.account, serializer: REST::AccountSerializer).as_json,
       count: line.photo_count,
-      album: line.album && { id: line.album.id.to_s, title: line.album.title },
+      album: line.album && { id: line.album.id.to_s, slug: line.album.slug, title: line.album.title },
       event: line.event && { id: line.event.id.to_s, slug: line.event.slug, title: line.event.title },
       status_id: line.status&.id&.to_s,
     }.compact

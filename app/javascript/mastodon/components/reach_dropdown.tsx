@@ -6,6 +6,7 @@ import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?re
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import ExpandMoreIcon from '@/material-icons/400-24px/expand_more.svg?react';
+import LinkIcon from '@/material-icons/400-24px/link.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import type { MarkKind } from 'mastodon/components/scope_mark';
 import { ScopeMark } from 'mastodon/components/scope_mark';
@@ -21,8 +22,23 @@ import { ScopeMark } from 'mastodon/components/scope_mark';
 // multi-select submenu; ticking krews does NOT change the reach tier, it adds
 // their members on top. Call sites that don't support krew just omit those
 // props and get a plain reach picker.
+//
+// "Same as <record>" (docs/design.md, Konnect; decisions.md, 2026-10-25):
+// a composer whose Konnect row holds a record it can follow passes
+// `sameAs` (from `useSameAs`) and the menu opens on one row per such
+// record, naming its audience. While one is chosen the button says "Same
+// as <title>"; the tier and Krews below show what it copied, and choosing
+// any of them turns it off (the call site's `onChange` / `onToggleKrew`).
 
 export type ReachValue = 'self_only' | 'mates' | 'orbit' | 'public';
+
+export interface SameAsOption {
+  key: string;
+  // The record's title, and its audience in words ("Growers and Climbers").
+  title: string;
+  audience: string;
+  selected: boolean;
+}
 
 export interface KrewOption {
   id: string;
@@ -65,6 +81,7 @@ const messages = defineMessages({
     defaultMessage:
       'Members of these krews see the post even if your reach wouldn’t include them.',
   },
+  sameAs: { id: 'reach.same_as', defaultMessage: 'Same as {title}' },
   krewCount: {
     id: 'reach.krews.count',
     defaultMessage: '· {count, plural, one {# krew} other {# krews}}',
@@ -121,7 +138,41 @@ interface Props {
   // (e.g. on a public post, which can't be restricted).
   peopleSlot?: React.ReactNode;
   peopleCount?: number;
+  // "Same as <record>" rows over the tiers, and what choosing one does.
+  sameAs?: readonly SameAsOption[];
+  onSameAs?: (key: string) => void;
 }
+
+const SameAsMenuItem: React.FC<{
+  option: SameAsOption;
+  onSelect: (key: string) => void;
+}> = ({ option, onSelect }) => {
+  const intl = useIntl();
+  const handleClick = useCallback(() => {
+    onSelect(option.key);
+  }, [onSelect, option.key]);
+
+  return (
+    <button
+      type='button'
+      role='option'
+      aria-selected={option.selected}
+      onClick={handleClick}
+      className={`reach-dropdown__item reach-dropdown__same${option.selected ? ' reach-dropdown__item--selected' : ''}`}
+    >
+      <span className='reach-dropdown__same-mark' aria-hidden='true'>
+        <Icon id='link' icon={LinkIcon} />
+      </span>
+      <span className='reach-dropdown__item-text'>
+        <span className='reach-dropdown__item-label'>
+          {intl.formatMessage(messages.sameAs, { title: option.title })}
+        </span>
+        <span className='reach-dropdown__item-hint'>{option.audience}</span>
+      </span>
+      <Icon id='' icon={CheckIcon} className='reach-dropdown__item-tick' />
+    </button>
+  );
+};
 
 const ReachMenuItem: React.FC<{
   option: ReachValue;
@@ -229,6 +280,8 @@ export const ReachDropdown: React.FC<Props> = ({
   krewSingleSelect = false,
   peopleSlot,
   peopleCount = 0,
+  sameAs,
+  onSameAs,
 }) => {
   const hideSet = new Set<ReachValue>(hide ?? []);
   const visibleOrder = ORDER.filter((o) => !hideSet.has(o));
@@ -309,6 +362,16 @@ export const ReachDropdown: React.FC<Props> = ({
     setSubOpen(false);
   }, []);
 
+  const sameAsOptions = onSameAs ? (sameAs ?? []) : [];
+  const leading = sameAsOptions.find((o) => o.selected);
+  const handleSameAs = useCallback(
+    (key: string) => {
+      onSameAs?.(key);
+      setOpen(false);
+    },
+    [onSameAs],
+  );
+
   const handleToggleKrew = useCallback(
     (id: string) => {
       onToggleKrew?.(id);
@@ -327,15 +390,28 @@ export const ReachDropdown: React.FC<Props> = ({
         disabled={disabled}
         onClick={toggle}
       >
-        <ScopeMark
-          kind={current.mark}
-          size={20}
-          className='reach-dropdown__button-mark'
-        />
-        <span className='reach-dropdown__button-label'>
-          {intl.formatMessage(messages[current.labelId])}
-        </span>
-        {krewEnabled && selectedKrews.length > 0 && (
+        {leading ? (
+          <>
+            <span className='reach-dropdown__same-mark reach-dropdown__same-mark--button'>
+              <Icon id='link' icon={LinkIcon} />
+            </span>
+            <span className='reach-dropdown__button-label reach-dropdown__button-label--same'>
+              {intl.formatMessage(messages.sameAs, { title: leading.title })}
+            </span>
+          </>
+        ) : (
+          <>
+            <ScopeMark
+              kind={current.mark}
+              size={20}
+              className='reach-dropdown__button-mark'
+            />
+            <span className='reach-dropdown__button-label'>
+              {intl.formatMessage(messages[current.labelId])}
+            </span>
+          </>
+        )}
+        {!leading && krewEnabled && selectedKrews.length > 0 && (
           <span className='reach-dropdown__button-krewcount'>
             {intl.formatMessage(messages.krewCount, {
               count: selectedKrews.length,
@@ -347,11 +423,25 @@ export const ReachDropdown: React.FC<Props> = ({
 
       {open && (
         <div className={`reach-dropdown__menu ${placement}`} role='listbox'>
+          {sameAsOptions.length > 0 && (
+            <>
+              {sameAsOptions.map((option) => (
+                <SameAsMenuItem
+                  key={option.key}
+                  option={option}
+                  onSelect={handleSameAs}
+                />
+              ))}
+              <div className='reach-dropdown__divider' />
+            </>
+          )}
           {visibleOrder.map((option) => (
             <ReachMenuItem
               key={option}
               option={option}
-              selected={option === value}
+              // While an audience follows another record, only its row is
+              // ticked: the copied tier is what it follows, not a choice.
+              selected={!leading && option === value}
               label={intl.formatMessage(messages[REACH_META[option].labelId])}
               hint={intl.formatMessage(messages[REACH_META[option].hintId])}
               onSelect={handleSelect}

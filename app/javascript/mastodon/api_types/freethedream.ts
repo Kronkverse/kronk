@@ -19,8 +19,10 @@ export interface FtdAccount {
   avatar: string;
 }
 
+// `slug` is set when the ref is a project: its page is reached by name.
 export interface FtdRef {
   id: string;
+  slug?: string;
   title: string;
 }
 
@@ -63,10 +65,14 @@ export interface FtdEvent {
 
 export interface FtdProjectSummary {
   id: string;
+  slug: string;
   title: string;
   description: string;
   owner: FtdAccount | null;
   cover: FtdCover | null;
+  // What its card shows: its own cover (small), else the image of the
+  // Kalendar event it's linked to, if you can see that event.
+  image_url: string | null;
   ends_on: string | null;
   done: boolean;
   joining: FtdJoining;
@@ -77,6 +83,7 @@ export interface FtdProjectSummary {
 
 export interface FtdSectionRow {
   id: string;
+  slug: string;
   title: string;
   owner: FtdAccount | null;
   done: boolean;
@@ -109,6 +116,7 @@ export interface FtdContribution {
 
 export interface FtdItemRow {
   id: string;
+  slug?: string;
   kind: FtdItemKind;
   title: string;
   category: FtdCategory | null;
@@ -135,6 +143,7 @@ export interface FtdItemRow {
 // A thing on the list, quoted on a comment about it.
 export interface FtdQuotedItem {
   id: string;
+  slug?: string;
   kind: FtdItemKind;
   title: string;
   quantity: number;
@@ -206,6 +215,7 @@ export interface FtdMine {
 
 export interface FtdProject {
   id: string;
+  slug: string;
   title: string;
   description: string;
   owner: FtdAccount | null;
@@ -244,6 +254,9 @@ export interface FtdProject {
   requests: FtdAccount[];
   all_parts: FtdPartOption[];
   comments: FtdComment[];
+  // For its owner: someone else has something in it, so it can't be
+  // removed yet (false for everyone else).
+  others_inside: boolean;
   can: {
     add: boolean;
     edit: boolean;

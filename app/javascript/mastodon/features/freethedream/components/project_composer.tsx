@@ -14,8 +14,19 @@ import type {
   FtdJoining,
   FtdProject,
 } from 'mastodon/api_types/freethedream';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeSection,
+  ComposeTextarea,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 import { NeedBoxes } from './need_boxes';
 import { CategoryChips, errorOf, parseLine } from './shared';
@@ -137,6 +148,7 @@ interface ProjectDraftParams {
   joining?: FtdJoining;
   sections?: string;
   gear?: string[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -174,6 +186,10 @@ export const ProjectComposer: React.FC<Props> = ({
   const top = editing ? editing.top : !parent;
   // Adding inside an emergence makes a gang; inside a gang, a fractal.
   const fractal = parent?.level === 'gang';
+  // What a new one will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('freethedream');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go and comes back when
   // the composer opens again: a new emergence on its own, a gang or
@@ -187,6 +203,7 @@ export const ProjectComposer: React.FC<Props> = ({
       setJoining(p.joining ?? 'open');
       setSections(p.sections ?? '');
       setGear(p.gear ?? []);
+      restoreKonnect(p.konnections);
       const media = d?.media_attachments[0];
       setCover(
         media
@@ -199,7 +216,7 @@ export const ProjectComposer: React.FC<Props> = ({
       );
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<ProjectDraftParams>({
@@ -208,7 +225,15 @@ export const ProjectComposer: React.FC<Props> = ({
     context: parent ? `project:${parent.id}` : null,
     active: !editing,
     snapshot: {
-      params: { title, description, endsOn, joining, sections, gear },
+      params: {
+        title,
+        description,
+        endsOn,
+        joining,
+        sections,
+        gear,
+        konnections: konnect.saved,
+      },
       mediaIds: top && cover ? [cover.id] : [],
     },
     hasContent:
@@ -309,8 +334,11 @@ export const ProjectComposer: React.FC<Props> = ({
           },
         );
     request
-      .then((project) => {
-        if (!editing) finishDraft();
+      .then(async (project) => {
+        if (!editing) {
+          finishDraft();
+          await commitKonnect('freethedream', project.id);
+        }
         onSaved(project);
       })
       .catch((err: unknown) => {
@@ -331,6 +359,7 @@ export const ProjectComposer: React.FC<Props> = ({
     editing,
     parent,
     finishDraft,
+    commitKonnect,
     onSaved,
   ]);
 
@@ -363,166 +392,128 @@ export const ProjectComposer: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
+      konnect={editing ? null : konnect}
     >
-      <div className='freethedream-form'>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.name)}
-          </span>
-          <input
-            className='freethedream__input'
-            value={title}
-            onChange={handleTitle}
-            maxLength={120}
-            placeholder={intl.formatMessage(
-              top ? messages.namePlaceholder : messages.sectionPlaceholder,
-            )}
-          />
-        </label>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.about)}
-          </span>
-          <textarea
-            className='freethedream__input'
-            rows={4}
-            value={description}
-            onChange={handleDescription}
-            maxLength={5000}
-          />
-        </label>
-        {top && (
-          <div className='freethedream-form__field'>
-            <span className='freethedream-form__label'>
-              {intl.formatMessage(messages.cover)}
-            </span>
-            {cover && (
-              <img
-                className='freethedream-form__cover'
-                src={cover.preview_url}
-                alt=''
-              />
-            )}
-            <div className='freethedream-form__row'>
-              <label className='freethedream__link'>
-                {intl.formatMessage(
-                  uploading
-                    ? messages.uploading
-                    : cover
-                      ? messages.coverChange
-                      : messages.coverAdd,
-                )}
-                <input
-                  type='file'
-                  accept='image/*'
-                  className='freethedream-form__file'
-                  onChange={handleCoverFile}
-                  disabled={uploading}
-                />
-              </label>
-              {cover && !uploading && (
-                <button
-                  type='button'
-                  className='freethedream__link'
-                  onClick={handleCoverRemove}
-                >
-                  {intl.formatMessage(messages.coverRemove)}
-                </button>
-              )}
-            </div>
-          </div>
+      <ComposeTitle
+        value={title}
+        onChange={handleTitle}
+        maxLength={120}
+        placeholder={intl.formatMessage(
+          top ? messages.namePlaceholder : messages.sectionPlaceholder,
         )}
-        {top && (
-          <label className='freethedream-form__field'>
-            <span className='freethedream-form__label'>
-              {intl.formatMessage(messages.ends)}
-            </span>
-            <input
-              type='date'
-              className='freethedream__input'
-              value={endsOn}
-              onChange={handleEnds}
+        aria-label={intl.formatMessage(messages.name)}
+      />
+      <ComposeBody
+        value={description}
+        onChange={handleDescription}
+        maxLength={5000}
+        placeholder={intl.formatMessage(messages.about)}
+        aria-label={intl.formatMessage(messages.about)}
+      />
+      {top && (
+        <ComposeSection title={intl.formatMessage(messages.cover)}>
+          {cover && (
+            <img
+              className='freethedream-form__cover'
+              src={cover.preview_url}
+              alt=''
             />
-          </label>
-        )}
-        {!editing && (
-          <>
-            {/* An emergence starts with its gangs, a gang with its fractals;
-                a fractal holds nothing (Tal, 2026-10-15). */}
-            {!fractal && (
-              <label className='freethedream-form__field'>
-                <span className='freethedream-form__label'>
-                  {intl.formatMessage(
-                    top ? messages.groupsInside : messages.fractalsInside,
-                  )}
-                </span>
-                <textarea
-                  className='freethedream__input'
-                  rows={2}
-                  value={sections}
-                  onChange={handleSections}
-                  placeholder={intl.formatMessage(
-                    top
-                      ? messages.groupsPlaceholder
-                      : messages.fractalsPlaceholder,
-                  )}
-                />
-                <span className='freethedream-form__hint'>
-                  {intl.formatMessage(messages.sectionsHint)}
-                </span>
-              </label>
+          )}
+          <div className='freethedream-form__row'>
+            <label className='freethedream__link'>
+              {intl.formatMessage(
+                uploading
+                  ? messages.uploading
+                  : cover
+                    ? messages.coverChange
+                    : messages.coverAdd,
+              )}
+              <input
+                type='file'
+                accept='image/*'
+                className='freethedream-form__file'
+                onChange={handleCoverFile}
+                disabled={uploading}
+              />
+            </label>
+            {cover && !uploading && (
+              <button
+                type='button'
+                className='freethedream__link'
+                onClick={handleCoverRemove}
+              >
+                {intl.formatMessage(messages.coverRemove)}
+              </button>
             )}
-            <fieldset className='freethedream-form__field'>
-              <legend className='freethedream-form__label'>
-                {intl.formatMessage(messages.gear)}
-              </legend>
-              <NeedBoxes lines={gear} onChange={setGear} />
-              <CategoryChips value={gearCategory} onChange={setGearCategory} />
-              <span className='freethedream-form__hint'>
-                {intl.formatMessage(messages.gearHint)}
-              </span>
-            </fieldset>
-          </>
-        )}
-        {top && (
-          <fieldset className='freethedream-form__field'>
-            <legend className='freethedream-form__label'>
-              {intl.formatMessage(messages.joining)}
-            </legend>
-            <label className='freethedream-form__choice'>
-              <input
-                type='radio'
-                name='joining'
-                value='open'
-                checked={joining === 'open'}
-                onChange={handleJoining}
+          </div>
+        </ComposeSection>
+      )}
+      {top && (
+        <ComposeField label={intl.formatMessage(messages.ends)}>
+          <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
+        </ComposeField>
+      )}
+      {!editing && (
+        <>
+          {/* An emergence starts with its gangs, a gang with its fractals;
+              a fractal holds nothing (Tal, 2026-10-15). */}
+          {!fractal && (
+            <ComposeField
+              label={intl.formatMessage(
+                top ? messages.groupsInside : messages.fractalsInside,
+              )}
+              hint={intl.formatMessage(messages.sectionsHint)}
+            >
+              <ComposeTextarea
+                rows={2}
+                value={sections}
+                onChange={handleSections}
+                placeholder={intl.formatMessage(
+                  top
+                    ? messages.groupsPlaceholder
+                    : messages.fractalsPlaceholder,
+                )}
               />
-              <span>
-                <strong>{intl.formatMessage(messages.open)}</strong>{' '}
-                {intl.formatMessage(messages.openHint)}
-              </span>
-            </label>
-            <label className='freethedream-form__choice'>
-              <input
-                type='radio'
-                name='joining'
-                value='by_request'
-                checked={joining === 'by_request'}
-                onChange={handleJoining}
-              />
-              <span>
-                <strong>{intl.formatMessage(messages.byRequest)}</strong>{' '}
-                {intl.formatMessage(messages.byRequestHint)}
-              </span>
-            </label>
-          </fieldset>
-        )}
-        {error && (
-          <p className='freethedream__error' role='alert'>
-            {error}
-          </p>
-        )}
-      </div>
+            </ComposeField>
+          )}
+          <ComposeSection title={intl.formatMessage(messages.gear)}>
+            <NeedBoxes lines={gear} onChange={setGear} />
+            <CategoryChips value={gearCategory} onChange={setGearCategory} />
+            <ComposeHint>{intl.formatMessage(messages.gearHint)}</ComposeHint>
+          </ComposeSection>
+        </>
+      )}
+      {top && (
+        <ComposeSection title={intl.formatMessage(messages.joining)}>
+          <label className='freethedream-form__choice'>
+            <input
+              type='radio'
+              name='joining'
+              value='open'
+              checked={joining === 'open'}
+              onChange={handleJoining}
+            />
+            <span>
+              <strong>{intl.formatMessage(messages.open)}</strong>{' '}
+              {intl.formatMessage(messages.openHint)}
+            </span>
+          </label>
+          <label className='freethedream-form__choice'>
+            <input
+              type='radio'
+              name='joining'
+              value='by_request'
+              checked={joining === 'by_request'}
+              onChange={handleJoining}
+            />
+            <span>
+              <strong>{intl.formatMessage(messages.byRequest)}</strong>{' '}
+              {intl.formatMessage(messages.byRequestHint)}
+            </span>
+          </label>
+        </ComposeSection>
+      )}
+      {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>
   );
 };

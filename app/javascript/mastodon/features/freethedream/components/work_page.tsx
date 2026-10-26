@@ -8,10 +8,11 @@ import { apiFtdProject } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { useSpaceBack } from 'mastodon/components/space_back';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { act } from './act';
 import { ItemComposer } from './item_composer';
-import { Loading, useLoaded } from './shared';
+import { Loading, projectPath, useLoaded } from './shared';
 import type { WorkList } from './work';
 import { RENAMED_LISTS, WorkBody, isWorkList, workMessages } from './work';
 
@@ -21,6 +22,7 @@ import { RENAMED_LISTS, WorkBody, isWorkList, workMessages } from './work';
 export const WorkPage: React.FC = () => {
   const { id, list } = useParams<{ id: string; list: string }>();
   const { data: project, failed, set } = useLoaded(id, () => apiFtdProject(id));
+  useNamedLink(id, project?.slug);
 
   if (!isWorkList(list)) {
     const renamed = RENAMED_LISTS[list] as WorkList | undefined;
@@ -43,7 +45,7 @@ const WorkView: React.FC<{
   const [offering, setOffering] = useState(false);
   // The space badge goes back to the page this list belongs to.
   useSpaceBack({
-    href: `/hub/freethedream/p/${project.id}`,
+    href: projectPath(project),
     label: project.title,
   });
 

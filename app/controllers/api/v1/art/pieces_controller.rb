@@ -9,6 +9,8 @@
 # `ArtPiece.visible_to(viewer)`; per-action authorisation (update /
 # destroy) requires the caller be the owner.
 class Api::V1::Art::PiecesController < Api::BaseController
+  include KrewAudienceParams
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy]
   before_action :require_user!, except: [:index, :show]
@@ -25,7 +27,7 @@ class Api::V1::Art::PiecesController < Api::BaseController
   def index
     scope = ArtPiece.visible_to(current_account).recent
     scope = narrow_by_scope(scope)
-    render json: scope.limit(clamp_limit), each_serializer: REST::ArtPieceSerializer
+    render json: scope.limit(clamp_limit), each_serializer: REST::ArtPieceSerializer, list: true
   end
 
   def show
@@ -38,6 +40,7 @@ class Api::V1::Art::PiecesController < Api::BaseController
     @piece = current_account.owned_art_pieces.new(piece_params)
 
     if @piece.save
+      sync_krew_audience!(@piece)
       Art::PublishPiece.new(@piece).call
       render json: @piece.reload, serializer: REST::ArtPieceSerializer, status: 201
     else
@@ -49,6 +52,7 @@ class Api::V1::Art::PiecesController < Api::BaseController
     authorize_owner!
 
     if @piece.update(piece_params)
+      sync_krew_audience!(@piece)
       render json: @piece.reload, serializer: REST::ArtPieceSerializer
     else
       render json: { error: @piece.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -90,7 +94,9 @@ class Api::V1::Art::PiecesController < Api::BaseController
   end
 
   def piece_params
-    params.expect(art_piece: [:title, :description, :kind, :visibility, :cover_media_attachment_id])
+    params.expect(art_piece: [:title, :description, :kind, :visibility, :cover_media_attachment_id,
+                              :medium, :width, :height, :depth, :size_unit, :year_made, :edition, :availability,
+                              :price_cents, :price_currency, { mediums: [] }])
   end
 
   def authorize_owner!

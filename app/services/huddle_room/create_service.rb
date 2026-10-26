@@ -2,14 +2,20 @@
 
 # Creates an open topical Huddle Room (see docs/spaces/huddle.md §
 # Three categories of Huddle). Anyone signed in can call this; the
-# only gate is a plausible name.
+# only gate is a plausible name. Rooms carry no icon: Kronk has no emoji,
+# and a Room's tile wears the Huddle glyph (decisions.md, 2026-10-22).
 #
 #   HuddleRoom::CreateService.new.call(
 #     account: current_account,
 #     name: 'Coworking',
 #     description: 'For focused co-work sessions.',
-#     icon: '💻'
+#     krew: krew # optional: Konnect the new Room to a Krew the account is in
 #   )
+#
+# A Krew given here is linked (a `link` KornerAttachment huddle → krew, in
+# the same transaction), not a gate: the Room stays open to everyone.
+# Members-only Krew Huddles are not built (docs/spaces/huddle.md). The
+# caller checks the account may link that Krew.
 #
 # Publishes `huddle.room.created` on success so Nudges / activity
 # surfaces can hear the birth of a new hangout.
@@ -19,24 +25,26 @@ module HuddleRoom
     # long room name is noise in a list.
     NAME_MAX = 80
     DESCRIPTION_MAX = 200
-    ICON_MAX = 32
 
-    def call(account:, name:, description: nil, icon: nil)
+    def call(account:, name:, description: nil, krew: nil)
       raise ArgumentError, 'account is required' if account.nil?
 
       name = normalise(name, NAME_MAX)
       raise ArgumentError, 'name is required' if name.blank?
 
-      session = HuddleSession.create!(
-        scope: 'room',
-        title: name,
-        description: normalise(description, DESCRIPTION_MAX),
-        icon: normalise(icon, ICON_MAX),
-        host_account: account,
-        session_url: build_room_key(name),
-        state: 'live',
-        last_active_at: Time.current
-      )
+      session = HuddleSession.transaction do
+        room = HuddleSession.create!(
+          scope: 'room',
+          title: name,
+          description: normalise(description, DESCRIPTION_MAX),
+          host_account: account,
+          session_url: build_room_key(name),
+          state: 'live',
+          last_active_at: Time.current
+        )
+        Kronk::AttachmentEffects.link!('huddle', room.id, 'krew', krew.id, account) if krew
+        room
+      end
 
       Kronk::KornerEvents.publish(
         'huddle.room.created',

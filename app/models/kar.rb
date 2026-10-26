@@ -2,12 +2,16 @@
 
 # Karporn — a single car post: title + description + year/make/model +
 # optional location tag + one or more photos. Single-author (all photos
-# by the piece's owner). Krew scoping isn't offered in v1; the four
-# reach tiers are the whole visibility axis.
+# by the piece's owner). Its audience is the reach ladder plus any
+# Krews it is for (`record_krews`, Kronk::KrewAudience).
 class Kar < ApplicationRecord
   include Reachable
   include Kronk::OwnUploads
   include Kronk::AttachmentSource
+  include Kronk::AudienceBearer
+  include Kronk::KrewAudience
+  # Where it is: its Konnected Place, when its own location is empty.
+  include Kronk::RecordPlace::Konnected
 
   self.attachment_source_slug = 'karporn'
 
@@ -19,7 +23,7 @@ class Kar < ApplicationRecord
 
   has_many :photos, class_name: 'KarPhoto', dependent: :destroy, inverse_of: :kar
 
-  # Reach ladder. Krew is not offered on Karporn in v1.
+  # Reach ladder. Krews are an additive axis on top (Kronk::KrewAudience).
   enum :visibility,
        { public: 0, mates: 1, orbit: 3, self_only: 4 },
        suffix: :scope
@@ -48,8 +52,8 @@ class Kar < ApplicationRecord
     :owner_id
   end
 
-  def self.reachable_krew_scope(_krew_ids)
-    none
+  def self.reachable_krew_scope(krew_ids)
+    audience_krew_scope(krew_ids)
   end
 
   private
@@ -62,8 +66,8 @@ class Kar < ApplicationRecord
     owner
   end
 
-  def reachable_krew_member?(_viewer)
-    false
+  def reachable_krew_member?(viewer)
+    audience_krew_member?(viewer)
   end
 
   def location_coords_are_paired

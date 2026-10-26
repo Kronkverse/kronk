@@ -416,6 +416,39 @@ RSpec.describe PostStatusService do
     end
   end
 
+  # docs/spaces/profile.md, The Gallery.
+  context 'when posting a photo for the first time' do
+    let(:author) { Fabricate(:account) }
+    let!(:shelf) { Fabricate(:profile_section, account: author, position: 0) }
+
+    def post_photo
+      subject.call(author, text: 'look', media_ids: [Fabricate(:media_attachment, account: author).id.to_s])
+    end
+
+    it 'puts a Gallery at the top of the profile', :aggregate_failures do
+      post_photo
+
+      gallery = author.profile_sections.ordered.first
+      expect(gallery.settings).to include('source' => 'media', 'korner_slug' => 'profile', 'render' => 'photo')
+      expect(gallery.position).to eq 0
+      expect(shelf.reload.position).to eq 1
+    end
+
+    it 'adds it once, and never back once the owner has taken it off' do
+      post_photo
+      author.profile_sections.detect(&:gallery?).update!(visible: false)
+      post_photo
+
+      expect(author.profile_sections.reload.count(&:gallery?)).to eq 1
+    end
+
+    it 'adds none for a post without a photo or video' do
+      subject.call(author, text: 'just words')
+
+      expect(author.profile_sections.reload.any?(&:gallery?)).to be false
+    end
+  end
+
   def create_status_with_options(**options)
     subject.call(Fabricate(:account), options.merge(text: 'test'))
   end

@@ -42,7 +42,8 @@ interface MomentJSON {
   expires_at: string;
   active: boolean;
   account: AccountJSON;
-  media_attachment: MediaJSON;
+  // Null on a voice-only Moment.
+  media_attachment: MediaJSON | null;
   // Whether the viewer has already seen this Moment (viewed or frothed) — its
   // ring renders dim rather than bright. See lib/kronk/korner_seen.rb.
   seen_by_viewer?: boolean;
@@ -94,9 +95,10 @@ const Ring = ({
   // — the strip is more useful when the *photo you'll open* is what
   // you see. Falls back to the account avatar when the tile has no
   // Moment yet (owner-with-nothing-posted case).
-  const tileImage = moment
-    ? moment.media_attachment.preview_url
-    : account.avatar || account.avatar_static;
+  // A voice-only Moment has no photo: its poster's avatar stands in.
+  const tileImage =
+    moment?.media_attachment?.preview_url ??
+    (account.avatar || account.avatar_static);
   // Show the `+` add-affordance on the owner tile in both cases: no
   // Moment yet (primary CTA), OR the owner already has one but might
   // want to post another (answers the "how do I add a second?"

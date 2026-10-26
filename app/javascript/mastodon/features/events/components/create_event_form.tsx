@@ -3,9 +3,7 @@ import { useState, useCallback, useMemo, useRef } from 'react';
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
 import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
-import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import api from 'mastodon/api';
 import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
@@ -23,15 +21,9 @@ const messages = defineMessages({
     id: 'events.form.end_before_start',
     defaultMessage: 'End time must be after start time',
   },
-  typeEvent: { id: 'events.form.type_event', defaultMessage: 'Event' },
-  typeHuddle: { id: 'events.form.type_huddle', defaultMessage: 'Huddle' },
   titlePlaceholder: {
     id: 'events.form.title_placeholder',
     defaultMessage: 'Event name...',
-  },
-  locationPlaceholder: {
-    id: 'events.form.location_placeholder',
-    defaultMessage: 'Where is it?',
   },
   descriptionPlaceholder: {
     id: 'events.form.description_placeholder',
@@ -69,7 +61,6 @@ interface Event {
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
-  spawn_album: boolean;
   max_attendees: number | null;
   recurrence_rule: string | null;
   going_count: number;
@@ -173,16 +164,10 @@ export const CreateEventForm: React.FC<Props> = ({
   const [startTime, setStartTime] = useState(startInit.time);
   const [endDate, setEndDate] = useState(endInit.date);
   const [endTime, setEndTime] = useState(endInit.time);
-  const [locationName, setLocationName] = useState(
-    editEvent?.location_name ?? '',
-  );
-  const [locationUrl, setLocationUrl] = useState(editEvent?.location_url ?? '');
-  const [eventType, setEventType] = useState(editEvent?.event_type ?? 'event');
   const [visibility, setVisibility] = useState<ReachValue>('public');
   const [rsvpEnabled, setRsvpEnabled] = useState(
     editEvent?.rsvp_enabled ?? true,
   );
-  const [spawnAlbum, setSpawnAlbum] = useState(editEvent?.spawn_album ?? false);
   const [recurrenceRule, setRecurrenceRule] = useState(
     editEvent?.recurrence_rule ?? '',
   );
@@ -205,12 +190,8 @@ export const CreateEventForm: React.FC<Props> = ({
       startTime,
       endDate,
       endTime,
-      locationName,
-      locationUrl,
-      eventType,
       visibility,
       rsvpEnabled,
-      spawnAlbum,
       recurrenceRule,
     }),
     [
@@ -220,12 +201,8 @@ export const CreateEventForm: React.FC<Props> = ({
       startTime,
       endDate,
       endTime,
-      locationName,
-      locationUrl,
-      eventType,
       visibility,
       rsvpEnabled,
-      spawnAlbum,
       recurrenceRule,
     ],
   );
@@ -237,12 +214,8 @@ export const CreateEventForm: React.FC<Props> = ({
       setStartTime(d.startTime);
       setEndDate(d.endDate);
       setEndTime(d.endTime);
-      setLocationName(d.locationName);
-      setLocationUrl(d.locationUrl);
-      setEventType(d.eventType);
       setVisibility(d.visibility);
       setRsvpEnabled(d.rsvpEnabled);
-      setSpawnAlbum(d.spawnAlbum);
       setRecurrenceRule(d.recurrenceRule);
     },
     // setters are stable; the closure captures nothing that changes.
@@ -256,8 +229,6 @@ export const CreateEventForm: React.FC<Props> = ({
   const handleDiscardDraft = useCallback(() => {
     setTitle('');
     setDescription('');
-    setLocationName('');
-    setLocationUrl('');
     setRecurrenceRule('');
     discardDraft();
   }, [discardDraft]);
@@ -322,20 +293,6 @@ export const CreateEventForm: React.FC<Props> = ({
     [],
   );
 
-  const handleLocationNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocationName(e.target.value);
-    },
-    [],
-  );
-
-  const handleLocationUrlChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocationUrl(e.target.value);
-    },
-    [],
-  );
-
   const handleVisibilityChange = useCallback((value: ReachValue) => {
     setVisibility(value);
   }, []);
@@ -350,13 +307,6 @@ export const CreateEventForm: React.FC<Props> = ({
   const handleRsvpChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setRsvpEnabled(e.target.checked);
-    },
-    [],
-  );
-
-  const handleSpawnAlbumChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSpawnAlbum(e.target.checked);
     },
     [],
   );
@@ -397,12 +347,8 @@ export const CreateEventForm: React.FC<Props> = ({
           description,
           start_time: startDateTime,
           end_time: endDateTime,
-          location_name: locationName || null,
-          location_url: locationUrl || null,
-          event_type: eventType,
           rsvp_enabled: rsvpEnabled,
           recurrence_rule: recurrenceRule || null,
-          spawn_album: spawnAlbum,
         };
 
         if (!editing) {
@@ -440,12 +386,8 @@ export const CreateEventForm: React.FC<Props> = ({
       startTime,
       endDate,
       endTime,
-      locationName,
-      locationUrl,
-      eventType,
       visibility,
       rsvpEnabled,
-      spawnAlbum,
       recurrenceRule,
       imageFile,
       removeImage,
@@ -457,22 +399,10 @@ export const CreateEventForm: React.FC<Props> = ({
     ],
   );
 
-  const handleSelectEvent = useCallback(() => {
-    setEventType('event');
-  }, []);
-
-  const handleSelectHuddle = useCallback(() => {
-    setEventType('huddle');
-    setLocationName('');
-  }, []);
-
   const titleInputId = 'event-form-title';
-  const locationInputId = 'event-form-location';
-  const linkInputId = 'event-form-link';
   const descriptionInputId = 'event-form-description';
   const repeatInputId = 'event-form-repeat';
   const rsvpInputId = 'event-form-rsvp';
-  const spawnAlbumInputId = 'event-form-spawn-album';
   const startLabelId = 'event-form-start';
   const endLabelId = 'event-form-end';
   const coverLabelId = 'event-form-cover';
@@ -494,11 +424,6 @@ export const CreateEventForm: React.FC<Props> = ({
               id='events.edit_event'
               defaultMessage='Edit Event'
             />
-          ) : eventType === 'huddle' ? (
-            <FormattedMessage
-              id='events.create_huddle'
-              defaultMessage='Schedule a Huddle'
-            />
           ) : (
             <FormattedMessage
               id='events.create_event'
@@ -516,27 +441,6 @@ export const CreateEventForm: React.FC<Props> = ({
           <Icon id='close' icon={CloseIcon} />
         </button>
       </div>
-
-      {!editing && (
-        <div className='create-event-form__type-toggle'>
-          <button
-            type='button'
-            className={`create-event-form__type-btn ${eventType === 'event' ? 'active' : ''}`}
-            onClick={handleSelectEvent}
-          >
-            <Icon id='calendar_month' icon={CalendarMonthIcon} />{' '}
-            {intl.formatMessage(messages.typeEvent)}
-          </button>
-          <button
-            type='button'
-            className={`create-event-form__type-btn ${eventType === 'huddle' ? 'active' : ''}`}
-            onClick={handleSelectHuddle}
-          >
-            <Icon id='videocam' icon={VideocamIcon} />{' '}
-            {intl.formatMessage(messages.typeHuddle)}
-          </button>
-        </div>
-      )}
 
       <div className='create-event-form__field'>
         <label htmlFor={titleInputId}>
@@ -638,39 +542,10 @@ export const CreateEventForm: React.FC<Props> = ({
         </div>
       </div>
 
-      {eventType !== 'huddle' && (
-        <div className='create-event-form__field'>
-          <label htmlFor={locationInputId}>
-            <FormattedMessage
-              id='events.form.location'
-              defaultMessage='Location'
-            />
-          </label>
-          <input
-            id={locationInputId}
-            type='text'
-            value={locationName}
-            onChange={handleLocationNameChange}
-            placeholder={intl.formatMessage(messages.locationPlaceholder)}
-            maxLength={200}
-          />
-        </div>
-      )}
-
-      <div className='create-event-form__field'>
-        <label htmlFor={linkInputId}>
-          <FormattedMessage id='events.form.link' defaultMessage='Link' />
-        </label>
-        <input
-          id={linkInputId}
-          type='url'
-          value={locationUrl}
-          onChange={handleLocationUrlChange}
-          placeholder='https://...'
-          maxLength={500}
-        />
-      </div>
-
+      {/* No location fields: where an event is, is its Konnected Map
+          Place, Konnected from the event's page (decisions.md,
+          2026-10-23, "Location fields become Konnect → Map"). An edit
+          sends no location, so an older event keeps its own. */}
       <div className='create-event-form__field'>
         <label htmlFor={descriptionInputId}>
           <FormattedMessage
@@ -743,22 +618,6 @@ export const CreateEventForm: React.FC<Props> = ({
         <FormattedMessage id='events.form.rsvp' defaultMessage='Enable RSVPs' />
       </label>
 
-      <label
-        htmlFor={spawnAlbumInputId}
-        className='create-event-form__checkbox'
-      >
-        <input
-          id={spawnAlbumInputId}
-          type='checkbox'
-          checked={spawnAlbum}
-          onChange={handleSpawnAlbumChange}
-        />
-        <FormattedMessage
-          id='events.form.spawn_album'
-          defaultMessage='Spawn an album for this event'
-        />
-      </label>
-
       {editing && onDelete && (
         <div className='create-event-form__danger'>
           <button
@@ -791,11 +650,6 @@ export const CreateEventForm: React.FC<Props> = ({
             <FormattedMessage
               id='events.form.save_changes'
               defaultMessage='Save Changes'
-            />
-          ) : eventType === 'huddle' ? (
-            <FormattedMessage
-              id='events.form.schedule_huddle'
-              defaultMessage='Schedule Huddle'
             />
           ) : (
             <FormattedMessage

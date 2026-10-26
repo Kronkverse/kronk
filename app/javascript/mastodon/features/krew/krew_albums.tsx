@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -6,7 +6,11 @@ import { Link } from 'react-router-dom';
 
 import { showAlertForError } from 'mastodon/actions/alerts';
 import { apiRequestGet } from 'mastodon/api';
-import { apiLinkAlbumKrew, apiUnlinkAlbumKrew } from 'mastodon/api/albutts';
+import {
+  albumPath,
+  apiLinkAlbumKrew,
+  apiUnlinkAlbumKrew,
+} from 'mastodon/api/albutts';
 import type { ApiAlbumListItemJSON } from 'mastodon/api_types/albutts';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -35,10 +39,13 @@ const messages = defineMessages({
 
 type AlbumItem = ApiAlbumListItemJSON;
 
-export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
-  krewId,
-  canLink,
-}) => {
+export const KrewAlbums: React.FC<{
+  krewId: string;
+  canLink: boolean;
+  // Open "Link one of your albums" once the Krew's albums are in (the
+  // space was just added).
+  openLink?: boolean;
+}> = ({ krewId, canLink, openLink = false }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [albums, setAlbums] = useState<AlbumItem[] | null>(null);
@@ -90,6 +97,14 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
       });
   }, [albums, choices]);
 
+  // Waits for the Krew's albums, so the list leaves out ones already here.
+  const linkOpened = useRef(false);
+  useEffect(() => {
+    if (!openLink || !canLink || albums === null || linkOpened.current) return;
+    linkOpened.current = true;
+    openPicker();
+  }, [openLink, canLink, albums, openPicker]);
+
   const link = useCallback(
     (albumId: string) => {
       setBusy(true);
@@ -125,7 +140,7 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
 
   return (
     <section className='krew-detail__section krew-detail__albums'>
-      <h3 className='krew-detail__section-heading'>
+      <h3 className='korner-section-heading'>
         {intl.formatMessage(messages.title)}
       </h3>
 
@@ -139,10 +154,7 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
         <ul className='krew-detail__event-list'>
           {albums.map((album) => (
             <li key={album.id} className='krew-detail__linked'>
-              <Link
-                to={`/hub/albutts/albums/${album.id}`}
-                className='krew-detail__event'
-              >
+              <Link to={albumPath(album)} className='krew-detail__event'>
                 <span className='krew-detail__event-title'>{album.title}</span>
                 <span className='krew-detail__event-where'>
                   {album.owner.display_name || album.owner.acct}

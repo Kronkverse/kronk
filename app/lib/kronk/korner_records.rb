@@ -49,6 +49,9 @@ module Kronk
       'Krew' => ->(viewer) { Krew.where(id: Krew.listed.select(:id)).or(Krew.where(id: viewer.krews.select(:id))) },
       'HuddleSession' => ->(_viewer) { HuddleSession.not_retired.where.not(scope: 'krew') },
       'Question' => ->(_viewer) { Question.active },
+      # A Place is seen through what's Konnected to it (MapPlace#visible_to?);
+      # only ones the viewer made or with a Konnection can pass that check.
+      'MapPlace' => ->(viewer) { MapPlace.made_or_konnected(viewer) },
     }.freeze
 
     # How far back a search looks for records it has to check one by one.
@@ -84,11 +87,22 @@ module Kronk
     # by one over the newest SEARCH_WINDOW.
     def findable(klass, scope, viewer, limit:)
       found = FOUND_BY[klass.name]
-      scope = scope.merge(found.call(viewer)) if found
+      # As id subqueries, not `merge`: merge lets the second relation's
+      # condition on a column replace the first's, so a Krew or an event
+      # looked up by id came back as whichever one the viewer finds first.
+      scope = scope.where(id: found.call(viewer).select(:id)) if found
       scope = scope.order(created_at: :desc)
-      return scope.merge(klass.visible_to(viewer)).limit(limit).to_a if klass.respond_to?(:visible_to)
+      return scope.where(id: klass.visible_to(viewer).select(:id)).limit(limit).to_a if klass.respond_to?(:visible_to)
 
       scope.limit(SEARCH_WINDOW).select { |record| visible?(record, viewer) }.first(limit)
+    end
+
+    # What `record` is called beside its title ("the Ember event"): its
+    # korner's `konnect.noun`, except a FreeTheDream gang, which is a gang.
+    def noun_for(slug, record)
+      return 'gang' if slug == 'freethedream' && record.respond_to?(:top?) && !record.top?
+
+      Kronk::KornerRegistry.find(slug)&.konnect&.dig('noun')
     end
 
     def title_of(record)
@@ -111,19 +125,25 @@ module Kronk
     # sentences for `korners doctor` and the spec: empty when it is wired,
     # or when it opts out with `no_attachments: <why>`. A korner with
     # records takes links unless it says why not (decisions.md, 2026-10-21).
+    # A korner with no primary resource has no records and nothing to
+    # answer; one whose primary resource names no model is a gap, not a
+    # pass, so it can't slip the rule by naming a table that isn't there.
     def attachment_gaps(manifest)
-      model = Kronk::KornerRegistry.model_for(manifest.slug)
-      return [] if model.nil?
+      primary = primary_resource(manifest.slug)
+      return [] if primary.nil?
 
       if manifest.no_attachments.present?
         linked = Array(manifest.attaches).any? || Array(manifest.accepts).any?
         return linked ? ["#{manifest.slug}: says `no_attachments:` but still declares `attaches:` or `accepts:`"] : []
       end
 
+      model = Kronk::KornerRegistry.model_for(manifest.slug)
+      return ["#{manifest.slug}: its primary resource `#{primary['name']}` resolves to no model; point it at one, or opt out with `no_attachments: <why>`"] if model.nil?
+
       gaps = []
       gaps << "#{manifest.slug}: add `accepts: [{ from: '*', kind: link }]`" unless takes_links?(manifest.accepts, 'from')
       gaps << "#{manifest.slug}: add `attaches: [{ to: '*', kind: link, trigger: user, lifecycle: keep }]`" unless takes_links?(manifest.attaches, 'to')
-      gaps << "#{manifest.slug}: add `path:` to its primary resource (its record page, e.g. /hub/#{manifest.slug}/:id)" if primary_resource(manifest.slug)&.dig('path').blank?
+      gaps << "#{manifest.slug}: add `path:` to its primary resource (its record page, e.g. /hub/#{manifest.slug}/:id)" if primary['path'].blank?
       gaps << "#{manifest.slug}: include Kronk::AttachmentSource in #{model.name}, with attachment_source_slug '#{manifest.slug}'" unless model.include?(Kronk::AttachmentSource) && model.attachment_source_slug == manifest.slug
       gaps.map { |gap| "#{gap}, or opt out with `no_attachments: <why>`" }
     end

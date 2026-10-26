@@ -659,4 +659,121 @@ RSpec.describe Mastodon::CLI::Korners do
       expect(issues_for(source, target)).to include(a_string_matching(/does not accept/))
     end
   end
+
+  # The `konnect:` block (Kronk::KornerKonnect, decisions.md 2026-10-23): its
+  # shape, `make:` needing a composer, and `effects:` matching the pairs
+  # Kronk::AttachmentEffects acts on, both ways.
+  describe 'konnect block' do
+    before do
+      stub_const('Kronk::PairLinks', Module.new)
+      allow(Kronk::AttachmentEffects).to receive(:handlers).and_return({ %w(a b) => Kronk::PairLinks })
+    end
+
+    def manifest(slug, konnect: nil, compose: { 'label' => 'New one', 'route' => "/hub/#{slug}/composer" }, no_attachments: nil)
+      Kronk::KornerRegistry::Manifest.new(slug: slug, konnect: konnect, compose: compose, no_attachments: no_attachments)
+    end
+
+    def effect(with, does = 'Something follows.')
+      { 'with' => with, 'does' => does }
+    end
+
+    def issues_for(*manifests)
+      Kronk::KornerKonnect.issues(manifests)
+    end
+
+    it 'passes when the handled pair is listed on one side' do
+      expect(issues_for(manifest('a', konnect: { 'make' => true, 'effects' => [effect('b')] }), manifest('b'))).to be_empty
+    end
+
+    it 'passes when the pair is listed on both sides' do
+      expect(issues_for(manifest('a', konnect: { 'effects' => [effect('b')] }), manifest('b', konnect: { 'effects' => [effect('a')] }))).to be_empty
+    end
+
+    # decisions.md, 2026-10-26: four records called Ember read the same
+    # unless each says what it is.
+    it 'fails a korner that takes links without a noun for its records' do
+      takes_links = Kronk::KornerRegistry::Manifest.new(slug: 'c', konnect: { 'make' => false }, accepts: [{ 'from' => '*', 'kind' => 'link' }])
+      named = Kronk::KornerRegistry::Manifest.new(slug: 'd', konnect: { 'noun' => 'thing' }, accepts: [{ 'from' => '*', 'kind' => 'link' }])
+
+      expect(issues_for(takes_links, named, manifest('a', konnect: { 'effects' => [effect('b')] }), manifest('b')))
+        .to contain_exactly(a_string_matching(/c: takes links but has no `konnect.noun`/))
+    end
+
+    it 'fails a noun that is not a word' do
+      expect(issues_for(manifest('a', konnect: { 'noun' => ' ', 'effects' => [effect('b')] }), manifest('b')))
+        .to include(a_string_matching(/a: `konnect.noun` must be a non-empty string/))
+    end
+
+    it 'fails a handled pair that neither manifest lists' do
+      expect(issues_for(manifest('a'), manifest('b'))).to include(a_string_matching(/a ↔ b: .*Kronk::PairLinks.*neither manifest lists it/))
+    end
+
+    it 'fails an effect for a pair with no handler' do
+      issues = issues_for(manifest('a', konnect: { 'effects' => [effect('b'), effect('c')] }), manifest('b'), manifest('c'))
+      expect(issues).to include(a_string_matching(/a: `konnect.effects\[1\]` lists `with: c`, but Kronk::AttachmentEffects has no handler for a ↔ c/))
+    end
+
+    it 'fails an effect naming a korner with no manifest' do
+      issues = issues_for(manifest('a', konnect: { 'effects' => [effect('b'), effect('nowhere')] }), manifest('b'))
+      expect(issues).to include(a_string_matching(/names `with: nowhere`, which has no manifest/))
+    end
+
+    it 'fails an effect without a sentence' do
+      issues = issues_for(manifest('a', konnect: { 'effects' => [{ 'with' => 'b' }] }), manifest('b'))
+      expect(issues).to include(a_string_matching(/needs `does:`/))
+    end
+
+    it 'fails make: true without a compose route' do
+      issues = issues_for(manifest('a', konnect: { 'make' => true, 'effects' => [effect('b')] }, compose: nil), manifest('b'))
+      expect(issues).to include(a_string_matching(/a: `konnect.make: true` needs a `konnect.route` or a `compose.route`/))
+    end
+
+    it 'takes make: true with its own route and label instead of compose' do
+      konnect = { 'make' => true, 'route' => '/hub/a/places/new', 'label' => 'New place', 'effects' => [effect('b')] }
+      expect(issues_for(manifest('a', konnect: konnect, compose: nil), manifest('b'))).to be_empty
+    end
+
+    it 'fails a route that is not a path' do
+      konnect = { 'make' => true, 'route' => 'places/new', 'effects' => [effect('b')] }
+      expect(issues_for(manifest('a', konnect: konnect), manifest('b'))).to include(a_string_matching(/`konnect.route` must be a path/))
+    end
+
+    it 'fails make: true on a korner that takes no links' do
+      issues = issues_for(manifest('a', konnect: { 'make' => true, 'effects' => [effect('b')] }, no_attachments: 'Gone in a day.'), manifest('b'))
+      expect(issues).to include(a_string_matching(/takes no links/))
+    end
+
+    it 'fails a malformed block' do
+      expect(issues_for(manifest('a', konnect: 'yes'), manifest('b', konnect: { 'effects' => [effect('a')] })))
+        .to include(a_string_matching(/a: `konnect:` must be a mapping/))
+      expect(issues_for(manifest('a', konnect: { 'make' => 'yes', 'spawn' => true, 'effects' => [effect('b')] }), manifest('b')))
+        .to include(a_string_matching(/`konnect.make` must be true or false/), a_string_matching(/unknown key `spawn`/))
+      expect(issues_for(manifest('a', konnect: { 'effects' => effect('b') }), manifest('b')))
+        .to include(a_string_matching(/`konnect.effects` must be a list/))
+    end
+  end
+
+  describe 'konnect blocks in the real manifests' do
+    before { Kronk::KornerRegistry.reload! }
+
+    it 'lists every pair Kronk::AttachmentEffects acts on, and only those' do
+      issues = Kronk::KornerKonnect.issues(Kronk::KornerRegistry.all)
+      expect(issues).to be_empty, issues.join("\n")
+    end
+
+    it 'names the records of every korner that takes links' do
+      takers = Kronk::KornerRegistry.all.select { |m| Array(m.accepts).any? { |e| e.is_a?(Hash) && e['kind'].to_s == 'link' } }
+      expect(takers.to_h { |m| [m.slug, m.konnect&.dig('noun')] }).to eq(
+        'albutts' => 'album', 'art' => 'art piece', 'booth' => 'set', 'cinema' => 'film', 'freethedream' => 'emergence',
+        'huddle' => 'room', 'kalendar' => 'event', 'karporn' => 'kar', 'kommons' => 'proposal', 'krew' => 'Krew',
+        'kronikles' => 'kronikle', 'kuestions' => 'Kuestion', 'map' => 'place', 'wachuneed' => 'listing'
+      )
+    end
+
+    it 'offers "New …" from the korners whose composers Konnect what they make' do
+      makers = Kronk::KornerRegistry.all.select { |m| m.konnect.is_a?(Hash) && m.konnect['make'] == true }.map(&:slug)
+      expect(makers).to contain_exactly('albutts', 'art', 'booth', 'cinema', 'freethedream', 'huddle', 'kalendar', 'karporn', 'kommons', 'krew',
+                                        'kronikles', 'kuestions', 'map', 'wachuneed')
+    end
+  end
 end

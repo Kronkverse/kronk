@@ -3,16 +3,27 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
-import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import api from 'mastodon/api';
 import { apiAddPhoto, apiCreateKar, apiUpdateKar } from 'mastodon/api/karporn';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { REACH_ORDER, ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useSameAs } from 'mastodon/hooks/useSameAs';
 
 const messages = defineMessages({
   removePhoto: {
@@ -26,14 +37,6 @@ const messages = defineMessages({
   postError: {
     id: 'karporn.composer.post_error',
     defaultMessage: 'Could not post the car.',
-  },
-  geoUnavailable: {
-    id: 'karporn.composer.geolocation_unavailable',
-    defaultMessage: 'Geolocation not available in this browser.',
-  },
-  geoFailed: {
-    id: 'karporn.composer.geolocation_failed',
-    defaultMessage: 'Could not read your current location.',
   },
   submit: { id: 'karporn.composer.submit', defaultMessage: 'Post car' },
   submitting: { id: 'karporn.composer.submitting', defaultMessage: 'Posting…' },
@@ -56,23 +59,6 @@ const messages = defineMessages({
   year: { id: 'karporn.composer.year', defaultMessage: 'Year' },
   make: { id: 'karporn.composer.make', defaultMessage: 'Make' },
   model: { id: 'karporn.composer.model', defaultMessage: 'Model' },
-  location: { id: 'karporn.composer.location', defaultMessage: 'Location' },
-  locationPlaceholder: {
-    id: 'karporn.composer.location_placeholder',
-    defaultMessage: 'Where was it? (optional)',
-  },
-  useCurrent: {
-    id: 'karporn.composer.use_current',
-    defaultMessage: 'Use my current location',
-  },
-  currentSet: {
-    id: 'karporn.composer.current_set',
-    defaultMessage: 'Coordinates captured',
-  },
-  currentClear: {
-    id: 'karporn.composer.current_clear',
-    defaultMessage: 'Clear coordinates',
-  },
   addPhotos: {
     id: 'karporn.composer.add_photos',
     defaultMessage: 'Add photos',
@@ -112,15 +98,15 @@ interface KarDraftParams {
   make?: string;
   model?: string;
   visibility?: ReachValue;
-  locationLabel?: string;
-  coords?: { lat: number; lng: number } | null;
+  krew_ids?: string[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
   onCancel: () => void;
   onCreated?: (kar: ApiKarJSON) => void;
   // Edit mode: pass the car to prefill the form. Submit then saves the
-  // text + location fields via the update endpoint (photos are managed
+  // text fields via the update endpoint (photos are managed
   // separately, so the photo picker hides) and the form's foot carries
   // Delete.
   kar?: ApiKarJSON;
@@ -130,12 +116,6 @@ interface Props {
 }
 
 const CURRENT_YEAR = new Date().getFullYear();
-
-const initialCoords = (kar?: ApiKarJSON) => {
-  const lat = kar?.location?.lat;
-  const lng = kar?.location?.lng;
-  return lat != null && lng != null ? { lat, lng } : null;
-};
 
 export const KarComposer: React.FC<Props> = ({
   onCancel,
@@ -158,13 +138,6 @@ export const KarComposer: React.FC<Props> = ({
     editingKar?.visibility ?? 'public',
   );
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
-  const [locationLabel, setLocationLabel] = useState(
-    editingKar?.location?.label ?? '',
-  );
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    () => initialCoords(editingKar),
-  );
-  const [locError, setLocError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{
     done: number;
@@ -173,6 +146,33 @@ export const KarComposer: React.FC<Props> = ({
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // The Krews it's for, on top of its reach (decisions.md, 2026-10-25).
+  const [krewIds, setKrewIds] = useState<string[]>(
+    editingKar?.krews?.map((k) => k.id) ?? [],
+  );
+  const availableKrews = useAvailableKrews();
+  const handleToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
+  const applyAudience = useCallback(
+    (tier: ReachValue, ids: string[] | null) => {
+      setVisibility(tier);
+      if (ids) setKrewIds(ids);
+    },
+    [],
+  );
+  // What the new car will be Konnected to (decisions.md, 2026-10-23),
+  // and whose audience it may follow ("Same as", 2026-10-25).
+  const { konnect, reach } = useSameAs(useKonnect('karporn'), {
+    enabled: !isEdit,
+    apply: applyAudience,
+    onChange: setVisibility,
+    onToggleKrew: handleToggleKrew,
+  });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go, here and on the
   // server, and comes back when the composer opens again. Editing a car
@@ -186,18 +186,17 @@ export const KarComposer: React.FC<Props> = ({
       setMake(p.make ?? '');
       setModel(p.model ?? '');
       setVisibility(p.visibility ?? 'public');
-      setLocationLabel(p.locationLabel ?? '');
-      setCoords(p.coords ?? null);
+      setKrewIds(p.krew_ids ?? []);
+      restoreKonnect(p.konnections);
       setPhotos((prev) => {
         prev.forEach((ph) => {
           URL.revokeObjectURL(ph.preview);
         });
         return [];
       });
-      setLocError(null);
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<KarDraftParams>({
@@ -211,17 +210,15 @@ export const KarComposer: React.FC<Props> = ({
         make,
         model,
         visibility,
-        locationLabel,
-        coords,
+        krew_ids: krewIds,
+        konnections: konnect.saved,
       },
     },
     hasContent:
       title.trim() !== '' ||
       description.trim() !== '' ||
       make.trim() !== '' ||
-      model.trim() !== '' ||
-      locationLabel.trim() !== '' ||
-      coords !== null,
+      model.trim() !== '',
     apply: applyDraft,
     describe: (d) => d.params.title,
     active: !isEdit,
@@ -258,36 +255,6 @@ export const KarComposer: React.FC<Props> = ({
   const handleModel = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setModel(e.target.value);
   }, []);
-  const handleLocationLabel = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocationLabel(e.target.value);
-    },
-    [],
-  );
-
-  const handleUseCurrent = useCallback(() => {
-    setLocError(null);
-    if (!('geolocation' in navigator)) {
-      setLocError(intl.formatMessage(messages.geoUnavailable));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({
-          lat: Number(pos.coords.latitude.toFixed(6)),
-          lng: Number(pos.coords.longitude.toFixed(6)),
-        });
-      },
-      () => {
-        setLocError(intl.formatMessage(messages.geoFailed));
-      },
-      { maximumAge: 60_000, timeout: 8_000 },
-    );
-  }, [intl]);
-  const handleClearCoords = useCallback(() => {
-    setCoords(null);
-  }, []);
-
   const handleAddPhotos = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -321,16 +288,17 @@ export const KarComposer: React.FC<Props> = ({
     if (editingKar) {
       void (async () => {
         try {
-          const updated = await apiUpdateKar(editingKar.id, {
-            title: title.trim(),
-            description: description.trim(),
-            year: Number.parseInt(year, 10),
-            make: make.trim(),
-            model: model.trim(),
-            location_lat: coords?.lat ?? null,
-            location_lng: coords?.lng ?? null,
-            location_label: locationLabel.trim() || null,
-          });
+          const updated = await apiUpdateKar(
+            editingKar.id,
+            {
+              title: title.trim(),
+              description: description.trim(),
+              year: Number.parseInt(year, 10),
+              make: make.trim(),
+              model: model.trim(),
+            },
+            krewIds,
+          );
           onUpdated?.(updated);
         } catch (e) {
           setPending(false);
@@ -352,17 +320,17 @@ export const KarComposer: React.FC<Props> = ({
     void (async () => {
       let kar: ApiKarJSON;
       try {
-        kar = await apiCreateKar({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          year: Number.parseInt(year, 10),
-          make: make.trim(),
-          model: model.trim(),
-          visibility,
-          location_lat: coords?.lat,
-          location_lng: coords?.lng,
-          location_label: locationLabel.trim() || undefined,
-        });
+        kar = await apiCreateKar(
+          {
+            title: title.trim(),
+            description: description.trim() || undefined,
+            year: Number.parseInt(year, 10),
+            make: make.trim(),
+            model: model.trim(),
+            visibility,
+          },
+          krewIds,
+        );
       } catch (e) {
         setPending(false);
         setUploadProgress(null);
@@ -373,6 +341,8 @@ export const KarComposer: React.FC<Props> = ({
         );
         return;
       }
+
+      await commitKonnect('karporn', kar.id);
 
       let done = 0;
       let failed = 0;
@@ -396,12 +366,12 @@ export const KarComposer: React.FC<Props> = ({
     })();
   }, [
     canSubmit,
-    coords,
+    commitKonnect,
     description,
     editingKar,
     finishDraft,
     intl,
-    locationLabel,
+    krewIds,
     make,
     model,
     onCreated,
@@ -427,177 +397,134 @@ export const KarComposer: React.FC<Props> = ({
       submitting={pending}
       canSubmit={canSubmit}
       draft={draft}
+      konnect={isEdit ? null : konnect}
       headerAction={
         // Reach is locked while editing: the update endpoints don't
         // re-scope the item's projected feed post, so narrowing reach
-        // here would only look private (no reach without consent).
+        // here would only look private (no reach without consent). Its
+        // Krews can still change: the server moves its post with them.
         <ReachDropdown
           value={visibility}
-          onChange={setVisibility}
-          disabled={pending || isEdit}
+          onChange={reach.onChange}
+          disabled={pending}
+          hide={
+            isEdit ? REACH_ORDER.filter((r) => r !== visibility) : undefined
+          }
+          krews={availableKrews}
+          selectedKrewIds={krewIds}
+          onToggleKrew={reach.onToggleKrew}
+          sameAs={reach.sameAs}
+          onSameAs={reach.onSameAs}
         />
       }
     >
-      <div className='karporn-composer'>
-        <input
-          type='text'
-          className='karporn-composer__title'
-          value={title}
-          onChange={handleTitle}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
-          maxLength={240}
-          disabled={pending}
-        />
+      <ComposeTitle
+        value={title}
+        onChange={handleTitle}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        maxLength={240}
+        disabled={pending}
+      />
 
-        <textarea
-          className='karporn-composer__description'
-          value={description}
-          onChange={handleDescription}
-          placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-          maxLength={4000}
-          disabled={pending}
-        />
+      <ComposeBody
+        value={description}
+        onChange={handleDescription}
+        placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+        maxLength={4000}
+        disabled={pending}
+      />
 
-        <div className='karporn-composer__meta'>
-          <label className='karporn-composer__field karporn-composer__field--year'>
-            <span>{intl.formatMessage(messages.year)}</span>
-            <input
-              type='number'
-              value={year}
-              onChange={handleYear}
-              min={1885}
-              max={CURRENT_YEAR + 2}
-              step={1}
-              disabled={pending}
-            />
-          </label>
-          <label className='karporn-composer__field'>
-            <span>{intl.formatMessage(messages.make)}</span>
-            <input
-              type='text'
-              value={make}
-              onChange={handleMake}
-              maxLength={120}
-              disabled={pending}
-            />
-          </label>
-          <label className='karporn-composer__field'>
-            <span>{intl.formatMessage(messages.model)}</span>
-            <input
-              type='text'
-              value={model}
-              onChange={handleModel}
-              maxLength={120}
-              disabled={pending}
-            />
-          </label>
-        </div>
-
-        <fieldset className='karporn-composer__location'>
-          <legend>
-            <Icon id='location_on' icon={LocationOnIcon} />
-            {intl.formatMessage(messages.location)}
-          </legend>
-          <input
-            type='text'
-            className='karporn-composer__location-label'
-            value={locationLabel}
-            onChange={handleLocationLabel}
-            placeholder={intl.formatMessage(messages.locationPlaceholder)}
-            maxLength={240}
+      <ComposeRow>
+        <ComposeField label={intl.formatMessage(messages.year)}>
+          <ComposeInput
+            type='number'
+            value={year}
+            onChange={handleYear}
+            min={1885}
+            max={CURRENT_YEAR + 2}
+            step={1}
             disabled={pending}
           />
-          {coords ? (
-            <div className='karporn-composer__coords'>
-              <span>
-                {intl.formatMessage(messages.currentSet)} —{' '}
-                {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
-              </span>
-              <button
-                type='button'
-                onClick={handleClearCoords}
-                disabled={pending}
-              >
-                {intl.formatMessage(messages.currentClear)}
-              </button>
-            </div>
-          ) : (
-            <button
-              type='button'
-              className='karporn-composer__use-current'
-              onClick={handleUseCurrent}
+        </ComposeField>
+        <ComposeField label={intl.formatMessage(messages.make)}>
+          <ComposeInput
+            value={make}
+            onChange={handleMake}
+            maxLength={120}
+            disabled={pending}
+          />
+        </ComposeField>
+        <ComposeField label={intl.formatMessage(messages.model)}>
+          <ComposeInput
+            value={model}
+            onChange={handleModel}
+            maxLength={120}
+            disabled={pending}
+          />
+        </ComposeField>
+      </ComposeRow>
+
+      {!isEdit && (
+        <ComposeHint>{intl.formatMessage(messages.photosHint)}</ComposeHint>
+      )}
+
+      {photos.length > 0 && (
+        <ul className='karporn-composer__photos'>
+          {photos.map((p) => (
+            <PhotoDraftTile
+              key={p.key}
+              draft={p}
               disabled={pending}
-            >
-              {intl.formatMessage(messages.useCurrent)}
-            </button>
-          )}
-          {locError && <p className='karporn-composer__error'>{locError}</p>}
-        </fieldset>
-
-        {!isEdit && (
-          <p className='karporn-composer__hint'>
-            {intl.formatMessage(messages.photosHint)}
-          </p>
-        )}
-
-        {photos.length > 0 && (
-          <ul className='karporn-composer__photos'>
-            {photos.map((p) => (
-              <PhotoDraftTile
-                key={p.key}
-                draft={p}
-                disabled={pending}
-                onRemove={removePhoto}
-              />
-            ))}
-          </ul>
-        )}
-
-        {!isEdit && (
-          <>
-            <button
-              type='button'
-              className='karporn-composer__add-photos'
-              onClick={handleAddPhotos}
-              disabled={pending}
-            >
-              <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
-              {intl.formatMessage(messages.addPhotos)}
-            </button>
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='image/*'
-              multiple
-              hidden
-              onChange={handleFilesSelected}
+              onRemove={removePhoto}
             />
-          </>
-        )}
+          ))}
+        </ul>
+      )}
 
-        {uploadProgress && uploadProgress.total > 0 && (
-          <p className='karporn-composer__progress'>
-            {intl.formatMessage(messages.uploading, uploadProgress)}
-          </p>
-        )}
-        {failedCount > 0 && (
-          <p className='karporn-composer__error'>
-            {intl.formatMessage(messages.failed, { count: failedCount })}
-          </p>
-        )}
-        {error && <p className='karporn-composer__error'>{error}</p>}
-
-        {isEdit && onDelete && (
+      {!isEdit && (
+        <>
           <button
             type='button'
-            className='compose-shell__delete'
-            onClick={onDelete}
-            disabled={pending || deleting}
+            className='karporn-composer__add-photos'
+            onClick={handleAddPhotos}
+            disabled={pending}
           >
-            {intl.formatMessage(messages.deleteKar)}
+            <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
+            {intl.formatMessage(messages.addPhotos)}
           </button>
-        )}
-      </div>
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='image/*'
+            multiple
+            hidden
+            onChange={handleFilesSelected}
+          />
+        </>
+      )}
+
+      {uploadProgress && uploadProgress.total > 0 && (
+        <ComposeHint>
+          {intl.formatMessage(messages.uploading, uploadProgress)}
+        </ComposeHint>
+      )}
+      {failedCount > 0 && (
+        <ComposeHint error>
+          {intl.formatMessage(messages.failed, { count: failedCount })}
+        </ComposeHint>
+      )}
+      {error && <ComposeHint error>{error}</ComposeHint>}
+
+      {isEdit && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={pending || deleting}
+        >
+          {intl.formatMessage(messages.deleteKar)}
+        </button>
+      )}
     </ComposeShell>
   );
 };

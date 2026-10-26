@@ -21,6 +21,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { act } from './act';
@@ -29,15 +30,17 @@ import { FromMyMycelium } from './from_my_mycelium';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import {
-  Loading,
-  People,
-  Person,
-  Crumbs,
-  Section,
   categoryMessages,
+  Crumbs,
   formatAmount,
   formatNeed,
   kindMessages,
+  Loading,
+  People,
+  itemPath,
+  Person,
+  projectPath,
+  Section,
   useLoaded,
 } from './shared';
 import { Talk } from './talk';
@@ -90,6 +93,7 @@ const messages = defineMessages({
 export const ItemPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data: item, failed, set } = useLoaded(id, () => apiFtdItem(id));
+  useNamedLink(id, item?.slug);
 
   if (!item) return <Loading failed={failed} />;
   return <ItemView key={item.id} item={item} onChange={set} />;
@@ -186,15 +190,15 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   }, []);
   // The space badge goes back to the part the item lives in.
   const home = item.placements[0] ?? item.root;
-  useSpaceBack({ href: `/hub/freethedream/p/${home.id}`, label: home.title });
+  useSpaceBack({ href: projectPath(home), label: home.title });
 
   const handleRemove = useCallback(() => {
     void act(
       apiFtdRemoveItem(item.id).then(() => {
-        history.push(`/hub/freethedream/p/${home.id}`);
+        history.push(projectPath(home));
       }),
     );
-  }, [item.id, home.id, history]);
+  }, [item.id, home, history]);
 
   const placed = new Set(item.placements.map((p) => p.id));
   const placeOptions = item.all_parts.filter((p) => !placed.has(p.id));
@@ -235,7 +239,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
             defaultMessage='Started from the idea {idea}'
             values={{
               idea: (
-                <Link to={`/hub/freethedream/i/${item.source_idea.id}`}>
+                <Link to={itemPath(item.source_idea)}>
                   {item.source_idea.title}
                 </Link>
               ),
@@ -322,11 +326,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
             id='freethedream.offer_for'
             defaultMessage='for {need}'
             values={{
-              need: (
-                <Link to={`/hub/freethedream/i/${item.need.id}`}>
-                  {item.need.title}
-                </Link>
-              ),
+              need: <Link to={itemPath(item.need)}>{item.need.title}</Link>,
             }}
           />
           {' · '}
@@ -374,10 +374,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
           <ul className='freethedream-rows'>
             {item.offers.map((offer) => (
               <li key={offer.id}>
-                <Link
-                  to={`/hub/freethedream/i/${offer.id}`}
-                  className='freethedream-row'
-                >
+                <Link to={itemPath(offer)} className='freethedream-row'>
                   <span className='freethedream-row__title'>{offer.title}</span>
                   <span className='freethedream-row__meta'>
                     {offer.owner?.display_name} ·{' '}
@@ -400,7 +397,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
         <ul className='freethedream-links'>
           {item.placements.map((p) => (
             <li key={p.id}>
-              <Link to={`/hub/freethedream/p/${p.id}`}>{p.title}</Link>
+              <Link to={projectPath(p)}>{p.title}</Link>
               {item.can.unplace && (
                 <button
                   type='button'

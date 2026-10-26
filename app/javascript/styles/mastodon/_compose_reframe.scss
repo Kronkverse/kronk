@@ -366,6 +366,40 @@
   }
 }
 
+// ── Same as <record>: follow a Konnected record's audience ──
+.reach-dropdown__same-mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
+  color: var(--kronk-purple-bright);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &--button {
+    width: 20px;
+    height: 20px;
+
+    .icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+.reach-dropdown__button-label--same {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 // ── additive krew axis: "Krews ›" row + cascading multi-select submenu ──
 .reach-dropdown__button-krewcount {
   white-space: nowrap;

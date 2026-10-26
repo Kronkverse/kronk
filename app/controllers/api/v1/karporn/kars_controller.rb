@@ -4,6 +4,8 @@
 # location). Photos live in the nested PhotosController; the kar itself
 # holds the metadata and (optionally) a lat/lng pin.
 class Api::V1::Karporn::KarsController < Api::BaseController
+  include KrewAudienceParams
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy]
   before_action :require_user!, except: [:index, :show]
@@ -17,7 +19,10 @@ class Api::V1::Karporn::KarsController < Api::BaseController
   def index
     scope = Kar.visible_to(current_account).recent
     scope = narrow_by_scope(scope)
-    render json: scope.limit(clamp_limit), each_serializer: REST::KarSerializer
+    # Where each one is, for kars with no location of their own: two
+    # queries for the page (Kronk::RecordPlace).
+    kars = Kronk::RecordPlace.preload(scope.limit(clamp_limit).to_a)
+    render json: kars, each_serializer: REST::KarSerializer, list: true
   end
 
   def show
@@ -30,6 +35,7 @@ class Api::V1::Karporn::KarsController < Api::BaseController
     @kar = current_account.owned_kars.new(kar_params)
 
     if @kar.save
+      sync_krew_audience!(@kar)
       Karporn::PublishKar.new(@kar).call
       render json: @kar.reload, serializer: REST::KarSerializer, status: 201
     else
@@ -41,6 +47,7 @@ class Api::V1::Karporn::KarsController < Api::BaseController
     authorize_owner!
 
     if @kar.update(kar_params)
+      sync_krew_audience!(@kar)
       render json: @kar.reload, serializer: REST::KarSerializer
     else
       render json: { error: @kar.errors.full_messages.to_sentence }, status: :unprocessable_entity

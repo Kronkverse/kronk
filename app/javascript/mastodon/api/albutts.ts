@@ -132,6 +132,8 @@ export type AlbumDraftParams = {
   captions?: Record<string, string>;
   // The upload picked as the new album's cover, if not the first.
   cover_media_id?: string;
+  // What the new album will be Konnected to (hooks/useKonnect.ts).
+  konnections?: { slug: string; id: string; title?: string | null }[];
 };
 
 // Asking to add photos to an album (docs/spaces/albutts.md).
@@ -176,3 +178,7 @@ export const apiLinkAlbumKrew = (albumId: string, krewId: string) =>
 
 export const apiUnlinkAlbumKrew = (albumId: string, krewId: string) =>
   apiRequestDelete(`v1/albutts/albums/${albumId}/krews/${krewId}`);
+
+// An album's page, by name (decisions.md, 2026-10-22).
+export const albumPath = (album: { id: string; slug?: string }): string =>
+  `/hub/albutts/albums/${album.slug ?? album.id}`;

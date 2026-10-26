@@ -5,18 +5,23 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import axios from 'axios';
 
 import api from 'mastodon/api';
-import { apiCreateAttachment } from 'mastodon/api/attachments';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
-import { ComposeAttachBar } from 'mastodon/components/compose_attach_bar';
-import type { PendingConnection } from 'mastodon/components/compose_attach_bar';
+import {
+  ComposeBody,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSection,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { MapPinPicker } from 'mastodon/components/map_pin_picker';
-import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
-import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 // Kalendar — event composer. First implementation, mounted directly
 // against the shared `<ComposeShell>` standard rather than a bespoke
@@ -27,7 +32,8 @@ import { useDraft } from 'mastodon/hooks/useDraft';
 //
 // Fields mirror the `event_params` permit list in
 // `Api::V1::EventsController#event_params` — title, description, start /
-// end time, location name + url. `event_type` (event | huddle) +
+// end time. Where it is, is a Konnection to a Map Place (the Konnect
+// row), not a field. `event_type` (event | huddle) +
 // `rsvp_enabled` are no longer sent from this composer (Tal
 // 2026-08-17): every event created here is `event`, and RSVP is on
 // by DB default; server permits them but the composer omits them.
@@ -58,45 +64,10 @@ const messages = defineMessages({
   when: { id: 'kalendar.new.when', defaultMessage: 'When' },
   starts: { id: 'kalendar.new.starts', defaultMessage: 'Starts' },
   ends: { id: 'kalendar.new.ends', defaultMessage: 'Ends (optional)' },
-  where: { id: 'kalendar.new.where', defaultMessage: 'Where' },
-  address: {
-    id: 'kalendar.new.address',
-    defaultMessage: 'Address',
-  },
-  addressPlaceholder: {
-    id: 'kalendar.new.address_placeholder',
-    defaultMessage:
-      "A pub, a park, an address — write however you'd text a friend.",
-  },
-  mapLink: {
-    id: 'kalendar.new.map_link',
-    defaultMessage: 'Map link (optional)',
-  },
-  mapLinkHint: {
-    id: 'kalendar.new.map_link_hint',
-    defaultMessage:
-      'A map link people can open in any browser — type one, or use Pin on map below.',
-  },
-  mapLinkPlaceholder: {
-    id: 'kalendar.new.map_link_placeholder',
-    defaultMessage: 'https://…',
-  },
   startDate: { id: 'kalendar.new.start_date', defaultMessage: 'Date' },
   startTime: { id: 'kalendar.new.start_time', defaultMessage: 'Time' },
   endDate: { id: 'kalendar.new.end_date', defaultMessage: 'End date' },
   endTime: { id: 'kalendar.new.end_time', defaultMessage: 'End time' },
-  pinOnMap: {
-    id: 'kalendar.new.pin_on_map',
-    defaultMessage: 'Pin on map',
-  },
-  pinnedAt: {
-    id: 'kalendar.new.pinned_at',
-    defaultMessage: 'Pinned at {lat}, {lng}',
-  },
-  clearPin: {
-    id: 'kalendar.new.clear_pin',
-    defaultMessage: 'Clear pin',
-  },
   create: { id: 'kalendar.new.create', defaultMessage: 'Post it' },
   creating: { id: 'kalendar.new.creating', defaultMessage: 'Posting…' },
   needTitleAndStart: {
@@ -130,10 +101,6 @@ const messages = defineMessages({
   coverUploadFailed: {
     id: 'kalendar.new.cover_upload_failed',
     defaultMessage: "Couldn't upload the image: {error}",
-  },
-  attachHeading: {
-    id: 'kalendar.new.attach_heading',
-    defaultMessage: 'Konnect a korner',
   },
   invitePeople: {
     id: 'kalendar.new.invite_people',
@@ -179,65 +146,11 @@ export interface CreatedEvent {
   image_url?: string | null;
 }
 
-// Companion-record creators for the Konnect-a-korner "create new"
-// sections. Each takes the freshly-created event + the pending
-// connection's mini-form fields and returns the new target
-// record's id (so the caller can bind it via /api/v1/attachments).
-// Reach follows the event's visibility strictly (Tal 2026-08-16 —
-// no override at the attachment level).
-async function createCompanionAlbum(
-  event: CreatedEvent,
-  conn: PendingConnection,
-): Promise<string | null> {
-  // Fall through empty-string title → event title → literal
-  // fallback. `??` doesn't do the empty-string coalesce, so an
-  // explicit `.length` check is the safer path.
-  const composerTitle = conn.createTitle?.trim() ?? '';
-  const eventTitle = event.title ?? '';
-  const title =
-    composerTitle.length > 0
-      ? composerTitle
-      : eventTitle.length > 0
-        ? eventTitle
-        : 'Album';
-  const body: Record<string, unknown> = {
-    album: {
-      title,
-      visibility: event.visibility ?? 'public',
-      ...(conn.createCoverId
-        ? { cover_media_attachment_id: conn.createCoverId }
-        : {}),
-    },
-  };
-  const res = await api().post<{ id: string }>('/api/v1/albutts/albums', body);
-  return res.data.id;
-}
-
-async function createCompanionHuddle(
-  event: CreatedEvent,
-  conn: PendingConnection,
-): Promise<string | null> {
-  const composerTitle = conn.createTitle?.trim() ?? '';
-  const eventTitle = event.title ?? '';
-  const name =
-    composerTitle.length > 0
-      ? composerTitle
-      : eventTitle.length > 0
-        ? eventTitle
-        : 'Huddle';
-  const res = await api().post<{ id: string }>('/api/v1/huddle/rooms', {
-    name,
-  });
-  return res.data.id;
-}
-
 interface CreatePayload {
   title: string;
   description?: string;
   start_time: string;
   end_time?: string;
-  location_name?: string;
-  location_url?: string;
   visibility: ReachValue;
   image_id?: string;
   krew_ids?: string[];
@@ -355,8 +268,7 @@ const extractApiError = (e: unknown): string => {
 };
 
 // What an event draft keeps (docs/design.md, Drafts). The cover image goes
-// as an upload id alongside. Konnected korners aren't kept yet: their
-// mini-forms are their own.
+// as an upload id alongside.
 interface EventDraftParams {
   title?: string;
   description?: string;
@@ -364,18 +276,16 @@ interface EventDraftParams {
   startTime?: string;
   endDate?: string;
   endTime?: string;
-  locationName?: string;
-  locationUrl?: string;
-  pinnedLocation?: PinnedLocation | null;
   reach?: ReachValue;
   krewIds?: string[];
   invitees?: InviteeAccount[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
   onCancel: () => void;
   onCreated: (event: CreatedEvent) => void;
-  // Arriving from a Krew's page ("New event for this Krew"): the event
+  // Arriving from a Krew (`?konnect=krew:<id>` or `?krew=<id>`): the event
   // starts out for that Krew alone.
   forKrewId?: string | null;
 }
@@ -386,6 +296,15 @@ export const EventComposer: React.FC<Props> = ({
   forKrewId,
 }) => {
   const intl = useIntl();
+  // What the new event will be Konnected to (decisions.md, 2026-10-23):
+  // the record it was opened for (`?konnect=<slug>:<id>`) and any the
+  // person adds in the Konnect row. A Krew it was opened for is the Krew
+  // audience (`forKrewId`), which keeps its own link (EventLinks.posted).
+  const konnect = useKonnect('kalendar', {
+    sourceHandled: !!forKrewId,
+  });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -397,18 +316,6 @@ export const EventComposer: React.FC<Props> = ({
   const [startTime, setStartTime] = useState(defaults.startTime);
   const [endDate, setEndDate] = useState(defaults.endDate);
   const [endTime, setEndTime] = useState(defaults.endTime);
-  const [locationName, setLocationName] = useState('');
-  const [locationUrl, setLocationUrl] = useState('');
-  // Pinned coordinates from the MapPinPicker. When set, `location_url`
-  // is derived from these (an OpenStreetMap link that any browser can
-  // open); when cleared, the URL field goes back to whatever the user
-  // typed. Storing coordinates separately from the derived URL lets
-  // the "Clear pin" affordance restore the URL to empty without
-  // touching the user's manual typing.
-  const [pinnedLocation, setPinnedLocation] = useState<PinnedLocation | null>(
-    null,
-  );
-  const [pinPickerOpen, setPinPickerOpen] = useState(false);
   // Event kind + RSVP-enabled toggles retired 2026-08-17. Every
   // event posted from this composer is an in-person event; huddles
   // are now spawned via the Konnect-a-korner picker (Huddle korner
@@ -443,17 +350,6 @@ export const EventComposer: React.FC<Props> = ({
   const [krewIds, setKrewIds] = useState<string[]>(
     forKrewId ? [forKrewId] : [],
   );
-  // connections — the compose-time "Konnect a korner" intents
-  // captured by `<ComposeAttachBar>` (docs/korners/adding_a_korner.md (Korner attachments)).
-  // Two shapes per entry:
-  //   * mode: 'create' — inline mini-form for a new record in the
-  //     target korner (Albutts: title + cover; Huddle: title). On
-  //     submit we POST the target's create endpoint (inheriting the
-  //     event's visibility) then POST /api/v1/attachments.
-  //   * mode: 'link' — the user picked an existing record via the
-  //     inline search. On submit we POST /api/v1/attachments
-  //     directly.
-  const [connections, setConnections] = useState<PendingConnection[]>([]);
   // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
   // user has picked from the search results. Stored as a Map keyed
   // by id so we can render chips with names/avatars (search results
@@ -482,18 +378,16 @@ export const EventComposer: React.FC<Props> = ({
       setStartTime(p.startTime ?? times.startTime);
       setEndDate(p.endDate ?? times.endDate);
       setEndTime(p.endTime ?? times.endTime);
-      setLocationName(p.locationName ?? '');
-      setLocationUrl(p.locationUrl ?? '');
-      setPinnedLocation(p.pinnedLocation ?? null);
       setReach(p.reach ?? (forKrewId ? 'self_only' : 'public'));
       setKrewIds(p.krewIds ?? (forKrewId ? [forKrewId] : []));
       setInvitees(new Map((p.invitees ?? []).map((a) => [a.id, a])));
+      restoreKonnect(p.konnections);
       const cover = d?.media_attachments[0];
       setImageMediaId(cover?.id ?? null);
       setImagePreviewUrl(cover?.preview_url ?? cover?.url ?? null);
       setImageError(null);
     },
-    [forKrewId],
+    [forKrewId, restoreKonnect],
   );
 
   const draft = useDraft<EventDraftParams>({
@@ -508,20 +402,16 @@ export const EventComposer: React.FC<Props> = ({
         startTime,
         endDate,
         endTime,
-        locationName,
-        locationUrl,
-        pinnedLocation,
         reach,
         krewIds,
         invitees: Array.from(invitees.values()),
+        konnections: konnect.saved,
       },
       mediaIds: imageMediaId ? [imageMediaId] : [],
     },
     hasContent:
       title.trim() !== '' ||
       description.trim() !== '' ||
-      locationName.trim() !== '' ||
-      locationUrl.trim() !== '' ||
       imageMediaId !== null ||
       invitees.size > 0,
     apply: applyDraft,
@@ -602,17 +492,7 @@ export const EventComposer: React.FC<Props> = ({
     },
     [],
   );
-  const onLocationName = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setLocationName(e.target.value);
-  }, []);
-  const onLocationUrl = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => {
-      setLocationUrl(e.target.value);
-    },
-    [],
-  );
+
   const onReach = useCallback((value: ReachValue) => {
     setReach(value);
   }, []);
@@ -694,23 +574,6 @@ export const EventComposer: React.FC<Props> = ({
       next.delete(id);
       return next;
     });
-  }, []);
-
-  const onConnectionAdd = useCallback((connection: PendingConnection) => {
-    setConnections((prev) => [...prev, connection]);
-  }, []);
-
-  const onConnectionUpdate = useCallback(
-    (id: string, patch: Partial<PendingConnection>) => {
-      setConnections((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, ...patch } : c)),
-      );
-    },
-    [],
-  );
-
-  const onConnectionRemove = useCallback((id: string) => {
-    setConnections((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
   // Force the native date/time picker open on click. Chromium supports
@@ -800,28 +663,6 @@ export const EventComposer: React.FC<Props> = ({
     coverInputRef.current?.click();
   }, []);
 
-  const openPinPicker = useCallback(() => {
-    setPinPickerOpen(true);
-  }, []);
-  const cancelPinPicker = useCallback(() => {
-    setPinPickerOpen(false);
-  }, []);
-  // Format an OSM URL for the pinned point. Zoom is clamped for
-  // sensible sharing (17 is street-level, higher zooms don't add
-  // clarity for "meet here" purposes).
-  const handlePin = useCallback((pin: PinnedLocation) => {
-    setPinnedLocation(pin);
-    const displayZoom = Math.min(17, Math.max(12, Math.round(pin.zoom)));
-    setLocationUrl(
-      `https://www.openstreetmap.org/?mlat=${pin.lat.toFixed(5)}&mlon=${pin.lng.toFixed(5)}#map=${displayZoom}/${pin.lat.toFixed(5)}/${pin.lng.toFixed(5)}`,
-    );
-    setPinPickerOpen(false);
-  }, []);
-  const clearPin = useCallback(() => {
-    setPinnedLocation(null);
-    setLocationUrl('');
-  }, []);
-
   const submit = useCallback(() => {
     if (!startIso) return;
     setError(null);
@@ -834,21 +675,10 @@ export const EventComposer: React.FC<Props> = ({
     const trimmedDescription = description.trim();
     if (trimmedDescription) payload.description = trimmedDescription;
     if (endIso) payload.end_time = endIso;
-    const trimmedLocationName = locationName.trim();
-    if (trimmedLocationName) payload.location_name = trimmedLocationName;
-    const trimmedLocationUrl = locationUrl.trim();
-    if (trimmedLocationUrl) payload.location_url = trimmedLocationUrl;
     if (imageMediaId) payload.image_id = imageMediaId;
     if (krewIds.length > 0) payload.krew_ids = krewIds;
 
     const inviteeIds = Array.from(invitees.keys());
-    // Snapshot for the post-create side-effect walk. Filter out
-    // link-mode connections that never picked a target (empty search)
-    // and create-mode connections that are still empty forms.
-    const pendingConnections = connections.filter((c) => {
-      if (c.mode === 'link') return Boolean(c.linkTargetId);
-      return true;
-    });
 
     void (async () => {
       try {
@@ -869,41 +699,7 @@ export const EventComposer: React.FC<Props> = ({
           }
         }
 
-        // Walk pending connections. For each:
-        //   * link: POST /api/v1/attachments with source event id +
-        //     picked target id.
-        //   * create: POST the target korner's own create endpoint
-        //     (Albutts /api/v1/albutts/albums or Huddle
-        //     /api/v1/huddle/rooms) with fields from the mini-form,
-        //     inheriting the event's visibility. Then POST the
-        //     KornerAttachment binding it to the source event.
-        // Same soft-failure story as invitees — the event is real;
-        // partial success is surfaced through the error strip but
-        // still returns the user to the detail page (they can retry
-        // from the AttachmentSection's picker there).
-        for (const conn of pendingConnections) {
-          try {
-            let targetId: string | null = null;
-            if (conn.mode === 'link') {
-              targetId = conn.linkTargetId ?? null;
-            } else if (conn.targetSlug === 'albutts') {
-              targetId = await createCompanionAlbum(res.data, conn);
-            } else if (conn.targetSlug === 'huddle') {
-              targetId = await createCompanionHuddle(res.data, conn);
-            }
-            if (!targetId) continue;
-
-            await apiCreateAttachment({
-              source_slug: 'kalendar',
-              source_id: res.data.id,
-              target_slug: conn.targetSlug,
-              target_id: targetId,
-              kind: 'link',
-            });
-          } catch (attachErr: unknown) {
-            setError(extractApiError(attachErr));
-          }
-        }
+        await commitKonnect('kalendar', res.data.id);
         finishDraft();
         onCreated(res.data);
         // Parent unmounts on success — no need to reset state.
@@ -913,15 +709,13 @@ export const EventComposer: React.FC<Props> = ({
       }
     })();
   }, [
-    connections,
+    commitKonnect,
     description,
     endIso,
     finishDraft,
     imageMediaId,
     invitees,
     krewIds,
-    locationName,
-    locationUrl,
     onCreated,
     reach,
     startIso,
@@ -960,406 +754,273 @@ export const EventComposer: React.FC<Props> = ({
       onCancel={onCancel}
       headerAction={reachControl}
       draft={draft}
+      konnect={konnect}
     >
-      <div className='event-composer'>
-        {reach === 'self_only' && (
-          <p className='event-composer__audience'>
-            {krewNames.length > 0 ? (
-              <FormattedMessage
-                id='kalendar.composer.audience.krews'
-                defaultMessage='Only members of {krews} will see this event.'
-                values={{
-                  krews: intl.formatList(krewNames, { type: 'conjunction' }),
-                }}
-              />
-            ) : (
-              <FormattedMessage
-                id='kalendar.composer.audience.nobody'
-                defaultMessage='Only you will see this event. Tick a Krew in the reach menu to make it theirs.'
-              />
-            )}
-          </p>
-        )}
-        <div className='event-composer__cover'>
-          {imagePreviewUrl ? (
-            <div className='event-composer__cover-preview'>
-              <img
-                src={imagePreviewUrl}
-                alt=''
-                className='event-composer__cover-image'
-              />
-              {imageUploading && (
-                <span className='event-composer__cover-badge'>
-                  <FormattedMessage {...messages.uploadingCover} />
-                </span>
-              )}
-              <button
-                type='button'
-                className='event-composer__cover-remove'
-                onClick={onImageRemove}
-                aria-label={intl.formatMessage(messages.removeCover)}
-              >
-                ×
-              </button>
-            </div>
-          ) : (
-            <>
-              <button
-                type='button'
-                className='event-composer__cover-add'
-                onClick={onCoverAddClick}
-              >
-                <span>
-                  <FormattedMessage {...messages.addCover} />
-                </span>
-                <small>
-                  <FormattedMessage {...messages.cover} />
-                </small>
-              </button>
-              <input
-                ref={coverInputRef}
-                type='file'
-                accept='image/*'
-                onChange={onImageChange}
-                className='event-composer__cover-input'
-              />
-            </>
-          )}
-          {imageError && (
-            <p className='event-composer__error' role='alert'>
-              <FormattedMessage
-                {...messages.coverUploadFailed}
-                values={{ error: imageError }}
-              />
-            </p>
-          )}
-        </div>
-
-        <label className='event-composer__field'>
-          <span className='event-composer__field-label'>
-            {intl.formatMessage(messages.eventTitle)}
-          </span>
-          <input
-            type='text'
-            value={title}
-            onChange={onTitle}
-            placeholder={intl.formatMessage(messages.eventTitlePlaceholder)}
-            required
-            className='event-composer__input'
-          />
-        </label>
-
-        <label className='event-composer__field'>
-          <span className='event-composer__field-label'>
-            {intl.formatMessage(messages.description)}
-          </span>
-          <textarea
-            value={description}
-            onChange={onDescription}
-            placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-            rows={3}
-            className='event-composer__input'
-          />
-        </label>
-
-        <fieldset className='event-composer__fieldset'>
-          <legend className='event-composer__legend'>
-            {intl.formatMessage(messages.when)}
-          </legend>
-          <div className='event-composer__row'>
-            <span className='event-composer__field event-composer__field--half'>
-              <span className='event-composer__field-label'>
-                {intl.formatMessage(messages.starts)}
-              </span>
-              <div className='event-composer__datetime'>
-                <input
-                  type='date'
-                  aria-label={intl.formatMessage(messages.startDate)}
-                  value={startDate}
-                  onChange={onStartDate}
-                  onClick={openPickerOnClick}
-                  required
-                  className='event-composer__input'
-                />
-                <input
-                  type='time'
-                  aria-label={intl.formatMessage(messages.startTime)}
-                  value={startTime}
-                  onChange={onStartTime}
-                  onClick={openPickerOnClick}
-                  required
-                  step={SNAP_MINUTES * 60}
-                  className='event-composer__input'
-                />
-              </div>
-            </span>
-            <span className='event-composer__field event-composer__field--half'>
-              <span className='event-composer__field-label'>
-                {intl.formatMessage(messages.ends)}
-              </span>
-              <div className='event-composer__datetime'>
-                <input
-                  type='date'
-                  aria-label={intl.formatMessage(messages.endDate)}
-                  value={endDate}
-                  onChange={onEndDate}
-                  onClick={openPickerOnClick}
-                  // Constrain end ≥ start (Tal 2026-08-14: "make it
-                  // impossible to select an end date before the start
-                  // date"). The `min` attribute greys out earlier
-                  // dates in the native picker + blocks form
-                  // submission via `checkValidity` — no separate
-                  // client-side validator needed.
-                  min={startDate || undefined}
-                  className='event-composer__input'
-                />
-                <input
-                  type='time'
-                  aria-label={intl.formatMessage(messages.endTime)}
-                  value={endTime}
-                  onChange={onEndTime}
-                  onClick={openPickerOnClick}
-                  step={SNAP_MINUTES * 60}
-                  // Same-day event: end time can't be before start
-                  // time. Only apply the min when the dates match —
-                  // otherwise a next-day end at 08:00 would be
-                  // blocked by a start of 19:00.
-                  min={endDate && endDate === startDate ? startTime : undefined}
-                  className='event-composer__input'
-                />
-              </div>
-            </span>
-          </div>
-        </fieldset>
-
-        {/* Kind (event / huddle) and its `{eventType === 'event' &&}`
-            gate on Where retired 2026-08-17. Huddles are now spawned
-            via the Konnect-a-korner picker (Huddle korner
-            attachment), so this composer only creates in-person
-            events; the address block is always relevant. RSVP is on
-            by default (DB default) and the "Invite-only" toggle
-            retired alongside — audience is a scope-picker decision. */}
-        <fieldset className='event-composer__fieldset'>
-          <legend className='event-composer__legend'>
-            {intl.formatMessage(messages.where)}
-          </legend>
-          <label className='event-composer__field'>
-            <span className='event-composer__field-label'>
-              {intl.formatMessage(messages.address)}
-            </span>
-            <input
-              type='text'
-              value={locationName}
-              onChange={onLocationName}
-              placeholder={intl.formatMessage(messages.addressPlaceholder)}
-              className='event-composer__input'
-            />
-          </label>
-          <label className='event-composer__field'>
-            <span className='event-composer__field-label'>
-              {intl.formatMessage(messages.mapLink)}
-            </span>
-            <input
-              type='url'
-              value={locationUrl}
-              onChange={onLocationUrl}
-              placeholder={intl.formatMessage(messages.mapLinkPlaceholder)}
-              className='event-composer__input'
-            />
-            <small className='event-composer__field-hint'>
-              {intl.formatMessage(messages.mapLinkHint)}
-            </small>
-            <div className='event-composer__pin-row'>
-              <button
-                type='button'
-                className='event-composer__pin-btn'
-                onClick={openPinPicker}
-              >
-                <FormattedMessage {...messages.pinOnMap} />
-              </button>
-              {pinnedLocation && (
-                <>
-                  <span className='event-composer__pin-coords'>
-                    <FormattedMessage
-                      {...messages.pinnedAt}
-                      values={{
-                        lat: pinnedLocation.lat.toFixed(4),
-                        lng: pinnedLocation.lng.toFixed(4),
-                      }}
-                    />
-                  </span>
-                  <button
-                    type='button'
-                    className='event-composer__pin-clear'
-                    onClick={clearPin}
-                  >
-                    <FormattedMessage {...messages.clearPin} />
-                  </button>
-                </>
-              )}
-            </div>
-            {pinnedLocation && (
-              // Re-key on lat/lng so a new pin remounts the preview
-              // — MapPinPreview intentionally doesn't `easeTo` on
-              // prop change (see its comment about avoiding subtle
-              // animations); remount is the explicit "show a new
-              // pin" trigger.
-              <MapPinPreview
-                key={`${pinnedLocation.lat},${pinnedLocation.lng}`}
-                lng={pinnedLocation.lng}
-                lat={pinnedLocation.lat}
-                zoom={pinnedLocation.zoom}
-                className='event-composer__pin-preview'
-              />
-            )}
-          </label>
-        </fieldset>
-
-        {/* "Konnect a korner" — the compose-time inter-korner
-            attach surface (docs/korners/adding_a_korner.md (Korner attachments)). The
-            bar reads Kalendar's `attaches:` manifest to know which
-            spaces are reachable, then stacks an inline mini-form
-            per picked connection. Create-mode (Albutts, Huddle)
-            POSTs the target's own create endpoint on submit;
-            link-mode POSTs KornerAttachment directly. Reach is
-            strict-inherited from the event. */}
-        <fieldset className='event-composer__fieldset'>
-          <legend className='event-composer__legend'>
-            {intl.formatMessage(messages.attachHeading)}
-          </legend>
-          <ComposeAttachBar
-            sourceSlug='kalendar'
-            connections={connections}
-            onAdd={onConnectionAdd}
-            onUpdate={onConnectionUpdate}
-            onRemove={onConnectionRemove}
-            disabled={busy}
-          />
-        </fieldset>
-
-        {/* Invitee picker — accounts get a nudge with the event on
-            submit. Optional for public/mates events; the natural
-            partner to the invite-only toggle above. Same account
-            search API the event-detail Invite panel uses; the two
-            surfaces stay in shape. */}
-        <div className='event-composer__invitees'>
-          <span className='event-composer__field-label'>
-            {intl.formatMessage(messages.invitePeople)}
-          </span>
-          <small className='event-composer__field-hint'>
-            {intl.formatMessage(messages.inviteHint)}
-          </small>
-          {invitees.size > 0 && (
-            <div className='event-composer__invitee-chips'>
-              {Array.from(invitees.values()).map((account) => (
-                <span key={account.id} className='event-composer__invitee-chip'>
-                  {account.avatar && (
-                    <img
-                      src={account.avatar}
-                      alt=''
-                      className='event-composer__invitee-avatar'
-                    />
-                  )}
-                  <span className='event-composer__invitee-name'>
-                    {account.display_name || account.username}
-                  </span>
-                  <button
-                    type='button'
-                    className='event-composer__invitee-remove'
-                    data-account-id={account.id}
-                    onClick={handleInviteeRemove}
-                    aria-label={intl.formatMessage(messages.inviteeRemove, {
-                      name: account.display_name || account.username,
-                    })}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <div className='event-composer__invitee-search'>
-            <input
-              type='search'
-              value={inviteeQuery}
-              onChange={onInviteeQueryChange}
-              placeholder={intl.formatMessage(
-                messages.inviteeSearchPlaceholder,
-              )}
-              className='event-composer__input'
-              autoComplete='off'
-            />
-            {inviteeQuery.trim().length > 0 && (
-              <div className='event-composer__invitee-results' role='listbox'>
-                {inviteeSearching && (
-                  <div className='event-composer__invitee-state'>
-                    <FormattedMessage {...messages.inviteeSearching} />
-                  </div>
-                )}
-                {!inviteeSearching && inviteeResults.length === 0 && (
-                  <div className='event-composer__invitee-state'>
-                    <FormattedMessage {...messages.inviteeNoResults} />
-                  </div>
-                )}
-                {!inviteeSearching &&
-                  inviteeResults.map((account) => {
-                    const already = invitees.has(account.id);
-                    return (
-                      <button
-                        key={account.id}
-                        type='button'
-                        role='option'
-                        aria-selected={already}
-                        className='event-composer__invitee-result'
-                        data-account-id={account.id}
-                        data-account={JSON.stringify(account)}
-                        onClick={handleInviteeSelect}
-                        disabled={already}
-                      >
-                        {account.avatar && (
-                          <img
-                            src={account.avatar}
-                            alt=''
-                            className='event-composer__invitee-avatar'
-                          />
-                        )}
-                        <span className='event-composer__invitee-name'>
-                          {account.display_name || account.username}
-                        </span>
-                        <span className='event-composer__invitee-acct'>
-                          @{account.acct}
-                        </span>
-                      </button>
-                    );
-                  })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {error && (
-          <p className='event-composer__error' role='alert'>
+      {reach === 'self_only' && (
+        <ComposeHint>
+          {krewNames.length > 0 ? (
             <FormattedMessage
-              id='kalendar.new.error'
-              defaultMessage="Couldn't create the event: {error}"
-              values={{ error }}
+              id='kalendar.composer.audience.krews'
+              defaultMessage='Only members of {krews} will see this event.'
+              values={{
+                krews: intl.formatList(krewNames, { type: 'conjunction' }),
+              }}
             />
-          </p>
+          ) : (
+            <FormattedMessage
+              id='kalendar.composer.audience.nobody'
+              defaultMessage='Only you will see this event. Tick a Krew in the reach menu to make it theirs.'
+            />
+          )}
+        </ComposeHint>
+      )}
+      <div className='event-composer__cover'>
+        {imagePreviewUrl ? (
+          <div className='event-composer__cover-preview'>
+            <img
+              src={imagePreviewUrl}
+              alt=''
+              className='event-composer__cover-image'
+            />
+            {imageUploading && (
+              <span className='event-composer__cover-badge'>
+                <FormattedMessage {...messages.uploadingCover} />
+              </span>
+            )}
+            <button
+              type='button'
+              className='event-composer__cover-remove'
+              onClick={onImageRemove}
+              aria-label={intl.formatMessage(messages.removeCover)}
+            >
+              ×
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              type='button'
+              className='event-composer__cover-add'
+              onClick={onCoverAddClick}
+            >
+              <span>
+                <FormattedMessage {...messages.addCover} />
+              </span>
+              <small>
+                <FormattedMessage {...messages.cover} />
+              </small>
+            </button>
+            <input
+              ref={coverInputRef}
+              type='file'
+              accept='image/*'
+              onChange={onImageChange}
+              className='event-composer__cover-input'
+            />
+          </>
         )}
-
-        {submitBlockerMessage && (
-          <p className='event-composer__submit-hint'>
-            <FormattedMessage {...submitBlockerMessage} />
-          </p>
+        {imageError && (
+          <ComposeHint error>
+            <FormattedMessage
+              {...messages.coverUploadFailed}
+              values={{ error: imageError }}
+            />
+          </ComposeHint>
         )}
       </div>
 
-      {pinPickerOpen && (
-        <MapPinPicker
-          initial={pinnedLocation ?? undefined}
-          onCancel={cancelPinPicker}
-          onPin={handlePin}
-        />
+      <ComposeTitle
+        value={title}
+        onChange={onTitle}
+        placeholder={intl.formatMessage(messages.eventTitlePlaceholder)}
+        aria-label={intl.formatMessage(messages.eventTitle)}
+        required
+      />
+
+      <ComposeBody
+        value={description}
+        onChange={onDescription}
+        placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+        aria-label={intl.formatMessage(messages.description)}
+      />
+
+      <ComposeSection title={intl.formatMessage(messages.when)}>
+        <ComposeField label={intl.formatMessage(messages.starts)}>
+          <ComposeRow>
+            <ComposeInput
+              type='date'
+              aria-label={intl.formatMessage(messages.startDate)}
+              value={startDate}
+              onChange={onStartDate}
+              onClick={openPickerOnClick}
+              required
+              className='event-composer__when-input'
+            />
+            <ComposeInput
+              type='time'
+              aria-label={intl.formatMessage(messages.startTime)}
+              value={startTime}
+              onChange={onStartTime}
+              onClick={openPickerOnClick}
+              required
+              step={SNAP_MINUTES * 60}
+              className='event-composer__when-input'
+            />
+          </ComposeRow>
+        </ComposeField>
+        <ComposeField label={intl.formatMessage(messages.ends)}>
+          <ComposeRow>
+            <ComposeInput
+              type='date'
+              aria-label={intl.formatMessage(messages.endDate)}
+              value={endDate}
+              onChange={onEndDate}
+              onClick={openPickerOnClick}
+              // Constrain end ≥ start (Tal 2026-08-14: "make it
+              // impossible to select an end date before the start
+              // date"). The `min` attribute greys out earlier
+              // dates in the native picker + blocks form
+              // submission via `checkValidity` — no separate
+              // client-side validator needed.
+              min={startDate || undefined}
+              className='event-composer__when-input'
+            />
+            <ComposeInput
+              type='time'
+              aria-label={intl.formatMessage(messages.endTime)}
+              value={endTime}
+              onChange={onEndTime}
+              onClick={openPickerOnClick}
+              step={SNAP_MINUTES * 60}
+              // Same-day event: end time can't be before start
+              // time. Only apply the min when the dates match —
+              // otherwise a next-day end at 08:00 would be
+              // blocked by a start of 19:00.
+              min={endDate && endDate === startDate ? startTime : undefined}
+              className='event-composer__when-input'
+            />
+          </ComposeRow>
+        </ComposeField>
+      </ComposeSection>
+
+      {/* Where it is: a Konnection to a Map Place, in the Konnect row the
+          shell draws (Konnect → Map → New place). The Where section went
+          with "Location fields become Konnect → Map" (decisions.md,
+          2026-10-23). */}
+
+      {/* Invitee picker — accounts get a nudge with the event on
+          submit. Same account search API the event-detail Invite
+          panel uses; the two surfaces stay in shape. A div with the
+          kit's field classes rather than <ComposeField>: a label
+          around the chips' and results' buttons would press them
+          when its text is clicked. */}
+      <div className='compose-field'>
+        <span className='compose-field__label'>
+          {intl.formatMessage(messages.invitePeople)}
+        </span>
+        <span className='compose-field__hint'>
+          {intl.formatMessage(messages.inviteHint)}
+        </span>
+        {invitees.size > 0 && (
+          <div className='event-composer__invitee-chips'>
+            {Array.from(invitees.values()).map((account) => (
+              <span key={account.id} className='event-composer__invitee-chip'>
+                {account.avatar && (
+                  <img
+                    src={account.avatar}
+                    alt=''
+                    className='event-composer__invitee-avatar'
+                  />
+                )}
+                <span className='event-composer__invitee-name'>
+                  {account.display_name || account.username}
+                </span>
+                <button
+                  type='button'
+                  className='event-composer__invitee-remove'
+                  data-account-id={account.id}
+                  onClick={handleInviteeRemove}
+                  aria-label={intl.formatMessage(messages.inviteeRemove, {
+                    name: account.display_name || account.username,
+                  })}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className='event-composer__invitee-search'>
+          <ComposeInput
+            type='search'
+            value={inviteeQuery}
+            onChange={onInviteeQueryChange}
+            placeholder={intl.formatMessage(messages.inviteeSearchPlaceholder)}
+            aria-label={intl.formatMessage(messages.invitePeople)}
+            autoComplete='off'
+          />
+          {inviteeQuery.trim().length > 0 && (
+            <div className='event-composer__invitee-results' role='listbox'>
+              {inviteeSearching && (
+                <div className='event-composer__invitee-state'>
+                  <FormattedMessage {...messages.inviteeSearching} />
+                </div>
+              )}
+              {!inviteeSearching && inviteeResults.length === 0 && (
+                <div className='event-composer__invitee-state'>
+                  <FormattedMessage {...messages.inviteeNoResults} />
+                </div>
+              )}
+              {!inviteeSearching &&
+                inviteeResults.map((account) => {
+                  const already = invitees.has(account.id);
+                  return (
+                    <button
+                      key={account.id}
+                      type='button'
+                      role='option'
+                      aria-selected={already}
+                      className='event-composer__invitee-result'
+                      data-account-id={account.id}
+                      data-account={JSON.stringify(account)}
+                      onClick={handleInviteeSelect}
+                      disabled={already}
+                    >
+                      {account.avatar && (
+                        <img
+                          src={account.avatar}
+                          alt=''
+                          className='event-composer__invitee-avatar'
+                        />
+                      )}
+                      <span className='event-composer__invitee-name'>
+                        {account.display_name || account.username}
+                      </span>
+                      <span className='event-composer__invitee-acct'>
+                        @{account.acct}
+                      </span>
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <ComposeHint error>
+          <FormattedMessage
+            id='kalendar.new.error'
+            defaultMessage="Couldn't create the event: {error}"
+            values={{ error }}
+          />
+        </ComposeHint>
+      )}
+
+      {submitBlockerMessage && (
+        <ComposeHint>
+          <FormattedMessage {...submitBlockerMessage} />
+        </ComposeHint>
       )}
     </ComposeShell>
   );

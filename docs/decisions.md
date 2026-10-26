@@ -17,6 +17,661 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — A korner's post is your words and its card
+
+Tal: going live posted "a generated text as a post 'Live now in the
+Booth:...' which is a little out of spec for kronk in general, It also
+shows a text link to the live space, but this is unnecessary given the
+little card in the post links to the space anyway."
+
+**Decision:** a post a korner makes for a record is the person's own words,
+or the record's title if they wrote none, as albums, art, kronikles and
+listings already post. The record's card shows what it is and links to it,
+so the text never carries generated copy or the record's URL. The Booth
+was the exception twice. A live set's Tell my feed now posts that way and
+gets its own feed card (StatusBoothLiveCard): it says Live now, when it
+starts, or that it has ended, and opens the room. Sharing a set does the
+same with its existing card, dropping "title — artist" and the link. The
+card that appeared before was the general link preview for the URL.
+
+## 2026-10-26 — First Nations Country as shapes, not a picture
+
+**Decision:** the Map's First Nations Country layer is drawn from shapes
+traced off @mangobee's map (`first-nations-countries.geojson`), not the
+picture laid over Australia. Each Country can be tapped for a card, found by
+name, and opened from a profile's "On <name> Country".
+
+**Why:** a picture can't say which Country a point is on, blurs past state
+level, and its names can't be fixed without redrawing it (the limit noted on
+2026-10-23). Shapes stay sharp at every zoom and carry their names as data.
+Kommons "Interactive Map Build" (@mangobee) chose this, Option 2, over keeping
+the picture with invisible shapes on top; community-edited borders and the
+people on a Country are later steps.
+
+**Supersedes:** the picture layer (`first-nations-country.webp`) of
+2026-10-23.
+
+## 2026-10-26 — Who is told a set is live is the host's choice
+
+The Booth's live sets told everyone tuned in to the Booth, like Huddle's
+Fomo noto, and #2339 left that for Tal to confirm. Tal: "Like all posts,
+this should be a choice when posting. And also notifications should be a
+choice from people."
+
+**Decision:** a live set has a reach (`booth_lives.visibility`, the reach
+ladder through Reachable). It is the reach the host gives Tell my feed in Go
+live, and Just me when Tell my feed is off. The home feed banner, the Live
+view, the Live now strip, the set's page and the "is live" nudge reach
+those people only. Anyone who tapped Remind me is still told. The people
+told keep their choice: the Booth's "Someone goes live" notification row
+and tuning out of the Booth, both already there. Sets from before keep
+reaching everyone, which is what they did. The rest of #2339 is left for
+its author to refine (Tal: "minimise adjustments").
+
+## 2026-10-26 — A space explains itself in About this space
+
+Tal: "the booth has an info banner, it should be in the info part of the
+floating kronk bubble."
+
+**Decision:** About this space (the Ж bubble's i, `<SpaceInfoDialog>`, from
+the manifest's `about:`) is the one place a space says what it is and how it
+works. No space puts a first-visit banner or a "how it works" strip on its
+own page. The Booth's "How the Booth works" strip is gone, and its points
+(upload, get heard, credit, go live, save) are in `booth.yaml`'s
+`about.how`. It was the only one. An empty state that links to the composer
+is not an explainer, so it stays.
+
+## 2026-10-26 — A record is named with what it is
+
+Tal, testing on shadow with an Ember Krew, an Ember event, an Ember
+emergence and an Ember album: a pop-up said (paraphrased) "Ember is
+connected to Ember". "If an event is happening and has an adjacent krew
+and other spaces, all wanting the same name, we need to find a better way
+to indicate which space is being referred to."
+
+**Decision:** wherever Kronk names a record, it says what the record is:
+"the Ember event", "the Ember Krew", "the Ember album". Each korner that
+takes links declares its word (`konnect.noun`), and `korners doctor`
+requires it. The server sends each record's own word, so a FreeTheDream
+gang says gang, not emergence. Konnected cards, tiles and the composer's
+Konnect row show the word under the title. Same as, pop-ups, notes and
+button labels say it in full (`hooks/useRecordName.ts`).
+
+Getting around stays in the Konnected section (Tal chose this over a strip
+under every title or a shared hub page): its cards (2026-10-26, below)
+are how you move between the records of one situation.
+
+## 2026-10-26 — Konnected records show themselves
+
+Tal, on shadow: "when they're konnected, instead of just a tile under
+'Konnect' they should expand out into the preview of it. For instance, in
+an event, the map used to be visible on the event page, also the albums
+was the same … once they're konnected, let's actually show them in a
+comprehensive way. we can leave the art space for now."
+
+**Decision:** in every Konnected section, a record with something to show
+is a card above the tiles, not a tile. A Place shows its map and address,
+an album up to four photos and how many, an event its date, time and
+where, and a Booth set, film, kar or listing its picture. A kronikle shows
+its opening lines. The card keeps the tile's audience marker, Same as and
+Diskonnect. The server sends what each card draws with the attachment
+(`Kronk::KonnectedPreview`), so a page makes no extra requests. Krews,
+proposals, Huddle rooms, Kuestions and art pieces stay tiles for now, as
+does an album with no photos.
+
+An event whose location comes from its Konnected Place no longer draws a
+second map under its details: the Place's card is the map. An event with
+its own typed address keeps its map.
+
+## 2026-10-26 — Every Krew shows how it lets people in
+
+Kommons proposal "Krews Type"
+(https://kronk.info/hub/kommons/p/117482707167518494): "There should be a
+icon which shows if krews are open/closed etc. Maybe also there should be a
+button for 'Join/apply' etc for visible krews, or a 'Member' if you're
+already a part of the krew."
+
+**Decision:** every Krew row (Yours and Discover) and the Krew page carry a
+small muted icon beside the name for its access: open (`lock_open`), asks
+to join (`person_add`), has requirements (`list_alt`), invite-only
+(`lock`), each with its name as the label. On Discover the row's way in is
+Join, Ask to join, or "See what's needed" (to the Krew page, where the
+requirements are) for a requirement-gated Krew; a Krew you're in says
+"Member" (was "You're in"), and one you've asked to join says "Asked to
+join". Yours has no action column: everything there is yours. The Krew
+page now lists a requirement-gated Krew's requirements to someone not in
+it ("To join:"), so "See what's needed" lands on the answer.
+
+**Why:** the only marker was a ⚿ glyph for invite-only, and invite-only
+Krews aren't listed in Discover, so in practice no row said how to get in
+until you opened it, and a requirement-gated row showed nothing at all. An
+icon from the shared material set, not a glyph, keeps it in family.
+
+**Supersedes:** the ⚿ invite-only glyph, "You're in", and the
+requirement-gated row with no action.
+
+## 2026-10-26 — The Mates list is for Mates
+
+Tal: "mates list visible to their mates only." The list had been off since
+2026-10-18 (Profile: one page) until it was settled who may see whose Mates.
+
+**Decision:** `/@:acct/mates` is back, shown to the person themselves and to
+their Mates. Everyone else, signed out included, gets an empty list from
+`GET /api/v1/accounts/:id/mates` and no link on the Mates count; the count
+stays visible to everyone who sees the profile. `hide_collections` still
+hides the list from everyone but the owner, Mates included, and a profile
+the viewer may not see hides it too.
+
+**Why:** who someone's Mates are is close to who they are; their Mates are
+already inside that circle, a stranger isn't. The count says how connected
+someone is without saying with whom. Detail: `docs/spaces/profile.md` (The
+Mates list).
+
+**Supersedes:** 2026-10-18 (the list off), and the older rule that anyone
+who could see the profile could see the list.
+
+## 2026-10-25 — No Unmate in lists
+
+Kommons proposal
+[#117481297515130656](https://kronk.info/hub/kommons/p/117481297515130656):
+"Definitely dont need an unmate button in pages like this" — a Mates list,
+where every row carried an Unmate button.
+
+**Decision:** once you are Mates, the relationship button shows nothing.
+`FollowButton` (every account row: Mates lists, froth and boost lists,
+hover cards, suggestions) and the profile peek card's `MateIconButton`
+render nothing for an established Mate. Unmate is only on the per-person
+settings screen, `/@:acct/settings`. Mate?, Mating… (withdraw) and Accept
+are unchanged.
+
+**Why:** ending a Mateship is a deliberate act about one person. A
+destructive button beside every name in a list invites mis-taps and reads
+as if the list were for pruning. The profile block already hid it for
+Mates; this makes every other surface agree. Detail:
+`docs/spaces/profile.md` (The profile block, Per-person settings).
+
+**Supersedes:** the Unmate state of `FollowButton` and the peek card's
+check-mark Unmate button.
+
+## 2026-10-25 — Konnect is the one way into a Krew's spaces
+
+Tal, checking Konnect on shadow: "I'm seeing 'Add a space' and 'Konnect'
+in the krew space? isnt that still a double up?", and New album from one
+Krew showed another Krew's name, and a Huddle could be linked from a Krew
+but not made.
+
+**Decision:**
+
+- **No Add a space on the Krew page.** Konnecting or making an album or an
+  event already turns that space on (`AlbumLinks`, `EventLinks`), so the
+  tile only added an empty space. The page has its spaces' tiles, what it
+  is Konnected to, then Konnect. Krew settings still turns spaces on and
+  off. Supersedes "Add a space is the last tile" (2026-10-18) and Add a
+  space beside Konnect (2026-10-22).
+- **Every composer that Konnects is offered as New ….** Booth, Cinema,
+  Huddle, Kommons, Krew, Kronikles and Kuestions read `?konnect=` since
+  "Konnect in every composer" but their manifests never said
+  `make: true`, so the picker couldn't make one. They do now. Booth's says
+  Upload a set (Go live has no Konnect yet); Kommons goes straight to its
+  composer, past the page picker that would drop the `?konnect=`.
+- **A record looked up by id is that record.** The Konnect tile names its
+  source by asking the candidates search for one id; the Krew and event
+  visibility scopes were merged in and replaced the id condition, so the
+  tile named the newest Krew or event the viewer could see. They are id
+  subqueries now (`Kronk::KornerRecords.findable`).
+
+## 2026-10-25 — Konnections carry audience: Same as
+
+Tal: an album, a film or anything Konnected to an event should be able to
+have the audience "Same as <that event>", and keep it as the event changes.
+
+**Decision:** a record has two relationships, kept apart. **Belonging** is
+who can see it, its audience: Everyone, a reach tier, or Krews (an event
+made within Growers is seen by Growers alone). **Konnections** are pointers
+between records. A Konnection may also carry audience: one end **follows**
+the other's.
+
+- **Following copies, then follows.** The follower takes the leader's
+  audience at once, and again whenever it changes: the event opens to
+  everyone, or adds a Krew, and the album does too. Chains follow down (an
+  album following an event, a film following the album), never round in a
+  circle. A record follows one leader at most.
+- **Switching back is always open.** Taking the flag off or Diskonnecting
+  stops the follow and the record keeps the audience it has; its owner
+  changing its audience by hand stops it too.
+- **What can be followed:** an audience of Everyone, or of Krews alone.
+  Mates and Orbit are relative to the leader's owner, so nobody else's
+  record can have them, and neither can an invite-only event or one for its
+  maker alone: the API refuses those (422), and the composer doesn't offer
+  them. A leader that later narrows to one of them holds its followers to
+  their owners until it opens again: a copy never widens.
+- **A follower carries what it can, and setting it is honest.** A Krew
+  audience reaches a korner that has Krews (all of them now, below), and
+  only Krews its owner is in. Setting a follow is refused unless the follower can carry the
+  whole audience, so "Same as" never says more than it does; a later change
+  it can't carry in full narrows it instead.
+- **Every korner with an audience can be for a Krew** (Tal: "they should all
+  have the screens"). Films, kars, kronikles, art pieces and listings get
+  Krews on top of their reach, as albums have: a member sees the record
+  whatever its tier, its feed post carries the Krews, the composer's reach
+  control sets them (`krew_ids`, as albums send), and each Krew is a
+  Konnection to it, both ways, as with albums ("its Krew is a Konnection to
+  the Krew", 2026-10-23). They live in one table, `record_krews` (korner
+  slug, record id, Krew), not five: the five rules are the same, and a new
+  korner joins without a migration. Albums keep `album_krews` (it also says
+  who may contribute) and Moments their single `krew_id`.
+- **Events lead, never follow:** an event's audience is its post's, set
+  when it is posted. **Booth sets** are always public: they can be
+  Konnected, but never follow and are never followed. Moments take no
+  Konnections, so neither.
+- Anyone who can see a record can Konnect to it, as before. Only whoever
+  looks after the follower sets or clears its follow.
+- **Seen, and the default when it fits** (Tal: "really visible and
+  intuitive"). A composer opened from a record it can follow starts on
+  "Same as <that record>", and the person can always pick their own
+  audience instead. Every Konnected tile says who sees its record, and a
+  record's owner is told, in one line, when people who see a Konnected
+  record can't open theirs. docs/design.md, Konnect, has the screens.
+
+How: `Kronk::Audience` (one adapter per korner),
+`metadata.audience_follows` on the link row; docs/korners/adding_a_korner.md
+(Korner attachments §2.7).
+
+## 2026-10-23 — Location fields become Konnect → Map
+
+The last step of "Map Places: location is a Konnection" (below): Konnect can
+now make a Place from the picker, so the composers' location fields go.
+
+**Decision:** no composer has a location field. Where a thing is, is the
+Place it is Konnected to.
+
+- **Konnect → Map → New place.** In a composer the Konnect picker makes the
+  Place right there (a name, an address if wanted, a pin on the map) and
+  picks it; the record links to it when it posts. The person never leaves
+  their composer. On a record's page, **New place** opens Map's Place
+  composer with `?konnect=`, like any other space's **New …**.
+- **Reads fall back to the Konnected Place.** An event's `location_name`
+  and `location_url`, a kar's `location`, a listing's `location`, and the
+  Map's event pins read the record's own old fields first and its Place
+  when they are empty (`Kronk::RecordPlace`). Own fields still win, so
+  older records keep what they said and the Android app, which still
+  writes them, keeps working. Editing in the app sends no location, so it
+  never clears or overwrites them.
+- **Only the owner's link says where it is.** A Place's maker can link it
+  to anything they can see; that Konnects the two but doesn't move someone
+  else's record. A link counts as the location when the record's owner
+  made it.
+
+The old columns stay until the app stops writing them.
+
+## 2026-10-23 — One composer, one Konnect
+
+Tal, after an audit of every composer: "look at the entirety of the site …
+as the network it is, not on a case by case basis … I want composers to be
+standardised, I want the konnect button to be standardised. This is so people
+don't have to go looking for it, they know how to use it across different
+pages and spaces and korners." The audit found 20 composers with 14 field
+styles (labels at 12 to 13px in three weights, titles from 18px bold sans to
+22px serif), a location field in four of them, a Krew field in three, and
+Konnect in some and not others; and 10 of 13 detail pages placing their own
+Konnected section.
+
+**Decision:** the platform owns how things are made and Konnected; a korner
+brings only its own fields.
+
+- One composer: `<ComposeShell>` plus the field kit
+  (`components/compose_fields.tsx`), in a fixed order (Korner Standard L13).
+  ESLint holds every composer to the kit; the ones older than the rule are on
+  a burn-down list.
+- One Konnect: the Konnect row in every composer, drawn by the shell, and the
+  Konnected section in `<KornerDetail>`'s `attached` slot on every record's
+  page (L14).
+- Location and Krews stop being fields. Where something is, is a Konnection
+  to a Map Place (2026-10-23, Map Places); its Krew is a Konnection to the
+  Krew. Reach stays in the header.
+
+Built in steps: the kit and the rule first (Cinema and Kronikles moved as
+the first two), then the shell's Konnect row, then the rest of the composers,
+then pages, then location and Krew fields.
+
+## 2026-10-23 — Any creation Konnects to any other; manifests list their Konnections
+
+Tal: "it should be possible to link any creation on kronk to other
+creations. We're building the framework to facilitate this. Maybe each
+korner manifest should list its konnections and how they work?" and "all
+composers should have the 'Konnect' option (at least most)".
+
+**Decision:**
+
+- **A manifest lists its Konnections** in an optional `konnect:` block:
+  `make: true` when its composer can make a new one Konnected to something,
+  and `effects:`, one `with: <korner>` / `does: <sentence>` per space where
+  a Konnection does more than link (the pairs `Kronk::AttachmentEffects`
+  acts on). `korners doctor` holds the block to the code both ways: an
+  effect with no handler fails, and so does a handler no manifest lists. The
+  manifest stays the true list.
+- **Konnect can make something new, from anywhere.** Once a space is picked,
+  the Konnect picker offers **New …** (its `compose.label`) for any korner
+  that says `make: true`. It opens that composer with
+  `?konnect=<source slug>:<source id>`, and what it makes is Konnected to
+  the source. This replaces the Krew-only "New … for this Krew" of the day
+  before (#2305, which used `?krew=` and a hard-coded list); `?krew=<id>`
+  still reads as `krew:<id>`, so a Krew still gets a Krew album or Krew event.
+- **Composers Konnect.** `<ComposeShell konnect={useKonnect(…)}>` draws a
+  Konnect row at the foot of the body: what the new thing will be Konnected
+  to, as space tiles, and a Konnect tile that picks more without saving
+  (the record doesn't exist yet). The links are made once the create
+  succeeds; one that fails doesn't fail the create. First in: Albutts, Art,
+  FreeTheDream, Karporn and Wachuneed's new listing. Kalendar reads
+  `?konnect=` but keeps its own attach bar for now; Huddle follows its Room
+  composer.
+
+## 2026-10-23 — Map Places: location is a Konnection
+
+Tal: "for maps, lets fold in konnecting location to it. So instead of a
+separate 'Location' option, fold that into konnecting via map." Places are
+exact, with addresses, and any creation on Kronk can Konnect to any other.
+
+**Decision:** Map gets a linkable record, the **Place** (`MapPlace`,
+`map_places`): an exact spot with a name and an address. A location is a
+Konnection to a Place, not a field on each space's record. Map's primary
+resource is now `map_places`, and Map takes and makes links like every
+other korner.
+
+- **A Place is seen by whoever can see something Konnected to it, and its
+  maker** (Tal agreed: "a pin anyone who can see the thing it's Konnected
+  to can see"). It has no audience of its own, so a Mates-only party's
+  Place is seen by its Mates, and a Place with nothing Konnected by its
+  maker alone. One you can't see is a 404, like any other record.
+- **Presence stays out.** Where people are right now is still not
+  something to link (2026-10-21): presence and treks are never Map's
+  primary resource, so they never resolve as a Konnection's end.
+- **Its maker looks after it** (edit, delete, what it links out to);
+  anyone who can see it Konnects their own things to it.
+- **Every existing pin moved over**, each Place inheriting its record's
+  audience through the link. Places are shared only within one owner's
+  records, never across owners.
+- The composers' Location fields go in a later step, once Konnect can make
+  a new Place from the picker (done: "Location fields become Konnect →
+  Map", above).
+
+**Supersedes:** Map's opt-out ("Presence is where people are right now…")
+in "Attaching works from every korner, both ways" (2026-10-21).
+
+## 2026-10-23 — First Nations Country on the Map
+
+A Kommons proposal from @mangobee ("Introduce First nation country display")
+asked for the Countries of Aboriginal and Torres Strait Islander peoples to be
+shown over Australia on the Map, for education, with the AIATSIS map as the
+reference point for the idea. @mangobee raised it with Tal, who agreed.
+
+**Decision:** a **First Nations Country** switch on the Map lays a picture of
+Country over Australia (`features/map_v2/country_layer.tsx`). The picture is
+@mangobee's own map, shown with their permission and credited to them, with a
+note that the boundaries are approximate and that Country, its names and its
+borders are held by its peoples. It is a picture, not data: re-projected into
+web mercator, fetched only when switched on, faded out past state-level zoom
+where it would blur, and off until a viewer turns it on (the choice is
+remembered per browser).
+
+**Why a picture:** it needs no outside service and nothing stored from one.
+Native Land Digital's API was looked at for the outlines; its terms allow a
+live point lookup but not storing or redistributing its data without
+permission, so a drawn layer from it would wait on that. A picture can't say
+which Country a point is on; telling your Mates the Country your pin is on is
+the proposal's next step, typed in to start with.
+
+## 2026-10-22 — Setup after signup
+
+A Kommons proposal ("Signup Setup", Tal) asked for more after the thresholds
+and the profile picture: choose a colour palette, default privacy, and a
+handful of people to follow. Tal: light mode should be offered there.
+
+**Decision:** a fresh signup lands on `/setup`, five steps in the SPA: how
+Kronk looks (Dark, Light or Match my device, and the shade), a line about
+you, who sees your posts by default (the reach ladder), a few suggested
+people to mate, and turning on notifications for this device. Tal picked
+the last two additions from a list (text size, Krews to join and pinned
+spaces were the others, left for later).
+Each choice saves as it is made, through the same endpoints as Settings, and
+every step can be skipped. Existing members aren't sent there; Settings has
+the same choices. The walkthrough starts on Home after.
+
+2026-10-25: one page, not five steps (Tal: "they should all be on one page
+… a single 'Continue' button so people can select and integrate with what
+they want to, and just leave the rest for later"). No Back, Next or Skip.
+
+## 2026-10-22 — Konnect can make something new
+
+From a Krew, Konnect finds something that exists or makes something new
+(Tal: "from the krew page you can create spaces for the krew to utilise").
+Once a space is picked in the Konnect picker, a Krew whose space has a
+composer that takes a Krew (Albutts, Kalendar, Huddle) also gets **New … for
+this Krew** above the search. It opens that composer, the same one the Ж
+menu opens, with `?krew=<id>`, and what it makes is Konnected to the Krew.
+No second composer is built for the picker.
+
+## 2026-10-22 — Huddle rooms: the standard composer, no emoji
+
+Tal: "the huddle composer needs to be proper, it doesn't currently follow
+the standardisation of composers, and also shouldn't have emoji choices, we
+have a strict 'no emoji' rule for kronk. Also the emojis on the current
+huddle tiles shouldn't exist." And: "the composer for creating a huddle
+should have a way to connect it to a krew."
+
+- **New Room is a composer like every other**: `<ComposeShell korner='huddle'>`
+  at `/hub/huddle/composer` (the manifest's `compose.route`; the old
+  `/hub/huddle/new` forwards there), with drafts (`huddle`/`room`). The
+  inline form in the Rooms list is gone.
+- **No icon.** The emoji field is gone from the composer and the API
+  (`icon` is ignored on create and no longer sent); every Room tile wears
+  the Huddle korner's icon. The `huddle_sessions.icon` column stays, unread.
+- **Konnect to a Krew** (optional, one): the Room is linked to the Krew
+  (a `link` attachment huddle → krew, made in the same request as the Room),
+  so it shows on the Krew's page. It is a link, not a gate: the Room stays
+  open to everyone. Members-only Krew Huddles are still not built.
+  `?krew=<id>` on the composer route picks the Krew to start with, the same
+  contract as the Kalendar and Albutts composers.
+
+## 2026-10-23 — Event edits Konnect albums and Huddles
+
+Tal: "it should be possible to link any creation on kronk to other
+creations", and approved cleaning up the event edit form. That form still
+had its own ways to reach another space: a "spawn an album" checkbox
+(`events.spawn_album`, Kalendar's `spawn → albutts` manifest entry) and an
+Event/Huddle type toggle. The Konnected section already sits under the form,
+and the new-event composer makes albums and Huddle Rooms through "Konnect a
+korner".
+
+**Decision:** the edit form drops both. An event's album, or the Huddle Room
+it happens in, is Konnected like anything else. The form stops sending
+`event_type`, so an existing Huddle event stays one; the server still takes
+`event_type` because the Android app sends it. The API stops accepting
+`spawn_album`, and Kalendar's spawn entry, Albutts' matching `accepts`, and the
+spawn factory go. No korner spawns now; `Kronk::AttachmentSource` keeps the
+mechanism and still deletes albums spawned before today with their event.
+
+## 2026-10-22 — Diskonnect, not Unkonnect
+
+Tal: "diskonnect is probably better". The × on a Konnected tile reads
+**Diskonnect**. Supersedes "Unkonnect" in "Attaching is Konnect, in space
+tiles" below.
+
+## 2026-10-22 — Attaching is Konnect, in space tiles
+
+Tal on shadow: the Krew page doubled up an **Attached** block and its
+**Spaces**, the Attached heading was out of proportion with the rest of the
+page, and "the 'Attach' term … should be replaced with 'Konnect' wording
+(konnected etc). The Attached wording and plumbing is part of a bigger
+plumbing network … (font and aesthetic included). I really like that the
+current 'Spaces' section has the icon tiles."
+
+**Decision:**
+
+- On screen an attachment is a **Konnection**: Konnect (the action),
+  Konnected (the block's heading), Unkonnect (the ×). The code keeps
+  `attachment` (`korner_attachments`, `AttachmentSection`), as froth keeps
+  `favourite`. The compose-time "Konnect a korner" bar already used it.
+- The Konnected block, its picker and the Krew page share one look, the
+  Krew page's icon tiles, lifted into `_space_tiles.scss` (`.space-tile`),
+  and one section heading (`.korner-section-heading`). FreeTheDream's,
+  Booth's and Kalendar's section labels moved to the same heading.
+- A page has one section of tiles, not two. The Krew page's Spaces holds its
+  Albutts and Kalendar tiles, then the rest of what it's Konnected to, then
+  Add a space (a tray of the spaces a Krew can turn on) and Konnect, which
+  opens the picker straight away. Pages leave out what they already show (`exclude`): an album its
+  Krew, an emergence its Krew and its event.
+
+Supersedes the "Attached" naming and the mini-hub tile style (2026-08-31).
+
+## 2026-10-22 — Pages are reached by name
+
+Albums, events and emergences had counting numbers in their links
+(`/hub/albutts/albums/4`). Tal asked whether that was the best way. It told
+anyone how many there were, let them walk the list, and a hidden album
+answered "not allowed", which confirmed it existed. Events already had a
+name, fixed when made.
+
+**Decision:** each has a slug from its title, counting up for the same title
+in that space (`beach-day`, `beach-day-2`), with no random part (Tal chose
+names alone over names plus a date or a code). A rename takes a new slug and
+the old one keeps working (`link_redirects`); an old slug is never given to
+another record. Numbers still open the page, and the app puts the name in the
+address bar (`useNamedLink`). Something the viewer can't see answers not
+found, the same as something that doesn't exist. `Kronk::NamedLink` does all
+of it; Krews keep their fixed slug. Wachuneed listings and FreeTheDream
+items joined on the same day. Moments still use numbers: they have no title
+to name them by.
+
+## 2026-10-22 — One way to link to a Krew
+
+Part of standardising attaching (Kommons proposal "Attach Function"). A
+Krew kept its own records of what was linked to it, apart from the
+attachments table, and only some ways of linking wrote both: the Krew's
+"Link one of your events" made no attachment, so neither Attached block
+showed it; an album attached with Attach never reached the Krew's Albums
+tile; a link made from the Krew or emergence end (krew → kalendar) never
+made the event a Krew event; and the Krew page offered two link buttons for
+the same thing.
+
+**Decision:** the korner attachment is the link, and a Krew's audience
+follows from it. `Kronk::AttachmentEffects` holds what a link does for the
+few pairs where it does something (kalendar ↔ krew, kalendar ↔
+freethedream, albutts ↔ krew), keyed by the unordered pair so either end
+can make it. Every way in goes through it: Attach from either end, the
+Krew's Link and Unlink buttons, and the Krews picked in a composer, which
+keep an attachment beside each (`AlbumKrew` callbacks,
+`EventLinks.posted`). A migration adds the attachments missing for
+existing Krew events and albums.
+
+- The audience widens only when the record's owner links it and is in the
+  Krew, as before; a link anyone else makes stays a link.
+- **A Krew album is linked to its own Krew** and that link can't be taken
+  off (422): it is the Krew's, and its audience is decided by its Krew.
+- **One place on the page**: the Krew's tiles keep their lists and Link
+  buttons (they offer only your own events and albums, which is what can
+  join the audience), and the Attached block below leaves out what the open
+  tile shows. Simpler than sending the tiles through the generic picker,
+  which would offer anyone's records and then not list them in the tile.
+
+## 2026-10-22 — Links join two korners, and only records you can see
+
+Step 1 of standardising attaching (Kommons proposal "Attach Function"). An
+audit found the server looser than the picker: it let a record link to
+another in its own korner (album → album), which the picker never offers,
+and it checked only that you look after the source, so a guessed id linked
+your record to a private one and the reply handed back its title.
+
+**Decision:** a link always joins two korners; the model refuses a link
+whose source and target korner are the same. A korner relates its own
+records itself (a gang inside an emergence, a set in a series), so a
+same-korner link would be a second, weaker way to say the same thing. No
+spawn rule is same-korner and spawns are untouched. Linking also needs the
+target to be visible to you, and a target you can't see answers 404, the
+same as one that doesn't exist, so nothing is learnt from guessing.
+
+The opt-out rule (2026-10-21) also had a gap: a korner whose primary
+resource names no model passed the check without saying anything. That now
+counts as missing; In Flow and Nudges say `no_attachments:`, since neither
+holds records anyone would link. Huddle's Room page shows the Attached
+block, managed by the Room's host.
+
+## 2026-10-22 — Drafts are quiet
+
+A Kommons proposal ("Draft tab in composer") said the drafts part of the
+composer sat at the top and was overly complicated: a Drafts label,
+Saving…/Saved, a chip per draft, Start another and Discard draft, above the
+body of every composer, on every post. Tal: move it to the bottom, make it
+simpler; it doesn't need to show that there is a draft, only that one came
+back after closing with something half written.
+
+**Decision:** saving stays automatic and says nothing. A fresh composer shows
+nothing about drafts. Only when a composer opens on a draft from before does
+one line appear under the body, by the submit: **Picked up where you left
+off · Start fresh · Discard**. Start fresh keeps that draft and blanks the
+box; Discard deletes it (asking first). With more than one draft the line
+adds **Other drafts (N)**, which opens the list to switch to; it is hidden
+until asked for. Supersedes the Drafts row of 2026-10-19; nothing about how
+drafts are kept changes.
+
+With it: the post composer opened to post to a Krew ("Post to <Krew>") took
+the newest feed draft and its reach. It now keeps that Krew's drafts
+(context `krew:<id>`), so each Krew has its own and a feed draft never lands
+on a Krew post.
+
+**Half an hour (later the same day):** reopening a composer to find last
+week's draft in it isn't clean. A draft comes back into the composer only if
+it was closed less than half an hour ago. Older, the composer opens empty
+and the line at the bottom is just **Drafts (N)**, to pick one up; nothing is
+deleted.
+
+## 2026-10-22 — FreeTheDream's rows reflow instead of swiping
+
+An emergence's page had two rows you scrolled sideways on a phone: Get
+involved (scroll-snap cards, 2026-10-15) and the Krew. That breaks the
+standing rule that phone views scroll vertically only (2026-08-13).
+
+**Decision:** both are tiles that reflow into a grid, two or so across on
+a phone. Supersedes "Get involved is a row of cards you swipe sideways"
+(2026-10-15). The emergence list moved onto `<SpaceGrid>` / `<SpaceCard>`
+at the same time, showing the linked event's image when an emergence has
+no cover, as its page already did.
+
+## 2026-10-22 — Anyone in a Krew unlinks its events
+
+Kommons "Link events", "Add a space", "Add more spaces", "No edit button
+for Krews" and "Krew Images don't show in Krew page". The Krew's own
+Unlink on an event still required the event's maker, though 2026-10-21
+says either end can take a link off, and for a Krew that's anyone in it.
+
+**Decision:** any member of the Krew can unlink an event from it (and so
+from its emergence, `Kronk::EventLinks`); the maker still can too.
+Linking stays the maker's. Alongside, without changing what was decided:
+the link picker starts with your events coming up and offers past ones on
+asking; a space added from the Krew page opens with its link list ready;
+when Albutts and Kalendar are both in, Add a space gives way to a line
+saying more spaces join as they're built for Krews (the 2026-10-18 rule
+stands); the Ж menu gets **Edit Krew**; and archiving stays with the last
+member (Tal), with a line in Settings saying so. See `docs/spaces/krew.md`.
+
+## 2026-10-22 — An event linked to an emergence is linked to its Krew
+
+Tal tried to attach an event to an emergence inside a Krew and couldn't find
+a way. There were three ways to link an event (the event's Attach, the
+emergence's "link one of your events", the Krew's "Link one of your
+events") and they didn't meet: the emergence read a korner attachment, the
+Krew read its events' post audience, so a link made on one never showed on
+the other. A gang couldn't hold an event at all.
+
+**Decision:** an emergence and its Krew are one group, so an event linked to
+either is linked to both, and unlinking from either takes it off both
+(`Kronk::EventLinks`). The Krew becomes an audience on the event's post only
+when the event's maker links it and is in the Krew, as the Krew's own Link
+button already required; an invite-only event stays for its invitees. A
+gang can link its own event. Attaching is also offered while editing an
+event, the attach section reads **Attached** (it said "Amongst Krew"), and
+the picker waits for a space to be chosen instead of opening on Huddle.
+
 ## 2026-10-22 — Kommunity's badge counts new members
 
 Nobody heard when someone joined Kronk; the only sign-up notice was

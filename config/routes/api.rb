@@ -169,6 +169,22 @@ namespace :api, format: false do
       resource :observation, only: [:show]
     end
 
+    # Live sets: go live, end, and tell your feed (docs/spaces/booth.md).
+    resources :booth_lives, only: [:index, :show, :create, :update, :destroy] do
+      # What's live now, for the home feed's banner.
+      collection do
+        get :now
+      end
+      member do
+        post :start
+        post :finish
+        post :share
+        # "Remind me" when a scheduled set goes live.
+        post :remind
+        delete :remind, action: :unremind
+      end
+    end
+
     resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :play
@@ -176,18 +192,28 @@ namespace :api, format: false do
         # The person tagged as an artist on a set: confirm it, or come off it.
         post :confirm_credit
         delete :credit, action: :remove_credit
+        # Keep a set in My sets → Saved.
+        post :save
+        delete :save, action: :unsave
       end
+
+      # Shoutouts: listeners' notes on a set, pinned to a moment or not.
+      resources :shoutouts, controller: 'booth_shoutouts', only: [:index, :create]
     end
 
     # Previews of links to things on Kronk, as the viewer sees them
     # (Kronk::LinkPreview).
     resources :link_previews, only: [:index]
+    resources :booth_shoutouts, only: [:destroy]
 
     # KornerAttachment REST surface (docs/korners/adding_a_korner.md (Korner attachments) §3.1).
     # Distinct from the proposal-nested `attachments` resource below — this
     # is the cross-korner join primitive, keyed by manifest slug + id.
-    resources :attachments, controller: 'attachments', only: [:index, :create, :destroy] do
+    resources :attachments, controller: 'attachments', only: [:index, :create, :update, :destroy] do
       collection do
+        # A record a composer could follow the audience of ("Same as",
+        # Kronk::Audience): its audience and whether it can be followed.
+        get :audience
         # Shared candidates search — a picker asks "what could I
         # attach a Kalendar event to?" and gets a list of Album /
         # Booth Set / whatever rows the current user can see + own.
@@ -300,6 +326,9 @@ namespace :api, format: false do
         resources :photos, only: [:create], controller: 'photos'
       end
       resources :art_piece_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
+      # An artist's portfolio: anyone's to read, your own to change.
+      resources :portfolios, only: [:show], controller: 'portfolios'
+      resource :portfolio, only: [:update], controller: 'portfolios'
     end
 
     # Kronikles — single-author long-form written works. Body is
@@ -368,6 +397,10 @@ namespace :api, format: false do
       # Map bridge (event_detail's location link routes to
       # /hub/map?event=<slug>, which reads back into this feed).
       get 'events', to: 'events#index'
+
+      # Places — exact spots with an address, Map's linkable record: a
+      # location is a Konnection to one (docs/spaces/map.md, Places).
+      resources :places, only: [:index, :show, :create, :update, :destroy]
     end
 
     namespace :klot do

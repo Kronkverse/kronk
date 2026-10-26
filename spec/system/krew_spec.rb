@@ -42,26 +42,85 @@ RSpec.describe 'Krew page', :js, :streaming do
       expect(page).to have_css('.krew-detail__happening-line', text: 'added 2 photos to Mayhem 2026')
       expect(page).to have_css('.krew-detail__happening-line', text: 'joined the Krew')
     end
-    expect(page).to have_no_css('.krew-detail__space-tile', text: /What's happening/i)
-    expect(page).to have_no_css('.krew-detail__space-tile--open')
+    expect(page).to have_no_css('.space-tile', text: /What's happening/i)
+    expect(page).to have_no_css('.space-tile--open')
     expect(plus_moon).to eq 'Post to Growers'
   end
 
-  it 'has a tile for each space with a Krew part, then Add a space' do
+  # decisions.md, 2026-10-25: Konnect is the one way in. A space's tile shows
+  # once the Krew has it; there is no separate Add a space.
+  it 'has a tile for each space the Krew has, then Konnect' do
     krew.krew_korners.find_by(korner: 'kalendar').destroy
     visit "/hub/krew/#{krew.slug}"
 
-    expect(page).to have_css('.krew-detail__space-tile', text: 'Albutts')
+    expect(page).to have_css('.space-tile', text: 'Albutts')
+    expect(page).to have_no_css('.space-tile', text: 'Kalendar')
     # Map has no Krew part yet, so it has no tile.
-    expect(page).to have_no_css('.krew-detail__space-tile', text: 'Map')
-    expect(all('.krew-detail__space-grid > .krew-detail__space-tile').last).to have_text(/Add a space/i)
+    expect(page).to have_no_css('.space-tile', text: 'Map')
+    expect(page).to have_no_css('.space-tile', text: /Add a space/i)
+    expect(all('.attachment-section > .space-tiles > li').last).to have_text(/Konnect/i)
+  end
+
+  it 'opens the Konnect picker straight from Konnect' do
+    visit "/hub/krew/#{krew.slug}"
+    within('.attachment-section') { click_on 'Konnect' }
+
+    expect(page).to have_css('.attachment-picker', text: 'Konnect something')
+  end
+
+  # decisions.md, 2026-10-23: a space whose manifest says `konnect: { make:
+  # true }` offers its composer from the picker, opened to Konnect what it
+  # makes here.
+  it 'makes a new album for the Krew from the Konnect picker' do
+    visit "/hub/krew/#{krew.slug}"
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') do
+      click_on 'Albutts'
+      click_on 'New album'
+    end
+
+    expect(page).to have_current_path("/hub/albutts/composer?konnect=krew:#{krew.id}")
+    within('.compose-shell .konnect-row') do
+      expect(page).to have_css('.space-tile', text: 'Growers')
+      # A Krew album is the Krew's: that Konnection isn't the composer's to drop.
+      expect(page).to have_no_css('.space-tile__remove')
+    end
+  end
+
+  it 'makes a new event for the Krew from the Konnect picker' do
+    visit "/hub/krew/#{krew.slug}"
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') do
+      click_on 'Kalendar'
+      click_on 'New event'
+    end
+
+    expect(page).to have_current_path("/hub/kalendar/composer?konnect=krew:#{krew.id}")
+    expect(page).to have_css('.compose-shell', text: 'New event')
+  end
+
+  it 'makes a new Huddle room for the Krew from the Konnect picker' do
+    # The Huddle lobby under the composer asks the Jitsi host who is in, a
+    # server this suite does not run (as in huddle_spec).
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    visit "/hub/krew/#{krew.slug}"
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') do
+      click_on 'Huddle'
+      click_on 'New Room'
+    end
+
+    expect(page).to have_current_path("/hub/huddle/composer?konnect=krew:#{krew.id}")
+    within('.compose-shell .konnect-row') do
+      expect(page).to have_css('.space-tile', text: 'Growers')
+    end
   end
 
   it 'opens the Krew albums in place, made with the + moon' do
     visit "/hub/krew/#{krew.slug}"
-    within('.krew-detail__space-grid') { click_on 'Albutts' }
+    within('.attachment-section') { click_on 'Albutts' }
 
-    expect(page).to have_css('.krew-detail__space-tile--open', text: 'Albutts')
+    expect(page).to have_css('.space-tile--open', text: 'Albutts')
     expect(page).to have_css('.krew-detail__albums')
     expect(page).to have_no_button('New Krew album')
     expect(plus_moon).to eq 'New Krew album'
@@ -69,17 +128,17 @@ RSpec.describe 'Krew page', :js, :streaming do
 
   it 'closes an open space on a second tap' do
     visit "/hub/krew/#{krew.slug}"
-    within('.krew-detail__space-grid') { click_on 'Albutts' }
+    within('.attachment-section') { click_on 'Albutts' }
     expect(page).to have_css('.krew-detail__albums')
 
-    within('.krew-detail__space-grid') { click_on 'Albutts' }
+    within('.attachment-section') { click_on 'Albutts' }
     expect(page).to have_no_css('.krew-detail__albums')
     expect(plus_moon).to eq 'Post to Growers'
   end
 
   it 'opens the Krew events in place, made with the + moon' do
     visit "/hub/krew/#{krew.slug}"
-    within('.krew-detail__space-grid') { click_on 'Kalendar' }
+    within('.attachment-section') { click_on 'Kalendar' }
 
     expect(page).to have_text('Nothing coming up for this Krew yet')
     expect(page).to have_no_css('.krew-detail__albums')
@@ -93,7 +152,7 @@ RSpec.describe 'Krew page', :js, :streaming do
     visit "/hub/krew/#{krew.slug}"
 
     expect(page).to have_css('.krew-detail__happening-line--chat', text: /unread/)
-    expect(page).to have_no_css('.krew-detail__space-tile', text: 'Chat')
+    expect(page).to have_no_css('.space-tile', text: 'Chat')
     within('.krew-detail__chat') do
       expect(page).to have_text('Seeds are in')
       expect(page).to have_link('Open in Nudges')

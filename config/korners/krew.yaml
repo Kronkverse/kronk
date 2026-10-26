@@ -111,6 +111,36 @@ attaches:
     trigger: user
     lifecycle: keep
 
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # What one of its records is called wherever Kronk names it beside
+  # its title ("the Ember event"), so records that share a title can be
+  # told apart (decisions.md, 2026-10-26).
+  noun: 'Krew'
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects the new Krew to that source.
+  make: true
+  # What Konnecting something to a Krew does beyond the link (the record's
+  # side says the same from its end). Only when the record's owner makes
+  # the Konnection and is in the Krew.
+  effects:
+    - with: kalendar
+      does: "The Krew joins the event's audience and lists it under Kalendar; the Krew's emergence is Konnected to the event too."
+    - with: albutts
+      does: "The Krew joins the album's audience and lists it under Albutts."
+    - with: art
+      does: "The Krew joins the art piece's audience, so its members can open it."
+    - with: cinema
+      does: "The Krew joins the film's audience, so its members can open it."
+    - with: karporn
+      does: "The Krew joins the kar's audience, so its members can open it."
+    - with: kronikles
+      does: "The Krew joins the kronikle's audience, so its members can open it."
+    - with: wachuneed
+      does: "The Krew joins the listing's audience, so its members can open it."
+
 compose:
   label: 'Gather a Krew'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of

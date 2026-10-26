@@ -48,17 +48,20 @@ class REST::KrewSerializer < ActiveModel::Serializer
     object.krew_memberships.where(role: 'seeder').count
   end
 
-  # 'seeder' | 'member' | nil when the viewer isn't in the krew.
-  # Prefers the seeded_by pointer (Phase 3a single-seeder shape) so a
-  # Krew created after this ships reports its planter as seeder even
-  # if no legacy role='seeder' row exists.
+  # 'seeder' | 'member' | nil when the viewer isn't in the krew. The web
+  # client reads any role as "in it", so membership is checked first: a
+  # seeder who has left is nil like anyone else outside. Inside, the
+  # seeded_by pointer still reports the planter as seeder even if no
+  # legacy role='seeder' row exists.
   def viewer_role
     return nil if current_user.blank?
 
     account = current_user.account
+    membership = object.krew_memberships.find_by(account: account)
+    return nil if membership.nil?
     return 'seeder' if object.seeded_by_account_id == account.id
 
-    object.krew_memberships.find_by(account: account)&.role
+    membership.role
   end
 
   # The viewer has asked to join and is waiting on a member.
@@ -95,15 +98,18 @@ class REST::KrewSerializer < ActiveModel::Serializer
 
   # Requirement rows for requirement_gated krews. Each entry carries
   # its kind + the kind-specific payload key. Not returned on
-  # access != requirement_gated (empty array).
+  # access != requirement_gated (empty array). An `attending_event` row
+  # also carries the event's title and start, but only for a viewer who
+  # can see that event; anyone else gets no `event` and reads "An event".
   def requirements
     return [] unless object.requirement_gated?
 
-    object.krew_requirements.map do |r|
+    object.krew_requirements.includes(:event).map do |r|
       {
         id: r.id.to_s,
         kind: r.kind,
         event_id: r.event_id&.to_s,
+        event: requirement_event(r.event),
         region: r.region,
         vouch_params: r.vouch_params,
       }.compact
@@ -111,6 +117,12 @@ class REST::KrewSerializer < ActiveModel::Serializer
   end
 
   private
+
+  def requirement_event(event)
+    return if event.nil? || !event.visible_to?(current_user&.account)
+
+    { title: event.title, starts_at: event.start_time&.iso8601 }
+  end
 
   def current_user
     scope

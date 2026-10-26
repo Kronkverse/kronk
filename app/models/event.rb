@@ -3,11 +3,14 @@
 class Event < ApplicationRecord
   include Searchable
   # KornerAttachment source (docs/korners/adding_a_korner.md (Korner attachments)). The
-  # manifest at `config/korners/kalendar.yaml` declares two `attaches:`
-  # entries — spawn → albutts (field:spawn_album) + link → booth.
-  # `Kronk::AttachmentSource` fires the spawn factory on create and
-  # cascades the join rows on destroy.
+  # manifest at `config/korners/kalendar.yaml` lets an event link to any
+  # korner that accepts it. `Kronk::AttachmentSource` cascades the join
+  # rows on destroy (and the albums older events spawned, 2026-10-23).
   include Kronk::AttachmentSource
+  # Where it is: its Konnected Place, when its own location is empty
+  # (`effective_location_name`, `effective_location_url`).
+  include Kronk::RecordPlace::Konnected
+  include Kronk::NamedLink
 
   self.attachment_source_slug = 'kalendar'
 
@@ -18,7 +21,7 @@ class Event < ApplicationRecord
       id: id,
       title: title.to_s,
       description: description.to_s,
-      location_name: location_name.to_s,
+      location_name: effective_location_name.to_s,
       host_acct: account&.acct.to_s,
       account_id: account_id,
       starts_at: start_time&.to_i,
@@ -28,11 +31,6 @@ class Event < ApplicationRecord
 
   belongs_to :account
   belongs_to :status, optional: true
-
-  # The reach the creator chose for the event's post. Set by the controller
-  # before save, because the spawned album is made on create, before that
-  # post exists. Not stored.
-  attr_accessor :requested_reach
 
   belongs_to :parent_event, class_name: 'Event', optional: true
   belongs_to :image, class_name: 'MediaAttachment', optional: true
@@ -61,16 +59,14 @@ class Event < ApplicationRecord
   # `list` and `birthdays` are the pre-2026-09-08 names for `events` and `me`
   # — still routed, so still reserved.
   RESERVED_SLUGS = %w(composer new list events birthdays me settings).freeze
+  self.named_link_reserved = RESERVED_SLUGS
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, length: { maximum: 5000 }
   validates :start_time, presence: true
   validates :location_name, length: { maximum: 200 }
   validates :location_url, length: { maximum: 400 }
-  validates :slug, presence: true, uniqueness: true, length: { maximum: 200 }
   validate :end_time_after_start_time
-
-  before_validation :assign_slug, on: :create
 
   scope :upcoming, -> { where('start_time > ?', Time.now.utc).order(start_time: :asc) }
   scope :past, -> { where(start_time: ..Time.now.utc).order(start_time: :desc) }
@@ -117,8 +113,7 @@ class Event < ApplicationRecord
       'kalendar.event.created',
       event_id: id,
       account_id: account_id,
-      event_type: event_type,
-      spawn_album: spawn_album
+      event_type: event_type
     )
   end
 
@@ -180,31 +175,15 @@ class Event < ApplicationRecord
     image&.file&.url(:small)
   end
 
-  # Autofill `slug` from the title on create. Nothing on update — a
-  # slug change would break existing URLs (bookmarks, shared links,
-  # embed frames in nudges). Editing the title leaves the slug
-  # intact.
-  #
-  # Race: two concurrent creates picking the same base slug can both
-  # see "cold-plunge" as free and both write it; the unique index
-  # catches the second one at save time (RecordInvalid on slug). Bump
-  # the suffix once and retry in the controller if we start seeing
-  # these; for MVP the frequency is too low to bother.
-  def assign_slug
-    return if slug.present?
+  # Where it is. An event's own `location_name` / `location_url` win (older
+  # events, and the Android app, which still writes them); without them, its
+  # Konnected Place: the Place's name, and an OpenStreetMap link to its
+  # point (Kronk::RecordPlace).
+  def effective_location_name
+    location_name.presence || konnected_place&.name
+  end
 
-    base = title.to_s.parameterize
-    base = 'event' if base.blank?
-    base = base.slice(0, 200)
-    candidate = base
-    candidate = "#{base}-1" if RESERVED_SLUGS.include?(candidate)
-
-    n = 1
-    while Event.where.not(id: id).exists?(slug: candidate)
-      n += 1
-      candidate = "#{base}-#{n}"
-    end
-
-    self.slug = candidate
+  def effective_location_url
+    location_url.presence || Kronk::RecordPlace.osm_url(konnected_place)
   end
 end

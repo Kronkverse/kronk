@@ -2,10 +2,21 @@
 
 class Api::V1::BoothSetsController < Api::BaseController
   PAGE_SIZE = 40
+  # First listens: recent sets that have barely been heard yet, so new
+  # voices get a front-row spot instead of a chart.
+  FIRST_LISTENS_WINDOW = 30.days
+  FIRST_LISTENS_MAX_PLAYS = 10
   REACH = %w(public orbit mates self_only).freeze
+  # The order a listener picks in Musik. Never ranked for them, and no
+  # popularity order: Fewest listens lets them dig for new voices.
+  SORTS = {
+    'newest' => { id: :desc },
+    'fewest' => { play_count: :asc, id: :desc },
+    'longest' => Arel.sql('booth_sets.duration_seconds DESC NULLS LAST, booth_sets.id DESC'),
+  }.freeze
 
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :play, :share, :confirm_credit, :remove_credit]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :play, :share, :confirm_credit, :remove_credit, :save, :unsave]
   before_action :require_user!, except: [:index, :show]
   before_action :set_booth_set, except: [:index, :create]
 
@@ -16,15 +27,17 @@ class Api::V1::BoothSetsController < Api::BaseController
     # left behind, so every request to this endpoint raised
     # `ActiveRecord::AssociationNotFoundError` and 500'd — which showed
     # up as an empty Booth for everyone, since the grid is this one call.
-    @booth_sets = BoothSet.published
-                          .includes(:account, :audio_attachment, :cover_attachment, credits: :account)
-                          .order(id: :desc)
-                          .limit(PAGE_SIZE)
+    @booth_sets = listing_scope
+                  .includes(:account, :audio_attachment, :cover_attachment, credits: :account)
+                  .order(SORTS.fetch(sort_param))
+                  .limit(PAGE_SIZE)
     @booth_sets = @booth_sets.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id)) if current_account
-    @booth_sets = @booth_sets.where(id: ...params[:max_id].to_i) if params[:max_id].present?
+    @booth_sets = page(@booth_sets)
     @booth_sets = @booth_sets.where('? = ANY (booth_sets.genres)', params[:genre].to_s) if params[:genre].present?
+    @booth_sets = @booth_sets.where(kind: params[:kind].to_s) if params[:kind].present?
+    @booth_sets = first_listens(@booth_sets) if truthy?(params[:first_listens])
     @booth_sets = search(@booth_sets, params[:q]) if params[:q].present?
-    render json: @booth_sets, each_serializer: REST::BoothSetSerializer
+    render json: @booth_sets, each_serializer: REST::BoothSetSerializer, saved_ids: saved_ids(@booth_sets)
   end
 
   def show
@@ -85,6 +98,19 @@ class Api::V1::BoothSetsController < Api::BaseController
     render_empty
   end
 
+  # Keep a set to come back to (My sets → Saved). Private to the member.
+  def save
+    raise ActiveRecord::RecordNotFound unless @booth_set.published? || owner?
+
+    BoothSetSave.find_or_create_by!(account: current_account, booth_set: @booth_set)
+    render json: @booth_set, serializer: REST::BoothSetSerializer
+  end
+
+  def unsave
+    BoothSetSave.where(account: current_account, booth_set: @booth_set).delete_all
+    render json: @booth_set, serializer: REST::BoothSetSerializer
+  end
+
   def play
     @booth_set.increment_play_count! if @booth_set.published?
     render_empty
@@ -111,6 +137,48 @@ class Api::V1::BoothSetsController < Api::BaseController
   end
 
   private
+
+  # Everyone's published sets; `mine` is your own, drafts included;
+  # `saved` is what you kept.
+  def listing_scope
+    if truthy?(params[:mine]) && current_account
+      BoothSet.where(account: current_account)
+    elsif truthy?(params[:saved]) && current_account
+      BoothSet.published.where(id: BoothSetSave.where(account: current_account).select(:booth_set_id))
+    else
+      BoothSet.published
+    end
+  end
+
+  # Published in the last month, under ten listens, and not your own (you
+  # can't give yourself a first listen).
+  def first_listens(scope)
+    scope = scope.where(created_at: FIRST_LISTENS_WINDOW.ago..).where(play_count: ...FIRST_LISTENS_MAX_PLAYS)
+    current_account ? scope.where.not(account_id: current_account.id) : scope
+  end
+
+  def sort_param
+    SORTS.key?(params[:sort]) ? params[:sort] : 'newest'
+  end
+
+  # Newest pages back from `max_id`; the other orders page by `offset`.
+  def page(scope)
+    if sort_param == 'newest'
+      params[:max_id].present? ? scope.where(id: ...params[:max_id].to_i) : scope
+    else
+      scope.offset(params[:offset].to_i.clamp(0, 10_000))
+    end
+  end
+
+  def saved_ids(sets)
+    return Set.new unless current_account
+
+    BoothSetSave.where(account: current_account, booth_set_id: sets.map(&:id)).pluck(:booth_set_id).to_set
+  end
+
+  def truthy?(value)
+    ActiveModel::Type::Boolean.new.cast(value) == true
+  end
 
   # Title, credit line or a genre tag, case-insensitively.
   def search(scope, query)
@@ -187,10 +255,10 @@ class Api::V1::BoothSetsController < Api::BaseController
     end
   end
 
+  # What the musician wrote, or the set's title, as any korner's post: the
+  # set's card carries the artist and opens it.
   def share_text
-    body = "#{@booth_set.title} — #{@booth_set.artist_name}\n\n#{booth_set_url(@booth_set)}"
-    comment = params[:comment].to_s.strip
-    comment.present? ? "#{comment}\n\n#{body}" : body
+    params[:comment].to_s.strip.presence || @booth_set.title
   end
 
   def set_booth_set
@@ -224,7 +292,7 @@ class Api::V1::BoothSetsController < Api::BaseController
     # the event side. `event_name` + `event_date` remain as free-text
     # context on the set itself. `artist_name` is not accepted: it is the
     # credit line, built from the uploader and `collaborators`.
-    params.permit(:title, :description, :event_name, :event_date,
+    params.permit(:title, :description, :event_name, :event_date, :kind,
                   :duration_seconds, :published, :cover_offset_y, :tracklist_text, genres: [])
   end
 end

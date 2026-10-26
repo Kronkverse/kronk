@@ -68,14 +68,19 @@ fixes it: **List something**, or **Post a wanted ad** in Desired.
 (`features/wachuneed/new_listing.tsx`): first whether you're offering
 something or looking for something (`?kind=wanted` opens on the second), then
 title, description, category, optional price (a budget, when wanted) in AUD,
-optional free-text location, up to ten photos (`Listing::MAX_PHOTOS`), and
-**Who can see this?**, the reach control (see Who can see it).
+up to ten photos (`Listing::MAX_PHOTOS`), and
+**Who can see this?**, the reach control (see Who can see it). There is no
+location field: where it is, is a Konnection to a Map Place from the Konnect
+row (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). A
+listing's `location` reads its own old free text first (older listings, the
+Android app) and its Konnected Place's name when that is empty.
 Photos upload as they are picked; the first is the cover, and **Make cover**
 on any other moves it to the front. It always
 creates the listing as `live`. No price means free or by arrangement
 (`Listing#free_or_by_arrangement?`).
 
-**Look at one.** `/hub/wachuneed/listings/:id` shows the title, category,
+**Look at one.** `/hub/wachuneed/listings/:name` (by name, `Kronk::NamedLink`;
+an old number still opens it) shows the title, category,
 photos full size and uncropped (bounded to 60vh) in a strip you swipe or
 arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,
@@ -109,7 +114,9 @@ when sent), `POST …/:id/close` (owner only; see Take it down)
 `REST::WachuneedListingSummarySerializer`; the detail `GET` and `PATCH` also
 carry `account`, `price_cents`, `price_currency`, `photo_full_url`,
 `visibility` and `can_message`). Create and `PATCH` take `visibility`
-(`public | mates | orbit | self_only`); the index and the detail show only
+(`public | mates | orbit | self_only`) and `krew_ids` (top level; only
+Krews the seller is in; on `PATCH` it replaces the set, and leaving it out
+keeps it), and the detail carries `krews`; the index and the detail show only
 what the caller can see (a listing they can't is a 404). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
 order) and `photo_url`, the cover. There is no delete endpoint.
@@ -192,8 +199,11 @@ Whoever can see a listing or a shop can message about it (Tal, 2026-10-19:
 "Anyone who can see the items, can message. If a shop is only visible to
 mates, or even if an item within a shop is only visible to mates, thats
 who can message., full control to seller"). Listings and shops each carry
-`visibility` on the reach ladder (`Reachable`, no Krew), chosen with the
-same control as a post's reach (`<ReachDropdown>`):
+`visibility` on the reach ladder (`Reachable`), chosen with the same
+control as a post's reach (`<ReachDropdown>`). A listing can also be for
+Krews (`krew_ids`, the same as an album's; `record_krews`,
+decisions.md 2026-10-25): their members see it, and so can message about
+it, whatever its reach. Shops have no Krews.
 
 - **Me** (`self_only`): only the seller. This also pauses an item.
 - **Mates**: the seller's Mates.
@@ -449,9 +459,9 @@ returned to Wachuneed, slug and all, on 2026-09-07.
   app, and no draft flow. The `auto_close_after_days` setting (default 90)
   is declared but nothing reads it.
 - **"Or trade" flag.** Designed (a price plus "open to trade"), not built.
-- **Location and Map.** Location is free text. Undecided: whether listings
-  should show on Map, using Map's location primitives, and how remote or
-  digital services are marked.
+- **Location and Map.** A location is a Konnected Place. Undecided:
+  whether listings show on Map, and how remote or digital services are
+  marked.
 - **Trust signals.** The design shows mutual Mates, shared Krews and time on
   Kronk beside a listing, with no stars or reviews (a real concern goes to
   Kommons). Not built.

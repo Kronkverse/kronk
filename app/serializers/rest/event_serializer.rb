@@ -5,7 +5,7 @@ class REST::EventSerializer < ActiveModel::Serializer
              :location_name, :location_url, :event_type, :huddle_url,
              :rsvp_enabled, :max_attendees, :recurrence_rule,
              :cancelled, :going_count, :interested_count,
-             :image_url, :spawn_album, :invite_only,
+             :image_url, :invite_only,
              :created_at, :updated_at
 
   belongs_to :account, serializer: REST::AccountSerializer
@@ -17,6 +17,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   attribute :visibility
   attribute :krews
   attribute :going_preview
+  attribute :place_id
 
   def id
     object.id.to_s
@@ -24,6 +25,25 @@ class REST::EventSerializer < ActiveModel::Serializer
 
   def status_id
     object.status_id&.to_s
+  end
+
+  # Its own location, or its Konnected Place's (Event#effective_location_*).
+  # A list preloads the Places (Kronk::RecordPlace.preload); one event on
+  # its own, or inside a status, reads its Place when it has no location.
+  def location_name
+    object.effective_location_name
+  end
+
+  def location_url
+    object.effective_location_url
+  end
+
+  # The Konnected Place its location comes from, when it has none of its own:
+  # the page leaves the map to that Place's card in Konnected.
+  def place_id
+    return nil if object.location_url.present?
+
+    object.konnected_place&.id&.to_s
   end
 
   # The Krews in the event's audience. With `visibility: self_only` they

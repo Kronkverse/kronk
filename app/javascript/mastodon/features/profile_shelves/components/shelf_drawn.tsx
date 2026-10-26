@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { defineMessages, useIntl } from 'react-intl';
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+
+import { Link } from 'react-router-dom';
 
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
@@ -20,6 +22,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import { apiRequestGet } from 'mastodon/api';
 import type {
   ApiProfileSectionJSON,
@@ -27,14 +30,18 @@ import type {
 } from 'mastodon/api/profile_sections';
 import { apiUpdateProfileSection } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
+import { Icon } from 'mastodon/components/icon';
 import { ProfileShopLink } from 'mastodon/components/profile_shop_link';
 import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
+import type { ArtSummary } from 'mastodon/components/status_art_card';
 import { StatusBoothCard } from 'mastodon/components/status_booth_card';
 import { StatusEventCard } from 'mastodon/components/status_event_card';
 import { StatusKommonsCard } from 'mastodon/components/status_kommons_card';
 import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
+import { pieceCardLine } from 'mastodon/features/art/details';
+import { useAppSelector } from 'mastodon/store';
 import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
 // Drawn shelf — a query over the account's posts, resolved at read
@@ -54,6 +61,11 @@ import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 //   event_card      → StatusEventCard
 //   longform        → LongformCard (this file — no dedicated korner card)
 //   photo           → PhotoTile   (this file — media excerpt)
+//   gallery         → GalleryTile (this file — the Gallery, chosen by
+//                                  `settings.source: 'media'`, not render)
+//   art_card        → ArtTile     (this file — any Art shelf, chosen by
+//                                  `korner_slug: 'art'`, not render: Art's
+//                                  photos live on the piece, not the post)
 //   *               → excerpt fallback
 //
 // It used to dispatch on short names (`album`, `track`, `trek`) that no
@@ -88,6 +100,10 @@ const messages = defineMessages({
     id: 'profile_shelves.drawn.position',
     defaultMessage: '{current} of {total}',
   },
+  more: {
+    id: 'profile_shelves.drawn.photo_more',
+    defaultMessage: '+{count}',
+  },
 });
 
 // Short names written into `settings.render` before the manifest card
@@ -115,6 +131,8 @@ const SOURCE_LABEL: Record<string, string> = {
   huddle_card: 'Huddle',
   longform: 'Long reads',
   photo: 'Photos',
+  gallery: 'Photos',
+  art_card: 'Art',
   moment: 'Moments',
   chips: 'Kategory',
   korner: 'Korner',
@@ -151,13 +169,20 @@ const LongformCard: React.FC<LongformCardProps> = ({ status }) => {
   );
 };
 
+const isVisual = (m: ApiStatusJSON['media_attachments'][number]) =>
+  m.type === 'image' || m.type === 'video' || m.type === 'gifv';
+
 interface PhotoTileProps {
   status: ApiStatusJSON;
 }
 
+// One tile per post: its first photo or video's still, a play mark when it
+// moves, and how many more the post holds (the Gallery, docs/spaces/profile.md).
 const PhotoTile: React.FC<PhotoTileProps> = ({ status }) => {
-  const media = status.media_attachments[0];
+  const intl = useIntl();
+  const media = status.media_attachments.find(isVisual);
   if (!media) return null;
+  const more = status.media_attachments.length - 1;
   return (
     <a
       className='profile-shelves__drawn-card profile-shelves__drawn-photo'
@@ -169,6 +194,89 @@ const PhotoTile: React.FC<PhotoTileProps> = ({ status }) => {
         className='profile-shelves__drawn-photo-img'
         loading='lazy'
       />
+      {media.type !== 'image' && (
+        <span className='profile-shelves__drawn-photo-play' aria-hidden='true'>
+          <Icon id='play_arrow' icon={PlayArrowIcon} />
+        </span>
+      )}
+      {more > 0 && (
+        <span className='profile-shelves__drawn-photo-more'>
+          {intl.formatMessage(messages.more, { count: more })}
+        </span>
+      )}
+    </a>
+  );
+};
+
+const GALLERY_CELLS = 4;
+
+// A Gallery tile: a small square holding up to four of the post's photos and
+// videos (one fills it, two split it, three put the first beside two, four
+// make a 2×2), a play mark on each one that moves, and the count of the rest
+// on the last (docs/spaces/profile.md, The Gallery).
+const GalleryTile: React.FC<PhotoTileProps> = ({ status }) => {
+  const intl = useIntl();
+  const visual = status.media_attachments.filter(isVisual);
+  const cells = visual.slice(0, GALLERY_CELLS);
+  if (cells.length === 0) return null;
+  const more = visual.length - cells.length;
+  return (
+    <a
+      className={`profile-shelves__drawn-card profile-shelves__drawn-gallery profile-shelves__drawn-gallery--${cells.length}`}
+      href={`/@${status.account.acct}/${status.id}`}
+    >
+      {cells.map((media, index) => (
+        <span key={media.id} className='profile-shelves__drawn-gallery-cell'>
+          <img
+            alt={media.description ?? ''}
+            src={media.preview_url}
+            className='profile-shelves__drawn-photo-img'
+            loading='lazy'
+          />
+          {media.type !== 'image' && (
+            <span
+              className='profile-shelves__drawn-photo-play'
+              aria-hidden='true'
+            >
+              <Icon id='play_arrow' icon={PlayArrowIcon} />
+            </span>
+          )}
+          {more > 0 && index === cells.length - 1 && (
+            <span className='profile-shelves__drawn-gallery-more'>
+              {intl.formatMessage(messages.more, { count: more })}
+            </span>
+          )}
+        </span>
+      ))}
+    </a>
+  );
+};
+
+// An Art piece on a profile: its cover filling a square, as it does in the
+// Art space and on a portfolio, and its title and card line (medium,
+// year) under it (docs/spaces/art.md, On a profile).
+const ArtTile: React.FC<{ piece: ArtSummary }> = ({ piece }) => {
+  const intl = useIntl();
+  const cover = piece.cover_url ?? piece.preview_urls?.[0];
+  return (
+    <a
+      className='profile-shelves__drawn-card profile-shelves__drawn-art'
+      href={`/hub/art/pieces/${piece.id}`}
+    >
+      {cover && (
+        <span className='profile-shelves__drawn-art-frame'>
+          <img
+            alt=''
+            src={cover}
+            className='profile-shelves__drawn-art-img'
+            loading='lazy'
+          />
+        </span>
+      )}
+      <span className='profile-shelves__drawn-art-title'>{piece.title}</span>
+      <span className='profile-shelves__drawn-art-meta'>
+        {pieceCardLine(intl, piece)}
+      </span>
     </a>
   );
 };
@@ -201,6 +309,7 @@ type WithKornerData = ApiStatusJSON & {
   listing?: unknown;
   proposal?: unknown;
   event?: unknown;
+  art_piece?: ArtSummary;
 };
 
 interface StatusCardProps {
@@ -238,6 +347,10 @@ const StatusCard: React.FC<StatusCardProps> = ({ status, render }) => {
       return <LongformCard status={status} />;
     case 'photo':
       return <PhotoTile status={status} />;
+    case 'gallery':
+      return <GalleryTile status={status} />;
+    case 'art_card':
+      return s.art_piece ? <ArtTile piece={s.art_piece} /> : null;
     default:
       return (
         <ExcerptCard status={status} source={SOURCE_LABEL[render] ?? render} />
@@ -247,6 +360,18 @@ const StatusCard: React.FC<StatusCardProps> = ({ status, render }) => {
 
 /* eslint-enable @typescript-eslint/no-unsafe-assignment,
                  @typescript-eslint/no-explicit-any */
+
+// The way from a profile's Art shelf to the artist's portfolio
+// (docs/spaces/art.md, Portfolio).
+const PortfolioLink: React.FC<{ accountId: string }> = ({ accountId }) => {
+  const acct = useAppSelector((state) => state.accounts.get(accountId)?.acct);
+  if (!acct) return null;
+  return (
+    <Link to={`/hub/art/@${acct}`} className='profile-shelves__shelf-shop'>
+      <FormattedMessage id='profile.art_portfolio' defaultMessage='Portfolio' />
+    </Link>
+  );
+};
 
 interface ShelfDrawnProps {
   accountId: string;
@@ -440,9 +565,18 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   }, []);
 
   const settings = section.settings;
-  const render = canonicalRender(
-    typeof settings.render === 'string' ? settings.render : 'korner',
-  );
+  // The Gallery is stored with the photo render; its source picks its tile.
+  // The Gallery is stored with the photo render, and an Art shelf with
+  // `photo` (the cutover backfill) or `art_card`; the source or korner picks
+  // the tile.
+  const render =
+    settings.source === 'media'
+      ? 'gallery'
+      : settings.korner_slug === 'art'
+        ? 'art_card'
+        : canonicalRender(
+            typeof settings.render === 'string' ? settings.render : 'korner',
+          );
   const source = SOURCE_LABEL[render] ?? render;
   const title =
     section.title ??
@@ -538,6 +672,10 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
               while arranging: the header is then the handle to drag. */}
           {render === 'wachuneed_card' && !arrange && (
             <ProfileShopLink accountId={accountId} />
+          )}
+          {/* An Art shelf leads on to the artist's portfolio. */}
+          {settings.korner_slug === 'art' && !arrange && (
+            <PortfolioLink accountId={accountId} />
           )}
           {headerExtra}
         </span>

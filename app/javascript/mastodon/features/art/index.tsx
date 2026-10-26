@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import {
@@ -12,20 +12,29 @@ import {
   useRouteMatch,
 } from 'react-router-dom';
 
-import { apiGetPiece, apiListPieces } from 'mastodon/api/art';
+import { apiRequestGet } from 'mastodon/api';
+import { apiGetPiece, apiGetPortfolio, apiListPieces } from 'mastodon/api/art';
 import type { PiecesScope } from 'mastodon/api/art';
-import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type {
+  ApiArtPieceJSON,
+  ApiArtPortfolioJSON,
+} from 'mastodon/api_types/art';
+import { EmptyState } from 'mastodon/components/empty_state';
 import { FeedDrum } from 'mastodon/components/feed_drum';
+import { LoadingState } from 'mastodon/components/loading_state';
+import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
+import { useAppSelector } from 'mastodon/store';
 
 import { ArtPieceComposer } from './components/art_piece_composer';
 import { ArtPieceDetail } from './components/art_piece_detail';
-import { artKindLabel } from './kinds';
+import { ArtPortfolio } from './components/art_portfolio';
+import { availabilityLabel, pieceCardLine, piecePrice } from './details';
 
 const messages = defineMessages({
   title: { id: 'art.title', defaultMessage: 'Art' },
-  loading: { id: 'art.loading', defaultMessage: 'Loading…' },
   emptyAll: {
     id: 'art.empty.all',
     defaultMessage: 'No pieces yet — tap the compose button to post one.',
@@ -41,6 +50,14 @@ const messages = defineMessages({
   photos: {
     id: 'art.photos',
     defaultMessage: '{count, plural, one {# photo} other {# photos}}',
+  },
+  yourPortfolio: {
+    id: 'art.your_portfolio',
+    defaultMessage: 'Your portfolio',
+  },
+  portfolioMissing: {
+    id: 'art.portfolio.missing',
+    defaultMessage: "This portfolio isn't here.",
   },
 });
 
@@ -78,6 +95,9 @@ const Art: React.FC<{ multiColumn?: boolean }> = () => {
         <Route path='/hub/art/pieces/:id' exact>
           <PieceDetailRoute />
         </Route>
+        <Route path='/hub/art/@:acct' exact>
+          <PortfolioRoute />
+        </Route>
         <Route path='/hub/art/composer' exact>
           <Directory autoOpenComposer />
         </Route>
@@ -113,7 +133,7 @@ interface DirectoryProps {
 const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const history = useHistory();
-  const { signedIn } = useIdentity();
+  const { signedIn, accountId: myId } = useIdentity();
   const scope = useCurrentScope();
   const [pieces, setPieces] = useState<ApiArtPieceJSON[] | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
@@ -172,37 +192,28 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   // animation.
   const gridContent =
     pieces === null ? (
-      <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
+      <LoadingState />
     ) : pieces.length === 0 ? (
-      <p className='space-subtitle art-directory__empty'>{emptyMessage}</p>
+      <EmptyState title={emptyMessage} />
     ) : (
-      <ul className='art-directory__grid'>
+      <SpaceGrid className='art-directory__grid art-works'>
         {pieces.map((p) => (
-          <li key={p.id} className='art-directory__cell'>
-            <Link to={`/hub/art/pieces/${p.id}`} className='art-card'>
-              {p.cover_url ? (
-                <img className='art-card__cover' src={p.cover_url} alt='' />
-              ) : (
-                <div className='art-card__cover art-card__cover--empty' />
-              )}
-              <div className='art-card__body'>
-                <div className='art-card__title'>{p.title}</div>
-                <div className='art-card__meta'>
-                  {artKindLabel(intl, p.kind)}
-                  {' · '}
-                  {intl.formatMessage(messages.photos, {
-                    count: p.photo_count,
-                  })}
-                </div>
-              </div>
-            </Link>
-          </li>
+          <SpaceCard
+            key={p.id}
+            to={`/hub/art/pieces/${p.id}`}
+            image={p.cover_url}
+            title={p.title}
+            meta={pieceCardLine(intl, p)}
+            tag={piecePrice(intl, p) ?? availabilityLabel(intl, p.availability)}
+            tagKind={p.availability}
+          />
         ))}
-      </ul>
+      </SpaceGrid>
     );
 
   return (
     <div className='art-directory'>
+      {scope === 'mine' && myId && <OwnPortfolioLink accountId={myId} />}
       {signedIn ? (
         <FeedDrum
           reach={scope}
@@ -247,13 +258,58 @@ const PieceDetailRoute: React.FC = () => {
     };
   }, [match.params.id]);
 
-  if (!piece) {
-    return (
-      <p className='space-subtitle'>
-        <FormattedMessage id='art.loading' defaultMessage='Loading…' />
-      </p>
-    );
-  }
+  if (!piece) return <LoadingState />;
 
   return <ArtPieceDetail piece={piece} onChange={setPiece} />;
+};
+
+// The way from "Mine" to your own portfolio.
+const OwnPortfolioLink: React.FC<{ accountId: string }> = ({ accountId }) => {
+  const intl = useIntl();
+  const acct = useAppSelector((state) => state.accounts.get(accountId)?.acct);
+
+  if (!acct) return null;
+
+  return (
+    <Link to={`/hub/art/@${acct}`} className='art-directory__portfolio-link'>
+      {intl.formatMessage(messages.yourPortfolio)}
+    </Link>
+  );
+};
+
+// /hub/art/@:acct — an artist's portfolio (docs/spaces/art.md, Portfolio).
+const PortfolioRoute: React.FC = () => {
+  const intl = useIntl();
+  const match = useRouteMatch<{ acct: string }>();
+  const [portfolio, setPortfolio] = useState<ApiArtPortfolioJSON | null>(null);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    const guard = { stale: false };
+    setPortfolio(null);
+    setMissing(false);
+    void (async () => {
+      try {
+        const account = await apiRequestGet<ApiAccountJSON>(
+          'v1/accounts/lookup',
+          { acct: match.params.acct },
+        );
+        const data = await apiGetPortfolio(account.id);
+        if (!guard.stale) setPortfolio(data);
+      } catch {
+        if (!guard.stale) setMissing(true);
+      }
+    })();
+    return () => {
+      guard.stale = true;
+    };
+  }, [match.params.acct]);
+
+  if (missing) {
+    return <EmptyState title={intl.formatMessage(messages.portfolioMissing)} />;
+  }
+
+  if (!portfolio) return <LoadingState />;
+
+  return <ArtPortfolio portfolio={portfolio} onChange={setPortfolio} />;
 };

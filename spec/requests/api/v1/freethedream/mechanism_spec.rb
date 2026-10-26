@@ -77,7 +77,8 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       api(bob, :post, "/projects/#{doof['id']}/join")
       api(bob, :post, '/projects', project: { title: 'Live Stage', parent_id: doof['id'] })
 
-      expect(api(alice, :get, "/projects/#{doof['id']}")['can']['remove']).to be false
+      expect(api(alice, :get, "/projects/#{doof['id']}")).to include('can' => include('remove' => false), 'others_inside' => true)
+      expect(api(bob, :get, "/projects/#{doof['id']}")['others_inside']).to be false
       api(alice, :delete, "/projects/#{doof['id']}")
       expect(response).to have_http_status(403)
     end
@@ -90,6 +91,23 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       api(alice, :delete, "/projects/#{kitchen['id']}")
       expect(response).to have_http_status(200)
       expect(Freethedream::Item.exists?(need['id'])).to be false
+    end
+
+    it 'takes the links of the gangs and fractals inside with it', :aggregate_failures do
+      doof = start_project(alice)
+      kitchen = api(alice, :post, '/projects', project: { title: 'Kitchen', parent_id: doof['id'] })
+      cooking = api(alice, :post, '/projects', project: { title: 'Cooking', parent_id: kitchen['id'] })
+      event = Event.create!(account: alice.account, title: 'Cook-up', start_time: 3.days.from_now, end_time: 4.days.from_now)
+      links = [kitchen, cooking].map do |part|
+        KornerAttachment.create!(source_slug: 'kalendar', source_id: event.id, target_slug: 'freethedream', target_id: part['id'].to_i,
+                                 kind: KornerAttachment::KIND_LINK, created_by_account: alice.account)
+      end
+
+      api(alice, :delete, "/projects/#{doof['id']}")
+      expect(response).to have_http_status(200)
+      expect(Freethedream::Project.where(id: [doof, kitchen, cooking].pluck('id'))).to be_empty
+      expect(KornerAttachment.where(id: links.map(&:id))).to be_empty
+      expect(Event.exists?(event.id)).to be true
     end
   end
 

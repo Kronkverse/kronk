@@ -39,6 +39,7 @@
 @use 'mastodon/draft_bar';
 @use 'mastodon/kronk_detail';
 @use 'mastodon/kronk_share_sheet';
+@use 'mastodon/space_tiles';
 @use 'mastodon/kronk_attachment';
 @use 'mastodon/status_engagement';
 @use 'mastodon/all_settings_footer';
@@ -127,10 +128,12 @@
 @use 'mastodon/stars';
 @use 'mastodon/buttons_kronk';
 @use 'mastodon/compose_shell';
+@use 'mastodon/compose_fields';
 @use 'mastodon/compose_reframe';
 @use 'mastodon/kronk_feed_float';
 @use 'mastodon/walkthrough';
 @use 'mastodon/settings_page';
+@use 'mastodon/setup';
 @use 'kronk/wordmark';
 @use 'kronk/form';
 @use 'kronk/scope_title';

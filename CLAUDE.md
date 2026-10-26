@@ -165,6 +165,7 @@ server-side strings go in `config/locales/kronk/overrides.yml`.
 | tune in / tune out                   | subscribe, follow (a korner)     | code field stays `subscription`                         |
 | nudge, Nudges                        | bell                             | the space; its two faces are Notifications and Messages |
 | froth                                | like, favourite                  | code stays `favourite`                                  |
+| Konnect, Konnected, Diskonnect       | attach, attached, link           | records across spaces; code stays `attachment`          |
 | steward                              | moderator                        | reserved — don't repurpose                              |
 
 The K-grammar (Kalendar, Kommons, Kuestions) is the house style for names.
@@ -555,7 +556,7 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.1.3 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
+Production is `2.1.4 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
 release, minors included, is "Rose" (decisions.md, 2026-10-19).
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —

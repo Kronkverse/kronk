@@ -4,7 +4,7 @@
 # Status. Mirrors REST::ProposalSummarySerializer /
 # REST::BoothSetSummarySerializer / REST::TrekSummarySerializer.
 class REST::AlbumSummarySerializer < ActiveModel::Serializer
-  attributes :id, :title, :visibility, :contributor_count, :photo_count
+  attributes :id, :slug, :title, :visibility, :contributor_count, :photo_count
 
   attribute :cover_url
   attribute :contributor_avatars

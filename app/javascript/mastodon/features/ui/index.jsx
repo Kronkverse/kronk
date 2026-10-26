@@ -131,6 +131,7 @@ import {
   SettingsYou,
   SettingsKorners,
   AppearanceSettings,
+  Setup,
   PostingSettings,
   NotificationsSettings,
   PrivacySettings,
@@ -309,20 +310,25 @@ class SwitchingColumnsArea extends PureComponent {
                 /huddle path forwards to it. `/hub/huddle` renders the
                 Main Huddle lobby + the open Rooms discovery list
                 (Phase 9.6). `/hub/huddle/room/:id` goes straight into
-                that Room's Jitsi call. Krew Huddles come with Phase 9.1/9.2. */}
+                that Room's Jitsi call. `/hub/huddle/composer` opens the New
+                Room composer over the lobby (`?krew=<id>` picks a Krew to
+                Konnect it to); the old `/hub/huddle/new` forwards there,
+                query and all. Krew Huddles come with Phase 9.1/9.2. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
             {signedIn && <WrappedRoute path='/hub/huddle/room/:id' exact component={LiveRoom} content={children} />}
-            {signedIn && <WrappedRoute path='/hub/huddle/new' exact component={Live} componentParams={{ autoOpenNewRoom: true }} content={children} />}
+            <Redirect from='/hub/huddle/new' to={{ ...this.props.location, pathname: '/hub/huddle/composer' }} exact />
+            {signedIn && <WrappedRoute path='/hub/huddle/composer' exact component={Live} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle' exact component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
             {/* Native Booth. The non-exact /hub/booth match also catches the
                 lens sub-paths (/hub/booth/musik, /artists, …); the component
                 reads the lens from the URL. Set detail is matched above. */}
-            <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
+            <WrappedRoute path={["/booth", "/hub/booth", "/hub/booth/live/:id"]} component={Booth} content={children} />
             {signedIn && <WrappedRoute path='/settings' exact stage component={SettingsHub} content={children} />}
             {signedIn && <WrappedRoute path='/settings/you' exact stage component={SettingsYou} content={children} />}
             {signedIn && <WrappedRoute path='/hub/settings' exact component={SettingsKorners} content={children} />}
             {signedIn && <WrappedRoute path='/settings/appearance' exact stage component={AppearanceSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/setup' exact stage component={Setup} content={children} />}
             {signedIn && <WrappedRoute path='/settings/posting' exact stage component={PostingSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/notifications' exact stage component={NotificationsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/privacy' exact stage component={PrivacySettings} content={children} />}

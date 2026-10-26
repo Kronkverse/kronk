@@ -1,0 +1,516 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { defineMessages, useIntl } from 'react-intl';
+
+import { useLocation } from 'react-router-dom';
+
+import * as maplibregl from 'maplibre-gl';
+
+import countriesUrl from '@/images/first-nations-countries.geojson?url';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import { FIRST_NATIONS_COUNTRIES } from 'mastodon/components/first_nations_countries';
+import type { FirstNationsCountry } from 'mastodon/components/first_nations_countries';
+import { Icon } from 'mastodon/components/icon';
+
+// First Nations Country — the Countries of Aboriginal and Torres Strait
+// Islander peoples drawn over Australia, switched on and off from the Map
+// (Kommons "Introduce First nation country display", 2026-10-23; drawn as
+// shapes you can tap, Kommons "Interactive Map Build", 2026-10-26).
+//
+// The shapes are traced from @mangobee's own map, shown with their permission
+// for education: each Country's colour area was taken off the picture,
+// re-projected from its Lambert conformal conic (standard parallels -18° and
+// -36°, fitted to 21 towns marked on it) and its name read off the map. Each
+// shape carries `name`, `colour` (as on the map), `also` (other names written
+// on the same shape), `label` (where its name sits), `bbox` and `area`.
+// A shape the reading missed has an empty name, to be named.
+
+interface CountryProps {
+  id: number;
+  name: string;
+  colour: string;
+  also?: string[];
+  label: [number, number];
+  bbox: [number, number, number, number];
+  area: number;
+}
+
+type CountryCollection = GeoJSON.FeatureCollection<
+  GeoJSON.Polygon | GeoJSON.MultiPolygon,
+  CountryProps
+>;
+
+const SOURCE_ID = 'first-nations-country';
+const FILL_ID = 'first-nations-country-fill';
+const LINE_ID = 'first-nations-country-line';
+const PICKED_ID = 'first-nations-country-picked';
+
+// Under the Mates' fuzz circles and pins, over the basemap.
+const BENEATH = 'fuzz-fill';
+
+// The colours stay calm so the names read, and calmer still close in so the
+// streets come through; the picked Country lifts.
+const FILL_OPACITY: maplibregl.ExpressionSpecification = [
+  'interpolate',
+  ['linear'],
+  ['zoom'],
+  4,
+  ['case', ['boolean', ['feature-state', 'picked'], false], 0.85, 0.62],
+  10,
+  ['case', ['boolean', ['feature-state', 'picked'], false], 0.55, 0.3],
+];
+
+const STORAGE_KEY = 'kronk.map.country_layer';
+
+const messages = defineMessages({
+  show: {
+    id: 'map.country.show',
+    defaultMessage: 'First Nations Country',
+  },
+  hide: {
+    id: 'map.country.hide',
+    defaultMessage: 'Hide First Nations Country',
+  },
+  disclaimer: {
+    id: 'map.country.disclaimer',
+    defaultMessage:
+      'Boundaries are approximate. Country, its names and its borders are held by its peoples.',
+  },
+  find: {
+    id: 'map.country.find',
+    defaultMessage: 'Find a Country',
+  },
+  country: {
+    id: 'map.country.card_title',
+    defaultMessage: '{name} Country',
+  },
+  unnamed: {
+    id: 'map.country.unnamed',
+    defaultMessage: 'Not named yet',
+  },
+  alsoOnMap: {
+    id: 'map.country.also_on_map',
+    defaultMessage: 'Also written here: {names}',
+  },
+  alsoKnown: {
+    id: 'map.country.also_known',
+    defaultMessage: 'Also known as {names}',
+  },
+  close: { id: 'map.country.close', defaultMessage: 'Close' },
+});
+
+const readStored = () => {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === 'on';
+  } catch {
+    return false;
+  }
+};
+
+const writeStored = (on: boolean) => {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off');
+  } catch {
+    // A private window: the choice lasts the visit.
+  }
+};
+
+// Case, accents and ŋ don't matter when matching names.
+const fold = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/ŋ/gi, 'ng')
+    .toLowerCase()
+    .replace(/[^a-z]/g, '');
+
+const listEntry = (name: string): FirstNationsCountry | undefined => {
+  const wanted = fold(name);
+  if (!wanted) return undefined;
+  return FIRST_NATIONS_COUNTRIES.find(
+    (c) =>
+      fold(c.name) === wanted || (c.also ?? []).some((a) => fold(a) === wanted),
+  );
+};
+
+// Every name a shape answers to: its own, the others written on it, and the
+// other spellings the Country list gives.
+const namesOf = (props: CountryProps) => {
+  const own = [props.name, ...(props.also ?? [])].filter(Boolean);
+  const listed = own.flatMap((n) => {
+    const entry = listEntry(n);
+    return entry ? [entry.name, ...(entry.also ?? [])] : [];
+  });
+  return [...new Set([...own, ...listed])];
+};
+
+// Roughly how many pixels across a shape is at this zoom (web mercator,
+// stretched by latitude), to tell whether its name fits inside.
+const widthAt = (props: CountryProps, zoom: number) => {
+  const perDegree = (512 * 2 ** zoom) / 360;
+  const stretch = 1 / Math.cos((props.label[1] * Math.PI) / 180);
+  return Math.sqrt(props.area * stretch) * perDegree;
+};
+
+// Names wait until the map is zoomed in a step from where it opens: at
+// Australia-wide only Mardu fits, and one name on its own reads as if it
+// were picked (@mangobee, 2026-10-26). From zoom 4 a couple of dozen come in
+// together, and more as you go closer.
+const NAMES_FROM_ZOOM = 4;
+
+const nameFits = (props: CountryProps, zoom: number) =>
+  props.name !== '' &&
+  zoom >= NAMES_FROM_ZOOM &&
+  widthAt(props, zoom) > props.name.length * 7 + 8;
+
+interface Props {
+  map: maplibregl.Map | null;
+  ready: boolean;
+}
+
+export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
+  const intl = useIntl();
+  const location = useLocation();
+  const [on, setOn] = useState(readStored);
+  const [countries, setCountries] = useState<CountryCollection | null>(null);
+  const [picked, setPicked] = useState<CountryProps | null>(null);
+  const [query, setQuery] = useState('');
+  const labelsRef = useRef<Map<number, maplibregl.Marker>>(new Map());
+
+  // A profile's "On <name> Country" links here with ?country=<name>.
+  const requested = useMemo(
+    () => new URLSearchParams(location.search).get('country'),
+    [location.search],
+  );
+  useEffect(() => {
+    if (requested) {
+      setOn(true);
+      writeStored(true);
+    }
+  }, [requested]);
+
+  // The shapes are only fetched once someone turns them on.
+  useEffect(() => {
+    if (!on || countries) return;
+    let cancelled = false;
+    void fetch(countriesUrl)
+      .then((r) => r.json() as Promise<CountryCollection>)
+      .then((data) => {
+        if (!cancelled) setCountries(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [on, countries]);
+
+  // ── Layers ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!map || !ready || !countries) return;
+
+    if (!map.getSource(SOURCE_ID)) {
+      map.addSource(SOURCE_ID, {
+        type: 'geojson',
+        data: countries,
+        promoteId: 'id',
+      });
+      const beneath = map.getLayer(BENEATH) ? BENEATH : undefined;
+      map.addLayer(
+        {
+          id: FILL_ID,
+          type: 'fill',
+          source: SOURCE_ID,
+          paint: {
+            'fill-color': ['get', 'colour'],
+            'fill-opacity': FILL_OPACITY,
+          },
+        },
+        beneath,
+      );
+      map.addLayer(
+        {
+          id: LINE_ID,
+          type: 'line',
+          source: SOURCE_ID,
+          paint: {
+            'line-color': '#241a42',
+            'line-opacity': 0.55,
+            'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.4, 10, 1],
+          },
+        },
+        beneath,
+      );
+      map.addLayer(
+        {
+          id: PICKED_ID,
+          type: 'line',
+          source: SOURCE_ID,
+          filter: ['==', ['get', 'id'], -1],
+          paint: { 'line-color': '#ffffff', 'line-width': 2.5 },
+        },
+        beneath,
+      );
+    }
+
+    const visibility = on ? 'visible' : 'none';
+    [FILL_ID, LINE_ID, PICKED_ID].forEach((id) => {
+      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visibility);
+    });
+  }, [map, ready, countries, on]);
+
+  // ── Names ─────────────────────────────────────────────────────────
+  // Drawn in Kronk's own type as small markers, shown only where a name fits
+  // inside its Country at this zoom (the basemap carries no label glyphs).
+  useEffect(() => {
+    if (!map || !ready || !countries || !on) return;
+    const labels = labelsRef.current;
+
+    const place = () => {
+      const zoom = map.getZoom();
+      const view = map.getBounds();
+      countries.features.forEach(({ properties: props }) => {
+        const show =
+          nameFits(props, zoom) &&
+          view.contains(props.label as maplibregl.LngLatLike);
+        const marker = labels.get(props.id);
+        if (show && !marker) {
+          const el = document.createElement('span');
+          el.className = 'map-country__name';
+          el.textContent = props.name;
+          labels.set(
+            props.id,
+            new maplibregl.Marker({ element: el })
+              .setLngLat(props.label)
+              .addTo(map),
+          );
+        } else if (!show && marker) {
+          marker.remove();
+          labels.delete(props.id);
+        }
+      });
+    };
+
+    place();
+    map.on('moveend', place);
+    return () => {
+      map.off('moveend', place);
+      labels.forEach((m) => m.remove());
+      labels.clear();
+    };
+  }, [map, ready, countries, on]);
+
+  // ── Picking ───────────────────────────────────────────────────────
+  const pick = useCallback(
+    (props: CountryProps | null, fly = false) => {
+      setPicked(props);
+      if (!map) return;
+      if (map.getLayer(PICKED_ID)) {
+        map.setFilter(PICKED_ID, ['==', ['get', 'id'], props?.id ?? -1]);
+      }
+      if (props && fly) {
+        const [w, s, e, n] = props.bbox;
+        map.fitBounds(
+          [
+            [w, s],
+            [e, n],
+          ],
+          { padding: 80, maxZoom: 8, duration: 900 },
+        );
+      }
+    },
+    [map],
+  );
+
+  useEffect(() => {
+    if (!map || !ready || !countries) return;
+    const previous = picked?.id;
+    if (!map.getSource(SOURCE_ID)) return;
+    if (previous !== undefined) {
+      map.setFeatureState(
+        { source: SOURCE_ID, id: previous },
+        { picked: true },
+      );
+    }
+    return () => {
+      if (previous !== undefined && map.getSource(SOURCE_ID)) {
+        map.setFeatureState(
+          { source: SOURCE_ID, id: previous },
+          { picked: false },
+        );
+      }
+    };
+  }, [map, ready, countries, picked]);
+
+  useEffect(() => {
+    if (!map || !ready || !countries || !on) return;
+    const onClick = (e: maplibregl.MapMouseEvent) => {
+      const [hit] = map.queryRenderedFeatures(e.point, { layers: [FILL_ID] });
+      const id = hit?.properties.id as number | undefined;
+      pick(
+        countries.features.find((f) => f.properties.id === id)?.properties ??
+          null,
+      );
+    };
+    const pointer = () => {
+      map.getCanvas().style.cursor = 'pointer';
+    };
+    const plain = () => {
+      map.getCanvas().style.cursor = '';
+    };
+    map.on('click', onClick);
+    map.on('mouseenter', FILL_ID, pointer);
+    map.on('mouseleave', FILL_ID, plain);
+    return () => {
+      map.off('click', onClick);
+      map.off('mouseenter', FILL_ID, pointer);
+      map.off('mouseleave', FILL_ID, plain);
+    };
+  }, [map, ready, countries, on, pick]);
+
+  // ?country=<name> flies there once the shapes are in.
+  useEffect(() => {
+    if (!requested || !countries || !ready) return;
+    const wanted = fold(requested);
+    const found = countries.features.find(({ properties }) =>
+      namesOf(properties).some((n) => fold(n) === wanted),
+    );
+    if (found) pick(found.properties, true);
+  }, [requested, countries, ready, pick]);
+
+  // ── Find a Country ────────────────────────────────────────────────
+  const matches = useMemo(() => {
+    const wanted = fold(query);
+    if (!wanted || !countries) return [];
+    return countries.features
+      .map((f) => f.properties)
+      .filter((props) => namesOf(props).some((n) => fold(n).includes(wanted)))
+      .sort(
+        (a, b) =>
+          Number(!fold(a.name).startsWith(wanted)) -
+            Number(!fold(b.name).startsWith(wanted)) ||
+          a.name.localeCompare(b.name),
+      )
+      .slice(0, 6);
+  }, [query, countries]);
+
+  const handleQuery = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+  }, []);
+
+  const choose = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const id = Number(e.currentTarget.value);
+      const found = countries?.features.find((f) => f.properties.id === id);
+      if (found) pick(found.properties, true);
+      setQuery('');
+    },
+    [countries, pick],
+  );
+
+  const toggle = useCallback(() => {
+    setOn((was) => {
+      writeStored(!was);
+      if (was) pick(null);
+      return !was;
+    });
+  }, [pick]);
+
+  const close = useCallback(() => {
+    pick(null);
+  }, [pick]);
+
+  const entry = picked ? listEntry(picked.name) : undefined;
+  const otherNames = picked
+    ? (picked.also ?? []).filter((n) => fold(n) !== fold(picked.name))
+    : [];
+
+  return (
+    <div className='map-country'>
+      <button
+        type='button'
+        className={`map-country__toggle${on ? ' map-country__toggle--on' : ''}`}
+        aria-pressed={on}
+        onClick={toggle}
+        title={intl.formatMessage(on ? messages.hide : messages.show)}
+      >
+        {intl.formatMessage(messages.show)}
+      </button>
+
+      {on && (
+        <div className='map-country__find'>
+          <input
+            type='search'
+            value={query}
+            onChange={handleQuery}
+            placeholder={intl.formatMessage(messages.find)}
+            aria-label={intl.formatMessage(messages.find)}
+            className='map-country__find-input'
+          />
+          {matches.length > 0 && (
+            <div className='map-country__matches'>
+              {matches.map((props) => (
+                <button
+                  key={props.id}
+                  type='button'
+                  value={props.id}
+                  onClick={choose}
+                  className='map-country__match'
+                >
+                  {props.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {on && picked && (
+        <section className='map-country__card' aria-live='polite'>
+          <div className='map-country__card-head'>
+            <h2 className='map-country__card-title'>
+              {picked.name
+                ? intl.formatMessage(messages.country, { name: picked.name })
+                : intl.formatMessage(messages.unnamed)}
+            </h2>
+            <button
+              type='button'
+              className='map-country__close'
+              onClick={close}
+              aria-label={intl.formatMessage(messages.close)}
+            >
+              <Icon id='close' icon={CloseIcon} />
+            </button>
+          </div>
+          {entry && (
+            <p className='map-country__card-line'>
+              {[entry.group, entry.region].filter(Boolean).join(' · ')}
+            </p>
+          )}
+          {entry?.also && entry.also.length > 0 && (
+            <p className='map-country__card-line'>
+              {intl.formatMessage(messages.alsoKnown, {
+                names: entry.also.join(', '),
+              })}
+            </p>
+          )}
+          {otherNames.length > 0 && (
+            <p className='map-country__card-line'>
+              {intl.formatMessage(messages.alsoOnMap, {
+                names: otherNames.join(', '),
+              })}
+            </p>
+          )}
+          <p className='map-country__card-note'>
+            {intl.formatMessage(messages.disclaimer)}
+          </p>
+        </section>
+      )}
+
+      {on && !picked && (
+        <p className='map-country__note'>
+          {intl.formatMessage(messages.disclaimer)}
+        </p>
+      )}
+    </div>
+  );
+};

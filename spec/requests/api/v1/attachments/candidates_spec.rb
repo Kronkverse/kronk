@@ -44,6 +44,50 @@ RSpec.describe 'Attachments::Candidates' do
       expect(titles).to_not include('Bob\'s wedding')
     end
 
+    it 'offers upcoming Kalendar events, and past ones when asked' do
+      Event.create!(account: user.account, title: 'Last picnic', start_time: 3.days.ago, end_time: 3.days.ago + 2.hours)
+      Event.create!(account: user.account, title: 'Next picnic', start_time: 3.days.from_now, end_time: 3.days.from_now + 2.hours)
+
+      get '/api/v1/attachments/candidates?korner=kalendar&q=picnic', headers: headers
+      expect(response.parsed_body.pluck('title')).to eq ['Next picnic']
+
+      get '/api/v1/attachments/candidates?korner=kalendar&q=picnic&past=1', headers: headers
+      expect(response.parsed_body.pluck('title')).to eq ['Last picnic']
+    end
+
+    # A composer opened with `?konnect=<slug>:<id>` looks its source up by id
+    # for the tile's title. The visibility scopes used to replace the id
+    # condition, so the tile named the newest Krew or event instead.
+    it 'looks a Krew up by id, not the newest one the viewer can find' do
+      mine = Krew.create!(slug: 'mainframe', name: 'Mainframe', access: 'open')
+      mine.krew_memberships.create!(account: user.account, role: 'member', source: 'direct')
+      newer = Krew.create!(slug: 'mayhem', name: 'Mayhem New Years', access: 'open')
+      newer.krew_memberships.create!(account: user.account, role: 'member', source: 'direct')
+
+      get "/api/v1/attachments/candidates?korner=krew&id=#{mine.id}", headers: headers
+
+      expect(response.parsed_body.pluck('title')).to eq ['Mainframe']
+      # It says what it is, beside a title another record may share.
+      expect(response.parsed_body.pluck('noun')).to eq ['Krew']
+    end
+
+    it 'looks an event up by id, not the newest one the viewer can see' do
+      first = Event.create!(account: user.account, title: 'Dawn swim', start_time: 3.days.from_now, end_time: 3.days.from_now + 1.hour)
+      Event.create!(account: user.account, title: 'Dusk swim', start_time: 4.days.from_now, end_time: 4.days.from_now + 1.hour)
+
+      get "/api/v1/attachments/candidates?korner=kalendar&id=#{first.id}", headers: headers
+
+      expect(response.parsed_body.pluck('title')).to eq ['Dawn swim']
+    end
+
+    it 'says when each Kalendar event starts' do
+      event = Event.create!(account: user.account, title: 'Dawn swim', start_time: 3.days.from_now, end_time: 3.days.from_now + 1.hour)
+
+      get '/api/v1/attachments/candidates?korner=kalendar&q=dawn', headers: headers
+
+      expect(response.parsed_body.first['starts_at']).to eq(event.start_time.iso8601)
+    end
+
     it 'returns the user\'s Albutts albums with no query' do
       Album.create!(owner: user.account, title: 'Roadtrip', visibility: :public)
 
@@ -52,6 +96,18 @@ RSpec.describe 'Attachments::Candidates' do
       expect(response).to have_http_status(200)
       titles = response.parsed_body.pluck('title')
       expect(titles).to include('Roadtrip')
+    end
+
+    it 'finds one record by id, past events included, for a composer opened to Konnect it' do
+      event = Event.create!(account: user.account, title: 'Last picnic', start_time: 3.days.ago, end_time: 3.days.ago + 2.hours)
+      Event.create!(account: user.account, title: 'Next picnic', start_time: 3.days.from_now, end_time: 3.days.from_now + 2.hours)
+
+      get "/api/v1/attachments/candidates?korner=kalendar&id=#{event.id}", headers: headers
+      expect(response.parsed_body.pluck('title')).to eq ['Last picnic']
+
+      hidden = Album.create!(owner: Fabricate(:account), title: 'Private', visibility: :self_only)
+      get "/api/v1/attachments/candidates?korner=albutts&id=#{hidden.id}", headers: headers
+      expect(response.parsed_body).to eq []
     end
 
     it 'serialises each hit with slug + id + title + url' do

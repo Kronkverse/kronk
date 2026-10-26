@@ -142,7 +142,7 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
       api(bob, :post, "/items/#{plates['id']}/bring", quantity: 8)
 
       thread = api(cara, :post, '/comments', subject_type: 'project', subject_id: kitchen['id'], body: 'Enamel or paper?', quoted_item_id: plates['id']).first
-      expect(thread['quoted_item']).to eq('id' => plates['id'], 'kind' => 'need', 'title' => 'plates', 'quantity' => 20, 'unit' => '', 'covered' => 8, 'more_welcome' => true)
+      expect(thread['quoted_item']).to eq('id' => plates['id'], 'slug' => 'plates', 'kind' => 'need', 'title' => 'plates', 'quantity' => 20, 'unit' => '', 'covered' => 8, 'more_welcome' => true)
 
       elsewhere = api(cara, :post, '/projects', project: { title: 'Other doof' })
       theirs = api(cara, :post, '/items', item: { project_id: elsewhere['id'], kind: 'need', title: 'cups' })

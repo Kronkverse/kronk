@@ -31,6 +31,8 @@ module Kronk
     OTHER_RECORDS = {
       'freethedream' => { 'i' => 'Freethedream::Item' },
       'kommons' => { 'node' => nil, 'space' => nil },
+      # A trek page holds a trek, not a Place (Map's primary resource).
+      'map' => { 'treks' => nil },
       'wachuneed' => { 'shop' => nil },
     }.freeze
 

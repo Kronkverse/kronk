@@ -35,6 +35,7 @@ export interface ApiRequestJSON {
   buyer: ApiRequestAccountJSON;
   listing: {
     id: string;
+    slug: string;
     title: string;
     state: string;
     cover_url: string | null;

@@ -5,17 +5,30 @@ import { defineMessages, useIntl } from 'react-intl';
 import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeBody,
+  ComposeCheck,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeTextarea,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useAppDispatch } from 'mastodon/store';
 
-import type { BoothSet } from '../types';
+import type { BoothKind, BoothSet } from '../types';
 
+import { ComposerSwitch } from './composer_switch';
 import { CreditsField, creditsPayload } from './credits_field';
 import type { CreditDraft } from './credits_field';
 import { GenreTagInput } from './genre_tag_input';
+import { KindSelect } from './kind_select';
 
 // Booth — upload a set. The shared `<ComposeShell>` overlay opened
 // by the Ж bubble at /hub/booth/composer (legacy /hub/booth/new
@@ -141,6 +154,7 @@ interface BoothDraftParams {
   tracklistText?: string;
   postToFeed?: boolean;
   reach?: ReachValue;
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -219,6 +233,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
+  const [kind, setKind] = useState<BoothKind>('mix');
   const [description, setDescription] = useState('');
   const [tracklistText, setTracklistText] = useState('');
   const [postToFeed, setPostToFeed] = useState(true);
@@ -235,6 +250,10 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const audioInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const stageRef = useRef<UploadStage>(null);
+  // What the new set will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('booth');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go, here and on the
   // server, and comes back when the composer opens again.
@@ -250,8 +269,9 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       setTracklistText(p.tracklistText ?? '');
       setPostToFeed(p.postToFeed ?? true);
       setReach(p.reach ?? 'public');
+      restoreKonnect(p.konnections);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<BoothDraftParams>({
@@ -268,6 +288,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         tracklistText,
         postToFeed,
         reach,
+        konnections: konnect.saved,
       },
     },
     hasContent:
@@ -430,6 +451,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           collaborators: creditsPayload(credits),
           audio_id: audioId,
           genres,
+          kind,
         };
         if (eventName) payload.event_name = eventName;
         if (eventDate) payload.event_date = eventDate;
@@ -441,6 +463,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           signal: controller.signal,
         });
         finishDraft();
+        await commitKonnect('booth', res.data.id);
 
         // The set exists from here on, so a failed feed post must not read
         // as a failed upload: say so and hand over to the set page.
@@ -489,6 +512,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     eventName,
     eventDate,
     genres,
+    kind,
     description,
     tracklistText,
     audioFile,
@@ -499,6 +523,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     intl,
     onCreated,
     finishDraft,
+    commitKonnect,
   ]);
 
   const canSubmit = Boolean(title.trim() && audioFile !== null);
@@ -507,6 +532,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     <ComposeShell
       korner='booth'
       label={intl.formatMessage(messages.shellLabel)}
+      switcher={<ComposerSwitch mode='upload' />}
       submitLabel={intl.formatMessage(messages.submit)}
       submittingLabel={intl.formatMessage(messages.submitting)}
       submitting={submitting}
@@ -514,192 +540,185 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
+      konnect={konnect}
     >
-      <div className='booth-composer'>
-        {error && <div className='booth-upload-form__error'>{error}</div>}
+      {error && <ComposeHint error>{error}</ComposeHint>}
 
-        {submitting && (
-          <div className='booth-upload-form__progress-wrap'>
-            <div className='booth-upload-form__progress-label'>
-              <span>{stageLabel}</span>
-              {stage !== 'saving' && (
-                <span className='booth-upload-form__progress-stats'>
-                  {uploadPct}%{uploadEta ? ` · ${uploadEta} remaining` : ''}
-                </span>
-              )}
-            </div>
-            <div className='booth-upload-form__progress-track'>
-              <div
-                className='booth-upload-form__progress-fill'
-                style={{
-                  width: stage === 'saving' ? '100%' : `${uploadPct}%`,
-                }}
-              />
-            </div>
-            {audioFile && stage === 'audio' && (
-              <div className='booth-upload-form__progress-size'>
-                {formatSize(Math.round((audioFile.size * uploadPct) / 100))} /{' '}
-                {formatSize(audioFile.size)}
-              </div>
-            )}
+      {submitting && (
+        <div className='booth-upload-form__progress-wrap'>
+          <div className='booth-upload-form__progress-label'>
+            <span>{stageLabel}</span>
             {stage !== 'saving' && (
-              <button
-                type='button'
-                className='booth-upload-form__cancel-upload'
-                onClick={handleCancelUpload}
-              >
-                {intl.formatMessage(messages.cancelUpload)}
-              </button>
+              <span className='booth-upload-form__progress-stats'>
+                {uploadPct}%{uploadEta ? ` · ${uploadEta} remaining` : ''}
+              </span>
             )}
           </div>
-        )}
-
-        {!submitting && (
-          <>
-            {/* The one thing a set can't do without comes first. */}
-            <div className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.audio)} *</span>
-              <label className='booth-upload-form__file-picker'>
-                <input
-                  ref={audioInputRef}
-                  type='file'
-                  accept='audio/*'
-                  onChange={handleAudioFileChange}
-                  required
-                />
-                <span className='booth-upload-form__file-picker-label'>
-                  {audioFile
-                    ? intl.formatMessage(messages.replaceFile)
-                    : intl.formatMessage(messages.pickAudio)}
-                </span>
-              </label>
-              {audioFile ? (
-                <span className='booth-upload-form__file-info'>
-                  {audioFile.name} · {formatSize(audioFile.size)}
-                </span>
-              ) : (
-                <small className='booth-upload-form__hint'>
-                  {intl.formatMessage(messages.audioHint)}
-                </small>
-              )}
-              {audioError && (
-                <span className='booth-upload-form__file-error'>
-                  {audioError}
-                </span>
-              )}
+          <div className='booth-upload-form__progress-track'>
+            <div
+              className='booth-upload-form__progress-fill'
+              style={{
+                width: stage === 'saving' ? '100%' : `${uploadPct}%`,
+              }}
+            />
+          </div>
+          {audioFile && stage === 'audio' && (
+            <div className='booth-upload-form__progress-size'>
+              {formatSize(Math.round((audioFile.size * uploadPct) / 100))} /{' '}
+              {formatSize(audioFile.size)}
             </div>
+          )}
+          {stage !== 'saving' && (
+            <button
+              type='button'
+              className='booth-upload-form__cancel-upload'
+              onClick={handleCancelUpload}
+            >
+              {intl.formatMessage(messages.cancelUpload)}
+            </button>
+          )}
+        </div>
+      )}
 
-            <label className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.title)} *</span>
+      {!submitting && (
+        <>
+          {/* The one thing a set can't do without comes first. A file
+              picker, not a kit field: the picker is its own <label>, which
+              can't sit inside <ComposeField>'s. */}
+          <div className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.audio)} *</span>
+            <label className='booth-upload-form__file-picker'>
               <input
-                type='text'
-                value={title}
-                onChange={handleTitleChange}
+                ref={audioInputRef}
+                type='file'
+                accept='audio/*'
+                onChange={handleAudioFileChange}
                 required
+              />
+              <span className='booth-upload-form__file-picker-label'>
+                {audioFile
+                  ? intl.formatMessage(messages.replaceFile)
+                  : intl.formatMessage(messages.pickAudio)}
+              </span>
+            </label>
+            {audioFile ? (
+              <span className='booth-upload-form__file-info'>
+                {audioFile.name} · {formatSize(audioFile.size)}
+              </span>
+            ) : (
+              <small className='booth-upload-form__hint'>
+                {intl.formatMessage(messages.audioHint)}
+              </small>
+            )}
+            {audioError && (
+              <span className='booth-upload-form__file-error'>
+                {audioError}
+              </span>
+            )}
+          </div>
+
+          <ComposeTitle
+            value={title}
+            onChange={handleTitleChange}
+            placeholder={intl.formatMessage(messages.title)}
+            aria-label={intl.formatMessage(messages.title)}
+            required
+            maxLength={200}
+          />
+
+          <div className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.cover)}</span>
+            <label className='booth-upload-form__file-picker'>
+              <input
+                type='file'
+                accept='image/*'
+                onChange={handleCoverFileChange}
+              />
+              <span className='booth-upload-form__file-picker-label'>
+                {coverFile
+                  ? intl.formatMessage(messages.replaceFile)
+                  : intl.formatMessage(messages.pickCover)}
+              </span>
+            </label>
+            {coverFile && (
+              <span className='booth-upload-form__file-info'>
+                {coverFile.name} · {formatSize(coverFile.size)}
+              </span>
+            )}
+            {coverError && (
+              <span className='booth-upload-form__file-error'>
+                {coverError}
+              </span>
+            )}
+          </div>
+
+          <KindSelect value={kind} onChange={setKind} />
+
+          {/* A tag picker (chips and suggestion buttons), not one control,
+              so it isn't wrapped in <ComposeField>'s <label>. */}
+          <div className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.genre)}</span>
+            <GenreTagInput value={genres} onChange={setGenres} />
+          </div>
+
+          <details
+            className='booth-upload-form__more'
+            open={credits.length > 0 || tracklistText !== ''}
+          >
+            <summary>{intl.formatMessage(messages.moreDetails)}</summary>
+
+            <CreditsField value={credits} onChange={setCredits} />
+
+            <ComposeField label={intl.formatMessage(messages.event)}>
+              <ComposeInput
+                value={eventName}
+                onChange={handleEventNameChange}
                 maxLength={200}
               />
-            </label>
+            </ComposeField>
 
-            <div className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.cover)}</span>
-              <label className='booth-upload-form__file-picker'>
-                <input
-                  type='file'
-                  accept='image/*'
-                  onChange={handleCoverFileChange}
-                />
-                <span className='booth-upload-form__file-picker-label'>
-                  {coverFile
-                    ? intl.formatMessage(messages.replaceFile)
-                    : intl.formatMessage(messages.pickCover)}
-                </span>
-              </label>
-              {coverFile && (
-                <span className='booth-upload-form__file-info'>
-                  {coverFile.name} · {formatSize(coverFile.size)}
-                </span>
-              )}
-              {coverError && (
-                <span className='booth-upload-form__file-error'>
-                  {coverError}
-                </span>
-              )}
-            </div>
+            <ComposeField label={intl.formatMessage(messages.eventDate)}>
+              <ComposeInput
+                type='date'
+                value={eventDate}
+                onChange={handleEventDateChange}
+              />
+            </ComposeField>
 
-            <div className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.genre)}</span>
-              <GenreTagInput value={genres} onChange={setGenres} />
-            </div>
+            <ComposeBody
+              value={description}
+              onChange={handleDescriptionChange}
+              placeholder={intl.formatMessage(messages.description)}
+              aria-label={intl.formatMessage(messages.description)}
+              rows={3}
+              maxLength={5000}
+            />
 
-            <details
-              className='booth-upload-form__more'
-              open={credits.length > 0 || tracklistText !== ''}
+            <ComposeField
+              label={intl.formatMessage(messages.tracklist)}
+              hint={intl.formatMessage(messages.tracklistHint)}
             >
-              <summary>{intl.formatMessage(messages.moreDetails)}</summary>
+              <ComposeTextarea
+                value={tracklistText}
+                onChange={handleTracklistChange}
+                rows={6}
+              />
+            </ComposeField>
+          </details>
 
-              <CreditsField value={credits} onChange={setCredits} />
-
-              <label className='booth-upload-form__field'>
-                <span>{intl.formatMessage(messages.event)}</span>
-                <input
-                  type='text'
-                  value={eventName}
-                  onChange={handleEventNameChange}
-                  maxLength={200}
-                />
-              </label>
-
-              <label className='booth-upload-form__field'>
-                <span>{intl.formatMessage(messages.eventDate)}</span>
-                <input
-                  type='date'
-                  value={eventDate}
-                  onChange={handleEventDateChange}
-                />
-              </label>
-
-              <label className='booth-upload-form__field'>
-                <span>{intl.formatMessage(messages.description)}</span>
-                <textarea
-                  value={description}
-                  onChange={handleDescriptionChange}
-                  rows={3}
-                  maxLength={5000}
-                />
-              </label>
-
-              <label className='booth-upload-form__field'>
-                <span>{intl.formatMessage(messages.tracklist)}</span>
-                <textarea
-                  value={tracklistText}
-                  onChange={handleTracklistChange}
-                  rows={6}
-                />
-                <small className='booth-upload-form__hint'>
-                  {intl.formatMessage(messages.tracklistHint)}
-                </small>
-              </label>
-            </details>
-
-            <div className='booth-upload-form__feed'>
-              <label className='booth-upload-form__check'>
-                <input
-                  type='checkbox'
-                  checked={postToFeed}
-                  onChange={handlePostToFeedChange}
-                />
-                <span>{intl.formatMessage(messages.postToFeed)}</span>
-              </label>
-              {postToFeed && (
-                <ReachDropdown value={reach} onChange={setReach} />
-              )}
-              <small className='booth-upload-form__hint'>
-                {intl.formatMessage(messages.postToFeedHint)}
-              </small>
-            </div>
-          </>
-        )}
-      </div>
+          <div className='booth-upload-form__feed'>
+            <ComposeCheck
+              label={intl.formatMessage(messages.postToFeed)}
+              checked={postToFeed}
+              onChange={handlePostToFeedChange}
+            />
+            {postToFeed && <ReachDropdown value={reach} onChange={setReach} />}
+            <ComposeHint>
+              {intl.formatMessage(messages.postToFeedHint)}
+            </ComposeHint>
+          </div>
+        </>
+      )}
     </ComposeShell>
   );
 };

@@ -9,8 +9,9 @@ Renamed from **Kompass** to **Map**, its original Kommons-proposal name
 
 Map lets people **signal presence on their own terms**: where they are,
 only if they choose to say, and only to their Mates. It also holds
-**treks**, recorded walks, runs and rides that you can share with Mates.
-Location never federates (`federates: false`).
+**treks**, recorded walks, runs and rides that you can share with Mates,
+and **Places**, exact spots with an address that anything on Kronk can
+Konnect to. Location never federates (`federates: false`).
 
 ## Views
 
@@ -19,20 +20,62 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 
 - **Map** (`mates`, default, `/hub/map`) — a MapLibre map with your Mates'
   pins, a people strip (a face per pin, your own slot last; tap to
-  centre), and upcoming Kalendar events as markers.
+  centre), upcoming Kalendar events as markers, and Places.
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
   after your Mates' (Kommons "Treks list of Mates before Mine",
   2026-10-21).
 
-Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here)
-and `/hub/map/composer` (the trek composer in the shared compose-shell
-overlay; `/hub/map/logger` is a legacy alias for it). The legacy bare
+Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here),
+`/hub/map/composer` (the trek composer in the shared compose-shell
+overlay; `/hub/map/logger` is a legacy alias for it), and for Places
+`/hub/map/places/:id` (a Place's page) and `/hub/map/places/new` (the
+Place composer). The legacy bare
 `/hub/map/treks` opens **My treks**.
 
 The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
 DO Spaces, drawn in Kronk colours (`basemap.ts`). No third-party map
 provider.
+
+### First Nations Country
+
+A **First Nations Country** button under the zoom buttons (Kommons, @mangobee,
+2026-10-23) draws the Countries of Aboriginal and Torres Strait Islander
+peoples over Australia, under the pins. Off until you turn it on; the choice is
+kept in your browser (`kronk.map.country_layer`). While it is on, a note under
+the button says the boundaries are approximate. It carries no on-map credit
+(@mangobee, 2026-10-26: take the credit line away).
+
+The Countries are shapes you can tap (Kommons "Interactive Map Build",
+@mangobee, 2026-10-26, Option 2): `app/javascript/images/first-nations-countries.geojson`,
+fetched only once the layer is turned on, drawn as a MapLibre `geojson` source
+with a fill in each Country's own colour, thin borders, and the tapped Country
+outlined. They are crisp at every zoom and stay on down to street level (the
+fill calms as you zoom in).
+
+- **Tap a Country** for its card: "<name> Country", and, when the name is on
+  the Country list (`first_nations_countries.ts`), its region, group and other
+  spellings; other names written on the same shape; the boundaries note.
+- **Find a Country**: a search box under the button matches any of those
+  names and flies there.
+- **From a profile**: "On <name> Country" links to `/hub/map?country=<name>`,
+  which turns the layer on and opens that Country.
+- **Names** are drawn in Kronk's own type as small markers, each shown only
+  when it fits inside its Country at that zoom, and none until zoom 4 (at
+  Australia-wide only Mardu fits, and a lone name read as if it were picked;
+  @mangobee, 2026-10-26). The basemap has no glyphs.
+
+The shapes were traced from @mangobee's own map (shown with their permission
+for education; the original is on the proposal): each colour area taken off
+the picture, re-projected from its Lambert conformal conic (standard parallels
+−18° and −36°, fitted to 21 towns marked on it, about 4 px off on average)
+and simplified as one coverage so neighbours share borders; names read off the
+map and matched to the Country list where they can be. Each shape carries
+`id`, `name`, `colour`, `also` (other names on the same shape), `label`,
+`bbox` and `area`. It is a first pass for @mangobee to check: a few small
+coastal Countries (Tiwi, Cobourg, the tip of Cape York) and most of Tasmania
+are coarse or unnamed, and some names placed from the sea may be on the wrong
+shape. A shape with no name shows "Not named yet".
 
 ## Presence
 
@@ -109,19 +152,113 @@ are sent. Heart rate, cadence, power and device fields are never read.
 
 Model: `Trek` (`treks`).
 
+## Places
+
+A Place is an exact spot with a name and an address: a venue, a park, a
+workshop. It is **Map's linkable record**: a location is a Konnection to a
+Place, not a field on each space's record (decisions.md, 2026-10-23).
+Model: `MapPlace` (`map_places`: `name` up to 120, `address`, `latitude`
+and `longitude` as exact decimals, `account_id` of its maker).
+
+- **A Place is seen by whoever can see something Konnected to it, and its
+  maker** (`MapPlace#visible_to?`, Tal 2026-10-23). It has no audience of
+  its own: a Place linked from a Mates-only party is seen by that party's
+  Mates, one linked from a public event by every member, and one with
+  nothing Konnected by its maker alone. "Can see" is the linked record's
+  own rule (`Kronk::KornerRecords.visible?`). One you can't see answers
+  404 everywhere (its page, `GET /places/:id`, the map, the Konnect
+  picker), so a guessed id says nothing. It says where something is, never
+  who is there: presence (people's pins) is separate, Mates-only and
+  coarsened, and never takes part in Konnecting.
+- **Its maker looks after it**: they edit and delete it and decide what it
+  links out to. Anyone who can see a Place can Konnect their own record to
+  it (which widens who sees it to that record's audience). If the maker's
+  account goes, the Place stays (`account_id` is nulled).
+- **How lists check it.** Who sees a linked event or album has no SQL
+  form, so a list reads Places the viewer made or that have any
+  Konnection (`made_or_konnected`, at most 1000 rows, after the box or
+  search narrows them), loads their Konnections in one query, and checks
+  each in Ruby (`MapPlace.visible_among`). The Konnect picker does the
+  same through `KornerRecords::FOUND_BY`.
+- **Konnecting.** `map.yaml`'s primary resource is `map_places` (`path:
+/hub/map/places/:id`), with `attaches:`/`accepts:` links to and from
+  anything, so `KornerRegistry.model_for('map')` is `MapPlace` and every
+  `map/<id>` attachment end is a Place. Presence and treks are listed
+  resources but never primary, so they never resolve as one. The Konnect
+  picker finds Places by name or address and shows the address under the
+  name.
+- **On the Map.** A Places layer (`place_layer.tsx`) draws the Places in
+  view as pin glyphs, reloading as the map moves. Tapping one opens a card
+  with its address and what's Konnected to it (both ways), and a link to
+  its page. `/hub/map?map_place=<id>` flies to a Place and opens its card
+  (not `?place=`, which opens your own pin's search: `?place=1`).
+- **Its page** (`place_page.tsx`) is a `<KornerDetail>`: the pin as hero
+  (`<MapPinPreview>`), the address, who added it, See on the map, Delete
+  for its maker, and the Konnected block.
+- **Making one.** `/hub/map/places/new` (`place_composer.tsx`, in
+  `<ComposeShell>`): a name, an address, and a pin from the shared
+  `<MapPinPicker>` (search an address, or tap the map; a pin dropped on a
+  search result fills the address and name). Without a pin, the server
+  looks the address up (`Kronk::Geocoder`) and refuses one it can't find.
+  Opened with `?konnect=<slug>:<id>`, it links that record to the new
+  Place once it is made, then opens the Place. The Ж bubble still logs a
+  trek (`compose:`); the Place composer is reached from a Konnect (the
+  manifest's `konnect: { make: true, route: /hub/map/places/new, label:
+'New place' }`), or by its URL.
+- **A Place, from a composer.** Composers have no location fields
+  (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). In
+  a composer's Konnect picker, picking Map opens the map at once
+  (`components/konnect_map.tsx` on `<MapPinPicker>`), search box focused.
+  Existing Places are listed above the search results (before typing too)
+  and picked as they are. Otherwise a search result, a tap or "Centre on
+  me" drops the pin, and the Name and Address under the map (filled from a
+  search result, typed by hand where OpenStreetMap doesn't know the
+  street) make the Place at once with **Add place** and pick it; the
+  record links to it when it posts. It needs an address or a pin. Escape
+  or Cancel closes the map back to the spaces.
+- **Where a record is.** Whatever reads a location falls back to the
+  record's Konnected Place when its own old fields are empty
+  (`Kronk::RecordPlace`; own fields still win, for older records and the
+  Android app): an event's `location_name` (the Place's name) and
+  `location_url` (an OpenStreetMap link to its point), a kar's `location`
+  (`{ lat, lng, label }`), a listing's `location`, and the event pins
+  below. Only a link the record's owner made counts, either way round;
+  the oldest wins. Lists read the Places in two queries
+  (`Kronk::RecordPlace.preload`); an event inside a status reads its own
+  when it has no location.
+- **Pins moved over.** Migration `20261023140100` gave every pinned event
+  (`location_url` an OpenStreetMap pin) and every kar with coordinates a
+  Place and a link to it, whatever its reach: the Place is seen by whoever
+  sees the record. One owner's records with the same name at the same spot
+  share a Place; different owners' never do. The old columns stay.
+
+API, all under `/api/v1/map/places`: `GET` (with `bbox=<west>,<south>,
+<east>,<north>`, or `near=<lat>,<lng>` and `radius_km`, and `q` for name or
+address), `GET /:id`, `POST` (`name`, `address`, `latitude`, `longitude`;
+or `name` and `address` alone), `PATCH` and `DELETE` (the maker only).
+
 ## Events
 
-`GET /api/v1/map/events` returns upcoming Kalendar events with a parseable
-OpenStreetMap `location_url` that you're allowed to see. The event page's
+`GET /api/v1/map/events` returns upcoming Kalendar events you're allowed to
+see that have a parseable OpenStreetMap `location_url`, or no `location_url`
+and a Konnected Place (pinned at the Place, with its name). The event page's
 location link goes to `/hub/map?event=<slug>`, which focuses that event.
 
 ## API
 
 All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
 create, destroy), `presence/self`, `geocode`, `treks` (index, show,
-create, destroy, publish, unpublish), `events`.
+create, destroy, publish, unpublish), `events`, `places` (index, show,
+create, update, destroy).
 
 ## Open
+
+- **The old location columns stay.** `events.location_name` /
+  `location_url`, `kars.location_*` and `listings.location` are read first
+  and still written by the Android app; they go once it stops. An event
+  with both a pin of its own and a Place shows the pin.
+- **No editing a Place in the app yet.** `PATCH` exists; the page only
+  offers Delete.
 
 - **Manifest settings are unused.** `default_share_scope` and
   `auto_expire_minutes` are declared but nothing reads them. Pins default

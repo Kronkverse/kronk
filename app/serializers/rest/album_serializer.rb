@@ -4,7 +4,7 @@
 # `/api/v1/albutts/albums` (index/show/create/update). Trimmed shape
 # for feed embedding lives in REST::AlbumSummarySerializer.
 class REST::AlbumSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :visibility, :contribution,
+  attributes :id, :slug, :title, :description, :visibility, :contribution,
              :contributor_count, :photo_count, :created_at
 
   attribute :cover_url
@@ -38,6 +38,14 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   has_many   :photos, serializer: REST::AlbumPhotoSerializer, unless: :list?
   has_many   :krews, serializer: REST::KrewSerializer, if: :krews?
 
+  # "Same as": the record whose audience this one follows
+  # (Kronk::Audience.leader_preview), or nil. Left out of lists.
+  attribute :audience_follows, unless: :list?
+
+  def audience_follows
+    Kronk::Audience.leader_preview(object, current_user&.account)
+  end
+
   def id
     object.id.to_s
   end
@@ -49,7 +57,7 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   # a handful of queries however many photos there are. The controller
   # hands them over when it has already loaded them.
   def photos
-    instance_options[:photos] || object.photos.for_display.to_a
+    instance_options[:photos] || AlbumPhoto.newest_bursts_first(object.photos.for_display.to_a)
   end
 
   def list?

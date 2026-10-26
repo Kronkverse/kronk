@@ -9,6 +9,7 @@ import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward.svg?react';
 import {
   apiGetWachugotListings,
   apiUpdateWachuneedListing,
+  listingPath,
 } from 'mastodon/api/wachuneed';
 import { apiOrderWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
@@ -304,7 +305,7 @@ export const ShopItems: React.FC<{
 
               <div className='wachuneed-shop-items__body'>
                 <Link
-                  to={`/hub/wachuneed/listings/${item.id}`}
+                  to={listingPath(item)}
                   className='wachuneed-shop-items__title'
                 >
                   {item.title}

@@ -17,6 +17,7 @@ import { KornerShell } from 'mastodon/components/korner_shell';
 import { ListingPhotos } from 'mastodon/components/listing_photos';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { writeComposerDraft } from 'mastodon/hooks/useComposerDraft';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { me } from 'mastodon/initial_state';
 
 import { AskForListing } from './ask_for_listing';
@@ -124,6 +125,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
   const [listing, setListing] = useState<ApiListingJSON | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  useNamedLink(id, listing?.slug);
 
   useEffect(() => {
     let cancelled = false;

@@ -37,6 +37,7 @@ import { ShareSheet } from 'mastodon/components/share_sheet';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { CreateEventForm } from './components/create_event_form';
 import { parseOsmUrl } from './parse_osm_url';
@@ -113,10 +114,12 @@ interface Event {
   end_time: string | null;
   location_name: string | null;
   location_url: string | null;
+  // The Konnected Place its location comes from, when it has none of its
+  // own; its map is then that Place's card in Konnected.
+  place_id?: string | null;
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
-  spawn_album: boolean;
   max_attendees: number | null;
   recurrence_rule: string | null;
   going_count: number;
@@ -223,6 +226,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   useEffect(() => {
     void fetchAll();
   }, [fetchAll]);
+  useNamedLink(id, event?.slug);
 
   // Reset the "read more" state whenever the event changes so an edit
   // that shrinks the description doesn't leave the veil hidden.
@@ -409,6 +413,14 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             onCancel={handleCancelEdit}
             editEvent={event}
             onDelete={handleDeleteVoid}
+          />
+          {/* Attaching is part of editing an event too (Tal 2026-10-22:
+              "I want to edit an event to attach it into an emergence").
+              Links take effect straight away, as on the event's page. */}
+          <AttachmentSection
+            korner='kalendar'
+            recordId={event.id}
+            canManage={event.is_owner}
           />
         </div>
         {confirmDialog}
@@ -601,18 +613,22 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </div>
         )}
 
-        {(() => {
-          const pin = parseOsmUrl(event.location_url);
-          return pin ? (
-            <MapPinPreview
-              key={`${pin.lat},${pin.lng}`}
-              lat={pin.lat}
-              lng={pin.lng}
-              zoom={pin.zoom}
-              className='event-detail__map-preview'
-            />
-          ) : null;
-        })()}
+        {/* A Konnected Place shows its own map, as its card in Konnected
+            (decisions.md, 2026-10-26); only an address of the event's own
+            is drawn here. */}
+        {!event.place_id &&
+          (() => {
+            const pin = parseOsmUrl(event.location_url);
+            return pin ? (
+              <MapPinPreview
+                key={`${pin.lat},${pin.lng}`}
+                lat={pin.lat}
+                lng={pin.lng}
+                zoom={pin.zoom}
+                className='event-detail__map-preview'
+              />
+            ) : null;
+          })()}
 
         {/* RSVP / Invite / Share row — icon-only Kronk squares. Sits
             below the map so the top of the page reads as description
@@ -682,7 +698,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         {/* KornerAttachments (docs/korners/adding_a_korner.md (Korner attachments) §4.2).
             Reads from the `/api/v1/attachments?source=kalendar/<id>`
             endpoint; the manifest's `attaches:` list drives which
-            target korners the "Attach…" button offers (Phase 3:
+            target korners Konnect offers (Phase 3:
             Albutts spawn + Booth link). Renders nothing when there
             are no attachments and the viewer can't add any, so a
             non-owner reading a plain event sees no chrome added. */}

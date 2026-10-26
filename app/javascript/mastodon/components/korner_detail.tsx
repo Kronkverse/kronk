@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 
 import { AttachmentSection } from './attachment_section';
+import type { AttachmentExclude } from './attachment_section';
 import { BackToKorner } from './back_to_korner';
 import type { IconProp } from './icon';
 import { Icon } from './icon';
@@ -43,11 +44,17 @@ interface KornerDetailProps {
   // face). Optional so shells without a natural parent (top-level
   // korner landing) can omit it.
   back?: { href: string; label: React.ReactNode };
-  // The record this page shows, for the "Attached" block under the body:
-  // what it links to and what links to it, with Attach for whoever looks
-  // after it (`canManage`). Every detail page passes it, so links show
-  // wherever either end is (decisions.md, 2026-10-21).
-  attached?: { korner: string; id: string | number; canManage?: boolean };
+  // The record this page shows, for the Konnected block under the body:
+  // what it's Konnected to both ways, with Konnect for whoever looks after
+  // it (`canManage`). Every detail page passes it, so a Konnection shows
+  // wherever either end is (decisions.md, 2026-10-21). `exclude` leaves
+  // out records the page already shows in its own way.
+  attached?: {
+    korner: string;
+    id: string | number;
+    canManage?: boolean;
+    exclude?: AttachmentExclude[];
+  };
   children?: React.ReactNode;
   className?: string;
 }
@@ -90,6 +97,7 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
           korner={attached.korner}
           recordId={attached.id}
           canManage={attached.canManage}
+          exclude={attached.exclude}
         />
       )}
     </div>

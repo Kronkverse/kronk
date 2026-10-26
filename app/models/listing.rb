@@ -8,6 +8,11 @@ class Listing < ApplicationRecord
   include Searchable
   include Reachable
   include Kronk::AttachmentSource
+  include Kronk::AudienceBearer
+  include Kronk::KrewAudience
+  # Where it is: its Konnected Place, when its own `location` is empty.
+  include Kronk::RecordPlace::Konnected
+  include Kronk::NamedLink
 
   self.attachment_source_slug = 'wachuneed'
 
@@ -94,7 +99,8 @@ class Listing < ApplicationRecord
   scope :in_shop_order, -> { order(Arel.sql('listings.shop_position ASC NULLS FIRST, listings.created_at DESC')) }
 
   # Who can see it, on the reach ladder (docs/spaces/wachuneed.md, Who can
-  # see it). Who can see it is who can message the poster about it. No Krew.
+  # see it), plus any Krews it is for (Kronk::KrewAudience). Who can see it
+  # is who can message the poster about it.
   # Typed here as well, so older migrations that load this model before the
   # column exists still boot.
   attribute :visibility, :integer, default: 0
@@ -234,13 +240,13 @@ class Listing < ApplicationRecord
     visible_to?(viewer)
   end
 
-  # Reachable adapter: the seller owns it, and there is no Krew.
+  # Reachable adapter: the seller owns it; its Krews are `record_krews`.
   def self.reachable_owner_column
     :account_id
   end
 
-  def self.reachable_krew_scope(_krew_ids)
-    none
+  def self.reachable_krew_scope(krew_ids)
+    audience_krew_scope(krew_ids)
   end
 
   # A listing someone could still be writing about: up, or reserved.
@@ -270,8 +276,8 @@ class Listing < ApplicationRecord
     account
   end
 
-  def reachable_krew_member?(_viewer)
-    false
+  def reachable_krew_member?(viewer)
+    audience_krew_member?(viewer)
   end
 
   # draft -> live -> reserved -> closed, never back: a closed listing is

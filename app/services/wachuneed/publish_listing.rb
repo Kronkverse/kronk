@@ -31,7 +31,8 @@ module Wachuneed
       status = PostStatusService.new.call(
         @listing.account,
         text: @listing.title,
-        visibility: @listing.visibility
+        visibility: @listing.visibility,
+        krew_ids: @listing.krew_ids
       )
 
       @listing.update_columns(status_id: status.id)

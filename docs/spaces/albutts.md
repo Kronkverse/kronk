@@ -34,10 +34,12 @@ git history (see [History](#history)).
 - **Arranging a new album** (Tal, 2026-10-21). In the composer, before
   posting, each photo has ↑ and ↓ to move it and **Make it the cover**
   (`PickArrange`); the first is the cover unless another is picked. The
-  photos are added to the album one at a time in that order, since an
-  album shows its photos in the order they were added
-  (`AlbumPhoto.chronological`), and the cover is set once they're in (it
-  must be one of the album's photos). A saved draft keeps the order and
+  photos are added to the album one at a time in that order, and the cover
+  is set once they're in (it must be one of the album's photos). An album
+  shows its newest additions first, each burst in the order it was added
+  (`AlbumPhoto.newest_bursts_first`: one person's photos with under ten
+  minutes between them), so the arranged order holds and later photos come
+  above it. A saved draft keeps the order and
   the cover (`cover_media_id`).
 - **`AlbumPhoto`** (`app/models/album_photo.rb`): one contribution. It's a
   thin join between the album and a **`Status`** that holds the photo, the
@@ -188,8 +190,11 @@ for credit.
   shows each photo's small rendition (`thumb_url`), fetched as the tile
   nears the screen. The original (`url`) loads in the lightbox, one photo
   at a time, and is what a download takes.
-- **Album page** at `/hub/albutts/albums/:id`: the photo grid with
+- **Album page** at `/hub/albutts/albums/<slug>`: the photo grid with
   per-photo credit, and a contribute composer for people allowed to add.
+  The slug comes from the title and follows renames; old names and the
+  number still open it, and a hidden album is a 404 (`Kronk::NamedLink`,
+  decisions.md 2026-10-22).
 - **New album** at `/hub/albutts/composer` (`/hub/albutts/new` is an
   alias), opened from the Ж menu. It uses the shared `ComposeShell` with the
   standard `ReachDropdown` in the header (tiers plus a krew submenu), and
@@ -318,12 +323,12 @@ and profiles showed each one.
 
 ## Cross-korner connections
 
-- **Kalendar spawn.** The event form has a "spawn an album" checkbox
-  (`events.spawn_album`). When an event is created with it ticked, the
-  factory in `config/initializers/attachment_factories/kalendar_albutts.rb`
-  creates an album titled after the event and links the two with a
-  `korner_attachments` row (`kind: spawn`, cascade on delete). The album is
-  created **public** with `open` contribution. RSVPs don't feed into it.
+- **Event albums.** An event's album is Konnected to it: made from the
+  Kalendar composer's "Konnect a korner" bar, or picked in the event's
+  Konnected section. The "spawn an album" checkbox (`events.spawn_album`)
+  and its factory were retired 2026-10-23 (decisions.md). Albums it spawned
+  before then keep their `kind: spawn` row and are deleted with their event.
+  RSVPs don't feed into an event's album.
 - **Links from any korner.** The manifest accepts `link` attachments from
   any korner (`accepts: from: '*'`). The album owner's consent is checked
   by `KornerAttachmentPolicy`.
@@ -336,9 +341,6 @@ and profiles showed each one.
 
 - **Event-based contribution.** `contribution: event` ("anyone at the
   event can add") has no attendee reader. Such albums are owner-only.
-- **Spawned albums are always public.** The Kalendar factory ignores the
-  event's own audience, so an invite-only event gets a public album with
-  its title. Decide whether the album should copy the event's reach.
 - **Event album lifecycle.** After the event ends, does the album stay
   open, close after a grace period, or lock?
 - **Changing a personal album's reach.** `Albutts::RescopeAlbum` now moves

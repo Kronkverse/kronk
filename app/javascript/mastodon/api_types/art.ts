@@ -4,6 +4,36 @@ import type { ApiAccountJSON } from './accounts';
 // Krew is not offered on Art in v1 (single-author korner).
 export type ArtVisibility = 'public' | 'orbit' | 'mates' | 'self_only';
 
+// Whether a piece can be had (docs/spaces/art.md, Piece details).
+export type ArtAvailability =
+  | 'not_for_sale'
+  | 'available'
+  | 'sold'
+  | 'commissioned'
+  | 'on_show';
+
+export type ArtSizeUnit = 'cm' | 'in';
+
+// What a piece is made of, how big, when, and its edition. All optional.
+export interface ArtPieceDetailsJSON {
+  // Materials, as written ("Stoneware, celadon glaze").
+  medium: string | null;
+  // The mediums it's in, picked from the artist's portfolio mediums: the
+  // category a portfolio's chips sort by.
+  mediums: string[];
+  width: number | null;
+  height: number | null;
+  depth: number | null;
+  size_unit: ArtSizeUnit;
+  year_made: number | null;
+  edition: string | null;
+  availability: ArtAvailability;
+  // What the artist asks, in whole cents of `price_currency` (AUD for now),
+  // when it's for sale; null: ask about it.
+  price_cents: number | null;
+  price_currency: string;
+}
+
 // What kind of work a piece is. Matches ArtPiece#kind in the Ruby model;
 // the names people see are in features/art/kinds.ts.
 export type ArtKind =
@@ -35,7 +65,7 @@ export interface ApiArtPiecePhotoJSON {
   created_at: string;
 }
 
-export interface ApiArtPieceJSON {
+export interface ApiArtPieceJSON extends ArtPieceDetailsJSON {
   id: string;
   title: string;
   description: string | null;
@@ -47,14 +77,43 @@ export interface ApiArtPieceJSON {
   created_at: string;
   owner: ApiAccountJSON;
   photos: ApiArtPiecePhotoJSON[];
+  // The Krews it is for, on top of its reach, named where you may see them.
+  krews?: { id: string; name: string; slug?: string }[];
 }
 
 export interface ArtPieceSummaryJSON {
   id: string;
+  medium?: string | null;
+  mediums?: string[];
+  availability?: ArtAvailability;
+  year_made?: number | null;
+  price_cents?: number | null;
+  price_currency?: string;
   title: string;
   kind: ArtKind;
   visibility: ArtVisibility;
   photo_count: number;
   cover_url: string | null;
   owner_acct: string;
+}
+
+// An artist's portfolio (GET /api/v1/art/portfolios/:account_id;
+// docs/spaces/art.md, Portfolio). `statement` and `open_for_commissions`
+// follow the profile's reach; the pieces are the ones the viewer may see.
+export interface ApiArtPortfolioJSON {
+  account: ApiAccountJSON;
+  is_owner: boolean;
+  statement: string | null;
+  open_for_commissions: boolean;
+  // What commissions start from (whole cents of `commission_currency`), and
+  // a line about them. Both optional.
+  commission_price_cents: number | null;
+  commission_currency: string;
+  commission_note: string | null;
+  // The mediums they work in, as chips under their name.
+  mediums: string[];
+  // Whether they've saved a portfolio yet (until then, the set-up).
+  set_up: boolean;
+  featured: ApiArtPieceJSON[];
+  pieces: ApiArtPieceJSON[];
 }

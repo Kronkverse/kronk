@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -308,6 +308,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.text "description"
     t.bigint "krew_id"
     t.bigint "owner_id", null: false
+    t.string "slug", null: false
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
     t.datetime "updated_at", null: false
@@ -316,6 +317,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["cover_media_attachment_id"], name: "index_albums_on_cover_media_attachment_id"
     t.index ["krew_id"], name: "index_albums_on_krew_id"
     t.index ["owner_id"], name: "index_albums_on_owner_id"
+    t.index ["slug"], name: "index_albums_on_slug", unique: true
     t.index ["status_id"], name: "index_albums_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_albums_on_visibility"
   end
@@ -411,20 +413,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
   end
 
   create_table "art_pieces", force: :cascade do |t|
+    t.integer "availability", default: 0, null: false
     t.bigint "cover_media_attachment_id"
     t.datetime "created_at", null: false
+    t.decimal "depth", precision: 8, scale: 2
     t.text "description"
+    t.string "edition", limit: 80
+    t.integer "featured_position"
+    t.decimal "height", precision: 8, scale: 2
     t.integer "kind", default: 0, null: false
+    t.string "medium", limit: 160
+    t.string "mediums", default: [], null: false, array: true
     t.bigint "owner_id", null: false
+    t.bigint "price_cents"
+    t.string "price_currency", default: "AUD", null: false
+    t.string "size_unit", limit: 2, default: "cm", null: false
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
     t.datetime "updated_at", null: false
     t.integer "visibility", default: 0, null: false
+    t.decimal "width", precision: 8, scale: 2
+    t.integer "year_made"
     t.index ["cover_media_attachment_id"], name: "index_art_pieces_on_cover_media_attachment_id"
     t.index ["kind"], name: "index_art_pieces_on_kind"
     t.index ["owner_id"], name: "index_art_pieces_on_owner_id"
     t.index ["status_id"], name: "index_art_pieces_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_art_pieces_on_visibility"
+  end
+
+  create_table "art_portfolios", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "commission_currency", default: "AUD", null: false
+    t.string "commission_note"
+    t.bigint "commission_price_cents"
+    t.datetime "created_at", null: false
+    t.string "mediums", default: [], null: false, array: true
+    t.boolean "open_for_commissions", default: false, null: false
+    t.text "statement"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_art_portfolios_on_account_id", unique: true
   end
 
   create_table "backups", force: :cascade do |t|
@@ -458,6 +485,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["status_id"], name: "index_bookmarks_on_status_id"
   end
 
+  create_table "booth_live_reminders", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "booth_live_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "booth_live_id"], name: "index_booth_live_reminders_on_account_id_and_booth_live_id", unique: true
+    t.index ["account_id"], name: "index_booth_live_reminders_on_account_id"
+    t.index ["booth_live_id"], name: "index_booth_live_reminders_on_booth_live_id"
+  end
+
+  create_table "booth_lives", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.datetime "ended_at"
+    t.string "genres", default: [], null: false, array: true
+    t.string "room_key", null: false
+    t.datetime "started_at"
+    t.datetime "starts_at", null: false
+    t.bigint "status_id"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
+    t.index ["account_id"], name: "index_booth_lives_on_account_id"
+    t.index ["room_key"], name: "index_booth_lives_on_room_key", unique: true
+    t.index ["starts_at"], name: "index_booth_lives_on_starts_at"
+  end
+
   create_table "booth_set_artists", force: :cascade do |t|
     t.bigint "account_id"
     t.bigint "booth_set_id", null: false
@@ -469,6 +524,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["account_id"], name: "index_booth_set_artists_on_account_id"
     t.index ["booth_set_id", "account_id"], name: "index_booth_set_artists_on_booth_set_id_and_account_id", unique: true, where: "(account_id IS NOT NULL)"
     t.index ["booth_set_id"], name: "index_booth_set_artists_on_booth_set_id"
+  end
+
+  create_table "booth_set_saves", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "booth_set_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "booth_set_id"], name: "index_booth_set_saves_on_account_id_and_booth_set_id", unique: true
+    t.index ["account_id"], name: "index_booth_set_saves_on_account_id"
+    t.index ["booth_set_id"], name: "index_booth_set_saves_on_booth_set_id"
   end
 
   create_table "booth_sets", force: :cascade do |t|
@@ -483,6 +548,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.datetime "event_date"
     t.string "event_name"
     t.string "genres", default: [], null: false, array: true
+    t.string "kind", default: "mix", null: false
     t.integer "play_count", default: 0, null: false
     t.boolean "published", default: true, null: false
     t.bigint "shared_status_id"
@@ -495,6 +561,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["cover_attachment_id"], name: "index_booth_sets_on_cover_attachment_id"
     t.index ["shared_status_id"], name: "index_booth_sets_on_shared_status_id", unique: true
     t.index ["status_id"], name: "index_booth_sets_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "booth_shoutouts", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "at_seconds"
+    t.text "body", null: false
+    t.bigint "booth_set_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_shoutouts_on_account_id"
+    t.index ["booth_set_id", "created_at"], name: "index_booth_shoutouts_on_booth_set_id_and_created_at"
+    t.index ["booth_set_id"], name: "index_booth_shoutouts_on_booth_set_id"
   end
 
   create_table "budget_items", force: :cascade do |t|
@@ -994,6 +1072,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.bigint "owner_id"
     t.integer "quantity", default: 1, null: false
     t.bigint "root_id", null: false
+    t.string "slug", null: false
     t.bigint "source_idea_id"
     t.string "title", null: false
     t.string "unit", default: "", null: false
@@ -1002,6 +1081,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["need_id"], name: "index_freethedream_items_on_need_id"
     t.index ["owner_id"], name: "index_freethedream_items_on_owner_id"
     t.index ["root_id"], name: "index_freethedream_items_on_root_id"
+    t.index ["slug"], name: "index_freethedream_items_on_slug", unique: true
     t.index ["source_idea_id"], name: "index_freethedream_items_on_source_idea_id"
   end
 
@@ -1049,6 +1129,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.bigint "owner_id"
     t.bigint "parent_id"
     t.bigint "root_id"
+    t.string "slug", null: false
     t.bigint "source_idea_id"
     t.date "starts_on"
     t.string "title", null: false
@@ -1058,6 +1139,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["owner_id"], name: "index_freethedream_projects_on_owner_id"
     t.index ["parent_id"], name: "index_freethedream_projects_on_parent_id"
     t.index ["root_id"], name: "index_freethedream_projects_on_root_id"
+    t.index ["slug"], name: "index_freethedream_projects_on_slug", unique: true
     t.index ["source_idea_id"], name: "index_freethedream_projects_on_source_idea_id"
   end
 
@@ -1329,6 +1411,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["slug"], name: "index_krews_on_slug", unique: true
   end
 
+  create_table "link_redirects", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["record_type", "record_id"], name: "index_link_redirects_on_record_type_and_record_id"
+    t.index ["record_type", "slug"], name: "index_link_redirects_on_record_type_and_slug", unique: true
+  end
+
   create_table "list_accounts", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "follow_id"
@@ -1416,6 +1508,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.integer "price_cents"
     t.string "price_currency", limit: 3
     t.integer "shop_position"
+    t.string "slug", null: false
     t.string "state", default: "draft", null: false
     t.bigint "status_id"
     t.string "subcategory"
@@ -1428,6 +1521,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
     t.index ["kind"], name: "index_listings_on_kind"
     t.index ["listing_shop_section_id"], name: "index_listings_on_listing_shop_section_id"
+    t.index ["slug"], name: "index_listings_on_slug", unique: true
     t.index ["state"], name: "index_listings_on_state"
     t.index ["status_id"], name: "index_listings_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_listings_on_visibility"
@@ -1453,6 +1547,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.string "user_agent"
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_login_activities_on_user_id"
+  end
+
+  create_table "map_places", force: :cascade do |t|
+    t.bigint "account_id"
+    t.text "address"
+    t.datetime "created_at", null: false
+    t.decimal "latitude", precision: 9, scale: 6, null: false
+    t.decimal "longitude", precision: 9, scale: 6, null: false
+    t.string "name", limit: 120, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_map_places_on_account_id"
+    t.index ["latitude", "longitude"], name: "index_map_places_on_latitude_and_longitude"
   end
 
   create_table "markers", force: :cascade do |t|
@@ -2098,6 +2204,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["status_id"], name: "index_quotes_on_status_id", unique: true
   end
 
+  create_table "record_krews", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "korner_slug", null: false
+    t.bigint "krew_id", null: false
+    t.bigint "record_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["korner_slug", "record_id", "krew_id"], name: "index_record_krews_on_record_and_krew", unique: true
+    t.index ["krew_id"], name: "index_record_krews_on_krew_id"
+  end
+
   create_table "relationship_severance_events", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "purged", default: false, null: false
@@ -2669,16 +2785,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
   add_foreign_key "art_pieces", "accounts", column: "owner_id", on_delete: :cascade
   add_foreign_key "art_pieces", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "art_pieces", "statuses", on_delete: :nullify
+  add_foreign_key "art_portfolios", "accounts", on_delete: :cascade
   add_foreign_key "backups", "users", on_delete: :nullify
   add_foreign_key "blocks", "accounts", column: "target_account_id", name: "fk_9571bfabc1", on_delete: :cascade
   add_foreign_key "blocks", "accounts", name: "fk_4269e03e65", on_delete: :cascade
   add_foreign_key "bookmarks", "accounts", on_delete: :cascade
   add_foreign_key "bookmarks", "statuses", on_delete: :cascade
+  add_foreign_key "booth_live_reminders", "accounts", on_delete: :cascade
+  add_foreign_key "booth_live_reminders", "booth_lives", column: "booth_live_id", on_delete: :cascade
+  add_foreign_key "booth_lives", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "booth_sets", on_delete: :cascade
+  add_foreign_key "booth_set_saves", "accounts", on_delete: :cascade
+  add_foreign_key "booth_set_saves", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_sets", "accounts", on_delete: :cascade
   add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
+  add_foreign_key "booth_shoutouts", "accounts", on_delete: :cascade
+  add_foreign_key "booth_shoutouts", "booth_sets", on_delete: :cascade
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
@@ -2795,6 +2919,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
+  add_foreign_key "map_places", "accounts", on_delete: :nullify
   add_foreign_key "markers", "users", on_delete: :cascade
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify
   add_foreign_key "media_attachments", "scheduled_statuses", on_delete: :nullify
@@ -2877,6 +3002,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
   add_foreign_key "quotes", "accounts", on_delete: :cascade
   add_foreign_key "quotes", "statuses", column: "quoted_status_id", on_delete: :nullify
   add_foreign_key "quotes", "statuses", on_delete: :cascade
+  add_foreign_key "record_krews", "krews", on_delete: :cascade
   add_foreign_key "report_notes", "accounts", on_delete: :cascade
   add_foreign_key "report_notes", "reports", on_delete: :cascade
   add_foreign_key "reports", "accounts", column: "action_taken_by_account_id", name: "fk_bca45b75fd", on_delete: :nullify

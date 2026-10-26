@@ -69,7 +69,7 @@ RSpec.describe 'Wachuneed listing reach' do
       get "/api/v1/wachuneed/listings/#{item.id}", headers: headers
       expect(response.parsed_body).to include('visibility' => 'public', 'can_message' => true)
       expect(enquire(item)).to eq [200, 201]
-      expect(response.parsed_body['body']).to include('Is it still going?', "/hub/wachuneed/listings/#{item.id}")
+      expect(response.parsed_body['body']).to include('Is it still going?', "/hub/wachuneed/listings/#{item.slug}")
     end
 
     it 'does not open general messaging: a chat or message without the listing is refused' do

@@ -119,6 +119,18 @@ settings:
     label: Daily prompt in my post box
     description: Kronk sets one prompt a day — the same for everyone. It sits faint in your composer as a starting point; your reply is a normal post.
 
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # What one of its records is called wherever Kronk names it beside
+  # its title ("the Ember event"), so records that share a title can be
+  # told apart (decisions.md, 2026-10-26).
+  noun: 'Kuestion'
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+
 compose:
   label: 'Ask a Kuestion'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of

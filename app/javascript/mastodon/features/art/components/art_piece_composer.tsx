@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -8,16 +8,46 @@ import {
   apiCreatePiece,
   apiDeletePhoto,
   apiGetPiece,
+  apiGetPortfolio,
   apiUpdatePiece,
 } from 'mastodon/api/art';
-import type { ApiArtPieceJSON, ArtKind } from 'mastodon/api_types/art';
+import type {
+  ApiArtPieceJSON,
+  ArtAvailability,
+  ArtKind,
+  ArtPieceDetailsJSON,
+  ArtSizeUnit,
+} from 'mastodon/api_types/art';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import {
+  ComposeBody,
+  ComposeCheck,
+  ComposeField,
+  ComposeHint,
+  ComposeInput,
+  ComposeRow,
+  ComposeSection,
+  ComposeSelect,
+  ComposeTitle,
+} from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { PhotoDropZone } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { REACH_ORDER, ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useSameAs } from 'mastodon/hooks/useSameAs';
+import { useIdentity } from 'mastodon/identity_context';
 
+import {
+  AVAILABILITIES,
+  AVAILABILITY_MESSAGES,
+  PRICE_CURRENCY,
+  parsePrice,
+  priceText,
+} from '../details';
 import { ART_KIND_MESSAGES, sortedArtKinds } from '../kinds';
 
 const messages = defineMessages({
@@ -50,9 +80,49 @@ const messages = defineMessages({
     defaultMessage: 'A note about the work (optional)',
   },
   kindLabel: { id: 'art.composer.kind_label', defaultMessage: 'Kind' },
+  details: { id: 'art.composer.details', defaultMessage: 'Details' },
+  medium: {
+    id: 'art.composer.materials',
+    defaultMessage: 'Materials',
+  },
+  mediumPlaceholder: {
+    id: 'art.composer.materials_placeholder',
+    defaultMessage: 'e.g. Stoneware, celadon glaze',
+  },
+  mediums: { id: 'art.composer.mediums', defaultMessage: 'Medium' },
+  mediumsHint: {
+    id: 'art.composer.mediums_hint',
+    defaultMessage:
+      "Tap the medium it's in; it's how your portfolio sorts your work.",
+  },
+  newMedium: {
+    id: 'art.composer.new_medium',
+    defaultMessage: 'New medium',
+  },
+  add: { id: 'art.composer.add_medium', defaultMessage: 'Add' },
+  size: { id: 'art.composer.size', defaultMessage: 'Add size' },
+  width: { id: 'art.composer.width', defaultMessage: 'Width' },
+  height: { id: 'art.composer.height', defaultMessage: 'Height' },
+  unit: { id: 'art.composer.unit', defaultMessage: 'Unit' },
+  yearMade: { id: 'art.composer.year_made', defaultMessage: 'Year made' },
+  edition: { id: 'art.composer.edition', defaultMessage: 'Edition' },
+  editionPlaceholder: {
+    id: 'art.composer.edition_placeholder',
+    defaultMessage: 'e.g. Original, or 3 of 25',
+  },
+  availability: { id: 'art.composer.availability', defaultMessage: 'Status' },
+  price: {
+    id: 'art.composer.price',
+    defaultMessage: 'Price ({currency})',
+  },
+  pricePlaceholder: {
+    id: 'art.composer.price_placeholder',
+    defaultMessage: 'Leave blank to have people ask',
+  },
   photosHint: {
     id: 'art.composer.photos_hint',
-    defaultMessage: 'Add photos of the work — the first one becomes the cover.',
+    defaultMessage:
+      'Add as many photos of the work as you like. The first is its main picture.',
   },
   uploading: {
     id: 'art.composer.uploading',
@@ -83,7 +153,62 @@ interface ArtPieceDraftParams {
   description?: string;
   kind?: ArtKind;
   visibility?: ReachValue;
+  krew_ids?: string[];
+  konnections?: KonnectTarget[];
+  details?: DetailsForm;
 }
+
+// The details as the form holds them: every field a string, so an empty
+// box stays empty rather than becoming 0.
+interface DetailsForm {
+  medium: string;
+  mediums: string[];
+  // Size is optional twice over: the switch says whether the piece has one.
+  sized: boolean;
+  width: string;
+  height: string;
+  size_unit: ArtSizeUnit;
+  year_made: string;
+  edition: string;
+  availability: ArtAvailability;
+  // Asked only when it's for sale.
+  price: string;
+}
+
+const detailsFormOf = (piece?: Partial<ArtPieceDetailsJSON>): DetailsForm => ({
+  medium: piece?.medium ?? '',
+  mediums: piece?.mediums ?? [],
+  sized: Boolean(piece?.width ?? piece?.height),
+  width: piece?.width?.toString() ?? '',
+  height: piece?.height?.toString() ?? '',
+  size_unit: piece?.size_unit ?? 'cm',
+  year_made: piece?.year_made?.toString() ?? '',
+  edition: piece?.edition ?? '',
+  availability: piece?.availability ?? 'not_for_sale',
+  price: priceText(piece?.price_cents),
+});
+
+const toNumber = (value: string): number | null => {
+  const n = Number.parseFloat(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+const detailsPayload = (form: DetailsForm): ArtPieceDetailsJSON => ({
+  medium: form.medium.trim() || null,
+  mediums: form.mediums,
+  // A piece shows width × height; depth isn't asked for (@mangobee,
+  // 2026-10-23), so saving clears any.
+  width: form.sized ? toNumber(form.width) : null,
+  height: form.sized ? toNumber(form.height) : null,
+  depth: null,
+  size_unit: form.size_unit,
+  year_made: toNumber(form.year_made),
+  edition: form.edition.trim() || null,
+  availability: form.availability,
+  price_cents:
+    form.availability === 'available' ? parsePrice(form.price) : null,
+  price_currency: PRICE_CURRENCY,
+});
 
 interface Props {
   onCancel: () => void;
@@ -115,6 +240,9 @@ export const ArtPieceComposer: React.FC<Props> = ({
   const [visibility, setVisibility] = useState<ReachValue>(
     editingPiece?.visibility ?? 'public',
   );
+  const [details, setDetails] = useState<DetailsForm>(() =>
+    detailsFormOf(editingPiece),
+  );
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   // Edit mode: the piece's photos, and the ids to take off on save.
   const [saved, setSaved] = useState(editingPiece?.photos ?? []);
@@ -131,6 +259,33 @@ export const ArtPieceComposer: React.FC<Props> = ({
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const kinds = useMemo(() => sortedArtKinds(intl), [intl]);
+  // The Krews it's for, on top of its reach (decisions.md, 2026-10-25).
+  const [krewIds, setKrewIds] = useState<string[]>(
+    editingPiece?.krews?.map((k) => k.id) ?? [],
+  );
+  const availableKrews = useAvailableKrews();
+  const handleToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
+  const applyAudience = useCallback(
+    (tier: ReachValue, ids: string[] | null) => {
+      setVisibility(tier);
+      if (ids) setKrewIds(ids);
+    },
+    [],
+  );
+  // What the new piece will be Konnected to (decisions.md, 2026-10-23),
+  // and whose audience it may follow ("Same as", 2026-10-25).
+  const { konnect, reach } = useSameAs(useKonnect('art'), {
+    enabled: !isEdit,
+    apply: applyAudience,
+    onChange: setVisibility,
+    onToggleKrew: handleToggleKrew,
+  });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: a new piece is saved as you go, here and on the server, and
   // comes back when the composer opens again. Editing one doesn't keep one.
@@ -141,6 +296,9 @@ export const ArtPieceComposer: React.FC<Props> = ({
       setDescription(p.description ?? '');
       setKind(p.kind ?? 'painting');
       setVisibility(p.visibility ?? 'public');
+      setKrewIds(p.krew_ids ?? []);
+      setDetails(p.details ?? detailsFormOf());
+      restoreKonnect(p.konnections);
       // Photos picked for another draft don't belong to this one.
       setPhotos((prev) => {
         prev.forEach((photo) => {
@@ -150,14 +308,24 @@ export const ArtPieceComposer: React.FC<Props> = ({
       });
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<ArtPieceDraftParams>({
     korner: 'art',
     kind: 'piece',
     context: null,
-    snapshot: { params: { title, description, kind, visibility } },
+    snapshot: {
+      params: {
+        title,
+        description,
+        kind,
+        visibility,
+        krew_ids: krewIds,
+        konnections: konnect.saved,
+        details,
+      },
+    },
     hasContent: title.trim() !== '' || description.trim() !== '',
     apply: applyDraft,
     describe: (d) => d.params.title,
@@ -184,6 +352,92 @@ export const ArtPieceComposer: React.FC<Props> = ({
     },
     [],
   );
+  // One handler for every detail field, keyed by the field's name.
+  const handleDetail = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setDetails((was) => ({ ...was, [name]: value }));
+    },
+    [],
+  );
+
+  // The artist's mediums to pick from: their portfolio's, and any their
+  // pieces already use (before they've set a portfolio up).
+  const { accountId: myId } = useIdentity();
+  const [knownMediums, setKnownMediums] = useState<string[]>([]);
+  const [newMedium, setNewMedium] = useState('');
+  useEffect(() => {
+    if (!myId) return;
+    const guard = { stale: false };
+    apiGetPortfolio(myId)
+      .then((portfolio) => {
+        if (guard.stale) return undefined;
+        const seen = new Map<string, string>();
+        [
+          ...portfolio.mediums,
+          ...portfolio.pieces.flatMap((piece) => piece.mediums),
+        ].forEach((name) => {
+          if (!seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name);
+        });
+        setKnownMediums([...seen.values()]);
+        return undefined;
+      })
+      .catch(() => undefined);
+    return () => {
+      guard.stale = true;
+    };
+  }, [myId]);
+  const offeredMediums = useMemo(() => {
+    const seen = new Set(knownMediums.map((m) => m.toLowerCase()));
+    return [
+      ...knownMediums,
+      ...details.mediums.filter((m) => !seen.has(m.toLowerCase())),
+    ];
+  }, [knownMediums, details.mediums]);
+  const toggleMedium = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const name = e.currentTarget.value;
+    setDetails((was) => ({
+      ...was,
+      mediums: was.mediums.includes(name)
+        ? was.mediums.filter((m) => m !== name)
+        : [...was.mediums, name].slice(0, 6),
+    }));
+  }, []);
+  const handleNewMedium = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewMedium(e.target.value);
+    },
+    [],
+  );
+  const addNewMedium = useCallback(() => {
+    const name = newMedium.trim().slice(0, 40);
+    if (!name) return;
+    setDetails((was) =>
+      was.mediums.some((m) => m.toLowerCase() === name.toLowerCase())
+        ? was
+        : { ...was, mediums: [...was.mediums, name].slice(0, 6) },
+    );
+    setNewMedium('');
+  }, [newMedium]);
+  const handleNewMediumKey = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addNewMedium();
+      }
+    },
+    [addNewMedium],
+  );
+
+  const handleSized = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const sized = e.target.checked;
+    setDetails((was) => ({ ...was, sized }));
+  }, []);
+  const handleUnit = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const unit = e.currentTarget.value as ArtSizeUnit;
+    setDetails((was) => ({ ...was, size_unit: unit }));
+  }, []);
+
   const handleKindChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setKind(e.target.value as ArtKind);
@@ -254,11 +508,16 @@ export const ArtPieceComposer: React.FC<Props> = ({
     if (editingPiece) {
       void (async () => {
         try {
-          await apiUpdatePiece(editingPiece.id, {
-            title: title.trim(),
-            description: description.trim(),
-            kind,
-          });
+          await apiUpdatePiece(
+            editingPiece.id,
+            {
+              title: title.trim(),
+              description: description.trim(),
+              kind,
+              ...detailsPayload(details),
+            },
+            krewIds,
+          );
           for (const id of removedIds) await apiDeletePhoto(id);
           const failed = await uploadPhotos(editingPiece.id, null);
           const updated = await apiGetPiece(editingPiece.id);
@@ -286,12 +545,16 @@ export const ArtPieceComposer: React.FC<Props> = ({
     void (async () => {
       let piece: ApiArtPieceJSON;
       try {
-        piece = await apiCreatePiece({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          kind,
-          visibility,
-        });
+        piece = await apiCreatePiece(
+          {
+            title: title.trim(),
+            description: description.trim() || undefined,
+            kind,
+            visibility,
+            ...detailsPayload(details),
+          },
+          krewIds,
+        );
       } catch (e) {
         setPending(false);
         setUploadProgress(null);
@@ -304,6 +567,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       }
       finishDraft();
 
+      await commitKonnect('art', piece.id);
       await uploadPhotos(piece.id, 0);
       // Re-fetch is unnecessary — the piece row exists; the detail page
       // will fetch fresh photo rows on mount. Hand the caller the piece
@@ -312,11 +576,14 @@ export const ArtPieceComposer: React.FC<Props> = ({
     })();
   }, [
     canSubmit,
+    commitKonnect,
     description,
+    details,
     editingPiece,
     finishDraft,
     intl,
     kind,
+    krewIds,
     onCreated,
     onUpdated,
     removedIds,
@@ -332,6 +599,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       onCancel={onCancel}
       onSubmit={submit}
       draft={draft}
+      konnect={isEdit ? null : konnect}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,
@@ -341,104 +609,266 @@ export const ArtPieceComposer: React.FC<Props> = ({
       headerAction={
         // Reach is locked while editing: the update endpoints don't
         // re-scope the item's projected feed post, so narrowing reach
-        // here would only look private (no reach without consent).
+        // here would only look private (no reach without consent). Its
+        // Krews can still change: the server moves its post with them.
         <ReachDropdown
           value={visibility}
-          onChange={setVisibility}
-          disabled={pending || isEdit}
+          onChange={reach.onChange}
+          disabled={pending}
+          hide={
+            isEdit ? REACH_ORDER.filter((r) => r !== visibility) : undefined
+          }
+          krews={availableKrews}
+          selectedKrewIds={krewIds}
+          onToggleKrew={reach.onToggleKrew}
+          sameAs={reach.sameAs}
+          onSameAs={reach.onSameAs}
         />
       }
     >
-      <div className='art-composer'>
-        <input
-          type='text'
-          className='art-composer__title'
-          value={title}
-          onChange={handleTitleChange}
-          placeholder={intl.formatMessage(messages.titlePlaceholder)}
-          maxLength={240}
-          disabled={pending}
-        />
+      <ComposeTitle
+        className='art-composer__title'
+        value={title}
+        onChange={handleTitleChange}
+        placeholder={intl.formatMessage(messages.titlePlaceholder)}
+        maxLength={240}
+        disabled={pending}
+      />
 
-        <div className='art-composer__kind'>
-          <label htmlFor='art-composer-kind'>
-            {intl.formatMessage(messages.kindLabel)}
-          </label>
-          <select
-            id='art-composer-kind'
-            value={kind}
-            onChange={handleKindChange}
+      <ComposeField label={intl.formatMessage(messages.kindLabel)}>
+        <ComposeSelect
+          value={kind}
+          onChange={handleKindChange}
+          disabled={pending}
+        >
+          {kinds.map((k) => (
+            <option key={k} value={k}>
+              {intl.formatMessage(ART_KIND_MESSAGES[k])}
+            </option>
+          ))}
+        </ComposeSelect>
+      </ComposeField>
+
+      <ComposeBody
+        value={description}
+        onChange={handleDescriptionChange}
+        placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+        maxLength={4000}
+        disabled={pending}
+      />
+
+      {/* A group, not a <ComposeField>: a label around the chips would
+          hand a click on its text to the first chip. */}
+      <ComposeSection title={intl.formatMessage(messages.mediums)}>
+        <ComposeHint>{intl.formatMessage(messages.mediumsHint)}</ComposeHint>
+        {offeredMediums.length > 0 && (
+          <div className='art-composer__mediums'>
+            {offeredMediums.map((name) => {
+              const on = details.mediums.includes(name);
+              return (
+                <button
+                  key={name}
+                  type='button'
+                  value={name}
+                  onClick={toggleMedium}
+                  aria-pressed={on}
+                  className={`art-composer__medium${on ? ' art-composer__medium--on' : ''}`}
+                  disabled={pending}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <div className='art-composer__new-medium'>
+          <ComposeInput
+            value={newMedium}
+            onChange={handleNewMedium}
+            onKeyDown={handleNewMediumKey}
+            maxLength={40}
+            placeholder={intl.formatMessage(messages.newMedium)}
+            aria-label={intl.formatMessage(messages.newMedium)}
             disabled={pending}
-          >
-            {kinds.map((k) => (
-              <option key={k} value={k}>
-                {intl.formatMessage(ART_KIND_MESSAGES[k])}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <textarea
-          className='art-composer__description'
-          value={description}
-          onChange={handleDescriptionChange}
-          placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
-          maxLength={4000}
-          disabled={pending}
-        />
-
-        <p className='art-composer__hint'>
-          {intl.formatMessage(messages.photosHint)}
-        </p>
-
-        {savedPhotos.length + photos.length > 0 && (
-          <ul className='art-composer__photos'>
-            {savedPhotos.map((p) => (
-              <PhotoTile
-                key={`saved-${p.id}`}
-                id={p.id}
-                src={p.url}
-                disabled={pending}
-                onRemove={removeSavedPhoto}
-              />
-            ))}
-            {photos.map((p) => (
-              <PhotoTile
-                key={p.key}
-                id={p.key}
-                src={p.preview}
-                disabled={pending}
-                onRemove={removePhoto}
-              />
-            ))}
-          </ul>
-        )}
-
-        <PhotoDropZone onFiles={handleFiles} disabled={pending} />
-
-        {uploadProgress && uploadProgress.total > 0 && (
-          <p className='art-composer__progress'>
-            {intl.formatMessage(messages.uploading, uploadProgress)}
-          </p>
-        )}
-        {failedCount > 0 && (
-          <p className='art-composer__error'>
-            {intl.formatMessage(messages.failed, { count: failedCount })}
-          </p>
-        )}
-        {error && <p className='art-composer__error'>{error}</p>}
-
-        {isEdit && onDelete && (
+          />
           <button
             type='button'
-            className='compose-shell__delete'
-            onClick={onDelete}
-            disabled={pending || deleting}
+            onClick={addNewMedium}
+            disabled={pending || !newMedium.trim()}
           >
-            {intl.formatMessage(messages.deletePiece)}
+            {intl.formatMessage(messages.add)}
           </button>
+        </div>
+      </ComposeSection>
+
+      <ComposeSection title={intl.formatMessage(messages.details)}>
+        <ComposeField label={intl.formatMessage(messages.medium)}>
+          <ComposeInput
+            name='medium'
+            value={details.medium}
+            onChange={handleDetail}
+            placeholder={intl.formatMessage(messages.mediumPlaceholder)}
+            maxLength={160}
+            disabled={pending}
+          />
+        </ComposeField>
+
+        <ComposeCheck
+          role='switch'
+          label={intl.formatMessage(messages.size)}
+          checked={details.sized}
+          onChange={handleSized}
+          disabled={pending}
+        />
+        {details.sized && (
+          <div className='art-composer__size'>
+            {(['width', 'height'] as const).map((dimension) => (
+              <ComposeInput
+                key={dimension}
+                type='number'
+                inputMode='decimal'
+                name={dimension}
+                value={details[dimension]}
+                onChange={handleDetail}
+                min={0}
+                step='any'
+                placeholder={intl.formatMessage(messages[dimension])}
+                aria-label={intl.formatMessage(messages[dimension])}
+                disabled={pending}
+              />
+            ))}
+            <div
+              className='art-composer__unit'
+              role='group'
+              aria-label={intl.formatMessage(messages.unit)}
+            >
+              {(['cm', 'in'] as const).map((unit) => (
+                <button
+                  key={unit}
+                  type='button'
+                  value={unit}
+                  onClick={handleUnit}
+                  aria-pressed={details.size_unit === unit}
+                  className={`art-composer__unit-option${details.size_unit === unit ? ' art-composer__unit-option--on' : ''}`}
+                  disabled={pending}
+                >
+                  {unit}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
-      </div>
+
+        <ComposeRow>
+          <ComposeField label={intl.formatMessage(messages.yearMade)}>
+            <ComposeInput
+              type='number'
+              inputMode='numeric'
+              name='year_made'
+              value={details.year_made}
+              onChange={handleDetail}
+              min={1}
+              max={new Date().getFullYear() + 1}
+              disabled={pending}
+            />
+          </ComposeField>
+          <ComposeField label={intl.formatMessage(messages.edition)}>
+            <ComposeInput
+              name='edition'
+              value={details.edition}
+              onChange={handleDetail}
+              placeholder={intl.formatMessage(messages.editionPlaceholder)}
+              maxLength={80}
+              disabled={pending}
+            />
+          </ComposeField>
+        </ComposeRow>
+
+        <ComposeField label={intl.formatMessage(messages.availability)}>
+          <ComposeSelect
+            name='availability'
+            value={details.availability}
+            onChange={handleDetail}
+            disabled={pending}
+          >
+            {AVAILABILITIES.map((value) => (
+              <option key={value} value={value}>
+                {intl.formatMessage(AVAILABILITY_MESSAGES[value])}
+              </option>
+            ))}
+          </ComposeSelect>
+        </ComposeField>
+
+        {/* For sale: what they're asking. Blank leaves it to Ask about
+            it (docs/spaces/art.md, Piece details). */}
+        {details.availability === 'available' && (
+          <ComposeField
+            label={intl.formatMessage(messages.price, {
+              currency: PRICE_CURRENCY,
+            })}
+          >
+            <ComposeInput
+              inputMode='decimal'
+              name='price'
+              value={details.price}
+              onChange={handleDetail}
+              placeholder={intl.formatMessage(messages.pricePlaceholder)}
+              maxLength={14}
+              disabled={pending}
+            />
+          </ComposeField>
+        )}
+      </ComposeSection>
+
+      <ComposeHint>{intl.formatMessage(messages.photosHint)}</ComposeHint>
+
+      {savedPhotos.length + photos.length > 0 && (
+        <ul className='art-composer__photos'>
+          {savedPhotos.map((p) => (
+            <PhotoTile
+              key={`saved-${p.id}`}
+              id={p.id}
+              src={p.url}
+              disabled={pending}
+              onRemove={removeSavedPhoto}
+            />
+          ))}
+          {photos.map((p) => (
+            <PhotoTile
+              key={p.key}
+              id={p.key}
+              src={p.preview}
+              disabled={pending}
+              onRemove={removePhoto}
+            />
+          ))}
+        </ul>
+      )}
+
+      <PhotoDropZone onFiles={handleFiles} disabled={pending} />
+
+      {uploadProgress && uploadProgress.total > 0 && (
+        <ComposeHint>
+          {intl.formatMessage(messages.uploading, uploadProgress)}
+        </ComposeHint>
+      )}
+      {failedCount > 0 && (
+        <ComposeHint error>
+          {intl.formatMessage(messages.failed, { count: failedCount })}
+        </ComposeHint>
+      )}
+      {error && <ComposeHint error>{error}</ComposeHint>}
+
+      {isEdit && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={pending || deleting}
+        >
+          {intl.formatMessage(messages.deletePiece)}
+        </button>
+      )}
     </ComposeShell>
   );
 };

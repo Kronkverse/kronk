@@ -668,7 +668,7 @@ moved onto it; their old columns are gone.
 | `source_slug`, `source_id` | The source korner's slug and its primary record id. |
 | `target_slug`, `target_id` | The same for the target.                            |
 | `kind`                     | `spawn`, `link` or `reference`.                     |
-| `metadata`                 | jsonb, optional.                                    |
+| `metadata`                 | jsonb, optional. `audience_follows`: §2.7.          |
 | `created_by_account_id`    | Who made it.                                        |
 
 Unique on all five endpoint-and-kind columns, so the same pair can carry a
@@ -678,7 +678,10 @@ target table depends on the slug; integrity is in the model.
 The three kinds:
 
 - **`spawn`**: created automatically when the source is created, and the
-  target is destroyed with the source (it exists because of it).
+  target is destroyed with the source (it exists because of it). No korner
+  spawns today: Kalendar's "spawn an album" was retired 2026-10-23 in favour
+  of Konnecting the album (decisions.md). Albums it spawned before then still
+  go with their event.
 - **`link`**: added by a person. Deleting the source removes only the row.
 - **`reference`**: a passive mention. Same lifecycle as a link. Nothing
   creates one yet.
@@ -690,21 +693,22 @@ Both sides must consent:
 ```yaml
 # kalendar.yaml: what this korner may attach to (it is the source)
 attaches:
-  - to: albutts
-    kind: spawn
-    trigger: field:spawn_album
-    lifecycle: cascade
   - to: '*'
     kind: link
     trigger: user
     lifecycle: keep
+  # a spawn would name its target and trigger:
+  # - to: albutts
+  #   kind: spawn
+  #   trigger: field:<boolean column>
+  #   lifecycle: cascade
 
 # albutts.yaml: what may attach to this korner (it is the target)
 accepts:
-  - from: kalendar
-    kind: spawn
   - from: '*'
     kind: link
+  # - from: kalendar
+  #   kind: spawn
 ```
 
 `'*'` on either side matches anything. `korners doctor` fails any `attaches`
@@ -712,9 +716,9 @@ entry the target doesn't `accept`, and `KornerAttachment` refuses to save one.
 
 **Every korner with records takes part, unless it says why not**
 (decisions.md, 2026-10-21). Albutts, Art, Booth, Cinema, FreeTheDream,
-Huddle, Kalendar, Karporn, Kommons, Krew, Kronikles, Kuestions and Wachuneed
-each carry `attaches: [{ to: '*', kind: link }]` and `accepts: [{ from: '*',
-kind: link }]`; Kalendar also spawns Albutts. A new korner needs four things:
+Huddle, Kalendar, Karporn, Kommons, Krew, Kronikles, Kuestions, Map (its
+Places, decisions.md 2026-10-23) and Wachuneed each carry `attaches: [{ to: '*', kind: link }]` and `accepts: [{ from: '*',
+kind: link }]`. A new korner needs four things:
 both entries, a `path:` on its primary resource (§2.3), and the model concern
 (§2.4). The template has the manifest half. The other way is to opt out in
 the manifest, with the reason:
@@ -723,7 +727,7 @@ the manifest, with the reason:
 no_attachments: 'A Moment is gone in a day; a link to it would soon point at nothing.'
 ```
 
-Moments, Klot, Map and Rose do. `korners doctor` and the `across_korners`
+Moments, Klot and Rose do (Map did until its Places, 2026-10-23). `korners doctor` and the `across_korners`
 request spec both fail a korner with a primary resource that does neither,
 naming what to add (`Kronk::KornerRecords.attachment_gaps`).
 
@@ -778,6 +782,152 @@ the cleanup is what most of them need.
 Only `field:` triggers are built; `event:<bus-event>` triggers are not (see
 [Open](#open)).
 
+#### 2.5 What a link does: `Kronk::AttachmentEffects`
+
+Most links are only a row. A few pairs keep something else in step with
+it: an event or album linked to a Krew joins the Krew's audience, so its
+members can open it and the Krew page lists it (decisions.md, 2026-10-22).
+`Kronk::AttachmentEffects` (`app/lib/kronk/attachment_effects.rb`) holds
+those pairs, keyed by the **unordered** pair of slugs, so a link behaves the
+same whichever end made it (album → krew or krew → album):
+
+| Pair                                                   | Handler                  | What follows                                                                      |
+| ------------------------------------------------------ | ------------------------ | --------------------------------------------------------------------------------- |
+| kalendar ↔ krew                                       | `Kronk::EventLinks`      | The Krew joins the event's post audience; the Krew's emergence gets the event too |
+| kalendar ↔ freethedream                               | `Kronk::EventLinks`      | The emergence's Krew joins the event's post audience                              |
+| albutts ↔ krew                                        | `Kronk::AlbumLinks`      | The Krew joins the album's audience (`album_krews`) and its posts'                |
+| art / cinema / karporn / kronikles / wachuneed ↔ krew | `Kronk::RecordKrewLinks` | The Krew joins the record's audience (`record_krews`) and its post's              |
+
+The audience only widens when the record's owner makes the link and is in
+the Krew; a link anyone else makes stays a link. Every way of linking such a
+pair goes through the registry: `AttachmentsController` create and destroy
+call `linked` / `unlinked`, and a space's own Link buttons call
+`AttachmentEffects.link!` / `unlink!` rather than writing the audience
+themselves. Where the audience can be set some other way (an album's
+composer picks its Krews), that write keeps a link beside it (`AlbumKrew`'s
+callbacks, `EventLinks.posted`), so the row and the audience never disagree.
+
+A new pair adds a module with `linked(attachment, actor)` and
+`unlinked(attachment)` (optionally `removable?(attachment)`, which turns a
+destroy into a 422) to `AttachmentEffects.handlers`, and reads the two ends
+with `AttachmentEffects.ends(attachment, '<its slug>')`, never with
+`source_*` / `target_*` directly. It also lists the pair in a manifest's
+`konnect.effects` (§2.6), or the doctor fails.
+
+A korner whose records can be for Krews and has no Krew column of its own
+uses the shared one: include `Kronk::KrewAudience` in its model (it adds
+`record_krews` and `krews`, keyed by the korner slug and record id), point
+Reachable's `reachable_krew_scope` / `reachable_krew_member?` at
+`audience_krew_scope` / `audience_krew_member?`, pass `krew_ids:
+record.krew_ids` when it posts its feed card, include `KrewAudienceParams`
+in its controller (`sync_krew_audience!(record)` after create and update:
+top-level `krew_ids`, as albums take), serialize `krews` as albums do, add
+its slug to `Kronk::RecordKrewLinks::SLUGS`, and list the pair in
+`krew.yaml`'s `konnect.effects`. Each `RecordKrew` keeps a Konnection to its
+Krew beside it, as `AlbumKrew` does.
+
+#### 2.6 The manifest's Konnections: `konnect:`
+
+Any creation on Kronk can be Konnected to any other (decisions.md,
+2026-10-23). `attaches:` / `accepts:` say a korner may; the optional
+`konnect:` block is the readable list of how its Konnections work:
+
+```yaml
+konnect:
+  # What one of its records is called beside its title ("the Ember event").
+  noun: event
+  # Konnect can make a new one of these from anywhere: the picker's
+  # "New …" opens compose.route with ?konnect=<source slug>:<source id>,
+  # and the composer Konnects what it makes to that source.
+  make: true
+  # What a Konnection with a given space does beyond the link itself.
+  effects:
+    - with: krew
+      does: "The Krew joins the event's audience and the Krew page lists it under Kalendar; …"
+```
+
+- **`noun`** is what one of its records is called. Wherever Kronk names
+  a record (Konnected cards and tiles, the Konnect row, Same as, pop-ups and
+  notes) it says the title and the noun: "the Ember event", "the Ember
+  Krew". The records around one situation often share a title, so a title
+  alone can't tell them apart (decisions.md, 2026-10-26). Every korner that
+  takes links needs one (`korners doctor`). The attachments and candidates
+  APIs send each record's own `noun` (a FreeTheDream gang says gang), and
+  `hooks/useRecordName.ts` does the naming.
+- **`make: true`** says the korner's composer Konnects what it makes
+  (`useKonnect`, §4.4). The Konnect picker then offers **New …** (the
+  manifest's `compose.label`) once this space is picked, from any record,
+  and opens `compose.route` with `?konnect=<source slug>:<source id>`. It
+  needs somewhere to go and a label: the manifest's `compose:`, or its own
+  `route:` and `label:` inside `konnect:` when the Ж menu's composer isn't the
+  one that makes the korner's linkable records (Map's composer makes treks;
+  a Place has its own composer). It also needs a korner that takes links.
+  Every korner whose composer calls `useKonnect` says it: Albutts, Art,
+  Booth, Cinema, FreeTheDream, Huddle, Kalendar, Karporn, Kommons, Krew,
+  Kronikles, Kuestions, Map and Wachuneed. A composer that Konnects but
+  isn't offered as New … is a gap (decisions.md, 2026-10-25).
+- **`effects:`** lists, per other korner (`with:`), what a Konnection does
+  beyond being a link (`does:`, one sentence a member could read). It is
+  exactly the pairs in `Kronk::AttachmentEffects` (§2.5): Kalendar ↔ Krew,
+  Kalendar ↔ FreeTheDream, Albutts ↔ Krew, and Krew with Art, Cinema,
+  Karporn, Kronikles and Wachuneed. A pair can be listed from either
+  end or both, in that end's words.
+
+`korners doctor` (`Kronk::KornerKonnect`, also run against the real
+manifests by `spec/lib/mastodon/cli/korners_spec.rb`) fails a block that
+isn't that shape, `make: true` with no route (`konnect.route` or
+`compose.route`) or label, or on a korner with
+`no_attachments:`, an `effects` entry whose pair has no handler, and a
+handler whose pair neither korner lists, so the manifests stay the true
+list. `GET /api/v1/korners` serves the block as `konnect` (`ApiKornerJSON`).
+
+#### 2.7 Same as: a Konnection that carries audience
+
+A link can say that one end's audience **follows** the other's
+(decisions.md, 2026-10-25). The row's `metadata.audience_follows` names
+the end that leads: `'target'` (the source follows the target) or
+`'source'` (the target follows the source). A record follows one leader at
+most; setting a new follow drops its old one. Clients never write the key
+into `metadata` themselves (create strips it); they ask for it (§3.1).
+
+`Kronk::Audience` (`app/lib/kronk/audience.rb`) reads and writes every
+korner's audience as `{ tier:, krew_ids: }`, through one adapter per
+korner, each using the model's own columns so `visible_to?` and the
+`visible_to` scopes are unchanged:
+
+| Korner                                              | Adapter        | Reads / writes                                                                                            |
+| --------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------- |
+| albutts                                             | `Album`        | `visibility` + `album_krews` (each a Krew Konnection, §2.5), its posts' reach and Krews; not a Krew album |
+| cinema, karporn, kronikles, art                     | `KrewReach`    | `visibility` + `record_krews` (Kronk::KrewAudience) and its post's Krews                                  |
+| wachuneed                                           | `ListingReach` | as `KrewReach`, and its feed card's reach (`PublishListing#rescope`)                                      |
+| kalendar                                            | `Event`        | reads its post's reach and `statuses_krews`; invite-only or unposted is not followable; never written     |
+| booth                                               | `Booth`        | public once published; never followed, never written                                                      |
+| kommons, kuestions, krew, huddle, map, freethedream | none           | can't follow or be followed                                                                               |
+
+- **Followable** (`Audience.followable?`): `public`, or `self_only` with
+  Krews. Mates, Orbit and owner-only are the leader's owner's, so no.
+- **Set** (`follow_error` says why not): the follower's korner writes an
+  audience, the leader's is followable, a Krew audience goes only to a korner
+  with Krews whose owner is in all of them, and no circle. Then `follow!`
+  copies it (`fit`).
+- **Follow**: a leader's change reaches its followers synchronously
+  (`Audience.changed` → `propagate`, down a chain to `MAX_DEPTH`, each record
+  once). Models include `Kronk::AudienceBearer` (an `after_update` on
+  `visibility`); `AlbumKrew` reports Krew changes; an event's are reported
+  by `EventLinks` (Krew links) and the events controller (re-posting).
+  A copy never widens: a leader that is no longer followable holds its
+  followers at `self_only`, and Krews a follower can't carry are left out. A
+  public leader leaves the follower's own Krews alone.
+- **Stop**: clearing the flag or Diskonnecting leaves the audience as it is.
+  A change the follow didn't make (the owner's edit) clears it
+  (`Audience.changed`, told apart by `Audience.write`).
+
+A new korner joins by adding an adapter to `Audience::ADAPTERS`
+(`read`, `read_many`, `write`, `fixed_reason`, `krews?`) and including
+`Kronk::AudienceBearer` in its model, or reporting changes itself with
+`Kronk::Audience.changed(record)` where its audience isn't a `visibility`
+column.
+
 ### 3. API
 
 #### 3.1 REST endpoints
@@ -788,8 +938,10 @@ Only `field:` triggers are built; `event:<bus-event>` triggers are not (see
 GET    /api/v1/attachments?source=<slug>/<id>   rows from a record
 GET    /api/v1/attachments?target=<slug>/<id>   rows to a record
 POST   /api/v1/attachments                      { source_slug, source_id, target_slug, target_id, kind, metadata? }
+PATCH  /api/v1/attachments/:id                  { audience_follows: 'target' | 'source' | null }
 DELETE /api/v1/attachments/:id
 GET    /api/v1/attachments/candidates?korner=<slug>&q=<query>
+GET    /api/v1/attachments/audience?korner=<slug>&id=<id>[&for=<slug>]
 ```
 
 - Lists return newest first, at most 80, and only rows where the viewer can
@@ -801,12 +953,31 @@ GET    /api/v1/attachments/candidates?korner=<slug>&q=<query>
   owner.
 - Each row serialises with a small `source` and `target` preview: `slug`,
   `id`, `title`, and `url` (the record's page, from `path:`), or
-  `missing: true`.
+  `missing: true`. Each preview also has `audience` (below), and each row
+  `audience_follows` (`'target'`, `'source'` or `null`, §2.7).
+- **Same as** (§2.7): create with `metadata: { audience: 'same' }` makes the
+  source follow the target. `PATCH` sets or clears it later
+  (`audience_follows`, or the shortcut `audience: 'same' | null`, where the
+  end you look after follows). Only whoever looks after the follower may
+  (403); a leader that can't be followed is a 422 with the reason, and on
+  create nothing is made.
+- An `audience` is `{ tier, krews: [{ id, name, slug }], hidden_krews,
+followable }`: Krews the viewer may not see named are only counted
+  (`Kronk::VisibleKrews`); `null` for a korner without one. The index reads
+  every row's in a fixed number of queries (`Audience.summaries`).
+- `audience` (the endpoint) is a composer's look at a record it could
+  follow, before its own record exists: the same fields plus `title`,
+  `followable` and `reason` (why not; for a new record in `for`'s korner,
+  made by the viewer, when `for` is given). A record the viewer can't see
+  is a 404.
 - `candidates` searches the target korner's primary model by
   `title`/`name`/`display_name`, limited to what the viewer can see and,
   where narrower, what they may find (`FOUND_BY`: an invite-only Krew only
   for its members). A korner that takes no links returns nothing. It powers
-  the picker.
+  the picker. A model can search its own way with a class method
+  `attachment_search(query)`, and give each row a second line with
+  `attachment_subtitle` (`subtitle` in the JSON): a Map Place is found by
+  name or address and shows its address.
 
 #### 3.2 Spawn factories
 
@@ -824,8 +995,9 @@ end
 ```
 
 The `require` matters: `lib/` isn't autoloaded, and without it the boot fails
-with a `NameError`. The one factory today is `kalendar_albutts.rb`, which also
-publishes the album to the feed and is idempotent.
+with a `NameError`. There are no factories today; the last, `kalendar_albutts.rb`,
+went with "spawn an album" on 2026-10-23 and is in git history
+(`git log --diff-filter=D -- config/initializers/attachment_factories`).
 
 ### 4. React primitives
 
@@ -839,33 +1011,106 @@ no shared cache.
 
 #### 4.2 `<AttachmentSection>`
 
-`components/attachment_section.tsx`. The "Attached" block on a detail page,
-showing both ends: what the record links to and what links to it, one tile
-per record, with an Attach button for whoever looks after it when its korner
-can attach to anything (`useAttachTargets`, wildcards included). A page on
+`components/attachment_section.tsx`. The **Konnected** block on a detail
+page (on screen an attachment is a Konnection: Konnect, Konnected,
+Diskonnect), showing both ends: what the record links to and what links to
+it, one space tile per record (`_space_tiles.scss`), with a Konnect tile and
+a × on each for whoever looks after it when its korner can attach to
+anything (`useAttachTargets`, wildcards included). A page on
 `<KornerDetail>` passes `attached={{ korner, id, canManage }}` and gets it;
 the bespoke pages (album, art piece, film, kar, chronicle, proposal, Krew,
 listing, and the Kuestions reveal sheet) mount it themselves, and the event
 page keeps its own spot. Huddle rooms don't show it: the room is the call,
 and the client can't tell who hosts it.
 
+A Konnected record with something to show is a **card** above the tiles
+(`components/konnected_card.tsx`; decisions.md, 2026-10-26): a Place its
+map, an album its photos, an event its date and where, a Booth set, film,
+kar or listing its picture, a kronikle its opening lines. Each end in the
+attachments API carries `preview` from `Kronk::KonnectedPreview`
+(`app/lib/kronk/konnected_preview.rb`), one small builder per korner; a
+korner with no builder, or a record with nothing to draw (an album with no
+photos), stays a tile. A new korner whose records have a picture, a place or
+a time adds a builder there and, if it is a new shape, a case in
+`KonnectedCard`.
+
+A page that already shows a linked record its own way leaves it out with
+`exclude` (a list of `{ slug, id }`, also on `attached`), so it isn't listed
+twice: an emergence's event card shows its Kalendar event and its Krew row
+its Krew, and a Krew album names its Krew, so their Konnected blocks skip
+those. `excludeSlugs` leaves out a whole korner, and `leading` puts the
+page's own tiles first in the same grid: the Krew page has one section,
+Spaces, with its Albutts and Kalendar tiles (which list its albums and
+events, so those two korners are skipped) and then the rest of what it's
+Konnected to.
+
 #### 4.3 `<AttachmentPicker>`
 
-`components/attachment_picker.tsx`. The modal that picks a target korner,
-then searches its records through `candidates`.
+`components/attachment_picker.tsx`. The modal behind Konnect: the target
+korners as space tiles (Change goes back to them), then a search of the
+chosen korner's records through `candidates`, each a title over its
+`subtitle` when the korner gives one (a Place's address). When the chosen korner's
+manifest says `konnect: { make: true }` (§2.6), a dashed **New …** button
+(its `konnect.label`, else `compose.label`) sits above the search: it closes the picker and opens
+that composer with `?konnect=<source slug>:<source id>`. From a Krew, New
+album and New event make a Krew album or a Krew event, as `?krew=<id>`
+always did.
 
-At compose time, `<ComposeAttachBar>` (`components/compose_attach_bar.tsx`)
-does the same job inside the Kalendar composer: pick any number of korners,
-then a record in each.
+Given `onPick`, the picker saves nothing and hands back the record chosen
+(`{ slug, id, title }`), leaving out what `exclude` lists. That is how a
+composer uses it (§4.4), since the record Konnecting doesn't exist yet. It
+offers no New … then, and Escape closes only the picker.
+
+#### 4.4 In a composer: `useKonnect` and the Konnect row
+
+`hooks/useKonnect.ts`. A composer's Konnections, held until what it makes
+exists. `useKonnect(korner, { sourceHandled? })` returns:
+
+- `source`: the record from `?konnect=<slug>:<id>` (or the older
+  `?krew=<id>`, read as `krew:<id>`), and `pending`: it first, then any the
+  person added;
+- `add(target)`, `remove(target)`, `removable(target)`;
+- `saved` and `restore(list)`, to keep them in the composer's draft
+  (`konnections` in its params);
+- `commit(createdSlug, createdId)`: after the create succeeds, POSTs a link
+  from the new record to each pending one. A link that fails is returned in
+  a list, never thrown, so the record is made either way.
+
+`sourceHandled` is for a composer that Konnects the source its own way: an
+album made for a Krew is the Krew's album, and an event made for a Krew is
+posted to it (both keep their link through `AttachmentEffects`). Its tile
+shows but has no ×, and `commit` leaves it out.
+
+Pass the result to `<ComposeShell konnect={…}>` and the shell draws the
+**Konnect row** (`components/konnect_row.tsx`) at the foot of the body,
+above the drafts line: a **Konnected** heading, a space tile per pending
+record with a × (Diskonnect), and a Konnect tile that opens the picker in
+pick mode. A composer outside the shell (Wachuneed's new listing) renders
+`<KonnectRow konnect={…} />` itself. `parseKonnectParam(search)` and
+`konnectSearch(slug, id)` read and write the URL param.
+
+Every composer passes `konnect`: the prop is required, so leaving it out is
+a type error. A composer that makes a record wires `useKonnect` (Albutts,
+Art, Booth, Cinema, FreeTheDream projects, Huddle rooms, Kalendar, Karporn,
+Kommons, Krew, Kronikles, Kuestions, Map places, Wachuneed listings and shop
+items); one that makes nothing new to Konnect passes `null` (editing,
+adding to a record that exists, treks, FreeTheDream items, Moments). Editing
+something already made has no row: its page's Konnected block does that.
+The Kalendar composer's own "Konnect a korner" bar is gone (2026-10-23): it
+uses the row like every other composer.
 
 ### 5. Where it is used
 
-| Pair                           | Kind  | How it's made                                                                     |
-| ------------------------------ | ----- | --------------------------------------------------------------------------------- |
-| Kalendar → Albutts             | spawn | Event created with "spawn album" ticked                                           |
-| Kalendar → Huddle              | link  | Linked from the event                                                             |
-| Kalendar → anything            | link  | Event composer's attach bar, or the event detail page                             |
-| Any linkable korner → anything | link  | The API today; of the detail pages, only the event's has the Attach button so far |
+| Pair                           | Kind | How it's made                                                                  |
+| ------------------------------ | ---- | ------------------------------------------------------------------------------ |
+| Kalendar → Huddle              | link | Linked from the event                                                          |
+| Kalendar → anything            | link | Event composer's Konnect row, or the event detail page                         |
+| A composer's korner → anything | link | The composer's Konnect row, or the picker's New … (`?konnect=`), on create     |
+| Any linkable korner → anything | link | The Attached block on the record's detail page (every linkable korner has one) |
+
+A link always joins two korners: an album can't link to another album
+(decisions.md, 2026-10-22). The picker never offers the record's own korner
+and the model refuses it.
 
 The migration ran in phases 1 to 6b (PRs in mid-August 2026). It backfilled
 the old `albums.event_id`, `booth_sets.event_id` and
@@ -877,14 +1122,15 @@ the detail.
 
 ### 6. Access rules
 
-| Action                        | Who                                                                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Create a `spawn`              | The framework only, on the source author's behalf.                                                                    |
-| Create a `link` / `reference` | Whoever looks after the source record, if both manifests consent. A proposal's proposer or claimer; anyone in a Krew. |
-| See an attachment             | Someone who can see both records.                                                                                     |
-| Remove an attachment          | Its creator, the source owner or the target owner.                                                                    |
-| Source destroyed              | `spawn`: target destroyed. Others: row removed.                                                                       |
-| Target destroyed              | Row removed.                                                                                                          |
+| Action                        | Who                                                                                                                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Create a `spawn`              | The framework only, on the source author's behalf.                                                                                                                                               |
+| Create a `link` / `reference` | Whoever looks after the source record and can see the target, if both manifests consent. A proposal's proposer or claimer; anyone in a Krew. A target they can't see answers 404, as if missing. |
+| See an attachment             | Someone who can see both records.                                                                                                                                                                |
+| Set or clear Same as          | Whoever looks after the follower, who can see the leader (§2.7).                                                                                                                                 |
+| Remove an attachment          | Its creator, the source owner or the target owner, unless the pair says no (a Krew album and its own Krew, §2.5).                                                                                |
+| Source destroyed              | `spawn`: target destroyed. Others: row removed.                                                                                                                                                  |
+| Target destroyed              | Row removed.                                                                                                                                                                                     |
 
 ---
 
@@ -936,6 +1182,7 @@ documentation only.
 | `hub_teaser.static`                                                                                                                                                                           | Hub tile and feed settings.                                                                                                                              |
 | `emits`, `listens`                                                                                                                                                                            | Doctor (a `listens` nothing `emits` is an issue); `nudges.yaml`'s `listens:` drives `Nudges::EventRouter`.                                               |
 | `attaches`, `accepts`                                                                                                                                                                         | [Korner attachments](#korner-attachments).                                                                                                               |
+| `konnect` (`make`, `effects`)                                                                                                                                                                 | The Konnect picker's New …; doctor (Korner attachments §2.6).                                                                                            |
 | `nodes`                                                                                                                                                                                       | `Kronk::NodeRegistry`: the Directory and doctor L6.                                                                                                      |
 | `mount`, `core`, `portal`                                                                                                                                                                     | Routing, Hub and doctor (see above).                                                                                                                     |
 | `enforced`                                                                                                                                                                                    | Hub (live vs Coming soon), sidebar, and which doctor checks apply.                                                                                       |

@@ -5,7 +5,7 @@
 # wachuneed API; this ships only what the feed card renders. Mirrors
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :category, :subcategory,
+  attributes :id, :slug, :title, :description, :category, :subcategory,
              :price_display, :location, :state, :photo_url, :photos, :kind,
              :shop_section_id, :shop_position, :ongoing, :availability
 
@@ -35,6 +35,26 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attribute :shop_details, if: :detail?
   attribute :visibility, if: :detail?
   attribute :can_message, if: :detail?
+
+  # The Krews it is for, on top of its reach (Kronk::KrewAudience), named
+  # only where the viewer may see them; the same shape as an album's.
+  has_many :krews, serializer: REST::KrewSerializer, if: -> { detail? && krews? }
+
+  def krews?
+    object.record_krews.exists?
+  end
+
+  def krews
+    Kronk::VisibleKrews.filter(object.krews.to_a, instance_options[:viewer])
+  end
+
+  # "Same as": the record whose audience this one follows
+  # (Kronk::Audience.leader_preview), or nil. Detail only.
+  attribute :audience_follows, if: :detail?
+
+  def audience_follows
+    Kronk::Audience.leader_preview(object, instance_options[:viewer])
+  end
 
   def detail?
     instance_options[:include_account].present?
@@ -93,6 +113,12 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
 
       { id: media.id.to_s, url: media.file.url(:small), full_url: media.file.url(:original), variant_value: photo.variant_value }
     end
+  end
+
+  # Its own `location` (older listings, the Android app), or its Konnected
+  # Place's name (Kronk::RecordPlace). A list preloads the Places.
+  def location
+    object.location.presence || object.konnected_place&.name
   end
 
   def photo_full_url

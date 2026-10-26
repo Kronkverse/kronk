@@ -49,7 +49,7 @@ export const Crew: React.FC<{ crew: FtdCrewRow[] }> = ({ crew }) => {
           {intl.formatMessage(messages.empty)}
         </p>
       ) : (
-        <ul className='freethedream-dreamers'>
+        <ul className='freethedream-dreamers freethedream-dreamers--crew'>
           {crew.map((row) => (
             <li key={row.account.id}>
               <Link

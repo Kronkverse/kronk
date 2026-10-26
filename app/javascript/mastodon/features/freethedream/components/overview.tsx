@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -9,12 +9,19 @@ import {
   apiFtdProjectAction,
 } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
+import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
 import { act } from './act';
 import { EventCard, EventLinker } from './event_card';
-import { Person, Section, formatAmount, formatNeed } from './shared';
+import {
+  formatAmount,
+  formatNeed,
+  Person,
+  projectPath,
+  Section,
+} from './shared';
 
 // The parts of a project's page that are about the project as a whole and
 // about you in it. There is one page (Tal, 2026-10-13: "we can probably
@@ -30,6 +37,15 @@ const messages = defineMessages({
   ask: { id: 'freethedream.ask', defaultMessage: 'Ask to join' },
   asked: { id: 'freethedream.asked', defaultMessage: 'Asked · Withdraw' },
   leave: { id: 'freethedream.leave', defaultMessage: 'Leave' },
+  leaveOwnTitle: {
+    id: 'freethedream.leave_own.title',
+    defaultMessage: 'Leave {title}?',
+  },
+  leaveOwnBody: {
+    id: 'freethedream.leave_own.body',
+    defaultMessage:
+      "It's yours. If you leave, it's up for grabs: anyone still in it can take it over.",
+  },
   getInvolved: {
     id: 'freethedream.get_involved_here',
     defaultMessage: 'Want to get involved? Join, then pick up anything here.',
@@ -93,9 +109,7 @@ export const Yours: React.FC<{ project: FtdProject }> = ({ project }) => {
           <ul className='freethedream-lines'>
             {unseen.map((place) => (
               <li key={place.id}>
-                <Link to={`/hub/freethedream/p/${place.id}`}>
-                  {place.title}
-                </Link>
+                <Link to={projectPath(place)}>{place.title}</Link>
                 <span className='freethedream-tag'>
                   {intl.formatMessage(messages.newCount, {
                     count: place.count,
@@ -188,6 +202,18 @@ const OnYouRow: React.FC<{
   );
 };
 
+// A project's or gang's Kalendar event, or the way to link one. The same
+// event shows on the emergence's Krew (Kronk::EventLinks).
+export const ProjectEvent: React.FC<{
+  project: FtdProject;
+  refresh: () => void;
+}> = ({ project, refresh }) =>
+  project.event ? (
+    <EventCard event={project.event} onChange={refresh} />
+  ) : project.can.link_event ? (
+    <EventLinker projectId={project.id} onLinked={refresh} />
+  ) : null;
+
 // Beside the work on a project's page: its Kalendar event, who's asking
 // to join (the Krew's list; anyone in can answer), and Join.
 export const ProjectAside: React.FC<{
@@ -198,11 +224,24 @@ export const ProjectAside: React.FC<{
   const intl = useIntl();
 
   const member = project.membership === 'member';
+  // Its owner leaving makes it up for grabs, so they're asked first.
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   const handleMembership = useCallback(() => {
+    if (project.membership === 'member' && project.can.edit) {
+      setConfirmLeave(true);
+      return;
+    }
     const action = project.membership === 'none' ? 'join' : 'leave';
     void act(apiFtdProjectAction(project.id, action).then(onChange));
-  }, [project.id, project.membership, onChange]);
+  }, [project.id, project.membership, project.can.edit, onChange]);
+  const handleLeave = useCallback(() => {
+    setConfirmLeave(false);
+    void act(apiFtdProjectAction(project.id, 'leave').then(onChange));
+  }, [project.id, onChange]);
+  const cancelLeave = useCallback(() => {
+    setConfirmLeave(false);
+  }, []);
 
   const handleAnswer = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -230,13 +269,7 @@ export const ProjectAside: React.FC<{
 
   return (
     <>
-      {project.event ? (
-        <EventCard event={project.event} onChange={refresh} />
-      ) : (
-        project.can.link_event && (
-          <EventLinker projectId={project.id} onLinked={refresh} />
-        )
-      )}
+      <ProjectEvent project={project} refresh={refresh} />
 
       {project.requests.length > 0 && (
         <Panel title={intl.formatMessage(messages.requests)}>
@@ -284,6 +317,19 @@ export const ProjectAside: React.FC<{
           />
         </KornerActionBar>
       </section>
+
+      {confirmLeave && (
+        <ConfirmDialog
+          title={intl.formatMessage(messages.leaveOwnTitle, {
+            title: project.title,
+          })}
+          message={intl.formatMessage(messages.leaveOwnBody)}
+          confirmLabel={intl.formatMessage(messages.leave)}
+          destructive
+          onConfirm={handleLeave}
+          onCancel={cancelLeave}
+        />
+      )}
     </>
   );
 };

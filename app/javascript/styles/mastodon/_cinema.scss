@@ -124,37 +124,6 @@
 }
 
 .cinema-composer {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-
-  &__title {
-    font-size: 20px;
-    font-weight: 700;
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid var(--border-subtle);
-    padding: 8px 0;
-    color: var(--text-primary);
-  }
-
-  &__description {
-    min-height: 80px;
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-medium);
-    padding: 8px 12px;
-    resize: vertical;
-  }
-
-  &__hint {
-    font-size: 12px;
-    opacity: 0.75;
-    margin: 0;
-  }
-
   &__pick {
     align-self: flex-start;
     display: inline-flex;
@@ -166,11 +135,5 @@
     border: 1px dashed color-mix(in oklab, var(--accent), transparent 60%);
     border-radius: var(--radius-small);
     cursor: pointer;
-  }
-
-  &__error {
-    color: var(--warning-red);
-    font-size: 13px;
-    margin: 0;
   }
 }

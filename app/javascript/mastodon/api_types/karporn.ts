@@ -31,6 +31,8 @@ export interface ApiKarJSON {
   owner: ApiAccountJSON;
   photos: ApiKarPhotoJSON[];
   location: KarLocation | null;
+  // The Krews it is for, on top of its reach, named where you may see them.
+  krews?: { id: string; name: string; slug?: string }[];
 }
 
 export interface KarSummaryJSON {

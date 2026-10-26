@@ -8,13 +8,15 @@ tagline: 'Shared self expression through the magic of audial art.'
 # What the i moon's pop-up says (SpaceInfoDialog). A first draft
 # (2026-10-16), for Tal to edit on shadow.
 about:
-  what: "Kronk's stage for music: DJ sets, mixes, tracks and readings, recorded to be listened to."
+  what: "Kronk's stage for music: DJ sets, mixes, tracks, readings and live sets, to be listened to."
   why: 'Music made by people on Kronk should be heard by the people around them. The Booth plays it and credits who made it.'
   how:
-    - 'Upload a set from the Ж menu: the audio, a title, a cover and its genres. Credit anyone you made it with.'
-    - 'Share it to your feed as you upload, or later from its page.'
-    - 'Browse Musik, search by title or genre, or find someone under Artists.'
+    - 'Upload a set from the Ж menu (Upload or go live): the audio file, a title and a cover. That is all it needs.'
+    - 'Every member can find it under Musik. Post it to your feed as you upload, or later from its page, so your people hear it.'
+    - 'Credit who you played with. Once they confirm, the set shows under their name in Artists too.'
+    - 'Play live: choose Go live in the same menu, now or at a time you set. Members listen in from Live.'
     - 'Press play and keep listening as you move around Kronk. Tap a time in the track list to jump to it.'
+    - 'Tap ♡ on a set to keep it in My sets. Only you see what you save.'
 icon:
   material: headphones
 render_target: native
@@ -40,6 +42,7 @@ resources:
   - name: booth_sets
     primary: true
     path: /hub/booth/sets/:id
+  - name: booth_lives
 
 storage:
   db_namespace: booth_ # tables: booth_sets
@@ -55,6 +58,8 @@ emits:
   # The uploader credited a Kronk account as an artist on a set; Nudges
   # tells that person, who can confirm it or come off it.
   - booth.set.tagged
+  # Someone left a shoutout on a set; Nudges tells the set's owner.
+  - booth.set.shouted
 listens: []
 
 # Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)). Booth
@@ -99,8 +104,24 @@ subscription:
 # Mastodon terms [public, unlisted, followers] it carried).
 settings: []
 
-compose:
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # What one of its records is called wherever Kronk names it beside
+  # its title ("the Ember event"), so records that share a title can be
+  # told apart (decisions.md, 2026-10-26).
+  noun: set
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+  # The upload side: Go live has no Konnect yet.
   label: 'Upload a set'
+
+compose:
+  # One entry for both: the composer switches between Upload a set and
+  # Go live (`/hub/booth/composer/live`).
+  label: 'Upload or go live'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
   # the Booth landing (docs/decisions.md 2026-08-12).
   # `/hub/booth/new` still resolves to the same overlay as a legacy
@@ -111,12 +132,19 @@ compose:
 # Only the surfaces that actually render live here — Events, Live and
 # Me were declared before their views existed and shipped as
 # "coming-soon" placeholders in the switcher, which read as broken
-# nav. Add them back when their surfaces are built.
+# nav. Live came back on 2026-10-13 with its surface (live sets on
+# Huddle's Jitsi server); Events and Me return when they're built.
 views:
   - {
       key: musik,
       label: Musik,
       tagline: 'Sets and mixes shared as living sound',
+    }
+  - { key: live, label: Live, tagline: 'Sets played live, now and coming up' }
+  - {
+      key: mine,
+      label: My sets,
+      tagline: 'Your sets, your live sets and what you saved',
     }
   - { key: artists, label: Artists, tagline: 'The people behind the sound' }
 

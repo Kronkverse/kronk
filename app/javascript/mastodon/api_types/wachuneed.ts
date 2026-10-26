@@ -44,6 +44,7 @@ export interface ApiListingOptionJSON {
 
 export interface ApiListingJSON {
   id: string;
+  slug?: string;
   title: string;
   description?: string | null;
   category: string;
@@ -103,4 +104,6 @@ export interface ApiListingJSON {
     avatar: string;
     avatar_static: string;
   };
+  // The Krews it is for, on top of its reach, named where you may see them.
+  krews?: { id: string; name: string; slug?: string }[];
 }

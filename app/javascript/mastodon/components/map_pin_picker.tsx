@@ -45,6 +45,13 @@ import {
 // because rendering them needs externally-hosted glyphs. The search
 // box + geolocation + click-to-pin cover the "how do I find
 // somewhere?" gap that would otherwise create.
+//
+// With `children`, the picker is live (Konnect → Map, components/
+// konnect_map.tsx): every search result picked, tap, drag or "Centre on
+// me" is reported through `onPin` at once, and the children (the Place's
+// name and address) take the footer's place, so there is no "Pin here".
+// `searchPlaces` lists existing Places above the search results, before
+// typing too; picking one calls `onPickPlace`.
 
 const messages = defineMessages({
   title: {
@@ -78,12 +85,24 @@ const messages = defineMessages({
     id: 'map_pin_picker.no_results',
     defaultMessage: 'No matches. Try a different search.',
   },
+  places: { id: 'map_pin_picker.places', defaultMessage: 'Places' },
 });
+
+// An existing Place offered above the search results.
+export interface PlacePick {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+}
 
 export interface PinnedLocation {
   lng: number;
   lat: number;
   zoom: number;
+  // The search result the pin was dropped on, if it was and the map
+  // hasn't been moved off it since (the Place composer fills its
+  // address from it).
+  label?: string;
 }
 
 interface Props {
@@ -93,6 +112,9 @@ interface Props {
   initial?: PinnedLocation;
   onCancel: () => void;
   onPin: (location: PinnedLocation) => void;
+  searchPlaces?: (query: string) => Promise<PlacePick[]>;
+  onPickPlace?: (place: PlacePick) => void;
+  children?: React.ReactNode;
 }
 
 // A comfortable "street-level" zoom for pinning a specific spot. Not
@@ -107,9 +129,21 @@ const LOCAL_ZOOM = 14;
 const SEARCH_DEBOUNCE_MS = 400;
 const SEARCH_MIN_LENGTH = 3;
 
-export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
+export const MapPinPicker: React.FC<Props> = ({
+  initial,
+  onCancel,
+  onPin,
+  searchPlaces,
+  onPickPlace,
+  children,
+}) => {
   const intl = useIntl();
+  const live = children !== undefined;
+  // Read from the map's listeners, which are bound once.
+  const reportRef = useRef<(location: PinnedLocation) => void>();
+  reportRef.current = live ? onPin : undefined;
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [locating, setLocating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,9 +151,15 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     ApiGeocodeResultJSON[] | null
   >(null);
   const [searching, setSearching] = useState(false);
-  const [resultsOpen, setResultsOpen] = useState(false);
+  const [placeResults, setPlaceResults] = useState<PlacePick[]>([]);
+  // Open from the start when there are Places to offer before typing.
+  const [resultsOpen, setResultsOpen] = useState(Boolean(searchPlaces));
+  // The label of the search result the crosshair sits on; cleared when
+  // the map is clicked elsewhere.
+  const pickedLabelRef = useRef<string | null>(null);
 
-  const centreOnMe = useCallback(() => {
+  // `report`: the person asked (the button), not the opening guess.
+  const centreOnMe = useCallback((report = false) => {
     const map = mapRef.current;
     // Navigator.geolocation is always defined per the DOM types; the
     // error callback below handles the case where the user denies
@@ -128,12 +168,19 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        pickedLabelRef.current = null;
         map.easeTo({
           center: [pos.coords.longitude, pos.coords.latitude],
           zoom: LOCAL_ZOOM,
           duration: 600,
         });
         setLocating(false);
+        if (report)
+          reportRef.current?.({
+            lng: pos.coords.longitude,
+            lat: pos.coords.latitude,
+            zoom: LOCAL_ZOOM,
+          });
       },
       () => {
         setLocating(false);
@@ -142,15 +189,13 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     );
   }, []);
 
+  const centreOnMeClick = useCallback(() => {
+    centreOnMe(true);
+  }, [centreOnMe]);
+
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => {
-      window.removeEventListener('keydown', handleKey);
-    };
-  }, [onCancel]);
+    searchRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     ensurePmtilesProtocol();
@@ -186,14 +231,35 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     // click point." easeTo (not flyTo) keeps the zoom the user has
     // already chosen — click-to-pin at street level should not zoom
     // out to the world.
+    map.on('dragstart', () => {
+      pickedLabelRef.current = null;
+      setResultsOpen(false);
+    });
+    map.on('dragend', () => {
+      const centre = map.getCenter();
+      reportRef.current?.({
+        lng: centre.lng,
+        lat: centre.lat,
+        zoom: map.getZoom(),
+      });
+    });
     map.on('click', (e) => {
+      pickedLabelRef.current = null;
+      setResultsOpen(false);
       map.easeTo({ center: e.lngLat, duration: 300 });
+      reportRef.current?.({
+        lng: e.lngLat.lng,
+        lat: e.lngLat.lat,
+        zoom: map.getZoom(),
+      });
     });
 
     mapRef.current = map;
 
     if (!initial) {
-      void map.once('load', centreOnMe);
+      void map.once('load', () => {
+        centreOnMe();
+      });
     }
 
     return () => {
@@ -240,6 +306,35 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     };
   }, [searchQuery]);
 
+  // Existing Places matching the search (all of them before typing).
+  useEffect(() => {
+    if (!searchPlaces) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      searchPlaces(searchQuery.trim())
+        .then((rows) => {
+          if (!cancelled) setPlaceResults(rows);
+        })
+        .catch(() => {
+          if (!cancelled) setPlaceResults([]);
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [searchPlaces, searchQuery]);
+
+  const handlePlaceClick = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
+    (e) => {
+      const place = placeResults[Number(e.currentTarget.dataset.idx)];
+      if (place) onPickPlace?.(place);
+    },
+    [placeResults, onPickPlace],
+  );
+
   const onSearchChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
@@ -248,15 +343,23 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
   }, []);
 
   const onSearchFocus = useCallback(() => {
-    if (searchResults && searchResults.length > 0) setResultsOpen(true);
-  }, [searchResults]);
+    if ((searchResults && searchResults.length > 0) || placeResults.length > 0)
+      setResultsOpen(true);
+  }, [searchResults, placeResults]);
 
   const pickResult = useCallback((r: ApiGeocodeResultJSON) => {
     const map = mapRef.current;
     if (!map) return;
     if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return;
     map.easeTo({ center: [r.lng, r.lat], zoom: LOCAL_ZOOM, duration: 600 });
+    pickedLabelRef.current = r.label;
     setResultsOpen(false);
+    reportRef.current?.({
+      lng: r.lng,
+      lat: r.lat,
+      zoom: LOCAL_ZOOM,
+      label: r.label,
+    });
   }, []);
 
   const handleResultClick = useCallback<
@@ -279,71 +382,116 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
         e.preventDefault();
         const first = searchResults?.[0];
         if (first) pickResult(first);
-      } else if (e.key === 'Escape') {
-        // Let Escape close the results dropdown before it closes the
-        // picker — matches the standard "one Escape = one dismissal"
-        // pattern users expect from search dropdowns.
-        if (resultsOpen) {
-          e.stopPropagation();
-          setResultsOpen(false);
-        }
       }
     },
-    [searchResults, resultsOpen, pickResult],
+    [searchResults, pickResult],
   );
 
   const handlePin = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
     const centre = map.getCenter();
-    onPin({ lng: centre.lng, lat: centre.lat, zoom: map.getZoom() });
+    onPin({
+      lng: centre.lng,
+      lat: centre.lat,
+      zoom: map.getZoom(),
+      ...(pickedLabelRef.current ? { label: pickedLabelRef.current } : {}),
+    });
   }, [onPin]);
 
   const dropdown = useMemo(() => {
     if (!resultsOpen) return null;
+    let found: React.ReactNode = null;
     if (searching) {
-      return (
-        <div
-          className='map-pin-picker__results map-pin-picker__results--state'
-          role='listbox'
-        >
+      found = (
+        <p className='map-pin-picker__results-state'>
           <FormattedMessage {...messages.searching} />
-        </div>
+        </p>
       );
-    }
-    if (searchResults === null) return null;
-    if (searchResults.length === 0) {
-      return (
-        <div
-          className='map-pin-picker__results map-pin-picker__results--state'
-          role='listbox'
-        >
+    } else if (searchResults?.length === 0) {
+      found = (
+        <p className='map-pin-picker__results-state'>
           <FormattedMessage {...messages.noResults} />
-        </div>
+        </p>
+      );
+    } else if (searchResults) {
+      found = (
+        <ul className='map-pin-picker__results-list'>
+          {searchResults.map((r, i) => (
+            // Result rows have no stable server id — use lat+lng+label
+            // as the key, which is stable across renders of the same
+            // search response and unique within one result set.
+            <li key={`${r.lat},${r.lng},${r.label}`}>
+              <button
+                type='button'
+                className='map-pin-picker__result'
+                data-idx={i}
+                onClick={handleResultClick}
+              >
+                {r.label}
+              </button>
+            </li>
+          ))}
+        </ul>
       );
     }
+    if (!found && placeResults.length === 0) return null;
     return (
-      <ul className='map-pin-picker__results' role='listbox'>
-        {searchResults.map((r, i) => (
-          // Result rows have no stable server id — use lat+lng+label
-          // as the key, which is stable across renders of the same
-          // search response and unique within one result set.
-          <li key={`${r.lat},${r.lng},${r.label}`} role='none'>
-            <button
-              type='button'
-              role='option'
-              aria-selected='false'
-              className='map-pin-picker__result'
-              data-idx={i}
-              onClick={handleResultClick}
-            >
-              {r.label}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <div className='map-pin-picker__results'>
+        {placeResults.length > 0 && (
+          <>
+            <p className='map-pin-picker__results-heading'>
+              <FormattedMessage {...messages.places} />
+            </p>
+            <ul className='map-pin-picker__results-list'>
+              {placeResults.map((p, i) => (
+                <li key={p.id}>
+                  <button
+                    type='button'
+                    className='map-pin-picker__result'
+                    data-idx={i}
+                    onClick={handlePlaceClick}
+                  >
+                    {p.title}
+                    {p.subtitle && (
+                      <span className='map-pin-picker__result-sub'>
+                        {p.subtitle}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {found}
+      </div>
     );
-  }, [resultsOpen, searching, searchResults, handleResultClick]);
+  }, [
+    resultsOpen,
+    searching,
+    searchResults,
+    placeResults,
+    handleResultClick,
+    handlePlaceClick,
+  ]);
+
+  // Escape is the picker's alone: caught on the way down, so a composer
+  // underneath doesn't close too. One Escape, one dismissal: the results
+  // dropdown first, then the picker.
+  const dropdownShown = dropdown !== null;
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      if (dropdownShown) setResultsOpen(false);
+      else onCancel();
+    };
+    window.addEventListener('keydown', handleKey, true);
+    return () => {
+      window.removeEventListener('keydown', handleKey, true);
+    };
+  }, [onCancel, dropdownShown]);
 
   return createPortal(
     <div
@@ -368,6 +516,7 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
           </p>
           <div className='map-pin-picker__search'>
             <input
+              ref={searchRef}
               type='search'
               className='map-pin-picker__search-input'
               value={searchQuery}
@@ -386,7 +535,7 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
           <button
             type='button'
             className='map-pin-picker__locate'
-            onClick={centreOnMe}
+            onClick={centreOnMeClick}
             disabled={locating}
           >
             {locating ? (
@@ -395,37 +544,43 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
               <FormattedMessage {...messages.centreOnMe} />
             )}
           </button>
-          {/* Floating primary confirm chip on the map itself. After
+          {!live && (
+            /* Floating primary confirm chip on the map itself. After
               the user searches / geolocates / clicks-to-pin, their
               attention is on the map — the footer confirm is out of
               visual focus (Tal 2026-08-14: "no way to select it
               once i've centered the cross on the location"). Two
               paths to confirm, same action; keyboard users still
-              land on the footer via tab order. */}
-          <button
-            type='button'
-            className='map-pin-picker__floating-confirm'
-            onClick={handlePin}
-          >
-            <FormattedMessage {...messages.confirm} />
-          </button>
+              land on the footer via tab order. */
+            <button
+              type='button'
+              className='map-pin-picker__floating-confirm'
+              onClick={handlePin}
+            >
+              <FormattedMessage {...messages.confirm} />
+            </button>
+          )}
         </div>
-        <footer className='map-pin-picker__footer'>
-          <button
-            type='button'
-            className='map-pin-picker__cancel'
-            onClick={onCancel}
-          >
-            <FormattedMessage {...messages.cancel} />
-          </button>
-          <button
-            type='button'
-            className='map-pin-picker__confirm'
-            onClick={handlePin}
-          >
-            <FormattedMessage {...messages.confirm} />
-          </button>
-        </footer>
+        {live ? (
+          <footer className='map-pin-picker__details'>{children}</footer>
+        ) : (
+          <footer className='map-pin-picker__footer'>
+            <button
+              type='button'
+              className='map-pin-picker__cancel'
+              onClick={onCancel}
+            >
+              <FormattedMessage {...messages.cancel} />
+            </button>
+            <button
+              type='button'
+              className='map-pin-picker__confirm'
+              onClick={handlePin}
+            >
+              <FormattedMessage {...messages.confirm} />
+            </button>
+          </footer>
+        )}
       </div>
     </div>,
     document.body,

@@ -34,7 +34,8 @@ RSpec.describe 'Attachments' do
         { 'to' => 'targetkorner', 'kind' => 'spawn' },
       ],
       accepts: [],
-      resources: []
+      resources: [],
+      konnect: nil
     )
     tgt_manifest = instance_double(
       Kronk::KornerRegistry::Manifest,
@@ -44,7 +45,8 @@ RSpec.describe 'Attachments' do
         { 'from' => 'sourcekorner', 'kind' => 'link' },
         { 'from' => 'sourcekorner', 'kind' => 'spawn' },
       ],
-      resources: []
+      resources: [],
+      konnect: nil
     )
 
     # Pass through to the real registry by default, THEN override the two
@@ -110,6 +112,20 @@ RSpec.describe 'Attachments' do
       )
       post '/api/v1/attachments', params: base_params.merge(source_id: other_source.id.to_s), headers: write_headers
       expect(response).to have_http_status(403)
+    end
+
+    it "answers 404 for a target the user can't see, and says nothing of it" do
+      hidden = Album.create!(owner: Fabricate(:account), title: 'Secret plans', visibility: :self_only)
+      expect do
+        post '/api/v1/attachments', params: base_params.merge(target_id: hidden.id.to_s), headers: write_headers
+      end.to_not change(KornerAttachment, :count)
+      expect(response).to have_http_status(404)
+      expect(response.body).to_not include('Secret plans')
+    end
+
+    it 'answers a hidden target the same as a missing one' do
+      post '/api/v1/attachments', params: base_params.merge(target_id: '0'), headers: write_headers
+      expect(response).to have_http_status(404)
     end
 
     it 'returns 422 when manifests disagree' do

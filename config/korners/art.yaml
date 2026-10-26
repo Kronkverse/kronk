@@ -94,6 +94,18 @@ launch:
 # composer opens as an overlay on the directory (features/art/index.tsx
 # switches to a "composer open" state when the URL is /hub/art/composer),
 # so no dedicated top-level route is needed.
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # What one of its records is called wherever Kronk names it beside
+  # its title ("the Ember event"), so records that share a title can be
+  # told apart (decisions.md, 2026-10-26).
+  noun: 'art piece'
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+
 compose:
   label: 'Post a piece'
   route: '/hub/art/composer'

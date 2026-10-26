@@ -24,6 +24,9 @@ class Api::V1::EventsController < Api::BaseController
     # (Mates, Orbit, a Krew alone) is decided per event, as opening one
     # does, so the list never shows an event its viewer could not open.
     @events = scope.limit(PAGE * 3).select { |event| event.visible_to?(current_account) }.first(PAGE)
+    # Where each one is, for those with no location of their own: two
+    # queries for the page, not two per event.
+    Kronk::RecordPlace.preload(@events)
     render json: @events, each_serializer: REST::EventSerializer
   end
 
@@ -37,8 +40,6 @@ class Api::V1::EventsController < Api::BaseController
     @event.huddle_url = "https://#{Rails.configuration.x.kronk_jitsi_domain}/huddle" if @event.event_type_huddle?
 
     set_image! if params[:image_id].present?
-
-    @event.requested_reach = event_reach(@event)
 
     # Save event first; create the status outside the transaction.
     # PostStatusService enqueues DistributionWorker via Sidekiq.perform_async,
@@ -147,12 +148,7 @@ class Api::V1::EventsController < Api::BaseController
   # 404 without leaking whether the row existed under a different
   # scheme.
   def set_event
-    identifier = params[:id].to_s
-    @event = if identifier.match?(/\A\d+\z/)
-               Event.find(identifier)
-             else
-               Event.find_by!(slug: identifier)
-             end
+    @event = Event.by_link!(params[:id])
   end
 
   def authorize_event_owner!
@@ -161,9 +157,10 @@ class Api::V1::EventsController < Api::BaseController
 
   # Read gate for `show` / `attendees` / `rsvp`. `visible_to?` is the
   # single source of truth (author + invitees + Status reach when
-  # not invite_only) — see Event#visible_to? for the rule.
+  # not invite_only) — see Event#visible_to? for the rule. Not found, not
+  # forbidden: a guessed name must not tell anyone a hidden event exists.
   def authorize_event_visible!
-    raise Mastodon::NotPermittedError unless @event.visible_to?(current_account)
+    raise ActiveRecord::RecordNotFound unless @event.visible_to?(current_account)
   end
 
   def set_image!
@@ -175,7 +172,7 @@ class Api::V1::EventsController < Api::BaseController
       :title, :description, :start_time, :end_time,
       :location_name, :location_url, :event_type,
       :rsvp_enabled, :max_attendees, :recurrence_rule,
-      :spawn_album, :invite_only
+      :invite_only
     )
   end
 
@@ -191,11 +188,22 @@ class Api::V1::EventsController < Api::BaseController
     when 'past'
       scope.past
     when 'mine'
-      scope.where(account: current_account)
+      mine_when(scope.where(account: current_account))
     when 'invited'
       scope.joins(:invitations).where(event_invitations: { account: current_account })
     else
       scope.upcoming
+    end
+  end
+
+  # `filter=mine` alone is every event you made, in no set order. `when`
+  # narrows it to those coming up (soonest first) or those started already
+  # (most recent first), so a picker isn't left sorting a capped page.
+  def mine_when(scope)
+    case params[:when]
+    when 'upcoming' then scope.upcoming
+    when 'past' then scope.past
+    else scope
     end
   end
 
@@ -210,6 +218,8 @@ class Api::V1::EventsController < Api::BaseController
       @event.update!(status: nil)
     end
     create_status_for_event!(@event) unless @event.invite_only?
+    # Its audience is its post's, so what follows it moves with it.
+    Kronk::Audience.changed(@event)
   end
 
   def event_full?
@@ -221,9 +231,8 @@ class Api::V1::EventsController < Api::BaseController
     params[:post_to_feed] != false && params[:post_to_feed] != 'false'
   end
 
-  # The reach the event's post and spawned album get. An event that isn't
-  # posted is seen only by its author and invitees (Event#visible_to?), so
-  # its album is Just me too, or the album would carry its title out.
+  # The reach the event's post gets. An event that isn't posted is seen
+  # only by its author and invitees (Event#visible_to?).
   def event_reach(event)
     return 'self_only' if event.invite_only? || !post_to_feed?
 
@@ -261,5 +270,7 @@ class Api::V1::EventsController < Api::BaseController
     event.update!(status: @status)
     @status.update_column(:source_korner, 'kalendar') # feed projection discriminator (§3.2)
     @status.touch
+    # The Krews picked here are linked to the event (Kronk::EventLinks).
+    Kronk::EventLinks.posted(event, current_account)
   end
 end

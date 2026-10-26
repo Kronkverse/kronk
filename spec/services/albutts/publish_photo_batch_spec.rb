@@ -71,7 +71,7 @@ RSpec.describe Albutts::PublishPhotoBatch do
     viewer = Fabricate(:user)
 
     json = REST::StatusSerializer.new(batch.status.reload, scope: viewer, scope_name: :current_user).as_json
-    expect(json[:album_photo_batch]).to include(photos_count: 2, album: { id: album.id.to_s, title: 'Mayhem 2026' })
+    expect(json[:album_photo_batch]).to include(photos_count: 2, album: { id: album.id.to_s, slug: 'mayhem-2026', title: 'Mayhem 2026' })
     expect(json[:album_photo_batch][:previews].size).to eq 2
   end
 end

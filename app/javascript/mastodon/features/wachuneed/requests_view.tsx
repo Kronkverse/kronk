@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
+import { listingPath } from 'mastodon/api/wachuneed';
 import {
   apiAnswerRequest,
   apiGetRequests,
@@ -139,9 +140,7 @@ const RequestCard: React.FC<{
     <StandardCard as='li' variant='flow'>
       <CardBadge>{intl.formatMessage(STATE_LABELS[request.state])}</CardBadge>
       <CardTitle>
-        <Link to={`/hub/wachuneed/listings/${listing.id}`}>
-          {listing.title}
-        </Link>
+        <Link to={listingPath(listing)}>{listing.title}</Link>
       </CardTitle>
       <CardMeta>{meta.join(' · ')}</CardMeta>
       {(chosen.length > 0 || request.message) && (

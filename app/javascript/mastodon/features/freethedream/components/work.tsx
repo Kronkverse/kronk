@@ -18,13 +18,13 @@ import { act } from './act';
 import { BringControl, isCounted } from './bring';
 import { FromMyMycelium } from './from_my_mycelium';
 import { QuickAdd } from './quick_add';
-import { formatAmount, formatNeed } from './shared';
+import { formatAmount, formatNeed, itemPath, projectPath } from './shared';
 
 // An emergence's work, list by list: what's still needed, Thing Bringing
 // (gear and supplies), Actualise (ideas brought to life) and what's on
 // offer, each with what's in the gangs inside it. On an emergence's
-// landing page they're cards you swipe through and go into (Tal,
-// 2026-10-15); a gang's page shows them in full.
+// landing page they're cards you go into (Tal, 2026-10-15); a gang's page
+// shows them in full.
 //
 // There are no Ideas any more (Tal, 2026-10-15): whoever has an idea adds
 // it to Actualise and is on it straight away, and others jump on board.
@@ -149,8 +149,8 @@ export const workCount = (project: FtdProject, list: WorkList) => {
   );
 };
 
-// The landing page's way into the work: one card per list, swiped
-// sideways.
+// The landing page's way into the work: one card per list, as tiles that
+// reflow (phone views never scroll sideways).
 export const WorkCards: React.FC<{ project: FtdProject }> = ({ project }) => {
   const intl = useIntl();
   return (
@@ -164,7 +164,7 @@ export const WorkCards: React.FC<{ project: FtdProject }> = ({ project }) => {
         {WORK_LISTS.map((list) => (
           <li key={list}>
             <Link
-              to={`/hub/freethedream/p/${project.id}/${list}`}
+              to={projectPath(project, `/${list}`)}
               className='freethedream-work__card'
             >
               <span className='freethedream-work__title'>
@@ -280,9 +280,7 @@ export const WorkBody: React.FC<{
       {groups.map((group) => (
         <div key={group.section.id}>
           <h4 className='freethedream-section__sub'>
-            <Link to={`/hub/freethedream/p/${group.section.id}`}>
-              {group.section.title}
-            </Link>
+            <Link to={projectPath(group.section)}>{group.section.title}</Link>
           </h4>
           <ul className='freethedream-rows'>
             {group.items.map((item) => row(group.section.id, item))}
@@ -390,10 +388,7 @@ const NeedRow: React.FC<{
           : 'freethedream-row freethedream-row--item'
       }
     >
-      <Link
-        to={`/hub/freethedream/i/${need.id}`}
-        className='freethedream-row__main'
-      >
+      <Link to={itemPath(need)} className='freethedream-row__main'>
         <span className='freethedream-row__title'>
           {need.title}
           {isCounted(need) && (
@@ -462,10 +457,7 @@ const JobRow: React.FC<{
     .filter(Boolean);
   return (
     <li className='freethedream-row freethedream-row--item'>
-      <Link
-        to={`/hub/freethedream/i/${job.id}`}
-        className='freethedream-row__main'
-      >
+      <Link to={itemPath(job)} className='freethedream-row__main'>
         <span className='freethedream-row__title'>{job.title}</span>
         <span className='freethedream-row__meta'>
           {names.length > 0
@@ -482,7 +474,7 @@ const JobRow: React.FC<{
 
 const OfferRow: React.FC<{ offer: FtdItemRow }> = ({ offer }) => (
   <li>
-    <Link to={`/hub/freethedream/i/${offer.id}`} className='freethedream-row'>
+    <Link to={itemPath(offer)} className='freethedream-row'>
       <span className='freethedream-row__title'>
         {offer.title}
         {(offer.quantity > 1 || offer.unit) && (
@@ -511,10 +503,7 @@ const NeededRow: React.FC<{
   const job = item.kind === 'job';
   return (
     <li className='freethedream-row freethedream-row--item'>
-      <Link
-        to={`/hub/freethedream/i/${item.id}`}
-        className='freethedream-row__main'
-      >
+      <Link to={itemPath(item)} className='freethedream-row__main'>
         <span className='freethedream-row__title'>
           {item.title}
           {!job && isCounted(item) && (

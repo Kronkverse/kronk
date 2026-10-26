@@ -20,6 +20,9 @@
 #     side honouring `'*'` wildcards. Mirrors the emits/listens contract.
 #   * Records exist — Kronk::KornerRegistry.model_for resolves each slug
 #     to its primary AR class; the id must find a live row.
+#   * Across korners — a `link` joins records in two different korners
+#     (no album → album); a korner relates its own records itself
+#     (decisions.md, 2026-10-22).
 #
 # Referential integrity is application-level (no FKs on source_id/target_id
 # because the target table varies by slug). No `dependent: :destroy` on the
@@ -41,16 +44,50 @@ class KornerAttachment < ApplicationRecord
   validates :source_id, uniqueness: { scope: %i(source_slug target_slug target_id kind) }
   validate  :manifests_agree
   validate  :records_exist
+  validate  :links_cross_korners
 
   scope :from_source, ->(slug, id) { where(source_slug: slug, source_id: id) }
   scope :to_target,   ->(slug, id) { where(target_slug: slug, target_id: id) }
 
   def source_record
-    resolve_record(source_slug, source_id)
+    return @source_record if defined?(@source_record)
+
+    @source_record = resolve_record(source_slug, source_id)
   end
 
   def target_record
-    resolve_record(target_slug, target_id)
+    return @target_record if defined?(@target_record)
+
+    @target_record = resolve_record(target_slug, target_id)
+  end
+
+  # Load both ends of many rows with one query per korner, for lists.
+  def self.preload_records(attachments)
+    wanted = Hash.new { |hash, slug| hash[slug] = Set.new }
+    attachments.each do |attachment|
+      wanted[attachment.source_slug] << attachment.source_id
+      wanted[attachment.target_slug] << attachment.target_id
+    end
+    found = wanted.to_h do |slug, ids|
+      klass = Kronk::KornerRegistry.model_for(slug)
+      [slug, klass ? klass.where(id: ids.to_a).index_by(&:id) : {}]
+    end
+    attachments.each do |attachment|
+      attachment.instance_variable_set(:@source_record, found[attachment.source_slug][attachment.source_id])
+      attachment.instance_variable_set(:@target_record, found[attachment.target_slug][attachment.target_id])
+    end
+  end
+
+  # Whichever end's audience follows the other's ("Same as",
+  # Kronk::Audience): 'source', 'target', or nil.
+  def audience_follower
+    Kronk::Audience.follower_end(self)
+  end
+
+  def reload(*)
+    remove_instance_variable(:@source_record) if defined?(@source_record)
+    remove_instance_variable(:@target_record) if defined?(@target_record)
+    super
   end
 
   private
@@ -89,6 +126,14 @@ class KornerAttachment < ApplicationRecord
       other = entry[direction_key].to_s
       other == '*' || other == other_slug
     end
+  end
+
+  # The picker never offers a record's own korner; this holds the API to
+  # the same rule.
+  def links_cross_korners
+    return unless kind == KIND_LINK && source_slug.present? && source_slug == target_slug
+
+    errors.add(:base, "a link joins two korners; #{source_slug} cannot link to itself")
   end
 
   def records_exist

@@ -52,6 +52,21 @@ RSpec.describe 'API V1 FreeTheDream overview' do
       expect(body['cover']).to include('id' => media.id.to_s)
     end
 
+    it "shows on the list, or the linked event's image when there's none", :aggregate_failures do
+      event = event_by(alice, 'Mini Doof weekend')
+      event.update!(image: Fabricate(:media_attachment, account: alice.account))
+      link(alice, event)
+      row = -> { api(alice, :get, '/freethedream/projects').find { |p| p['id'] == doof['id'] } }
+      expect(row.call['image_url']).to be_present
+      expect(row.call['cover']).to be_nil
+      # An event with no post is seen only by its maker, so not its picture.
+      expect(api(bob, :get, '/freethedream/projects').find { |p| p['id'] == doof['id'] }['image_url']).to be_nil
+
+      media = Fabricate(:media_attachment, account: alice.account)
+      api(alice, :put, "/freethedream/projects/#{doof['id']}", project: { cover_media_attachment_id: media.id })
+      expect(row.call).to include('cover' => include('id' => media.id.to_s), 'image_url' => row.call['cover']['preview_url'])
+    end
+
     it "refuses someone else's upload" do
       media = Fabricate(:media_attachment, account: bob.account)
       api(alice, :put, "/freethedream/projects/#{doof['id']}", project: { cover_media_attachment_id: media.id })
@@ -122,8 +137,8 @@ RSpec.describe 'API V1 FreeTheDream overview' do
 
       body = mine(cara)
       expect(body['groups'].pluck('title')).to eq ['Kitchen']
-      expect(body['jobs']).to eq [{ 'id' => fire['id'], 'title' => 'build the fire', 'section' => { 'id' => kitchen['id'], 'title' => 'Kitchen' } }]
-      expect(body['bringing']).to eq [{ 'id' => plates['id'], 'title' => 'plates', 'quantity' => 10, 'unit' => '', 'about' => 30, 'more_welcome' => false, 'section' => { 'id' => kitchen['id'], 'title' => 'Kitchen' } }]
+      expect(body['jobs']).to eq [{ 'id' => fire['id'], 'slug' => 'build-the-fire', 'title' => 'build the fire', 'section' => { 'id' => kitchen['id'], 'slug' => 'kitchen', 'title' => 'Kitchen' } }]
+      expect(body['bringing']).to eq [{ 'id' => plates['id'], 'title' => 'plates', 'quantity' => 10, 'unit' => '', 'about' => 30, 'more_welcome' => false, 'section' => { 'id' => kitchen['id'], 'slug' => 'kitchen', 'title' => 'Kitchen' } }]
       # Ten of about thirty plates isn't sorted yet; tea towels (one) are
       # sorted by anyone bringing one.
       expect(body['needed'].pluck('title')).to eq ['plates', 'tea towels']
