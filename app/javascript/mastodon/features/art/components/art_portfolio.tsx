@@ -18,6 +18,7 @@ import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
+import { availabilityLabel, pieceCardLine } from '../details';
 import { artKindLabel } from '../kinds';
 
 import { ArtPortfolioEditor } from './art_portfolio_editor';
@@ -229,15 +230,9 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
       to={`/hub/art/pieces/${piece.id}`}
       image={piece.cover_url}
       title={piece.title}
-      meta={[
-        piece.mediums[0] ??
-          (piece.medium?.trim()
-            ? piece.medium.trim()
-            : artKindLabel(intl, piece.kind)),
-        piece.year_made ? String(piece.year_made) : null,
-      ]
-        .filter(Boolean)
-        .join(' · ')}
+      meta={pieceCardLine(intl, piece)}
+      tag={availabilityLabel(intl, piece.availability)}
+      tagKind={piece.availability}
     />
   );
 
@@ -332,7 +327,7 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
       {shown.length > 0 && (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- catches the cards' own link clicks; Enter on a card is a click too
         <div onClick={openViewer}>
-          <SpaceGrid className='art-portfolio__works'>
+          <SpaceGrid className='art-portfolio__works art-works'>
             {shown.map(card)}
           </SpaceGrid>
         </div>

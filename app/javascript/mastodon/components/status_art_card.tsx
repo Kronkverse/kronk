@@ -27,6 +27,10 @@ export interface ArtSummary {
   // The first few photos at thumbnail size (profile Art tile).
   preview_urls?: string[];
   owner_acct: string;
+  // For the card line (features/art/details.ts, pieceCardLine).
+  medium?: string | null;
+  mediums?: string[];
+  year_made?: number | null;
 }
 
 export const StatusArtCard: React.FC<{ piece: ArtSummary }> = ({ piece }) => {
