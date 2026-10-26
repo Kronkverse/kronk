@@ -181,4 +181,38 @@ RSpec.describe 'Krew page', :js, :streaming do
     find('.krew-detail__faces').click
     expect(page).to have_no_css('.krew-detail__people')
   end
+
+  # decisions.md, 2026-10-27: a new Krew's spaces come from Konnect, not a
+  # list to tick, and a requirement left unfinished stops it being made
+  # instead of being dropped.
+  it 'gathers a Krew with plain access choices and no list of spaces' do
+    visit '/hub/krew/composer'
+
+    within('.compose-shell') do
+      expect(page).to have_no_text('Korners')
+      expect(page).to have_no_text(/invite link/i)
+      expect(page).to have_css('.konnect-row')
+      expect(page).to have_css('.krew-composer__radio', count: 4)
+      expect(page).to have_field('Open', type: 'radio', checked: true, visible: :all)
+
+      find('.compose-title').fill_in(with: 'Seed savers')
+      find('.krew-composer__radio', text: 'Has requirements').click
+      click_on '+ Add requirement'
+      expect(page).to have_no_css('option', text: 'Vouched by a member')
+      find('.compose-shell__submit').click
+
+      expect(page).to have_text('Name a region, or remove this requirement.')
+    end
+    expect(Krew.where(name: 'Seed savers')).to be_empty
+
+    within('.compose-shell') do
+      fill_in 'Region (e.g. Melbourne)', with: 'Melbourne'
+      find('.compose-shell__submit').click
+    end
+
+    expect(page).to have_current_path(%r{/hub/krew/seed-savers})
+    krew = Krew.find_by!(name: 'Seed savers')
+    expect(krew.access).to eq 'requirement_gated'
+    expect(krew.krew_requirements.pluck(:kind)).to eq ['located_in']
+  end
 end
