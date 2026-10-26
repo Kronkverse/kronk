@@ -17,6 +17,28 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — Konnected records show themselves
+
+Tal, on shadow: "when they're konnected, instead of just a tile under
+'Konnect' they should expand out into the preview of it. For instance, in
+an event, the map used to be visible on the event page, also the albums
+was the same … once they're konnected, let's actually show them in a
+comprehensive way. we can leave the art space for now."
+
+**Decision:** in every Konnected section, a record with something to show
+is a card above the tiles, not a tile. A Place shows its map and address,
+an album up to four photos and how many, an event its date, time and
+where, and a Booth set, film, kar or listing its picture. A kronikle shows
+its opening lines. The card keeps the tile's audience marker, Same as and
+Diskonnect. The server sends what each card draws with the attachment
+(`Kronk::KonnectedPreview`), so a page makes no extra requests. Krews,
+proposals, Huddle rooms, Kuestions and art pieces stay tiles for now, as
+does an album with no photos.
+
+An event whose location comes from its Konnected Place no longer draws a
+second map under its details: the Place's card is the map. An event with
+its own typed address keeps its map.
+
 ## 2026-10-26 — Every Krew shows how it lets people in
 
 Kommons proposal "Krews Type"

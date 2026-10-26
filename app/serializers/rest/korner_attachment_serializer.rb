@@ -13,6 +13,9 @@
 # end that leads, when the other follows it: 'target' (the source follows
 # the target), 'source', or nil. The index passes every row's audiences in
 # at once (`audiences:`); one row works them out itself.
+#
+# And its `preview` (Kronk::KonnectedPreview: a Place's spot, an album's
+# photos, an event's date), or nil, for the card the Konnected section draws.
 class REST::KornerAttachmentSerializer < ActiveModel::Serializer
   attributes :id, :source_slug, :source_id,
              :target_slug, :target_id,
@@ -54,6 +57,7 @@ class REST::KornerAttachmentSerializer < ActiveModel::Serializer
       title: record_title(record),
       url: record_url(slug, record),
       audience: audience_of(slug, record),
+      preview: Kronk::KonnectedPreview.for(slug, record),
     }
   end
 

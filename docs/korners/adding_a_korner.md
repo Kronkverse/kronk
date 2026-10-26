@@ -1013,6 +1013,17 @@ listing, and the Kuestions reveal sheet) mount it themselves, and the event
 page keeps its own spot. Huddle rooms don't show it: the room is the call,
 and the client can't tell who hosts it.
 
+A Konnected record with something to show is a **card** above the tiles
+(`components/konnected_card.tsx`; decisions.md, 2026-10-26): a Place its
+map, an album its photos, an event its date and where, a Booth set, film,
+kar or listing its picture, a kronikle its opening lines. Each end in the
+attachments API carries `preview` from `Kronk::KonnectedPreview`
+(`app/lib/kronk/konnected_preview.rb`), one small builder per korner; a
+korner with no builder, or a record with nothing to draw (an album with no
+photos), stays a tile. A new korner whose records have a picture, a place or
+a time adds a builder there and, if it is a new shape, a case in
+`KonnectedCard`.
+
 A page that already shows a linked record its own way leaves it out with
 `exclude` (a list of `{ slug, id }`, also on `attached`), so it isn't listed
 twice: an emergence's event card shows its Kalendar event and its Krew row

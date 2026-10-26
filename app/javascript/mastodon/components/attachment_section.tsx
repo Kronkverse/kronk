@@ -23,6 +23,7 @@ import {
   krewNames,
 } from 'mastodon/components/audience_marker';
 import { Icon } from 'mastodon/components/icon';
+import { KonnectedCard, hasCard } from 'mastodon/components/konnected_card';
 import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import { useAttachments } from 'mastodon/hooks/useAttachments';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
@@ -33,7 +34,9 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // record is Konnected to, both ways, each as the other record's korner icon
 // over its title in the shared space tiles (`_space_tiles.scss`, the Krew
 // page's Spaces look). One tile per record, however many links join the
-// two. `<KornerDetail attached={…}>` mounts it. In the code a Konnection is
+// two. A record with something to show is a card instead, above the tiles
+// (`<KonnectedCard>`: a Place's map, an album's photos, an event's date;
+// decisions.md, 2026-10-26). `<KornerDetail attached={…}>` mounts it. In the code a Konnection is
 // still an attachment (`korner_attachments`); Konnect is its name on screen
 // (decisions.md, 2026-10-22), as froth is a favourite's.
 //
@@ -254,6 +257,14 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     setPickerOpen(false);
   }, []);
 
+  // Records with something to show are cards, above the tiles.
+  const cards = links.filter((link) =>
+    hasCard(link.otherSlug, link.other.preview),
+  );
+  const tiles = links.filter(
+    (link) => !hasCard(link.otherSlug, link.other.preview),
+  );
+
   const hasLeading = Boolean(leading);
   const empty = links.length === 0 && !hasLeading;
   if (empty && !canKonnect) return null;
@@ -273,10 +284,25 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
         )}
       </h3>
 
+      {cards.length > 0 && (
+        <ul className='konnected-cards'>
+          {cards.map((link) => (
+            <KonnectedTile
+              key={link.attachment.id}
+              link={link}
+              canManage={canManage}
+              canFollow={canFollow && followable(link)}
+              onRemove={removeLink}
+              onFollow={changeFollow}
+            />
+          ))}
+        </ul>
+      )}
+
       <ul className='space-tiles'>
         {leading}
 
-        {links.map((link) => (
+        {tiles.map((link) => (
           <KonnectedTile
             key={link.attachment.id}
             link={link}
@@ -399,7 +425,8 @@ interface KonnectedTileProps {
 
 // The other record as a space tile: its korner's icon, its title, who sees
 // it, a way there. The × (either end can undo) sits in the corner, with
-// Same as beside it.
+// Same as beside it. A record with something to show is a card, with the
+// same marker and buttons.
 const KonnectedTile: React.FC<KonnectedTileProps> = ({
   link,
   canManage,
@@ -421,15 +448,18 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
     onFollow(link, !following);
   }, [link, following, onFollow]);
 
+  const marker = (
+    <AudienceMarker
+      audience={other.audience}
+      slug={otherSlug}
+      leads={following}
+    />
+  );
   const body = (
     <>
       <OtherIcon className='space-tile__glyph' />
       <span className='space-tile__name'>{title}</span>
-      <AudienceMarker
-        audience={other.audience}
-        slug={otherSlug}
-        leads={following}
-      />
+      {marker}
     </>
   );
   const tileClass = `space-tile${following ? ' space-tile--leads' : ''}`;
@@ -438,16 +468,8 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
     { title },
   );
 
-  return (
-    <li>
-      {other.url ? (
-        <Link to={other.url} className={tileClass}>
-          {body}
-        </Link>
-      ) : (
-        <span className={`${tileClass} space-tile--static`}>{body}</span>
-      )}
-
+  const controls = (
+    <>
       {canFollow && (
         <button
           type='button'
@@ -474,6 +496,32 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
           <Icon id='close' icon={CloseIcon} />
         </button>
       )}
+    </>
+  );
+
+  if (other.preview && hasCard(otherSlug, other.preview))
+    return (
+      <KonnectedCard
+        slug={otherSlug}
+        title={title}
+        url={other.url}
+        preview={other.preview}
+        leads={following}
+        marker={marker}
+        controls={controls}
+      />
+    );
+
+  return (
+    <li>
+      {other.url ? (
+        <Link to={other.url} className={tileClass}>
+          {body}
+        </Link>
+      ) : (
+        <span className={`${tileClass} space-tile--static`}>{body}</span>
+      )}
+      {controls}
     </li>
   );
 };

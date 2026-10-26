@@ -17,6 +17,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   attribute :visibility
   attribute :krews
   attribute :going_preview
+  attribute :place_id
 
   def id
     object.id.to_s
@@ -35,6 +36,14 @@ class REST::EventSerializer < ActiveModel::Serializer
 
   def location_url
     object.effective_location_url
+  end
+
+  # The Konnected Place its location comes from, when it has none of its own:
+  # the page leaves the map to that Place's card in Konnected.
+  def place_id
+    return nil if object.location_url.present?
+
+    object.konnected_place&.id&.to_s
   end
 
   # The Krews in the event's audience. With `visibility: self_only` they

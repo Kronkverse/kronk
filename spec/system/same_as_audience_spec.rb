@@ -82,7 +82,7 @@ RSpec.describe 'Same as: Konnections carrying audience', :js, :streaming do
       click_on 'Create album'
     end
     # With no photos to add, the composer goes on to the album.
-    expect(page).to have_css('.attachment-section .space-tile--leads', text: /Harvest dinner.*Growers.*Same as/m)
+    expect(page).to have_css('.attachment-section .konnected-card--leads', text: /Harvest dinner.*Growers.*Same as/m)
 
     album = Album.find_by!(title: 'Harvest photos')
     expect_growers_only(album)
@@ -124,13 +124,13 @@ RSpec.describe 'Same as: Konnections carrying audience', :js, :streaming do
     Kronk::Audience.follow!(row, 'source')
     visit "/hub/albutts/albums/#{album.id}"
 
-    tile = find('.attachment-section .space-tiles > li', text: 'Harvest dinner')
-    expect(tile).to have_css('.space-tile--leads', text: /Growers.*Same as/m)
-    tile.click_on 'Stop following Harvest dinner'
+    card = find('.attachment-section .konnected-cards > li', text: 'Harvest dinner')
+    expect(card).to have_css('.konnected-card--leads', text: /Growers.*Same as/m)
+    card.click_on 'Stop following Harvest dinner'
     click_on 'Yes'
 
-    expect(page).to have_no_css('.attachment-section .space-tile--leads')
-    expect(page).to have_css('.attachment-section .space-tile', text: /Harvest dinner.*Growers/m)
+    expect(page).to have_no_css('.attachment-section .konnected-card--leads')
+    expect(page).to have_css('.attachment-section .konnected-card', text: /Harvest dinner.*Growers/m)
     expect(row.reload.metadata.to_h).to_not have_key('audience_follows')
     expect_growers_only(album)
   end
@@ -146,7 +146,7 @@ RSpec.describe 'Same as: Konnections carrying audience', :js, :streaming do
     click_on 'Yes'
 
     expect(page).to have_no_css('.attachment-section__note')
-    expect(page).to have_css('.attachment-section .space-tile--leads', text: 'Harvest dinner')
+    expect(page).to have_css('.attachment-section .konnected-card--leads', text: 'Harvest dinner')
     expect_growers_only(album)
   end
 
