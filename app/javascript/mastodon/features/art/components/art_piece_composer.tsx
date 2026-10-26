@@ -41,7 +41,13 @@ import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useSameAs } from 'mastodon/hooks/useSameAs';
 import { useIdentity } from 'mastodon/identity_context';
 
-import { AVAILABILITIES, AVAILABILITY_MESSAGES } from '../details';
+import {
+  AVAILABILITIES,
+  AVAILABILITY_MESSAGES,
+  PRICE_CURRENCY,
+  parsePrice,
+  priceText,
+} from '../details';
 import { ART_KIND_MESSAGES, sortedArtKinds } from '../kinds';
 
 const messages = defineMessages({
@@ -105,6 +111,14 @@ const messages = defineMessages({
     defaultMessage: 'e.g. Original, or 3 of 25',
   },
   availability: { id: 'art.composer.availability', defaultMessage: 'Status' },
+  price: {
+    id: 'art.composer.price',
+    defaultMessage: 'Price ({currency})',
+  },
+  pricePlaceholder: {
+    id: 'art.composer.price_placeholder',
+    defaultMessage: 'Leave blank to have people ask',
+  },
   photosHint: {
     id: 'art.composer.photos_hint',
     defaultMessage:
@@ -157,6 +171,8 @@ interface DetailsForm {
   year_made: string;
   edition: string;
   availability: ArtAvailability;
+  // Asked only when it's for sale.
+  price: string;
 }
 
 const detailsFormOf = (piece?: Partial<ArtPieceDetailsJSON>): DetailsForm => ({
@@ -169,6 +185,7 @@ const detailsFormOf = (piece?: Partial<ArtPieceDetailsJSON>): DetailsForm => ({
   year_made: piece?.year_made?.toString() ?? '',
   edition: piece?.edition ?? '',
   availability: piece?.availability ?? 'not_for_sale',
+  price: priceText(piece?.price_cents),
 });
 
 const toNumber = (value: string): number | null => {
@@ -188,6 +205,9 @@ const detailsPayload = (form: DetailsForm): ArtPieceDetailsJSON => ({
   year_made: toNumber(form.year_made),
   edition: form.edition.trim() || null,
   availability: form.availability,
+  price_cents:
+    form.availability === 'available' ? parsePrice(form.price) : null,
+  price_currency: PRICE_CURRENCY,
 });
 
 interface Props {
@@ -778,6 +798,26 @@ export const ArtPieceComposer: React.FC<Props> = ({
             ))}
           </ComposeSelect>
         </ComposeField>
+
+        {/* For sale: what they're asking. Blank leaves it to Ask about
+            it (docs/spaces/art.md, Piece details). */}
+        {details.availability === 'available' && (
+          <ComposeField
+            label={intl.formatMessage(messages.price, {
+              currency: PRICE_CURRENCY,
+            })}
+          >
+            <ComposeInput
+              inputMode='decimal'
+              name='price'
+              value={details.price}
+              onChange={handleDetail}
+              placeholder={intl.formatMessage(messages.pricePlaceholder)}
+              maxLength={14}
+              disabled={pending}
+            />
+          </ComposeField>
+        )}
       </ComposeSection>
 
       <ComposeHint>{intl.formatMessage(messages.photosHint)}</ComposeHint>

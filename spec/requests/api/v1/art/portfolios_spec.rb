@@ -53,4 +53,15 @@ RSpec.describe 'Art portfolios' do
 
     expect(response.parsed_body).to include('set_up' => true, 'mediums' => %w(Ceramics Oil))
   end
+
+  it 'keeps what commissions start from and a line about them', :aggregate_failures do
+    put '/api/v1/art/portfolio', headers: own_headers, params: {
+      open_for_commissions: true, commission_price_cents: '30000', commission_note: 'Portraits, about six weeks'
+    }
+
+    expect(response).to have_http_status(200)
+    expect(response.parsed_body).to include(
+      'commission_price_cents' => 30_000, 'commission_currency' => 'AUD', 'commission_note' => 'Portraits, about six weeks'
+    )
+  end
 end

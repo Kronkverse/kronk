@@ -4,7 +4,9 @@
 #
 #   GET /api/v1/art/portfolios/:id   anyone's portfolio (:id is the account)
 #   PUT /api/v1/art/portfolio        your own: statement, open_for_commissions,
-#                                    featured_ids (up to three of your pieces)
+#                                    commission_price_cents, commission_currency,
+#                                    commission_note, mediums, featured_ids (up
+#                                    to three of your pieces)
 #
 # The pieces are the ones the viewer may see (`ArtPiece.visible_to`), so a
 # Mates-only piece is in a Mate's view of the portfolio and nobody else's. The
@@ -37,7 +39,8 @@ class Api::V1::Art::PortfoliosController < Api::BaseController
   private
 
   def portfolio_params
-    params.permit(:statement, :open_for_commissions, featured_ids: [], mediums: [])
+    params.permit(:statement, :open_for_commissions, :commission_price_cents, :commission_currency, :commission_note,
+                  featured_ids: [], mediums: [])
   end
 
   def piece_json(piece)
@@ -57,6 +60,10 @@ class Api::V1::Art::PortfoliosController < Api::BaseController
       is_owner: account.id == viewer&.id,
       statement: profile_visible ? portfolio&.statement : nil,
       open_for_commissions: profile_visible && portfolio&.open_for_commissions == true,
+      # What commissions start from, and a line about them (both optional).
+      commission_price_cents: profile_visible ? portfolio&.commission_price_cents : nil,
+      commission_currency: portfolio&.commission_currency || 'AUD',
+      commission_note: profile_visible ? portfolio&.commission_note : nil,
       mediums: profile_visible ? (portfolio&.mediums || []) : [],
       # Whether the artist has saved one yet; until then their own portfolio
       # offers the guided set-up.

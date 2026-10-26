@@ -14,7 +14,7 @@ import { IconButton } from 'mastodon/components/icon_button';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
-import { availabilityLabel, pieceFacts } from '../details';
+import { availabilityLabel, pieceFacts, piecePrice } from '../details';
 
 // The portfolio's quick viewer (docs/spaces/art.md, Portfolio): tap a piece
 // and see it whole, full screen, then step through the rest of the work on
@@ -131,7 +131,12 @@ export const ArtQuickViewer: React.FC<Props> = ({
 
   if (!piece) return null;
 
-  const status = availabilityLabel(intl, piece.availability);
+  const status = [
+    availabilityLabel(intl, piece.availability),
+    piecePrice(intl, piece),
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const facts = pieceFacts(intl, piece);
 
   return createPortal(
