@@ -37,6 +37,29 @@ Mates list).
 **Supersedes:** 2026-10-18 (the list off), and the older rule that anyone
 who could see the profile could see the list.
 
+## 2026-10-25 — No Unmate in lists
+
+Kommons proposal
+[#117481297515130656](https://kronk.info/hub/kommons/p/117481297515130656):
+"Definitely dont need an unmate button in pages like this" — a Mates list,
+where every row carried an Unmate button.
+
+**Decision:** once you are Mates, the relationship button shows nothing.
+`FollowButton` (every account row: Mates lists, froth and boost lists,
+hover cards, suggestions) and the profile peek card's `MateIconButton`
+render nothing for an established Mate. Unmate is only on the per-person
+settings screen, `/@:acct/settings`. Mate?, Mating… (withdraw) and Accept
+are unchanged.
+
+**Why:** ending a Mateship is a deliberate act about one person. A
+destructive button beside every name in a list invites mis-taps and reads
+as if the list were for pruning. The profile block already hid it for
+Mates; this makes every other surface agree. Detail:
+`docs/spaces/profile.md` (The profile block, Per-person settings).
+
+**Supersedes:** the Unmate state of `FollowButton` and the peek card's
+check-mark Unmate button.
+
 ## 2026-10-25 — Konnect is the one way into a Krew's spaces
 
 Tal, checking Konnect on shadow: "I'm seeing 'Add a space' and 'Konnect'
