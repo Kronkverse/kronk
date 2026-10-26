@@ -4,6 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { useLocation } from 'react-router-dom';
 
+import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import {
   apiCreateKommonsProposal,
@@ -24,6 +25,7 @@ import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { useAppDispatch } from 'mastodon/store';
 
 // Kommons — open a proposal. The shared `<ComposeShell>` overlay at
 // `/hub/kommons/composer` (legacy `/hub/kommons/propose` still
@@ -79,6 +81,11 @@ const messages = defineMessages({
       "Couldn't load the Kommons map — your proposal will land unscoped.",
   },
   nodesRetry: { id: 'propose.nodes_retry', defaultMessage: 'Retry' },
+  partlySaved: {
+    id: 'propose.partly_saved',
+    defaultMessage:
+      'Your proposal is up, but {items} didn’t save. Add them from its page.',
+  },
 });
 
 // What a proposal draft keeps (docs/design.md, Drafts). Design docs
@@ -119,6 +126,7 @@ interface Props {
 // unscoped proposal.
 export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const location = useLocation();
 
   // Scope: `?space=<slug>` targets a korner (anchors to its index node);
@@ -420,17 +428,39 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       .then(async (created) => {
         // Steps become Tasks; staged design docs upload as attachments. The
         // attachment route is nested under a persisted proposal, so it must
-        // run after create. Best-effort — a failure here doesn't lose the
-        // proposal, which already exists.
+        // run after create. Best-effort: the proposal exists, so a step or
+        // a document that fails is named in an alert and the rest carries
+        // on. Throwing here would leave the composer open on a proposal
+        // already made, and pressing again would make it twice.
+        const unsaved: string[] = [];
         for (const step of cleanSteps) {
-          await apiCreateProposalTask(created.id, step);
+          try {
+            await apiCreateProposalTask(created.id, step);
+          } catch {
+            unsaved.push(`“${step}”`);
+          }
         }
         for (const file of docs) {
           const form = new FormData();
           form.append('file', file);
           form.append('kind', 'reference');
-          await api().post(`/api/v1/proposals/${created.id}/attachments`, form);
+          try {
+            await api().post(
+              `/api/v1/proposals/${created.id}/attachments`,
+              form,
+            );
+          } catch {
+            unsaved.push(file.name);
+          }
         }
+        if (unsaved.length > 0)
+          dispatch(
+            showAlert({
+              message: intl.formatMessage(messages.partlySaved, {
+                items: intl.formatList(unsaved, { type: 'conjunction' }),
+              }),
+            }),
+          );
         finishDraft();
         await commitKonnect('kommons', created.id);
         onCreated(created.id);
@@ -445,6 +475,8 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       });
   }, [
     canSubmit,
+    dispatch,
+    intl,
     title,
     body,
     steps,
