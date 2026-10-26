@@ -110,8 +110,7 @@ const messages = defineMessages({
   },
   requirementsHint: {
     id: 'krew.new.requirements_hint',
-    defaultMessage:
-      'People need to meet every one of these to join.',
+    defaultMessage: 'People need to meet every one of these to join.',
   },
   addRequirement: {
     id: 'krew.new.add_requirement',
@@ -481,6 +480,9 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           aria-label={intl.formatMessage(messages.access)}
         >
           {ACCESS_CHOICES.map((choice) => (
+            // The input and its words are both inside the label; the rule
+            // doesn't follow text through formatMessage.
+            // eslint-disable-next-line jsx-a11y/label-has-associated-control
             <label key={choice.key} className='krew-composer__radio'>
               <input
                 type='radio'

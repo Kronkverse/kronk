@@ -383,9 +383,7 @@ export const EventComposer: React.FC<Props> = ({
   const commitKonnect = konnect.commit;
 
   const [title, setTitle] = useState(editing?.title ?? '');
-  const [description, setDescription] = useState(
-    editing?.description ?? '',
-  );
+  const [description, setDescription] = useState(editing?.description ?? '');
   // Auto-fill start = now (rounded to next 5-min slot), end = +2h —
   // Tal 2026-08-14. Lazy initialiser so `new Date()` runs once at
   // mount; the user can still tweak either half. Editing starts from the
@@ -423,7 +421,7 @@ export const EventComposer: React.FC<Props> = ({
   );
   // An older event's own typed address, until the person removes it.
   const ownLocation = editing?.own_location;
-  const hasOwnLocation = !!(ownLocation?.name || ownLocation?.url);
+  const hasOwnLocation = !!(ownLocation?.name ?? ownLocation?.url);
   const [ownLocationRemoved, setOwnLocationRemoved] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -1069,7 +1067,7 @@ export const EventComposer: React.FC<Props> = ({
           </span>
           <span className='event-composer__own-location-row'>
             <span className='event-composer__own-location-text'>
-              {ownLocation?.name || ownLocation?.url}
+              {ownLocation.name ?? ownLocation.url}
             </span>
             <button
               type='button'
