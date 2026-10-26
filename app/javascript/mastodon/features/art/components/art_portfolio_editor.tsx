@@ -4,7 +4,10 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { apiUpdatePortfolio } from 'mastodon/api/art';
 import type { ApiArtPortfolioJSON } from 'mastodon/api_types/art';
+import { ComposeField, ComposeInput } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+
+import { PRICE_CURRENCY, parsePrice, priceText } from '../details';
 
 // Edit portfolio (Ж menu on your own portfolio; docs/spaces/art.md,
 // Portfolio): the mediums you work in, your artist statement, up to three
@@ -100,6 +103,22 @@ const messages = defineMessages({
     id: 'art.portfolio.commissions_label',
     defaultMessage: 'Open for commissions',
   },
+  fromPrice: {
+    id: 'art.portfolio.commission_from_price',
+    defaultMessage: 'Starting from ({currency})',
+  },
+  fromPricePlaceholder: {
+    id: 'art.portfolio.commission_from_price_placeholder',
+    defaultMessage: 'Optional',
+  },
+  note: {
+    id: 'art.portfolio.commission_note',
+    defaultMessage: 'A line about your commissions',
+  },
+  notePlaceholder: {
+    id: 'art.portfolio.commission_note_placeholder',
+    defaultMessage: 'Portraits in oil, about six weeks',
+  },
   commissionsHint: {
     id: 'art.portfolio.commissions_hint',
     defaultMessage: 'People can ask you about a commission in Nudges.',
@@ -154,6 +173,20 @@ export const ArtPortfolioEditor: React.FC<Props> = ({
   const [typed, setTyped] = useState('');
   const [statement, setStatement] = useState(portfolio.statement ?? '');
   const [open, setOpen] = useState(portfolio.open_for_commissions);
+  // What commissions start from, and a line about them: both optional.
+  const [fromPrice, setFromPrice] = useState(
+    priceText(portfolio.commission_price_cents),
+  );
+  const [note, setNote] = useState(portfolio.commission_note ?? '');
+  const handleFromPrice = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFromPrice(e.target.value);
+    },
+    [],
+  );
+  const handleNote = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setNote(e.target.value);
+  }, []);
   const [featured, setFeatured] = useState<string[]>(
     portfolio.featured.map((piece) => piece.id),
   );
@@ -236,6 +269,9 @@ export const ArtPortfolioEditor: React.FC<Props> = ({
       mediums,
       statement,
       open_for_commissions: open,
+      commission_price_cents: parsePrice(fromPrice),
+      commission_currency: PRICE_CURRENCY,
+      commission_note: note.trim(),
       featured_ids: featured,
     })
       .then((next) => {
@@ -246,7 +282,7 @@ export const ArtPortfolioEditor: React.FC<Props> = ({
         setFailed(true);
         setPending(false);
       });
-  }, [mediums, statement, open, featured, onSaved]);
+  }, [mediums, statement, open, fromPrice, note, featured, onSaved]);
 
   const lastStep = !guided || step === STEPS.length - 1;
   const submit = useCallback(() => {
@@ -450,6 +486,35 @@ export const ArtPortfolioEditor: React.FC<Props> = ({
                 </span>
               </span>
             </label>
+            {open && (
+              <>
+                <ComposeField
+                  label={intl.formatMessage(messages.fromPrice, {
+                    currency: PRICE_CURRENCY,
+                  })}
+                >
+                  <ComposeInput
+                    inputMode='decimal'
+                    value={fromPrice}
+                    onChange={handleFromPrice}
+                    placeholder={intl.formatMessage(
+                      messages.fromPricePlaceholder,
+                    )}
+                    maxLength={14}
+                    disabled={pending}
+                  />
+                </ComposeField>
+                <ComposeField label={intl.formatMessage(messages.note)}>
+                  <ComposeInput
+                    value={note}
+                    onChange={handleNote}
+                    placeholder={intl.formatMessage(messages.notePlaceholder)}
+                    maxLength={200}
+                    disabled={pending}
+                  />
+                </ComposeField>
+              </>
+            )}
           </section>
         )}
 

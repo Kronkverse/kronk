@@ -9,10 +9,15 @@ class ArtPortfolio < ApplicationRecord
   FEATURED_LIMIT = 3
   MEDIUMS_LIMIT = 12
   MEDIUM_LENGTH = 40
+  COMMISSION_NOTE_LIMIT = 200
 
   belongs_to :account
 
   validates :statement, length: { maximum: STATEMENT_LIMIT }, allow_blank: true
+  # What commissions start from, and a line about them; both optional.
+  validates :commission_price_cents, numericality: { only_integer: true, greater_than: 0, less_than: ArtPiece::PRICE_MAX_CENTS }, allow_nil: true
+  validates :commission_currency, length: { is: 3 }
+  validates :commission_note, length: { maximum: COMMISSION_NOTE_LIMIT }, allow_blank: true
   validate :mediums_are_short_and_few
 
   # Tidy as typed: trimmed, blanks dropped, no repeats (ignoring case).

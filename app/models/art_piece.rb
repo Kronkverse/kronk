@@ -49,6 +49,10 @@ class ArtPiece < ApplicationRecord
 
   SIZE_UNITS = %w(cm in).freeze
 
+  # A price is whole cents of a three-letter currency (AUD for now, as in
+  # Wachuneed), under a billion.
+  PRICE_MAX_CENTS = 100_000_000_000
+
   MEDIUMS_LIMIT = 6
 
   # Tidy as picked: trimmed, blanks dropped, no repeats (ignoring case).
@@ -64,6 +68,8 @@ class ArtPiece < ApplicationRecord
   validates :size_unit, inclusion: { in: SIZE_UNITS }
   validates :year_made, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: ->(_) { Time.current.year + 1 } }, allow_nil: true
   validates :description, length: { maximum: 4000 }, allow_blank: true
+  validates :price_cents, numericality: { only_integer: true, greater_than: 0, less_than: PRICE_MAX_CENTS }, allow_nil: true
+  validates :price_currency, length: { is: 3 }
 
   scope :recent, -> { order(created_at: :desc) }
 

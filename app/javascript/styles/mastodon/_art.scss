@@ -445,6 +445,12 @@
       line-height: 1.5;
     }
   }
+
+  // What commissions start from, and the artist's line about them.
+  &__commission-terms {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
 }
 
 .art-portfolio-editor {

@@ -31,7 +31,7 @@ import { useAppSelector } from 'mastodon/store';
 import { ArtPieceComposer } from './components/art_piece_composer';
 import { ArtPieceDetail } from './components/art_piece_detail';
 import { ArtPortfolio } from './components/art_portfolio';
-import { availabilityLabel, pieceCardLine } from './details';
+import { availabilityLabel, pieceCardLine, piecePrice } from './details';
 
 const messages = defineMessages({
   title: { id: 'art.title', defaultMessage: 'Art' },
@@ -204,7 +204,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
             image={p.cover_url}
             title={p.title}
             meta={pieceCardLine(intl, p)}
-            tag={availabilityLabel(intl, p.availability)}
+            tag={piecePrice(intl, p) ?? availabilityLabel(intl, p.availability)}
             tagKind={p.availability}
           />
         ))}
