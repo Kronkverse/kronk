@@ -28,6 +28,7 @@ import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import { useAttachments } from 'mastodon/hooks/useAttachments';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useRecordName } from 'mastodon/hooks/useRecordName';
 
 // AttachmentSection — the "Konnected" block on every korner detail page
 // (docs/korners/adding_a_korner.md (Korner attachments) §4.2): what this
@@ -50,7 +51,9 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // audience the same") or does ("Stop following"), each confirmed with what
 // changes, and a line under the grid for each Konnected record whose
 // people can't open this one ("Growers can't open Harvest photos"), with
-// "Make it Same as …" where that would mend it. Pages of records that
+// "Make it Same as …" where that would mend it. Every record is named with
+// what it is ("the Ember event"), since a situation's records often share a
+// title (hooks/useRecordName; decisions.md, 2026-10-26). Pages of records that
 // can't follow (an event, a Krew) get the markers only.
 //
 // Renders nothing when there is nothing to show and nothing to add, so a
@@ -96,7 +99,6 @@ const messages = defineMessages({
     id: 'attachment_section.make_same',
     defaultMessage: 'Make it Same as {other}',
   },
-  thisRecord: { id: 'attachment_section.this_record', defaultMessage: 'this' },
 });
 
 interface AttachmentSectionProps {
@@ -146,6 +148,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   className,
 }) => {
   const intl = useIntl();
+  const names = useRecordName();
   const { attached, attachedFrom, loading, removeLink, refresh } =
     useAttachments(korner, recordId);
   const [confirmDialog, confirmThen] = useConfirmThen();
@@ -197,8 +200,8 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   // Set or clear Same as on one link, once confirmed.
   const changeFollow = useCallback(
     (link: KonnectedLink, follow: boolean) => {
-      const own = link.own.title ?? intl.formatMessage(messages.thisRecord);
-      const other = link.other.title ?? link.otherSlug;
+      const own = names.The(link.own);
+      const other = names.the({ ...link.other, slug: link.otherSlug });
       const question = follow
         ? intl.formatMessage(messages.followConfirm, {
             own,
@@ -236,7 +239,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
           });
       });
     },
-    [confirmThen, intl, korner, refresh, onAudienceChange],
+    [confirmThen, intl, names, korner, refresh, onAudienceChange],
   );
 
   // Honest notes: Konnected records whose people can't open this one. Only
@@ -335,8 +338,8 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
       </ul>
 
       {notes.map(({ link, mismatch }) => {
-        const own = link.own.title ?? intl.formatMessage(messages.thisRecord);
-        const other = link.other.title ?? link.otherSlug;
+        const own = names.the(link.own);
+        const other = names.the({ ...link.other, slug: link.otherSlug });
         return (
           <p className='attachment-section__note' key={link.attachment.id}>
             {mismatch.everyone
@@ -435,10 +438,14 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
   onFollow,
 }) => {
   const intl = useIntl();
+  const names = useRecordName();
   const { attachment, other, otherSlug } = link;
   // The other korner's icon; a Kronk-purple circle for unmanifested slugs.
   const OtherIcon = useKornerIcon(otherSlug);
   const title = other.title ?? other.slug;
+  // What it is, under its title, and in full for the buttons' labels.
+  const noun = names.noun(otherSlug, other.noun);
+  const named = names.the({ ...other, slug: otherSlug });
   const following = leads(link);
 
   const handleRemove = useCallback(() => {
@@ -459,13 +466,14 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
     <>
       <OtherIcon className='space-tile__glyph' />
       <span className='space-tile__name'>{title}</span>
+      {noun && <span className='space-tile__kind'>{noun}</span>}
       {marker}
     </>
   );
   const tileClass = `space-tile${following ? ' space-tile--leads' : ''}`;
   const followLabel = intl.formatMessage(
     following ? messages.unfollow : messages.follow,
-    { title },
+    { title: named },
   );
 
   const controls = (
@@ -490,8 +498,8 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
           type='button'
           className='space-tile__remove'
           onClick={handleRemove}
-          aria-label={intl.formatMessage(messages.diskonnect, { title })}
-          title={intl.formatMessage(messages.diskonnect, { title })}
+          aria-label={intl.formatMessage(messages.diskonnect, { title: named })}
+          title={intl.formatMessage(messages.diskonnect, { title: named })}
         >
           <Icon id='close' icon={CloseIcon} />
         </button>
@@ -504,6 +512,7 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
       <KonnectedCard
         slug={otherSlug}
         title={title}
+        noun={noun}
         url={other.url}
         preview={other.preview}
         leads={following}

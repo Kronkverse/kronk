@@ -43,6 +43,9 @@ export interface ApiKornerComposeJSON {
 // A korner's Konnections and how they work (manifest `konnect:`,
 // docs/korners/adding_a_korner.md, Korner attachments §2.6).
 export interface ApiKornerKonnectJSON {
+  // What one of its records is called beside its title ("event", "Krew"),
+  // so records that share a title can be told apart (hooks/useRecordName).
+  noun?: string;
   // The Konnect picker offers "New …" here: `compose.route` opens with
   // `?konnect=<source slug>:<source id>` and Konnects what it makes.
   make?: boolean;

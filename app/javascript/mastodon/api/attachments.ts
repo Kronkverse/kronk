@@ -47,6 +47,8 @@ export interface AttachmentEndpointPreview {
   slug: string;
   id: string | null;
   title: string | null;
+  // What it is beside its title ("event", "Krew"; a gang says gang).
+  noun?: string | null;
   url: string | null;
   missing?: boolean;
   // Null for a korner without an audience (a Krew, a proposal).
@@ -142,6 +144,8 @@ export interface AttachmentCandidateJSON {
   slug: string;
   id: string;
   title: string | null;
+  // What it is beside its title ("event", "Krew").
+  noun?: string | null;
   url: string;
   // Kalendar events only: when it starts (ISO 8601).
   starts_at?: string;

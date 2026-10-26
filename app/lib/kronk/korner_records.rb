@@ -97,6 +97,14 @@ module Kronk
       scope.limit(SEARCH_WINDOW).select { |record| visible?(record, viewer) }.first(limit)
     end
 
+    # What `record` is called beside its title ("the Ember event"): its
+    # korner's `konnect.noun`, except a FreeTheDream gang, which is a gang.
+    def noun_for(slug, record)
+      return 'gang' if slug == 'freethedream' && record.respond_to?(:top?) && !record.top?
+
+      Kronk::KornerRegistry.find(slug)&.konnect&.dig('noun')
+    end
+
     def title_of(record)
       TITLE_FIELDS.each do |field|
         value = record.try(field)

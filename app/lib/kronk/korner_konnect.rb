@@ -5,6 +5,7 @@
 # Korner attachments §2.6).
 #
 #   konnect:
+#     noun: event           # what one record is called, beside its title
 #     make: true            # the Konnect picker offers "New …" here
 #     route: /hub/x/new     # optional: where "New …" goes, if not compose.route
 #     label: 'New thing'    # optional: what it says, if not compose.label
@@ -27,7 +28,7 @@ module Kronk
   module KornerKonnect
     module_function
 
-    KEYS = %w(make route label effects).freeze
+    KEYS = %w(noun make route label effects).freeze
     EFFECT_KEYS = %w(with does).freeze
 
     def issues(manifests)
@@ -43,10 +44,25 @@ module Kronk
       return ["#{slug}: `konnect:` must be a mapping of `make:` and `effects:`"] unless raw.is_a?(Hash)
 
       issues = (raw.keys.map(&:to_s) - KEYS).map { |key| "#{slug}: `konnect:` has an unknown key `#{key}` (only #{KEYS.join(', ')})" }
+      issues.concat(noun_issues(manifest, raw))
       issues.concat(override_issues(manifest, raw))
       issues.concat(make_issues(manifest, raw))
       issues.concat(effects_issues(manifest, raw, by_slug))
       issues
+    end
+
+    # A korner whose records can be Konnected names them (`noun: event`), so a
+    # record is never just its title where another could share it.
+    def noun_issues(manifest, raw)
+      noun = raw['noun']
+      return ["#{manifest.slug}: `konnect.noun` must be a non-empty string"] if raw.key?('noun') && !(noun.is_a?(String) && noun.strip.present?)
+      return ["#{manifest.slug}: takes links but has no `konnect.noun` (what one of its records is called: event, album, Krew)"] if takes_links?(manifest) && noun.blank?
+
+      []
+    end
+
+    def takes_links?(manifest)
+      Array(manifest.accepts).any? { |entry| entry.is_a?(Hash) && entry['kind'].to_s == KornerAttachment::KIND_LINK }
     end
 
     def make_issues(manifest, raw)

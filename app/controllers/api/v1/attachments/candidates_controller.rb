@@ -99,6 +99,7 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
       slug: slug,
       id: record.id.to_s,
       title: Kronk::KornerRecords.title_of(record),
+      noun: Kronk::KornerRecords.noun_for(slug, record),
       url: Kronk::KornerRecords.path_for(slug, record),
       subtitle: record.try(:attachment_subtitle).presence,
     }.compact

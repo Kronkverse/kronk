@@ -34,7 +34,8 @@ RSpec.describe 'Attachments' do
         { 'to' => 'targetkorner', 'kind' => 'spawn' },
       ],
       accepts: [],
-      resources: []
+      resources: [],
+      konnect: nil
     )
     tgt_manifest = instance_double(
       Kronk::KornerRegistry::Manifest,
@@ -44,7 +45,8 @@ RSpec.describe 'Attachments' do
         { 'from' => 'sourcekorner', 'kind' => 'link' },
         { 'from' => 'sourcekorner', 'kind' => 'spawn' },
       ],
-      resources: []
+      resources: [],
+      konnect: nil
     )
 
     # Pass through to the real registry by default, THEN override the two

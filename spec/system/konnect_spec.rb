@@ -107,6 +107,26 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
     expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id)).to exist
   end
 
+  # decisions.md, 2026-10-26: an event, its Krew and its album often share a
+  # title, so each says what it is.
+  it 'says what each Konnected record is when they share a title' do
+    krew = Krew.create!(slug: 'ember', name: 'Ember', access: 'open')
+    krew.krew_memberships.create!(account: bob.account, role: 'member', source: 'direct')
+    event = Event.create!(account: bob.account, title: 'Ember', start_time: 2.days.from_now, end_time: 2.days.from_now + 1.hour)
+    ember = Album.create!(owner: bob.account, title: 'Ember', visibility: :public)
+    [['kalendar', event.id], ['krew', krew.id]].each do |slug, id|
+      KornerAttachment.create!(source_slug: 'albutts', source_id: ember.id, target_slug: slug, target_id: id, kind: 'link', created_by_account: bob.account)
+    end
+    visit "/hub/albutts/albums/#{ember.id}"
+
+    within('.attachment-section') do
+      expect(page).to have_css('.konnected-card', text: /event.*Ember/mi)
+      expect(page).to have_css('.space-tile', text: /Ember.*Krew/mi)
+      expect(page).to have_button('Diskonnect the Ember event')
+      expect(page).to have_button('Diskonnect the Ember Krew')
+    end
+  end
+
   # No Places yet, so no list to close first: one Escape closes the map.
   it 'closes the map back to the spaces on Escape, leaving the composer open' do
     visit '/hub/kalendar/composer'
@@ -126,7 +146,7 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
 
     within('.konnect-row') do
       expect(page).to have_css('.space-tile', text: 'Studio days')
-      click_on 'Diskonnect Studio days'
+      click_on 'Diskonnect the Studio days album'
       expect(page).to have_no_css('.space-tile', text: 'Studio days')
     end
   end

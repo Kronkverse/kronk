@@ -75,7 +75,7 @@ RSpec.describe 'Same as: Konnections carrying audience', :js, :streaming do
     end
 
     within('.compose-shell') do
-      expect(page).to have_css('.reach-dropdown__button', text: 'Same as Harvest dinner')
+      expect(page).to have_css('.reach-dropdown__button', text: 'Same as the Harvest dinner event')
       expect(page).to have_css('.konnect-row .space-tile--leads', text: /Harvest dinner.*Growers.*Same as/m)
       reach_menu { expect(page).to have_css('.reach-dropdown__same[aria-selected="true"]', text: /Harvest dinner.*Growers/m) }
       find('input[placeholder="What is this album?"]').set('Harvest photos')
@@ -105,8 +105,8 @@ RSpec.describe 'Same as: Konnections carrying audience', :js, :streaming do
 
     within('.compose-shell') do
       expect(page).to have_css('.konnect-row .space-tile', text: /Harvest dinner.*Growers/m)
-      reach_menu { find('.reach-dropdown__same', text: 'Same as Harvest dinner').click }
-      expect(page).to have_css('.reach-dropdown__button', text: 'Same as Harvest dinner')
+      reach_menu { find('.reach-dropdown__same', text: 'Same as the Harvest dinner event').click }
+      expect(page).to have_css('.reach-dropdown__button', text: 'Same as the Harvest dinner event')
       attach_file(file_fixture('voice.mp4'), make_visible: true)
       click_on 'Post film'
     end
@@ -126,7 +126,7 @@ RSpec.describe 'Same as: Konnections carrying audience', :js, :streaming do
 
     card = find('.attachment-section .konnected-cards > li', text: 'Harvest dinner')
     expect(card).to have_css('.konnected-card--leads', text: /Growers.*Same as/m)
-    card.click_on 'Stop following Harvest dinner'
+    card.click_on 'Stop following the Harvest dinner event'
     click_on 'Yes'
 
     expect(page).to have_no_css('.attachment-section .konnected-card--leads')
@@ -141,8 +141,8 @@ RSpec.describe 'Same as: Konnections carrying audience', :js, :streaming do
     link(album, 'albutts', event, 'kalendar')
     visit "/hub/albutts/albums/#{album.id}"
 
-    expect(page).to have_css('.attachment-section__note', text: 'Growers can’t open Harvest photos.')
-    click_on 'Make it Same as Harvest dinner'
+    expect(page).to have_css('.attachment-section__note', text: 'Growers can’t open the Harvest photos album.')
+    click_on 'Make it Same as the Harvest dinner event'
     click_on 'Yes'
 
     expect(page).to have_no_css('.attachment-section__note')
