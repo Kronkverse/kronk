@@ -1815,6 +1815,7 @@
   "kommunity.orb.rank": "Rank {rank}",
   "kommunity.orb.selected_member": "Selected member",
   "kommunity.orb.view_profile": "View profile",
+  "konnect.commit_failed": "Couldn’t Konnect {records}.",
   "konnect_row.drop": "Diskonnect {title}",
   "konnect_row.heading": "Konnected",
   "konnect_row.konnect": "Konnect",
