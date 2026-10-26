@@ -67,6 +67,8 @@ RSpec.describe 'Attachments::Candidates' do
       get "/api/v1/attachments/candidates?korner=krew&id=#{mine.id}", headers: headers
 
       expect(response.parsed_body.pluck('title')).to eq ['Mainframe']
+      # It says what it is, beside a title another record may share.
+      expect(response.parsed_body.pluck('noun')).to eq ['Krew']
     end
 
     it 'looks an event up by id, not the newest one the viewer can see' do

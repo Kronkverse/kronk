@@ -9,6 +9,7 @@ import type {
 } from 'mastodon/components/reach_dropdown';
 import type { KonnectControls, KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { konnectKey } from 'mastodon/hooks/useKonnect';
+import { useRecordName } from 'mastodon/hooks/useRecordName';
 
 // useSameAs — "Same as <record>" in a composer's Who sees this
 // (docs/design.md, Konnect, "Same as"; decisions.md, 2026-10-25).
@@ -51,6 +52,7 @@ export const useSameAs = (
   { enabled, apply, onChange, onToggleKrew }: UseSameAsOptions,
 ): { konnect: KonnectControls; reach: SameAsReachProps } => {
   const intl = useIntl();
+  const names = useRecordName();
   const [leaderKey, setLeaderKey] = useState<string | null>(null);
   // Reach chosen by hand (or by a draft): no more defaulting.
   const [touched, setTouched] = useState(false);
@@ -121,13 +123,14 @@ export const useSameAs = (
             const audience = audiences[key];
             return {
               key,
-              title: t.title ?? audience?.title ?? t.slug,
+              // "Same as the Ember event": the title alone may be the Krew's too.
+              title: names.the({ ...t, title: t.title ?? audience?.title }),
               audience: audienceText(intl, audience, t.slug, 'long') ?? '',
               selected: key === currentKey,
             };
           })
         : undefined,
-    [candidates, audiences, currentKey, intl],
+    [candidates, audiences, currentKey, intl, names],
   );
 
   // A draft keeps which one leads, and puts it back.

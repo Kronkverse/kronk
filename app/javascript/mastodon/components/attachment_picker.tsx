@@ -245,10 +245,15 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   }, [target, query, datesEvents, past]);
 
   const handleAttach = useCallback(
-    async (row: Pick<AttachmentCandidateJSON, 'id' | 'title'>) => {
+    async (row: Pick<AttachmentCandidateJSON, 'id' | 'title' | 'noun'>) => {
       if (!target || attaching) return;
       if (onPick) {
-        onPick({ slug: target.slug, id: row.id, title: row.title });
+        onPick({
+          slug: target.slug,
+          id: row.id,
+          title: row.title,
+          noun: row.noun,
+        });
         onClose();
         return;
       }

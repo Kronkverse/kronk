@@ -72,6 +72,10 @@ accepts:
 # a Konnection to a Place (decisions.md, 2026-10-23, "Location fields
 # become Konnect → Map").
 konnect:
+  # What one of its records is called wherever Kronk names it beside
+  # its title ("the Ember event"), so records that share a title can be
+  # told apart (decisions.md, 2026-10-26).
+  noun: place
   make: true
   route: /hub/map/places/new
   label: 'New place'
