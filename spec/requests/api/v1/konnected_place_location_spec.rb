@@ -31,6 +31,11 @@ RSpec.describe 'Location from a Konnected Place' do
     Event.find(response.parsed_body['id'])
   end
 
+  def pins_for_events(user)
+    get '/api/v1/map/events', headers: headers_for(user)
+    response.parsed_body.index_by { |pin| pin['title'] }
+  end
+
   describe 'events' do
     it "reads the Place's name and point when the event has no location" do
       event = create_event('Picnic')
@@ -72,6 +77,22 @@ RSpec.describe 'Location from a Konnected Place' do
       get "/api/v1/events/#{event.id}", headers: headers_for(author)
 
       expect(response.parsed_body['location_name']).to be_nil
+    end
+
+    # decisions.md, 2026-10-27: the Place is read live, so someone else's
+    # would let its maker move the event, and hand the event's audience an
+    # address they can't otherwise see.
+    it "doesn't take its location from someone else's Place, even when its host Konnected it" do
+      event = create_event('Picnic')
+      theirs = MapPlace.create!(account: stranger.account, name: 'Somewhere else', latitude: 1, longitude: 1)
+      link('kalendar', event.id, to: theirs)
+
+      get "/api/v1/events/#{event.id}", headers: headers_for(author)
+      expect(response.parsed_body['location_name']).to be_nil
+      expect(pins_for_events(author)).to_not have_key('Picnic')
+
+      # Konnected all the same.
+      expect(Kronk::AttachmentEffects.between('kalendar', event.id, 'map', theirs.id)).to exist
     end
 
     it 'reads the Places of a whole list' do

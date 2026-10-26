@@ -102,6 +102,37 @@ RSpec.describe 'Map places' do
       get '/api/v1/attachments/candidates?korner=map&q=fitzroy', headers: headers_for(stranger)
       expect(response.parsed_body).to be_empty
     end
+
+    # decisions.md, 2026-10-27: a Mate who can see Alice's Mates-only Place
+    # can't open it to everyone by Konnecting a public record of theirs.
+    it "isn't widened by a link someone else makes" do
+      konnect(event_by(maker, visibility: :private), place)
+      konnect(event_by(other), place)
+
+      get "/api/v1/map/places/#{place.id}", headers: headers_for(stranger)
+      expect(response).to have_http_status(404)
+      expect(visible_ids(stranger)).to be_empty
+
+      get '/api/v1/attachments/candidates?korner=map&q=fitzroy', headers: headers_for(stranger)
+      expect(response.parsed_body).to be_empty
+
+      get "/api/v1/attachments?target=map/#{place.id}", headers: headers_for(stranger)
+      expect(response.parsed_body).to be_empty
+    end
+
+    it "hides a suspended maker's Places from everyone else" do
+      # Linked by its maker to someone else's public event, which stays up.
+      KornerAttachment.create!(source_slug: 'map', source_id: place.id, target_slug: 'kalendar', target_id: event_by(other).id,
+                               kind: 'link', created_by_account: maker.account)
+      get "/api/v1/map/places/#{place.id}", headers: headers_for(stranger)
+      expect(response).to have_http_status(200)
+
+      maker.account.suspend!
+
+      get "/api/v1/map/places/#{place.id}", headers: headers_for(stranger)
+      expect(response).to have_http_status(404)
+      expect(visible_ids(stranger)).to be_empty
+    end
   end
 
   describe 'GET /api/v1/map/places' do

@@ -70,4 +70,26 @@ RSpec.describe DeleteAccountService do
       expect(booth_set.reload.audio_attachment_id).to eq(media.id)
     end
   end
+
+  # A Place is an exact spot, often someone's home: it goes with its maker,
+  # and so do its Konnections, whether or not the account row is kept.
+  describe "an account's Map Places" do
+    let(:account) { Fabricate(:account) }
+    let(:friend)  { Fabricate(:account) }
+
+    [true, false].each do |reserve|
+      it "removes them with their Konnections (reserve_username: #{reserve})", :aggregate_failures do
+        place = MapPlace.create!(account: account, name: 'Home', address: '1 Quiet St', latitude: -37.8, longitude: 144.9)
+        event = Event.create!(account: friend, title: 'Picnic', start_time: 2.days.from_now)
+        KornerAttachment.create!(source_slug: 'map', source_id: place.id, target_slug: 'kalendar', target_id: event.id,
+                                 kind: 'link', created_by_account: account)
+
+        subject.call(account, reserve_username: reserve)
+
+        expect(MapPlace.exists?(place.id)).to be(false)
+        expect(KornerAttachment.where(source_slug: 'map', source_id: place.id)).to_not exist
+        expect(Event.exists?(event.id)).to be(true)
+      end
+    end
+  end
 end
