@@ -331,6 +331,15 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
     })();
   }, [album.id, onChange]);
 
+  // Same as set or cleared in the Konnected section: the album's audience
+  // (its reach and Krews above) changed with it.
+  const handleAudienceChange = useCallback(() => {
+    if (!onChange) return;
+    apiGetAlbum(album.id)
+      .then(onChange)
+      .catch(() => undefined);
+  }, [album.id, onChange]);
+
   const ownerAccount = createAccountFromServerJSON(album.owner);
   const ownerName = ownerAccount.display_name || ownerAccount.username;
 
@@ -452,6 +461,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
         exclude={
           krewOfAlbum ? [{ slug: 'krew', id: krewOfAlbum.id }] : undefined
         }
+        onAudienceChange={handleAudienceChange}
       />
 
       {selecting && (

@@ -20,6 +20,8 @@ import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { konnectSearch } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useRecordName } from 'mastodon/hooks/useRecordName';
+import { errorText } from 'mastodon/utils/api_error';
 
 // The API refuses `spawn` on POST — narrow the picker's chosen kind
 // so callers of `addLink` don't have to re-prove it at every use.
@@ -56,6 +58,10 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 // with no search step in between: an existing Place, or a new one made at
 // once. In a composer it is handed back as the pick; on a record's page it
 // is Konnected straight away (decisions.md, 2026-10-25).
+//
+// Records already Konnected (`exclude`: a composer's Konnect row, a page's
+// Konnected section) aren't offered again, in the results or in Map's
+// Places. A link that fails says why, in the server's words.
 //
 // Kind is set to `link` today (user-added, independent lifecycle).
 // A future update could read the manifest's `kind:` on each entry
@@ -105,6 +111,10 @@ const messages = defineMessages({
     id: 'attachment_picker.konnect_error',
     defaultMessage: "Couldn't Konnect it: {message}.",
   },
+  attachErrorBare: {
+    id: 'attachment_picker.konnect_error_bare',
+    defaultMessage: "Couldn't Konnect it.",
+  },
 });
 
 interface AttachmentPickerProps {
@@ -115,7 +125,7 @@ interface AttachmentPickerProps {
   onAttached?: () => void;
   // Pick, don't save: the chosen record is handed back instead of linked.
   onPick?: (target: KonnectTarget) => void;
-  // Records already chosen, left out of the results.
+  // Records already chosen or Konnected, left out of the results.
   exclude?: Pick<KonnectTarget, 'slug' | 'id'>[];
 }
 
@@ -244,9 +254,11 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     };
   }, [target, query, datesEvents, past]);
 
-  const handleAttach = useCallback(
+  // Konnect the chosen record (in a composer, hand it back) and close.
+  // A link that can't be made throws, for the caller to say so.
+  const konnectRow = useCallback(
     async (row: Pick<AttachmentCandidateJSON, 'id' | 'title' | 'noun'>) => {
-      if (!target || attaching) return;
+      if (!target) return;
       if (onPick) {
         onPick({
           slug: target.slug,
@@ -257,19 +269,31 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
         onClose();
         return;
       }
+      await addLink(target.slug, row.id, target.kind);
+      onAttached?.();
+      onClose();
+    },
+    [addLink, onAttached, onClose, onPick, target],
+  );
+
+  const handleAttach = useCallback(
+    async (row: AttachmentCandidateJSON) => {
+      if (!target || attaching) return;
       setAttaching(true);
       setError(null);
       try {
-        await addLink(target.slug, row.id, target.kind);
-        onAttached?.();
-        onClose();
+        await konnectRow(row);
       } catch (e) {
-        const message = e instanceof Error ? e.message : 'unknown error';
-        setError(intl.formatMessage(messages.attachError, { message }));
+        const message = errorText(e);
+        setError(
+          message
+            ? intl.formatMessage(messages.attachError, { message })
+            : intl.formatMessage(messages.attachErrorBare),
+        );
         setAttaching(false);
       }
     },
-    [addLink, attaching, intl, onAttached, onClose, onPick, target],
+    [attaching, intl, konnectRow, target],
   );
 
   const excludeKey = (exclude ?? []).map((e) => `${e.slug}/${e.id}`).join(' ');
@@ -301,12 +325,22 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     if (targetSlugs.length > 1) clearTarget();
     else onClose();
   }, [targetSlugs.length, clearTarget, onClose]);
+  // The map says itself when this fails (in its own panel, over ours), so
+  // the failure goes back to it.
   const handleMapPick = useCallback(
-    (picked: KonnectTarget) => {
-      if (!target) return;
-      void handleAttach({ id: picked.id, title: picked.title ?? null });
+    async (picked: KonnectTarget) => {
+      setAttaching(true);
+      try {
+        await konnectRow({
+          id: picked.id,
+          title: picked.title ?? null,
+          noun: picked.noun,
+        });
+      } finally {
+        setAttaching(false);
+      }
     },
-    [target, handleAttach],
+    [konnectRow],
   );
   const excludedPlaces = useMemo(
     () => (exclude ?? []).filter((e) => e.slug === 'map').map((e) => e.id),
@@ -550,6 +584,7 @@ const CandidateRow: React.FC<CandidateRowProps> = ({
   onAttach,
 }) => {
   const TargetIcon = useKornerIcon(row.slug);
+  const names = useRecordName();
   const handleClick = useCallback(() => {
     void onAttach(row);
   }, [onAttach, row]);
@@ -564,7 +599,8 @@ const CandidateRow: React.FC<CandidateRowProps> = ({
       <TargetIcon className='attachment-picker__result-icon' />
       <span className='attachment-picker__result-text'>
         <span className='attachment-picker__result-title'>
-          {row.title ?? row.id}
+          {/* Untitled, it is "This album", never its id. */}
+          {row.title ?? names.The({ slug: row.slug, noun: row.noun })}
         </span>
         {row.subtitle && (
           <span className='attachment-picker__result-subtitle'>
