@@ -43,8 +43,8 @@ A **First Nations Country** button under the zoom buttons (Kommons, @mangobee,
 2026-10-23) lays a map of the Countries of Aboriginal and Torres Strait
 Islander peoples over Australia, under the pins. Off until you turn it on; the
 choice is kept in your browser (`kronk.map.country_layer`). While it is on, a
-note under the button credits the map to @mangobee and says the boundaries are
-approximate.
+note under the button says the boundaries are approximate. It carries no
+on-map credit (@mangobee, 2026-10-26: take the credit line away).
 
 It is a picture (`app/javascript/images/first-nations-country.webp`, a MapLibre
 `image` source over 111.5°E–155°E, 8.8°S–44.6°S), not data. @mangobee drew
