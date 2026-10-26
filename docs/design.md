@@ -861,9 +861,10 @@ or `project:`) and `project`, `booth`/`upload`, `kuestions`/`kuestion`.
 What a draft can't keep yet: files a composer only uploads when you post. The
 photos of a kar or an art piece, a film's video, a Booth set's audio and
 cover, and a Kronikle's Konnected korners or an event's are kept as text only;
-a trek keeps its route only while under 200,000 characters. Moments and the
-Kommons tree composer keep nothing yet (Moments uploads on Share; the tree
-composer isn't in the shell). Each needs its uploads moved to when the file is
+a trek keeps its route only while under 200,000 characters. Moments, the
+Kommons tree composer and Wachuneed's New listing page keep nothing yet
+(Moments uploads on Share; the tree composer and `new_listing.tsx` aren't in
+the shell). Each needs its uploads moved to when the file is
 picked, as albums do.
 
 Nudges keep a per-device draft per conversation instead
@@ -880,10 +881,19 @@ the person adds. Pass it to `<ComposeShell konnect={…}>`: the shell draws the
 **Konnect row** at the foot of the body, above the drafts line, in the same
 space tiles as a page's Konnected block (`.space-tiles`, one tile per record
 with a × to drop it, then a dashed Konnect tile that opens the picker in its
-pick-don't-save mode). Tiles reflow; nothing scrolls sideways. After the
+pick-don't-save mode). Tiles reflow; nothing scrolls sideways. The picker
+never offers what is Konnected already: the row's records in a composer,
+everything Konnected either way on a record's page. After the
 create succeeds the composer calls `konnect.commit(<its slug>, <new id>)`;
-a link that fails never fails the create. Keep `konnect.saved` in the draft
-(`konnections`) and `restore` it in `apply`. A composer that makes nothing
+a link that fails never fails the create, and `commit` names it in an alert
+itself ("Couldn't Konnect the Ember event"), so the composer needn't. Keep
+`konnect.saved` in the draft (`konnections`) and `restore` it in `apply`.
+`saved` never holds the record the composer was opened from: that comes
+from the URL each time, so a draft picked up later without `?konnect=`
+isn't Konnected to it or following its audience. Cancel from a composer
+opened from a record goes back to it (`useKonnectReturn()` in the korner's
+close handler: a step back, or the record's page on a cold load), not to
+the space's directory. A composer that makes nothing
 new to Konnect passes `konnect={null}`: editing a record (Konnect it from its
 page), adding to one that exists (photos to an album, a hand-over), a record
 that isn't its korner's linkable one (a trek, a FreeTheDream item), or a
@@ -892,7 +902,8 @@ through Konnect too, not fields of their own (Korner Standard L13): where a
 thing is, is a Konnection to a Map Place. In a composer's picker, Map opens
 the map straight away (`components/konnect_map.tsx`): existing Places listed
 above the search results, or a pin plus a name and an address you can type,
-which makes the Place and picks it without leaving the composer; whatever
+which makes the Place and picks it without leaving the composer (whatever
+fails is said in the map's own panel); whatever
 reads a location falls back to the Konnected Place (`Kronk::RecordPlace`,
 decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The
 korner's manifest then says
