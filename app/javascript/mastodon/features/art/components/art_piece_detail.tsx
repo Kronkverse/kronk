@@ -19,6 +19,10 @@ import { ArtPieceComposer } from './art_piece_composer';
 import { ArtQuickViewer } from './art_quick_viewer';
 
 const messages = defineMessages({
+  toPortfolio: {
+    id: 'art.detail.to_portfolio',
+    defaultMessage: "{name}'s portfolio",
+  },
   readMore: { id: 'art.detail.read_more', defaultMessage: 'Read more' },
   readLess: { id: 'art.detail.read_less', defaultMessage: 'Show less' },
   emptyPhotos: {
@@ -175,9 +179,20 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
       meta={
         <KornerMeta
           items={[
-            // The artist's portfolio, where the rest of their work is.
-            <Link key='owner' to={`/hub/art/@${piece.owner.acct}`}>
-              @{piece.owner.acct}
+            // The artist's picture, which goes to their portfolio, where
+            // the rest of their work is (@mangobee, 2026-10-26).
+            <Link
+              key='owner'
+              to={`/hub/art/@${piece.owner.acct}`}
+              className='art-piece-detail__artist'
+              aria-label={intl.formatMessage(messages.toPortfolio, {
+                name: piece.owner.display_name.trim() || piece.owner.username,
+              })}
+              title={intl.formatMessage(messages.toPortfolio, {
+                name: piece.owner.display_name.trim() || piece.owner.username,
+              })}
+            >
+              <img src={piece.owner.avatar} alt='' />
             </Link>,
             // Who can see it: the artist's to know.
             piece.is_owner
