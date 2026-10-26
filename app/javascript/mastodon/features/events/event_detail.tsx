@@ -114,6 +114,9 @@ interface Event {
   end_time: string | null;
   location_name: string | null;
   location_url: string | null;
+  // The Konnected Place its location comes from, when it has none of its
+  // own; its map is then that Place's card in Konnected.
+  place_id?: string | null;
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
@@ -610,18 +613,22 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </div>
         )}
 
-        {(() => {
-          const pin = parseOsmUrl(event.location_url);
-          return pin ? (
-            <MapPinPreview
-              key={`${pin.lat},${pin.lng}`}
-              lat={pin.lat}
-              lng={pin.lng}
-              zoom={pin.zoom}
-              className='event-detail__map-preview'
-            />
-          ) : null;
-        })()}
+        {/* A Konnected Place shows its own map, as its card in Konnected
+            (decisions.md, 2026-10-26); only an address of the event's own
+            is drawn here. */}
+        {!event.place_id &&
+          (() => {
+            const pin = parseOsmUrl(event.location_url);
+            return pin ? (
+              <MapPinPreview
+                key={`${pin.lat},${pin.lng}`}
+                lat={pin.lat}
+                lng={pin.lng}
+                zoom={pin.zoom}
+                className='event-detail__map-preview'
+              />
+            ) : null;
+          })()}
 
         {/* RSVP / Invite / Share row — icon-only Kronk squares. Sits
             below the map so the top of the page reads as description

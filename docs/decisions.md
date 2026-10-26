@@ -17,6 +17,98 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-26 — Konnected records show themselves
+
+Tal, on shadow: "when they're konnected, instead of just a tile under
+'Konnect' they should expand out into the preview of it. For instance, in
+an event, the map used to be visible on the event page, also the albums
+was the same … once they're konnected, let's actually show them in a
+comprehensive way. we can leave the art space for now."
+
+**Decision:** in every Konnected section, a record with something to show
+is a card above the tiles, not a tile. A Place shows its map and address,
+an album up to four photos and how many, an event its date, time and
+where, and a Booth set, film, kar or listing its picture. A kronikle shows
+its opening lines. The card keeps the tile's audience marker, Same as and
+Diskonnect. The server sends what each card draws with the attachment
+(`Kronk::KonnectedPreview`), so a page makes no extra requests. Krews,
+proposals, Huddle rooms, Kuestions and art pieces stay tiles for now, as
+does an album with no photos.
+
+An event whose location comes from its Konnected Place no longer draws a
+second map under its details: the Place's card is the map. An event with
+its own typed address keeps its map.
+
+## 2026-10-26 — Every Krew shows how it lets people in
+
+Kommons proposal "Krews Type"
+(https://kronk.info/hub/kommons/p/117482707167518494): "There should be a
+icon which shows if krews are open/closed etc. Maybe also there should be a
+button for 'Join/apply' etc for visible krews, or a 'Member' if you're
+already a part of the krew."
+
+**Decision:** every Krew row (Yours and Discover) and the Krew page carry a
+small muted icon beside the name for its access: open (`lock_open`), asks
+to join (`person_add`), has requirements (`list_alt`), invite-only
+(`lock`), each with its name as the label. On Discover the row's way in is
+Join, Ask to join, or "See what's needed" (to the Krew page, where the
+requirements are) for a requirement-gated Krew; a Krew you're in says
+"Member" (was "You're in"), and one you've asked to join says "Asked to
+join". Yours has no action column: everything there is yours. The Krew
+page now lists a requirement-gated Krew's requirements to someone not in
+it ("To join:"), so "See what's needed" lands on the answer.
+
+**Why:** the only marker was a ⚿ glyph for invite-only, and invite-only
+Krews aren't listed in Discover, so in practice no row said how to get in
+until you opened it, and a requirement-gated row showed nothing at all. An
+icon from the shared material set, not a glyph, keeps it in family.
+
+**Supersedes:** the ⚿ invite-only glyph, "You're in", and the
+requirement-gated row with no action.
+
+## 2026-10-26 — The Mates list is for Mates
+
+Tal: "mates list visible to their mates only." The list had been off since
+2026-10-18 (Profile: one page) until it was settled who may see whose Mates.
+
+**Decision:** `/@:acct/mates` is back, shown to the person themselves and to
+their Mates. Everyone else, signed out included, gets an empty list from
+`GET /api/v1/accounts/:id/mates` and no link on the Mates count; the count
+stays visible to everyone who sees the profile. `hide_collections` still
+hides the list from everyone but the owner, Mates included, and a profile
+the viewer may not see hides it too.
+
+**Why:** who someone's Mates are is close to who they are; their Mates are
+already inside that circle, a stranger isn't. The count says how connected
+someone is without saying with whom. Detail: `docs/spaces/profile.md` (The
+Mates list).
+
+**Supersedes:** 2026-10-18 (the list off), and the older rule that anyone
+who could see the profile could see the list.
+
+## 2026-10-25 — No Unmate in lists
+
+Kommons proposal
+[#117481297515130656](https://kronk.info/hub/kommons/p/117481297515130656):
+"Definitely dont need an unmate button in pages like this" — a Mates list,
+where every row carried an Unmate button.
+
+**Decision:** once you are Mates, the relationship button shows nothing.
+`FollowButton` (every account row: Mates lists, froth and boost lists,
+hover cards, suggestions) and the profile peek card's `MateIconButton`
+render nothing for an established Mate. Unmate is only on the per-person
+settings screen, `/@:acct/settings`. Mate?, Mating… (withdraw) and Accept
+are unchanged.
+
+**Why:** ending a Mateship is a deliberate act about one person. A
+destructive button beside every name in a list invites mis-taps and reads
+as if the list were for pruning. The profile block already hid it for
+Mates; this makes every other surface agree. Detail:
+`docs/spaces/profile.md` (The profile block, Per-person settings).
+
+**Supersedes:** the Unmate state of `FollowButton` and the peek card's
+check-mark Unmate button.
+
 ## 2026-10-25 — Konnect is the one way into a Krew's spaces
 
 Tal, checking Konnect on shadow: "I'm seeing 'Add a space' and 'Konnect'

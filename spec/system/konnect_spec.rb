@@ -59,7 +59,7 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
     end
 
     expect(page).to have_css('.event-detail__location', text: 'Fitzroy Gardens')
-    expect(page).to have_css('.space-tile', text: 'Fitzroy Gardens')
+    expect(page).to have_css('.konnected-card--map', text: 'Fitzroy Gardens')
     place = MapPlace.find_by!(name: 'Fitzroy Gardens', address: 'Wellington Pde, East Melbourne', account: bob.account)
     event = Event.find_by!(title: 'Picnic', location_name: nil)
     expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id)).to exist
@@ -103,7 +103,7 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
     within('.map-pin-picker') { click_on 'Bondi Pavilion' }
 
     expect(page).to have_no_css('.attachment-picker')
-    expect(page).to have_css('.attachment-section .space-tile', text: 'Bondi Pavilion')
+    expect(page).to have_css('.attachment-section .konnected-card--map', text: 'Bondi Pavilion')
     expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id)).to exist
   end
 

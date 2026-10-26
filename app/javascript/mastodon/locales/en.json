@@ -1811,6 +1811,7 @@
   "konnect_row.drop": "Diskonnect {title}",
   "konnect_row.heading": "Konnected",
   "konnect_row.konnect": "Konnect",
+  "konnected_card.photos": "{count, plural, one {# photo} other {# photos}}",
   "korner.visibility.krew.help": "Members of the krew(s) you pick",
   "korner.visibility.krew.label": "A krew",
   "korner.visibility.mates.help": "Your mutual connections only",
