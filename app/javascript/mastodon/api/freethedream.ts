@@ -4,7 +4,6 @@ import api, {
   apiRequestPost,
   apiRequestPut,
 } from 'mastodon/api';
-import { apiCreateAttachment } from 'mastodon/api/attachments';
 import type {
   FtdAccount,
   FtdCategory,
@@ -101,18 +100,6 @@ export const apiFtdUploadCover = async (file: File) => {
   const response = await api().post<FtdCover>('/api/v2/media', form);
   return response.data;
 };
-
-// Link a Kalendar event to a project: a korner attachment from the event,
-// made by the event's owner (docs/korners/adding_a_korner.md, Korner
-// attachments).
-export const apiFtdLinkEvent = (projectId: string, eventId: string) =>
-  apiCreateAttachment({
-    source_slug: 'kalendar',
-    source_id: eventId,
-    target_slug: 'freethedream',
-    target_id: projectId,
-    kind: 'link',
-  });
 
 export const apiFtdRsvp = (
   eventId: string,
