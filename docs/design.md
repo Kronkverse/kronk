@@ -357,7 +357,12 @@ The visual points:
 - **No colour field.** Identity is name and icon.
 - **Feed projection.** `feed_projection.card` names the korner's feed card
   (for example `kommons_card`, rendered by `StatusKommonsCard`). Every feed card
-  sits on `<StatusKornerCard>` and the [Card standard](#card-standard).
+  sits on `<StatusKornerCard>` and the [Card standard](#card-standard). A
+  korner's post is the person's own words, or the record's title when they
+  wrote none, linked to the record (its `status_id`, stamped
+  `source_korner`). The card is the link: the post never carries generated
+  copy ("Live now in the Booth: …") or the record's URL in its text
+  (decisions.md, 2026-10-26).
 - **Settings.** `/hub/<slug>/settings`, built from the widget kit (§4.1).
 - **Header.** The Frame draws the badge, title, tagline and view switch from the
   manifest (`views:`, `header:`). See [Frame](#frame).

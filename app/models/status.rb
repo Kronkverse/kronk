@@ -137,6 +137,8 @@ class Status < ApplicationRecord
   has_one :quote, inverse_of: :status, dependent: :destroy
   has_one :proposal, dependent: :nullify, inverse_of: :discussion
   has_one :booth_set, dependent: :nullify, inverse_of: :status
+  # A live set's "Tell my feed" post (Booth::Live, its feed card).
+  has_one :booth_live, dependent: :nullify, inverse_of: :status
   has_one :question, dependent: :nullify, inverse_of: :status
   has_one :answer, dependent: :nullify, inverse_of: :status
   has_one :huddle_session, dependent: :nullify, inverse_of: :status
