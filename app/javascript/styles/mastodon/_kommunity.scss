@@ -461,3 +461,47 @@
     }
   }
 }
+
+// Kommunity Everyone — the alphabetical directory (Tal 2026-10-26). A
+// plain `.stage-column` list of shared `.account` rows, hairline between,
+// like the Mates tab. The wrapper hands the column a bounded height so it
+// owns the vertical scroll.
+.kommunity-everyone {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  inline-size: 100%;
+}
+
+.kommunity-everyone__search {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.875rem;
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  font: inherit;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.kommunity-everyone__list {
+  display: flex;
+  flex-direction: column;
+
+  .account {
+    border-block-end: 1px solid var(--border-subtle);
+
+    &:last-child {
+      border-block-end: 0;
+    }
+  }
+}
