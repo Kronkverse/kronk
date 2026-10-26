@@ -17,6 +17,7 @@ import type { ReactElement, MouseEvent } from 'react';
 
 import type { Map as ImmutableMap } from 'immutable';
 
+import { SilentErrorBoundary } from './silent_error_boundary';
 import {
   StatusAlbuttsAddedCard,
   StatusAlbuttsCard,
@@ -133,6 +134,24 @@ export const KORNER_CARDS: KornerCardEntry[] = [
 /* eslint-enable @typescript-eslint/no-unsafe-assignment,
                  @typescript-eslint/no-explicit-any */
 
+// Calls an entry's factory inside the boundary, so a card that throws
+// while building or rendering (a map with no WebGL, data of the wrong
+// shape) drops out of its post instead of taking the app down.
+const GuardedCard: React.FC<{
+  entry: KornerCardEntry;
+  status: StatusLike;
+  ctx: CardContext;
+}> = ({ entry, status, ctx }) => entry.card(status, ctx);
+
+const guarded = (entry: KornerCardEntry): KornerCardEntry => ({
+  ...entry,
+  card: (status, ctx) => (
+    <SilentErrorBoundary>
+      <GuardedCard entry={entry} status={status} ctx={ctx} />
+    </SilentErrorBoundary>
+  ),
+});
+
 export function pickKornerCard(status: StatusLike): KornerCardEntry | null {
   // Dispatch on the `source_korner` discriminator (docs/spaces/feed.md (Who sees what)
   // §3.2), replacing the old per-association / post_type predicates. Fall back
@@ -144,7 +163,7 @@ export function pickKornerCard(status: StatusLike): KornerCardEntry | null {
     const bySlug = korner === entry.slug;
     const byAssoc = korner == null && status.get(entry.assocField) != null;
     if ((bySlug || byAssoc) && status.get(entry.assocField) != null) {
-      return entry;
+      return guarded(entry);
     }
   }
 

@@ -190,6 +190,7 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
                 lat={pin.lat}
                 lng={pin.lng}
                 zoom={previewZoom}
+                label={event.location_name}
               />
             </Suspense>
           </div>

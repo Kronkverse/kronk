@@ -606,6 +606,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
                 lat={pin.lat}
                 lng={pin.lng}
                 zoom={pin.zoom}
+                label={event.location_name}
                 className='event-detail__map-preview'
               />
             ) : null;
