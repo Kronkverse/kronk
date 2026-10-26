@@ -61,7 +61,9 @@ fill calms as you zoom in).
 - **From a profile**: "On <name> Country" links to `/hub/map?country=<name>`,
   which turns the layer on and opens that Country.
 - **Names** are drawn in Kronk's own type as small markers, each shown only
-  when it fits inside its Country at that zoom (the basemap has no glyphs).
+  when it fits inside its Country at that zoom, and none until zoom 4 (at
+  Australia-wide only Mardu fits, and a lone name read as if it were picked;
+  @mangobee, 2026-10-26). The basemap has no glyphs.
 
 The shapes were traced from @mangobee's own map (shown with their permission
 for education; the original is on the proposal): each colour area taken off
