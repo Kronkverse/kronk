@@ -80,6 +80,10 @@ class Api::V1::KrewsController < Api::BaseController
     }
   end
 
+  # A new Krew starts with no spaces: Konnecting or making something for
+  # it turns its space on (decisions.md, 2026-10-25, "Konnect is the one
+  # way into a Krew's spaces"), and Krew settings turns them on and off
+  # (#attach). A `korner_attachments` list sent here is ignored.
   def create
     access = normalize_access_param(create_params[:access], create_params[:discoverable])
     krew_attrs = create_params.slice(:slug, :name, :description, :governance_framework, :governance_threshold).merge(
@@ -98,7 +102,6 @@ class Api::V1::KrewsController < Api::BaseController
     ActiveRecord::Base.transaction do
       krew.save!
       krew.krew_memberships.create!(account: current_account, role: 'seeder', source: 'direct')
-      attach_korners!(krew, params[:korner_attachments])
       attach_requirements!(krew, params[:requirements])
     end
 
@@ -265,17 +268,6 @@ class Api::V1::KrewsController < Api::BaseController
   def send_invites!(krew, account_ids)
     krew.invitable_accounts(account_ids, inviter: current_account).each do |account|
       Nudges::Conversation.invite_to_krew!(krew, account, current_account)
-    end
-  end
-
-  # Inline korner attachments on create (Phase 4c). Accepts an array
-  # of slug strings; silently drops anything not in KrewKorner::KORNERS
-  # rather than 422-ing the whole create.
-  def attach_korners!(krew, slugs)
-    Array(slugs).each do |slug|
-      next unless KrewKorner::KORNERS.include?(slug.to_s)
-
-      krew.krew_korners.find_or_create_by!(korner: slug.to_s)
     end
   end
 
