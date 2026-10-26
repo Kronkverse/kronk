@@ -145,34 +145,8 @@ const messages = defineMessages({
     defaultMessage:
       'Tap ♡ on any set to keep it here. Only you see what you save.',
   },
-  introTitle: {
-    id: 'booth.intro.title',
-    defaultMessage: 'How the Booth works',
-  },
-  introUpload: {
-    id: 'booth.intro.upload',
-    defaultMessage:
-      'Upload a set from the Ж menu (Upload or go live): the audio file, a title and a cover. That’s all it needs.',
-  },
-  introShare: {
-    id: 'booth.intro.share',
-    defaultMessage:
-      'Every member can find it here. Post it to your feed as you upload, or later from the set’s page, so your people hear it.',
-  },
-  introCredit: {
-    id: 'booth.intro.credit',
-    defaultMessage:
-      'Credit who you played with. Once they confirm, the set shows under their name in Artists too.',
-  },
-  introLive: {
-    id: 'booth.intro.live',
-    defaultMessage:
-      'Play live: choose Go live in the same menu, now or at a time you set, and members listen in from Live.',
-  },
-  introDismiss: { id: 'booth.intro.dismiss', defaultMessage: 'Got it' },
 });
 
-const INTRO_KEY = 'kronk.booth.intro_dismissed';
 const GENRE_CHIPS = 8;
 type FilterKey = 'sort' | 'kind' | 'genre';
 
@@ -185,14 +159,6 @@ const SORT_MESSAGES: Record<BoothSort, MessageDescriptor> = {
 
 // How many First listens show up front before "See all".
 const FIRST_SHELF = 4;
-
-function readIntroDismissed(): boolean {
-  try {
-    return window.localStorage.getItem(INTRO_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
 
 // The artist detail path is `/hub/booth/artists/<encoded-key>`; the
 // roster is bare `/hub/booth/artists`. Returns the decoded key (`@acct` for
@@ -330,50 +296,6 @@ const SetGallery: React.FC<{
   );
 };
 
-// First-visit explainer: three lines on what the Booth is for and how a
-// set gets heard. Dismissed once per browser.
-const BoothIntro: React.FC = () => {
-  const intl = useIntl();
-  const [dismissed, setDismissed] = useState(readIntroDismissed);
-
-  const handleDismiss = useCallback(() => {
-    setDismissed(true);
-    try {
-      window.localStorage.setItem(INTRO_KEY, '1');
-    } catch {
-      // Private mode: it comes back next visit, which is fine.
-    }
-  }, []);
-
-  if (dismissed) return null;
-
-  return (
-    <section className='booth-intro' aria-labelledby='booth-intro-title'>
-      <h2 id='booth-intro-title' className='booth-intro__title'>
-        {intl.formatMessage(messages.introTitle)}
-      </h2>
-      <ol className='booth-intro__steps'>
-        <li>{intl.formatMessage(messages.introUpload)}</li>
-        <li>{intl.formatMessage(messages.introShare)}</li>
-        <li>{intl.formatMessage(messages.introCredit)}</li>
-        <li>{intl.formatMessage(messages.introLive)}</li>
-      </ol>
-      <div className='booth-intro__actions'>
-        <Link to='/hub/booth/composer' className='booth-intro__cta'>
-          {intl.formatMessage(messages.upload)}
-        </Link>
-        <button
-          type='button'
-          className='booth-intro__dismiss'
-          onClick={handleDismiss}
-        >
-          {intl.formatMessage(messages.introDismiss)}
-        </button>
-      </div>
-    </section>
-  );
-};
-
 const MusikView: React.FC = () => {
   const intl = useIntl();
   const [input, setInput] = useState('');
@@ -441,7 +363,6 @@ const MusikView: React.FC = () => {
 
   return (
     <>
-      <BoothIntro />
       <LiveNowStrip />
 
       {/* First listens: recent sets few people have heard yet, up front so

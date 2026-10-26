@@ -67,11 +67,11 @@ which opens the same form as the grid card's menu.
     to one **kind** (`kind`, see [Kinds](#kinds)) and to one of the most
     used genres (`genre`). **Sort** is the listener's choice of Newest
     (pages by `max_id`), Fewest listens or Longest (page by `offset`); the
-    Booth never ranks for anyone. A first-visit **How the Booth works** strip (upload,
-    get heard, credit who played) sits on top until dismissed; that is
-    kept per browser in `localStorage` (`kronk.booth.intro_dismissed`).
-    It and the empty state link to the composer, because a musician on
-    their first visit hasn't found the Ж yet.
+    Booth never ranks for anyone. How the Booth works (upload, get heard,
+    credit who played, go live, save) is in About this space, the Ж
+    bubble's i, from the manifest's `about:`; the page carries no banner
+    (decisions.md, 2026-10-26). The empty state links to the composer,
+    because a musician on their first visit hasn't found the Ж yet.
   - **My sets** (`/hub/booth/mine`): a musician's own corner. Counts
     (sets, plays, live sets coming, saved), their sets with drafts
     included (`mine=true`), the live sets they've planned, and the sets
