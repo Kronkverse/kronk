@@ -154,18 +154,21 @@ All in `app/javascript/mastodon/features/krew/`.
 - **`/hub/krew`** (`index.tsx`): the directory, with two views on the
   standard rotating title: **Yours** (your Krews, including invite-only ones,
   most recently active first) and **Discover** (listed Krews). Each card
-  shows the Krew's photo (its initial when it has none) and the member
-  count. A Discover row carries the way in beside it:
-  **Join** for an open Krew, **Ask to join** for an `approval` one, and
-  "Asked to join" or "You're in" once that is so. A requirement-gated Krew
-  has no button on the row.
+  shows the Krew's photo (its initial when it has none), the member
+  count, and beside the name a small icon for its access
+  (`krew_access_mark.tsx`: open, asks to join, has requirements,
+  invite-only; decisions.md, 2026-10-26). A Discover row carries the way
+  in beside it: **Join** for an open Krew, **Ask to join** for an
+  `approval` one, **See what's needed** (to the Krew page) for a
+  requirement-gated one, and "Asked to join" or "Member" once that is so.
 - **`/hub/krew/composer`** (`krew_composer.tsx`): "Gather a Krew", the shared
   `<ComposeShell>` overlay on the directory. Name, description, access,
   spaces to attach, requirements, and people to invite. `/hub/krew/new` is an
   alias.
-- **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name,
-  description, then the way in for someone not in it (Join, Ask to join, or
-  a note that it needs an invite). Under the name are **the faces**: a few
+- **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name
+  (with the same access icon), description, then the way in for someone
+  not in it (Join, Ask to join, or a note that it needs an invite; a
+  requirement-gated Krew lists its requirements above Join). Under the name are **the faces**: a few
   of the people in it, how many, and for members a badge when people are
   asking to join. Tapping them opens **People** below the grid (tapping
   again closes it): for members, the people asking to join with "Let them

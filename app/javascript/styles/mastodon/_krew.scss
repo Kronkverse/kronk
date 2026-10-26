@@ -254,9 +254,14 @@ $krew-column-width: 720px;
     font-weight: 600;
   }
 
+  // How the Krew lets people in (krew_access_mark.tsx): a small muted
+  // icon beside the name.
   &__row-marker {
+    flex: none;
+    align-self: center;
+    width: 1rem;
+    height: 1rem;
     color: var(--text-muted);
-    font-size: 0.9rem;
   }
 
   &__row-desc {
@@ -372,10 +377,11 @@ $krew-column-width: 720px;
   }
 
   &__marker {
+    width: 0.7em;
+    height: 0.7em;
     margin-left: 0.4rem;
     color: var(--text-muted);
-    font-size: 0.9em;
-    font-weight: 400;
+    vertical-align: middle;
   }
 
   &__submeta {
@@ -526,6 +532,19 @@ $krew-column-width: 720px;
     margin: 0 0 0.75rem;
     color: var(--text-muted);
     font-size: 0.85rem;
+  }
+
+  // What a requirement-gated Krew asks of someone joining, above Join.
+  &__needs {
+    flex-basis: 100%;
+  }
+
+  &__needs-list {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 
   &__invite {
