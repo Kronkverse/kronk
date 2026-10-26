@@ -19,10 +19,8 @@ import { ArtPieceComposer } from './art_piece_composer';
 import { ArtQuickViewer } from './art_quick_viewer';
 
 const messages = defineMessages({
-  description: {
-    id: 'art.detail.description',
-    defaultMessage: 'About the artwork',
-  },
+  readMore: { id: 'art.detail.read_more', defaultMessage: 'Read more' },
+  readLess: { id: 'art.detail.read_less', defaultMessage: 'Show less' },
   emptyPhotos: {
     id: 'art.detail.empty_photos',
     defaultMessage: 'No photos yet.',
@@ -70,6 +68,9 @@ const VISIBILITY_LABEL = {
   self_only: messages.visibilitySelfOnly,
 } as const;
 
+// A description longer than this folds to four lines behind Read more.
+const ABOUT_FOLD = 280;
+
 interface Props {
   piece: ApiArtPieceJSON;
   onChange?: (piece: ApiArtPieceJSON) => void;
@@ -81,6 +82,10 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const toggleAbout = useCallback(() => {
+    setAboutOpen((was) => !was);
+  }, []);
   // Which picture the full-screen viewer has open.
   const [viewing, setViewing] = useState<number | null>(null);
   const openViewer = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -133,7 +138,7 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
   }, [deleting, intl, piece.id, history, confirmThen]);
 
   // Top to bottom (@mangobee, 2026-10-26): the main picture, whole; the
-  // title; About the artwork; its mediums and details; then every other
+  // title; the artist's words about it; its mediums and details; then every other
   // picture. Any picture opens full screen in the quick viewer.
   const photos = piece.photos.filter((photo) => photo.url);
   const [main, ...more] = photos;
@@ -189,13 +194,29 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
         <EmptyState title={intl.formatMessage(messages.emptyPhotos)} />
       )}
 
+      {/* The artist's words straight under the title, like the label
+          beside a work in a gallery (@mangobee, 2026-10-26). A long one
+          folds to four lines behind Read more. */}
       {piece.description && (
-        <section className='art-piece-detail__section'>
-          <h2 className='art-piece-detail__heading'>
-            {intl.formatMessage(messages.description)}
-          </h2>
-          <p className='art-piece-detail__description'>{piece.description}</p>
-        </section>
+        <div className='art-piece-detail__about'>
+          <p
+            className={`art-piece-detail__description${aboutOpen ? '' : ' art-piece-detail__description--folded'}`}
+          >
+            {piece.description}
+          </p>
+          {piece.description.length > ABOUT_FOLD && (
+            <button
+              type='button'
+              className='art-piece-detail__read-more'
+              onClick={toggleAbout}
+              aria-expanded={aboutOpen}
+            >
+              {intl.formatMessage(
+                aboutOpen ? messages.readLess : messages.readMore,
+              )}
+            </button>
+          )}
+        </div>
       )}
 
       {/* Its mediums lead back to the artist's portfolio, filtered to that

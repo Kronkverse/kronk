@@ -103,7 +103,7 @@
     font-size: 13px;
   }
 
-  // About the artwork, Mediums, More pictures: one heading style.
+  // Mediums, More pictures: one heading style.
   &__section {
     margin: var(--sp-5, 24px) 0 0;
   }
@@ -116,10 +116,37 @@
     font-weight: 400;
   }
 
+  // The artist's words, like a gallery label: no heading, a little larger.
+  &__about {
+    max-width: 40rem;
+    margin: 0 0 var(--sp-4, 16px);
+  }
+
   &__description {
     margin: 0;
-    line-height: 1.5;
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.6;
     white-space: pre-wrap;
+
+    &--folded {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 4;
+    }
+  }
+
+  &__read-more {
+    margin-top: 4px;
+    padding: 0;
+    color: var(--accent-text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    cursor: pointer;
   }
 
   // Every other picture: equal squares, each whole on a soft matte, like
