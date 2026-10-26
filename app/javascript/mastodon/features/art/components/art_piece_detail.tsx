@@ -47,30 +47,7 @@ const messages = defineMessages({
     id: 'art.detail.delete_confirm',
     defaultMessage: 'Delete this piece and all its photos? This is permanent.',
   },
-  visibilityPublic: {
-    id: 'art.detail.visibility_public',
-    defaultMessage: 'Kronk',
-  },
-  visibilityOrbit: {
-    id: 'art.detail.visibility_orbit',
-    defaultMessage: 'Orbit',
-  },
-  visibilityMates: {
-    id: 'art.detail.visibility_mates',
-    defaultMessage: 'Mates',
-  },
-  visibilitySelfOnly: {
-    id: 'art.detail.visibility_self_only',
-    defaultMessage: 'Just me',
-  },
 });
-
-const VISIBILITY_LABEL = {
-  public: messages.visibilityPublic,
-  orbit: messages.visibilityOrbit,
-  mates: messages.visibilityMates,
-  self_only: messages.visibilitySelfOnly,
-} as const;
 
 // A description longer than this folds to four lines behind Read more.
 const ABOUT_FOLD = 280;
@@ -194,10 +171,6 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
             >
               <img src={piece.owner.avatar} alt='' />
             </Link>,
-            // Who can see it: the artist's to know.
-            piece.is_owner
-              ? intl.formatMessage(VISIBILITY_LABEL[piece.visibility])
-              : null,
           ]}
         />
       }
