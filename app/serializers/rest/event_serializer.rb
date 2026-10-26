@@ -18,6 +18,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   attribute :krews
   attribute :going_preview
   attribute :place_id
+  attribute :own_location
 
   def id
     object.id.to_s
@@ -38,12 +39,19 @@ class REST::EventSerializer < ActiveModel::Serializer
     object.effective_location_url
   end
 
-  # The Konnected Place its location comes from, when it has none of its own:
-  # the page leaves the map to that Place's card in Konnected.
+  # The Place the event is Konnected to, if any. Its page then leaves where
+  # it is to that Place's card in Konnected, even when the event also has an
+  # older address of its own (decisions.md, 2026-10-27).
   def place_id
-    return nil if object.location_url.present?
-
     object.konnected_place&.id&.to_s
+  end
+
+  # The address typed into the event itself, not one read from its Place:
+  # editing shows it so it can be removed. Nil when it has none.
+  def own_location
+    return nil if object.location_name.blank? && object.location_url.blank?
+
+    { name: object.location_name.presence, url: object.location_url.presence }
   end
 
   # The Krews in the event's audience. With `visibility: self_only` they

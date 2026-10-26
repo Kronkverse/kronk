@@ -53,9 +53,8 @@ const PLACEHOLDER: Record<string, string> = {
   workshop: '🛠',
 };
 
-// The Event shape shipped by `/api/v1/events` — a subset of the full
-// EventCard payload, matching what the list needs. See
-// `features/events/index.tsx` for the exhaustive shape.
+// The Event shape shipped by `/api/v1/events` — the subset the list needs
+// (REST::EventSerializer has the rest).
 interface Event {
   id: string;
   slug?: string;

@@ -25,7 +25,9 @@ import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useAppDispatch } from 'mastodon/store';
 
-// Kalendar — event composer. First implementation, mounted directly
+// Kalendar — event composer, for a new event and for editing one (the
+// event's page opens it with `event`, as the album, film and kar pages
+// open theirs). First implementation, mounted directly
 // against the shared `<ComposeShell>` standard rather than a bespoke
 // page (per docs/decisions.md 2026-08-12: "Kalendar /
 // Wachuneed / Huddle — declare `compose.route` in the manifest but
@@ -43,6 +45,14 @@ import { useAppDispatch } from 'mastodon/store';
 // reads it to seed the accompanying Status via PostStatusService. Reach
 // lives in the shell's `headerAction` slot, the same treatment Moments
 // + trek composer use.
+//
+// Editing sends what this composer edits — title, description, times and
+// cover — as a PATCH. An event's audience is its post's, set when it is
+// posted (decisions.md, 2026-10-25: events lead), so editing has no reach
+// control, and its Konnections, Krews included, are changed on its page
+// (`konnect={null}`). Its invitees are the page's Invite. An older event
+// may still have an address typed into it: editing shows that and lets
+// it be removed, the only location there is here.
 
 const messages = defineMessages({
   label: { id: 'kalendar.new.title', defaultMessage: 'New event' },
@@ -138,6 +148,24 @@ const messages = defineMessages({
     defaultMessage:
       'The event is made, but the invites didn’t go: {reason}. Invite from its page.',
   },
+  editLabel: { id: 'kalendar.edit.title', defaultMessage: 'Edit event' },
+  save: { id: 'kalendar.edit.save', defaultMessage: 'Save' },
+  saving: { id: 'kalendar.edit.saving', defaultMessage: 'Saving…' },
+  saveError: {
+    id: 'kalendar.edit.error',
+    defaultMessage: "Couldn't save the event: {error}",
+  },
+  deleteEvent: { id: 'kalendar.edit.delete', defaultMessage: 'Delete event' },
+  ownLocation: { id: 'kalendar.edit.own_location', defaultMessage: 'Address' },
+  ownLocationHint: {
+    id: 'kalendar.edit.own_location_hint',
+    defaultMessage:
+      "Typed in before places came from Konnect. To say where it is now, Konnect a place from the event's page.",
+  },
+  removeOwnLocation: {
+    id: 'kalendar.edit.remove_own_location',
+    defaultMessage: 'Remove',
+  },
 });
 
 // The server returns the full event record; we only need the URL
@@ -151,6 +179,30 @@ export interface CreatedEvent {
   visibility?: string | null;
   title?: string;
   image_url?: string | null;
+}
+
+// The event being edited, as its page has it.
+export interface EditableEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string | null;
+  image_url: string | null;
+  // The address typed into the event itself, if any: not one read from a
+  // Konnected Place (REST::EventSerializer#own_location).
+  own_location?: { name: string | null; url: string | null } | null;
+}
+
+interface UpdatePayload {
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string | null;
+  image_id?: string;
+  remove_image?: 'true';
+  location_name?: string;
+  location_url?: string;
 }
 
 interface CreatePayload {
@@ -291,16 +343,32 @@ interface EventDraftParams {
 
 interface Props {
   onCancel: () => void;
-  onCreated: (event: CreatedEvent) => void;
+  onCreated?: (event: CreatedEvent) => void;
   // Arriving from a Krew (`?konnect=krew:<id>` or `?krew=<id>`): the event
   // starts out for that Krew alone.
   forKrewId?: string | null;
+  // Editing this event instead of making one.
+  event?: EditableEvent;
+  onUpdated?: () => void;
+  // Delete lives inside the edit form (as for albums, films and kars).
+  onDelete?: () => void;
 }
+
+// An ISO time as the date and time inputs' values, in the browser's zone.
+const splitLocal = (iso: string | null | undefined) => {
+  if (!iso) return { date: '', time: '' };
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return { date: '', time: '' };
+  return { date: dateInputValue(d), time: timeInputValue(d) };
+};
 
 export const EventComposer: React.FC<Props> = ({
   onCancel,
   onCreated,
   forKrewId,
+  event: editing,
+  onUpdated,
+  onDelete,
 }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
@@ -314,12 +382,25 @@ export const EventComposer: React.FC<Props> = ({
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(editing?.title ?? '');
+  const [description, setDescription] = useState(
+    editing?.description ?? '',
+  );
   // Auto-fill start = now (rounded to next 5-min slot), end = +2h —
   // Tal 2026-08-14. Lazy initialiser so `new Date()` runs once at
-  // mount; the user can still tweak either half.
-  const defaults = useMemo(() => computeDefaultTimes(), []);
+  // mount; the user can still tweak either half. Editing starts from the
+  // event's own times; one with no end has none.
+  const [defaults] = useState<DefaultTimes>(() => {
+    if (!editing) return computeDefaultTimes();
+    const start = splitLocal(editing.start_time);
+    const end = splitLocal(editing.end_time);
+    return {
+      startDate: start.date,
+      startTime: start.time,
+      endDate: end.date,
+      endTime: end.time,
+    };
+  });
   const [startDate, setStartDate] = useState(defaults.startDate);
   const [startTime, setStartTime] = useState(defaults.startTime);
   const [endDate, setEndDate] = useState(defaults.endDate);
@@ -337,7 +418,13 @@ export const EventComposer: React.FC<Props> = ({
   // shown immediately so the thumbnail appears before the upload
   // completes.
   const [imageMediaId, setImageMediaId] = useState<string | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(
+    editing?.image_url ?? null,
+  );
+  // An older event's own typed address, until the person removes it.
+  const ownLocation = editing?.own_location;
+  const hasOwnLocation = !!(ownLocation?.name || ownLocation?.url);
+  const [ownLocationRemoved, setOwnLocationRemoved] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   // Default to public: events are "shared time" (Kalendar manifest
@@ -401,6 +488,8 @@ export const EventComposer: React.FC<Props> = ({
   const draft = useDraft<EventDraftParams>({
     korner: 'kalendar',
     kind: 'event',
+    // Editing changes the event itself; there is nothing to keep a draft of.
+    active: !editing,
     context: forKrewId ? `krew:${forKrewId}` : null,
     snapshot: {
       params: {
@@ -671,6 +760,50 @@ export const EventComposer: React.FC<Props> = ({
     coverInputRef.current?.click();
   }, []);
 
+  const onOwnLocationRemove = useCallback(() => {
+    setOwnLocationRemoved(true);
+  }, []);
+
+  const save = useCallback(() => {
+    if (!editing || !startIso) return;
+    setError(null);
+    setBusy(true);
+    const payload: UpdatePayload = {
+      title: title.trim(),
+      description: description.trim(),
+      start_time: startIso,
+      end_time: endIso,
+    };
+    if (imageMediaId) payload.image_id = imageMediaId;
+    else if (editing.image_url && !imagePreviewUrl)
+      payload.remove_image = 'true';
+    if (ownLocationRemoved) {
+      payload.location_name = '';
+      payload.location_url = '';
+    }
+
+    void (async () => {
+      try {
+        await api().patch(`/api/v1/events/${editing.id}`, payload);
+        onUpdated?.();
+        // Parent closes the composer on success.
+      } catch (e: unknown) {
+        setError(extractApiError(e));
+        setBusy(false);
+      }
+    })();
+  }, [
+    description,
+    editing,
+    endIso,
+    imageMediaId,
+    imagePreviewUrl,
+    onUpdated,
+    ownLocationRemoved,
+    startIso,
+    title,
+  ]);
+
   const submit = useCallback(() => {
     if (!startIso) return;
     setError(null);
@@ -715,7 +848,7 @@ export const EventComposer: React.FC<Props> = ({
 
         await commitKonnect('kalendar', res.data.id);
         finishDraft();
-        onCreated(res.data);
+        onCreated?.(res.data);
         // Parent unmounts on success — no need to reset state.
       } catch (e: unknown) {
         setError(extractApiError(e));
@@ -760,19 +893,23 @@ export const EventComposer: React.FC<Props> = ({
   return (
     <ComposeShell
       korner='kalendar'
-      label={intl.formatMessage(messages.label)}
-      subtitle={intl.formatMessage(messages.subtitle)}
-      submitLabel={intl.formatMessage(messages.create)}
-      submittingLabel={intl.formatMessage(messages.creating)}
+      label={intl.formatMessage(editing ? messages.editLabel : messages.label)}
+      subtitle={editing ? undefined : intl.formatMessage(messages.subtitle)}
+      submitLabel={intl.formatMessage(
+        editing ? messages.save : messages.create,
+      )}
+      submittingLabel={intl.formatMessage(
+        editing ? messages.saving : messages.creating,
+      )}
       submitting={busy}
       canSubmit={canSubmit}
-      onSubmit={submit}
+      onSubmit={editing ? save : submit}
       onCancel={onCancel}
-      headerAction={reachControl}
+      headerAction={editing ? undefined : reachControl}
       draft={draft}
-      konnect={konnect}
+      konnect={editing ? null : konnect}
     >
-      {reach === 'self_only' && (
+      {!editing && reach === 'self_only' && (
         <ComposeHint>
           {krewNames.length > 0 ? (
             <FormattedMessage
@@ -922,114 +1059,148 @@ export const EventComposer: React.FC<Props> = ({
       {/* Where it is: a Konnection to a Map Place, in the Konnect row the
           shell draws (Konnect → Map → New place). The Where section went
           with "Location fields become Konnect → Map" (decisions.md,
-          2026-10-23). */}
+          2026-10-23). An older event's own address shows here only to be
+          removed; a div, not <ComposeField>, so its text doesn't press
+          Remove. */}
+      {editing && hasOwnLocation && !ownLocationRemoved && (
+        <div className='compose-field event-composer__own-location'>
+          <span className='compose-field__label'>
+            {intl.formatMessage(messages.ownLocation)}
+          </span>
+          <span className='event-composer__own-location-row'>
+            <span className='event-composer__own-location-text'>
+              {ownLocation?.name || ownLocation?.url}
+            </span>
+            <button
+              type='button'
+              className='event-composer__own-location-remove'
+              onClick={onOwnLocationRemove}
+              disabled={busy}
+            >
+              {intl.formatMessage(messages.removeOwnLocation)}
+            </button>
+          </span>
+          <span className='compose-field__hint'>
+            {intl.formatMessage(messages.ownLocationHint)}
+          </span>
+        </div>
+      )}
 
       {/* Invitee picker — accounts get a nudge with the event on
           submit. Same account search API the event-detail Invite
           panel uses; the two surfaces stay in shape. A div with the
           kit's field classes rather than <ComposeField>: a label
           around the chips' and results' buttons would press them
-          when its text is clicked. */}
-      <div className='compose-field'>
-        <span className='compose-field__label'>
-          {intl.formatMessage(messages.invitePeople)}
-        </span>
-        <span className='compose-field__hint'>
-          {intl.formatMessage(messages.inviteHint)}
-        </span>
-        {invitees.size > 0 && (
-          <div className='event-composer__invitee-chips'>
-            {Array.from(invitees.values()).map((account) => (
-              <span key={account.id} className='event-composer__invitee-chip'>
-                {account.avatar && (
-                  <img
-                    src={account.avatar}
-                    alt=''
-                    className='event-composer__invitee-avatar'
-                  />
-                )}
-                <span className='event-composer__invitee-name'>
-                  {account.display_name || account.username}
+          when its text is clicked. Not while editing: the page's
+          Invite asks people to an event that exists. */}
+      {!editing && (
+        <div className='compose-field'>
+          <span className='compose-field__label'>
+            {intl.formatMessage(messages.invitePeople)}
+          </span>
+          <span className='compose-field__hint'>
+            {intl.formatMessage(messages.inviteHint)}
+          </span>
+          {invitees.size > 0 && (
+            <div className='event-composer__invitee-chips'>
+              {Array.from(invitees.values()).map((account) => (
+                <span key={account.id} className='event-composer__invitee-chip'>
+                  {account.avatar && (
+                    <img
+                      src={account.avatar}
+                      alt=''
+                      className='event-composer__invitee-avatar'
+                    />
+                  )}
+                  <span className='event-composer__invitee-name'>
+                    {account.display_name || account.username}
+                  </span>
+                  <button
+                    type='button'
+                    className='event-composer__invitee-remove'
+                    data-account-id={account.id}
+                    onClick={handleInviteeRemove}
+                    aria-label={intl.formatMessage(messages.inviteeRemove, {
+                      name: account.display_name || account.username,
+                    })}
+                  >
+                    ×
+                  </button>
                 </span>
-                <button
-                  type='button'
-                  className='event-composer__invitee-remove'
-                  data-account-id={account.id}
-                  onClick={handleInviteeRemove}
-                  aria-label={intl.formatMessage(messages.inviteeRemove, {
-                    name: account.display_name || account.username,
-                  })}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-        <div className='event-composer__invitee-search'>
-          <ComposeInput
-            type='search'
-            value={inviteeQuery}
-            onChange={onInviteeQueryChange}
-            placeholder={intl.formatMessage(messages.inviteeSearchPlaceholder)}
-            aria-label={intl.formatMessage(messages.invitePeople)}
-            autoComplete='off'
-          />
-          {inviteeQuery.trim().length > 0 && (
-            <div className='event-composer__invitee-results' role='listbox'>
-              {inviteeSearching && (
-                <div className='event-composer__invitee-state'>
-                  <FormattedMessage {...messages.inviteeSearching} />
-                </div>
-              )}
-              {!inviteeSearching && inviteeResults.length === 0 && (
-                <div className='event-composer__invitee-state'>
-                  <FormattedMessage {...messages.inviteeNoResults} />
-                </div>
-              )}
-              {!inviteeSearching &&
-                inviteeResults.map((account) => {
-                  const already = invitees.has(account.id);
-                  return (
-                    <button
-                      key={account.id}
-                      type='button'
-                      role='option'
-                      aria-selected={already}
-                      className='event-composer__invitee-result'
-                      data-account-id={account.id}
-                      data-account={JSON.stringify(account)}
-                      onClick={handleInviteeSelect}
-                      disabled={already}
-                    >
-                      {account.avatar && (
-                        <img
-                          src={account.avatar}
-                          alt=''
-                          className='event-composer__invitee-avatar'
-                        />
-                      )}
-                      <span className='event-composer__invitee-name'>
-                        {account.display_name || account.username}
-                      </span>
-                      <span className='event-composer__invitee-acct'>
-                        @{account.acct}
-                      </span>
-                    </button>
-                  );
-                })}
+              ))}
             </div>
           )}
+          <div className='event-composer__invitee-search'>
+            <ComposeInput
+              type='search'
+              value={inviteeQuery}
+              onChange={onInviteeQueryChange}
+              placeholder={intl.formatMessage(
+                messages.inviteeSearchPlaceholder,
+              )}
+              aria-label={intl.formatMessage(messages.invitePeople)}
+              autoComplete='off'
+            />
+            {inviteeQuery.trim().length > 0 && (
+              <div className='event-composer__invitee-results' role='listbox'>
+                {inviteeSearching && (
+                  <div className='event-composer__invitee-state'>
+                    <FormattedMessage {...messages.inviteeSearching} />
+                  </div>
+                )}
+                {!inviteeSearching && inviteeResults.length === 0 && (
+                  <div className='event-composer__invitee-state'>
+                    <FormattedMessage {...messages.inviteeNoResults} />
+                  </div>
+                )}
+                {!inviteeSearching &&
+                  inviteeResults.map((account) => {
+                    const already = invitees.has(account.id);
+                    return (
+                      <button
+                        key={account.id}
+                        type='button'
+                        role='option'
+                        aria-selected={already}
+                        className='event-composer__invitee-result'
+                        data-account-id={account.id}
+                        data-account={JSON.stringify(account)}
+                        onClick={handleInviteeSelect}
+                        disabled={already}
+                      >
+                        {account.avatar && (
+                          <img
+                            src={account.avatar}
+                            alt=''
+                            className='event-composer__invitee-avatar'
+                          />
+                        )}
+                        <span className='event-composer__invitee-name'>
+                          {account.display_name || account.username}
+                        </span>
+                        <span className='event-composer__invitee-acct'>
+                          @{account.acct}
+                        </span>
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {error && (
         <ComposeHint error>
-          <FormattedMessage
-            id='kalendar.new.error'
-            defaultMessage="Couldn't create the event: {error}"
-            values={{ error }}
-          />
+          {editing ? (
+            intl.formatMessage(messages.saveError, { error })
+          ) : (
+            <FormattedMessage
+              id='kalendar.new.error'
+              defaultMessage="Couldn't create the event: {error}"
+              values={{ error }}
+            />
+          )}
         </ComposeHint>
       )}
 
@@ -1037,6 +1208,17 @@ export const EventComposer: React.FC<Props> = ({
         <ComposeHint>
           <FormattedMessage {...submitBlockerMessage} />
         </ComposeHint>
+      )}
+
+      {editing && onDelete && (
+        <button
+          type='button'
+          className='compose-shell__delete'
+          onClick={onDelete}
+          disabled={busy}
+        >
+          {intl.formatMessage(messages.deleteEvent)}
+        </button>
       )}
     </ComposeShell>
   );

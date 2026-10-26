@@ -35,11 +35,11 @@ import { KornerDetail } from 'mastodon/components/korner_detail';
 import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { Stage } from 'mastodon/components/stage';
+import { EventComposer } from 'mastodon/features/kalendar/event_composer';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
-import { CreateEventForm } from './components/create_event_form';
 import { parseOsmUrl } from './parse_osm_url';
 
 const messages = defineMessages({
@@ -58,7 +58,6 @@ const messages = defineMessages({
   delete: { id: 'events.detail.delete', defaultMessage: 'Delete' },
   editEvent: { id: 'events.detail.edit_event', defaultMessage: 'Edit event' },
   stageEvent: { id: 'events.detail.stage_event', defaultMessage: 'Event' },
-  stageEdit: { id: 'events.detail.stage_edit', defaultMessage: 'Edit Event' },
   loading: { id: 'events.detail.loading', defaultMessage: 'Loading...' },
   invited: { id: 'events.detail.invited', defaultMessage: 'Invited' },
   invite: { id: 'events.detail.invite', defaultMessage: 'Invite' },
@@ -114,9 +113,11 @@ interface Event {
   end_time: string | null;
   location_name: string | null;
   location_url: string | null;
-  // The Konnected Place its location comes from, when it has none of its
-  // own; its map is then that Place's card in Konnected.
+  // The Place it is Konnected to. Where it is, is then that Place's card in
+  // Konnected, not a line and a map of the page's own.
   place_id?: string | null;
+  // The address typed into the event itself, which editing can remove.
+  own_location?: { name: string | null; url: string | null } | null;
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
@@ -291,10 +292,10 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     }
   }, [event, confirm, history, intl]);
 
-  const handleEventUpdated = useCallback((updated: Event) => {
-    setEvent(updated);
+  const handleEventUpdated = useCallback(() => {
     setEditing(false);
-  }, []);
+    void fetchAll();
+  }, [fetchAll]);
 
   const handleInviteSearch = useCallback((query: string) => {
     setInviteQuery(query);
@@ -400,30 +401,6 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         <div className='events-page__empty'>
           {intl.formatMessage(messages.loading)}
         </div>
-      </Stage>
-    );
-  }
-
-  if (editing) {
-    return (
-      <Stage label={intl.formatMessage(messages.stageEdit)}>
-        <div className='events-page'>
-          <CreateEventForm
-            onEventCreated={handleEventUpdated}
-            onCancel={handleCancelEdit}
-            editEvent={event}
-            onDelete={handleDeleteVoid}
-          />
-          {/* Attaching is part of editing an event too (Tal 2026-10-22:
-              "I want to edit an event to attach it into an emergence").
-              Links take effect straight away, as on the event's page. */}
-          <AttachmentSection
-            korner='kalendar'
-            recordId={event.id}
-            canManage={event.is_owner}
-          />
-        </div>
-        {confirmDialog}
       </Stage>
     );
   }
@@ -561,7 +538,11 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </div>
         </div>
 
+        {/* Where it is: the Konnected Place's card says it, when there is
+            one (decisions.md, 2026-10-27); only an event with no Place
+            draws its own address here. */}
         {event.location_name &&
+          !event.place_id &&
           (() => {
             // Route the location link through the Map korner when the
             // event has a parseable OSM pin — that way the tap opens
@@ -614,8 +595,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         )}
 
         {/* A Konnected Place shows its own map, as its card in Konnected
-            (decisions.md, 2026-10-26); only an address of the event's own
-            is drawn here. */}
+            (decisions.md, 2026-10-26), even when the event also has an
+            older address of its own (2026-10-27). */}
         {!event.place_id &&
           (() => {
             const pin = parseOsmUrl(event.location_url);
@@ -791,6 +772,19 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </div>
         )}
       </KornerDetail>
+
+      {/* Editing is the Kalendar composer over the page, as for albums
+          and films. The page's Konnected section stays the way to Konnect
+          and Diskonnect (Tal 2026-10-22: "I want to edit an event to
+          attach it into an emergence"). */}
+      {editing && (
+        <EventComposer
+          event={event}
+          onCancel={handleCancelEdit}
+          onUpdated={handleEventUpdated}
+          onDelete={handleDeleteVoid}
+        />
+      )}
 
       <ShareSheet
         open={shareOpen}

@@ -22,7 +22,6 @@ const BURN_DOWN = new Set([
   'features/albutts/components/contribute_composer.tsx',
   'features/booth/components/booth_composer.tsx',
   'features/booth/components/edit_form.tsx',
-  'features/events/components/create_event_form.tsx',
   'features/freethedream/components/project_composer.tsx',
   'features/kalendar/event_composer.tsx',
   'features/karporn/components/kar_composer.tsx',

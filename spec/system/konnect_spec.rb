@@ -58,8 +58,9 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
       click_on 'Post it'
     end
 
-    expect(page).to have_css('.event-detail__location', text: 'Fitzroy Gardens')
+    # Where it is shows once, as the Place's card (decisions.md, 2026-10-27).
     expect(page).to have_css('.konnected-card--map', text: 'Fitzroy Gardens')
+    expect(page).to have_no_css('.event-detail__location')
     place = MapPlace.find_by!(name: 'Fitzroy Gardens', address: 'Wellington Pde, East Melbourne', account: bob.account)
     event = Event.find_by!(title: 'Picnic', location_name: nil)
     expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id)).to exist
