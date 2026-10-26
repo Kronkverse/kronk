@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -425,6 +425,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_120000) do
     t.string "medium", limit: 160
     t.string "mediums", default: [], null: false, array: true
     t.bigint "owner_id", null: false
+    t.bigint "price_cents"
+    t.string "price_currency", default: "AUD", null: false
     t.string "size_unit", limit: 2, default: "cm", null: false
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
@@ -441,6 +443,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_120000) do
 
   create_table "art_portfolios", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.string "commission_currency", default: "AUD", null: false
+    t.string "commission_note"
+    t.bigint "commission_price_cents"
     t.datetime "created_at", null: false
     t.string "mediums", default: [], null: false, array: true
     t.boolean "open_for_commissions", default: false, null: false

@@ -96,7 +96,7 @@ class Api::V1::Art::PiecesController < Api::BaseController
   def piece_params
     params.expect(art_piece: [:title, :description, :kind, :visibility, :cover_media_attachment_id,
                               :medium, :width, :height, :depth, :size_unit, :year_made, :edition, :availability,
-                              { mediums: [] }])
+                              :price_cents, :price_currency, { mediums: [] }])
   end
 
   def authorize_owner!

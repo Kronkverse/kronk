@@ -28,6 +28,8 @@ A piece can also say what a gallery label would (Kommons "Portfolio style & Art 
 - **Year made**, and **Edition** ("Original", "3 of 25", up to 80 characters).
 - **Status** (`availability`) — _Not for sale_ (the default), _Available_, _Sold_, _Commissioned_, _On show_.
 
+**Price**: when the status is _Available_, the artist can say what they're asking (`price_cents`, whole cents, and `price_currency`, AUD for now as in Wachuneed). Leave it blank and people use _Ask about it_. Cards then wear the price as their tag, and the piece page and the quick viewer read "Available · $1,200 AUD" (@mangobee, 2026-10-26). Changing the status away from _Available_ clears it.
+
 The piece page shows them as one line under the title, "Oil on linen · 60 × 90 cm · 2026 · Original", with the status as a chip when it isn't _Not for sale_. Every card (the Art grid, a portfolio, a profile's Art shelf) reads the medium (or materials, or kind) and year, and wears the status as a tag. The labels live once, in `features/art/details.ts`.
 
 ## Where you see Art
@@ -51,6 +53,8 @@ Every artist has a portfolio at **`/hub/art/@:acct`** (Kommons "Portfolio style 
 The artist edits it from the Ж menu, **Edit portfolio** (`art_portfolio_editor.tsx`, in the compose shell): their mediums (tapped from a list of common ones or typed), the statement, the featured pieces, ticked from their own (the order they're ticked is the order they show), and the commissions switch.
 
 **Setting it up.** Until an artist has saved a portfolio (`set_up` in the API), their own portfolio opens with a **Set up your portfolio** card. **Start** walks them through the same four sections one at a time (mediums, statement, featured pieces, commissions) with Back and Next; any step can be left empty.
+
+**Commissions** can also say what they start from (`art_portfolios.commission_price_cents` and `commission_currency`) and carry a line about them (`commission_note`, up to 200 characters, such as "Portraits in oil, about six weeks"). Both are optional, set under _Open for commissions_ in Edit portfolio, and shown in the Commissions section as "From $300 AUD · Portraits in oil, about six weeks" (@mangobee, 2026-10-26).
 
 Ways in: the **Mine** face (_Your portfolio_), the owner's @name on a piece page, and **Portfolio** in the header of a profile's Art shelf.
 

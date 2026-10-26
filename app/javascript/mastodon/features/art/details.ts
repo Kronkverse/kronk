@@ -103,3 +103,48 @@ export const pieceCardLine = (
   ]
     .filter(Boolean)
     .join(' · ');
+
+// Prices are AUD for now, as in Wachuneed; the currency is kept with each.
+export const PRICE_CURRENCY = 'AUD';
+
+// "$1,200 AUD", or "$1,200.50 AUD" when there are cents.
+export const formatPrice = (
+  intl: IntlShape,
+  cents: number,
+  currency: string = PRICE_CURRENCY,
+): string =>
+  `${intl.formatNumber(cents / 100, {
+    style: 'currency',
+    currency,
+    currencyDisplay: 'narrowSymbol',
+    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  })} ${currency}`;
+
+// What's typed in a price box ("1,200", "$1200.50") as whole cents, or null
+// when it's blank or not a price.
+export const parsePrice = (typed: string): number | null => {
+  const n = Number.parseFloat(typed.replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : null;
+};
+
+// A price box's starting text for a saved price: "1200", "1200.50".
+export const priceText = (cents: number | null | undefined): string =>
+  cents
+    ? cents % 100 === 0
+      ? String(cents / 100)
+      : (cents / 100).toFixed(2)
+    : '';
+
+// The price of a piece that's for sale, when the artist gave one.
+export const piecePrice = (
+  intl: IntlShape,
+  piece: {
+    availability?: ArtAvailability;
+    price_cents?: number | null;
+    price_currency?: string;
+  },
+): string | null =>
+  piece.availability === 'available' && piece.price_cents
+    ? formatPrice(intl, piece.price_cents, piece.price_currency)
+    : null;

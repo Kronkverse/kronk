@@ -18,7 +18,12 @@ import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
-import { availabilityLabel, pieceCardLine } from '../details';
+import {
+  availabilityLabel,
+  formatPrice,
+  pieceCardLine,
+  piecePrice,
+} from '../details';
 import { artKindLabel } from '../kinds';
 
 import { ArtPortfolioEditor } from './art_portfolio_editor';
@@ -46,6 +51,10 @@ const messages = defineMessages({
     id: 'art.portfolio.commissions_closed',
     defaultMessage:
       "You're not taking commissions. Switch it on in Edit portfolio and people can ask you here.",
+  },
+  commissionFrom: {
+    id: 'art.portfolio.commission_from',
+    defaultMessage: 'From {price}',
   },
   readMore: { id: 'art.portfolio.read_more', defaultMessage: 'Read more' },
   readLess: { id: 'art.portfolio.read_less', defaultMessage: 'Show less' },
@@ -231,7 +240,9 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
       image={piece.cover_url}
       title={piece.title}
       meta={pieceCardLine(intl, piece)}
-      tag={availabilityLabel(intl, piece.availability)}
+      tag={
+        piecePrice(intl, piece) ?? availabilityLabel(intl, piece.availability)
+      }
       tagKind={piece.availability}
     />
   );
@@ -370,6 +381,25 @@ export const ArtPortfolio: React.FC<Props> = ({ portfolio, onChange }) => {
                 : messages.commissionsClosed,
             )}
           </p>
+          {portfolio.open_for_commissions &&
+            (portfolio.commission_price_cents ?? portfolio.commission_note) && (
+              <p className='art-portfolio__commission-terms'>
+                {[
+                  portfolio.commission_price_cents
+                    ? intl.formatMessage(messages.commissionFrom, {
+                        price: formatPrice(
+                          intl,
+                          portfolio.commission_price_cents,
+                          portfolio.commission_currency,
+                        ),
+                      })
+                    : null,
+                  portfolio.commission_note?.trim(),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            )}
           {portfolio.open_for_commissions && !portfolio.is_owner && (
             <KornerActionBar>
               <KornerPill

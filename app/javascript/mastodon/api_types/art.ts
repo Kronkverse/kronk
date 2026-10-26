@@ -28,6 +28,10 @@ export interface ArtPieceDetailsJSON {
   year_made: number | null;
   edition: string | null;
   availability: ArtAvailability;
+  // What the artist asks, in whole cents of `price_currency` (AUD for now),
+  // when it's for sale; null: ask about it.
+  price_cents: number | null;
+  price_currency: string;
 }
 
 // What kind of work a piece is. Matches ArtPiece#kind in the Ruby model;
@@ -83,6 +87,8 @@ export interface ArtPieceSummaryJSON {
   mediums?: string[];
   availability?: ArtAvailability;
   year_made?: number | null;
+  price_cents?: number | null;
+  price_currency?: string;
   title: string;
   kind: ArtKind;
   visibility: ArtVisibility;
@@ -99,6 +105,11 @@ export interface ApiArtPortfolioJSON {
   is_owner: boolean;
   statement: string | null;
   open_for_commissions: boolean;
+  // What commissions start from (whole cents of `commission_currency`), and
+  // a line about them. Both optional.
+  commission_price_cents: number | null;
+  commission_currency: string;
+  commission_note: string | null;
   // The mediums they work in, as chips under their name.
   mediums: string[];
   // Whether they've saved a portfolio yet (until then, the set-up).

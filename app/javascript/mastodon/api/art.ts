@@ -90,6 +90,9 @@ export const apiGetPortfolio = (accountId: string) =>
 export const apiUpdatePortfolio = (params: {
   statement?: string;
   open_for_commissions?: boolean;
+  commission_price_cents?: number | null;
+  commission_currency?: string;
+  commission_note?: string;
   featured_ids?: string[];
   mediums?: string[];
 }) => apiRequestPut<ApiArtPortfolioJSON>('v1/art/portfolio', params);

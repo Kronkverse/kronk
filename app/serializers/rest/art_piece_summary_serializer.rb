@@ -4,7 +4,7 @@
 # Status. Mirrors REST::AlbumSummarySerializer /
 # REST::BoothSetSummarySerializer.
 class REST::ArtPieceSummarySerializer < ActiveModel::Serializer
-  attributes :id, :title, :kind, :visibility, :photo_count, :medium, :mediums, :availability, :year_made
+  attributes :id, :title, :kind, :visibility, :photo_count, :medium, :mediums, :availability, :year_made, :price_cents, :price_currency
 
   attribute :cover_url
   attribute :preview_urls
