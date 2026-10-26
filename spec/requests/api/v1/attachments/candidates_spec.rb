@@ -110,6 +110,24 @@ RSpec.describe 'Attachments::Candidates' do
       expect(response.parsed_body).to eq []
     end
 
+    # Event.visible_to only settles invite-only; the event's reach comes
+    # from its post (Event#visible_to?), so a Mates-only or unposted event
+    # by someone else used to be listed with its title and date.
+    it "offers only events the viewer could open, not someone else's Mates-only or unposted one" do
+      host = Fabricate(:account)
+      mates_only = Fabricate(:status, account: host, visibility: :private)
+      hidden = Event.create!(account: host, title: 'Garden party (Mates)', status: mates_only, start_time: 2.days.from_now)
+      Event.create!(account: host, title: 'Garden party (draft)', start_time: 2.days.from_now)
+      Event.create!(account: host, title: 'Garden party (open)', status: Fabricate(:status, account: host, visibility: :public),
+                    start_time: 2.days.from_now)
+
+      get '/api/v1/attachments/candidates?korner=kalendar&q=garden', headers: headers
+      expect(response.parsed_body.pluck('title')).to eq ['Garden party (open)']
+
+      get "/api/v1/attachments/candidates?korner=kalendar&id=#{hidden.id}", headers: headers
+      expect(response.parsed_body).to eq []
+    end
+
     it 'serialises each hit with slug + id + title + url' do
       album = Album.create!(owner: user.account, title: 'Test album', visibility: :public)
 

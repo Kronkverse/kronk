@@ -17,6 +17,44 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — Konnect shares only what its owner chose
+
+An audit of Konnect found links reaching further than their makers
+meant: a Mate could Konnect their own public record to someone's
+Mates-only Place (their home, say) and open it to everyone; a Place's
+maker could move other people's events by editing a Place they had used;
+a Krew member's link to someone else's event linked it to the Krew's
+emergence in its maker's name, and taking that link off took the event
+out of the Krew; and the picker and the link API handed back records
+their asker couldn't open.
+
+**Decision:**
+
+- **A Place is seen through its maker's links only.** It is seen by its
+  maker and by whoever can see something its maker Konnected it to. A
+  link someone else makes Konnects their record to it but never widens
+  who sees it. A suspended or deleted maker's Places are seen by nobody,
+  and deleting an account deletes its Places. Refines "A Place is seen by
+  whoever can see something Konnected to it" (2026-10-23, Map Places).
+- **A record's location is only its owner's own Place.** Besides being
+  linked by the record's owner (2026-10-23), the Place must be theirs.
+  Someone else's Place Konnected to it shows in the Konnected section
+  but isn't where the record is, so nobody else's edit moves it, and the
+  record never hands its audience an address they can't see.
+- **Only the owner's link shares, and only taking that off unshares.** A
+  link someone else makes between a Krew (or emergence) and a record
+  stays a link: it doesn't add the emergence, and removing it leaves the
+  owner's links and the Krew's place in the audience alone. Removing an
+  owner's link still takes an event off its Krew and emergence together
+  (2026-10-22).
+- **Two records are Konnected once.** A link the other way round to one
+  that exists is refused (422, "Already Konnected").
+- **A link you can't see is not found.** Changing one needs you to look
+  after one of its ends (404 if you can't see it, 403 if you can), and
+  the picker offers only records you could open: a model's SQL
+  visibility scope only narrows the search (Event's settles only
+  invite-only), and each record is then checked as opening it would be.
+
 ## 2026-10-26 — A korner's post is your words and its card
 
 Tal: going live posted "a generated text as a post 'Live now in the

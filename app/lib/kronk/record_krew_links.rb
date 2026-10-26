@@ -13,7 +13,8 @@
 # audience.
 #
 # The Krew only becomes an audience when the record's owner links it and
-# is in the Krew; a link someone else makes stays a link.
+# is in the Krew; a link someone else makes stays a link, and taking it
+# off leaves the audience alone.
 module Kronk
   module RecordKrewLinks
     module_function
@@ -26,11 +27,16 @@ module Kronk
       share(record, krew, actor) if record && krew
     end
 
-    # After `attachment` was removed.
+    # After `attachment` was removed: only the owner's link put the Krew in
+    # the audience, so only removing that one (with no other of theirs
+    # left) takes it out.
     def unlinked(attachment)
       record, krew = resolve(attachment)
       return if record.nil? || krew.nil?
-      return if AttachmentEffects.between(slug_of(attachment), record.id, 'krew', krew.id).exists?
+
+      owner_id = Kronk::Audience.owner_id_of(record)
+      return unless attachment.created_by_account_id == owner_id
+      return if AttachmentEffects.between(slug_of(attachment), record.id, 'krew', krew.id).exists?(created_by_account_id: owner_id)
 
       record.sync_audience_krews!(record.record_krews.pluck(:krew_id) - [krew.id])
     end

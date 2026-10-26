@@ -15,7 +15,9 @@
 # The Krew only becomes an audience when the event's maker links it and is
 # in the Krew, as the Krew's own Link button requires; it then gets the
 # Kalendar space, where the Krew page lists events. An invite-only event
-# stays for its invitees. A link someone else makes stays a link.
+# stays for its invitees. A link someone else makes stays a link: it
+# doesn't add the emergence either, and taking it off takes off only it,
+# since it never put the event in the Krew.
 module Kronk
   module EventLinks
     module_function
@@ -43,9 +45,12 @@ module Kronk
     # After `attachment` was removed. Unlinking from either end takes the
     # event off both (2026-10-22): its other links to the Krew, its
     # emergence and gangs go too, and the Krew stops being an audience.
+    # Only for a link the event's maker made, the kind that shares it;
+    # removing anyone else's leaves the maker's links and audience alone.
     def unlinked(attachment)
       event, krew, = resolve(attachment)
       return if event.nil? || krew.nil?
+      return unless attachment.created_by_account_id == event.account_id
 
       unlink!(event, krew)
     end
@@ -100,7 +105,11 @@ module Kronk
       krew.krew_korners.find_or_create_by!(korner: 'kalendar')
     end
 
+    # The event's maker linked it to a Krew: link it to the Krew's emergence
+    # too. Never someone else's event, as with `share`.
     def link_emergence(event, krew, actor)
+      return unless event.account_id == actor.id
+
       project = krew.freethedream_project
       return if project.nil? || AttachmentEffects.between('kalendar', event.id, 'freethedream', project.id).exists?
 
@@ -108,9 +117,10 @@ module Kronk
                                kind: KornerAttachment::KIND_LINK, created_by_account: actor)
     end
 
-    # Every Krew the event is linked to, directly or through an emergence.
+    # Every Krew the event's maker linked it to, directly or through an
+    # emergence: someone else's link never makes the Krew an audience.
     def linked_krews(event)
-      links_of(event).filter_map do |attachment|
+      links_of(event).where(created_by_account_id: event.account_id).filter_map do |attachment|
         _, slug, id = AttachmentEffects.ends(attachment, 'kalendar')
         krew_for(slug, id) if GROUP_SLUGS.include?(slug)
       end.uniq

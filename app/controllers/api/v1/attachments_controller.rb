@@ -17,6 +17,11 @@
 #                                                   — a would-be leader's audience
 #   DELETE /api/v1/attachments/:id                 — undo either end
 #
+# A link you can't see (both ends) answers 404 on PATCH, as on index, so a
+# guessed id reads nothing; changing it also needs you to look after one
+# end. Two records are Konnected once: a link the other way round is
+# refused (422, "Already Konnected").
+#
 # "Same as" (Kronk::Audience, decisions.md 2026-10-25): a link can say that
 # one end's audience follows the other's. Only whoever looks after the
 # follower sets or clears it, and only when the leader's audience can be
@@ -37,6 +42,8 @@ class Api::V1::AttachmentsController < Api::BaseController
 
     rows = scope.includes(:created_by_account).order(created_at: :desc).limit(80).to_a
     KornerAttachment.preload_records(rows)
+    # Who sees a Place at either end is read for the whole list at once.
+    MapPlace.preload_konnections(rows.flat_map { |a| [a.source_record, a.target_record] }.grep(MapPlace).uniq)
     @attachments = rows.select { |a| KornerAttachmentPolicy.new(current_account, a).show? }
     audiences = Kronk::Audience.summaries(@attachments.flat_map { |a| [a.source_record, a.target_record] }, current_account)
 
@@ -51,6 +58,9 @@ class Api::V1::AttachmentsController < Api::BaseController
     # id says nothing about what exists.
     return render json: { error: 'not found' }, status: 404 unless policy.target_visible?
     return render json: { error: "kind '#{@attachment.kind}' cannot be created via the API" }, status: 422 if @attachment.kind == KornerAttachment::KIND_SPAWN
+    # The unique index holds one direction; this holds both, so the same
+    # two records aren't Konnected twice.
+    return render json: { error: 'Already Konnected' }, status: 422 if already_konnected?
 
     follow = follow_requested?
     if follow
@@ -67,14 +77,25 @@ class Api::V1::AttachmentsController < Api::BaseController
     end
   end
 
-  # Set or clear "Same as": which end leads (the other follows it).
+  # Set or clear "Same as": which end leads (the other follows it). Only
+  # for someone who looks after one end; anyone else gets 404 if they
+  # can't see the link and 403 if they can. The link is sent back only to
+  # someone who can see both ends: a follower's owner who has lost sight
+  # of its leader can still stop following, and is told nothing of it.
   def update
+    visible = KornerAttachmentPolicy.new(current_account, @attachment).show?
+    unless looks_after?('source') || looks_after?('target')
+      return render json: { error: 'attachment not found' }, status: 404 unless visible
+
+      return render json: { error: 'only whoever looks after one of its ends can change a Konnection' }, status: 403
+    end
+
     leader_end = requested_leader_end
     return render json: { error: 'audience_follows must be source, target or null' }, status: 422 if leader_end == :invalid
 
     if leader_end.nil?
       follower = @attachment.audience_follower
-      return render json: @attachment, serializer: REST::KornerAttachmentSerializer if follower.nil?
+      return render_updated(visible) if follower.nil?
       return render json: { error: 'only whoever looks after the follower can stop it following' }, status: 403 unless looks_after?(follower)
 
       Kronk::Audience.unfollow!(@attachment)
@@ -88,7 +109,7 @@ class Api::V1::AttachmentsController < Api::BaseController
 
       Kronk::Audience.follow!(@attachment, follower)
     end
-    render json: @attachment, serializer: REST::KornerAttachmentSerializer
+    render_updated(visible)
   end
 
   # What a composer shows before its record exists: the audience of a
@@ -106,7 +127,10 @@ class Api::V1::AttachmentsController < Api::BaseController
   end
 
   def destroy
-    return render json: { error: 'not authorised to remove this attachment' }, status: 403 unless KornerAttachmentPolicy.new(current_account, @attachment).destroy?
+    policy = KornerAttachmentPolicy.new(current_account, @attachment)
+    # Someone who can neither remove it nor see it learns nothing of it.
+    return render json: { error: 'attachment not found' }, status: 404 unless policy.destroy? || policy.show?
+    return render json: { error: 'not authorised to remove this attachment' }, status: 403 unless policy.destroy?
     return render json: { error: "a Krew's own album stays linked to it" }, status: 422 unless Kronk::AttachmentEffects.removable?(@attachment)
 
     @attachment.destroy
@@ -147,6 +171,22 @@ class Api::V1::AttachmentsController < Api::BaseController
     permitted = params.permit(:source_slug, :source_id, :target_slug, :target_id, :kind, metadata: {}).to_h
     metadata = permitted.delete(:metadata)&.except('audience', Kronk::Audience::FOLLOWS_KEY)
     metadata.present? ? permitted.merge(metadata: metadata) : permitted
+  end
+
+  def render_updated(visible)
+    return render_empty unless visible
+
+    render json: @attachment, serializer: REST::KornerAttachmentSerializer
+  end
+
+  # Whether the two records already have a link of this kind, either way
+  # round (Kronk::AttachmentEffects.between, for any kind).
+  def already_konnected?
+    a = @attachment
+    links = KornerAttachment.where(kind: a.kind)
+    links.where(source_slug: a.source_slug, source_id: a.source_id, target_slug: a.target_slug, target_id: a.target_id)
+         .or(links.where(source_slug: a.target_slug, source_id: a.target_id, target_slug: a.source_slug, target_id: a.source_id))
+         .exists?
   end
 
   def follow_requested?
