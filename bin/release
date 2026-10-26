@@ -16,6 +16,13 @@
 #                               mark its PRs shipped, and open the PR that
 #                               brings the version bump back to shadow
 #
+# A pick that conflicts only where the conflict is mechanical is resolved,
+# not left out: Markdown docs keep both sides (two PRs each adding an entry
+# to the top of docs/decisions.md is the usual one), and db/schema.rb's
+# `define(version:)` line takes the later version. Any other conflict, or a
+# schema conflict beyond that line, leaves the PR out as before. The release
+# PR lists each file resolved this way, for a read before merging.
+#
 # A PR that builds a Kommons proposal says so on a line of its own in its
 # body (`Proposal: <link or id>`). `cut` gathers those into
 # config/shipped_proposals.yaml, and the production deploy marks them actioned.
@@ -32,6 +39,7 @@ require 'json'
 require 'open3'
 require 'date'
 require 'time'
+require 'tmpdir'
 
 REPO          = 'Kronkverse/kronk'
 READY_LABEL   = 'ready to ship'
@@ -42,6 +50,10 @@ GUIDE         = 'CLAUDE.md'
 PR_LIST_MARK  = 'release-prs'
 SHIPPED_PROPOSALS = 'config/shipped_proposals.yaml'
 PROPOSAL_URL  = 'https://kronk.info/hub/kommons/p/'
+SCHEMA        = 'db/schema.rb'
+# A conflicted file's index stages, in merge-file order: ours, base, theirs.
+MERGE_STAGES  = [2, 1, 3].freeze
+SCHEMA_LINE   = /\AActiveRecord::Schema\[[\d.]+\]\.define\(version: ([\d_]+)\) do\n\z/
 
 def run(*cmd, allow_failure: false)
   out, err, status = Open3.capture3(*cmd)
@@ -157,6 +169,56 @@ end
 
 # ── cut ──────────────────────────────────────────────────────────────────────
 
+# Docs whose conflicts are kept both ways: two PRs adding their own lines.
+def union_doc?(path) = path == GUIDE || (path.start_with?('docs/') && path.end_with?('.md'))
+
+# Each conflict hunk in db/schema.rb, if every one is only the version line,
+# takes the later version. False (file untouched) otherwise.
+def resolve_schema_stamp!
+  text = File.read(SCHEMA)
+  mechanical = true
+  resolved = text.gsub(/^<<<<<<< [^\n]*\n(.*?)^=======\n(.*?)^>>>>>>> [^\n]*\n/m) do
+    ours = Regexp.last_match(1)
+    theirs = Regexp.last_match(2)
+    a = ours[SCHEMA_LINE, 1]
+    b = theirs[SCHEMA_LINE, 1]
+    mechanical &&= a && b
+    next '' unless a && b
+
+    a.delete('_') >= b.delete('_') ? ours : theirs
+  end
+  return false unless mechanical
+
+  File.write(SCHEMA, resolved)
+  true
+end
+
+# Resolve a stopped cherry-pick whose conflicts are all mechanical (see the
+# header) and finish it. Returns the files resolved, or nil to leave it.
+def resolve_mechanical(conflicted)
+  return nil if conflicted.empty?
+  return nil unless conflicted.all? { |path| path == SCHEMA || union_doc?(path) }
+
+  conflicted.each do |path|
+    if path == SCHEMA
+      return nil unless resolve_schema_stamp!
+    else
+      stages = MERGE_STAGES.map { |n| run('git', 'show', ":#{n}:#{path}", allow_failure: true) }
+      return nil unless stages.all? { |(_, ok)| ok }
+
+      files = stages.each_with_index.map do |(content, _), i|
+        "#{Dir.tmpdir}/release-#{Process.pid}-#{i}".tap { |f| File.write(f, content) }
+      end
+      merged, = run('git', 'merge-file', '--union', '-p', *files, allow_failure: true)
+      files.each { |f| File.delete(f) }
+      File.write(path, merged)
+    end
+    sh('git', 'add', path)
+  end
+  _, status = Open3.capture2e({ 'GIT_EDITOR' => 'true' }, 'git', 'cherry-pick', '--continue')
+  status.success? ? conflicted : nil
+end
+
 def cut(version)
   abort('Usage: bin/release cut <version>, e.g. 2.0.2') unless version&.match?(/\A\d+\.\d+\.\d+\z/)
   abort('Commit or stash your changes first.') unless sh('git', 'status', '--porcelain').strip.empty?
@@ -177,8 +239,12 @@ def cut(version)
       taken << pr
     else
       conflicted = sh('git', 'diff', '--name-only', '--diff-filter=U').split("\n")
-      run('git', 'cherry-pick', '--abort', allow_failure: true)
-      blocked << pr.merge('conflicts' => conflicted)
+      if (resolved = resolve_mechanical(conflicted))
+        taken << pr.merge('resolved' => resolved)
+      else
+        run('git', 'cherry-pick', '--abort', allow_failure: true)
+        blocked << pr.merge('conflicts' => conflicted)
+      end
     end
   end
   abort("None of the ready PRs apply cleanly on main:\n#{blocked.map { |pr| "  #{line_for(pr)}" }.join("\n")}") if taken.empty?
@@ -211,6 +277,11 @@ def release_body(version, taken, blocked, waiting, proposals)
   parts = []
   parts << "## What changed\n\nRelease **#{label_for(version)}**: the PRs marked *ready to ship*, cherry-picked onto `main` in the order they merged into `shadow`, plus the version bump and changelog.\n"
   parts << "### Shipping (#{taken.size})\n\n#{taken.map { |pr| "- #{line_for(pr)}" }.join("\n")}\n"
+  resolved = taken.select { |pr| pr['resolved'] }
+  unless resolved.empty?
+    parts << "### Resolved automatically (#{resolved.size})\n\nThese conflicted only in docs (both sides kept) or the schema's version line (the later one kept). Read the docs listed before merging.\n\n" \
+             "#{resolved.map { |pr| "- #{line_for(pr)} — #{pr['resolved'].join(', ')}" }.join("\n")}\n"
+  end
   unless blocked.empty?
     parts << "### Marked ready but could not apply on their own (#{blocked.size})\n\nThese build on work that is not ready yet. They stay on shadow; ship what they depend on first, or ship them together.\n\n" \
              "#{blocked.map { |pr| "- #{line_for(pr)} — conflicts in #{pr['conflicts'].join(', ')}" }.join("\n")}\n"
