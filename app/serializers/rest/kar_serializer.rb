@@ -8,6 +8,10 @@ class REST::KarSerializer < ActiveModel::Serializer
   attribute :cover_url
   attribute :is_owner
   attribute :location
+  # The Place it is Konnected to, if any: its page leaves where it is to
+  # that Place's card in Konnected (decisions.md, 2026-10-27). Left out of
+  # lists, which have no Konnected section.
+  attribute :place_id, unless: -> { instance_options[:list] }
 
   belongs_to :owner, serializer: REST::AccountSerializer
   has_many   :photos, serializer: REST::KarPhotoSerializer
@@ -70,6 +74,10 @@ class REST::KarSerializer < ActiveModel::Serializer
     return nil if place.nil?
 
     { lat: place.latitude&.to_f, lng: place.longitude&.to_f, label: place.name }.compact
+  end
+
+  def place_id
+    object.konnected_place&.id&.to_s
   end
 
   private

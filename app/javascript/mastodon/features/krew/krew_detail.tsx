@@ -982,11 +982,11 @@ export const KrewDetail = () => {
             )}
 
             {isMember && openNow === 'kalendar' && (
-              <KrewEvents krewId={krew.id} canLink={!krew.archived} />
+              <KrewEvents krewId={krew.id} />
             )}
 
             {isMember && openNow === 'albutts' && (
-              <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
+              <KrewAlbums krewId={krew.id} />
             )}
 
             {isMember && activity && (

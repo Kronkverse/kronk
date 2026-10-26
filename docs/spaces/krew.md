@@ -33,12 +33,13 @@ members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
 
 An album or event made earlier, or outside the Krew, can be linked to it
 afterwards (Kommons "Link Existing Albums (and more)", 2026-10-17). On the
-Krew page, a member's **Link one of your albums** and **Link one of your
-events** list their own that aren't in the Krew yet; **Unlink** takes one
-back out. Past events count: the events list shows what's coming up,
-soonest first, and **Link a past event** below it adds the ones already
-been, most recent first (`GET /api/v1/events?filter=mine&when=upcoming`
-or `when=past`; plain `filter=mine` is still every event you made).
+Krew page that is **Konnect** (the Kalendar picker offers past events a tap
+away), and **Diskonnect** on its card takes it back out. The Albums and
+Events lists the tiles open are lists only; their own "Link one of your …"
+pickers and Unlink buttons went on 2026-10-27 (decisions.md, "Konnect
+only: leftovers removed"). `GET /api/v1/events?filter=mine&when=upcoming`
+or `when=past` still serves the picker; plain `filter=mine` is every event
+you made.
 
 - Albums: `POST/DELETE /api/v1/albutts/albums/:album_id/krews` adds the
   Krew to `album_krews`. Owner only, and only a Krew they're in.
@@ -46,7 +47,7 @@ or `when=past`; plain `filter=mine` is still every event you made).
   post: the event's maker only, and only a Krew they're in. Invite-only
   events can't be linked; they stay for their invitees. Either end can
   unlink (decisions.md, 2026-10-21), so the `DELETE` takes the maker or
-  **anyone in the Krew**, and Unlink shows to them all.
+  **anyone in the Krew**, and Diskonnect shows to them all.
 - **Posts follow.** A Krew on a post is set when the post is made, so
   `Kronk::StatusKrews` adds the Krew to the posts the album already has
   (the album post and each photo's), or the event's, and takes it off on
@@ -60,8 +61,8 @@ or `when=past`; plain `filter=mine` is still every event you made).
   is added to the Krew's audience. Unlinking from either takes it off both.
 - **A link is a link, however it's made** (decisions.md, 2026-10-22). Each
   of these keeps a korner attachment between the record and the Krew, so
-  both show it in their **Konnected** blocks: the Link buttons above, the
-  Attach picker from the album, the event or the Krew (either direction
+  both show it in their **Konnected** blocks: the Konnect picker from the
+  album, the event or the Krew (either direction
   works the same), the Krews picked in an album's or event's composer, and
   a Krew album (`albums.krew_id`), which stays linked to its own Krew and
   can't be unlinked from it. `Kronk::AttachmentEffects` turns a link into
@@ -162,9 +163,15 @@ All in `app/javascript/mastodon/features/krew/`.
   `approval` one, **See what's needed** (to the Krew page) for a
   requirement-gated one, and "Asked to join" or "Member" once that is so.
 - **`/hub/krew/composer`** (`krew_composer.tsx`): "Gather a Krew", the shared
-  `<ComposeShell>` overlay on the directory. Name, description, access,
-  spaces to attach, requirements, and people to invite. `/hub/krew/new` is an
-  alias.
+  `<ComposeShell>` overlay on the directory. Name, description, people to
+  invite, access, and requirements; its Konnect row is how a new Krew gets
+  albums, events or a Huddle (Konnecting or making one turns that space on),
+  so there is no list of spaces to tick (2026-10-27). Access is four radio
+  cards in plain words, the same as Settings: Open, Ask to join,
+  Invite-only (hidden; only people a member brings in), Has requirements.
+  Requirements can be an event or a region, as in Settings; a row left
+  unfinished stops the Krew being made and says what it is missing.
+  `/hub/krew/new` is an alias.
 - **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name
   (with the same access icon), description, then the way in for someone
   not in it (Join, Ask to join, or a note that it needs an invite; a
@@ -210,7 +217,7 @@ All in `app/javascript/mastodon/features/krew/`.
   invite link, spaces, membership (Leave) and Archive. Archive shows only to
   a sole member; while others are in, Membership says a Krew is archived
   when its last member leaves. Requirements to join show only while Access
-  is Requirement-gated. Spaces are the Krew page's icon tiles, each with a ×
+  is Has requirements. Spaces are the Krew page's icon tiles, each with a ×
   to take it out, plus Add a space (a tray of the spaces it can turn on).
 
 **Chat.** Each Krew has one group conversation in Nudges

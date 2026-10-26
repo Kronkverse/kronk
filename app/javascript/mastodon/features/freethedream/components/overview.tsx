@@ -14,7 +14,7 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
 import { act } from './act';
-import { EventCard, EventLinker } from './event_card';
+import { EventCard, MakeEventPrompt } from './event_card';
 import {
   formatAmount,
   formatNeed,
@@ -202,8 +202,8 @@ const OnYouRow: React.FC<{
   );
 };
 
-// A project's or gang's Kalendar event, or the way to link one. The same
-// event shows on the emergence's Krew (Kronk::EventLinks).
+// A project's or gang's Kalendar event, or for its owner a way to make
+// one. The same event shows on the emergence's Krew (Kronk::EventLinks).
 export const ProjectEvent: React.FC<{
   project: FtdProject;
   refresh: () => void;
@@ -211,7 +211,7 @@ export const ProjectEvent: React.FC<{
   project.event ? (
     <EventCard event={project.event} onChange={refresh} />
   ) : project.can.link_event ? (
-    <EventLinker projectId={project.id} onLinked={refresh} />
+    <MakeEventPrompt projectId={project.id} />
   ) : null;
 
 // Beside the work on a project's page: its Kalendar event, who's asking

@@ -1,19 +1,16 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 import type { IntlShape } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import { apiRequestGet } from 'mastodon/api';
 import { apiDeleteAttachment } from 'mastodon/api/attachments';
-import { apiFtdLinkEvent, apiFtdRsvp } from 'mastodon/api/freethedream';
+import { apiFtdRsvp } from 'mastodon/api/freethedream';
 import type { FtdEvent } from 'mastodon/api_types/freethedream';
 import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
-import { EventComposer } from 'mastodon/features/kalendar/event_composer';
-import type { CreatedEvent } from 'mastodon/features/kalendar/event_composer';
-
-import { errorOf } from './shared';
+import { konnectSearch } from 'mastodon/hooks/useKonnect';
+import { useKorner } from 'mastodon/hooks/useKorner';
 
 // The Kalendar event a project happens at, on its Overview: its name, the
 // map pin (which opens the Kronk Map), who's going, and your RSVP. When
@@ -51,10 +48,6 @@ const messages = defineMessages({
     defaultMessage: 'Happening in person?',
   },
   make: { id: 'freethedream.event.make', defaultMessage: 'Make the event' },
-  linkMine: {
-    id: 'freethedream.event.link_mine',
-    defaultMessage: 'Or link one of your events',
-  },
 });
 
 export const DATE: Intl.DateTimeFormatOptions = {
@@ -206,70 +199,16 @@ export const EventCard: React.FC<{
   );
 };
 
-interface MyEvent {
-  id: string;
-  title: string;
-  start_time: string;
-}
-
-// For the project's owner when there's no event yet: make one in Kalendar's
-// own composer, or link one they already made. Either way the link is a
-// korner attachment from the event.
-export const EventLinker: React.FC<{
+// For the project's owner when there's no event yet: Kalendar's own
+// composer, opened to Konnect what it makes to this project. Linking an
+// event that already exists is the page's Konnect (decisions.md,
+// 2026-10-27).
+export const MakeEventPrompt: React.FC<{
   projectId: string;
-  onLinked: () => void;
-}> = ({ projectId, onLinked }) => {
+}> = ({ projectId }) => {
   const intl = useIntl();
-  const [composing, setComposing] = useState(false);
-  const [mine, setMine] = useState<MyEvent[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    apiRequestGet<MyEvent[]>('v1/events', { filter: 'mine' })
-      .then((events) => {
-        const now = Date.now();
-        setMine(
-          events
-            .filter((e) => new Date(e.start_time).getTime() >= now)
-            .sort((a, b) => a.start_time.localeCompare(b.start_time)),
-        );
-      })
-      .catch(() => {
-        setMine([]);
-      });
-  }, []);
-
-  const link = useCallback(
-    (eventId: string) => {
-      setError(null);
-      apiFtdLinkEvent(projectId, eventId)
-        .then(onLinked)
-        .catch((err: unknown) => {
-          setError(errorOf(err));
-        });
-    },
-    [projectId, onLinked],
-  );
-
-  const open = useCallback(() => {
-    setComposing(true);
-  }, []);
-  const close = useCallback(() => {
-    setComposing(false);
-  }, []);
-  const handleCreated = useCallback(
-    (event: CreatedEvent) => {
-      setComposing(false);
-      link(event.id);
-    },
-    [link],
-  );
-  const handlePick = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      if (e.target.value) link(e.target.value);
-    },
-    [link],
-  );
+  const route = useKorner('kalendar')?.compose?.route;
+  if (!route) return null;
 
   return (
     <div className='freethedream-event freethedream-event--empty'>
@@ -277,37 +216,16 @@ export const EventLinker: React.FC<{
         {intl.formatMessage(messages.inPerson)}
       </span>
       <div className='freethedream-event__foot'>
-        <button
-          type='button'
+        <Link
+          to={{
+            pathname: route,
+            search: konnectSearch('freethedream', projectId),
+          }}
           className='freethedream__button freethedream__button--small'
-          onClick={open}
         >
           {intl.formatMessage(messages.make)}
-        </button>
-        {mine.length > 0 && (
-          <select
-            className='freethedream__input freethedream__input--inline'
-            value=''
-            onChange={handlePick}
-            aria-label={intl.formatMessage(messages.linkMine)}
-          >
-            <option value=''>{intl.formatMessage(messages.linkMine)}</option>
-            {mine.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.title} · {intl.formatDate(e.start_time, DATE)}
-              </option>
-            ))}
-          </select>
-        )}
+        </Link>
       </div>
-      {error && (
-        <p className='freethedream__error' role='alert'>
-          {error}
-        </p>
-      )}
-      {composing && (
-        <EventComposer onCancel={close} onCreated={handleCreated} />
-      )}
     </div>
   );
 };

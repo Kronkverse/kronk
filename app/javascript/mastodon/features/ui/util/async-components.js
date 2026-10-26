@@ -190,10 +190,6 @@ export function LiveRoom () {
   return import("../../live/room");
 }
 
-export function Events () {
-  return import("../../events").then(m => ({ default: m.Events }));
-}
-
 export function Nudges () {
   // Phase 1b: /nudges renders the Signal-shaped messenger shell.
   // Legacy features/nudges (partner-based 1:1 view) retires with the

@@ -51,6 +51,9 @@ export interface ApiListingJSON {
   subcategory?: string | null;
   price_display?: string | null;
   location?: string | null;
+  // The Place it is Konnected to, if any (detail only). Its card in
+  // Konnected then says where the listing is.
+  place_id?: string | null;
   state: string;
   // `offer` (on offer, the Offered section) or `wanted` (looking for, the
   // Desired section). Older servers omit it: treat absent as `offer`.

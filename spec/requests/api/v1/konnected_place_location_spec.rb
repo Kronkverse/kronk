@@ -66,6 +66,19 @@ RSpec.describe 'Location from a Konnected Place' do
 
       expect(response.parsed_body).to include('location_name' => 'The rotunda',
                                               'location_url' => 'https://www.openstreetmap.org/?mlat=-33.87&mlon=151.21')
+      # Its page shows the Place alone (decisions.md, 2026-10-27), and its
+      # edit form the own address, to remove.
+      expect(response.parsed_body).to include('place_id' => place.id.to_s,
+                                              'own_location' => { 'name' => 'The rotunda', 'url' => 'https://www.openstreetmap.org/?mlat=-33.87&mlon=151.21' })
+    end
+
+    it 'has no own location when it reads its Place' do
+      event = create_event('Picnic')
+      link('kalendar', event.id)
+
+      get "/api/v1/events/#{event.id}", headers: headers_for(author)
+
+      expect(response.parsed_body).to include('place_id' => place.id.to_s, 'own_location' => nil)
     end
 
     it "doesn't let someone else's Place say where the event is" do
@@ -148,6 +161,7 @@ RSpec.describe 'Location from a Konnected Place' do
 
       get "/api/v1/karporn/kars/#{bare.id}", headers: headers_for(author)
       expect(response.parsed_body['location']).to include('label' => 'Fitzroy Gardens', 'lat' => be_within(0.0001).of(-37.8136))
+      expect(response.parsed_body['place_id']).to eq(place.id.to_s)
 
       get '/api/v1/karporn/kars', headers: headers_for(author), params: { scope: 'mine' }
       labels = response.parsed_body.to_h { |kar| [kar['title'], kar.dig('location', 'label')] }
@@ -164,6 +178,7 @@ RSpec.describe 'Location from a Konnected Place' do
 
       get "/api/v1/wachuneed/listings/#{bare.id}", headers: headers_for(author)
       expect(response.parsed_body['location']).to eq('Fitzroy Gardens')
+      expect(response.parsed_body['place_id']).to eq(place.id.to_s)
 
       get '/api/v1/wachuneed/listings', headers: headers_for(author), params: { mine: true }
       locations = response.parsed_body.to_h { |listing| [listing['title'], listing['location']] }
