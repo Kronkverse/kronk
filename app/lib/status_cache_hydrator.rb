@@ -110,7 +110,7 @@ class StatusCacheHydrator
             # (an ActiveModel::Serializer quirk) drops the has_one associations it does not
             # re-declare. Reduce the nested hash to that field set so the cache-warm hydration
             # equals the full render.
-            payload[:quoted_status] = payload[:quoted_status].except(:album, :booth_set, :event, :listing, :proposal, :question, :trek)
+            payload[:quoted_status] = payload[:quoted_status].except(:album, :booth_set, :booth_live, :event, :listing, :proposal, :question, :trek)
           end
         end
       else

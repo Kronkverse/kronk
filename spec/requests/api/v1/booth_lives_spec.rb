@@ -149,11 +149,25 @@ RSpec.describe 'API V1 Booth Lives' do
       post "/api/v1/booth_lives/#{booth_live.id}/share", headers: headers, params: { visibility: 'mates' }
       status = Status.find(response.parsed_body['id'])
       expect(status.visibility).to eq 'mates'
-      expect(status.text).to include('Live now in the Booth', "/hub/booth/live/#{booth_live.id}")
+      # decisions.md, 2026-10-26: a post is what the host wrote, or the title;
+      # the set's card says it's live and opens the room.
+      expect(status.text).to eq booth_live.title
+      expect(status.source_korner).to eq 'booth'
       expect(booth_live.reload.status_id).to eq status.id
 
       post "/api/v1/booth_lives/#{booth_live.id}/share", headers: headers, params: { visibility: 'unlisted' }
       expect(Status.find(response.parsed_body['id']).visibility).to eq 'public'
+    end
+
+    it "posts the host's own words when they write some, with the set as its card", :aggregate_failures do
+      booth_live = Fabricate(:booth_live, account: user.account, started_at: 1.minute.ago)
+
+      post "/api/v1/booth_lives/#{booth_live.id}/share", headers: headers, params: { comment: 'Come dance' }
+
+      expect(response.parsed_body['content']).to include('Come dance')
+      expect(response.parsed_body['content']).to_not include('/hub/booth/live/')
+      expect(response.parsed_body.dig('booth_live', 'id')).to eq booth_live.id.to_s
+      expect(response.parsed_body['booth_live']).to_not have_key('room_key')
     end
   end
 end

@@ -165,6 +165,13 @@ RSpec.describe 'API V1 Booth Sets' do
       expect(booth_set.reload.status_id).to eq status.id
     end
 
+    # decisions.md, 2026-10-26: the card carries the set; the post is the
+    # musician's words, or its title, with no link of its own.
+    it 'posts the title, or what the member wrote, and no link', :aggregate_failures do
+      expect(share.text).to eq booth_set.title
+      expect(share(comment: 'New mix').text).to eq 'New mix'
+    end
+
     it 'never posts at a retired visibility', :aggregate_failures do
       user.settings[:default_privacy] = 'unlisted'
       user.save!

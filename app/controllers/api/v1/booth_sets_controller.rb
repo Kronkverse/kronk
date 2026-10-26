@@ -255,10 +255,10 @@ class Api::V1::BoothSetsController < Api::BaseController
     end
   end
 
+  # What the musician wrote, or the set's title, as any korner's post: the
+  # set's card carries the artist and opens it.
   def share_text
-    body = "#{@booth_set.title} — #{@booth_set.artist_name}\n\n#{booth_set_url(@booth_set)}"
-    comment = params[:comment].to_s.strip
-    comment.present? ? "#{comment}\n\n#{body}" : body
+    params[:comment].to_s.strip.presence || @booth_set.title
   end
 
   def set_booth_set

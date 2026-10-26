@@ -278,10 +278,19 @@ unless the musician unticks it; otherwise the set page offers it once,
 as a banner, and keeps a Share to feed action for the owner. The
 endpoint takes only `public`, `orbit`, `mates` or `self_only`; anything
 else falls back to the user's default if that is a reach tier, and to
-`public` if not (a pre-2.0 `unlisted` can still sit there). That posts a `Status` with the set's title, artist and link, stamps it
+`public` if not (a pre-2.0 `unlisted` can still sit there). That posts a `Status` whose text is the musician's comment, or the set's title
+when there is none (no generated line, no link), stamps it
 `source_korner: 'booth'`, and points the set's `status_id` at it. The post
-renders as `StatusBoothCard` (`booth_card`). Sharing again points the set
-at the newest post; older shares stay in timelines as plain text.
+renders as `StatusBoothCard` (`booth_card`), which carries the artist and
+opens the set. Sharing again points the set at the newest post; older
+shares stay in timelines as plain text.
+
+A live set's Tell my feed (`POST /api/v1/booth_lives/:id/share`) posts the
+same way: the host's words or the set's title, linked through
+`booth_lives.status_id`. It renders as `StatusBoothLiveCard`: LIVE SET,
+the title, Live now / Starts … / Ended, and its genres, opening the room.
+The card follows the set's own reach (`booth_live`, served only to people
+it reaches, never with the room key).
 
 Froths and replies on that post are ordinary status actions. A
 froth publishes `booth.set.frothed` (`Favourite#publish_korner_froth`),

@@ -88,6 +88,8 @@ class Api::V1::BoothLivesController < Api::BaseController
       application: doorkeeper_token.application
     )
     @booth_live.update!(status_id: status.id)
+    # The feed draws the set's own card for it (feed projection, §3.2).
+    status.update_column(:source_korner, 'booth')
     render json: status, serializer: REST::StatusSerializer
   end
 
@@ -113,12 +115,9 @@ class Api::V1::BoothLivesController < Api::BaseController
     nil
   end
 
+  # What the host wrote, or the set's title, as any korner's post (an album
+  # posts its title): the card says it is live or when, and opens the room.
   def share_text
-    url = "#{root_url.chomp('/')}/hub/booth/live/#{@booth_live.id}"
-    # The room page shows the start time in each reader's own time zone, so
-    # the post links there rather than printing a server-side time.
-    lead = @booth_live.live? ? "Live now in the Booth: #{@booth_live.title}" : "Playing live in the Booth soon: #{@booth_live.title}"
-    comment = params[:comment].to_s.strip
-    [comment.presence, "#{lead}\n\n#{url}"].compact.join("\n\n")
+    params[:comment].to_s.strip.presence || @booth_live.title
   end
 end

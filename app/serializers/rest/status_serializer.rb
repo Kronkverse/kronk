@@ -40,6 +40,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :event, serializer: REST::EventSerializer
   has_one :proposal, serializer: REST::ProposalSummarySerializer
   has_one :booth_set, serializer: REST::BoothSetSummarySerializer
+  has_one :booth_live, serializer: REST::BoothLiveSummarySerializer, if: :booth_live_visible_to_viewer?
   has_one :listing, serializer: REST::WachuneedListingSummarySerializer
   has_one :trek, serializer: REST::TrekSummarySerializer, if: :trek_visible_to_viewer?
   has_one :question, serializer: REST::QuestionSummarySerializer
@@ -240,6 +241,11 @@ class REST::StatusSerializer < ActiveModel::Serializer
   # conditions, and AMS evaluates association conditions via public_send
   # (unlike attribute conditions, which use send). Defining them under
   # `private` raised NoMethodError on every timeline render.
+  # A live set has its own reach (decisions.md, 2026-10-26).
+  def booth_live_visible_to_viewer?
+    object.booth_live.present? && object.booth_live.visible_to?(current_user&.account)
+  end
+
   def album_visible_to_viewer?
     object.album.present? && object.album.visible_to?(current_user&.account)
   end
