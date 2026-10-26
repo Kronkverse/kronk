@@ -122,13 +122,17 @@ export const PlacePage: React.FC<{ id: string }> = ({ id }) => {
         place.maker ? (
           <KornerMeta
             items={[
-              intl.formatMessage(messages.madeBy, {
-                name: (
-                  <Link key='maker' to={`/@${place.maker.acct}`}>
-                    {place.maker.display_name}
-                  </Link>
-                ),
-              }),
+              // One span: in the meta row's flex, a bare text node loses
+              // the space before the name.
+              <span key='maker'>
+                {intl.formatMessage(messages.madeBy, {
+                  name: (
+                    <Link key='maker' to={`/@${place.maker.acct}`}>
+                      {place.maker.display_name}
+                    </Link>
+                  ),
+                })}
+              </span>,
             ]}
           />
         ) : undefined

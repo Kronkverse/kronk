@@ -261,3 +261,184 @@
     );
   }
 }
+
+// Konnected cards — a Konnected record shown as itself, above the tiles
+// (`<KonnectedCard>`, components/konnected_card.tsx; decisions.md,
+// 2026-10-26): a Place's map, an album's photos, an event's date, a
+// picture, a kronikle's opening lines. Same border, surface and lift as a
+// tile; the Same as and Diskonnect buttons sit over its corner.
+.konnected-cards {
+  align-items: start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    position: relative;
+    display: flex;
+    min-inline-size: 0;
+
+    > .konnected-card {
+      flex: 1;
+    }
+  }
+}
+
+.konnected-card {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--kronk-purple-accent);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px
+      color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
+  }
+
+  &--leads {
+    border-color: var(--kronk-purple-accent);
+  }
+
+  // A date or lines of text sit beside the title, not over it.
+  &--date,
+  &--text {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  &__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    max-inline-size: 100%;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+
+    .konnected-card--date & {
+      display: flex;
+      flex: none;
+      aspect-ratio: auto;
+      inline-size: 4.5rem;
+    }
+  }
+
+  &__map,
+  &__image {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  &__photos {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 2px;
+    block-size: 100%;
+
+    img {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      min-block-size: 0;
+      object-fit: cover;
+    }
+
+    &--1 img {
+      grid-area: 1 / 1 / 3 / 3;
+    }
+
+    &--2 img {
+      grid-row: 1 / 3;
+    }
+
+    &--3 img:first-child {
+      grid-row: 1 / 3;
+    }
+  }
+
+  &__date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    line-height: 1;
+  }
+
+  &__day {
+    font-size: 1.75rem;
+  }
+
+  &__month {
+    margin-block-start: 0.2rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-inline-size: 0;
+    padding: 0.7rem 0.85rem 0.8rem;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-inline-size: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    line-height: 1.25;
+
+    > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__glyph {
+    flex: none;
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+    color: var(--kronk-purple-accent);
+  }
+
+  &__line {
+    overflow: hidden;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &--quote {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      white-space: normal;
+    }
+  }
+}

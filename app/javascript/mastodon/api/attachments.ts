@@ -23,6 +23,26 @@ export interface AttachmentAudience {
   followable: boolean;
 }
 
+// What a Konnected record's card draws (Kronk::KonnectedPreview); each
+// korner fills its own fields. Null for a korner that stays a tile.
+export interface KonnectedPreviewJSON {
+  // Map: the Place's spot.
+  latitude?: number;
+  longitude?: number;
+  address?: string | null;
+  // Albutts: up to four photos, and how many there are.
+  photos?: string[];
+  photo_count?: number;
+  // Kalendar.
+  start_time?: string | null;
+  end_time?: string | null;
+  location?: string | null;
+  // Booth, Cinema, Karporn, Wachuneed, an event: its picture.
+  image?: string | null;
+  // Booth's artist, a kronikle's opening lines.
+  line?: string | null;
+}
+
 export interface AttachmentEndpointPreview {
   slug: string;
   id: string | null;
@@ -31,6 +51,7 @@ export interface AttachmentEndpointPreview {
   missing?: boolean;
   // Null for a korner without an audience (a Krew, a proposal).
   audience?: AttachmentAudience | null;
+  preview?: KonnectedPreviewJSON | null;
 }
 
 // The end of a Konnection that leads, when the other follows its audience.
