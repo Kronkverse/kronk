@@ -211,8 +211,11 @@ getting involved, not for doing the work itself:
   view (every 20 seconds, from `GET /projects/:id/activity`), and new
   lines fade in.
 - **Beside it** (below it, on a phone): the **event card** (name into
-  Kalendar, map pin, who's going, your RSVP; the owner sees **Make the
-  event** or **Link one of your events** until there is one), **Asking to
+  Kalendar, map pin, who's going, your RSVP; until there is one, the owner
+  sees **Make the event**, which opens Kalendar's composer with
+  `?konnect=freethedream:<id>`, so the event is Konnected as it is made.
+  An event that already exists is linked with the page's Konnect; the
+  card's own "Or link one of your events" went on 2026-10-27), **Asking to
   join** for anyone in, and **Join** (or Ask to join). Then Talk and the
   owner's actions. To bring someone in, **Share** the emergence from the
   Ж menu; there is no Invite (Tal 2026-10-17: "no invite anywhere, only
@@ -429,7 +432,7 @@ shadow.
   `cover_media_attachment_id` on projects (an image the person setting it
   uploaded); `Project#event_link` finds the linked Kalendar event, and the
   project shape adds `cover`, `event` (with your RSVP) and
-  `can.link_event`. (An invite endpoint and its nudge,
+  `can.link_event` (who sees Make the event). (An invite endpoint and its nudge,
   `freethedream.project.invited`, were removed 2026-10-19.) The
   manifest's primary resource is `freethedream/projects` so
   `KornerRegistry.model_for` finds `Freethedream::Project`, and it accepts
