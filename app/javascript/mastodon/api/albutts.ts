@@ -165,19 +165,11 @@ export const apiAcceptContributionRequest = (albumId: string, id: string) =>
 
 export const apiDeclineContributionRequest = (albumId: string, id: string) =>
   apiRequestDelete(`v1/albutts/albums/${albumId}/contribution_requests/${id}`);
-// Link an album you made to a Krew you're in, or unlink it
-// (docs/spaces/krew.md, Linking).
 // Give a personal album to a Krew you're in. One way: it is then the Krew's.
 export const apiGiveAlbum = (albumId: string, krewId: string) =>
   apiRequestPost<ApiAlbumJSON>(`v1/albutts/albums/${albumId}/give`, {
     krew_id: krewId,
   });
-
-export const apiLinkAlbumKrew = (albumId: string, krewId: string) =>
-  apiRequestPost(`v1/albutts/albums/${albumId}/krews`, { krew_id: krewId });
-
-export const apiUnlinkAlbumKrew = (albumId: string, krewId: string) =>
-  apiRequestDelete(`v1/albutts/albums/${albumId}/krews/${krewId}`);
 
 // An album's page, by name (decisions.md, 2026-10-22).
 export const albumPath = (album: { id: string; slug?: string }): string =>

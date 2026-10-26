@@ -100,7 +100,7 @@ RSpec.describe 'Album links to a Krew' do
     expect(krew_album_ids).to be_empty
   end
 
-  it "takes the link off with the Krew's Unlink button" do
+  it "takes the link off through the album's Krews endpoint" do
     attach(author, 'albutts', album.id, 'krew', krew.id)
     delete "/api/v1/albutts/albums/#{album.id}/krews/#{krew.id}", headers: headers_for(author)
 
