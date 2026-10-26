@@ -185,7 +185,7 @@ RSpec.describe 'Krew page', :js, :streaming do
   # decisions.md, 2026-10-27: a new Krew's spaces come from Konnect, not a
   # list to tick, and a requirement left unfinished stops it being made
   # instead of being dropped.
-  it 'gathers a Krew with plain access choices and no list of spaces' do
+  it 'offers plain access choices and no list of spaces' do
     visit '/hub/krew/composer'
 
     within('.compose-shell') do
@@ -194,7 +194,13 @@ RSpec.describe 'Krew page', :js, :streaming do
       expect(page).to have_css('.konnect-row')
       expect(page).to have_css('.krew-composer__radio', count: 4)
       expect(page).to have_field('Open', type: 'radio', checked: true, visible: :all)
+    end
+  end
 
+  it 'holds back a Krew until its requirement is finished' do
+    visit '/hub/krew/composer'
+
+    within('.compose-shell') do
       find('.compose-title').fill_in(with: 'Seed savers')
       find('.krew-composer__radio', text: 'Has requirements').click
       click_on '+ Add requirement'
