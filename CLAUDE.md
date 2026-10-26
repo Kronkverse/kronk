@@ -513,8 +513,10 @@ shadow for a later release. `bin/release` does the mechanics:
    ever bumped — see **Versioning**), adds a changelog entry from the PR titles,
    and opens the PR into `main`, titled with the version. A ready PR that can't
    apply on its own — because it builds on work that isn't ready — is left out
-   and named in the PR body. Edit the changelog wording in the PR if it needs
-   it. It also gathers the `Proposal:` lines of the PRs it took into
+   and named in the PR body. A conflict only in Markdown docs (both sides
+   kept) or in `db/schema.rb`'s version line (the later one kept) is resolved
+   instead, and the PR body lists those files to read before merging. Edit the
+   changelog wording in the PR if it needs it. It also gathers the `Proposal:` lines of the PRs it took into
    `config/shipped_proposals.yaml` and lists them in the PR body.
 
 3. **Check it.** The release tree is `main` plus the picked PRs, not exactly
