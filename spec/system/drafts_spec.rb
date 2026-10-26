@@ -43,6 +43,26 @@ RSpec.describe 'Composer drafts', :js, :streaming do
     expect(Draft.where(account: bob.account, korner: 'kalendar')).to be_empty
   end
 
+  # decisions.md, 2026-10-25: New … from a record is a new thing for that
+  # record. A recent draft's own Konnections coming back would Konnect it to
+  # something else, and a Krew among them would make it that Krew's album.
+  it 'opens clean when made from a record, leaving a recent draft parked' do
+    krew = Krew.create!(slug: 'mayhem', name: 'Mayhem New Years', access: 'open')
+    krew.krew_memberships.create!(account: bob.account, role: 'member', source: 'direct')
+    event = Event.create!(account: bob.account, title: 'Swim', start_time: 2.days.from_now, end_time: 2.days.from_now + 1.hour)
+    Draft.create!(account: bob.account, korner: 'albutts', kind: 'album',
+                  params: { title: 'Ember', konnections: [{ slug: 'krew', id: krew.id.to_s, title: krew.name }] })
+
+    visit "/hub/albutts/composer?konnect=kalendar:#{event.id}"
+
+    within('.compose-shell') do
+      expect(page).to have_css('.konnect-row .space-tile', text: 'Swim')
+      expect(page).to have_no_css('.konnect-row .space-tile', text: 'Mayhem New Years')
+      expect(page).to have_no_field(with: 'Ember')
+    end
+    expect(page).to have_css('.draft-bar', text: 'Drafts (1)')
+  end
+
   it 'opens clean on a draft from more than half an hour ago, and offers it at the bottom' do
     Draft.create!(account: bob.account, korner: 'kalendar', kind: 'event', params: { title: 'Seed swap' })
          .update_columns(updated_at: 2.hours.ago)

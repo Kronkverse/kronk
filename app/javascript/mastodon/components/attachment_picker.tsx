@@ -48,11 +48,14 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 // save a link from: given `onPick`, the picker hands back the record chosen
 // and saves nothing (`<ComposeShell konnect={…}>`, hooks/useKonnect.ts).
 //
-// There, "New …" can't open another composer (the person is mid-compose),
-// except for one space: Map. Where a thing is is a Konnection to a Place
-// (decisions.md, 2026-10-23, "Location fields become Konnect → Map"), so
-// picking Map opens the map right here (<KonnectMap>): an existing Place,
-// or a new one made at once and handed back as the pick.
+// There, "New …" can't open another composer (the person is mid-compose).
+//
+// One space works the same everywhere: Map. Where a thing is is a
+// Konnection to a Place (decisions.md, 2026-10-23, "Location fields become
+// Konnect → Map"), so picking Map opens the map right here (<KonnectMap>),
+// with no search step in between: an existing Place, or a new one made at
+// once. In a composer it is handed back as the pick; on a record's page it
+// is Konnected straight away (decisions.md, 2026-10-25).
 //
 // Kind is set to `link` today (user-added, independent lifecycle).
 // A future update could read the manifest's `kind:` on each entry
@@ -156,9 +159,9 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     makeLabel
       ? { route: makeRoute, label: makeLabel }
       : undefined;
-  // Map, in a composer: the map opens over the picker, which leaves Escape
+  // Map, anywhere: the map opens over the picker, which leaves Escape
   // to it.
-  const mapping = Boolean(onPick) && target?.slug === 'map';
+  const mapping = target?.slug === 'map';
   const makeNewRoute = makeNew?.route;
   const handleMakeNew = useCallback(() => {
     if (!makeNewRoute || sourceId == null) return;
@@ -242,7 +245,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   }, [target, query, datesEvents, past]);
 
   const handleAttach = useCallback(
-    async (row: AttachmentCandidateJSON) => {
+    async (row: Pick<AttachmentCandidateJSON, 'id' | 'title'>) => {
       if (!target || attaching) return;
       if (onPick) {
         onPick({ slug: target.slug, id: row.id, title: row.title });
@@ -295,10 +298,10 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   }, [targetSlugs.length, clearTarget, onClose]);
   const handleMapPick = useCallback(
     (picked: KonnectTarget) => {
-      onPick?.(picked);
-      onClose();
+      if (!target) return;
+      void handleAttach({ id: picked.id, title: picked.title ?? null });
     },
-    [onPick, onClose],
+    [target, handleAttach],
   );
   const excludedPlaces = useMemo(
     () => (exclude ?? []).filter((e) => e.slug === 'map').map((e) => e.id),
