@@ -59,10 +59,6 @@ const messages = defineMessages({
     id: 'map.country.hide',
     defaultMessage: 'Hide First Nations Country',
   },
-  credit: {
-    id: 'map.country.credit',
-    defaultMessage: 'Country map by @mangobee.',
-  },
   disclaimer: {
     id: 'map.country.disclaimer',
     defaultMessage:
@@ -141,7 +137,6 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
       </button>
       {on && (
         <p className='map-country__note'>
-          {intl.formatMessage(messages.credit)}{' '}
           {intl.formatMessage(messages.disclaimer)}
         </p>
       )}
