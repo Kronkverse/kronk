@@ -28,7 +28,7 @@ A piece can also say what a gallery label would (Kommons "Portfolio style & Art 
 - **Year made**, and **Edition** ("Original", "3 of 25", up to 80 characters).
 - **Status** (`availability`) — _Not for sale_ (the default), _Available_, _Sold_, _Commissioned_, _On show_.
 
-**Price**: when the status is _Available_, the artist can say what they're asking (`price_cents`, whole cents, and `price_currency`, AUD for now as in Wachuneed). Leave it blank and people use _Ask about it_. Cards then wear the price as their tag, and the piece page and the quick viewer read "Available · $1,200 AUD" (@mangobee, 2026-10-26). Changing the status away from _Available_ clears it.
+**Price**: when the status is _Available_, the artist can say what they're asking (`price_cents`, whole cents, and `price_currency`, AUD for now as in Wachuneed). Leave it blank and people use _Ask about it_. Cards then wear the price as their tag, and the piece page's status chip and the quick viewer read "Available · $1,200 AUD" (@mangobee, 2026-10-26). Changing the status away from _Available_ clears it.
 
 The piece page shows them as one line under the title, "Oil on linen · 60 × 90 cm · 2026 · Original", with the status as a chip when it isn't _Not for sale_. Every card (the Art grid, a portfolio, a profile's Art shelf) reads the medium (or materials, or kind) and year, and wears the status as a tag. The labels live once, in `features/art/details.ts`.
 

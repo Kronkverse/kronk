@@ -13,7 +13,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
-import { availabilityLabel, pieceFacts } from '../details';
+import { availabilityLabel, pieceFacts, piecePrice } from '../details';
 
 import { ArtPieceComposer } from './art_piece_composer';
 import { ArtQuickViewer } from './art_quick_viewer';
@@ -125,7 +125,13 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
   const [main, ...more] = photos;
   const mainUrl = main?.url ?? piece.cover_url;
   const facts = pieceFacts(intl, piece);
-  const status = availabilityLabel(intl, piece.availability);
+  // For sale with a price: "Available · $1,200 AUD".
+  const status = [
+    availabilityLabel(intl, piece.availability),
+    piecePrice(intl, piece),
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <KornerDetail
