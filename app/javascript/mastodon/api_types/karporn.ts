@@ -31,6 +31,9 @@ export interface ApiKarJSON {
   owner: ApiAccountJSON;
   photos: ApiKarPhotoJSON[];
   location: KarLocation | null;
+  // The Place it is Konnected to, if any (left out of lists). Its card in
+  // Konnected then says where the kar is.
+  place_id?: string | null;
   // The Krews it is for, on top of its reach, named where you may see them.
   krews?: { id: string; name: string; slug?: string }[];
 }

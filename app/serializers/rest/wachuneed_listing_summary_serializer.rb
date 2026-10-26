@@ -34,6 +34,9 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attribute :announced, if: :detail?
   attribute :shop_details, if: :detail?
   attribute :visibility, if: :detail?
+  # The Place it is Konnected to, if any: the listing page leaves where it
+  # is to that Place's card in Konnected (decisions.md, 2026-10-27).
+  attribute :place_id, if: :detail?
   attribute :can_message, if: :detail?
 
   # The Krews it is for, on top of its reach (Kronk::KrewAudience), named
@@ -119,6 +122,10 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   # Place's name (Kronk::RecordPlace). A list preloads the Places.
   def location
     object.location.presence || object.konnected_place&.name
+  end
+
+  def place_id
+    object.konnected_place&.id&.to_s
   end
 
   def photo_full_url
