@@ -121,4 +121,40 @@ RSpec.describe 'Event links to an emergence and its Krew' do
 
     expect(krew_event_ids).to_not include(their_event.id.to_s)
   end
+
+  describe 'links someone else makes' do
+    let(:member) { Fabricate(:user) }
+    let(:member_headers) do
+      token = Fabricate(:accessible_access_token, resource_owner_id: member.id, scopes: 'read:statuses write:statuses')
+      { 'Authorization' => "Bearer #{token.token}" }
+    end
+
+    before { krew.krew_memberships.create!(account: member.account, role: 'member', source: 'direct') }
+
+    it "doesn't link someone else's event to the emergence" do
+      post '/api/v1/attachments', headers: member_headers, params: {
+        source_slug: 'krew', source_id: krew.id, target_slug: 'kalendar', target_id: event.id, kind: 'link'
+      }
+
+      expect(response).to have_http_status(200)
+      expect(Kronk::AttachmentEffects.between('kalendar', event.id, 'freethedream', project.id)).to_not exist
+      expect(krew_event_ids).to_not include(event.id.to_s)
+    end
+
+    it "takes off only their own link, leaving the maker's and the Krew audience" do
+      post "/api/v1/events/#{event.id}/krews", headers: headers, params: { krew_id: krew.id }
+      gang = Freethedream::Project.create!(owner: member.account, title: 'Raised beds', parent: project, root: project)
+      post '/api/v1/attachments', headers: member_headers, params: {
+        source_slug: 'freethedream', source_id: gang.id, target_slug: 'kalendar', target_id: event.id, kind: 'link'
+      }
+      expect(response).to have_http_status(200)
+
+      delete "/api/v1/attachments/#{response.parsed_body['id']}", headers: member_headers
+
+      expect(response).to have_http_status(200)
+      expect(Kronk::AttachmentEffects.between('kalendar', event.id, 'krew', krew.id)).to exist
+      expect(project.reload.event_link&.first).to eq(event)
+      expect(krew_event_ids).to include(event.id.to_s)
+    end
+  end
 end

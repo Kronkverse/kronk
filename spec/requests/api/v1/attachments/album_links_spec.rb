@@ -61,6 +61,20 @@ RSpec.describe 'Album links to a Krew' do
     expect(album.reload.album_krews).to be_empty
   end
 
+  # The member's link was there first, so the composer's Krew made no
+  # second one; taking theirs off used to take the album out of the Krew.
+  it "keeps the owner's Krew when someone else's link is taken off" do
+    album.update!(visibility: :public)
+    id = attach(member, 'krew', krew.id, 'albutts', album.id)
+    put "/api/v1/albutts/albums/#{album.id}", headers: headers_for(author), params: { album: { title: 'Seed swap' }, krew_ids: [krew.id] }
+    expect(album.reload.krew_ids).to eq([krew.id])
+
+    delete "/api/v1/attachments/#{id}", headers: headers_for(member)
+
+    expect(response).to have_http_status(200)
+    expect(album.reload.krew_ids).to eq([krew.id])
+  end
+
   it "puts the Krew's Link button's album in both Attached blocks" do
     post "/api/v1/albutts/albums/#{album.id}/krews", headers: headers_for(author), params: { krew_id: krew.id }
 
