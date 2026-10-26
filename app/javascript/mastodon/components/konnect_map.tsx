@@ -81,9 +81,9 @@ const messages = defineMessages({
 });
 
 interface Props {
-  // The Place chosen or made. A promise that rejects (Konnecting it on a
-  // record's page failed) is shown here.
-  onPicked: (target: KonnectTarget) => Promise<void> | void;
+  // The Place chosen or made. If it rejects (Konnecting it on a record's
+  // page failed), that is shown here.
+  onPicked: (target: KonnectTarget) => Promise<void>;
   onCancel: () => void;
   // Places already chosen, left out of the list.
   exclude: string[];
