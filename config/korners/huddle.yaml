@@ -57,12 +57,13 @@ security:
 # Standard (docs/korners/adding_a_korner.md §11.5 — "Never build a
 # per-page 'Add' / 'New X' / 'Create' button"). Route mounts the
 # Huddle shell with `autoOpenComposer`, which opens RoomComposer in the
-# shared <ComposeShell> (`?krew=<id>` picks a Krew to Konnect the Room
-# to). Creating goes straight into the new Room's call; cancelling puts
-# the URL back to `/hub/huddle`. `/hub/huddle/new` redirects here.
+# shared <ComposeShell>. Opened with `?konnect=<slug>:<id>` (or the older
+# `?krew=<id>`), RoomComposer Konnects the Room to that record through
+# useKonnect, and a Krew's keys the draft to it. Creating goes straight
+# into the new Room's call; cancelling goes back to the record it was
+# opened from, or to `/hub/huddle`. `/hub/huddle/new` redirects here.
 # Konnect (decisions.md, 2026-10-23): a Konnection with a Room is only the
-# link. `konnect: { make: true }` waits for RoomComposer to take
-# `?konnect=` through useKonnect (it reads only `?krew=` so far).
+# link.
 
 # Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
 # Korner attachments §2.6): this korner's Konnections and how they work.

@@ -9,6 +9,7 @@ import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { Stage } from 'mastodon/components/stage';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 
 import { KrewAccessMark } from './krew_access_mark';
 import { KrewComposer } from './krew_composer';
@@ -268,13 +269,16 @@ export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
       });
   }, []);
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/krew')) return;
     // If we arrived via the composer route (`/composer` or legacy
     // `/new`), drop back to the plain directory URL so the composer
     // doesn't reopen on refresh.
     if (autoOpenComposer) history.replace('/hub/krew');
-  }, [autoOpenComposer, history]);
+  }, [autoOpenComposer, history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: ApiKrewJSON) => {

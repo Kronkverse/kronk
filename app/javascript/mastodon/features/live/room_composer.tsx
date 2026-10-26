@@ -66,8 +66,8 @@ const messages = defineMessages({
 });
 
 interface Props {
-  // Arriving from a Krew's page: the draft is that Krew's (the Krew itself
-  // comes through Konnect, from the same `?krew=`).
+  // Arriving from a Krew (`?konnect=krew:<id>`, or the older `?krew=`):
+  // the draft is that Krew's. The Krew itself comes through Konnect.
   forKrewId?: string | null;
   onCancel: () => void;
   onCreated: (room: CreatedRoom) => void;

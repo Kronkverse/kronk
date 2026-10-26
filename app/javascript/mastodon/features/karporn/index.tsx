@@ -17,6 +17,7 @@ import type { KarsScope } from 'mastodon/api/karporn';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { KarComposer } from './components/kar_composer';
@@ -127,10 +128,13 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     [history],
   );
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/karporn')) return;
     if (autoOpenComposer) history.replace('/hub/karporn');
-  }, [autoOpenComposer, history]);
+  }, [autoOpenComposer, history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: ApiKarJSON) => {
