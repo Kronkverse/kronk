@@ -81,7 +81,7 @@ class Api::V1::AttachmentsController < Api::BaseController
     else
       follower = (Kronk::Audience::ENDS - [leader_end]).first
       return render json: { error: 'only whoever looks after a record can choose its audience' }, status: 403 unless looks_after?(follower)
-      return render json: { error: 'not found' }, status: 404 unless Kronk::KornerRecords.visible?(@attachment.public_send(:"#{leader_end}_record"), current_account)
+      return render json: { error: 'not found' }, status: 404 unless Kronk::KornerRecords.visible?(end_record(leader_end), current_account)
 
       error = follow_error(follower)
       return render json: { error: error }, status: 422 if error
@@ -155,11 +155,20 @@ class Api::V1::AttachmentsController < Api::BaseController
 
   def follow_error(follower_end)
     leader_end = (Kronk::Audience::ENDS - [follower_end]).first
-    follower = @attachment.public_send(:"#{follower_end}_record")
-    leader = @attachment.public_send(:"#{leader_end}_record")
+    follower = end_record(follower_end)
+    leader = end_record(leader_end)
     return 'a record follows the audience of something it is Konnected to' if follower.nil? || leader.nil? || @attachment.kind != KornerAttachment::KIND_LINK
 
     Kronk::Audience.follow_error(follower, leader)
+  end
+
+  # The record at one end of the link, by name ('source' or 'target'). Named
+  # outright rather than sent as a method name built from the request.
+  def end_record(end_name)
+    case end_name
+    when 'source' then @attachment.source_record
+    when 'target' then @attachment.target_record
+    end
   end
 
   # `audience_follows: 'target' | 'source' | null`, or the shortcut
@@ -181,7 +190,7 @@ class Api::V1::AttachmentsController < Api::BaseController
   end
 
   def looks_after?(end_name)
-    Kronk::KornerRecords.looked_after_by?(@attachment.public_send(:"#{end_name}_record"), current_account)
+    Kronk::KornerRecords.looked_after_by?(end_record(end_name), current_account)
   end
 
   # Why the composer's new record (in `for`'s korner, made by the viewer)
