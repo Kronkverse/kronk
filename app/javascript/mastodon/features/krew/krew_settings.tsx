@@ -130,7 +130,7 @@ const messages = defineMessages({
   accessOpen: { id: 'krew.settings.access_open', defaultMessage: 'Open' },
   accessOpenDesc: {
     id: 'krew.settings.access_open_desc',
-    defaultMessage: 'Anyone can join directly.',
+    defaultMessage: 'Anyone can find it and join.',
   },
   accessApproval: {
     id: 'krew.settings.access_approval',
@@ -146,15 +146,16 @@ const messages = defineMessages({
   },
   accessInviteDesc: {
     id: 'krew.settings.access_invite_desc',
-    defaultMessage: 'People need an invite link to join.',
+    defaultMessage: 'Hidden. Only people a member brings in can join.',
   },
   accessGated: {
     id: 'krew.settings.access_gated',
-    defaultMessage: 'Requirement-gated',
+    defaultMessage: 'Has requirements',
   },
   accessGatedDesc: {
     id: 'krew.settings.access_gated_desc',
-    defaultMessage: 'Add requirements below that people must meet.',
+    defaultMessage:
+      'Anyone can find it. People who meet the requirements below can join.',
   },
 
   membership: {

@@ -202,17 +202,18 @@ const SettingsKitDemo: React.FC = () => {
           {
             key: 'open',
             label: 'Open',
-            description: 'Anyone can join directly.',
+            description: 'Anyone can find it and join.',
           },
           {
             key: 'invite_only',
             label: 'Invite-only',
-            description: 'People need an invite link to join.',
+            description: 'Hidden. Only people a member brings in can join.',
           },
           {
             key: 'gated',
-            label: 'Requirement-gated',
-            description: 'Add requirements below that people must meet.',
+            label: 'Has requirements',
+            description:
+              'Anyone can find it. People who meet the requirements below can join.',
           },
         ]}
       />

@@ -84,6 +84,46 @@ their asker couldn't open.
   visibility scope only narrows the search (Event's settles only
   invite-only), and each record is then checked as opening it would be.
 
+## 2026-10-27 — Konnect only: leftovers removed
+
+When Konnect became the one way to link records (2.1.4), the older ways of
+doing the same job stayed beside it, so several pages offered two controls
+for one thing. They are gone:
+
+- **Krew composer:** no Korners section to tick. Konnecting or making an
+  album or an event in its Konnect row already turns that space on
+  (2026-10-25), so it stops sending `korner_attachments`. Access is four
+  radio cards in plain words, the same as Krew settings (Open, Ask to join,
+  Invite-only, Has requirements; no "invite link", no "Requirement-gated").
+  "Vouched by a member" can't be set from it, as in settings, and a
+  requirement row left unfinished stops the Krew being made instead of
+  being dropped without a word.
+- **Krew page, Albums and Events:** no "Link one of your albums/events" or
+  Unlink of their own. Konnect and Diskonnect on the page do it.
+- **FreeTheDream:** the event card's "Or link one of your events" and its
+  own composer are gone. Make the event opens Kalendar's composer with
+  `?konnect=freethedream:<id>`.
+- **Event edit:** the Kalendar composer edits too, over the page, with the
+  page's Konnected section left as it is. The old `CreateEventForm` and the
+  unrouted Events page are deleted. An older event's own typed address
+  shows there with Remove, the only location control.
+- **Where it is, once.** An event, kar or listing with a Konnected Place
+  shows where it is as the Place's card, not also as a line (or, for an
+  event, a map) of its own. That holds for an event that also has an older
+  address: the Place wins on its page. The serializers send `place_id` for
+  it.
+- **Kommons:** the new-Korner intro no longer mentions `config/korners/`.
+
+**Why:** two ways to do one thing make people wonder which is right, and
+whether they do the same. Konnect is the one way (2026-10-23, One
+composer, one Konnect), so what it does is not repeated elsewhere.
+
+**Supersedes:** the Krew page's own Link and Unlink (2026-10-17, Kommons
+"Link Existing Albums (and more)"), Korners in Gather a Krew, the
+FreeTheDream event linker, and "An event with its own typed address keeps
+its map" (2026-10-26, Konnected records show themselves) when it also has a
+Place.
+
 ## 2026-10-26 — A korner's post is your words and its card
 
 Tal: going live posted "a generated text as a post 'Live now in the

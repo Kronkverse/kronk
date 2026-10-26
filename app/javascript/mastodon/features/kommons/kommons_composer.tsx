@@ -57,7 +57,7 @@ const messages = defineMessages({
   introNewKorner: {
     id: 'propose.intro_new_korner',
     defaultMessage:
-      'A Korner is a space in Kronk — Kalendar, Kommons, Booth. Say what this new space is for, who it serves, and what one action it makes possible. Others can back the idea; a shipped proposal ends with a new manifest under config/korners/.',
+      'A Korner is a space in Kronk — Kalendar, Kommons, Booth. Say what this new space is for, who it serves, and what one action it makes possible. Others can back the idea.',
   },
   submit: { id: 'propose.submit', defaultMessage: 'Open it' },
   submitting: { id: 'propose.submitting', defaultMessage: 'Opening…' },

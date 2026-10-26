@@ -355,7 +355,9 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
                 : listing.price_display}
             </span>
           ) : null}
-          {listing.location ? (
+          {/* Where it is shows once: as its Place's card in Konnected
+              when it has one (decisions.md, 2026-10-27). */}
+          {listing.location && !listing.place_id ? (
             <span className='wachuneed-detail__location'>
               {listing.location}
             </span>
