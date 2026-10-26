@@ -1,70 +1,12 @@
-// Art — single-author physical-works korner. Directory (grid of piece
-// cards), piece detail (cover + photo grid + description), and composer
-// (title + kind + description + photo uploads). Modeled loosely on
-// Albutts but simpler — no contributor roster, no lightbox in v1.
+// Art — single-author physical-works korner. Directory (a <SpaceGrid> of
+// pieces), piece page (the photo, its thumbnails, the details), portfolio,
+// the quick viewer, and the composer.
 
 @use 'variables' as *;
 
 .art-directory {
-  &__empty {
-    text-align: center;
-    padding: 40px 20px;
-  }
-
   &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
     padding: 12px;
-    list-style: none;
-    margin: 0;
-  }
-
-  &__cell {
-    display: contents;
-  }
-}
-
-.art-card {
-  display: block;
-  border-radius: var(--radius-medium);
-  overflow: hidden;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  text-decoration: none;
-  transition: transform var(--dur-fast) var(--ease-out);
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-
-  &__cover {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    background-color: color-mix(in oklab, var(--accent), transparent 85%);
-
-    &--empty {
-      background: color-mix(in oklab, var(--accent), transparent 92%);
-    }
-  }
-
-  &__body {
-    padding: 8px 10px 12px;
-  }
-
-  &__title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-
-  &__meta {
-    font-size: 12px;
-    opacity: 0.75;
-    text-transform: capitalize;
   }
 }
 
@@ -125,49 +67,76 @@
     }
   }
 
+  // The photo on show, whole; it opens the quick viewer.
+  &__media {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__cover-button {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: var(--radius-large);
+    }
+  }
+
   &__cover {
     display: block;
     width: 100%;
-    max-height: 80vh;
+    max-height: 70vh;
     object-fit: contain;
     border-radius: var(--radius-large);
   }
 
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 8px;
-    list-style: none;
-    padding: 0;
-    margin: 16px 0;
+  // Its other photos, small, in a row that scrolls when there are many.
+  &__thumbs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px;
   }
 
-  &__grid-item {
-    margin: 0;
+  &__thumb {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 56px;
+    padding: 2px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-small);
+    background: color-mix(in oklab, var(--accent), transparent 88%);
+    cursor: pointer;
 
     img {
       display: block;
       width: 100%;
-      border-radius: var(--radius-medium);
+      height: 100%;
+      object-fit: contain;
     }
 
-    &--dark {
-      aspect-ratio: 1;
-      background: color-mix(in oklab, var(--accent), transparent 92%);
-      border-radius: var(--radius-medium);
+    &--on {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
     }
   }
 
   &__caption {
-    font-size: 12px;
-    opacity: 0.75;
-    margin-top: 4px;
-  }
-
-  &__empty {
-    text-align: center;
-    padding: 40px 20px;
-    opacity: 0.75;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
   }
 
   &__description {
@@ -404,12 +373,6 @@
   // (@mangobee, 2026-10-23: balanced and equal).
   &__works {
     margin-bottom: var(--sp-5, 24px);
-
-    .standard-card__media img {
-      padding: 6px;
-      box-sizing: border-box;
-      object-fit: contain;
-    }
   }
 
   // Commissions close the page.
@@ -852,5 +815,20 @@
     color: var(--text-secondary);
     font-size: 14px;
     line-height: 1.4;
+  }
+}
+
+// Pieces as tiles, everywhere Art lists them (the Art grid, a portfolio):
+// equal squares, each artwork shown whole on a soft matte, never cropped.
+// A profile's Art shelf draws the same (_profile_shelves.scss).
+.art-works {
+  .standard-card__media:not(.space-card__photo--placeholder) {
+    background: color-mix(in oklab, var(--accent), transparent 88%);
+  }
+
+  .standard-card__media img {
+    padding: 6px;
+    box-sizing: border-box;
+    object-fit: contain;
   }
 }

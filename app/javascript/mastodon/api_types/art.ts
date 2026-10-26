@@ -82,6 +82,7 @@ export interface ArtPieceSummaryJSON {
   medium?: string | null;
   mediums?: string[];
   availability?: ArtAvailability;
+  year_made?: number | null;
   title: string;
   kind: ArtKind;
   visibility: ArtVisibility;

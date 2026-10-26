@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import {
@@ -20,7 +20,10 @@ import type {
   ApiArtPieceJSON,
   ApiArtPortfolioJSON,
 } from 'mastodon/api_types/art';
+import { EmptyState } from 'mastodon/components/empty_state';
 import { FeedDrum } from 'mastodon/components/feed_drum';
+import { LoadingState } from 'mastodon/components/loading_state';
+import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
 import { useAppSelector } from 'mastodon/store';
@@ -28,11 +31,10 @@ import { useAppSelector } from 'mastodon/store';
 import { ArtPieceComposer } from './components/art_piece_composer';
 import { ArtPieceDetail } from './components/art_piece_detail';
 import { ArtPortfolio } from './components/art_portfolio';
-import { artKindLabel } from './kinds';
+import { availabilityLabel, pieceCardLine } from './details';
 
 const messages = defineMessages({
   title: { id: 'art.title', defaultMessage: 'Art' },
-  loading: { id: 'art.loading', defaultMessage: 'Loading…' },
   emptyAll: {
     id: 'art.empty.all',
     defaultMessage: 'No pieces yet — tap the compose button to post one.',
@@ -190,33 +192,23 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   // animation.
   const gridContent =
     pieces === null ? (
-      <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
+      <LoadingState />
     ) : pieces.length === 0 ? (
-      <p className='space-subtitle art-directory__empty'>{emptyMessage}</p>
+      <EmptyState title={emptyMessage} />
     ) : (
-      <ul className='art-directory__grid'>
+      <SpaceGrid className='art-directory__grid art-works'>
         {pieces.map((p) => (
-          <li key={p.id} className='art-directory__cell'>
-            <Link to={`/hub/art/pieces/${p.id}`} className='art-card'>
-              {p.cover_url ? (
-                <img className='art-card__cover' src={p.cover_url} alt='' />
-              ) : (
-                <div className='art-card__cover art-card__cover--empty' />
-              )}
-              <div className='art-card__body'>
-                <div className='art-card__title'>{p.title}</div>
-                <div className='art-card__meta'>
-                  {artKindLabel(intl, p.kind)}
-                  {' · '}
-                  {intl.formatMessage(messages.photos, {
-                    count: p.photo_count,
-                  })}
-                </div>
-              </div>
-            </Link>
-          </li>
+          <SpaceCard
+            key={p.id}
+            to={`/hub/art/pieces/${p.id}`}
+            image={p.cover_url}
+            title={p.title}
+            meta={pieceCardLine(intl, p)}
+            tag={availabilityLabel(intl, p.availability)}
+            tagKind={p.availability}
+          />
         ))}
-      </ul>
+      </SpaceGrid>
     );
 
   return (
@@ -266,13 +258,7 @@ const PieceDetailRoute: React.FC = () => {
     };
   }, [match.params.id]);
 
-  if (!piece) {
-    return (
-      <p className='space-subtitle'>
-        <FormattedMessage id='art.loading' defaultMessage='Loading…' />
-      </p>
-    );
-  }
+  if (!piece) return <LoadingState />;
 
   return <ArtPieceDetail piece={piece} onChange={setPiece} />;
 };
@@ -320,18 +306,10 @@ const PortfolioRoute: React.FC = () => {
   }, [match.params.acct]);
 
   if (missing) {
-    return (
-      <p className='space-subtitle'>
-        {intl.formatMessage(messages.portfolioMissing)}
-      </p>
-    );
+    return <EmptyState title={intl.formatMessage(messages.portfolioMissing)} />;
   }
 
-  if (!portfolio) {
-    return (
-      <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
-    );
-  }
+  if (!portfolio) return <LoadingState />;
 
   return <ArtPortfolio portfolio={portfolio} onChange={setPortfolio} />;
 };

@@ -3,8 +3,11 @@ import type { IntlShape } from 'react-intl';
 
 import type {
   ArtAvailability,
+  ArtKind,
   ArtPieceDetailsJSON,
 } from 'mastodon/api_types/art';
+
+import { artKindLabel } from './kinds';
 
 // A piece's details as people read them (docs/spaces/art.md, Piece
 // details): the facts line on its page ("Oil on linen · 60 × 90 cm · 2026 ·
@@ -78,3 +81,25 @@ export const availabilityLabel = (
   availability && availability !== 'not_for_sale'
     ? intl.formatMessage(AVAILABILITY_MESSAGES[availability])
     : null;
+
+// The line under a piece on every card — the Art grid, a portfolio, a
+// profile's Art shelf: its first medium (or its materials, or its kind),
+// and the year it was made.
+export const pieceCardLine = (
+  intl: IntlShape,
+  piece: {
+    kind: ArtKind;
+    mediums?: string[];
+    medium?: string | null;
+    year_made?: number | null;
+  },
+): string =>
+  [
+    piece.mediums?.[0] ??
+      (piece.medium?.trim()
+        ? piece.medium.trim()
+        : artKindLabel(intl, piece.kind)),
+    piece.year_made ? String(piece.year_made) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
