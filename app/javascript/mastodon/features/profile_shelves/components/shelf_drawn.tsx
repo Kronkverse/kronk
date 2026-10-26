@@ -252,8 +252,8 @@ const GalleryTile: React.FC<PhotoTileProps> = ({ status }) => {
   );
 };
 
-// An Art piece on a profile: its cover, shown whole in a square, as it is in
-// the Art space and on a portfolio, and its title and card line (medium,
+// An Art piece on a profile: its cover filling a square, as it does in the
+// Art space and on a portfolio, and its title and card line (medium,
 // year) under it (docs/spaces/art.md, On a profile).
 const ArtTile: React.FC<{ piece: ArtSummary }> = ({ piece }) => {
   const intl = useIntl();

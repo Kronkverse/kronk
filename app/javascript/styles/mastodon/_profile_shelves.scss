@@ -353,21 +353,19 @@
     text-decoration: none;
   }
 
-  // The piece whole, on a soft matte, never cropped (as in the Art space).
+  // The piece's main picture filling its square, as in the Art space.
   &__drawn-art-frame {
     display: block;
     width: 100%;
     aspect-ratio: 1;
-    background: color-mix(in oklab, var(--accent), transparent 88%);
+    overflow: hidden;
   }
 
   &__drawn-art-img {
     display: block;
     width: 100%;
     height: 100%;
-    padding: 6px;
-    box-sizing: border-box;
-    object-fit: contain;
+    object-fit: cover;
   }
 
   &__drawn-art-title {

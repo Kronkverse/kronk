@@ -877,16 +877,12 @@
 }
 
 // Pieces as tiles, everywhere Art lists them (the Art grid, a portfolio):
-// equal squares, each artwork shown whole on a soft matte, never cropped.
-// A profile's Art shelf draws the same (_profile_shelves.scss).
+// equal squares, each filled edge to edge by the piece's main picture
+// (@mangobee, 2026-10-26: the main image fits the tile). A shape that isn't
+// square is trimmed to the tile; the piece page shows it whole. A profile's
+// Art shelf draws the same (_profile_shelves.scss).
 .art-works {
-  .standard-card__media:not(.space-card__photo--placeholder) {
-    background: color-mix(in oklab, var(--accent), transparent 88%);
-  }
-
   .standard-card__media img {
-    padding: 6px;
-    box-sizing: border-box;
-    object-fit: contain;
+    object-fit: cover;
   }
 }
