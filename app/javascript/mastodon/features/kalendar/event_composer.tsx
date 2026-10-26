@@ -4,6 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import axios from 'axios';
 
+import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import {
@@ -22,6 +23,7 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useAppDispatch } from 'mastodon/store';
 
 // Kalendar — event composer. First implementation, mounted directly
 // against the shared `<ComposeShell>` standard rather than a bespoke
@@ -130,6 +132,11 @@ const messages = defineMessages({
   inviteeRemove: {
     id: 'kalendar.new.invitee_remove',
     defaultMessage: 'Remove {name}',
+  },
+  inviteFailed: {
+    id: 'kalendar.new.invite_failed',
+    defaultMessage:
+      'The event is made, but the invites didn’t go: {reason}. Invite from its page.',
   },
 });
 
@@ -296,6 +303,7 @@ export const EventComposer: React.FC<Props> = ({
   forKrewId,
 }) => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   // What the new event will be Konnected to (decisions.md, 2026-10-23):
   // the record it was opened for (`?konnect=<slug>:<id>`) and any the
   // person adds in the Konnect row. A Krew it was opened for is the Krew
@@ -687,15 +695,21 @@ export const EventComposer: React.FC<Props> = ({
         // now — one request with all ids so the server does the fan-
         // out of nudges as a single unit. Failure here doesn't roll
         // the event back: the event exists, the author can still
-        // invite from the detail page. Surface the error so they
-        // notice rather than silently swallowing it.
+        // invite from the detail page. Said in an alert: the composer
+        // closes next, so an error in it would never be seen.
         if (inviteeIds.length > 0) {
           try {
             await api().post(`/api/v1/events/${res.data.id}/invite`, {
               account_ids: inviteeIds,
             });
           } catch (inviteErr: unknown) {
-            setError(extractApiError(inviteErr));
+            dispatch(
+              showAlert({
+                message: intl.formatMessage(messages.inviteFailed, {
+                  reason: extractApiError(inviteErr),
+                }),
+              }),
+            );
           }
         }
 
@@ -711,9 +725,11 @@ export const EventComposer: React.FC<Props> = ({
   }, [
     commitKonnect,
     description,
+    dispatch,
     endIso,
     finishDraft,
     imageMediaId,
+    intl,
     invitees,
     krewIds,
     onCreated,

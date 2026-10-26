@@ -133,7 +133,9 @@ export const useSameAs = (
     [candidates, audiences, currentKey, intl, names],
   );
 
-  // A draft keeps which one leads, and puts it back.
+  // A draft keeps which one leads, and puts it back. The record the
+  // composer was opened from is never in `saved` (useKonnect), so a draft
+  // never follows it once opened without it.
   const { restore: restoreKonnect, saved: savedKonnect, commit } = konnect;
   const restore = useCallback(
     (saved: KonnectTarget[] | null | undefined) => {

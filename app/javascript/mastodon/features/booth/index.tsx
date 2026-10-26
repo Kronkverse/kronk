@@ -17,6 +17,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceGrid } from 'mastodon/components/space_grid';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { useIdentity } from 'mastodon/identity_context';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -825,9 +826,12 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [dispatch, history],
   );
+  const returnToSource = useKonnectReturn();
   const handleCancelUpload = useCallback(() => {
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/booth')) return;
     history.push('/hub/booth');
-  }, [history]);
+  }, [history, returnToSource]);
 
   // A live set opens its room: the host's get-ready panel for "now", the
   // scheduled page for "later".

@@ -10,6 +10,7 @@ import type {
   ApiProfileKuestionJSON,
 } from 'mastodon/api_types/kuestions';
 import { Stage } from 'mastodon/components/stage';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 
 import { AnsweredPanel } from './answered_panel';
 import { DeckPanel } from './deck_panel';
@@ -92,12 +93,15 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
     }
   }, [history, location.pathname]);
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/kuestions')) return;
     // Return to whichever panel URL sits below. The composer URL was
     // `/composer` (fresh) or `/ask` (legacy) — neither is a panel, so
     // drop back to the deck landing to keep the URL clean.
     history.push('/hub/kuestions');
-  }, [history]);
+  }, [history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: ApiKuestionJSON | ApiProfileKuestionJSON) => {
