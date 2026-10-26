@@ -35,7 +35,8 @@ interface MomentJSON {
   // Whether the viewer has already opened this Moment (lib/kronk/korner_seen.rb).
   seen_by_viewer?: boolean;
   account: AccountJSON;
-  media_attachment: MediaAttachment;
+  // Null on a voice-only Moment.
+  media_attachment: MediaAttachment | null;
 }
 
 type Filter = 'active' | 'log';
@@ -142,7 +143,7 @@ const MomentTile = ({
       className={`moments__tile${seen ? ' moments__tile--seen' : ''}`}
     >
       <div className='moments__tile-media'>
-        {moment.media_attachment.type === 'video' ? (
+        {moment.media_attachment?.type === 'video' ? (
           <video
             className='moments__tile-video'
             src={moment.media_attachment.preview_url}
@@ -153,7 +154,8 @@ const MomentTile = ({
         ) : (
           <img
             className='moments__tile-image'
-            src={moment.media_attachment.preview_url}
+            // A voice-only Moment has no photo: its poster's avatar stands in.
+            src={moment.media_attachment?.preview_url ?? moment.account.avatar}
             alt={moment.caption ?? ''}
           />
         )}

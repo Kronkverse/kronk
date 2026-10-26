@@ -122,7 +122,8 @@ interface MomentJSON {
   views_count?: number;
   account: AccountJSON;
   krew: { id: string; name: string } | null;
-  media_attachment: MediaJSON;
+  // Null on a voice-only Moment.
+  media_attachment: MediaJSON | null;
   // The backing Status the Moment viewer's reactions bar rides on.
   // Populated for Moments created on or after 2026-09-19 (see
   // MomentsController#mint_backing_status!). Suppressed from
@@ -667,7 +668,7 @@ const ViewerBody = ({
   onAddAnother,
   intl,
 }: ViewerBodyProps) => {
-  const isVideo = moment.media_attachment.type === 'video';
+  const isVideo = moment.media_attachment?.type === 'video';
   const availableKrews = useAvailableKrews();
 
   // Reach and krew are independent (docs/decisions.md):
@@ -867,8 +868,10 @@ const ViewerBody = ({
               ref={videoRef}
               className='moments-viewer__video'
               src={
-                moment.media_attachment.url ||
-                moment.media_attachment.preview_url
+                moment.media_attachment
+                  ? moment.media_attachment.url ||
+                    moment.media_attachment.preview_url
+                  : undefined
               }
               autoPlay
               muted
@@ -878,9 +881,12 @@ const ViewerBody = ({
           ) : (
             <img
               className='moments-viewer__image'
+              // A voice-only Moment has no photo: its poster's avatar stands in.
               src={
-                moment.media_attachment.url ||
-                moment.media_attachment.preview_url
+                moment.media_attachment
+                  ? moment.media_attachment.url ||
+                    moment.media_attachment.preview_url
+                  : moment.account.avatar || moment.account.avatar_static
               }
               alt={moment.caption ?? ''}
             />
@@ -964,7 +970,7 @@ const ViewerBody = ({
           )
         )}
 
-        {moment.media_attachment.tags &&
+        {moment.media_attachment?.tags &&
           moment.media_attachment.tags.length > 0 && (
             <div className='moments-viewer__tagged'>
               <FormattedMessage
