@@ -573,3 +573,31 @@ input.kronk-form__input {
     animation-duration: 1ms;
   }
 }
+
+// ── No zoom on focus ──────────────────────────────────────────────
+// iOS Safari zooms the page into any text field whose text is under
+// 16px when it takes focus, and stays zoomed, so Send and Post end up
+// half off screen (Kommons "Fix zoom when typing on home screen app").
+// The fix is the standard one: on a touch screen every text field is at
+// least 16px. User zoom stays on; we never set maximum-scale.
+// This is the one place it is done, for every field on the site: the
+// composer kit, the post box, Nudges messages, search, settings.
+// A field drawn bigger on purpose (a composer title) sets
+// `--field-font-size` to its size, and keeps it.
+@media (pointer: coarse) {
+  input:not(
+      [type='button'],
+      [type='checkbox'],
+      [type='color'],
+      [type='file'],
+      [type='image'],
+      [type='radio'],
+      [type='range'],
+      [type='reset'],
+      [type='submit']
+    ),
+  textarea,
+  select {
+    font-size: max(16px, var(--field-font-size, 16px)) !important;
+  }
+}
