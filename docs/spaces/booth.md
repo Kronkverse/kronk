@@ -157,8 +157,9 @@ to be confused with Albutts' photo albums.
   (`ALBUM_TRACKS_MIN` / `ALBUM_TRACKS_MAX`) and no `audio_attachment` of
   its own; any other kind has no tracks. Its `duration_seconds` is the sum
   of its tracks' when every length is known. A track's length comes from
-  the browser reading the file before upload, or else from media
-  processing.
+  the browser reading the file before upload (from a `blob:` URL, which
+  the Content-Security-Policy's `media-src` allows for this), or else from
+  media processing.
 - **Protected like a set's audio.** Deleting a track's audio is refused
   while the album uses it (FK `on_delete: :restrict`),
   `booth_set_tracks.audio_attachment_id` is a `MediaAttachmentsVacuum`
