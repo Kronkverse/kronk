@@ -14,7 +14,7 @@
 // only if it is a bare host name (`meet.example.org`, optionally with a
 // port): never anything that could change what a script URL means.
 
-import { apiRequestPost } from 'mastodon/api';
+import { apiRequestGet, apiRequestPost } from 'mastodon/api';
 import { jitsiDomain, jitsiRoomPrefix } from 'mastodon/initial_state';
 
 export const jitsiHost: string | null = /^[a-z0-9.-]+(?::\d{1,5})?$/i.test(
@@ -64,6 +64,22 @@ export interface CallPass {
   moderator: boolean;
   recording: boolean;
 }
+
+export interface CallPresence {
+  names: string[] | null;
+  count: number | null;
+}
+
+// Who is in a call before you join it. Kronk asks the Jitsi server, which
+// answers only Kronk (Api::V1::Calls::PresencesController).
+export const getCallPresence = (
+  kind: CallKind,
+  id?: string,
+): Promise<CallPresence> =>
+  apiRequestGet<CallPresence>(
+    'v1/calls/presence',
+    id === undefined ? { kind } : { kind, id },
+  );
 
 export const getCallPass = (kind: CallKind, id?: string): Promise<CallPass> =>
   apiRequestPost<CallPass>(

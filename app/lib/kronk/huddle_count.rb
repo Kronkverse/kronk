@@ -34,6 +34,33 @@ module Kronk
       nil
     end
 
+    WHO_TTL = 10.seconds
+
+    # Display names of who is in `room` now (Jitsi's /room, from
+    # mod_muc_size), for a lobby or a live set's listener count. The server
+    # answers only Kronk's own address, so browsers ask Kronk
+    # (Api::V1::Calls::PresencesController), never Jitsi. Cached for a few
+    # seconds per room: every lobby polls. nil when Jitsi can't say.
+    def self.who(room)
+      name = Kronk::Jitsi.room_name(room)
+      key = "huddle:who:#{name}"
+      cached = redis.get(key)
+      return JSON.parse(cached) if cached
+
+      url = "https://#{Kronk::Jitsi.domain}/room?room=#{CGI.escape(name)}&domain=#{Kronk::Jitsi::XMPP_DOMAIN}"
+      names = Request.new(:get, url).perform do |response|
+        case response.code
+        when 404 then []
+        when 200 then Array(JSON.parse(response.body_with_limit)).filter_map { |p| p['display_name'].presence if p.is_a?(Hash) }
+        end
+      end
+      redis.set(key, names.to_json, ex: WHO_TTL.to_i) unless names.nil?
+      names
+    rescue HTTP::Error, OpenSSL::SSL::SSLError, Mastodon::Error, JSON::ParserError, ArgumentError, TypeError => e
+      Rails.logger.warn("Huddle presence unavailable for #{room}: #{e.class}: #{e.message}")
+      nil
+    end
+
     def self.remember(count)
       redis.set(LAST_SEEN_KEY, count, ex: LAST_SEEN_TTL.to_i)
     end

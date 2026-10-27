@@ -29,8 +29,8 @@ import type { Call } from 'mastodon/jitsi';
 import {
   createCall,
   getCallPass,
+  getCallPresence,
   jitsiHost,
-  jitsiRoomName,
   loadJitsi,
 } from 'mastodon/jitsi';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
@@ -53,10 +53,6 @@ const messages = defineMessages({
       'Huddle is a live video space for the Kronk community to hang out, co-create, share wisdom, stories, art and more. Authentic presence is welcomed in the Huddle.',
   },
 });
-
-// The Main Huddle's room. Kronk asks for a pass into it (mastodon/jitsi.ts),
-// which carries its Jitsi name; the lobby asks the server by that name too.
-const ROOM_NAME = 'huddle';
 
 // The call lives outside this page (huddle_pip/jitsi_session.ts) so that
 // leaving the page doesn't end it: it shrinks into the floating mini window
@@ -342,24 +338,12 @@ const Live: React.FC<{
 
   useEffect(() => {
     if (inRoom || !jitsiHost) return undefined;
-    const roomUrl = `https://${jitsiHost}/room?room=${encodeURIComponent(jitsiRoomName(ROOM_NAME))}&domain=meet.jitsi`;
 
+    // Kronk asks the Jitsi server, which answers only Kronk.
     const fetchRoomInfo = async () => {
       try {
-        const response = await fetch(roomUrl);
-        if (!response.ok) {
-          setLobbyParticipants([]);
-          return;
-        }
-        const data = (await response.json()) as {
-          jid: string;
-          display_name: string;
-          email: string;
-        }[];
-        const names = data
-          .map((p) => p.display_name)
-          .filter((name): name is string => !!name);
-        setLobbyParticipants(names);
+        const { names } = await getCallPresence('huddle');
+        setLobbyParticipants(names ?? []);
       } catch {
         setLobbyParticipants([]);
       }

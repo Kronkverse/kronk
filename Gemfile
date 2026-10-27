@@ -31,6 +31,7 @@ gem 'chewy', '~> 7.3'
 gem 'devise'
 gem 'devise-two-factor'
 gem 'meilisearch', '~> 0.30' # Kronk 2.0 search backend — see lib/kronk/search
+gem 'jwt', '~> 2.10' # Kronk: passes into Kronk's own Jitsi (app/lib/kronk/jitsi.rb)
 
 group :pam_authentication, optional: true do
   gem 'devise_pam_authenticatable2', '~> 9.2'

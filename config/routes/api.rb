@@ -90,6 +90,7 @@ namespace :api, format: false do
     # recorder's, signed with JITSI_RECORDING_SECRET, not a member's.
     namespace :calls do
       resource :token, only: [:create]
+      resource :presence, only: [:show]
       post 'recordings/start', to: 'recording_uploads#create', as: :recording_upload
       post 'recordings/:id/complete', to: 'recording_uploads#complete', as: :recording_upload_complete
       resources :recordings, only: [:index, :destroy]

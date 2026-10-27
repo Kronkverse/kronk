@@ -25,8 +25,8 @@ import type { Call } from 'mastodon/jitsi';
 import {
   createCall,
   getCallPass,
+  getCallPresence,
   jitsiHost,
-  jitsiRoomName,
   loadJitsi,
 } from 'mastodon/jitsi';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
@@ -218,17 +218,16 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
     };
   }, [id]);
 
-  // Who's in the room, from the Jitsi server (Huddle's lobby does the same).
+  // Who's in the room, through Kronk (the Jitsi server answers only Kronk;
+  // Huddle's lobby does the same).
   const roomKey = live?.room_key;
   useEffect(() => {
     if (state !== 'live' || !roomKey || !jitsiHost) return undefined;
     let cancelled = false;
-    const url = `https://${jitsiHost}/room?room=${encodeURIComponent(jitsiRoomName(roomKey))}&domain=meet.jitsi`;
     const count = async () => {
       try {
-        const res = await fetch(url);
-        const people = res.ok ? ((await res.json()) as unknown[]) : [];
-        if (!cancelled) setListeners(people.length);
+        const { count: people } = await getCallPresence('booth_live', id);
+        if (!cancelled) setListeners(people);
       } catch {
         if (!cancelled) setListeners(null);
       }
@@ -239,7 +238,7 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [state, roomKey]);
+  }, [state, roomKey, id]);
 
   // The Jitsi script, once, from the configured server.
   useEffect(() => {
