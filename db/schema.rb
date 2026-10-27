@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -485,6 +485,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
     t.index ["status_id"], name: "index_bookmarks_on_status_id"
   end
 
+  create_table "booth_live_moments", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "artist"
+    t.integer "at_seconds", default: 0, null: false
+    t.text "body", default: "", null: false
+    t.bigint "booth_live_id", null: false
+    t.datetime "created_at", null: false
+    t.string "kind", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_live_moments_on_account_id"
+    t.index ["booth_live_id", "id"], name: "index_booth_live_moments_on_booth_live_id_and_id"
+  end
+
   create_table "booth_live_reminders", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "booth_live_id", null: false
@@ -497,6 +511,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
 
   create_table "booth_lives", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.bigint "booth_set_id"
     t.datetime "created_at", null: false
     t.text "description", default: "", null: false
     t.datetime "ended_at"
@@ -509,6 +524,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
     t.datetime "updated_at", null: false
     t.integer "visibility", default: 0, null: false
     t.index ["account_id"], name: "index_booth_lives_on_account_id"
+    t.index ["booth_set_id"], name: "index_booth_lives_on_booth_set_id"
     t.index ["room_key"], name: "index_booth_lives_on_room_key", unique: true
     t.index ["starts_at"], name: "index_booth_lives_on_starts_at"
   end
@@ -632,6 +648,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
     t.string "filename", null: false
     t.bigint "huddle_session_id"
     t.string "kind", null: false
+    t.string "media", default: "video", null: false
+    t.bigint "pair_id"
     t.bigint "size", null: false
     t.bigint "started_by_account_id"
     t.string "status", default: "pending", null: false
@@ -640,6 +658,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
     t.index ["booth_live_id"], name: "index_call_recordings_on_booth_live_id"
     t.index ["huddle_session_id"], name: "index_call_recordings_on_huddle_session_id"
     t.index ["kind", "status", "created_at"], name: "index_call_recordings_on_kind_and_status_and_created_at"
+    t.index ["pair_id"], name: "index_call_recordings_on_pair_id"
     t.index ["started_by_account_id"], name: "index_call_recordings_on_started_by_account_id"
     t.index ["storage_key"], name: "index_call_recordings_on_storage_key", unique: true
   end
@@ -2872,9 +2891,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
   add_foreign_key "blocks", "accounts", name: "fk_4269e03e65", on_delete: :cascade
   add_foreign_key "bookmarks", "accounts", on_delete: :cascade
   add_foreign_key "bookmarks", "statuses", on_delete: :cascade
+  add_foreign_key "booth_live_moments", "accounts", on_delete: :cascade
+  add_foreign_key "booth_live_moments", "booth_lives", column: "booth_live_id", on_delete: :cascade
   add_foreign_key "booth_live_reminders", "accounts", on_delete: :cascade
   add_foreign_key "booth_live_reminders", "booth_lives", column: "booth_live_id", on_delete: :cascade
   add_foreign_key "booth_lives", "accounts", on_delete: :cascade
+  add_foreign_key "booth_lives", "booth_sets", on_delete: :nullify
   add_foreign_key "booth_set_artists", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_set_saves", "accounts", on_delete: :cascade
@@ -2890,7 +2912,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
   add_foreign_key "call_recordings", "accounts", column: "started_by_account_id", on_delete: :nullify
-  add_foreign_key "call_recordings", "booth_lives", column: "booth_live_id", on_delete: :cascade
+  add_foreign_key "call_recordings", "booth_lives", on_delete: :cascade
+  add_foreign_key "call_recordings", "call_recordings", column: "pair_id", on_delete: :nullify
   add_foreign_key "call_recordings", "huddle_sessions", on_delete: :cascade
   add_foreign_key "canonical_email_blocks", "accounts", column: "reference_account_id", on_delete: :cascade
   add_foreign_key "challenge_conditions", "proposal_votes", on_delete: :cascade, validate: false

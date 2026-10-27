@@ -198,7 +198,11 @@ namespace :api, format: false do
         post :remind
         delete :remind, action: :unremind
       end
+
+      # The crowd on screen: shoutouts, reactions, requests, Now playing.
+      resources :moments, controller: 'booth_live_moments', only: [:index, :create]
     end
+    resources :booth_live_moments, only: [:destroy]
 
     resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
       member do
