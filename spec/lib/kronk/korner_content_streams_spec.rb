@@ -22,6 +22,10 @@ RSpec.describe Kronk::KornerContentStreams do
       expect(described_class.for('kommunity')).to be_a(described_class::KommunityStream)
     end
 
+    it 'returns the Map override for the map slug' do
+      expect(described_class.for('map')).to be_a(described_class::MapStream)
+    end
+
     it 'accepts a symbol slug' do
       expect(described_class.for(:kommons)).to be_a(described_class::SourceKornerStream)
     end
@@ -134,6 +138,64 @@ RSpec.describe Kronk::KornerContentStreams do
       member(:everyone)
 
       expect(stream.unread_relation(viewer, stream.newest_id(viewer), [])).to be_empty
+    end
+  end
+
+  describe described_class::MapStream do
+    subject(:stream) { described_class.new }
+
+    let(:viewer) { Fabricate(:account, created_at: 1.day.ago) }
+    let(:mate)   { Fabricate(:account) }
+
+    before do
+      viewer.follow!(mate)
+      mate.follow!(viewer)
+    end
+
+    def place(account, scope: 'friends', lat: -33.86, note: nil)
+      PresenceState.place!(account, raw_lat: lat, raw_lng: 151.2, precision: 'city', scope: scope, note: note)
+    end
+
+    def unread(baseline = stream.starting_baseline(viewer))
+      stream.unread_count(viewer, baseline, [])
+    end
+
+    it 'counts a Mate putting their pin on the map' do
+      place(mate)
+
+      expect(unread).to eq(1)
+    end
+
+    it 'counts a trek post alongside the pins' do
+      place(mate)
+      Fabricate(:status, account: mate, source_korner: 'map', visibility: :mates)
+
+      expect(unread).to eq(2)
+    end
+
+    it 'leaves out pins the viewer cannot see on the map' do
+      follower_only = Fabricate(:account)
+      viewer.follow!(follower_only)
+      place(follower_only)
+      place(viewer)
+      place(mate, scope: 'none')
+
+      expect(unread).to eq(0)
+    end
+
+    it 'stops counting once the viewer has looked, until the Mate moves' do
+      place(mate)
+      looked = stream.newest_id(viewer)
+
+      expect(unread(looked)).to eq(0)
+
+      travel_to(1.minute.from_now) do
+        place(mate, note: 'Just a note')
+        expect(unread(looked)).to eq(0)
+
+        place(mate, lat: 51.5)
+        expect(unread(looked)).to eq(1)
+      end
     end
   end
 end

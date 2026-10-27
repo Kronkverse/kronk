@@ -122,6 +122,15 @@ as a Redis key with a seven-day life (`POST
 /api/v1/map/presence/:account_id/challenge`, event `map.pin.challenged`). It
 only works on a pin you can already see.
 
+**On the Map's tile.** The Map's number (its Hub tile and the side nav)
+counts a Mate putting their pin on the map or moving it since you last
+opened the Map, alongside new trek posts (Kommons "Notifications on location
+updates", 2026-10-27). Only pins you could see count, the same rule as the
+map itself (Mates, shared with Mates); a note edit doesn't, since it leaves
+`placed_at` alone. Opening the Map clears it. `MapStream` in
+`lib/kronk/korner_content_streams.rb`; the badge is the shared one
+(`hub.md`, Updates). No nudge and no push.
+
 The privacy rules:
 
 - **The raw point is never stored.** `PresenceState.place!` coarsens it
