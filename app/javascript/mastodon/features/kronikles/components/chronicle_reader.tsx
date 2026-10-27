@@ -13,6 +13,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
+import { ChapterNav } from './chapter_nav';
 import { ChronicleComposer } from './chronicle_composer';
 import { RenderMarkdown } from './render_markdown';
 
@@ -132,6 +133,7 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
     <article className='kronikles-reader'>
       {confirmDialog}
       <header className='kronikles-reader__header'>
+        <ChapterNav chronicle={chronicle} placement='head' />
         <h1 className='kronikles-reader__title'>{chronicle.title}</h1>
         <div className='kronikles-reader__meta'>
           <span>{intl.formatMessage(KIND_LABEL[chronicle.kind])}</span>
@@ -149,6 +151,8 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
       <div className='kronikles-reader__body'>
         <RenderMarkdown source={chronicle.body} pictures={chronicle.pictures} />
       </div>
+
+      <ChapterNav chronicle={chronicle} placement='foot' />
 
       <AttachmentSection
         korner='kronikles'

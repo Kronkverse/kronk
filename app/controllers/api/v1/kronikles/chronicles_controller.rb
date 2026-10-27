@@ -24,8 +24,9 @@ class Api::V1::Kronikles::ChroniclesController < Api::BaseController
   SCOPES = %w(all mine mates).freeze
 
   def index
-    scope = Chronicle.visible_to(current_account).recent
-    scope = narrow_by_scope(scope)
+    scope = narrow_by_scope(Chronicle.visible_to(current_account))
+    scope = one_per_series(scope) unless params[:series] == 'each'
+    scope = scope.recent.includes(series: :cover_media_attachment)
     render json: scope.limit(clamp_limit), each_serializer: REST::ChronicleSerializer, list: true
   end
 
@@ -88,8 +89,23 @@ class Api::V1::Kronikles::ChroniclesController < Api::BaseController
     end
   end
 
+  # The directory shows a Series once, as one tile (docs/spaces/kronikles.md,
+  # Series): of its chapters the viewer can see, only the newest is listed,
+  # and it carries the Series. `series=each` lists every chapter (the
+  # owner's add-a-chapter picker).
+  def one_per_series(relation)
+    newest = relation.where.not(series_id: nil)
+                     .reorder(nil)
+                     .select(Arel.sql('DISTINCT ON (chronicles.series_id) chronicles.id'))
+                     .order(Arel.sql('chronicles.series_id, chronicles.created_at DESC, chronicles.id DESC'))
+
+    Chronicle.where(id: relation.where(series_id: nil).select(:id)).or(Chronicle.where(id: newest))
+  end
+
+  # `series_id` puts it in one of the owner's Series (or, blank, takes it
+  # out); the model refuses anyone else's.
   def chronicle_params
-    params.expect(chronicle: [:title, :body, :kind, :visibility])
+    params.expect(chronicle: [:title, :body, :kind, :visibility, :series_id])
   end
 
   def authorize_owner!

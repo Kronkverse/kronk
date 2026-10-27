@@ -36,6 +36,30 @@ class REST::ChronicleSerializer < ActiveModel::Serializer
     Kronk::Audience.leader_preview(object, current_user&.account)
   end
 
+  # The Series it is a chapter of (docs/spaces/kronikles.md, Series), and
+  # where it sits there: counted over the chapters the viewer can see, so a
+  # chapter they can't see is never numbered or pointed to. Both nil when
+  # it is in no Series. Lists carry the Series (the directory shows it as one
+  # tile) but not the chapter.
+  attribute :series
+  attribute :chapter, unless: -> { instance_options[:list] }
+
+  def series
+    return if object.series.nil?
+
+    cover = object.series.cover_media_attachment&.file&.url(:small)
+    {
+      id: object.series.id.to_s,
+      title: object.series.title,
+      cover_url: cover.present? ? full_asset_url(cover) : nil,
+      chapter_count: visible_chapter_ids.size,
+    }
+  end
+
+  def chapter
+    object.chapter_for(current_user&.account)
+  end
+
   def id
     object.id.to_s
   end
@@ -64,5 +88,11 @@ class REST::ChronicleSerializer < ActiveModel::Serializer
 
   def created_at
     object.created_at.iso8601
+  end
+
+  private
+
+  def visible_chapter_ids
+    @visible_chapter_ids ||= object.series.chapters_visible_to(current_user&.account).pluck(:id)
   end
 end

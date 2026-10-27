@@ -22,6 +22,8 @@ import { useIdentity } from 'mastodon/identity_context';
 
 import { ChronicleComposer } from './components/chronicle_composer';
 import { ChronicleReader } from './components/chronicle_reader';
+import { SeriesRoute } from './components/series_page';
+import { SeriesRow } from './components/series_row';
 
 const messages = defineMessages({
   title: { id: 'kronikles.title', defaultMessage: 'Kronikles' },
@@ -78,6 +80,9 @@ export const Kronikles: React.FC<{ multiColumn?: boolean }> = () => {
         </Route>
         <Route path='/hub/kronikles' exact>
           <Directory />
+        </Route>
+        <Route path='/hub/kronikles/series/:id' exact>
+          <SeriesRoute />
         </Route>
         {/* :id must come last so the scope segments above match first. */}
         <Route path='/hub/kronikles/:id' exact>
@@ -163,16 +168,24 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
       </p>
     ) : (
       <ul className='kronikles-directory__list'>
-        {chronicles.map((c) => (
-          <li key={c.id} className='kronikles-directory__row'>
-            <Link to={`/hub/kronikles/${c.id}`} className='kronikles-card'>
-              <div className='kronikles-card__kind'>{c.kind}</div>
-              <div className='kronikles-card__title'>{c.title}</div>
-              <p className='kronikles-card__excerpt'>{c.excerpt}</p>
-              <div className='kronikles-card__owner'>@{c.owner.acct}</div>
-            </Link>
-          </li>
-        ))}
+        {chronicles.map((c) =>
+          c.series ? (
+            <SeriesRow
+              key={`series-${c.series.id}`}
+              chronicle={c}
+              series={c.series}
+            />
+          ) : (
+            <li key={c.id} className='kronikles-directory__row'>
+              <Link to={`/hub/kronikles/${c.id}`} className='kronikles-card'>
+                <div className='kronikles-card__kind'>{c.kind}</div>
+                <div className='kronikles-card__title'>{c.title}</div>
+                <p className='kronikles-card__excerpt'>{c.excerpt}</p>
+                <div className='kronikles-card__owner'>@{c.owner.acct}</div>
+              </Link>
+            </li>
+          ),
+        )}
       </ul>
     );
 
