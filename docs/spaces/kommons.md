@@ -237,7 +237,8 @@ The workflow for building a proposal:
    PR ready to ship. Name the proposal in the PR body on a line of its own
    (`Proposal: <link or id>`; `Part of proposal:` if more PRs are to come).
 4. **It is marked actioned when it ships.** `bin/release cut` gathers those
-   lines into `config/shipped_proposals.yaml`, and the production deploy runs
+   lines, and any other proposal link in the body, into
+   `config/shipped_proposals.yaml`, and the production deploy runs
    `kommons:proposals:action_shipped`, which actions every listed proposal
    still open or claimed. The proposer is asked to close it. A proposal whose
    PR carried no line is marked by hand: **Mark actioned** for the claimant,
