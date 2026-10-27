@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — The Map's badge counts Mates' pin moves
+
+Kommons "Notifications on location updates"
+(https://kronk.info/hub/kommons/p/117482796448402351): when a Mate adds their
+location or moves it, show it on the Map's korner card.
+
+**Decision:** the Map's unread badge counts a Mate placing or moving their pin
+since you last opened the Map, on top of its trek posts. Only pins you could
+see on the map count. A pin is one row per person, overwritten in place, so it
+has no new id to count by: it counts by `placed_at` against the time inside the
+baseline id (ids are time-based), and opening the Map advances the baseline to
+now. It is the first badge counted by time rather than by id; an adapter whose
+updates aren't one relation answers `#unread_count` itself
+(`Kronk::KornerSeen.counts_for`). No nudge and no push.
+
+---
+
 ## 2026-10-27 — Rooms are Kuddles, and you can follow one
 
 Kommons "Notification for additional Huddles"

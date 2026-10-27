@@ -80,7 +80,11 @@ module Kronk
       slugs.index_with do |slug|
         stream = KornerContentStreams.for(slug)
         baseline = baselines.fetch(slug) { stream.starting_baseline(account) }
-        stream.unread_relation(account, baseline, seen[slug] || []).count
+        if stream.respond_to?(:unread_count)
+          stream.unread_count(account, baseline, seen[slug] || [])
+        else
+          stream.unread_relation(account, baseline, seen[slug] || []).count
+        end
       end
     end
 
