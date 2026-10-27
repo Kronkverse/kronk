@@ -168,4 +168,9 @@
     border-radius: var(--radius-small);
     background: var(--surface-sunken);
   }
+
+  &__player--audio {
+    max-height: none;
+    background: transparent;
+  }
 }

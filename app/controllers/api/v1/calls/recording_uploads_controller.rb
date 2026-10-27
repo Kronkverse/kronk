@@ -13,13 +13,22 @@
 # than five minutes off. The timestamp is signed with the body so a captured
 # request can't be replayed later under a fresh one.
 #
-#   POST /api/v1/calls/recordings/start  { room, filename, size, duration?, started_by? }
-#     -> 201 { id, upload_url, upload_method: "PUT", upload_headers, expires_in }
+#   POST /api/v1/calls/recordings/start  { room, filename, size, media?, duration?, started_by? }
+#     -> 201 { id, media, pair_id, upload_url, upload_method: "PUT", upload_headers, expires_in }
 #        404 a room that isn't one of this Kronk's calls
-#        413 over 4 GB · 422 a bad filename or size
+#        413 over 4 GB · 422 a bad filename, size or media
+#   PUT  <upload_url> with upload_headers, the file as the body (to storage, not Kronk)
 #   POST /api/v1/calls/recordings/:id/complete  { duration? }
-#     -> 200 { id, status: "ready", size }
+#     -> 200 { id, media, status: "ready", size }
 #        422 nothing has been uploaded yet · 413 the upload is over 4 GB
+#
+# `media` is "video" (.mp4, .webm, .mkv) or "audio" (.m4a, .ogg, .opus,
+# .mp3); left out, the filename's extension decides. The extension must
+# match it. One recording can be uploaded as both: the script runs start,
+# PUT and complete once per file, with the same room, and Kronk pairs the
+# two (`pair_id` on the second start's answer). A live set's audio file,
+# once complete, becomes a draft set for its host
+# (Booth::LiveRecordingSetWorker); its video stays a recording.
 #
 # With no JITSI_RECORDING_SECRET both are 404; without S3 storage, 503.
 class Api::V1::Calls::RecordingUploadsController < Api::BaseController
@@ -27,6 +36,7 @@ class Api::V1::Calls::RecordingUploadsController < Api::BaseController
   TIMESTAMP_HEADER = 'X-Kronk-Timestamp'
   MAX_SKEW = 5.minutes
   FILENAME_PATTERN = /\A[A-Za-z0-9][A-Za-z0-9._-]*\z/
+  FILENAME_ERROR = 'The filename must end .mp4, .webm or .mkv for video, or .m4a, .ogg, .opus or .mp3 for audio'
 
   skip_before_action :require_authenticated_user!, raise: false
 
@@ -38,19 +48,25 @@ class Api::V1::Calls::RecordingUploadsController < Api::BaseController
     target = Kronk::CallTarget.for_room(payload['room'])
     return render json: { error: 'Unknown room' }, status: 404 if target.nil?
 
-    filename = clean_filename(payload['filename'])
-    return render json: { error: 'The filename must end .mp4, .webm or .mkv' }, status: 422 if filename.nil?
+    media = payload['media'].presence
+    return render json: { error: 'The media must be "video" or "audio"' }, status: 422 unless media.nil? || CallRecording::MEDIA.include?(media)
+
+    filename = clean_filename(payload['filename'], media)
+    return render json: { error: FILENAME_ERROR }, status: 422 if filename.nil?
 
     size = integer(payload['size'])
     return render json: { error: 'The size must be a number of bytes' }, status: 422 if size.nil? || size <= 0
     return render json: { error: 'Recordings can be at most 4 GB' }, status: 413 if size > CallRecording::MAX_SIZE
 
-    recording = CallRecording.build_for(target, filename: filename, size: size, started_by: started_by)
+    recording = CallRecording.build_for(target, filename: filename, size: size, started_by: started_by, media: media)
     recording.duration = duration
     recording.save!
+    recording.pair_with_other_file!
 
     render json: {
       id: recording.id.to_s,
+      media: recording.media,
+      pair_id: recording.pair_id&.to_s,
       upload_url: Kronk::CallRecordingStorage.upload_url(recording.storage_key, recording.content_type),
       upload_method: 'PUT',
       upload_headers: { 'Content-Type' => recording.content_type },
@@ -73,7 +89,7 @@ class Api::V1::Calls::RecordingUploadsController < Api::BaseController
       recording.complete!(size: size, duration: duration)
     end
 
-    render json: { id: recording.id.to_s, status: recording.status, size: recording.size }
+    render json: { id: recording.id.to_s, media: recording.media, status: recording.status, size: recording.size }
   end
 
   private
@@ -109,12 +125,14 @@ class Api::V1::Calls::RecordingUploadsController < Api::BaseController
     end
   end
 
-  # Jibri's own file name, kept to plain characters, with one of the video
-  # types Kronk plays.
-  def clean_filename(value)
+  # Jibri's own file name, kept to plain characters, with one of the types
+  # Kronk plays, and of the medium the script said (when it said one).
+  def clean_filename(value, media)
     name = File.basename(value.to_s).strip
     return nil if name.length > CallRecording::FILENAME_MAX || !FILENAME_PATTERN.match?(name)
-    return nil if Kronk::CallRecordingStorage.content_type_for(name).nil?
+
+    found = Kronk::CallRecordingStorage.media_for(name)
+    return nil if found.nil? || (media && found != media)
 
     name
   end

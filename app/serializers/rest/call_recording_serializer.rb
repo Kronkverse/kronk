@@ -5,11 +5,16 @@
 # saves it: both signed and short-lived, never a public object. `can_delete`
 # is the viewer's own.
 class REST::CallRecordingSerializer < ActiveModel::Serializer
-  attributes :id, :kind, :created_at, :duration, :size, :filename,
-             :content_type, :url, :download_url, :can_delete
+  attributes :id, :kind, :media, :pair_id, :created_at, :duration, :size,
+             :filename, :content_type, :url, :download_url, :can_delete
 
   def id
     object.id.to_s
+  end
+
+  # The other file of the same recording (video and audio), if there is one.
+  def pair_id
+    object.pair_id&.to_s
   end
 
   def created_at
