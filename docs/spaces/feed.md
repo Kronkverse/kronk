@@ -115,6 +115,9 @@ one (Tal, 2026-09-14).
   reply itself (`status.replied`, `PostStatusService#publish_reply_nudge!`).
 - **A korner post opens as its card.** The post page picks the same card the
   feed does (`components/korner_cards.tsx`) and leaves the text out with it.
+- **Long text folds behind _Read more_ in the feed, and opens in place.** The
+  button unfolds the card where it is; it doesn't go to the post's page. The
+  post's own page never folds (`detailed` on `components/status.jsx`).
 - **The home feed shows no replies at all**
   (`FeedManager#filter_from_home`). Search labels a comment as a Comment.
 
