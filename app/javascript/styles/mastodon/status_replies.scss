@@ -180,7 +180,15 @@
           border-color: $highlight-text-color;
         }
 
-        input {
+        // The comment box is a one-row textarea (it suggests @names as you
+        // type), drawn to look like the single-line input it replaced.
+        .caption-textarea {
+          flex: 1;
+          min-width: 0;
+        }
+
+        input,
+        textarea {
           flex: 1;
           background: none;
           border: none;
@@ -189,6 +197,9 @@
           font-size: 13px;
           padding: 0;
           min-width: 0;
+          font-family: inherit;
+          line-height: 1.4;
+          resize: none;
 
           &::placeholder {
             color: $darker-text-color;
@@ -285,7 +296,15 @@
         border-color: $highlight-text-color;
       }
 
-      input {
+      // The comment box is a one-row textarea (it suggests @names as you
+      // type), drawn to look like the single-line input it replaced.
+      .caption-textarea {
+        flex: 1;
+        min-width: 0;
+      }
+
+      input,
+      textarea {
         flex: 1;
         background: none;
         border: none;
@@ -294,6 +313,9 @@
         font-size: 14px;
         padding: 0;
         min-width: 0;
+        font-family: inherit;
+        line-height: 1.4;
+        resize: none;
 
         &::placeholder {
           color: $darker-text-color;

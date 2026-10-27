@@ -9,6 +9,7 @@ import ArrowIcon from '@/material-icons/400-24px/arrow_right_alt.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import HeartBorderIcon from '@/material-icons/400-24px/favorite.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { CaptionTextarea } from 'mastodon/features/albutts/components/caption_textarea';
 import { Avatar } from './avatar';
 import { RelativeTimestamp } from './relative_timestamp';
 import { IconButton } from './icon_button';
@@ -122,8 +123,8 @@ class ReplyItem extends PureComponent {
     this.setState(state => ({ childrenExpanded: !state.childrenExpanded }));
   };
 
-  handleReplyChange = (e) => {
-    this.setState({ replyText: e.target.value });
+  handleReplyChange = (replyText) => {
+    this.setState({ replyText });
   };
 
   handleReplyKeyDown = (e) => {
@@ -225,8 +226,8 @@ class ReplyItem extends PureComponent {
             {showReplyInput && (
               <div className='status-replies__item__inline-reply'>
                 <div className='status-replies__item__inline-reply__input-wrapper'>
-                  <input
-                    type='text'
+                  <CaptionTextarea
+                    rows={1}
                     placeholder={intl.formatMessage(messages.replyPlaceholder)}
                     value={replyText}
                     onChange={this.handleReplyChange}
@@ -336,8 +337,8 @@ class StatusReplies extends PureComponent {
     });
   };
 
-  handleReplyChange = (e) => {
-    this.setState({ replyText: e.target.value });
+  handleReplyChange = (replyText) => {
+    this.setState({ replyText });
   };
 
   handleReplyKeyDown = (e) => {
@@ -463,8 +464,8 @@ class StatusReplies extends PureComponent {
               <img src={currentAccount.get('avatar')} alt='' width={28} height={28} />
             </div>
             <div className='status-replies__quick-reply__input-wrapper'>
-              <input
-                type='text'
+              <CaptionTextarea
+                rows={1}
                 placeholder={intl.formatMessage(messages.replyPlaceholder)}
                 value={replyText}
                 onChange={this.handleReplyChange}
