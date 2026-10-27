@@ -442,8 +442,11 @@ Proposal: https://kronk.info/hub/kommons/p/117292062013500413
 ```
 
 When the PR ships, the deploy marks that proposal actioned and its proposer is
-asked to close it. If the proposal takes several PRs, write `Part of proposal:`
-on all but the last, so it is not called built early.
+asked to close it. Any proposal link in the body counts, so a link that is only
+context still marks it actioned: leave it out, or quote the proposal's title
+instead. If the proposal takes several PRs, write `Part of proposal:` on all
+but the last, so it is not called built early. A fix that turns out to solve a
+proposal gets the line added as soon as that is noticed.
 
 Three habits worth keeping:
 

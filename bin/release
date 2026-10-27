@@ -23,8 +23,8 @@
 # schema conflict beyond that line, leaves the PR out as before. The release
 # PR lists each file resolved this way, for a read before merging.
 #
-# A PR that builds a Kommons proposal says so on a line of its own in its
-# body (`Proposal: <link or id>`). `cut` gathers those into
+# A PR that builds a Kommons proposal links it in its body, ideally on a line
+# of its own (`Proposal: <link or id>`). `cut` gathers those into
 # config/shipped_proposals.yaml, and the production deploy marks them actioned.
 #
 # Needs `git` (run inside a clone with an `origin` remote) and `gh` (logged in).
@@ -140,12 +140,19 @@ end
 
 # ── Proposals ────────────────────────────────────────────────────────────────
 
-# The proposals a set of PRs finishes: each `Proposal:` line at the start of a
-# line in a PR body, as a link to the proposal or its bare id. A PR that is
-# one of several for a proposal writes `Part of proposal:` on all but the
-# last, which does not match and so does not mark it actioned.
+# The proposals a set of PRs finishes: every link to a proposal anywhere in a
+# PR body, and the bare ids on a `Proposal:` line. Only the line used to
+# count, and PRs that named their proposal in a sentence shipped without it
+# being actioned (2.1.4). A PR that is one of several for a proposal writes
+# `Part of proposal:` on all but the last; links on that line don't count.
+PROPOSAL_LINK = %r{kronk\.info/hub/kommons/p/(\d{6,})}
+
 def proposal_ids(prs)
-  prs.flat_map { |pr| pr['body'].to_s.scan(/^Proposal:(.*)$/i).flatten.flat_map { |rest| rest.scan(/\d{6,}/) } }.uniq
+  prs.flat_map do |pr|
+    pr['body'].to_s.lines.reject { |line| line.match?(/^\s*Part of proposal:/i) }.flat_map do |line|
+      line.match?(/^Proposal:/i) ? line.scan(/\d{6,}/) : line.scan(PROPOSAL_LINK).flatten
+    end
+  end.uniq
 end
 
 def record_proposals!(version, ids)
@@ -287,7 +294,7 @@ def release_body(version, taken, blocked, waiting, proposals)
              "#{blocked.map { |pr| "- #{line_for(pr)} — conflicts in #{pr['conflicts'].join(', ')}" }.join("\n")}\n"
   end
   parts << "### Staying on shadow (#{waiting.size})\n\nMerged, but not marked ready to ship.\n\n#{waiting.empty? ? '- (none)' : waiting.map { |pr| "- #{line_for(pr)}" }.join("\n")}\n"
-  parts << "### Proposals marked actioned by the deploy (#{proposals.size})\n\nFrom the `Proposal:` line of the PRs above, written to `#{SHIPPED_PROPOSALS}`. Each proposer is asked to close theirs once production is deployed. Edit that file in this PR to add or drop one.\n\n" \
+  parts << "### Proposals marked actioned by the deploy (#{proposals.size})\n\nFrom the proposal links in the PRs above, written to `#{SHIPPED_PROPOSALS}`. Each proposer is asked to close theirs once production is deployed. Edit that file in this PR to add or drop one.\n\n" \
            "#{proposals.empty? ? '- (none)' : proposals.map { |id| "- #{PROPOSAL_URL}#{id}" }.join("\n")}\n"
   parts << "## Why\n\nShip the finished work without taking unfinished work with it.\n"
   parts << "## How to test\n\nThis tree is `main` plus the PRs above, so it is not exactly what shadow ran: CI on this PR is the check. For a final look, put this PR on shadow with the **Staging Deploy** action.\n"
