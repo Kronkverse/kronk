@@ -16,7 +16,7 @@ import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { useBoothPlayback } from '../booth_playback_context';
 import { formatDuration } from '../format';
-import { kindMessage } from '../kinds';
+import { kindLabel } from '../kinds';
 import { toggleSave } from '../save';
 import type { BoothSet } from '../types';
 
@@ -276,7 +276,7 @@ export const BoothGridCard: React.FC<Props> = ({
         <CardMeta className='booth-card__meta'>
           <span className='booth-card__artist'>{set.artist_name}</span>
           <span className='booth-card__tag'>
-            {intl.formatMessage(kindMessage(set.kind))}
+            {kindLabel(set, intl)}
           </span>
           {set.genres[0] && (
             <span className='booth-card__tag'>{set.genres[0]}</span>

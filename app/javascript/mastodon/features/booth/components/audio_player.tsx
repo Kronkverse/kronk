@@ -6,6 +6,7 @@ import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 
 import { useBoothPlayback } from '../booth_playback_context';
+import { albumTracks } from '../kinds';
 import type { BoothSet } from '../types';
 
 const messages = defineMessages({
@@ -83,8 +84,14 @@ export const AudioPlayer: React.FC<Props> = ({ set, markers, onMarker }) => {
   const [dragging, setDragging] = useState(false);
 
   const isActive = activeSet?.id === set.id;
+  // An album's player runs over one track at a time, so before it starts
+  // it shows the first track's length.
+  const firstTrack = albumTracks(set)[0];
+  const idleLength = firstTrack
+    ? firstTrack.duration_seconds
+    : set.duration_seconds;
   const displayTime = isActive ? currentTime : 0;
-  const displayDuration = isActive ? duration : (set.duration_seconds ?? 0);
+  const displayDuration = isActive ? duration : (idleLength ?? 0);
   const displayPlaying = isActive && playing;
   const progressPct =
     displayDuration > 0 ? (displayTime / displayDuration) * 100 : 0;

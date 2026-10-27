@@ -23,6 +23,7 @@ import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
 import { useBoothPlayback } from './booth_playback_context';
+import { AlbumTracks } from './components/album_tracks';
 import { AudioPlayer } from './components/audio_player';
 import type { PlayerMarker } from './components/audio_player';
 import { EditForm } from './components/edit_form';
@@ -30,7 +31,7 @@ import { ShareForm } from './components/share_form';
 import { Shoutouts, useShoutouts } from './components/shoutouts';
 import { Tracklist } from './components/tracklist';
 import { formatDuration } from './format';
-import { kindMessage } from './kinds';
+import { isAlbumKind, kindLabel } from './kinds';
 import { toggleSave } from './save';
 import type { BoothSet } from './types';
 
@@ -278,7 +279,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         meta={
           <KornerMeta
             items={[
-              intl.formatMessage(kindMessage(set.kind)),
+              kindLabel(set, intl),
               set.genres.length > 0 && set.genres.join(', '),
               set.event_name &&
                 (set.event_date
@@ -324,7 +325,16 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
           </KornerActionBar>
         }
       >
-        <AudioPlayer set={set} markers={markers} onMarker={handleMarker} />
+        {/* An album's time runs per track, so shoutouts aren't pins on
+            it; its tracks follow the player instead. */}
+        {isAlbumKind(set.kind) ? (
+          <>
+            <AudioPlayer set={set} />
+            <AlbumTracks set={set} />
+          </>
+        ) : (
+          <AudioPlayer set={set} markers={markers} onMarker={handleMarker} />
+        )}
 
         {/* Who made it: the uploader, then everyone they credited. A
             tagged account is unverified until that person confirms it; a
