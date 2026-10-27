@@ -15,14 +15,16 @@ class Api::V1::Accounts::SearchController < Api::BaseController
   # why). Filtered here rather than in the upstream service, which its own
   # specs (and upstream merges) expect to find remote accounts.
   def account_search
-    members_only(AccountSearchService.new.call(
-      params[:q],
-      current_account,
-      limit: limit_param(DEFAULT_ACCOUNTS_LIMIT),
-      resolve: truthy_param?(:resolve),
-      following: truthy_param?(:following),
-      offset: params[:offset]
-    ))
+    members_only(
+      AccountSearchService.new.call(
+        params[:q],
+        current_account,
+        limit: limit_param(DEFAULT_ACCOUNTS_LIMIT),
+        resolve: truthy_param?(:resolve),
+        following: truthy_param?(:following),
+        offset: params[:offset]
+      )
+    )
   end
 
   def members_only(accounts)
