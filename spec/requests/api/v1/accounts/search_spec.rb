@@ -16,5 +16,14 @@ RSpec.describe 'Accounts Search API' do
       expect(response.content_type)
         .to start_with('application/json')
     end
+
+    it 'finds only Kronk members, not accounts from other servers' do
+      member = Fabricate(:account, username: 'kestrel')
+      Fabricate(:account, username: 'kestrel', domain: 'elsewhere.example')
+
+      get '/api/v1/accounts/search', params: { q: 'kestrel' }, headers: headers
+
+      expect(response.parsed_body.pluck(:id)).to eq [member.id.to_s]
+    end
   end
 end

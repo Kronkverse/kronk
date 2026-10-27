@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — Search finds Kronk's own members
+
+Tal: "the search picks up users from different servers". Federation is
+closed (limited mode, empty allowlist), but about 200 accounts from other
+servers are still in the database from before, and search (the top bar,
+Mate search, @-suggestions) offered them as if they were people here.
+
+- **Search shows members only.** People: local accounts, never the
+  instance actor (`Kronk::Search::PolicyFilter#filter_accounts`,
+  `Api::V1::Accounts::SearchController`). Posts: members' own
+  (`filter_statuses`). The upstream `AccountSearchService` is left as it
+  is, so its specs and upstream merges keep working; the filter sits where
+  Kronk's responses are made.
+- **The instance actor's posts can't break search any more.** Two stray
+  posts from May 2026 belong to it; its username is a host name, which the
+  post routes refuse, so any search that matched them (pasting a kronk.info
+  link into the composer did) answered 500.
+
 ## 2026-10-27 — Kronikles get a Series
 
 Kommons proposal "Kronikles"
