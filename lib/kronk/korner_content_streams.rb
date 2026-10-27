@@ -20,7 +20,9 @@
 # `statuses.source_korner`), so the default SourceKornerStream covers them all
 # for free — a new korner joins the unread system the moment it stamps that
 # column, with no code here. Moments and Kommunity have no backing Status, so
-# they get overrides (Kommunity's updates are new members).
+# they get overrides (Kommunity's updates are new members), and Map adds its
+# Mates' pin moves to its posts. An adapter whose updates aren't one relation
+# answers #unread_count itself.
 #
 # "Feed-visible" mirrors the home-feed write path
 # (FanOutOnWriteService#fan_out_to_local_recipients!):
@@ -104,6 +106,40 @@ module Kronk
       end
     end
 
+    # Map: its trek posts, as for any korner, plus a Mate putting their pin
+    # on the map or moving it (Kommons "Notifications on location updates").
+    # A pin has no post and is one row per person, overwritten in place, so
+    # it can't be keyed by id: a move counts by when it happened (`placed_at`,
+    # which a note edit leaves alone) against the time inside the baseline,
+    # ids being time-based. Only pins the viewer can see on the map count: a
+    # Mate's, shared with Mates (Api::V1::Map::PresenceController#visible_pins).
+    # Pins have no per-item seen rows; opening the Map clears them.
+    class MapStream < SourceKornerStream
+      def initialize
+        super('map')
+      end
+
+      def unread_count(viewer, baseline, seen_ids)
+        unread_relation(viewer, baseline, seen_ids).count + moved_pins(viewer, baseline).count
+      end
+
+      # Now, as an id, so opening the Map also covers every pin placed so far.
+      def newest_id(viewer)
+        [super, (Time.current.to_f * 1000).to_i << 16].max
+      end
+
+      private
+
+      def moved_pins(viewer, baseline)
+        since = Time.zone.at((baseline.to_i >> 16) / 1000.0)
+
+        PresenceState.active
+                     .where(share_scope: :friends, account_id: viewer.mates.select(:id))
+                     .where.not(account_id: viewer.id)
+                     .where(PresenceState.arel_table[:placed_at].gt(since))
+      end
+    end
+
     # Moments has no backing Status, so it streams its own rows. Same feed-visible
     # shape, keyed on `moments.id`, restricted to still-live moments. Moment's
     # visibility enum omits the unlisted/private tiers, so the public branch is
@@ -169,6 +205,7 @@ module Kronk
       'moments' => -> { MomentStream.new },
       'kalendar' => -> { KalendarStream.new },
       'kommunity' => -> { KommunityStream.new },
+      'map' => -> { MapStream.new },
     }.freeze
   end
 end
