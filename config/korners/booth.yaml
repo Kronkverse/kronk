@@ -8,10 +8,11 @@ tagline: 'Shared self expression through the magic of audial art.'
 # What the i moon's pop-up says (SpaceInfoDialog). A first draft
 # (2026-10-16), for Tal to edit on shadow.
 about:
-  what: "Kronk's stage for music: DJ sets, mixes, tracks, readings and live sets, to be listened to."
+  what: "Kronk's stage for music: DJ sets, mixes, tracks, albums, readings and live sets, to be listened to."
   why: 'Music made by people on Kronk should be heard by the people around them. The Booth plays it and credits who made it.'
   how:
     - 'Upload a set from the Ж menu (Upload or go live): the audio file, a title and a cover. That is all it needs.'
+    - 'Putting out an album or EP? Choose Album or EP and pick all its files at once. Each one is a track, played in the order you set.'
     - 'Every member can find it under Musik. Post it to your feed as you upload, or later from its page, so your people hear it.'
     - 'Credit who you played with. Once they confirm, the set shows under their name in Artists too.'
     - 'Play live: choose Go live in the same menu, now or at a time you set. Members listen in from Live.'
