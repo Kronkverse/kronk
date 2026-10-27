@@ -759,6 +759,14 @@ built:
 The phone tab-bar (`HubSwitcher variant="bottom"`) has the same five pillars as
 icon tabs. It has no wire and no arrival glint.
 
+**Text fields are at least 16px on a touch screen.** iOS Safari zooms the page
+into a field under 16px when it takes focus, and stays zoomed. One rule in
+`styles/kronk/_form.scss` (No zoom on focus) holds every `input`, `textarea`
+and `select` to 16px under `(pointer: coarse)`, so no field sets this itself.
+A field drawn bigger on purpose (`.compose-title`) sets `--field-font-size` to
+its size and keeps it. User zoom stays on: never set `maximum-scale` or
+`user-scalable=no`. Spec: `spec/system/touch_input_zoom_spec.rb`.
+
 ---
 
 ## Platform primitives
