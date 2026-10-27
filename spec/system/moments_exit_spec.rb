@@ -19,7 +19,7 @@ RSpec.describe 'Moments viewer exit', :js, :streaming do
     moment = Moment.create!(account: ash, media_attachment: Fabricate(:media_attachment, account: ash), visibility: :public, caption: 'Low tide')
 
     page.current_window.resize_to(390, 664)
-    visit '/home'
+    visit '/hub/kommons'
     visit "/hub/moments/#{moment.id}"
     expect(page).to have_css('.moments-viewer__close')
     expect(page).to have_css('.moments-viewer__caption', text: 'Low tide')
@@ -52,6 +52,6 @@ RSpec.describe 'Moments viewer exit', :js, :streaming do
 
     find('.moments-viewer__close').click
     expect(page).to have_no_css('.moments-viewer')
-    expect(page).to have_current_path('/home')
+    expect(page).to have_current_path('/hub/kommons')
   end
 end
