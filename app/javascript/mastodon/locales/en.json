@@ -2343,6 +2343,7 @@
   "me_hub.title": "Me",
   "me_hub.title_handle": "@{handle}",
   "media_gallery.hide": "Hide",
+  "media_gallery.more": "{count} more",
   "media_pick.capture": "Take a photo or video",
   "media_pick.library": "Choose from library",
   "moments.composer.add_more": "Add more",

@@ -7508,6 +7508,31 @@ a.status-card {
   }
 }
 
+// "+N" over the fourth tile of a post with more than four photos. It opens
+// the viewer at the fifth.
+.media-gallery__more {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  background: color-mix(in oklab, var(--surface-primary), transparent 35%);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in oklab, var(--surface-primary), transparent 20%);
+  }
+}
+
 .media-gallery__item__badges {
   position: absolute;
   bottom: 8px;
