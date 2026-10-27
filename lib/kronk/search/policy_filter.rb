@@ -57,7 +57,12 @@ module Kronk
         return [] if hits.blank?
 
         ids = hits.pluck(:id)
-        scope = Account.where(id: ids).where(suspended_at: nil).where(silenced_at: nil).or(Account.where(id: viewer&.id))
+        # Kronk's own members only: federation is closed, so the remote
+        # accounts left from before aren't people anyone here can reach, and
+        # the instance actor isn't a person at all (its username is a host
+        # name, so it can't even be linked to).
+        members = Account.local.without_instance_actor.where(id: ids)
+        scope = members.where(suspended_at: nil).where(silenced_at: nil).or(members.where(id: viewer&.id))
 
         # Preserve adapter ranking order.
         ordered = scope.index_by(&:id)
@@ -74,6 +79,11 @@ module Kronk
         ids.filter_map do |id|
           record = by_id[id.to_i] || by_id[id.to_s]
           next unless record
+          # Members' posts only, as for accounts. The instance actor's posts
+          # (two stray ones from May 2026) also can't be serialized: their
+          # URL needs a username the routes refuse, so one in the results
+          # turned the whole search into a 500.
+          next unless record.local? && !record.account.instance_actor?
           # A hidden post is found through what it stands for (its album,
           # Moment or Kuestion), never as a post of its own.
           next if record.kronk_feed_suppressed?
