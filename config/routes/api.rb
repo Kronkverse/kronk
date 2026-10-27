@@ -84,6 +84,17 @@ namespace :api, format: false do
       # The Main Huddle's head-count, for the home feed's banner.
       resource :count, only: [:show]
     end
+
+    # Kronk's calls on its Jitsi server (docs/decisions.md, 2026-10-27): a
+    # pass into one, and its recordings. `start` and `complete` are the
+    # recorder's, signed with JITSI_RECORDING_SECRET, not a member's.
+    namespace :calls do
+      resource :token, only: [:create]
+      resource :presence, only: [:show]
+      post 'recordings/start', to: 'recording_uploads#create', as: :recording_upload
+      post 'recordings/:id/complete', to: 'recording_uploads#complete', as: :recording_upload_complete
+      resources :recordings, only: [:index, :destroy]
+    end
     resource :token_balance, only: [:show]
 
     # FreeTheDream's shared map (docs/spaces/freethedream.md): the page's

@@ -127,6 +127,66 @@ updates aren't one relation answers `#unread_count` itself
 
 ---
 
+## 2026-10-27 — Kronk's own Jitsi: passes, Kronk controls, recordings
+
+Kronk's calls (the Main Huddle, Kuddles, the Booth's live sets) move from
+an open Jitsi server anyone could walk into to Kronk's own, which lets
+people in only with a token (JWT) Kronk signs. With the server knowing who
+is who, Kronk can draw its own controls and keep recordings.
+
+**Decision (Tal):**
+
+- **A pass per call.** `POST /api/v1/calls/token` (`kind`: `huddle`,
+  `kuddle` or `booth_live`, and `id`) gives the room's Jitsi name and an
+  HS256 token good for two hours, for whoever may join: every signed-in
+  member for the Main Huddle (tuning out of Huddle quiets its feed and
+  nudges, not the room), anyone signed in for an open Kuddle (a retired one
+  is a 404), and whoever a live set's reach allows while it is live (its
+  host from when it's planned). The Kuddle's maker, the set's host and
+  staff (`manage_reports`) get a moderator's token; the Main Huddle has no
+  maker, so only staff. `Kronk::CallTarget` holds these rules.
+- **Configuration, not code.** `JITSI_JWT_SECRET` (blank: no tokens, the old
+  open server), `JITSI_JWT_APP_ID`, `JITSI_ROOM_PREFIX` (shadow sets
+  `shadow-`, so shadow and production can share one server without
+  meeting; put on every room name Kronk hands Jitsi, never stored) and
+  `JITSI_RECORDING_SECRET`, all in `config/initializers/1_kronk_jitsi.rb`.
+  Secrets stay in the environment.
+- **Kronk draws the controls.** Jitsi's toolbar, pre-join screen, deep
+  links, invites and watermarks are off (`mastodon/jitsi.ts`, one config
+  for every call). Kronk's bar under the call (`<CallControls>`) has mic,
+  camera, screen, raise hand, tile view and leave, and Record / Stop
+  recording for a moderator, everywhere a call is drawn, the mini window
+  included. Its state comes from the call's events. A Booth listener's bar
+  has no mic, camera or screen. The Booth's host keeps Jitsi's pre-join
+  screen, the one place to pick a mixer or audio interface.
+- **Recordings are the one thing a call leaves.** Huddles were "the moment,
+  not the artefact" (`docs/spaces/huddle.md`, Nothing persists); a
+  recording is now the one exception, by Tal's choice: a call can be kept
+  when whoever runs it decides to. It stays in the spirit of the rule
+  because it is never silent: only a moderator can start one, and
+  everyone in the call sees "Recording" while it runs. Nothing else (who
+  was there, chat, a feed card) is kept. Who sees
+  it follows the call: a Kuddle's, anyone who can see the Kuddle; the Main
+  Huddle's, every signed-in member; a live set's goes to its host alone,
+  to publish as a set. The Kuddle's maker, the host or staff can delete
+  one, file and all.
+- **Files never pass through Kronk and are never public.** The server's
+  recorder (Jibri) asks Kronk for a signed upload URL (HMAC with
+  `JITSI_RECORDING_SECRET`), PUTs the file to a private object in Kronk's
+  own bucket, and tells Kronk it's done. People play and download through
+  signed URLs that expire.
+
+**Not attempted:** chat and reactions in a call (they were Jitsi toolbar
+buttons, and are gone with it); the Booth's upload taking a stored
+recording directly (the host downloads it and uploads it); a sweep for
+objects left behind when an account's deletion takes a Kuddle or a live
+set at the database.
+
+**Why:** an open room name was the whole lock, so a Booth listener could
+unmute and anyone with a link could join. Signing passes puts Kronk's
+rules (who's in, who moderates) on the server itself, and drawing the
+controls ourselves makes a call look and behave like the rest of Kronk.
+
 ---
 
 ## 2026-10-27 — Rooms are Kuddles, and you can follow one

@@ -33,9 +33,17 @@ RSpec.configure do |config|
     # doesn't say what failed to load, so this goes by the location.
     room_size = %r{\Ahttps://#{Regexp.escape(Rails.configuration.x.kronk_jitsi_domain)}/room-size\?}
 
+    # The Map's basemap reads its tiles from the real tile host, so a spec
+    # that visits the next page while tiles are still loading cuts those
+    # fetches off, and the basemap chunk logs "Failed to fetch". Whether it
+    # does is down to timing, not to the page under test.
+    basemap = %r{/packs-test/basemap-[^/]*\.js\z}
+
     errors = example.metadata[:js_console_messages].reject do |msg|
       url = msg[:location].to_h.then { |location| location['url'] || location[:url] }.to_s
-      ignored_errors.any? { |pattern| pattern.match(msg[:text]) } || room_size.match?(url)
+      ignored_errors.any? { |pattern| pattern.match(msg[:text]) } ||
+        room_size.match?(url) ||
+        (basemap.match?(url) && msg[:text].to_s.include?('Failed to fetch'))
     end
 
     if errors.present?

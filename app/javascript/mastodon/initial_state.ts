@@ -47,6 +47,10 @@ interface InitialStateMeta {
   sso_redirect: string;
   // Huddle's Jitsi host (config/initializers/1_kronk_jitsi.rb).
   jitsi_domain: string;
+  // Put before every Jitsi room name (JITSI_ROOM_PREFIX); usually empty.
+  jitsi_room_prefix?: string;
+  // Whether calls can be recorded here (Kronk::Jitsi.recording?).
+  jitsi_recording?: boolean;
   status_page_url: string;
   emoji_style?: string;
   personal_accent?: string | null;
@@ -138,6 +142,8 @@ export const statusPageUrl = getMeta('status_page_url');
 export const sso_redirect = getMeta('sso_redirect');
 // Always sent by the server; empty only where there's no initial state.
 export const jitsiDomain = getMeta('jitsi_domain') ?? '';
+export const jitsiRoomPrefix = getMeta('jitsi_room_prefix') ?? '';
+export const jitsiRecording = getMeta('jitsi_recording') ?? false;
 export const personalAccent = getMeta('personal_accent');
 // Type-cast defensively: the value may arrive as a number (fresh from
 // the slider) or as a string (round-tripped through Mastodon's

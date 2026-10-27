@@ -1062,6 +1062,14 @@ move.
 | `konnect:` in manifests            | A korner's Konnections: `make` (the picker offers its composer) and `effects` (what a Konnection with a space does, matching `Kronk::AttachmentEffects`). Checked by `korners doctor`.                                                                                                                                                                       | `config/korners/*.yaml`, `app/lib/kronk/korner_konnect.rb`                                                    |
 | `<EventSearch>`                    | A form field that picks one Kalendar event: the same candidates search, upcoming first with a "Show past events" toggle, the pick as a chip (title and date) with Change. Krew requirements use it.                                                                                                                                                          | `components/event_search.tsx`                                                                                 |
 
+### Calls
+
+| Primitive           | What it does                                                                                                                                                                                                                                                  | Where                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `mastodon/jitsi.ts` | Kronk's Jitsi calls: the checked host and its script (loaded once), `getCallPass(kind, id)` for a pass, and `createCall({ parentNode, pass, displayName, … })`, one embed config with Jitsi's toolbar hidden, returning a `Call` that holds the call's state. | `jitsi.ts`, `hooks/useCallState.ts`. docs/spaces/huddle.md, The Jitsi server |
+| `<CallControls>`    | The control bar under every call: mic, camera, screen, hand, tile view, leave, Record for a moderator, and the "Recording" marker. `compact` for the Huddle's mini window, `listenOnly` for a Booth listener.                                                 | `components/call_controls.tsx`, `styles/mastodon/_kronk_call.scss`           |
+| `<CallRecordings>`  | A call's recordings with Play, Download and Delete; silent when there are none. `useCallRecordings` and `<CallRecordingList>` for a page that shows them its own way.                                                                                         | `components/call_recordings.tsx`                                             |
+
 ### Where the spread bites
 
 1. **Header pieces are split.** `<KronkFrame>` and the space-header pieces are

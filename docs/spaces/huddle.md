@@ -4,12 +4,51 @@
 
 Huddle is a live hangout: drop in, be around each other, chat, work side by
 side. Not a meeting and not a livestream. Video, audio and screen share run on
-a Jitsi server, embedded in the page with the Jitsi iframe API. The server is
-configuration, not code: `JITSI_DOMAIN` (default `meet.talitamoss.info`) is
-read once in `config/initializers/1_kronk_jitsi.rb` and reaches the CSP,
-Kalendar's Huddle events and the web client (`jitsiDomain` in
-`initial_state.ts`). The Booth's live sets use the same server, in rooms
-of their own (`docs/spaces/booth.md`, Live sets). This doc describes what is built as of 2026-10-27.
+a Jitsi server, embedded in the page with the Jitsi iframe API. The Booth's
+live sets use the same server, in rooms of their own (`docs/spaces/booth.md`,
+Live sets). This doc describes what is built as of 2026-10-27.
+
+## The Jitsi server
+
+Kronk's own server takes people only with a pass, a token Kronk signs
+(decisions.md, 2026-10-27, "Kronk's own Jitsi"). The server is configuration,
+not code, read once in `config/initializers/1_kronk_jitsi.rb`:
+
+| Variable                 | What it does                                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `JITSI_DOMAIN`           | The server's bare host (default `meet.talitamoss.info`, the old open one). Reaches the CSP, Kalendar's Huddle events and the web client (`jitsiDomain` in `initial_state.ts`). |
+| `JITSI_JWT_SECRET`       | The shared HS256 secret. Blank: no tokens, and Kronk works on an open server as it always did (no Record either).                                                              |
+| `JITSI_JWT_APP_ID`       | The token's `iss`, the server's app id. Default `kronk`.                                                                                                                       |
+| `JITSI_ROOM_PREFIX`      | Put before every room name Kronk hands Jitsi (shadow sets `shadow-`), so two Kronks can share a server. Applied in passes, the head count and who-is-in; never stored.         |
+| `JITSI_RECORDING_SECRET` | Signs the recorder's calls to Kronk (Recordings, below). Blank: those endpoints are off.                                                                                       |
+
+Never put a value in the repo; they live in the environment.
+
+- **Passes.** `POST /api/v1/calls/token` with `kind` (`huddle`, `kuddle` or
+  `booth_live`) and `id` answers
+  `{ domain, room, jwt, moderator, recording }`. `room` is the Jitsi name
+  (prefix included), `jwt` is null without a secret. The token is HS256, `iss` the app id, `aud` `jitsi`,
+  `sub` `meet.jitsi`, `room` that one room, `iat`, `nbf` (a minute back, for
+  clock drift) and `exp` two hours on, and `context.user` with the member's
+  `id`, `name`, `avatar`, `moderator` and `affiliation` (`owner` for a
+  moderator), which the server's `mod_token_affiliation` reads. Who gets one,
+  and who moderates, is `Kronk::CallTarget`: the Main Huddle, every
+  signed-in member (staff moderate); an open Kuddle, anyone signed in (its
+  maker and staff moderate; a retired one is a 404); a live set, whoever
+  its reach allows while it is live (the host and staff moderate). Someone
+  who can't see the call gets a 404.
+- **One module.** `mastodon/jitsi.ts` checks the host, loads the server's
+  script once, asks for a pass (`getCallPass`) and embeds the call
+  (`createCall`) with one configuration: Jitsi's toolbar, pre-join screen,
+  deep links, invites and watermarks off, the name from Kronk.
+- **Kronk's controls.** `<CallControls>` (`components/call_controls.tsx`)
+  sits under every call: mic, camera, share screen, raise hand, tile view,
+  leave, and Record / Stop recording for a moderator when the pass says
+  recording works. It sends the call's API commands and shows what the
+  call's events report (mute, sharing, hand, tile view, recording, whether
+  you moderate). While a call is recorded everyone in it sees "Recording"
+  at the start of the bar. Leave is there before the call comes up, so a
+  call that never loads can still be left.
 
 **Kuddles.** A Room is called a **Kuddle** wherever people see it (Tal,
 2026-10-27): the list, the composer ("New Kuddle"), the Konnect noun ("the
@@ -26,11 +65,13 @@ krew`).
 **1. The Main Huddle.** One room, always open, everyone welcome. It is joined,
 never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
 
-- The page joins a fixed Jitsi room named `huddle`. It does not read the
-  `scope: main` row, which a migration seeds as a singleton
+- The page asks for a pass into a fixed Jitsi room named `huddle` (with
+  `JITSI_ROOM_PREFIX` before it). It does not read the `scope: main` row,
+  which a migration seeds as a singleton
   (`AddRoomScopeToHuddleSessions`; `HuddleSession` validates there is only
   one).
-- The lobby polls the Jitsi server for who is in the room. The home feed's
+- The lobby polls Kronk for who is in the room (`GET /api/v1/calls/presence`,
+  which asks the Jitsi server; it answers only Kronk). The home feed's
   `LiveBanner` shows a banner when someone is there, from Kronk's own count
   (`GET /api/v1/huddle/count`, the minute-old figure below), not from Jitsi:
   Jitsi answers an empty room with a 404, which every browser logged as a
@@ -40,9 +81,10 @@ never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
   `features/huddle_pip/`), like a video player's picture-in-picture (Tal,
   2026-10-19). You still see the call and it still sees you, mic and camera
   on. The window has a top bar to drag it by (where you leave it is kept on
-  the device), the people count, and buttons to mute, turn the camera off,
-  go back to the Huddle and leave. On a phone it is smaller and sits above
-  the tab bar.
+  the device), the people count, and Kronk's call controls in a compact
+  form, with a way back to the Huddle. Their state (muted, hand up,
+  recording) belongs to the call, so the window shows what the page
+  showed. On a phone it is smaller and sits above the tab bar.
 
   How: Tomas's approach (#2118) keeps the Jitsi iframe in a container on
   `document.body` that no page owns (`huddle_pip/jitsi_session.ts`). That
@@ -79,10 +121,12 @@ Reading room, and so on). Anyone can join; there's no membership or invite.
   recently active first (`REST::HuddleRoomSerializer`). Who created a room is
   deliberately not shown.
 - **Join:** tapping a room on `/hub/huddle` is the join. `/hub/huddle/kuddle/:id`
-  (`features/live/room.tsx`) has no lobby: it embeds Jitsi on the room's key
-  straight away, under a slim bar with the room's name, Follow and Unhuddle. Unhuddle,
-  or hanging up inside Jitsi, goes back to `/hub/huddle`, and so does the
-  Frame's `← Huddle` badge (the page draws no back chip of its own). A room
+  (`features/live/room.tsx`) has no lobby: it asks for a pass on the room's
+  key and embeds the call straight away, under a slim bar with the room's
+  name and Follow, with Kronk's controls under the call (their leave is
+  Unhuddle). Unhuddle goes back to `/hub/huddle`, and so does the Frame's
+  `← Huddle` badge (the page draws no back chip of its own). Under the
+  controls are the Kuddle's recordings, if it has any. A room
   call doesn't follow you yet; leaving the page ends it.
 - **Retire:** `Scheduler::HuddleRoomReaper` runs daily at 03:15 UTC and
   soft-retires rooms whose `last_active_at` is more than six months old
@@ -159,18 +203,76 @@ it as you choose (Kommons "Fomo noto", 2026-10-21; Kuddles 2026-10-27;
 
 ## Nothing persists
 
-When a session ends, nothing survives: no transcript, recording, feed card or
-"Alice was here" trace. Huddles are the moment, not the artefact. Only the
-room's identity lasts (Main forever, Rooms until the reaper).
+When a session ends, nothing survives: no transcript, feed card or "Alice was
+here" trace. Huddles are the moment, not the artefact. Only the room's
+identity lasts (Main forever, Rooms until the reaper).
+
+**Recordings are the one exception** (Tal, 2026-10-27; decisions.md,
+"Kronk's own Jitsi"). A call can be kept when whoever runs it decides to.
+That stays true to the rule because a recording is never silent: only a
+moderator (the Kuddle's maker, a live set's host, staff) can start one, and
+everyone in the call sees "Recording" while it runs. Nothing about who was
+there is kept with it. Without `JITSI_JWT_SECRET`, `JITSI_RECORDING_SECRET`
+and S3 storage, nobody sees Record and nothing persists at all.
+
+## Recordings
+
+The server's recorder (Jibri) records a call to a file, and when it stops,
+a finalize script on the Jitsi server hands the file to Kronk.
+
+- **Who sees one.** A Kuddle's: anyone who can see the Kuddle. The Main
+  Huddle's: every signed-in member. A live set's: its host (and staff),
+  for them to publish as a set (`docs/spaces/booth.md`, Recording a live
+  set). Who may delete: the Kuddle's maker, the set's host, staff; the
+  Main Huddle's, staff. Deleting takes the file too. `CallRecordingPolicy`
+  and `Kronk::CallTarget` hold the rules.
+- **Where they show.** Under a Kuddle's call and in the Main Huddle's
+  lobby (`<CallRecordings>`, `components/call_recordings.tsx`): each with
+  its date and length, Play (inline), Download and Delete for whoever may.
+  Nothing shows when there are none.
+- **Storage.** A private object under `call_recordings/<random>/<filename>`
+  (after `S3_KEY_PREFIX`) in the bucket Paperclip already uses
+  (`Kronk::CallRecordingStorage`), uploaded straight there by the recorder.
+  Never a public object: `GET /api/v1/calls/recordings?kind=&id=` lists the
+  ready ones with signed URLs, `url` to play (three hours) and
+  `download_url` to save (ten minutes);
+  `DELETE /api/v1/calls/recordings/:id` deletes one. The CSP's
+  `media-src` allows the bucket's own host. Without S3 (local development) recording is off.
+- **The recorder's side** (`Api::V1::Calls::RecordingUploadsController`).
+  Every call is signed: `X-Kronk-Timestamp: <unix seconds>` and
+  `X-Kronk-Signature: sha256=<hex HMAC-SHA256 of "<timestamp>.<raw body>">`
+  with `JITSI_RECORDING_SECRET`, refused (401) if wrong or more than five
+  minutes off.
+  - `POST /api/v1/calls/recordings/start` with `{ room, filename, size }`
+    (and optionally `duration` in seconds and `started_by`, a Kronk
+    account id). Kronk takes the prefix off `room` and finds the Main
+    Huddle, a live set (`room_key`) or a Kuddle (`session_url`); anything
+    else is a 404, over 4 GB a 413, a filename that isn't a plain
+    `.mp4`, `.webm` or `.mkv` a 422. It answers 201 with
+    `{ id, upload_url, upload_method, upload_headers, expires_in }`
+    (`upload_method` is `PUT`, `upload_headers` the `Content-Type` to
+    send), and the row is `pending`.
+  - The recorder PUTs the file to `upload_url` with those headers within
+    the hour.
+  - `POST /api/v1/calls/recordings/:id/complete` (body `{}` or
+    `{ duration }`) checks the object is there and marks the row `ready`:
+    200 `{ id, status, size }`, 422 if nothing is uploaded yet, 413 (and
+    the file deleted) if it's over 4 GB.
+- **Data.** `call_recordings`: `kind` (`huddle | kuddle | booth_live`),
+  `huddle_session_id` or `booth_live_id`, `started_by_account_id`,
+  `status` (`pending | ready`), `storage_key`, `filename`, `content_type`,
+  `size`, `duration`, `completed_at`.
 
 ## Moderation — flat and distributed
 
 The intended rule: every participant has the same powers (mute someone, remove
 someone from the current session), with no host role, so moderation is never a
 prize. No room locks or permanent bans; those would go through Krew governance.
-Kronk code does not implement any of this. In-session controls are whatever the
-Jitsi server provides. The manifest's `maintainers: [moderator]` is korner-level
-upkeep, not an in-session role.
+Kronk code does not implement any of this. With passes, the server makes a
+Kuddle's maker and staff (and a live set's host) moderators, which today
+means they can record; Kronk's controls offer nothing else a moderator does.
+The manifest's `maintainers: [moderator]` is korner-level upkeep, not an
+in-session role.
 
 ## Kalendar
 
@@ -203,11 +305,14 @@ longer makes Huddle-type events (its edit form lost the type toggle on
   `POST /api/v1/huddle/rooms/:id/join`, which moves `last_active_at` (so the
   list and the reaper see use). Nothing writes `huddle_participants` or calls
   `start!` / `end!`, so occupancy in the list is always 0.
-- **No Jitsi JWT.** Huddle joins the Jitsi server without a token, so
-  the Jitsi server does not know who is a Kronk member. A token endpoint
-  existed briefly in March 2026 and was reverted; its route lingered, 500ing
-  on every join, until 2026-10-11. Bringing tokens back means a controller
-  that reads the secret from the environment, never from the code.
+- **Chat and reactions** were Jitsi toolbar buttons and went with the
+  toolbar. Bringing them back means Kronk controls for them.
+- **Recordings left behind.** A `pending` row whose upload never finished
+  stays (nobody sees it). Deleting an account removes its Kuddles and live
+  sets at the database, and their recording rows with them, but not the
+  files. Both want a sweep.
+- **Kalendar's Huddle events** still store a link straight to the Jitsi
+  room (`events.huddle_url`), which a token-only server won't open.
 - **The Main Huddle row is unused.** The page hard-codes the Jitsi room. Either
   read the row or drop it.
 - **Capacity.** The design says rooms cap at about 35 people (Jitsi's practical

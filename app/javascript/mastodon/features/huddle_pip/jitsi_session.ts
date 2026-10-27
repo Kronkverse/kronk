@@ -7,19 +7,14 @@
 // call keeps its video and mic as you go.
 //
 // live/index.tsx and huddle_pip/index.tsx both import from here; this file
-// imports from neither, which keeps the module graph free of cycles.
+// imports from neither, which keeps the module graph free of cycles. The
+// call itself, and the state Kronk's controls show, is mastodon/jitsi.ts's
+// Call, so the mini window picks up where the page left off.
 
-export interface JitsiApi {
-  dispose: () => void;
-  addListener: (event: string, callback: (data?: unknown) => void) => void;
-  executeCommand: (command: string, ...args: string[]) => void;
-  getNumberOfParticipants: () => number;
-  isAudioMuted?: () => Promise<boolean>;
-  isVideoMuted?: () => Promise<boolean>;
-}
+import type { Call } from 'mastodon/jitsi';
 
 interface Session {
-  api: JitsiApi;
+  call: Call;
   container: HTMLDivElement;
 }
 
@@ -55,7 +50,7 @@ export const setJitsiSession = (next: Session): void => {
 
 export const disposeJitsiSession = (): void => {
   if (!session) return;
-  session.api.dispose();
+  session.call.dispose();
   session.container.remove();
   session = null;
   detach();

@@ -6,7 +6,8 @@
 # GET /api/v1/huddle/count rather than asking Jitsi itself.
 #
 # `fetch` asks Jitsi (nil when it can't say); a Kuddle is asked by its Jitsi
-# room key (`session_url`). `remember` / `last_seen` keep the latest Main
+# room key (`session_url`). The key is what Kronk stores; the name asked
+# about carries JITSI_ROOM_PREFIX (Kronk::Jitsi.room_name). `remember` / `last_seen` keep the latest Main
 # count in Redis, and `remember_kuddle` / `last_seen_kuddles` each Kuddle's,
 # so a "People are huddling" nudge can say how many are there now without
 # storing a number on the nudge.
@@ -14,12 +15,13 @@ module Kronk
   module HuddleCount
     extend Redisable
 
-    ROOM = 'huddle'
+    ROOM = Kronk::Jitsi::MAIN_ROOM
     LAST_SEEN_KEY = 'huddle:main:count'
     LAST_SEEN_TTL = 5.minutes
 
     def self.fetch(room = ROOM)
-      url = "https://#{Rails.configuration.x.kronk_jitsi_domain}/room-size?room=#{CGI.escape(room.to_s)}&domain=meet.jitsi"
+      name = Kronk::Jitsi.room_name(room)
+      url = "https://#{Kronk::Jitsi.domain}/room-size?room=#{CGI.escape(name)}&domain=#{Kronk::Jitsi::XMPP_DOMAIN}"
 
       Request.new(:get, url).perform do |response|
         case response.code
@@ -29,6 +31,33 @@ module Kronk
       end
     rescue HTTP::Error, OpenSSL::SSL::SSLError, Mastodon::Error, JSON::ParserError, ArgumentError, TypeError => e
       Rails.logger.warn("Huddle count unavailable for #{room}: #{e.class}: #{e.message}")
+      nil
+    end
+
+    WHO_TTL = 10.seconds
+
+    # Display names of who is in `room` now (Jitsi's /room, from
+    # mod_muc_size), for a lobby or a live set's listener count. The server
+    # answers only Kronk's own address, so browsers ask Kronk
+    # (Api::V1::Calls::PresencesController), never Jitsi. Cached for a few
+    # seconds per room: every lobby polls. nil when Jitsi can't say.
+    def self.who(room)
+      name = Kronk::Jitsi.room_name(room)
+      key = "huddle:who:#{name}"
+      cached = redis.get(key)
+      return JSON.parse(cached) if cached
+
+      url = "https://#{Kronk::Jitsi.domain}/room?room=#{CGI.escape(name)}&domain=#{Kronk::Jitsi::XMPP_DOMAIN}"
+      names = Request.new(:get, url).perform do |response|
+        case response.code
+        when 404 then []
+        when 200 then Array(JSON.parse(response.body_with_limit)).filter_map { |p| p['display_name'].presence if p.is_a?(Hash) }
+        end
+      end
+      redis.set(key, names.to_json, ex: WHO_TTL.to_i) unless names.nil?
+      names
+    rescue HTTP::Error, OpenSSL::SSL::SSLError, Mastodon::Error, JSON::ParserError, ArgumentError, TypeError => e
+      Rails.logger.warn("Huddle presence unavailable for #{room}: #{e.class}: #{e.message}")
       nil
     end
 

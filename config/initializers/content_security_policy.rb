@@ -22,6 +22,9 @@ media_hosts = policy.media_hosts
 # pmtiles ("content-length exceeding request"). CDN can be revisited later.
 map_tile_host = ENV.fetch('MAP_TILE_HOST', 'https://kronk-osm.syd1.digitaloceanspaces.com')
 jitsi_host = "https://#{Rails.configuration.x.kronk_jitsi_domain}"
+# Call recordings play from short-lived signed URLs on the bucket's own host
+# (1_kronk_jitsi.rb); nothing is added without S3.
+recordings_host = Rails.configuration.x.kronk_call_recordings_host
 
 Rails.application.config.content_security_policy do |p|
   p.base_uri        :none
@@ -32,7 +35,7 @@ Rails.application.config.content_security_policy do |p|
   # blob: lets the Booth read a picked audio file's length before it uploads
   # (an album's tracks, docs/spaces/booth.md, Albums). Only this page's own
   # scripts can make a blob: URL.
-  p.media_src       :self, :data, :blob, *media_hosts
+  p.media_src       :self, :data, :blob, *media_hosts, *recordings_host
   p.manifest_src    :self, assets_host
 
   if policy.sso_host.present?

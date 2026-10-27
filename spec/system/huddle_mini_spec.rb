@@ -21,9 +21,16 @@ RSpec.describe 'Huddle mini window', :js, :streaming do
         call.style.cssText = 'width:100%;height:100%;background:#222;color:#fff';
         options.parentNode.appendChild(call);
         window.__jitsiCommands = [];
+        window.__jitsiOptions = options;
+        window.__jitsiListeners = {};
+        window.__jitsiEmit = function (event, data) {
+          (window.__jitsiListeners[event] || []).forEach(function (listener) { listener(data); });
+        };
       };
       window.JitsiMeetExternalAPI.prototype = {
-        addListener: function () {},
+        addListener: function (event, listener) {
+          (window.__jitsiListeners[event] = window.__jitsiListeners[event] || []).push(listener);
+        },
         executeCommand: function (command) { window.__jitsiCommands.push(command); },
         getNumberOfParticipants: function () { return 2; },
         isAudioMuted: function () { return Promise.resolve(false); },
@@ -73,6 +80,38 @@ RSpec.describe 'Huddle mini window', :js, :streaming do
 
     expect(page).to have_no_css('.huddle-mini')
     expect(page.evaluate_script('window.__jitsiDisposed')).to be true
+  end
+
+  # docs/decisions.md, 2026-10-27: Jitsi's toolbar is hidden and Kronk's
+  # controls drive the call.
+  it 'drives the call from Kronk’s own controls, with the toolbar hidden', :aggregate_failures do
+    visit '/huddle'
+    click_on 'Huddle Up'
+    expect(page).to have_css('.huddle-call .fake-call', visible: :visible)
+
+    expect(page.evaluate_script('window.__jitsiOptions.configOverwrite.toolbarButtons')).to eq []
+    expect(page.evaluate_script('window.__jitsiOptions.roomName')).to eq 'huddle'
+
+    click_on 'Raise hand'
+    click_on 'Show everyone'
+    click_on 'Turn camera off'
+    expect(page.evaluate_script('window.__jitsiCommands')).to include('toggleRaiseHand', 'toggleTileView', 'toggleVideo')
+
+    # No tokens in the test environment, so no Record button for anyone.
+    expect(page).to have_no_button('Record')
+
+    page.execute_script("window.__jitsiEmit('audioMuteStatusChanged', { muted: true })")
+    expect(page).to have_button('Unmute')
+
+    page.execute_script("window.__jitsiEmit('recordingStatusChanged', { on: true, mode: 'file' })")
+    expect(page).to have_css('.call-controls__recording', text: 'Recording')
+
+    # The state goes with the call into the mini window.
+    visit_in_app('/home')
+    within('.huddle-mini') do
+      expect(page).to have_button('Unmute')
+      expect(page).to have_text('Recording')
+    end
   end
 
   # Moving inside the app, as a tap on a link does, without reloading it.
