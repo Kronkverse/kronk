@@ -255,14 +255,19 @@ a finalize script on the Jitsi server hands the file to Kronk.
 
   The script runs these three steps **once per file**: for the video, then
   for the audio (either order works), with the same `room` both times.
-
   1. `POST /api/v1/calls/recordings/start` with
      `{ "room", "filename", "size", "media" }`, and optionally
      `"duration"` (whole seconds) and `"started_by"` (a Kronk account id,
      the moderator's pass's `context.user.id`):
 
      ```json
-     { "room": "booth-3f9c…", "filename": "friday_2026-10-27.m4a", "size": 81234567, "media": "audio", "duration": 5400 }
+     {
+       "room": "booth-3f9c…",
+       "filename": "friday_2026-10-27.m4a",
+       "size": 81234567,
+       "media": "audio",
+       "duration": 5400
+     }
      ```
 
      - `room` is the Jitsi room name. Kronk takes `JITSI_ROOM_PREFIX` and
@@ -271,9 +276,9 @@ a finalize script on the Jitsi server hands the file to Kronk.
      - `filename` is plain (`[A-Za-z0-9][A-Za-z0-9._-]*`, up to 200
        characters) and its extension says what it is:
 
-       | `media` | Extensions and the `Content-Type` Kronk asks for                                   |
-       | ------- | ----------------------------------------------------------------------------------- |
-       | `video` | `.mp4` `video/mp4`, `.webm` `video/webm`, `.mkv` `video/x-matroska`                   |
+       | `media` | Extensions and the `Content-Type` Kronk asks for                                               |
+       | ------- | ---------------------------------------------------------------------------------------------- |
+       | `video` | `.mp4` `video/mp4`, `.webm` `video/webm`, `.mkv` `video/x-matroska`                            |
        | `audio` | `.m4a` `audio/mp4`, `.ogg` `audio/ogg`, `.opus` `audio/ogg` (Opus in Ogg), `.mp3` `audio/mpeg` |
 
      - `media` is `"video"` or `"audio"`. Left out, the extension decides
@@ -288,6 +293,7 @@ a finalize script on the Jitsi server hands the file to Kronk.
      medium for the same call, started within the last two hours (so on
      the second file's start, it's the first file's `id`; on the first,
      null).
+
   2. `PUT` the file to `upload_url` with exactly `upload_headers`, within
      `expires_in` seconds. This goes to storage, not to Kronk.
   3. `POST /api/v1/calls/recordings/<id>/complete` with `{}` or
@@ -301,9 +307,10 @@ a finalize script on the Jitsi server hands the file to Kronk.
   the background; the script doesn't wait for it. If the script uploads
   only a video, the host gets the recording as before and uploads a set
   by hand. Copying Jibri's own audio into `.m4a` (`ffmpeg -i in.mp4 -vn
-  -c:a copy out.m4a`) adds no second loss; its quality is whatever
+-c:a copy out.m4a`) adds no second loss; its quality is whatever
   Jibri's encoder was set to, and Kronk makes a set's audio MP3 like any
   upload.
+
 - **Data.** `call_recordings`: `kind` (`huddle | kuddle | booth_live`),
   `huddle_session_id` or `booth_live_id`, `started_by_account_id`,
   `media` (`video | audio`, default `video`), `pair_id` (the other file of

@@ -409,7 +409,7 @@ go into the call, so the recording has them too
   `body` is "Artist - Title", read like a track list line) answers the
   moment; 422 if the set isn't live, 429 for a second one from the same
   person within two seconds (`THROTTLE`). `DELETE
-  /api/v1/booth_live_moments/:id` for its author, the host or a steward.
+/api/v1/booth_live_moments/:id` for its author, the host or a steward.
   All of it follows the set's reach (`BoothLive#visible_to?`): outside it
   the set isn't there (404). Only the host can post a `track` (403).
 - **Live updates.** Kronk's streaming server carries per-person timelines,
@@ -437,16 +437,22 @@ go into the call, so the recording has them too
 other keys, all always present:
 
 ```json
-{ "kronk": 1, "type": "shoutout", "name": "Rosa", "text": "This tune!", "at": 754 }
+{
+  "kronk": 1,
+  "type": "shoutout",
+  "name": "Rosa",
+  "text": "This tune!",
+  "at": 754
+}
 ```
 
-| Key     | Type    | What it is                                                                                                 |
-| ------- | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `kronk` | number  | The version, `1`. Ignore any other.                                                                         |
-| `type`  | string  | `shoutout`, `reaction`, `request` or `track`. Ignore one you don't know (a later type may be added in 1).   |
-| `name`  | string  | The sender's display name (the host's for a `track`). Plain text.                                           |
+| Key     | Type    | What it is                                                                                                                                                                     |
+| ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `kronk` | number  | The version, `1`. Ignore any other.                                                                                                                                            |
+| `type`  | string  | `shoutout`, `reaction`, `request` or `track`. Ignore one you don't know (a later type may be added in 1).                                                                      |
+| `name`  | string  | The sender's display name (the host's for a `track`). Plain text.                                                                                                              |
 | `text`  | string  | A shoutout's or request's words (up to 200 characters); a reaction's key, `froth`, `applause` or `rewind`; a track as `Artist – Title` (en dash), or just `Title`. Plain text. |
-| `at`    | integer | Whole seconds since the set went live.                                                                      |
+| `at`    | integer | Whole seconds since the set went live.                                                                                                                                         |
 
 For the script on the Jitsi server's page that draws them in the call:
 

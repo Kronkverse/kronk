@@ -2896,7 +2896,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
   add_foreign_key "booth_live_reminders", "accounts", on_delete: :cascade
   add_foreign_key "booth_live_reminders", "booth_lives", column: "booth_live_id", on_delete: :cascade
   add_foreign_key "booth_lives", "accounts", on_delete: :cascade
-  add_foreign_key "booth_lives", "booth_sets", on_delete: :nullify
+  add_foreign_key "booth_lives", "booth_sets", on_delete: :nullify, validate: false
   add_foreign_key "booth_set_artists", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_set_saves", "accounts", on_delete: :cascade
@@ -2912,8 +2912,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
   add_foreign_key "call_recordings", "accounts", column: "started_by_account_id", on_delete: :nullify
-  add_foreign_key "call_recordings", "booth_lives", on_delete: :cascade
-  add_foreign_key "call_recordings", "call_recordings", column: "pair_id", on_delete: :nullify
+  add_foreign_key "call_recordings", "booth_lives", column: "booth_live_id", on_delete: :cascade
+  add_foreign_key "call_recordings", "call_recordings", column: "pair_id", on_delete: :nullify, validate: false
   add_foreign_key "call_recordings", "huddle_sessions", on_delete: :cascade
   add_foreign_key "canonical_email_blocks", "accounts", column: "reference_account_id", on_delete: :cascade
   add_foreign_key "challenge_conditions", "proposal_votes", on_delete: :cascade, validate: false

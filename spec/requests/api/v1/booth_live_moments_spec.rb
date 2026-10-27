@@ -43,7 +43,7 @@ RSpec.describe 'API V1 Booth live moments' do
         expect(response).to have_http_status(422)
       end
 
-      expect(live.moments.pluck(:kind, :body)).to eq [%w(request Something\ by\ Burial), %w(reaction applause)]
+      expect(live.moments.pluck(:kind, :body)).to eq [['request', 'Something by Burial'], %w(reaction applause)]
     end
 
     it 'slows down someone sending twice in a row' do
