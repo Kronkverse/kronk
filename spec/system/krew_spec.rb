@@ -99,7 +99,7 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(page).to have_css('.compose-shell', text: 'New event')
   end
 
-  it 'makes a new Huddle room for the Krew from the Konnect picker' do
+  it 'makes a new Kuddle for the Krew from the Konnect picker' do
     # The Huddle lobby under the composer asks the Jitsi host who is in, a
     # server this suite does not run (as in huddle_spec).
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
@@ -107,7 +107,7 @@ RSpec.describe 'Krew page', :js, :streaming do
     within('.attachment-section') { click_on 'Konnect' }
     within('.attachment-picker') do
       click_on 'Huddle'
-      click_on 'New Room'
+      click_on 'New Kuddle'
     end
 
     expect(page).to have_current_path("/hub/huddle/composer?konnect=krew:#{krew.id}")

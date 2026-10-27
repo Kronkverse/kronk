@@ -1,6 +1,6 @@
-// A Huddle Room — Phase 9.6 discovery slice.
+// A Huddle Room, called a Kuddle wherever people see it.
 //
-// Mounted at `/hub/huddle/room/:id`. Fetches the Room's shape from
+// Mounted at `/hub/huddle/kuddle/:id` (`/hub/huddle/room/:id` redirects). Fetches the Room's shape from
 // `GET /api/v1/huddle/rooms` (finding by id) and goes straight into
 // the call: the same Jitsi iframe the Main Huddle uses, scoped to the
 // Room's `session_url` (unique per row so two Rooms named "Coworking"
@@ -30,10 +30,13 @@ import { Stage } from 'mastodon/components/stage';
 import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
+import { KuddleFollow } from './kuddle_follow';
+import type { KuddleFollowState } from './kuddle_follow';
+
 // Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
 const JITSI_DOMAIN = jitsiDomain;
 
-interface HuddleRoomJSON {
+interface HuddleRoomJSON extends KuddleFollowState {
   id: string;
   name: string;
   description: string | null;
@@ -69,7 +72,7 @@ const messages = defineMessages({
   leave: { id: 'huddle.room.leave', defaultMessage: 'Unhuddle' },
   notFound: {
     id: 'huddle.room.not_found',
-    defaultMessage: 'Room not found or has been retired.',
+    defaultMessage: 'This Kuddle is not here, or has been retired.',
   },
 });
 
@@ -115,6 +118,11 @@ const leaveStyle: CSSProperties = {
   background: '#e03131',
   color: '#fff',
   cursor: 'pointer',
+};
+const headerActionsStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
 };
 const jitsiWrapStyle: CSSProperties = { flex: 1, minHeight: '400px' };
 const jitsiInnerStyle: CSSProperties = { width: '100%', height: '100%' };
@@ -175,6 +183,10 @@ export const LiveRoom: React.FC = () => {
         jitsiApiRef.current = null;
       }
     };
+  }, []);
+
+  const handleFollowChange = useCallback((state: KuddleFollowState) => {
+    setRoom((current) => (current ? { ...current, ...state } : current));
   }, []);
 
   const handleLeave = useCallback(() => {
@@ -242,9 +254,17 @@ export const LiveRoom: React.FC = () => {
         <div style={inRoomWrapStyle}>
           <div style={inRoomHeaderStyle}>
             <span style={nameStyle}>{room.name}</span>
-            <button type='button' onClick={handleLeave} style={leaveStyle}>
-              {intl.formatMessage(messages.leave)}
-            </button>
+            <div style={headerActionsStyle}>
+              <KuddleFollow
+                roomId={room.id}
+                name={room.name}
+                state={room}
+                onChange={handleFollowChange}
+              />
+              <button type='button' onClick={handleLeave} style={leaveStyle}>
+                {intl.formatMessage(messages.leave)}
+              </button>
+            </div>
           </div>
           <div style={jitsiWrapStyle}>
             <div ref={jitsiContainerRef} style={jitsiInnerStyle} />

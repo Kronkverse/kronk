@@ -309,13 +309,15 @@ class SwitchingColumnsArea extends PureComponent {
             {/* Huddle is a korner surface at /hub/huddle; the legacy
                 /huddle path forwards to it. `/hub/huddle` renders the
                 Main Huddle lobby + the open Rooms discovery list
-                (Phase 9.6). `/hub/huddle/room/:id` goes straight into
-                that Room's Jitsi call. `/hub/huddle/composer` opens the New
+                (Phase 9.6). `/hub/huddle/kuddle/:id` goes straight into
+                that Room's Jitsi call (Rooms are Kuddles to the people
+                using them; the old `/hub/huddle/room/:id` forwards). `/hub/huddle/composer` opens the New
                 Room composer over the lobby (`?krew=<id>` picks a Krew to
                 Konnect it to); the old `/hub/huddle/new` forwards there,
                 query and all. Krew Huddles come with Phase 9.1/9.2. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
-            {signedIn && <WrappedRoute path='/hub/huddle/room/:id' exact component={LiveRoom} content={children} />}
+            <Redirect from='/hub/huddle/room/:id' to='/hub/huddle/kuddle/:id' exact />
+            {signedIn && <WrappedRoute path='/hub/huddle/kuddle/:id' exact component={LiveRoom} content={children} />}
             <Redirect from='/hub/huddle/new' to={{ ...this.props.location, pathname: '/hub/huddle/composer' }} exact />
             {signedIn && <WrappedRoute path='/hub/huddle/composer' exact component={Live} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle' exact component={Live} content={children} />}
