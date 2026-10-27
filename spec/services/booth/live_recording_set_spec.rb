@@ -18,7 +18,7 @@ RSpec.describe Booth::LiveRecordingSet do
   before do
     # Storage is stubbed: the "download" copies a small fixture into place.
     allow(Kronk::CallRecordingStorage).to receive(:download) do |_key, path|
-      FileUtils.cp(Rails.root.join('spec', 'fixtures', 'files', 'boop.ogg', 'boop.ogg', 'files', 'boop.ogg', 'boop.ogg'), path)
+      FileUtils.cp(file_fixture('boop.ogg'), path)
       path
     end
     live.moments.create!(account: host, kind: 'track', artist: 'Burial', title: 'Archangel')

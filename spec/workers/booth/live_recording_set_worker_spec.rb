@@ -13,7 +13,7 @@ RSpec.describe Booth::LiveRecordingSetWorker do
 
   before do
     allow(Kronk::CallRecordingStorage).to receive(:download) do |_key, path|
-      FileUtils.cp(Rails.root.join('spec', 'fixtures', 'files', 'boop.mp3', 'boop.mp3', 'files', 'boop.mp3', 'boop.mp3'), path)
+      FileUtils.cp(file_fixture('boop.mp3'), path)
       path
     end
   end
