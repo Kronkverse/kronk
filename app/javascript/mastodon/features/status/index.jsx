@@ -143,7 +143,7 @@ class Status extends ImmutablePureComponent {
         <ScrollContainer scrollKey='thread'>
           <div className='item-list scrollable scrollable--flex'>
             {/* Edit is the Ж menu's on a detail page (docs/design.md). */}
-            <StatusQuoteManager id={status.get('id')} allReplies hideEdit />
+            <StatusQuoteManager id={status.get('id')} allReplies detailed hideEdit />
           </div>
         </ScrollContainer>
 
