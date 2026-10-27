@@ -128,7 +128,9 @@ RSpec.describe 'Location from a Konnected Place' do
     end
 
     it 'pins an event with no location at its Place' do
-      link('kalendar', create_event('Picnic').id)
+      picnic = create_event('Picnic')
+      link('kalendar', picnic.id)
+      EventRsvp.create!(event: picnic, account: stranger.account, status: :going)
 
       pin = pins_for(stranger)['Picnic']
 
@@ -138,7 +140,9 @@ RSpec.describe 'Location from a Konnected Place' do
     end
 
     it "keeps to the event's reach" do
-      link('kalendar', create_event('Just me', visibility: 'self_only').id)
+      hidden = create_event('Just me', visibility: 'self_only')
+      link('kalendar', hidden.id)
+      EventRsvp.create!(event: hidden, account: stranger.account, status: :going)
 
       expect(pins_for(stranger)).to_not have_key('Just me')
       expect(pins_for(author)).to have_key('Just me')

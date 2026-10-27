@@ -126,8 +126,9 @@ Kalendar is the source side of `korner_attachments`
 - **No spawns.** `spawn_album` (an album made with the event, deleted with it)
   was retired 2026-10-23; the API ignores it. Albums spawned before then are
   still deleted with their event (`kind: spawn` rows cascade).
-- **Map:** events whose `location_url` is a parseable OpenStreetMap link, or
-  that have none and a Konnected Place, show as pins on Map
+- **Map:** your events (the ones you host, are going to or are interested
+  in) whose `location_url` is a parseable OpenStreetMap link, or that have
+  none and a Konnected Place, show as pins on Map
   (`/api/v1/map/events`), and the event page links to
   `/hub/map?event=<slug>`.
 
