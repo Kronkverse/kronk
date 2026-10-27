@@ -9,6 +9,7 @@
 
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   defineMessages,
@@ -546,19 +547,23 @@ const MomentViewer = () => {
     else v.pause();
   }, []);
 
+  // The viewer is mounted on document.body, as <ComposeShell> is: inside the
+  // page's column it sat under the phone tab bar and the Ж button, which
+  // covered its footer (Kommons "Make a way to exit Moments").
   if (loading) {
-    return (
+    return createPortal(
       <div className='moments-viewer moments-viewer--loading'>
         <FormattedMessage
           id='moments.viewer.loading'
           defaultMessage='Loading Moment…'
         />
-      </div>
+      </div>,
+      document.body,
     );
   }
 
   if (error || !moment) {
-    return (
+    return createPortal(
       <div className='moments-viewer moments-viewer--error'>
         <div className='moments-viewer__error-body'>
           <FormattedMessage
@@ -576,11 +581,12 @@ const MomentViewer = () => {
             />
           </button>
         </div>
-      </div>
+      </div>,
+      document.body,
     );
   }
 
-  return (
+  return createPortal(
     <>
       <ViewerBody
         moment={moment}
@@ -611,7 +617,8 @@ const MomentViewer = () => {
       {composerOpen && (
         <MomentsComposer onClose={closeComposer} onPosted={onPosted} />
       )}
-    </>
+    </>,
+    document.body,
   );
 };
 
@@ -857,8 +864,9 @@ const ViewerBody = ({
             className='moments-viewer__close'
             onClick={onCloseClick}
             aria-label={intl.formatMessage(messages.close)}
+            title={intl.formatMessage(messages.close)}
           >
-            <CloseIcon />
+            <CloseIcon aria-hidden='true' />
           </button>
         </header>
 
