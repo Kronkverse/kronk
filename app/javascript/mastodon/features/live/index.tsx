@@ -570,6 +570,7 @@ const Live: React.FC<{
               call={call}
               onLeave={leaveRoom}
               leaveLabel={intl.formatMessage(messages.leave)}
+              inputPicker
             />
           </div>
         )}
