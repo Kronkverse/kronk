@@ -1447,6 +1447,33 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   }
 }
 
+// A post (or other Kronk link) being shared into the chat, from the Nudge
+// button or the share sheet: a compact <StandardCard> above the text box,
+// with an × to leave it out. It goes as the message's last line.
+.standard-card.nudges-composer__shared {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  padding-inline-end: 2.75rem;
+  margin-block-end: 0.5rem;
+  border-radius: var(--radius-medium);
+
+  .standard-card__title,
+  .standard-card__body {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .standard-card__actions {
+    position: absolute;
+    inset-block-start: 0.25rem;
+    inset-inline-end: 0.25rem;
+  }
+}
+
 // Staged-preview row above the input. Up to MAX_MEDIA=5 previews at
 // 5 rem each with 0.5 rem gaps = ~27 rem — wider than the mobile
 // pane. Horizontal scroll keeps them inside the composer's right
