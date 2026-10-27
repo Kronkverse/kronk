@@ -1126,9 +1126,18 @@
   color: var(--text-secondary);
 }
 
+// The call, with the crowd drawn over it (live_crowd.tsx).
+.booth-live__screen {
+  position: relative;
+  margin-top: 1rem;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
 .booth-live__stage {
   height: min(70vh, 40rem);
-  margin-top: 1rem;
   overflow: hidden;
   border-radius: var(--radius-medium);
   background: var(--surface-elevated);
@@ -1142,6 +1151,129 @@
 }
 
 // ── live card with Remind me beside it ──────────────────────────────
+.booth-live__now-playing {
+  margin: 0.75rem 0 0;
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+// The crowd on screen: the newest few in the bottom corner of the call,
+// each fading in, staying, and fading out over FADE_MS (6s, here
+// `--dur-slow` × 15). Clicks pass through to the call.
+.booth-live-crowd {
+  position: absolute;
+  inset-block-end: 0.75rem;
+  inset-inline-start: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: min(22rem, calc(100% - 1.5rem));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.booth-live-crowd__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.45rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius-medium);
+  background: color-mix(in oklab, var(--surface-primary) 82%, transparent);
+  box-shadow: var(--elevation-floating);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  animation: booth-crowd-fade calc(var(--dur-slow) * 15) var(--ease-out)
+    forwards;
+
+  &--track {
+    background: color-mix(
+      in oklab,
+      var(--accent) 24%,
+      color-mix(in oklab, var(--surface-primary) 82%, transparent)
+    );
+  }
+
+  &--reaction .booth-live-crowd__text {
+    color: var(--accent-text);
+    font-weight: 700;
+  }
+}
+
+.booth-live-crowd__avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-round);
+}
+
+.booth-live-crowd__name {
+  font-weight: 700;
+}
+
+.booth-live-crowd__text {
+  overflow-wrap: anywhere;
+}
+
+@keyframes booth-crowd-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  8%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booth-live-crowd__item {
+    animation: none;
+  }
+}
+
+// What a listener sends, and the host's Now playing, under the controls.
+.booth-live-crowd-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.booth-live-crowd-compose__reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.booth-live-crowd-compose__reaction {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in oklab, var(--accent) 14%, var(--surface-elevated));
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
 .booth-live-card-row {
   display: flex;
   flex-wrap: wrap;

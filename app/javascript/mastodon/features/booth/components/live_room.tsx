@@ -19,6 +19,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { useCallState } from 'mastodon/hooks/useCallState';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { jitsiRecording, me } from 'mastodon/initial_state';
 import type { Call } from 'mastodon/jitsi';
@@ -31,8 +32,16 @@ import {
 } from 'mastodon/jitsi';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
-import type { BoothLive } from '../types';
+import { crowdMessageText, trackMessageText } from '../crowd';
+import type { BoothLive, BoothLiveMoment, BoothTrack } from '../types';
 
+import {
+  CrowdComposer,
+  CrowdOverlay,
+  NowPlayingForm,
+  useCrowdOnScreen,
+  useLiveMoments,
+} from './live_crowd';
 import { RemindButton } from './remind_button';
 
 // A live set's room (docs/spaces/booth.md, Live sets), on Huddle's Jitsi
@@ -41,10 +50,16 @@ import { RemindButton } from './remind_button';
 // Jitsi's audio processing off and stereo at a high bitrate, so music comes
 // through as music and not as a voice call, and can record the set on the
 // server. Listeners tap Listen in (browsers only play sound after a tap)
-// and join muted, with a raised hand and the view to choose. The page polls
-// the set while you wait, so Listen in appears when the host goes live, and
-// asks the Jitsi server how many people are in the room, the way Huddle's
-// lobby does.
+// and join to listen only, with a raised hand and the view to choose. The
+// page polls the set while you wait, so Listen in appears when the host goes
+// live, and asks the Jitsi server how many people are in the room, the way
+// Huddle's lobby does.
+//
+// While it's live, the crowd is on screen (live_crowd.tsx): listeners'
+// shoutouts, reactions and requests, and the host's Now playing, over the
+// call for everyone, and sent into the call by the host's page for the
+// recorder to draw (crowd.ts). Once it's over, a recording's audio comes
+// back as a draft set for the host to publish.
 
 const POLL_SET_MS = 20_000;
 const POLL_COUNT_MS = 15_000;
@@ -75,6 +90,36 @@ const messages = defineMessages({
   recordingReady: {
     id: 'booth.live.recording_ready',
     defaultMessage: 'Your recording is ready',
+  },
+  setReady: {
+    id: 'booth.live.set_ready',
+    defaultMessage: 'Your set is ready to publish',
+  },
+  setReadyBody: {
+    id: 'booth.live.set_ready_body',
+    defaultMessage:
+      'Kronk made it from the recording, with your Now playing as its track list. Only you can see it until you publish it.',
+  },
+  setMaking: {
+    id: 'booth.live.set_making',
+    defaultMessage: 'Making your set from the recording',
+  },
+  setMakingBody: {
+    id: 'booth.live.set_making_body',
+    defaultMessage:
+      'A long set takes a few minutes. You’ll get a nudge when it’s ready to publish.',
+  },
+  publishSet: {
+    id: 'booth.live.publish_set',
+    defaultMessage: 'Publish your set',
+  },
+  downloadVideo: {
+    id: 'booth.live.download_video',
+    defaultMessage: 'Download video',
+  },
+  nowPlaying: {
+    id: 'booth.live.now_playing',
+    defaultMessage: 'Now playing: {track}',
   },
   recordingReadyBody: {
     id: 'booth.live.recording_ready_body',
@@ -132,7 +177,12 @@ const messages = defineMessages({
   tipInput: {
     id: 'booth.live.tip_input',
     defaultMessage:
-      'Plug in your mixer or audio interface. When the room opens, pick it as your microphone.',
+      'Plug your mixer or audio interface into your computer by USB and use Chrome. When the room opens, pick it as your microphone, or under Sound input.',
+  },
+  tipMusic: {
+    id: 'booth.live.tip_music',
+    defaultMessage:
+      'Music sound is on: the browser leaves your sound as it is, in stereo. Turn it off under the room when you talk for a while.',
   },
   tipComputer: {
     id: 'booth.live.tip_computer',
@@ -188,6 +238,69 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
   );
 
   const state = live?.state;
+  const isHost = live?.is_owner === true;
+  const hostName = live
+    ? live.account.display_name || live.account.username
+    : '';
+  const callState = useCallState(call);
+  // What the host last marked as playing, from the poll or the set itself.
+  const [playing, setPlaying] = useState<{ text: string; at: number } | null>(
+    null,
+  );
+  const [crowd, showCrowd, crowdDone] = useCrowdOnScreen();
+
+  // New moments: on screen for everyone, and into the call from the host's
+  // page, for the recorder.
+  const handleMoments = useCallback(
+    (fresh: BoothLiveMoment[]) => {
+      showCrowd(fresh);
+      const track = [...fresh].reverse().find((m) => m.kind === 'track');
+      if (track) setPlaying({ text: track.text, at: track.at_seconds });
+      const active = callRef.current;
+      if (isHost && active) {
+        fresh.forEach((moment) => {
+          active.broadcast(crowdMessageText(moment));
+        });
+      }
+    },
+    [showCrowd, isHost],
+  );
+  const addMoment = useLiveMoments(
+    id,
+    state === 'live' && joined,
+    handleMoments,
+  );
+
+  // The set's own list, for someone who arrives mid-set.
+  const tracks: BoothTrack[] = live?.tracklist ?? [];
+  const lastTrack = tracks[tracks.length - 1];
+  const fromSet = lastTrack
+    ? {
+        text: lastTrack.artist
+          ? `${lastTrack.artist} – ${lastTrack.title}`
+          : lastTrack.title,
+        at: lastTrack.start_seconds ?? 0,
+      }
+    : null;
+  const nowPlaying =
+    playing && (!fromSet || playing.at >= fromSet.at) ? playing : fromSet;
+
+  // When recording starts, the host's page says what's playing again, so
+  // the recording has it on screen from the start.
+  // Only when recording starts, not on every track (those go as they come),
+  // so the message waits in a ref.
+  const recordingNow = callState?.recording === true;
+  const playingMessageRef = useRef<string | null>(null);
+  useEffect(() => {
+    playingMessageRef.current = nowPlaying
+      ? trackMessageText(hostName, nowPlaying.text, nowPlaying.at)
+      : null;
+  });
+  useEffect(() => {
+    const message = playingMessageRef.current;
+    if (recordingNow && isHost && call && message) call.broadcast(message);
+  }, [recordingNow, isHost, call]);
+
   // The set's recording, once it's over, for its host to publish.
   const [recordings, forgetRecording] = useCallRecordings(
     'booth_live',
@@ -375,10 +488,19 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
   }, [live, confirm, intl, history]);
 
   const latestRecording = recordings[0];
+  const latestVideo = recordings.find((r) => r.media !== 'audio');
+  const hasAudio = recordings.some((r) => r.media === 'audio');
   const handleDownloadRecording = useCallback(() => {
     // A signed URL that answers "save as", so the page stays put.
     if (latestRecording) window.location.assign(latestRecording.download_url);
   }, [latestRecording]);
+  const handleDownloadVideo = useCallback(() => {
+    if (latestVideo) window.location.assign(latestVideo.download_url);
+  }, [latestVideo]);
+  const draftSetId = live?.booth_set_id ?? null;
+  const handlePublishSet = useCallback(() => {
+    if (draftSetId) history.push(`/hub/booth/sets/${draftSetId}`);
+  }, [draftSetId, history]);
   const handleUploadRecording = useCallback(() => {
     history.push('/hub/booth/composer');
   }, [history]);
@@ -390,7 +512,7 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
     return <EmptyState title={intl.formatMessage(messages.notFound)} />;
   }
 
-  const owner = live.is_owner;
+  const owner = isHost;
   const startsAt = new Date(live.starts_at);
   const when =
     state === 'scheduled'
@@ -487,25 +609,68 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
           )
         }
       >
-        {state === 'ended' && owner && latestRecording && (
+        {state === 'ended' && owner && draftSetId && (
           <EmptyState
-            title={intl.formatMessage(messages.recordingReady)}
-            body={intl.formatMessage(messages.recordingReadyBody)}
+            title={intl.formatMessage(messages.setReady)}
+            body={intl.formatMessage(messages.setReadyBody)}
             action={
               <KornerActionBar align='center'>
                 <KornerPill
                   variant='primary'
-                  label={intl.formatMessage(messages.downloadRecording)}
-                  onClick={handleDownloadRecording}
+                  label={intl.formatMessage(messages.publishSet)}
+                  onClick={handlePublishSet}
                 />
-                <KornerPill
-                  label={intl.formatMessage(messages.uploadRecording)}
-                  onClick={handleUploadRecording}
-                />
+                {latestVideo && (
+                  <KornerPill
+                    label={intl.formatMessage(messages.downloadVideo)}
+                    onClick={handleDownloadVideo}
+                  />
+                )}
               </KornerActionBar>
             }
           />
         )}
+
+        {state === 'ended' && owner && !draftSetId && hasAudio && (
+          <EmptyState
+            title={intl.formatMessage(messages.setMaking)}
+            body={intl.formatMessage(messages.setMakingBody)}
+            action={
+              latestVideo && (
+                <KornerActionBar align='center'>
+                  <KornerPill
+                    label={intl.formatMessage(messages.downloadVideo)}
+                    onClick={handleDownloadVideo}
+                  />
+                </KornerActionBar>
+              )
+            }
+          />
+        )}
+
+        {state === 'ended' &&
+          owner &&
+          !draftSetId &&
+          !hasAudio &&
+          latestRecording && (
+            <EmptyState
+              title={intl.formatMessage(messages.recordingReady)}
+              body={intl.formatMessage(messages.recordingReadyBody)}
+              action={
+                <KornerActionBar align='center'>
+                  <KornerPill
+                    variant='primary'
+                    label={intl.formatMessage(messages.downloadRecording)}
+                    onClick={handleDownloadRecording}
+                  />
+                  <KornerPill
+                    label={intl.formatMessage(messages.uploadRecording)}
+                    onClick={handleUploadRecording}
+                  />
+                </KornerActionBar>
+              }
+            />
+          )}
 
         {state === 'ended' && owner && (
           <CallRecordingList
@@ -541,6 +706,7 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
             </h2>
             <ul>
               <li>{intl.formatMessage(messages.tipInput)}</li>
+              <li>{intl.formatMessage(messages.tipMusic)}</li>
               <li>{intl.formatMessage(messages.tipComputer)}</li>
               <li>{intl.formatMessage(messages.tipHeadphones)}</li>
               <li>
@@ -571,13 +737,37 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
           </p>
         )}
 
-        <div
-          ref={containerRef}
-          className='booth-live__stage'
-          hidden={!joined}
-        />
+        {state === 'live' && nowPlaying && (
+          <p className='booth-live__now-playing'>
+            {intl.formatMessage(messages.nowPlaying, {
+              track: nowPlaying.text,
+            })}
+          </p>
+        )}
+
+        <div className='booth-live__screen' hidden={!joined}>
+          <div ref={containerRef} className='booth-live__stage' />
+          {state === 'live' && (
+            <CrowdOverlay moments={crowd} onDone={crowdDone} />
+          )}
+        </div>
         {joined && (
-          <CallControls call={call} onLeave={leaveRoom} listenOnly={!owner} />
+          <CallControls
+            call={call}
+            onLeave={leaveRoom}
+            listenOnly={!owner}
+            inputPicker={owner}
+          />
+        )}
+        {joined && state === 'live' && owner && (
+          <NowPlayingForm liveId={live.id} onSent={addMoment} />
+        )}
+        {joined && state === 'live' && !owner && (
+          <CrowdComposer
+            liveId={live.id}
+            hostName={hostName}
+            onSent={addMoment}
+          />
         )}
       </KornerDetail>
 
