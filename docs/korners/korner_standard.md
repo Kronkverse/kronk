@@ -319,7 +319,8 @@ supplies everything else, in this order, top to bottom:
 1. **Header**: the korner icon and label, and who sees it (`<ReachDropdown>`
    as the shell's `headerAction`).
 2. **Media**: the record's pictures, video or cover.
-3. **Title**: `<ComposeTitle>`, the display serif, no box.
+3. **Title**: `<ComposeTitle>`, the display serif, in the same box as
+   every other field (decisions.md, 2026-10-27).
 4. **Fields**: `<ComposeBody>` for the main text, then the korner's own
    fields from the kit: `<ComposeField>` (label, hint, error) around
    `<ComposeInput>`, `<ComposeTextarea>` or `<ComposeSelect>`;
