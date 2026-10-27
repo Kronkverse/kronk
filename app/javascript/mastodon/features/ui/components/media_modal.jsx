@@ -28,6 +28,7 @@ import { IconButton } from 'mastodon/components/icon_button';
 import { Footer } from 'mastodon/features/picture_in_picture/components/footer';
 import { Video } from 'mastodon/features/video';
 import { disableSwiping, me } from 'mastodon/initial_state';
+import { handleMediaDownloadClick } from 'mastodon/utils/download_media';
 
 import { ZoomableImage } from './zoomable_image';
 
@@ -101,6 +102,13 @@ class MediaModal extends ImmutablePureComponent {
     navigationHidden: false,
     zoomedIn: false,
     mediaTags: {},
+  };
+
+  // A photo is fetched and saved in place (share sheet on a phone); the
+  // link itself stays for videos and as the fallback.
+  handleDownloadClick = (e) => {
+    const current = this.props.media.get(this.getIndex());
+    handleMediaDownloadClick(e, current && { type: current.get('type'), url: current.get('url'), id: current.get('id') });
   };
 
   handleZoomClick = () => {
@@ -394,7 +402,7 @@ class MediaModal extends ImmutablePureComponent {
             {zoomable && <IconButton title={intl.formatMessage(zoomedIn ? messages.zoomOut : messages.zoomIn)} iconComponent={zoomedIn ? FitScreenIcon : ActualSizeIcon} onClick={this.handleZoomClick} />}
             {taggable && <IconButton title={intl.formatMessage(messages.tagPeople)} icon='tag' iconComponent={TagIcon} onClick={this.handleTagYourself} />}
             {downloadUrl && (
-              <a className='icon-button' href={downloadUrl} download title={intl.formatMessage(messages.download)} aria-label={intl.formatMessage(messages.download)}>
+              <a className='icon-button' href={downloadUrl} download onClick={this.handleDownloadClick} title={intl.formatMessage(messages.download)} aria-label={intl.formatMessage(messages.download)}>
                 <Icon id='download' icon={DownloadIcon} aria-hidden='true' />
               </a>
             )}
