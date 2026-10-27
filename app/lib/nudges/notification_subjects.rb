@@ -94,8 +94,8 @@ module Nudges
         next unless StatusPolicy.new(@viewer, status).show?
 
         @pages[status.id] = status.kronk_page
-        text = status.spoiler_text.presence || status.moment&.caption.presence ||
-               PlainTextFormatter.new(status.text, status.local?).to_s
+        text = status.spoiler_text.presence ||
+               PlainTextFormatter.new(status.moment&.caption.presence || status.text, status.local?).to_s
         [status.id, clip(text)]
       end.to_h
     end
