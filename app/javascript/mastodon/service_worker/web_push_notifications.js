@@ -78,9 +78,33 @@ const formatMessage = (messageId, locale, values = {}) =>
 const htmlToPlainText = html =>
   unescape(html.replace(/<br\s*\/?>/g, '\n').replace(/<\/p><p>/g, '\n\n').replace(/<[^>]*>/g, ''));
 
+// "Just a ping" (docs/spaces/nudges.md, Push): one notification, always
+// under the same tag so each replaces the last instead of stacking, with
+// the server's generic title and nothing else: no name, no words, no
+// avatar. It skips `notify`'s grouping, which would list earlier titles.
+const PING_TAG = 'kronk-ping';
+
+const handlePing = (event, payload) => {
+  const { title, timestamp, preferred_locale } = payload;
+
+  event.waitUntil(self.registration.showNotification(title, {
+    tag: PING_TAG,
+    renotify: true,
+    timestamp: timestamp ? new Date(timestamp) : new Date(),
+    icon: '/android-chrome-192x192.png',
+    badge: '/badge.png',
+    data: { preferred_locale, url: (new URL('/nudges', self.location)).href },
+  }));
+};
+
 // A nudge (Nudges::PushPayload) arrives ready to show: who, in that space's
 // words, and where a tap goes. Nothing to fetch.
 const handleNudgePush = (event, payload) => {
+  if (payload.ping) {
+    handlePing(event, payload);
+    return;
+  }
+
   const { title, body, icon, url, tag, timestamp, preferred_locale } = payload;
 
   event.waitUntil(notify({

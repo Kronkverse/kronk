@@ -53,6 +53,40 @@ RSpec.describe NotifyService do
     end
   end
 
+  # docs/spaces/nudges.md (Push): "Just a ping" covers the pushes that still
+  # come from a legacy Notification, so nothing says who or what.
+  context 'when the recipient chose how push reads' do
+    let(:sender) { Fabricate(:account) }
+    let(:activity) { Fabricate(:favourite, account: sender, status: Fabricate(:status, account: recipient)) }
+    let(:type) { :favourite }
+    let!(:subscription) { Fabricate(:web_push_subscription, user: user, data: { alerts: { favourite: true }, policy: 'all' }) }
+
+    before do
+      allow(Nudges::PushPreferences).to receive(:skip_legacy_push?).and_return(false)
+      allow(Web::PushNotificationWorker).to receive(:push_bulk)
+      allow(Nudges::WebPushWorker).to receive(:push_bulk)
+    end
+
+    it 'pushes the notification as before for Each one' do
+      subject
+
+      expect(Web::PushNotificationWorker).to have_received(:push_bulk)
+      expect(Nudges::WebPushWorker).to_not have_received(:push_bulk)
+    end
+
+    it 'sends it as a ping for Just a ping' do
+      user.settings['nudges.push_style'] = 'ping'
+      user.save!
+      args = []
+      allow(Nudges::WebPushWorker).to receive(:push_bulk) { |subs, &block| args.concat(subs.map(&block)) }
+
+      subject
+
+      expect(Web::PushNotificationWorker).to_not have_received(:push_bulk)
+      expect(args).to eq([[subscription.id, 'notification', Notification.last.id]])
+    end
+  end
+
   it 'does not notify when sender\'s domain is blocked' do
     recipient.block_domain!(sender.domain)
     expect { subject }.to_not change(Notification, :count)

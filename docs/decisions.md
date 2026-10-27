@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — Push can be just a ping
+
+mangobee's Kommons proposal "Changing our Notification for web/app"
+(https://kronk.info/hub/kommons/p/116684543811893646, approved by Tal):
+"ping users that there is a notification awaiting them on Kronk ... gather
+all notifications under one bundle", so people come to them at their own
+pace.
+
+**Decision:** push has a second way to read, chosen on
+`/settings/notifications` under **How push tells you**: **Each one** (what
+it did before, and still the default) or **Just a ping**. A ping is one
+notification, "Something new on Kronk", with no names, words or picture,
+always under the same tag so it replaces the last one, and it opens Nudges.
+It is a per-person setting (`nudges.push_style`), not per device. It changes
+only what a push says: the per-row Push switches and quiet hours still decide
+whether one is sent. Legacy notifications that still push are sent as the
+same ping, so the choice holds for everything that reaches the phone
+(`docs/spaces/nudges.md`, Push).
+
+---
+
 ## 2026-10-27 — Search finds Kronk's own members
 
 Tal: "the search picks up users from different servers". Federation is
@@ -34,6 +55,8 @@ Mate search, @-suggestions) offered them as if they were people here.
   posts from May 2026 belong to it; its username is a host name, which the
   post routes refuse, so any search that matched them (pasting a kronk.info
   link into the composer did) answered 500.
+
+---
 
 ## 2026-10-27 — Kronikles get a Series
 

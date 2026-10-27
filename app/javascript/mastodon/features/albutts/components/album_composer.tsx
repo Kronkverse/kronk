@@ -165,7 +165,7 @@ const messages = defineMessages({
   },
   descriptionLabel: {
     id: 'albutts.composer.description_label',
-    defaultMessage: 'Description (optional)',
+    defaultMessage: 'Album description (optional)',
   },
   photosClear: {
     id: 'albutts.composer.photos_clear',
@@ -173,7 +173,7 @@ const messages = defineMessages({
   },
   captionPlaceholder: {
     id: 'albutts.composer.caption_placeholder',
-    defaultMessage: 'Add a description (optional)',
+    defaultMessage: 'Caption for this photo (optional)',
   },
   photosPick: {
     id: 'albutts.composer.photos_pick',

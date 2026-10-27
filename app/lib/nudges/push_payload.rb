@@ -9,6 +9,26 @@
 class Nudges::PushPayload
   include RoutingHelper
 
+  # "Just a ping" (Nudges::PushPreferences.ping?): every push is the same
+  # notification, so the phone holds one, replaced each time, and opens
+  # Nudges. No name, no words, no picture.
+  PING_TAG = 'kronk-ping'
+  PING_URL = '/nudges'
+
+  def self.ping(at: Time.current)
+    {
+      kronk_nudge: true,
+      ping: true,
+      title: I18n.t('nudges.push.ping'),
+      body: nil,
+      icon: nil,
+      url: PING_URL,
+      tag: PING_TAG,
+      timestamp: at.iso8601,
+      preferred_locale: I18n.locale.to_s,
+    }
+  end
+
   def initialize(record, recipient:)
     @record = record
     @recipient = recipient

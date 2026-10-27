@@ -4,7 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
-import { apiContributePhoto } from 'mastodon/api/albutts';
+import { apiContributePhoto, apiUpdateAlbum } from 'mastodon/api/albutts';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
@@ -23,7 +23,7 @@ const messages = defineMessages({
   },
   captionPlaceholder: {
     id: 'albutts.contribute.caption_placeholder',
-    defaultMessage: 'Add a description (optional)',
+    defaultMessage: 'Caption for this photo (optional)',
   },
   photosPick: {
     id: 'albutts.contribute.photos_pick',
@@ -65,6 +65,27 @@ const messages = defineMessages({
     id: 'albutts.contribute.done',
     defaultMessage: 'Done',
   },
+  albumDescriptionLabel: {
+    id: 'albutts.contribute.album_description_label',
+    defaultMessage: 'Album description',
+  },
+  albumDescriptionPlaceholder: {
+    id: 'albutts.contribute.album_description_placeholder',
+    defaultMessage: 'What is this album about? (optional)',
+  },
+  albumDescriptionError: {
+    id: 'albutts.contribute.album_description_error',
+    defaultMessage: "Couldn't save the album description. Try again.",
+  },
+  captionsNote: {
+    id: 'albutts.contribute.captions_note',
+    defaultMessage: 'Each box below is the caption for that one photo.',
+  },
+  captionsNoteNotOwner: {
+    id: 'albutts.contribute.captions_note_not_owner',
+    defaultMessage:
+      "Each box below is the caption for that one photo. The album's description is written by whoever runs the album.",
+  },
 });
 
 // Concurrency cap on the upload pool — matches the new-album composer
@@ -74,6 +95,12 @@ const UPLOAD_CONCURRENCY = 4;
 
 interface ContributeComposerProps {
   albumId: string;
+  // Someone who runs the album (its owner, or a member of its Krew) also
+  // gets the album's description here, so words about the whole album go
+  // on the album and not into the first photo's caption (Kommons
+  // "Album Description", 2026-10-22).
+  canEditAlbum?: boolean;
+  albumDescription?: string;
   onCancel: () => void;
   onContributed: () => void;
 }
@@ -114,6 +141,8 @@ interface PhotoDraft {
 // still uploading, or that didn't upload, aren't kept.
 interface ContributeDraftParams {
   captions?: Record<string, string>;
+  // The album's description, as typed, for someone who runs the album.
+  description?: string;
 }
 
 const photosFromDraft = (
@@ -138,6 +167,8 @@ const errorMessageOf = (e: unknown): string => {
 };
 
 const CAPTION_MAX = 500;
+// Same as the album composer's description box.
+const DESCRIPTION_MAX = 4000;
 
 // Post-album contribute modal — the "Add photos" affordance from the
 // detail page. Same parallel-pool + per-photo status pattern as
@@ -147,6 +178,8 @@ const CAPTION_MAX = 500;
 // visibility).
 export const ContributeComposer: React.FC<ContributeComposerProps> = ({
   albumId,
+  canEditAlbum = false,
+  albumDescription = '',
   onCancel,
   onContributed,
 }) => {
@@ -155,6 +188,10 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
   const [pending, setPending] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [description, setDescription] = useState(albumDescription);
+  const [descriptionError, setDescriptionError] = useState(false);
+  const descriptionChanged =
+    canEditAlbum && description.trim() !== albumDescription.trim();
 
   const doneCount = photos.filter((p) => p.status === 'done').length;
   const failedCount = photos.filter((p) => p.status === 'failed').length;
@@ -173,9 +210,10 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     (d: ApiComposerDraftJSON<ContributeDraftParams> | null) => {
       uploadQueueRef.current = [];
       setPhotos(d ? photosFromDraft(d) : []);
+      setDescription(d?.params.description ?? albumDescription);
       setHasSubmitted(false);
     },
-    [],
+    [albumDescription],
   );
 
   const draft = useDraft<ContributeDraftParams>({
@@ -187,10 +225,11 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
         captions: Object.fromEntries(
           kept.map((p) => [p.mediaId ?? '', p.caption]),
         ),
+        description: descriptionChanged ? description : undefined,
       },
       mediaIds: kept.map((p) => p.mediaId ?? ''),
     },
-    hasContent: kept.length > 0,
+    hasContent: kept.length > 0 || descriptionChanged,
     apply: applyDraft,
     paused: pending,
   });
@@ -374,15 +413,37 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     [albumId, setPhotoStatus, uploadOne],
   );
 
+  // The album's description goes to the album, first; the photos and
+  // their captions follow. If it can't be saved nothing is added, so the
+  // words aren't lost and the person can try again.
   const submit = useCallback(() => {
     if (pending || photos.length === 0 || uploadingCount > 0) return;
     setPending(true);
-    setHasSubmitted(true);
+    setDescriptionError(false);
     void (async () => {
+      if (descriptionChanged) {
+        try {
+          await apiUpdateAlbum(albumId, { description: description.trim() });
+        } catch (e) {
+          console.error('[albutts] saving the album description failed', e);
+          setDescriptionError(true);
+          setPending(false);
+          return;
+        }
+      }
+      setHasSubmitted(true);
       await runAddPool(photos.filter((p) => p.status !== 'done'));
       setPending(false);
     })();
-  }, [pending, photos, uploadingCount, runAddPool]);
+  }, [
+    pending,
+    photos,
+    uploadingCount,
+    runAddPool,
+    descriptionChanged,
+    albumId,
+    description,
+  ]);
 
   const handleRetryFailed = useCallback(() => {
     setPending(true);
@@ -441,6 +502,35 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
       draft={draft}
     >
       <div className='albutts-composer'>
+        {canEditAlbum && !hasSubmitted && (
+          <>
+            <label
+              htmlFor='albutts-contribute-description'
+              className='albutts-composer__label'
+            >
+              {intl.formatMessage(messages.albumDescriptionLabel)}
+            </label>
+            <CaptionTextarea
+              id='albutts-contribute-description'
+              className='compose-input compose-input--body albutts-composer__album-description'
+              value={description}
+              onChange={setDescription}
+              placeholder={intl.formatMessage(
+                messages.albumDescriptionPlaceholder,
+              )}
+              maxLength={DESCRIPTION_MAX}
+              rows={3}
+              disabled={pending}
+            />
+          </>
+        )}
+
+        {descriptionError && (
+          <p className='albutts-composer__error' role='alert'>
+            {intl.formatMessage(messages.albumDescriptionError)}
+          </p>
+        )}
+
         {!hasSubmitted && (
           <div
             className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
@@ -482,6 +572,13 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
 
         {photos.length > 0 && (
           <>
+            <p className='albutts-composer__note albutts-composer__captions-note'>
+              {intl.formatMessage(
+                canEditAlbum
+                  ? messages.captionsNote
+                  : messages.captionsNoteNotOwner,
+              )}
+            </p>
             <ul className='albutts-composer__picks'>
               {photos.map((p) => (
                 <li
