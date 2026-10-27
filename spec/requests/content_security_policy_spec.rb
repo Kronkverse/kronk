@@ -37,7 +37,7 @@ RSpec.describe 'Content-Security-Policy' do
       frame-src 'self' https:
       img-src 'self' data: blob: #{local_domain} #{map_tile_host}
       manifest-src 'self' #{local_domain}
-      media-src 'self' data: #{local_domain}
+      media-src 'self' data: blob: #{local_domain}
       script-src 'self' #{local_domain} 'wasm-unsafe-eval' https://#{Rails.configuration.x.kronk_jitsi_domain}
       style-src 'self' #{local_domain} 'nonce-ZbA+JmE7+bK8F5qvADZHuQ=='
       worker-src 'self' blob: #{local_domain}

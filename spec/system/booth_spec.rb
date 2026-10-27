@@ -71,4 +71,37 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.booth-credit', text: 'Lena K')
     expect(mine.reload.credits.map(&:label)).to eq ['Ash', 'Lena K']
   end
+
+  # docs/spaces/booth.md, Albums.
+  describe 'albums' do
+    it 'lists an album\'s tracks on its page, in order' do
+      album = BoothSet.new(account: ash, title: 'Tides', artist_name: 'Ash', kind: 'album', published: true)
+      %w(Ebb Flow).each_with_index do |name, i|
+        album.tracks.build(audio_attachment: Fabricate(:media_attachment, account: ash), title: name, position: i, duration_seconds: 60)
+      end
+      album.save!
+
+      visit "/hub/booth/sets/#{album.id}"
+
+      expect(page).to have_css('.booth-album .booth-tracklist__title', count: 2)
+      expect(page.all('.booth-album .booth-tracklist__title').map(&:text)).to eq %w(Ebb Flow)
+    end
+
+    it 'uploads an album from several files, one track each' do
+      visit '/hub/booth/composer'
+
+      click_on 'Album or EP'
+      find('.booth-album-field input[type="file"]', visible: :all)
+        .set([file_fixture('boop.mp3').to_s, file_fixture('boop.ogg').to_s])
+      expect(page).to have_css('.booth-album-field__track', count: 2)
+      find('[aria-label="Title of track 2"]').set('Boop again')
+      find('[aria-label="Title"]').set('Two boops')
+      click_on 'Upload set'
+
+      expect(page).to have_current_path(%r{\A/hub/booth/sets/\d+})
+      album = BoothSet.find_by!(title: 'Two boops')
+      expect(album.kind).to eq 'album'
+      expect(album.tracks.map(&:title)).to eq ['boop', 'Boop again']
+    end
+  end
 end
