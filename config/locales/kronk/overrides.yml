@@ -43,6 +43,17 @@ en:
   about:
     about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
     hosted_on: Kronk hosted on %{domain}
+  activerecord:
+    attributes:
+      wachuneed_brand:
+        url: Link
+        why: Why we back them
+    errors:
+      models:
+        wachuneed_brand:
+          attributes:
+            name:
+              taken: is already in Brands
   albutts:
     photos_added:
       one: Added a photo to %{title}
@@ -189,6 +200,7 @@ en:
         received: "%{who} sent you a rose"
       space_invited: "%{who} invited you to take a look"
       wachuneed:
+        brand_listed: "%{who} backed your brand, and it is in Brands now"
         offer_accepted: "%{who} accepted your request"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
@@ -262,6 +274,17 @@ en-GB:
   about:
     about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
     hosted_on: Kronk hosted on %{domain}
+  activerecord:
+    attributes:
+      wachuneed_brand:
+        url: Link
+        why: Why we back them
+    errors:
+      models:
+        wachuneed_brand:
+          attributes:
+            name:
+              taken: is already in Brands
   albutts:
     photos_added:
       one: Added a photo to %{title}
@@ -408,6 +431,7 @@ en-GB:
         received: "%{who} sent you a rose"
       space_invited: "%{who} invited you to take a look"
       wachuneed:
+        brand_listed: "%{who} backed your brand, and it is in Brands now"
         offer_accepted: "%{who} accepted your request"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
