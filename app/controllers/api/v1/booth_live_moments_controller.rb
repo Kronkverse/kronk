@@ -65,7 +65,7 @@ class Api::V1::BoothLiveMomentsController < Api::BaseController
   private
 
   def set_booth_live
-    @booth_live = BoothLive.find(params[:booth_live_id])
+    @booth_live = BoothLive.find(params[:id])
     raise ActiveRecord::RecordNotFound unless @booth_live.visible_to?(current_account)
   end
 
