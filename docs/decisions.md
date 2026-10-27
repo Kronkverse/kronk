@@ -17,6 +17,39 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — Brands live in Wachuneed, listed by backing
+
+Tahlia's Kommons proposal "Reccomened brands space"
+(https://kronk.info/hub/kommons/p/117432251243226073): "We all have many
+friends doing really cool shit, let's collate them all here together and
+support our wider Kommunity", in categories such as clothing or art.
+
+**Decision (Tal):** a **Brands** section inside Wachuneed, not a new
+korner: brands whose mission members have looked into and respect.
+
+- **Anyone proposes, members decide.** Any member proposes a brand (name,
+  website, why we back them, an optional category and picture). It joins
+  the list once three members back it, the proposer counted
+  (`WachuneedBrand::BACKERS_TO_LIST`); until then it waits under
+  Proposed. No steward approves a brand: backing is the gate, spread among
+  the people who use the list (Err syntropic, 2026-10-19). The threshold is
+  a constant so it can move without a migration.
+- **Undo after the fact.** The proposer edits or takes down their own;
+  staff who handle reports can remove any. No report flow of its own.
+- **No ranking.** Listed brands go A to Z, Proposed newest first, never by
+  backing count: the count is shown, not used to order.
+- **Not a listing.** A brand sells nothing through Kronk, has no reach
+  (every signed-in member sees it), no feed card and no Konnections. Its
+  own tables (`wachuneed_brands`, `wachuneed_brand_backings`) rather than a
+  third listing `kind`, which would have dragged price, reach, photos and
+  requests along with it.
+- **Told once.** The proposer is nudged the first time their brand is
+  listed, not each time it crosses back over three.
+
+Detail: `docs/spaces/wachuneed.md`, Brands.
+
+---
+
 ## 2026-10-27 — The Krew page lists the Krew's posts again
 
 Kommons "Krew space feed"
@@ -38,6 +71,8 @@ page and opens nothing on arrival. See `docs/spaces/krew.md`, The surfaces.
 
 ---
 
+---
+
 ## 2026-10-27 — The Map's badge counts Mates' pin moves
 
 Kommons "Notifications on location updates"
@@ -52,6 +87,8 @@ baseline id (ids are time-based), and opening the Map advances the baseline to
 now. It is the first badge counted by time rather than by id; an adapter whose
 updates aren't one relation answers `#unread_count` itself
 (`Kronk::KornerSeen.counts_for`). No nudge and no push.
+
+---
 
 ---
 
@@ -193,6 +230,8 @@ and Previous / Next; the Series has its own page with its contents
   audience rule in `Kronk::KornerRecords` first.
 - Positions are a plain `series_position` integer, rewritten whole on
   reorder (a writer's Series is small), as Art's featured pieces are.
+
+---
 
 ---
 

@@ -507,3 +507,65 @@
   gap: 8px 12px;
   margin-block: 16px;
 }
+
+// Brands (brand_page.tsx, brand_composer.tsx; docs/spaces/wachuneed.md,
+// Brands). The page is the standard detail shell; this sizes only what is
+// its own: the logo in the hero, the reason, and the backers' faces.
+.wachuneed-brand {
+  &__logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: contain;
+  }
+
+  &__waiting {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  &__why {
+    margin: 0;
+    color: var(--text-primary);
+    white-space: pre-line;
+  }
+
+  &__error {
+    margin: 0 0 0.75rem;
+    color: var(--warning-red);
+    text-align: center;
+  }
+
+  &__faces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.wachuneed-brand-composer {
+  &__picture {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+
+    .photo-drop-zone {
+      flex: 1;
+    }
+  }
+
+  &__picture-preview {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    object-fit: contain;
+  }
+}

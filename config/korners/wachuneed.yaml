@@ -25,6 +25,7 @@ about:
     - 'List something from the Ж menu, or post a wanted ad.'
     - 'Message the poster in Nudges to sort it out. Kronk handles no payment; you agree that between you.'
     - 'If you sell what you make, open a shop under Mine.'
+    - 'Under Brands, back the brands whose mission you respect, or propose one.'
     - "Take a listing down once it's gone."
 icon:
   material: kronk_coin
@@ -58,9 +59,13 @@ resources:
   - name: listing_offers
   - name: listing_shops
   - name: listing_shop_sections
+  # Brands members back (docs/spaces/wachuneed.md, Brands).
+  - name: wachuneed_brands
+    path: /hub/wachuneed/brands/:id
+  - name: wachuneed_brand_backings
 
 storage:
-  db_namespace: listing_ # tables: listings, listing_photos, listing_offers, listing_shops, listing_shop_sections
+  db_namespace: listing_ # tables: listings, listing_photos, listing_offers, listing_shops, listing_shop_sections (and wachuneed_brands, wachuneed_brand_backings)
   media_prefix: spaces/wachuneed/
   redis_prefix: 'wachuneed:'
 
@@ -71,6 +76,7 @@ emits:
   - wachuneed.offer.made
   - wachuneed.offer.accepted
   - wachuneed.offer.declined # seller declines a buyer's offer; Nudges routes to buyer
+  - wachuneed.brand.listed # a proposed brand reached its backers; Nudges routes to the proposer
 
 listens: []
 
@@ -148,11 +154,17 @@ hub_teaser:
 #   /hub/wachuneed         → offered (live listings on offer)
 #   /hub/wachuneed/desired → desired (live wanted listings)
 #   /hub/wachuneed/shops   → shops   (every shop with something on offer)
+#   /hub/wachuneed/brands  → brands  (brands members back; Proposed ones too)
 #   /hub/wachuneed/mine    → mine    (the caller's own listings)
 views:
   - { key: offered, label: Offered, tagline: 'Things and services on offer.' }
   - { key: desired, label: Desired, tagline: 'What people are looking for.' }
   - { key: shops, label: Shops, tagline: 'Sellers with a page of their own.' }
+  - {
+      key: brands,
+      label: Brands,
+      tagline: 'Brands whose mission members back.',
+    }
   - { key: mine, label: Mine, tagline: 'Your own listings.' }
   - {
       key: requests,
@@ -185,6 +197,11 @@ nodes:
   - id: wachuneed.shops
     label: Shops
     url: /hub/wachuneed/shops
+    lifecycle: live
+    spa: true
+  - id: wachuneed.brands
+    label: Brands
+    url: /hub/wachuneed/brands
     lifecycle: live
     spa: true
   - id: wachuneed.requests

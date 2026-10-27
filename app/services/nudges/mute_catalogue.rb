@@ -55,6 +55,7 @@ module Nudges
       'wachuneed.offered' => { korner: 'wachuneed', label: 'Someone makes an offer on your listing' },
       'wachuneed.offer_accepted' => { korner: 'wachuneed', label: 'Your offer is accepted' },
       'wachuneed.offer_declined' => { korner: 'wachuneed', label: 'Your offer is declined' },
+      'wachuneed.brand_listed' => { korner: 'wachuneed', label: 'A brand you proposed is in Brands' },
       'freethedream.mentioned' => { korner: 'freethedream', label: 'Someone tags you in an emergence’s talk' },
       'freethedream.mycelium_matched' => { korner: 'freethedream', label: 'A new need fits something you shared from your Mycelium' },
       'kuestions.answered' => { korner: 'kuestions', label: 'Someone answers your question' },

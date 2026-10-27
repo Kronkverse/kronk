@@ -298,6 +298,10 @@ namespace :api, format: false do
       put    :shop, to: 'shops#upsert'
       put    'shop/order', to: 'shops#order'
       delete :shop, to: 'shops#destroy'
+      # Brands members back (docs/spaces/wachuneed.md, Brands).
+      resources :brands, only: [:index, :show, :create, :update, :destroy] do
+        resource :backing, only: [:create, :destroy], controller: 'brand_backings'
+      end
     end
 
     # Albutts — shared albums. Photos are nested under an album; each

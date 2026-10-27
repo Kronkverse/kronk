@@ -82,7 +82,8 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
     # to add photos to an album, and being let in, for the same reason; a
     # Wachuneed request and its answer, since a buyer needn't be a Mate; a
     # Mycelium match, since it is about what the recipient shared into an
-    # emergence, whoever added the need there.
+    # emergence, whoever added the need there; a brand reaching its backers,
+    # since the backer who brought it there needn't be the proposer's Mate.
     it 'leaves the Mate gate on for every listen that does not opt in' do
       declared = Kronk::KornerRegistry.find('nudges').listens.select { |e| e.is_a?(Hash) }
       directed = declared.select { |e| e['directed'] == true }.pluck('event')
@@ -105,6 +106,7 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
         'wachuneed.offer.made',
         'wachuneed.offer.accepted',
         'wachuneed.offer.declined',
+        'wachuneed.brand.listed',
         'albutts.contribution.granted'
       )
     end

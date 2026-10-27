@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_120200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_120300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2709,6 +2709,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120200) do
     t.index ["unconfirmed_email"], name: "index_users_on_unconfirmed_email", where: "(unconfirmed_email IS NOT NULL)"
   end
 
+  create_table "wachuneed_brand_backings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "wachuneed_brand_id", null: false
+    t.index ["account_id"], name: "index_wachuneed_brand_backings_on_account_id"
+    t.index ["wachuneed_brand_id", "account_id"], name: "index_wachuneed_brand_backings_on_brand_and_account", unique: true
+  end
+
+  create_table "wachuneed_brands", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.datetime "listed_at"
+    t.bigint "media_attachment_id"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.text "why", null: false
+    t.index "lower((name)::text)", name: "index_wachuneed_brands_on_lower_name", unique: true
+    t.index ["account_id"], name: "index_wachuneed_brands_on_account_id"
+    t.index ["media_attachment_id"], name: "index_wachuneed_brands_on_media_attachment_id"
+  end
+
   create_table "web_push_subscriptions", force: :cascade do |t|
     t.bigint "access_token_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -3084,6 +3108,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120200) do
   add_foreign_key "users", "invites", on_delete: :nullify
   add_foreign_key "users", "oauth_applications", column: "created_by_application_id", on_delete: :nullify
   add_foreign_key "users", "user_roles", column: "role_id", on_delete: :nullify
+  add_foreign_key "wachuneed_brand_backings", "accounts", on_delete: :cascade
+  add_foreign_key "wachuneed_brand_backings", "wachuneed_brands", on_delete: :cascade
+  add_foreign_key "wachuneed_brands", "accounts", on_delete: :cascade
+  add_foreign_key "wachuneed_brands", "media_attachments", on_delete: :nullify
   add_foreign_key "web_push_subscriptions", "oauth_access_tokens", column: "access_token_id", on_delete: :cascade
   add_foreign_key "web_push_subscriptions", "users", on_delete: :cascade
   add_foreign_key "web_settings", "users", name: "fk_11910667b2", on_delete: :cascade
