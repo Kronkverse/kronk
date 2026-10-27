@@ -129,6 +129,7 @@ module Account::Associations
     # Kronikles — long-form written works this account owns. Single-
     # author, so there's no `contributor` counterpart to Albutts's split.
     has_many :owned_chronicles, class_name: 'Chronicle', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+    has_many :owned_chronicle_series, class_name: 'ChronicleSeries', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
 
     # Cinema — short films this account owns. Same single-author shape.
     has_many :owned_films, class_name: 'Film', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy

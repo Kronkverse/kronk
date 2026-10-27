@@ -336,6 +336,12 @@ namespace :api, format: false do
     # story / poetry / letter / journal / other).
     namespace :kronikles do
       resources :chronicles, only: [:index, :show, :create, :update, :destroy]
+      # A writer's Kronikles as ordered chapters (docs/spaces/kronikles.md,
+      # Series). Seen as far as its chapters are; changed by its owner.
+      resources :series, only: [:index, :show, :create, :update, :destroy] do
+        member { put :reorder }
+        resources :chapters, only: [:index, :create, :destroy], controller: 'series_chapters'
+      end
     end
 
     # Cinema — single-author short films. Direct MP4 upload via the
