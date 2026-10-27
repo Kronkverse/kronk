@@ -28,6 +28,7 @@ class Vacuum::MediaAttachmentsVacuum
     'moments' => %w(media_attachment_id voice_media_attachment_id),
     'nudge_messages' => %w(media_attachment_id voice_attachment_id),
     'nudges_conversation_messages' => %w(media_attachment_id media_attachment_ids voice_attachment_id),
+    'wachuneed_brands' => %w(media_attachment_id),
   }.freeze
 
   # Array columns hold several ids; the rest hold one. Arrays are matched
