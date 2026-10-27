@@ -1,5 +1,5 @@
-// Kronikles — long-form writing korner. Directory (feed of chronicle
-// cards with excerpts), reader (rendered markdown), composer (title +
+// Kronikles — long-form writing korner. Directory (the shared tile
+// grid), reader (rendered markdown), composer (title +
 // kind picker + textarea + reach dropdown).
 
 @use 'variables' as *;
@@ -10,59 +10,16 @@
     padding: 40px 20px;
   }
 
-  &__list {
-    list-style: none;
+  // The list is the shared SpaceGrid (components/space_grid.tsx).
+  &__grid {
     padding: 12px;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
 
-  &__row {
-    margin: 0;
-  }
-}
-
-.kronikles-card {
-  display: block;
-  padding: 16px;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-medium);
-  color: var(--text-primary);
-  text-decoration: none;
-  transition: transform var(--dur-fast) var(--ease-out);
-
-  &:hover {
-    transform: translateY(-1px);
-  }
-
-  &__kind {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent-text);
-    margin-bottom: 4px;
-  }
-
-  &__title {
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-
-  &__excerpt {
-    font-size: 13px;
-    opacity: 0.75;
-    margin: 0 0 8px;
-    line-height: 1.4;
-  }
-
-  &__owner {
-    font-size: 12px;
-    opacity: 0.6;
+    // A Kronikle without a picture shows the korner's glyph, sized like
+    // the other spaces' placeholders.
+    .space-card__photo--placeholder .icon {
+      inline-size: 2.5rem;
+      block-size: 2.5rem;
+    }
   }
 }
 
@@ -104,6 +61,13 @@
   &__body {
     font-size: 16px;
     line-height: 1.65;
+  }
+
+  // The shared reactions bar under the writing, as on a trek or a moment.
+  &__engagement {
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
   }
 }
 
