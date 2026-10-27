@@ -26,8 +26,8 @@ class Chronicle < ApplicationRecord
   PICTURE = /!\[[^\]\n]*\]\(picture:(\d+)\)/
   MAX_PICTURES = 30
 
-  after_save :sync_pictures!, if: :saved_change_to_body?
   before_save :place_in_series, if: :will_save_change_to_series_id?
+  after_save :sync_pictures!, if: :saved_change_to_body?
 
   # Kind labels — displayed as a badge on the reader and the feed card,
   # filterable in the directory once the picker earns a place. `other`

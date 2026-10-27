@@ -29,7 +29,7 @@ class REST::ChronicleSeriesSerializer < ActiveModel::Serializer
     object.chapters_visible_to(viewer).count
   end
 
-  def is_owner
+  def is_owner # rubocop:disable Naming/PredicatePrefix
     owner?
   end
 

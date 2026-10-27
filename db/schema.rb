@@ -2829,7 +2829,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120100) do
   add_foreign_key "chronicle_series", "accounts", column: "owner_id", on_delete: :cascade
   add_foreign_key "chronicle_series", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "chronicles", "accounts", column: "owner_id", on_delete: :cascade
-  add_foreign_key "chronicles", "chronicle_series", column: "series_id", on_delete: :nullify
+  add_foreign_key "chronicles", "chronicle_series", column: "series_id", on_delete: :nullify, validate: false
   add_foreign_key "chronicles", "statuses", on_delete: :nullify
   add_foreign_key "conversation_mutes", "accounts", name: "fk_225b4212bb", on_delete: :cascade
   add_foreign_key "conversation_mutes", "conversations", on_delete: :cascade

@@ -215,7 +215,7 @@ RSpec.describe 'Kronikles Series' do
       expect(first.reload.series_id).to be_nil
     end
 
-    it 'won’t take someone else’s Kronikle' do
+    it 'refuses someone else’s Kronikle' do
       theirs = Chronicle.create!(owner: reader.account, title: 'Mine', body: 'Mine.', visibility: :public)
 
       post "/api/v1/kronikles/series/#{series.id}/chapters", headers: headers_for(writer), params: { chronicle_id: theirs.id }
@@ -224,7 +224,7 @@ RSpec.describe 'Kronikles Series' do
       expect(theirs.reload.series_id).to be_nil
     end
 
-    it 'won’t let anyone else add to it' do
+    it 'refuses anyone else adding to it' do
       chapter('Setting out')
       theirs = Chronicle.create!(owner: reader.account, title: 'Mine', body: 'Mine.', visibility: :public)
 
