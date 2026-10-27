@@ -48,11 +48,12 @@ import { KrewAlbums } from './krew_albums';
 import { KrewChat } from './krew_chat';
 import { KrewEvents } from './krew_events';
 import { KrewPhotoField } from './krew_photo_field';
+import { KrewPosts } from './krew_posts';
 import { KrewSpaceIcon } from './krew_space_icon';
 
 // Krew page (/hub/krew/:id): identity, the faces, then for members What's
-// happening, the spaces and the Krew's chat (docs/spaces/krew.md, The
-// surfaces). Settings lives on the floating space menu.
+// happening, the spaces, the Krew's chat and its posts (docs/spaces/krew.md,
+// The surfaces). Settings lives on the floating space menu.
 
 // What's happening sits above the grid: the last few things done in the
 // Krew. The grid's tiles open their space below it, one at a time, and
@@ -995,6 +996,9 @@ export const KrewDetail = () => {
                 onRead={handleChatRead}
               />
             )}
+
+            {/* The Krew's posts, last, so the page scrolls on into them. */}
+            {isMember && <KrewPosts krewId={krew.id} />}
           </>
         )}
       </div>

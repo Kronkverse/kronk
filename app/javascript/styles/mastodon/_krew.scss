@@ -1158,6 +1158,19 @@ $krew-column-width: 720px;
   }
 }
 
+// The Krew's posts, last on the page: the standard StatusList, grown to its
+// content so the page itself scrolls on into it (no box inside the page with
+// a scroll of its own). `.scrollable` is a fixed-height scroller with
+// `contain: strict` everywhere else; here it is let out. More posts load as
+// the end comes into view (LoadMoreSentinel watches the viewport).
+.krew-detail__posts {
+  .scrollable {
+    overflow: visible;
+    contain: none;
+    flex: none;
+  }
+}
+
 // Joining: the invite panel under the faces, and the people asking to join.
 .krew-detail {
   &__invite {
