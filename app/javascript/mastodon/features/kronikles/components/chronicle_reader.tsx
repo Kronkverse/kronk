@@ -1,17 +1,20 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import { fetchStatus } from 'mastodon/actions/statuses';
 import { apiDeleteChronicle } from 'mastodon/api/kronikles';
 import type { ApiChronicleJSON } from 'mastodon/api_types/kronikles';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
+import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
+import { useAppDispatch } from 'mastodon/store';
 
 import { ChapterNav } from './chapter_nav';
 import { ChronicleComposer } from './chronicle_composer';
@@ -63,15 +66,17 @@ const VISIBILITY_LABEL = {
   self_only: messages.visibilitySelfOnly,
 } as const;
 
-const KIND_LABEL: Record<ApiChronicleJSON['kind'], typeof messages.kindOther> =
-  {
-    essay: messages.kindEssay,
-    short_story: messages.kindShortStory,
-    poetry: messages.kindPoetry,
-    letter: messages.kindLetter,
-    journal: messages.kindJournal,
-    other: messages.kindOther,
-  };
+export const KIND_LABEL: Record<
+  ApiChronicleJSON['kind'],
+  typeof messages.kindOther
+> = {
+  essay: messages.kindEssay,
+  short_story: messages.kindShortStory,
+  poetry: messages.kindPoetry,
+  letter: messages.kindLetter,
+  journal: messages.kindJournal,
+  other: messages.kindOther,
+};
 
 interface Props {
   chronicle: ApiChronicleJSON;
@@ -84,6 +89,13 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
+  const dispatch = useAppDispatch();
+
+  // The Kronikle's Status, for the shared reactions bar below.
+  const statusId = chronicle.status_id;
+  useEffect(() => {
+    if (statusId) dispatch(fetchStatus(statusId, { alsoFetchContext: false }));
+  }, [dispatch, statusId]);
 
   // Edit lives in the Ж menu (docs/design.md): the author gets an Edit
   // Kronikle moon, opening the create composer in edit mode. Delete
@@ -151,6 +163,19 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
       <div className='kronikles-reader__body'>
         <RenderMarkdown source={chronicle.body} pictures={chronicle.pictures} />
       </div>
+
+      {/* The same reactions bar as every other space (StatusEngagement on
+          the Kronikle's Status): Reply, Froth, Nudge. Edit stays in the Ж
+          menu; the replies are a later step (Kommons "Better formatting for
+          posted work"). */}
+      {statusId && (
+        <StatusEngagement
+          statusId={statusId}
+          showThread={false}
+          className='kronikles-reader__engagement'
+          hideEdit
+        />
+      )}
 
       <ChapterNav chronicle={chronicle} placement='foot' />
 

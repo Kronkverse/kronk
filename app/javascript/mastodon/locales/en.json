@@ -2042,7 +2042,6 @@
   "kronikles.series.none_left": "All your Kronikles are in this Series already. Write a new one and choose this Series as you do.",
   "kronikles.series.pick_one": "Choose one of your Kronikles",
   "kronikles.series.previous": "Previous chapter",
-  "kronikles.series.row_summary": "{count, plural, one {# chapter} other {# chapters}} · Latest: {title}",
   "kronikles.series.save_failed": "Could not save this Series.",
   "kronikles.series.take_out": "Take out",
   "kronikles.series.title_placeholder": "Series title",

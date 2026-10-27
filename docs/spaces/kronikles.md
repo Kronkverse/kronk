@@ -50,9 +50,9 @@ All input is treated as untrusted: the renderer builds React nodes directly (no 
 
 ## Where you see Kronikles
 
-- **`/hub/kronikles` directory** — a vertical feed of chronicle cards (kind badge + title + excerpt + author), a Series as one card. Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator.
+- **`/hub/kronikles` directory** — the shared tile grid (`<SpaceGrid>` + `<SpaceCard>`, two across on a phone, four from tablet width): the Kronikle's first picture, or the Kronikles glyph when it has none, over its title, the author's handle and its kind. A Series is one tile (badge "Series", chapter count and author). Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator. (It was a column of full-width cards with an excerpt until 2026-10-27, Kommons "Better formatting for posted work".)
 - **`/hub/kronikles/series/:id`** — a Series' page and contents (see Series).
-- **`/hub/kronikles/:id` reader** — title header + meta row (kind · visibility · owner), rendered markdown body; a chapter also shows its Series and Previous / Next (see Series). The author gets **Edit Kronikle** in the Ж menu, which opens the create composer in edit mode (title, kind, body; reach is shown but locked while editing). **Delete Kronikle** sits at the foot of that form, not on the page.
+- **`/hub/kronikles/:id` reader** — title header + meta row (kind · visibility · owner), rendered markdown body, then the **shared reactions bar** every space uses (`<StatusEngagement>` on the Kronikle's Status, `status_id` on the API response): Reply, Froth, Nudge, as on an album photo, a Moment or a trek. Only the bar, not the reply thread under it (`showThread={false}`); Edit stays in the Ж menu (`hideEdit`). A chapter also shows its Series and Previous / Next (see Series). The author gets **Edit Kronikle** in the Ж menu, which opens the create composer in edit mode (title, kind, body; reach is shown but locked while editing). **Delete Kronikle** sits at the foot of that form, not on the page.
 - **Home feed** — one card per Kronikle lifetime. `StatusKroniklesCard` renders kind badge + title + a 360-char plain-text excerpt (leading markdown syntax stripped). Later body edits do not spawn new cards.
 
 ## Composer
@@ -107,6 +107,7 @@ API, under `/api/v1/kronikles`:
 - **Real markdown pipeline** — `render_markdown.tsx` is deliberately minimal. Once long-form authors ask for tables, code fences, or footnotes, the honest move is to add a real library (`marked` or `remark`) with `DOMPurify`, not to grow the hand-written transformer into a full parser.
 - **Reading time / word count** — nothing shown on the feed card today. Could sit next to the kind badge once we know what value looks like.
 - **Draft state** — every Kronikle is publish-on-submit. Multi-session drafts (save-and-continue) haven't been needed yet; add a `drafted_at` or a separate `chronicle_drafts` table if long-form authors start losing work to browser refreshes.
+- **Replies on the reader** — the reactions bar is there, but the replies themselves show only on the post (tap Reply, or open the feed card). Showing the thread under the Kronikle, as treks do, is the next step if readers want it.
 - **Changing reach after posting** — the API accepts it but doesn't re-scope the item's feed post, so the edit form locks it.
 
 ## Related

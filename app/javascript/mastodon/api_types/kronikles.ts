@@ -64,6 +64,8 @@ export interface ApiChronicleJSON {
   kind: ChronicleKind;
   visibility: ChronicleVisibility;
   is_owner: boolean;
+  // The backing Status, for the reactions bar; null until published.
+  status_id: string | null;
   pictures: ChroniclePictureJSON[];
   created_at: string;
   owner: ApiAccountJSON;

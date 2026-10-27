@@ -76,7 +76,8 @@ RSpec.describe 'Kronikles', :inline_jobs, :js, :streaming do
 
     visit '/hub/kronikles'
 
-    expect(page).to have_css('.kronikles-card--series', count: 1, text: 'The long walk')
-    expect(page).to have_no_css('.kronikles-card__title', text: 'Setting out')
+    expect(page).to have_css('.space-card', count: 1, text: 'The long walk')
+    expect(page).to have_css('.space-card__tag', text: 'Series')
+    expect(page).to have_no_css('.space-card__title', text: 'Setting out')
   end
 end

@@ -10,6 +10,11 @@ class REST::ChronicleSerializer < ActiveModel::Serializer
 
   attribute :is_owner
 
+  # The backing Status (Kronikles::PublishChronicle), which carries the
+  # reactions: the reader puts the shared reactions bar on it, as Albutts,
+  # Moments and Treks do. Nil until it is published.
+  attribute :status_id
+
   # The pictures the body places, for the reader to resolve
   # `![caption](picture:<id>)` against. Never a URL from the body itself.
   attribute :pictures
@@ -74,6 +79,10 @@ class REST::ChronicleSerializer < ActiveModel::Serializer
         height: media.file.meta&.dig('original', 'height'),
       }
     end
+  end
+
+  def status_id
+    object.status_id&.to_s
   end
 
   def excerpt
