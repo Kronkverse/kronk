@@ -28,7 +28,7 @@ class Api::V1::BoothSetsController < Api::BaseController
     # `ActiveRecord::AssociationNotFoundError` and 500'd — which showed
     # up as an empty Booth for everyone, since the grid is this one call.
     @booth_sets = listing_scope
-                  .includes(:account, :audio_attachment, :cover_attachment, credits: :account)
+                  .includes(:account, :audio_attachment, :cover_attachment, credits: :account, tracks: :audio_attachment)
                   .order(SORTS.fetch(sort_param))
                   .limit(PAGE_SIZE)
     @booth_sets = @booth_sets.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id)) if current_account
@@ -55,6 +55,7 @@ class Api::V1::BoothSetsController < Api::BaseController
     @booth_set.artist_name = @booth_set.credit_line
     set_audio! if params[:audio_id].present?
     set_cover! if params[:cover_id].present?
+    assign_tracks!
     tagged = BoothSet.transaction do
       @booth_set.save!
       replace_credits!
@@ -71,8 +72,10 @@ class Api::V1::BoothSetsController < Api::BaseController
     elsif params[:cover_id].present?
       set_cover!
     end
+    @booth_set.assign_attributes(booth_set_params)
+    assign_tracks!
     tagged = BoothSet.transaction do
-      @booth_set.update!(booth_set_params)
+      @booth_set.save!
       replace_credits!
     end
     announce_tags(tagged)
@@ -283,6 +286,38 @@ class Api::V1::BoothSetsController < Api::BaseController
 
   def set_cover!
     @booth_set.cover_attachment = current_account.media_attachments.find(params[:cover_id])
+  end
+
+  # `tracks` is an album's or EP's running order (docs/spaces/booth.md,
+  # Albums): an array of `{ id }` for a track it already has, or
+  # `{ audio_id }` for a newly uploaded file, each with a `title` and
+  # optionally `duration_seconds`. It replaces the tracks; one left out is
+  # removed. Absent means "leave the tracks alone". The model checks there
+  # are enough, and that only albums and EPs have any.
+  def assign_tracks!
+    return unless params.key?(:tracks)
+
+    existing = @booth_set.tracks.index_by(&:id)
+    kept = wanted_tracks.first(BoothSet::ALBUM_TRACKS_MAX + 1).each_with_index.map do |entry, position|
+      track = entry[:id].present? ? existing.fetch(entry[:id].to_i) { raise ActiveRecord::RecordNotFound } : new_track(entry)
+      track.assign_attributes(position: position, title: entry[:title].to_s.squish.presence || track.title)
+      track.duration_seconds = entry[:duration_seconds].to_i if entry[:duration_seconds].to_i.positive?
+      track
+    end
+
+    (existing.values - kept).each(&:mark_for_destruction)
+  end
+
+  def new_track(entry)
+    media = current_account.media_attachments.find(entry[:audio_id])
+    @booth_set.tracks.build(audio_attachment: media, duration_seconds: BoothSetTrack.media_duration(media))
+  end
+
+  def wanted_tracks
+    raw = params[:tracks]
+    raw = raw.values if raw.respond_to?(:values) && !raw.is_a?(Array)
+
+    Array(raw).select { |entry| entry.respond_to?(:[]) && (entry[:id].present? || entry[:audio_id].present?) }
   end
 
   def booth_set_params

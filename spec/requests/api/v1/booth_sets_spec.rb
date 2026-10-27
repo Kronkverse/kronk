@@ -315,4 +315,123 @@ RSpec.describe 'API V1 Booth Sets' do
       expect(response).to have_http_status(422)
     end
   end
+
+  # Albums and EPs (docs/spaces/booth.md, Albums): several tracks, each its
+  # own audio file, in order, in place of one recording.
+  describe 'albums' do
+    let(:write_token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
+    let(:write_headers) { { 'Authorization' => "Bearer #{write_token.token}" } }
+    let(:files)         { Array.new(3) { Fabricate(:media_attachment, account: user.account) } }
+
+    def create_album(tracks, kind: 'album')
+      post '/api/v1/booth_sets', headers: write_headers, as: :json,
+                                 params: { title: 'Tides', kind: kind, tracks: tracks }
+    end
+
+    def titles
+      response.parsed_body['tracks'].pluck('title')
+    end
+
+    it 'creates an album with its tracks in the order given', :aggregate_failures do
+      tracks = [
+        { audio_id: files[2].id, title: 'Low Water', duration_seconds: 200 },
+        { audio_id: files[0].id, title: 'Undertow', duration_seconds: 180 },
+        { audio_id: files[1].id, title: 'Slack Tide', duration_seconds: 240 },
+      ]
+      create_album(tracks)
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['kind']).to eq 'album'
+      expect(titles).to eq ['Low Water', 'Undertow', 'Slack Tide']
+      expect(response.parsed_body['tracks'].pluck('duration_seconds')).to eq [200, 180, 240]
+      expect(response.parsed_body['tracks'].pluck('audio_url')).to all(be_present)
+      expect(response.parsed_body['duration_seconds']).to eq 620
+      expect(response.parsed_body['audio_url']).to eq response.parsed_body['tracks'].first['audio_url']
+    end
+
+    it 'shows the tracks in Musik' do
+      create_album([{ audio_id: files[0].id, title: 'A' }, { audio_id: files[1].id, title: 'B' }], kind: 'ep')
+
+      get '/api/v1/booth_sets', headers: headers
+
+      row = response.parsed_body.find { |r| r['id'] == BoothSet.last.id.to_s }
+      expect(row['tracks'].pluck('title')).to eq %w(A B)
+    end
+
+    it 'refuses an album with one track or no tracks', :aggregate_failures do
+      create_album([{ audio_id: files[0].id, title: 'Alone' }])
+      expect(response).to have_http_status(422)
+
+      create_album([])
+      expect(response).to have_http_status(422)
+      expect(BoothSet.count).to eq 0
+    end
+
+    it "refuses someone else's file" do
+      other = Fabricate(:media_attachment, account: Fabricate(:account))
+      create_album([{ audio_id: files[0].id, title: 'Mine' }, { audio_id: other.id, title: 'Theirs' }])
+
+      expect(response).to have_http_status(404)
+    end
+
+    it 'reorders, renames and removes tracks on update', :aggregate_failures do
+      create_album(files.each_with_index.map { |file, i| { audio_id: file.id, title: "Track #{i + 1}" } })
+      set_id = response.parsed_body['id']
+      ids = response.parsed_body['tracks'].pluck('id')
+
+      patch "/api/v1/booth_sets/#{set_id}", headers: write_headers, as: :json,
+                                            params: { tracks: [{ id: ids[2], title: 'Opener' }, { id: ids[0] }] }
+
+      expect(response).to have_http_status(200)
+      expect(titles).to eq ['Opener', 'Track 1']
+      expect(response.parsed_body['tracks'].pluck('id')).to eq [ids[2], ids[0]]
+      expect(BoothSetTrack.where(booth_set_id: set_id).count).to eq 2
+    end
+
+    it 'leaves the tracks alone when an update does not send them' do
+      create_album([{ audio_id: files[0].id, title: 'A' }, { audio_id: files[1].id, title: 'B' }])
+      set_id = response.parsed_body['id']
+
+      patch "/api/v1/booth_sets/#{set_id}", headers: write_headers, params: { title: 'Renamed' }
+
+      expect(titles).to eq %w(A B)
+    end
+
+    it 'does not take an album below two tracks' do
+      create_album([{ audio_id: files[0].id, title: 'A' }, { audio_id: files[1].id, title: 'B' }])
+      set_id = response.parsed_body['id']
+      ids = response.parsed_body['tracks'].pluck('id')
+
+      patch "/api/v1/booth_sets/#{set_id}", headers: write_headers, as: :json, params: { tracks: [{ id: ids[0] }] }
+
+      expect(response).to have_http_status(422)
+      expect(BoothSetTrack.where(booth_set_id: set_id).count).to eq 2
+    end
+
+    it "does not let anyone else change an album's tracks" do
+      set = BoothSet.new(account: Fabricate(:account), title: 'Theirs', artist_name: 'Lena', kind: 'album')
+      2.times { |i| set.tracks.build(audio_attachment: Fabricate(:media_attachment, account: set.account), title: "T#{i}", position: i) }
+      set.save!
+
+      patch "/api/v1/booth_sets/#{set.id}", headers: write_headers, as: :json, params: { tracks: [{ id: set.tracks.last.id }] }
+
+      expect(response).to have_http_status(403)
+    end
+
+    it 'keeps a set without a kind exactly as before', :aggregate_failures do
+      post '/api/v1/booth_sets', headers: write_headers, params: { title: 'Warm-up', audio_id: files[0].id }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['kind']).to eq 'mix'
+      expect(response.parsed_body['tracks']).to eq []
+      expect(response.parsed_body['audio_url']).to be_present
+    end
+
+    it 'refuses tracks on a set that is not an album or EP' do
+      post '/api/v1/booth_sets', headers: write_headers, as: :json,
+                                 params: { title: 'Warm-up', kind: 'mix', tracks: [{ audio_id: files[0].id, title: 'A' }, { audio_id: files[1].id, title: 'B' }] }
+
+      expect(response).to have_http_status(422)
+    end
+  end
 end

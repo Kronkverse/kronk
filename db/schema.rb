@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_120300) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_120400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -534,6 +534,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120300) do
     t.index ["account_id", "booth_set_id"], name: "index_booth_set_saves_on_account_id_and_booth_set_id", unique: true
     t.index ["account_id"], name: "index_booth_set_saves_on_account_id"
     t.index ["booth_set_id"], name: "index_booth_set_saves_on_booth_set_id"
+  end
+
+  create_table "booth_set_tracks", force: :cascade do |t|
+    t.bigint "audio_attachment_id", null: false
+    t.bigint "booth_set_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "duration_seconds"
+    t.integer "position", default: 0, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["audio_attachment_id"], name: "index_booth_set_tracks_on_audio_attachment_id"
+    t.index ["booth_set_id", "position"], name: "index_booth_set_tracks_on_booth_set_id_and_position"
   end
 
   create_table "booth_sets", force: :cascade do |t|
@@ -2846,6 +2858,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120300) do
   add_foreign_key "booth_set_artists", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_set_saves", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_saves", "booth_sets", on_delete: :cascade
+  add_foreign_key "booth_set_tracks", "booth_sets", on_delete: :cascade
+  add_foreign_key "booth_set_tracks", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_sets", "accounts", on_delete: :cascade
   add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :restrict

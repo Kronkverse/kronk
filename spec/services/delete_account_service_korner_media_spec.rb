@@ -52,6 +52,31 @@ RSpec.describe DeleteAccountService do
     end
   end
 
+  describe 'an account with a Booth album' do
+    let(:account) { Fabricate(:account) }
+    let(:opener)  { Fabricate(:media_attachment, account: account) }
+    let(:closer)  { Fabricate(:media_attachment, account: account) }
+    let!(:album) do
+      set = BoothSet.new(account: account, title: 'Tides', artist_name: 'BludPlum', kind: 'album', published: true)
+      set.tracks.build(audio_attachment: opener, title: 'One', position: 0)
+      set.tracks.build(audio_attachment: closer, title: 'Two', position: 1)
+      set.save!
+      set
+    end
+
+    it "refuses to delete a track's audio while the album uses it" do
+      expect { opener.destroy }.to raise_error(ActiveRecord::InvalidForeignKey)
+    end
+
+    it 'deletes the account, the album, its tracks and their audio', :aggregate_failures do
+      expect { subject.call(account, reserve_username: false) }.to_not raise_error
+
+      expect(BoothSet.exists?(album.id)).to be(false)
+      expect(BoothSetTrack.where(booth_set_id: album.id)).to_not exist
+      expect(MediaAttachment.where(id: [opener.id, closer.id])).to_not exist
+    end
+  end
+
   describe 'deleting media a Booth set still points at' do
     let(:account) { Fabricate(:account) }
     let(:media)   { Fabricate(:media_attachment, account: account) }

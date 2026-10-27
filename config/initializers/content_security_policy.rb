@@ -29,7 +29,10 @@ Rails.application.config.content_security_policy do |p|
   p.frame_ancestors :none
   p.font_src        :self, assets_host
   p.img_src         :self, :data, :blob, *media_hosts, map_tile_host
-  p.media_src       :self, :data, *media_hosts
+  # blob: lets the Booth read a picked audio file's length before it uploads
+  # (an album's tracks, docs/spaces/booth.md, Albums). Only this page's own
+  # scripts can make a blob: URL.
+  p.media_src       :self, :data, :blob, *media_hosts
   p.manifest_src    :self, assets_host
 
   if policy.sso_host.present?

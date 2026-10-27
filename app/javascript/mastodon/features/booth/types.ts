@@ -18,7 +18,18 @@ export type BoothKind =
   | 'live_recording'
   | 'track'
   | 'podcast'
-  | 'spoken_word';
+  | 'spoken_word'
+  | 'album'
+  | 'ep';
+
+// One track of an album or EP: its own audio file, in running order. Not
+// the same as a `BoothTrack`, which names a stretch of one recording.
+export interface BoothAlbumTrack {
+  id: string;
+  title: string;
+  duration_seconds: number | null;
+  audio_url: string | null;
+}
 
 // Someone who made a set. The uploader is always first and always verified.
 // After them come the people they credited: a tagged Kronk account, which
@@ -54,6 +65,8 @@ export interface BoothSet {
   saved?: boolean;
   tracklist?: BoothTrack[];
   tracklist_text?: string;
+  // An album's or EP's tracks; empty for every other kind.
+  tracks?: BoothAlbumTrack[];
   is_owner?: boolean;
   can_moderate?: boolean;
   account: {

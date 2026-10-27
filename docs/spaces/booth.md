@@ -8,7 +8,7 @@ DJ sets and mixes first, and also tracks, spoken word, readings and
 podcasts. Voice messages are not Booth. They belong in Nudges or as media
 on a post.
 
-This doc describes what is built as of 2026-10-13. Earlier designs are in
+This doc describes what is built as of 2026-10-27. Earlier designs are in
 git history (see [History](#history)).
 
 ## What a set is
@@ -39,6 +39,8 @@ git history (see [History](#history)).
 - `status_id`: the post that represents the set in the feed, if it has
   been shared (see below).
 - `tracklist`: an optional ordered track list (see [Track list](#track-list)).
+- `tracks`: an album's or EP's own tracks, each its own audio file (see
+  [Albums](#albums)). Every other kind has none.
 
 Sets are indexed for search (`searchable_as :booth_sets`).
 
@@ -94,7 +96,8 @@ which opens the same form as the grid card's menu.
 - **Playback** runs through a shared context (`booth_playback_context.tsx`)
   that keeps playing across views, with a bottom dock (`booth_dock.tsx`):
   cover, title, back 15s / play / forward 15s, and a seekable waveform.
-  There is no queue. Starting a set calls
+  There is no queue beyond Play next and an album's own tracks
+  ([Albums](#albums)). Starting a set calls
   `POST /api/v1/booth_sets/:id/play`, which bumps `play_count`.
 - **Upload** at `/hub/booth/composer` (`/hub/booth/new` is an alias),
   opened from the Ж menu ("Upload a set"). It uses the shared
@@ -130,10 +133,66 @@ The Booth lifts new voices instead of ranking popular ones (design brief,
 
 ## Kinds
 
-`booth_sets.kind` is one of `mix`, `live_recording`, `track`, `podcast`
-or `spoken_word` (`BoothSet::KINDS`), chosen on the upload and edit forms
-("What kind is it?") and shown on cards and the set page. Sets from
-before kinds existed are mixes.
+`booth_sets.kind` is one of `mix`, `live_recording`, `track`, `podcast`,
+`spoken_word`, `album` or `ep` (`BoothSet::KINDS`), chosen on the upload
+and edit forms ("What kind is it?") and shown on cards and the set page.
+Sets from before kinds existed are mixes. `album` and `ep`
+(`ALBUM_KINDS`) are made of tracks instead of one recording: the forms
+offer them only in album mode, and an album can't be edited into a mix or
+back.
+
+## Albums
+
+Added 2026-10-27 (Cassidy's Kommons proposal "Albums to live in Musik?",
+117292076963057258). A musician can put out an album or EP: several
+tracks, each its own audio file, in order, under one title, cover, credits
+and notes. It is a `BoothSet` with kind `album` or `ep`, so it lives in
+Musik, My sets, Artists, saves, shoutouts and the feed like any set. Not
+to be confused with Albutts' photo albums.
+
+- **`BoothSetTrack`** (`booth_set_tracks`): `booth_set`, `position`,
+  `title` (up to 200 characters), `audio_attachment` (an ordinary
+  `MediaAttachment`, uploaded through the media API) and
+  `duration_seconds`. An album has 2 to 30 tracks
+  (`ALBUM_TRACKS_MIN` / `ALBUM_TRACKS_MAX`) and no `audio_attachment` of
+  its own; any other kind has no tracks. Its `duration_seconds` is the sum
+  of its tracks' when every length is known. A track's length comes from
+  the browser reading the file before upload (from a `blob:` URL, which
+  the Content-Security-Policy's `media-src` allows for this), or else from
+  media processing.
+- **Protected like a set's audio.** Deleting a track's audio is refused
+  while the album uses it (FK `on_delete: :restrict`),
+  `booth_set_tracks.audio_attachment_id` is a `MediaAttachmentsVacuum`
+  keeper, and deleting the set (or the account) removes its tracks.
+- **API.** Create and update take `tracks`, the running order: an array of
+  `{ id, title }` for a track the album has, or
+  `{ audio_id, title, duration_seconds }` for a new upload. It replaces the
+  tracks, removing any left out; absent leaves them alone. The serializer returns `tracks`
+  (`id`, `title`, `duration_seconds`, `audio_url`), empty for other kinds,
+  and `audio_url` is the first track's, so anything that plays one file
+  (the embeddable player) plays that. The feed summary carries `kind` and
+  `track_count`.
+- **Uploading.** The composer asks "What are you uploading?": **One
+  recording** or **Album or EP**. Album mode swaps the file picker for a
+  track editor (`components/album_tracks_field.tsx`): pick several files at
+  once, each named after its file (a leading "03 - " goes), rename, move
+  up or down, remove, add more. Files upload one after another
+  ("Uploading track 2 of 9"). The timed track list is hidden for albums.
+  The edit form has the same editor for the album's tracks.
+- **Listening.** The set page lists the tracks under the player
+  (`components/album_tracks.tsx`); each plays from its start (`playTrack`
+  in the playback context). When a track ends the player starts the next
+  one whatever Play next says, and after the last it carries on to the
+  next set if Play next is on. The dock names the track ("Track 2 of 9")
+  and what's up next. The set page's player and the dock run over the
+  current track.
+- **Cards** show "Album · 9 tracks"; the feed card is badged ALBUM or EP
+  with its track count.
+- **Kept at the album level:** plays (one per album started, not per
+  track), saves and the Kind filter. Shoutouts on an album aren't pinned
+  to a moment, since its time runs per track.
+- **Not built:** the embeddable player plays only the first track; track
+  names aren't searchable; there is no per-track artist (a compilation).
 
 ## Saving and Play next
 

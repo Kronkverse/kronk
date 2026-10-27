@@ -15,6 +15,7 @@ import {
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
@@ -22,8 +23,11 @@ import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useAppDispatch } from 'mastodon/store';
 
+import { ALBUM_KINDS, RECORDING_KINDS } from '../kinds';
 import type { BoothKind, BoothSet } from '../types';
 
+import { AlbumTracksField, albumReady } from './album_tracks_field';
+import type { AlbumTrackDraft } from './album_tracks_field';
 import { ComposerSwitch } from './composer_switch';
 import { CreditsField, creditsPayload } from './credits_field';
 import type { CreditDraft } from './credits_field';
@@ -134,6 +138,19 @@ const messages = defineMessages({
     id: 'booth.upload.failed.try_again',
     defaultMessage: '{what}. Please try again.',
   },
+  oneRecording: {
+    id: 'booth.upload.one_recording',
+    defaultMessage: 'One recording',
+  },
+  albumOrEp: { id: 'booth.upload.album_or_ep', defaultMessage: 'Album or EP' },
+  shape: {
+    id: 'booth.upload.shape',
+    defaultMessage: 'What are you uploading?',
+  },
+  uploadingTrack: {
+    id: 'booth.upload.uploading_track',
+    defaultMessage: 'Uploading track {number} of {count}',
+  },
   shareFailed: {
     id: 'booth.upload.share_failed',
     defaultMessage:
@@ -239,6 +256,10 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [postToFeed, setPostToFeed] = useState(true);
   const [reach, setReach] = useState<ReachValue>('public');
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  // An album or EP is several files, one per track, instead of one.
+  const [albumMode, setAlbumMode] = useState(false);
+  const [albumTracks, setAlbumTracks] = useState<AlbumTrackDraft[]>([]);
+  const [uploadingTrack, setUploadingTrack] = useState(0);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
@@ -306,9 +327,15 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
   const finishDraft = draft.finish;
 
+  const audioLabel = albumMode
+    ? intl.formatMessage(messages.uploadingTrack, {
+        number: uploadingTrack + 1,
+        count: albumTracks.length,
+      })
+    : 'Uploading audio';
   const stageLabel =
     stage === 'audio'
-      ? 'Uploading audio'
+      ? audioLabel
       : stage === 'cover'
         ? 'Uploading cover'
         : stage === 'saving'
@@ -371,6 +398,17 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     [],
   );
 
+  // One recording or an album: the file picker follows, and so do the
+  // kinds on offer.
+  const handleOneRecording = useCallback(() => {
+    setAlbumMode(false);
+    setKind((current) => (ALBUM_KINDS.includes(current) ? 'mix' : current));
+  }, []);
+  const handleAlbum = useCallback(() => {
+    setAlbumMode(true);
+    setKind((current) => (ALBUM_KINDS.includes(current) ? current : 'album'));
+  }, []);
+
   const handlePostToFeedChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setPostToFeed(e.target.checked);
@@ -407,7 +445,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   }, []);
 
   const handleSubmit = useCallback(() => {
-    if (!audioFile) return;
+    if (albumMode ? !albumReady(albumTracks) : !audioFile) return;
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -424,13 +462,39 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
         updateStage('audio');
         setUploadPct(0);
-        const audioId = await uploadMedia(audioFile, {
-          signal: controller.signal,
-          onProgress: (pct, eta) => {
-            setUploadPct(pct);
-            setUploadEta(eta);
-          },
-        });
+        const onProgress = (pct: number, eta: string) => {
+          setUploadPct(pct);
+          setUploadEta(eta);
+        };
+
+        // An album uploads its files one after another, in running order.
+        let audioId: string | null = null;
+        const tracks: {
+          audio_id: string;
+          title: string;
+          duration_seconds: number | null;
+        }[] = [];
+        if (albumMode) {
+          for (const [index, track] of albumTracks.entries()) {
+            if (!track.file) continue;
+            setUploadingTrack(index);
+            setUploadPct(0);
+            const id = await uploadMedia(track.file, {
+              signal: controller.signal,
+              onProgress,
+            });
+            tracks.push({
+              audio_id: id,
+              title: track.title.trim(),
+              duration_seconds: track.duration_seconds,
+            });
+          }
+        } else if (audioFile) {
+          audioId = await uploadMedia(audioFile, {
+            signal: controller.signal,
+            onProgress,
+          });
+        }
 
         let coverId: string | null = null;
         if (coverFile) {
@@ -438,10 +502,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           setUploadPct(0);
           coverId = await uploadMedia(coverFile, {
             signal: controller.signal,
-            onProgress: (pct, eta) => {
-              setUploadPct(pct);
-              setUploadEta(eta);
-            },
+            onProgress,
           });
         }
 
@@ -449,14 +510,16 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         const payload: Record<string, unknown> = {
           title,
           collaborators: creditsPayload(credits),
-          audio_id: audioId,
           genres,
           kind,
         };
+        if (audioId) payload.audio_id = audioId;
+        if (albumMode) payload.tracks = tracks;
         if (eventName) payload.event_name = eventName;
         if (eventDate) payload.event_date = eventDate;
         if (description) payload.description = description;
-        if (tracklistText.trim()) payload.tracklist_text = tracklistText;
+        const sendTracklist = !albumMode && tracklistText.trim() !== '';
+        if (sendTracklist) payload.tracklist_text = tracklistText;
         if (coverId) payload.cover_id = coverId;
 
         const res = await api().post<BoothSet>('/api/v1/booth_sets', payload, {
@@ -516,6 +579,8 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     description,
     tracklistText,
     audioFile,
+    albumMode,
+    albumTracks,
     coverFile,
     postToFeed,
     reach,
@@ -526,7 +591,9 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     commitKonnect,
   ]);
 
-  const canSubmit = Boolean(title.trim() && audioFile !== null);
+  const canSubmit = Boolean(
+    title.trim() && (albumMode ? albumReady(albumTracks) : audioFile !== null),
+  );
 
   return (
     <ComposeShell
@@ -562,7 +629,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               }}
             />
           </div>
-          {audioFile && stage === 'audio' && (
+          {audioFile && !albumMode && stage === 'audio' && (
             <div className='booth-upload-form__progress-size'>
               {formatSize(Math.round((audioFile.size * uploadPct) / 100))} /{' '}
               {formatSize(audioFile.size)}
@@ -582,40 +649,61 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
       {!submitting && (
         <>
+          {/* One recording, or an album or EP made of several files. */}
+          <div className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.shape)}</span>
+            <div className='booth-upload-form__shape'>
+              <KornerPill
+                label={intl.formatMessage(messages.oneRecording)}
+                active={!albumMode}
+                onClick={handleOneRecording}
+              />
+              <KornerPill
+                label={intl.formatMessage(messages.albumOrEp)}
+                active={albumMode}
+                onClick={handleAlbum}
+              />
+            </div>
+          </div>
+
           {/* The one thing a set can't do without comes first. A file
               picker, not a kit field: the picker is its own <label>, which
               can't sit inside <ComposeField>'s. */}
-          <div className='booth-upload-form__field'>
-            <span>{intl.formatMessage(messages.audio)} *</span>
-            <label className='booth-upload-form__file-picker'>
-              <input
-                ref={audioInputRef}
-                type='file'
-                accept='audio/*'
-                onChange={handleAudioFileChange}
-                required
-              />
-              <span className='booth-upload-form__file-picker-label'>
-                {audioFile
-                  ? intl.formatMessage(messages.replaceFile)
-                  : intl.formatMessage(messages.pickAudio)}
-              </span>
-            </label>
-            {audioFile ? (
-              <span className='booth-upload-form__file-info'>
-                {audioFile.name} · {formatSize(audioFile.size)}
-              </span>
-            ) : (
-              <small className='booth-upload-form__hint'>
-                {intl.formatMessage(messages.audioHint)}
-              </small>
-            )}
-            {audioError && (
-              <span className='booth-upload-form__file-error'>
-                {audioError}
-              </span>
-            )}
-          </div>
+          {albumMode ? (
+            <AlbumTracksField value={albumTracks} onChange={setAlbumTracks} />
+          ) : (
+            <div className='booth-upload-form__field'>
+              <span>{intl.formatMessage(messages.audio)} *</span>
+              <label className='booth-upload-form__file-picker'>
+                <input
+                  ref={audioInputRef}
+                  type='file'
+                  accept='audio/*'
+                  onChange={handleAudioFileChange}
+                  required
+                />
+                <span className='booth-upload-form__file-picker-label'>
+                  {audioFile
+                    ? intl.formatMessage(messages.replaceFile)
+                    : intl.formatMessage(messages.pickAudio)}
+                </span>
+              </label>
+              {audioFile ? (
+                <span className='booth-upload-form__file-info'>
+                  {audioFile.name} · {formatSize(audioFile.size)}
+                </span>
+              ) : (
+                <small className='booth-upload-form__hint'>
+                  {intl.formatMessage(messages.audioHint)}
+                </small>
+              )}
+              {audioError && (
+                <span className='booth-upload-form__file-error'>
+                  {audioError}
+                </span>
+              )}
+            </div>
+          )}
 
           <ComposeTitle
             value={title}
@@ -652,7 +740,11 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             )}
           </div>
 
-          <KindSelect value={kind} onChange={setKind} />
+          <KindSelect
+            value={kind}
+            onChange={setKind}
+            kinds={albumMode ? ALBUM_KINDS : RECORDING_KINDS}
+          />
 
           {/* A tag picker (chips and suggestion buttons), not one control,
               so it isn't wrapped in <ComposeField>'s <label>. */}
@@ -694,16 +786,20 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               maxLength={5000}
             />
 
-            <ComposeField
-              label={intl.formatMessage(messages.tracklist)}
-              hint={intl.formatMessage(messages.tracklistHint)}
-            >
-              <ComposeTextarea
-                value={tracklistText}
-                onChange={handleTracklistChange}
-                rows={6}
-              />
-            </ComposeField>
+            {/* An album's tracks are its files; the timed list is for one
+                recording. */}
+            {!albumMode && (
+              <ComposeField
+                label={intl.formatMessage(messages.tracklist)}
+                hint={intl.formatMessage(messages.tracklistHint)}
+              >
+                <ComposeTextarea
+                  value={tracklistText}
+                  onChange={handleTracklistChange}
+                  rows={6}
+                />
+              </ComposeField>
+            )}
           </details>
 
           <div className='booth-upload-form__feed'>

@@ -10,10 +10,16 @@ import type { PropsWithChildren } from 'react';
 
 import api from 'mastodon/api';
 
-import type { BoothSet } from './types';
+import { albumTracks } from './kinds';
+import type { BoothAlbumTrack, BoothSet } from './types';
 
 interface BoothPlaybackContextValue {
   activeSet: BoothSet | null;
+  // On an album or EP, the track that is loaded (its index in
+  // `activeSet.tracks`, and the track); `currentTime` and `duration` are
+  // that track's. Null for one recording.
+  activeTrackIndex: number;
+  activeTrack: BoothAlbumTrack | null;
   playing: boolean;
   currentTime: number;
   duration: number;
@@ -26,6 +32,8 @@ interface BoothPlaybackContextValue {
 
   play: (set: BoothSet, queue?: BoothSet[]) => void;
   playFrom: (set: BoothSet, seconds: number) => void;
+  // Start an album or EP at one of its tracks.
+  playTrack: (set: BoothSet, index: number) => void;
   toggle: () => void;
   seekPct: (pct: number) => void;
   skip: (delta: number) => void;
@@ -51,10 +59,12 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [activeSet, setActiveSet] = useState<BoothSet | null>(null);
+  const [activeTrackIndex, setActiveTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const playCountedIdRef = useRef<string | null>(null);
+  // Which set and track (`id#index`) should start once its src is loaded.
   const playIntentRef = useRef<string | null>(null);
   // A start position requested before the set's audio has loaded (a track
   // list timestamp on a set that isn't playing yet). Applied once metadata
@@ -84,14 +94,40 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
       }
 
       // Different set — swap active and mark intent so the effect below
-      // starts playback once React updates the audio src.
-      playIntentRef.current = set.id;
+      // starts playback once React updates the audio src. An album starts
+      // at its first track.
+      const first = albumTracks(set)[0];
+      playIntentRef.current = `${set.id}#0`;
       playCountedIdRef.current = null;
       setCurrentTime(0);
-      setDuration(set.duration_seconds ?? 0);
+      const length = first ? first.duration_seconds : set.duration_seconds;
+      setDuration(length ?? 0);
+      setActiveTrackIndex(0);
       setActiveSet(set);
     },
     [activeSet],
+  );
+
+  const playTrack = useCallback(
+    (set: BoothSet, index: number) => {
+      const track = albumTracks(set)[index];
+      if (!track) return;
+      const audio = audioRef.current;
+      if (activeSet?.id === set.id && activeTrackIndex === index) {
+        if (audio) void audio.play().catch(() => undefined);
+        return;
+      }
+      // Moving between tracks of the album that's already playing is not
+      // a new listen; starting a different set is.
+      if (activeSet?.id !== set.id) playCountedIdRef.current = null;
+      playIntentRef.current = `${set.id}#${index}`;
+      pendingSeekRef.current = null;
+      setCurrentTime(0);
+      setDuration(track.duration_seconds ?? 0);
+      setActiveTrackIndex(index);
+      setActiveSet(set);
+    },
+    [activeSet, activeTrackIndex],
   );
 
   const playFrom = useCallback(
@@ -112,11 +148,12 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
   // if the user requested it via play().
   useEffect(() => {
     if (!activeSet) return;
-    if (playIntentRef.current !== activeSet.id) return;
+    const intent = `${activeSet.id}#${activeTrackIndex}`;
+    if (playIntentRef.current !== intent) return;
     playIntentRef.current = null;
     const audio = audioRef.current;
     if (audio) void audio.play().catch(() => undefined);
-  }, [activeSet]);
+  }, [activeSet, activeTrackIndex]);
 
   const toggle = useCallback(() => {
     const audio = audioRef.current;
@@ -148,6 +185,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
     if (audio) audio.pause();
     pendingSeekRef.current = null;
     setActiveSet(null);
+    setActiveTrackIndex(0);
     setPlaying(false);
     setCurrentTime(0);
     setDuration(0);
@@ -172,13 +210,32 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
       ? (queue[activeIndex + 1] ?? null)
       : null;
 
+  // An album or EP plays straight through: the next track, whatever Play
+  // next says, which is about moving on to another set.
+  const tracks = activeSet ? albumTracks(activeSet) : [];
+  const activeTrack = tracks[activeTrackIndex] ?? null;
+  const hasNextTrack = activeTrackIndex < tracks.length - 1;
+  const src = activeTrack ? activeTrack.audio_url : activeSet?.audio_url;
+
   // The ended listener is wired once; it reads the latest choice here.
   const endedRef = useRef<(() => void) | null>(null);
   useEffect(() => {
     endedRef.current = () => {
-      if (autoNext && upNext) play(upNext);
+      if (activeSet && hasNextTrack) {
+        playTrack(activeSet, activeTrackIndex + 1);
+      } else if (autoNext && upNext) {
+        play(upNext);
+      }
     };
-  }, [autoNext, upNext, play]);
+  }, [
+    autoNext,
+    upNext,
+    play,
+    playTrack,
+    activeSet,
+    activeTrackIndex,
+    hasNextTrack,
+  ]);
 
   // Wire audio element event listeners once
   useEffect(() => {
@@ -228,6 +285,8 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
 
   const value: BoothPlaybackContextValue = {
     activeSet,
+    activeTrackIndex,
+    activeTrack,
     playing,
     currentTime,
     duration,
@@ -236,6 +295,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
     setAutoNext,
     play,
     playFrom,
+    playTrack,
     toggle,
     seekPct,
     skip,
@@ -247,11 +307,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
       {children}
       {/* Audio element lives here — persists across route changes */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio
-        ref={audioRef}
-        src={activeSet?.audio_url ?? ''}
-        preload='metadata'
-      />
+      <audio ref={audioRef} src={src ?? ''} preload='metadata' />
     </BoothPlaybackContext.Provider>
   );
 };
@@ -262,6 +318,8 @@ export function useBoothPlayback(): BoothPlaybackContextValue {
     // Outside provider — return a no-op shape so components render without crashing
     return {
       activeSet: null,
+      activeTrackIndex: 0,
+      activeTrack: null,
       playing: false,
       currentTime: 0,
       duration: 0,
@@ -270,6 +328,7 @@ export function useBoothPlayback(): BoothPlaybackContextValue {
       setAutoNext: () => undefined,
       play: () => undefined,
       playFrom: () => undefined,
+      playTrack: () => undefined,
       toggle: () => undefined,
       seekPct: () => undefined,
       skip: () => undefined,
