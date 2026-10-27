@@ -201,6 +201,14 @@ All in `app/javascript/mastodon/features/krew/`.
     (`krew_chat.tsx`, the messenger's `ConversationView` without its
     header), with "Open in Nudges" beside the heading. It is marked read
     once it has been on screen, not when the page opens.
+  - **Posts**: last on the page, the posts sent to the Krew, newest first,
+    as the standard feed card in the standard timeline (`krew_posts.tsx`,
+    `StatusListContainer` on the `krew:<id>` timeline,
+    `expandKrewTimeline`). The page scrolls on into them and more load as
+    the end comes into view (`GET :id/statuses` pages with `max_id` and a
+    `Link: rel=next` header). Only posts the member may see are listed
+    (each goes through `StatusPolicy`). Back by Tal's "Krew space feed"
+    proposal (decisions.md, 2026-10-27).
 
   The Ж menu's **+** makes something for the Krew in the open space, with
   the normal composer: **Post to <Krew>** (the post composer with the Krew
@@ -271,9 +279,9 @@ two can't collide.
 - **The page for someone outside the Krew** is its name, description,
   faces and the way in. What's happening and the spaces are for members,
   even when a Krew album or post is shown to everyone.
-- **No list of a Krew's posts.** What's happening names the latest post,
-  and each post opens on its own, but older posts sent to the Krew have no
-  list on the page (`GET :id/statuses` still serves one).
+- **New Krew posts don't arrive live.** The Posts list picks up new posts
+  when the page is opened again (`since_id`), not while it is open; there
+  is no Krew stream.
 - **Should invite-only Krews be listed?** They are hidden from Discover, so
   nobody can ask to join one. Listing them would show Krews whose makers
   chose hidden; "Ask to join" is the listed kind of closed Krew for now.
