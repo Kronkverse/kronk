@@ -74,7 +74,7 @@ const messages = defineMessages({
   },
   captionPlaceholder: {
     id: 'albutts.lightbox.caption_placeholder',
-    defaultMessage: 'Add a description (optional)',
+    defaultMessage: 'Caption for this photo (optional)',
   },
   saveCaption: {
     id: 'albutts.lightbox.save_caption',

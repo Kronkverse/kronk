@@ -514,6 +514,8 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
       {contributeOpen && (
         <ContributeComposer
           albumId={album.id}
+          canEditAlbum={album.can_manage ?? album.is_owner}
+          albumDescription={album.description ?? ''}
           onCancel={closeContribute}
           onContributed={handleContributed}
         />

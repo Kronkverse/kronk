@@ -206,6 +206,19 @@ for credit.
   window resets (`X-RateLimit-Reset`), says when it will carry on, and
   retries the same photo, up to six waits, instead of failing it. A photo
   that uploaded but couldn't be added is retried without uploading again.
+- **Album description or photo caption** (Kommons "Album Description",
+  2026-10-27). The album has one description; each photo has its own
+  caption. Every box in the composers says which it is: the album's is
+  **Album description**, a photo's is **Caption for this photo**. The **Add
+  photos** form (`ContributeComposer`) shows the album's description at the
+  top for whoever runs the album (`can_manage`), saved to the album before
+  the photos go in; anyone else is told each box is one photo's caption and
+  the description is the album's to write. Until then every per-photo box
+  said "Add a description", and the Add photos form had no album field, so a
+  story about the whole album went into the first photo's caption. In the
+  grid a caption shows four lines; the lightbox has all of it. Captions
+  already written that way are left as they are: their contributor can move
+  the words with Edit caption and, if they run the album, Edit album.
 - **Drafts** (Kommons "Album Draft Saving", 2026-10-17; the shared drafts of
   `design.md`, Drafts, since 2026-10-19: korner `albutts`, kind `album`). A
   new album saves as you go: its fields, the uploaded photos in order, and
