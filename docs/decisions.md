@@ -17,6 +17,44 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — Kronikles get a Series
+
+Kommons proposal "Kronikles"
+([#117504092528767330](https://kronk.info/hub/kommons/p/117504092528767330)):
+"would be nice to have different types of story ie> chapters. Be great to
+be able to link chapters together".
+
+**Decision (Tal):** a **Series** record. A writer makes a Series (title,
+optional description and cover) and puts their own Kronikles in it as
+ordered chapters. Readers of a chapter see its Series, "Chapter N of M"
+and Previous / Next; the Series has its own page with its contents
+(`docs/spaces/kronikles.md`, Series).
+
+- **A Series is seen only as far as its chapters are.** It has no audience
+  of its own: each Kronikle keeps its reach and Krews, a reader sees and
+  counts only the chapters they can see, and a Series with none they can
+  see is a 404. A Series-level audience would either widen chapters past
+  what their writer chose for each (no reach without consent) or have to
+  be kept in step with them. Its writer always sees it, so an empty one
+  can be filled.
+- **One Series per Kronikle, the writer's own.** No shared or multi-author
+  Series: Kronikles is single-author (its space doc), and putting your
+  writing in someone else's Series is a reach question this doesn't need.
+- **Deleting a Series keeps its Kronikles.** The Series is a way of
+  reading them, not where they live.
+- **One entry in the directory, not a Series face.** The directory's faces
+  are one axis (All / Mine / Mates': whose writing); a Series tab would put
+  a second axis on that rotator. A Series sits where its newest visible
+  chapter would, so the list stays newest first with no ranking.
+- **Not Konnectable on its own.** It's a secondary resource in the
+  manifest: Konnect and previews check a record's audience, and a Series
+  has none to check. Konnect a chapter. If people ask for it, give it an
+  audience rule in `Kronk::KornerRecords` first.
+- Positions are a plain `series_position` integer, rewritten whole on
+  reorder (a writer's Series is small), as Art's featured pieces are.
+
+---
+
 ## 2026-10-26 — Maps fall back without WebGL; feed cards can't crash the app
 
 Kommons "error report on login"
