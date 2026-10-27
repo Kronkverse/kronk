@@ -226,6 +226,13 @@ for credit.
   web session and no access token. One download is capped at 1 GB
   (`MAX_BYTES`); the page adds up the sizes first and says to download in
   parts. A photo whose file cannot be read is left out of the zip.
+  One photo saves from the lightbox's download button without leaving the
+  page (`utils/download_media.ts`, shared with the post viewer): it fetches
+  the original from the media host, then opens the share sheet on a phone
+  (Save Image) or downloads it on a computer. If the fetch fails it falls
+  back to `/media/:id/download`, a redirect to the file with
+  `Content-Disposition: attachment`; that redirect goes to the storage
+  bucket, which sends no CORS headers, so script can't read it.
 - Code: `app/javascript/mastodon/features/albutts/`,
   `app/controllers/api/v1/albutts/`, routes under `namespace :albutts` in
   `config/routes/api.rb`.
