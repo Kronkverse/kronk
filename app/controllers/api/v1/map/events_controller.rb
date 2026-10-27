@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-# Map — event pins. Events with a parseable OSM `location_url`, and
+# Map — event pins. Only *your* events: the ones you host, and the ones
+# you've said you're going to or interested in (Tal, Kommons "Events on
+# Map", 2026-10-27). Events with a parseable OSM `location_url`, and
 # events with none that are Konnected to a Place (Kronk::RecordPlace: a
 # location is a Konnection now), surface on the Map as spiral markers,
 # filtered by the caller's visibility on the underlying Event (see
@@ -8,7 +10,10 @@
 # `location_url` wins over its Place. Tapping a pin opens a preview card
 # with the essentials + a link to /kalendar/<slug>.
 #
-#   GET /api/v1/map/events — pins for upcoming events I can see
+#   GET /api/v1/map/events — pins for my upcoming events
+#   GET /api/v1/map/events?event=<slug> — the same, plus that one event
+#       when I may see it: an event page's location link opens the Map on
+#       its pin, whether or not I've answered it.
 #
 # Look-ahead is bounded to a rolling window so the payload stays
 # small; the surface is a "what's coming" lens, not the full archive.
@@ -37,8 +42,26 @@ class Api::V1::Map::EventsController < Api::BaseController
          .not_cancelled
          .where(start_time: ..(Time.now.utc + UPCOMING_WINDOW))
          .where(pinned)
+         .where(mine)
          .visible_to(current_account)
          .includes(:account, :status)
+  end
+
+  # Hosted by me, or answered going / interested — plus the event the
+  # page was opened for (`?event=`), if any.
+  def mine
+    answered = EventRsvp.where(account: current_account, status: %i(going interested)).select(:event_id)
+    condition = Event.arel_table[:account_id].eq(current_account.id).or(Event.arel_table[:id].in(answered.arel))
+    focus = focused_event_id
+    focus ? condition.or(Event.arel_table[:id].eq(focus)) : condition
+  end
+
+  def focused_event_id
+    return if params[:event].blank?
+
+    Event.by_link!(params[:event].to_s).id
+  rescue ActiveRecord::RecordNotFound
+    nil
   end
 
   # An own `location_url`, or a Place Konnected by the event's host.

@@ -100,5 +100,11 @@ export interface ApiMapEventPinJSON {
   going_count: number;
 }
 
-export const apiGetMapEvents = () =>
-  apiRequestGet<ApiMapEventPinJSON[]>('v1/map/events');
+// Your events: the ones you host, and the ones you're going to or
+// interested in. `event` adds that one event (when you may see it) so an
+// event page's location link still lands on its pin.
+export const apiGetMapEvents = (event?: string | null) =>
+  apiRequestGet<ApiMapEventPinJSON[]>(
+    'v1/map/events',
+    event ? { event } : undefined,
+  );

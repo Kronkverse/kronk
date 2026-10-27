@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — The Map shows only your events
+
+Kommons "Events on Map"
+(https://kronk.info/hub/kommons/p/117483841086601552): the Map pinned every
+upcoming event you were allowed to see, so it filled with other people's
+events.
+
+**Decision (Tal):** the Map's events are only your own: the ones you host,
+plus the ones you're going to or interested in. Every other event stays
+findable in Kalendar. An event's reach still applies: an answered event you
+may no longer see has no pin. One exception keeps the event page working: its
+location link opens `/hub/map?event=<slug>`, and that one event is pinned
+while you may see it, answered or not.
+
+**Supersedes:** the Map pinning every visible upcoming event (docs/spaces/map.md, Events).
+
+---
+
 ## 2026-10-27 — Push can be just a ping
 
 mangobee's Kommons proposal "Changing our Notification for web/app"
