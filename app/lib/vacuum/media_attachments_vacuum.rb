@@ -14,6 +14,7 @@ class Vacuum::MediaAttachmentsVacuum
     'albums' => %w(cover_media_attachment_id),
     'art_piece_photos' => %w(media_attachment_id),
     'art_pieces' => %w(cover_media_attachment_id),
+    'booth_set_tracks' => %w(audio_attachment_id),
     'booth_sets' => %w(audio_attachment_id cover_attachment_id),
     'chronicle_pictures' => %w(media_attachment_id),
     'chronicle_series' => %w(cover_media_attachment_id),

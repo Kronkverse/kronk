@@ -40,9 +40,16 @@ class BoothSet < ApplicationRecord
   has_many :credits, -> { order(:position, :id) }, class_name: 'BoothSetArtist', inverse_of: :booth_set, dependent: :destroy
   has_many :saves, class_name: 'BoothSetSave', inverse_of: :booth_set, dependent: :delete_all
   has_many :shoutouts, class_name: 'BoothShoutout', inverse_of: :booth_set, dependent: :delete_all
+  # An album's or EP's tracks, each its own audio file, in running order
+  # (docs/spaces/booth.md, Albums). Every other kind has none.
+  has_many :tracks, -> { order(:position, :id) }, class_name: 'BoothSetTrack', inverse_of: :booth_set, dependent: :delete_all, autosave: true
 
   # What a set is. Filterable in Musik; existing sets are mixes.
-  KINDS = %w(mix live_recording track podcast spoken_word).freeze
+  KINDS = %w(mix live_recording track podcast spoken_word album ep).freeze
+  # The kinds made of several tracks instead of one recording.
+  ALBUM_KINDS = %w(album ep).freeze
+  ALBUM_TRACKS_MIN = 2
+  ALBUM_TRACKS_MAX = 30
 
   # How many people an uploader can credit on one set.
   MAX_CREDITS = 10
@@ -96,6 +103,18 @@ class BoothSet < ApplicationRecord
   validates :genres, length: { maximum: 10 }
   validates :kind, inclusion: { in: KINDS }
   validate :tracklist_must_be_well_formed
+  validate :tracks_must_fit_kind
+
+  before_validation :total_album_duration, if: :album?
+
+  def album?
+    ALBUM_KINDS.include?(kind)
+  end
+
+  # The tracks that will still be there once the set is saved.
+  def kept_tracks
+    tracks.reject(&:marked_for_destruction?)
+  end
 
   # Track list (docs/spaces/booth.md, "Track list"): ordered entries of
   # `{ "start_seconds" => Integer|nil, "artist" => String|nil, "title" => String }`.
@@ -146,7 +165,11 @@ class BoothSet < ApplicationRecord
   scope :published, -> { where(published: true) }
   scope :recent, -> { order(created_at: :desc) }
 
+  # An album has no single file; anything that plays one recording (the
+  # embeddable player, an older client) gets its first track.
   def audio_url
+    return tracks.first&.audio_url if album?
+
     audio_attachment&.file&.url(:original)
   end
 
@@ -159,6 +182,25 @@ class BoothSet < ApplicationRecord
   end
 
   private
+
+  # An album or EP is its tracks: at least two and no single file. Any other
+  # kind is one recording and has no tracks.
+  def tracks_must_fit_kind
+    count = kept_tracks.size
+    if album?
+      errors.add(:base, "An album or EP needs at least #{ALBUM_TRACKS_MIN} tracks") if count < ALBUM_TRACKS_MIN
+      errors.add(:base, "An album or EP can have up to #{ALBUM_TRACKS_MAX} tracks") if count > ALBUM_TRACKS_MAX
+      errors.add(:base, 'An album or EP is its tracks, not one audio file') if audio_attachment_id.present?
+    elsif count.positive?
+      errors.add(:base, 'Only an album or EP has tracks of its own')
+    end
+  end
+
+  # An album is as long as its tracks, when every track's length is known.
+  def total_album_duration
+    lengths = kept_tracks.map(&:duration_seconds)
+    self.duration_seconds = lengths.present? && lengths.all? ? lengths.sum : nil
+  end
 
   def tracklist_must_be_well_formed
     entries = tracklist

@@ -9,7 +9,7 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :artist_name, :event_name, :event_date,
              :genres, :duration_seconds, :audio_url, :cover_url,
              :cover_offset_y, :published, :created_at, :updated_at,
-             :tracklist, :tracklist_text, :artists, :kind
+             :tracklist, :tracklist_text, :artists, :kind, :tracks
 
   belongs_to :account, serializer: REST::AccountSerializer
 
@@ -47,6 +47,14 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
 
   def tracklist
     Array(object.tracklist)
+  end
+
+  # An album's or EP's tracks in running order, each its own file. Empty
+  # for every other kind.
+  def tracks
+    object.tracks.map do |track|
+      { id: track.id.to_s, title: track.title, duration_seconds: track.duration_seconds, audio_url: track.audio_url }
+    end
   end
 
   # rubocop:disable Naming/PredicatePrefix -- `is_owner` is the JSON API key; renaming would break clients
