@@ -4,14 +4,10 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
-import CallEndIcon from '@/material-icons/400-24px/call_end.svg?react';
-import MicIcon from '@/material-icons/400-24px/mic.svg?react';
-import MicOffIcon from '@/material-icons/400-24px/mic_off.svg?react';
 import OpenInFullIcon from '@/material-icons/400-24px/open_in_full.svg?react';
-import VideocamIcon from '@/material-icons/400-24px/videocam.svg?react';
-import VideocamOffIcon from '@/material-icons/400-24px/videocam_off.svg?react';
 import { huddleLeft } from 'mastodon/actions/huddle';
-import { Icon } from 'mastodon/components/icon';
+import { CallControls } from 'mastodon/components/call_controls';
+import { IconButton } from 'mastodon/components/icon_button';
 import {
   disposeJitsiSession,
   getJitsiSession,
@@ -27,15 +23,7 @@ const messages = defineMessages({
     defaultMessage:
       '{count, plural, one {# in the call} other {# in the call}}',
   },
-  mute: { id: 'huddle.mini.mute', defaultMessage: 'Mute' },
-  unmute: { id: 'huddle.mini.unmute', defaultMessage: 'Unmute' },
-  cameraOff: {
-    id: 'huddle.mini.camera_off',
-    defaultMessage: 'Turn camera off',
-  },
-  cameraOn: { id: 'huddle.mini.camera_on', defaultMessage: 'Turn camera on' },
   expand: { id: 'huddle.mini.expand', defaultMessage: 'Back to the Huddle' },
-  leave: { id: 'huddle.mini.leave', defaultMessage: 'Leave' },
   drag: { id: 'huddle.mini.drag', defaultMessage: 'Move the Huddle window' },
 });
 
@@ -81,7 +69,8 @@ const saveOffset = (offset: Offset) => {
 // floating, like a video player's picture-in-picture (Tal, 2026-10-19), not
 // a pill. The video is the same Jitsi call, moved over this window's video
 // area (jitsi_session.ts), so mic and camera carry on. Drag it by its top
-// bar; the buttons mute, turn the camera off, go back to the Huddle, leave.
+// bar; under the video are Kronk's call controls (components/
+// call_controls.tsx), with a way back to the Huddle.
 export const HuddlePip: React.FC = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
@@ -93,11 +82,10 @@ export const HuddlePip: React.FC = () => {
 
   const [offset, setOffset] = useState<Offset>(readOffset);
   const [count, setCount] = useState(startCount);
-  const [audioMuted, setAudioMuted] = useState(false);
-  const [videoMuted, setVideoMuted] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
-  const shown = active && minimized && getJitsiSession() !== null;
+  const call = getJitsiSession()?.call ?? null;
+  const shown = active && minimized && call !== null;
 
   // Put the call over this window's video area while it's shown.
   useEffect(() => {
@@ -109,29 +97,16 @@ export const HuddlePip: React.FC = () => {
     };
   }, [shown]);
 
-  // Who's in, and what's on, as the call reports it.
+  // Who's in, as the call reports it. What's on (mic, camera, hand,
+  // recording) is the call's own state, which the controls read.
   useEffect(() => {
-    const api = shown ? getJitsiSession()?.api : undefined;
+    const api = shown ? getJitsiSession()?.call.api : undefined;
     if (!api) return undefined;
-    let live = true;
     setCount(api.getNumberOfParticipants());
-    void api.isAudioMuted?.().then((muted) => {
-      if (live) setAudioMuted(muted);
-    });
-    void api.isVideoMuted?.().then((muted) => {
-      if (live) setVideoMuted(muted);
-    });
-    api.addListener('audioMuteStatusChanged', (data) => {
-      if (live) setAudioMuted(Boolean((data as { muted?: boolean }).muted));
-    });
-    api.addListener('videoMuteStatusChanged', (data) => {
-      if (live) setVideoMuted(Boolean((data as { muted?: boolean }).muted));
-    });
     const poll = window.setInterval(() => {
       setCount(api.getNumberOfParticipants());
     }, 5000);
     return () => {
-      live = false;
       window.clearInterval(poll);
     };
   }, [shown]);
@@ -180,12 +155,6 @@ export const HuddlePip: React.FC = () => {
     [offset],
   );
 
-  const toggleAudio = useCallback(() => {
-    getJitsiSession()?.api.executeCommand('toggleAudio');
-  }, []);
-  const toggleVideo = useCallback(() => {
-    getJitsiSession()?.api.executeCommand('toggleVideo');
-  }, []);
   const handleExpand = useCallback(() => {
     history.push('/huddle');
   }, [history]);
@@ -227,60 +196,15 @@ export const HuddlePip: React.FC = () => {
         data-huddle-slot='floating'
       />
 
-      <div className='huddle-mini__controls'>
-        <button
-          type='button'
-          className={`huddle-mini__button${audioMuted ? ' huddle-mini__button--off' : ''}`}
-          onClick={toggleAudio}
-          aria-pressed={audioMuted}
-          title={intl.formatMessage(
-            audioMuted ? messages.unmute : messages.mute,
-          )}
-          aria-label={intl.formatMessage(
-            audioMuted ? messages.unmute : messages.mute,
-          )}
-        >
-          <Icon
-            id={audioMuted ? 'mic_off' : 'mic'}
-            icon={audioMuted ? MicOffIcon : MicIcon}
-          />
-        </button>
-        <button
-          type='button'
-          className={`huddle-mini__button${videoMuted ? ' huddle-mini__button--off' : ''}`}
-          onClick={toggleVideo}
-          aria-pressed={videoMuted}
-          title={intl.formatMessage(
-            videoMuted ? messages.cameraOn : messages.cameraOff,
-          )}
-          aria-label={intl.formatMessage(
-            videoMuted ? messages.cameraOn : messages.cameraOff,
-          )}
-        >
-          <Icon
-            id={videoMuted ? 'videocam_off' : 'videocam'}
-            icon={videoMuted ? VideocamOffIcon : VideocamIcon}
-          />
-        </button>
-        <button
-          type='button'
-          className='huddle-mini__button'
-          onClick={handleExpand}
+      <CallControls call={call} onLeave={handleLeave} compact>
+        <IconButton
+          className='call-controls__button'
           title={intl.formatMessage(messages.expand)}
-          aria-label={intl.formatMessage(messages.expand)}
-        >
-          <Icon id='open_in_full' icon={OpenInFullIcon} />
-        </button>
-        <button
-          type='button'
-          className='huddle-mini__button huddle-mini__button--leave'
-          onClick={handleLeave}
-          title={intl.formatMessage(messages.leave)}
-          aria-label={intl.formatMessage(messages.leave)}
-        >
-          <Icon id='call_end' icon={CallEndIcon} />
-        </button>
-      </div>
+          icon='open_in_full'
+          iconComponent={OpenInFullIcon}
+          onClick={handleExpand}
+        />
+      </CallControls>
     </div>
   );
 };

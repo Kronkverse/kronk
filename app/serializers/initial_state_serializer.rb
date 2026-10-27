@@ -111,6 +111,8 @@ class InitialStateSerializer < ActiveModel::Serializer
       admin: object.admin&.id&.to_s,
       domain: Addressable::IDNA.to_unicode(instance_presenter.domain),
       jitsi_domain: Rails.configuration.x.kronk_jitsi_domain,
+      jitsi_recording: Kronk::Jitsi.recording?,
+      jitsi_room_prefix: Kronk::Jitsi.room_prefix,
       limited_federation_mode: Rails.configuration.x.mastodon.limited_federation_mode,
       locale: I18n.locale,
       mascot: instance_presenter.mascot&.file&.url,
