@@ -70,6 +70,7 @@ RSpec.describe 'Wachuneed brands API' do
                                        params: { name: 'pargo', url: 'https://pargo.example', why: 'Fair pay.' }
 
       expect(response).to have_http_status(422)
+      expect(response.parsed_body['error']).to include('is already in Brands')
     end
 
     it 'needs a signed-in member' do

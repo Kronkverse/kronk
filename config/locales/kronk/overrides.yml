@@ -48,6 +48,12 @@ en:
       wachuneed_brand:
         url: Link
         why: Why we back them
+    errors:
+      models:
+        wachuneed_brand:
+          attributes:
+            name:
+              taken: is already in Brands
   albutts:
     photos_added:
       one: Added a photo to %{title}
@@ -273,6 +279,12 @@ en-GB:
       wachuneed_brand:
         url: Link
         why: Why we back them
+    errors:
+      models:
+        wachuneed_brand:
+          attributes:
+            name:
+              taken: is already in Brands
   albutts:
     photos_added:
       one: Added a photo to %{title}

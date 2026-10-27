@@ -31,7 +31,7 @@ class WachuneedBrand < ApplicationRecord
   normalizes :category, with: ->(category) { category.to_s.strip.presence }
 
   validates :name, presence: true, length: { maximum: 80 }
-  validates :name, uniqueness: { case_sensitive: false, message: 'is already in Brands' }
+  validates :name, uniqueness: { case_sensitive: false }
   validates :url, presence: true, length: { maximum: 500 }
   validates :why, presence: true, length: { maximum: 1000 }
   validates :category, inclusion: { in: CATEGORIES }, allow_nil: true
@@ -85,7 +85,7 @@ class WachuneedBrand < ApplicationRecord
   # `backer` takes their backing back. The proposer can't: their backing
   # is the proposal, and taking the brand down is how they withdraw it.
   def unback!(backer)
-    raise Mastodon::ValidationError, 'You proposed this brand. Take it down instead.' if backer.id == account_id
+    raise Mastodon::ValidationError, 'You proposed this brand. Take it down instead.' if backer.id == account_id # rubocop:disable I18n/RailsI18n/DecorateString
 
     backings.where(account_id: backer.id).destroy_all
     backings.reset
