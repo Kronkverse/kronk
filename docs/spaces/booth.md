@@ -300,8 +300,9 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   play sound after a tap) and join muted, with Jitsi's keyboard shortcuts
   off and only raise hand, tile view and leave in their controls. The
   page polls the set every 20 seconds, so Listen in appears when the host
-  goes live, and asks the Jitsi server who's in the room every 15
-  seconds, as Huddle's lobby does ("N in the room"). **End set** asks first; the ended page offers the
+  goes live, and asks who's in the room every 15 seconds, as Huddle's
+  lobby does ("N in the room"), through Kronk (`GET
+  /api/v1/calls/presence`): the Jitsi server answers that only to Kronk. **End set** asks first; the ended page offers the
   host **Upload the recording**.
 - **Remind me.** On a scheduled set someone else is playing, Remind me
   (`booth_live_reminders`, `POST` / `DELETE /api/v1/booth_lives/:id/remind`)

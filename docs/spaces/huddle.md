@@ -19,7 +19,7 @@ not code, read once in `config/initializers/1_kronk_jitsi.rb`:
 | `JITSI_DOMAIN`           | The server's bare host (default `meet.talitamoss.info`, the old open one). Reaches the CSP, Kalendar's Huddle events and the web client (`jitsiDomain` in `initial_state.ts`).         |
 | `JITSI_JWT_SECRET`       | The shared HS256 secret. Blank: no tokens, and Kronk works on an open server as it always did (no Record either).                                                                      |
 | `JITSI_JWT_APP_ID`       | The token's `iss`, the server's app id. Default `kronk`.                                                                                                                               |
-| `JITSI_ROOM_PREFIX`      | Put before every room name Kronk hands Jitsi (shadow sets `shadow-`), so two Kronks can share a server. Applied in passes, the head count and the browser's lobby polls; never stored. |
+| `JITSI_ROOM_PREFIX`      | Put before every room name Kronk hands Jitsi (shadow sets `shadow-`), so two Kronks can share a server. Applied in passes, the head count and who-is-in; never stored. |
 | `JITSI_RECORDING_SECRET` | Signs the recorder's calls to Kronk (Recordings, below). Blank: those endpoints are off.                                                                                               |
 
 Never put a value in the repo; they live in the environment.
@@ -70,7 +70,8 @@ never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
   which a migration seeds as a singleton
   (`AddRoomScopeToHuddleSessions`; `HuddleSession` validates there is only
   one).
-- The lobby polls the Jitsi server for who is in the room. The home feed's
+- The lobby polls Kronk for who is in the room (`GET /api/v1/calls/presence`,
+  which asks the Jitsi server; it answers only Kronk). The home feed's
   `LiveBanner` shows a banner when someone is there, from Kronk's own count
   (`GET /api/v1/huddle/count`, the minute-old figure below), not from Jitsi:
   Jitsi answers an empty room with a 404, which every browser logged as a
@@ -304,11 +305,6 @@ longer makes Huddle-type events (its edit form lost the type toggle on
   `POST /api/v1/huddle/rooms/:id/join`, which moves `last_active_at` (so the
   list and the reaper see use). Nothing writes `huddle_participants` or calls
   `start!` / `end!`, so occupancy in the list is always 0.
-- **The lobby's who's-in poll on Kronk's server.** The Main Huddle's lobby
-  and a live set's room ask the Jitsi server from the browser
-  (`/room?room=…`) who is in. Kronk's server answers head counts only to
-  Kronk's own address, so there these may come up empty; they want to go
-  through Kronk, as the home banner's count does.
 - **Chat and reactions** were Jitsi toolbar buttons and went with the
   toolbar. Bringing them back means Kronk controls for them.
 - **Recordings left behind.** A `pending` row whose upload never finished
