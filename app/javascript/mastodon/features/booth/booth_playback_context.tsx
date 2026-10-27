@@ -307,11 +307,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
       {children}
       {/* Audio element lives here — persists across route changes */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio
-        ref={audioRef}
-        src={src ?? ''}
-        preload='metadata'
-      />
+      <audio ref={audioRef} src={src ?? ''} preload='metadata' />
     </BoothPlaybackContext.Provider>
   );
 };

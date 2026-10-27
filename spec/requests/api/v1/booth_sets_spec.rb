@@ -333,11 +333,12 @@ RSpec.describe 'API V1 Booth Sets' do
     end
 
     it 'creates an album with its tracks in the order given', :aggregate_failures do
-      create_album([
+      tracks = [
         { audio_id: files[2].id, title: 'Low Water', duration_seconds: 200 },
         { audio_id: files[0].id, title: 'Undertow', duration_seconds: 180 },
         { audio_id: files[1].id, title: 'Slack Tide', duration_seconds: 240 },
-      ])
+      ]
+      create_album(tracks)
 
       expect(response).to have_http_status(200)
       expect(response.parsed_body['kind']).to eq 'album'
@@ -379,7 +380,7 @@ RSpec.describe 'API V1 Booth Sets' do
       ids = response.parsed_body['tracks'].pluck('id')
 
       patch "/api/v1/booth_sets/#{set_id}", headers: write_headers, as: :json,
-                                             params: { tracks: [{ id: ids[2], title: 'Opener' }, { id: ids[0] }] }
+                                            params: { tracks: [{ id: ids[2], title: 'Opener' }, { id: ids[0] }] }
 
       expect(response).to have_http_status(200)
       expect(titles).to eq ['Opener', 'Track 1']
@@ -396,7 +397,7 @@ RSpec.describe 'API V1 Booth Sets' do
       expect(titles).to eq %w(A B)
     end
 
-    it 'will not take an album below two tracks' do
+    it 'does not take an album below two tracks' do
       create_album([{ audio_id: files[0].id, title: 'A' }, { audio_id: files[1].id, title: 'B' }])
       set_id = response.parsed_body['id']
       ids = response.parsed_body['tracks'].pluck('id')
