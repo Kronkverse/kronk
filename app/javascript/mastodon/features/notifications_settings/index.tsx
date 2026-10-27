@@ -21,10 +21,14 @@ import {
   NudgeSwitches,
   QuietHoursControl,
 } from 'mastodon/features/settings/nudge_switches';
+import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
 import { useNudgeSettings } from 'mastodon/hooks/useNudgeSettings';
-import type { NudgeSettingRow } from 'mastodon/hooks/useNudgeSettings';
+import type {
+  NudgeSettingRow,
+  PushStyle,
+} from 'mastodon/hooks/useNudgeSettings';
 import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 
 // Notifications. Three concerns share this page:
@@ -52,6 +56,27 @@ const messages = defineMessages({
   deviceLabel: {
     id: 'notifications_settings.device_label',
     defaultMessage: 'Notifications here',
+  },
+  pushStyleLabel: {
+    id: 'notifications_settings.push_style_label',
+    defaultMessage: 'How push tells you',
+  },
+  pushStyleEach: {
+    id: 'notifications_settings.push_style_each',
+    defaultMessage: 'Each one',
+  },
+  pushStyleEachDesc: {
+    id: 'notifications_settings.push_style_each_desc',
+    defaultMessage: 'Every push says who did what.',
+  },
+  pushStylePing: {
+    id: 'notifications_settings.push_style_ping',
+    defaultMessage: 'Just a ping',
+  },
+  pushStylePingDesc: {
+    id: 'notifications_settings.push_style_ping_desc',
+    defaultMessage:
+      'One quiet "Something new on Kronk", replaced each time, with no names or words. Open Nudges to see what it is.',
   },
   quietLabel: {
     id: 'notifications_settings.quiet_label',
@@ -316,6 +341,31 @@ export const NotificationsSettings: React.FC<{
         <SettingsRow label={intl.formatMessage(messages.deviceLabel)}>
           <PushPrompt variant='settings' />
         </SettingsRow>
+        {nudges.pushStyle && (
+          <SettingsRow
+            label={intl.formatMessage(messages.pushStyleLabel)}
+            stack
+          >
+            <SettingsRadioCards<PushStyle>
+              name='push-style'
+              value={nudges.pushStyle}
+              onChange={nudges.setPushStyle}
+              ariaLabel={intl.formatMessage(messages.pushStyleLabel)}
+              choices={[
+                {
+                  key: 'each',
+                  label: intl.formatMessage(messages.pushStyleEach),
+                  description: intl.formatMessage(messages.pushStyleEachDesc),
+                },
+                {
+                  key: 'ping',
+                  label: intl.formatMessage(messages.pushStylePing),
+                  description: intl.formatMessage(messages.pushStylePingDesc),
+                },
+              ]}
+            />
+          </SettingsRow>
+        )}
         {nudges.quietHours && (
           <SettingsRow
             label={intl.formatMessage(messages.quietLabel)}

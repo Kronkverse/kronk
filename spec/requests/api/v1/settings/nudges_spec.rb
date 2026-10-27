@@ -84,6 +84,23 @@ RSpec.describe 'API V1 Settings Nudges' do
       expect(body['types'].find { |r| r['key'] == 'kommons.backed' }['push']).to be false
     end
 
+    it 'chooses how push reads, without touching the mute list, and refuses anything else' do
+      user.settings['nudges.muted_types'] = ['feed.frothed']
+      user.save!
+
+      expect(Nudges::PushPreferences.style(user)).to eq('each')
+
+      put '/api/v1/settings/nudges', headers: headers, params: { push_style: 'ping' }, as: :json
+
+      expect(response.parsed_body).to include('push_style' => 'ping', 'muted_types' => ['feed.frothed'])
+      expect(Nudges::PushPreferences.ping?(user.reload)).to be true
+
+      put '/api/v1/settings/nudges', headers: headers, params: { push_style: 'loud' }, as: :json
+
+      expect(response).to have_http_status(422)
+      expect(Nudges::PushPreferences.style(user.reload)).to eq('ping')
+    end
+
     it 'sets quiet hours, and refuses a time that is not HH:MM' do
       put '/api/v1/settings/nudges', headers: headers, params: { quiet_hours: { start: '23:30', end: '06:00' } }, as: :json
 
