@@ -20,7 +20,8 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 
 - **Map** (`mates`, default, `/hub/map`) — a MapLibre map with your Mates'
   pins, a people strip (a face per pin, your own slot last; tap to
-  centre), upcoming Kalendar events as markers, and Places.
+  centre), your upcoming Kalendar events (hosting, going or interested) as
+  markers, and Places.
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
   after your Mates' (Kommons "Treks list of Mates before Mine",
@@ -269,10 +270,15 @@ or `name` and `address` alone), `PATCH` and `DELETE` (the maker only).
 
 ## Events
 
-`GET /api/v1/map/events` returns upcoming Kalendar events you're allowed to
-see that have a parseable OpenStreetMap `location_url`, or no `location_url`
-and a Konnected Place (pinned at the Place, with its name). The event page's
-location link goes to `/hub/map?event=<slug>`, which focuses that event.
+The Map shows only your events: the ones you host, and the ones you're
+going to or interested in (decisions.md, 2026-10-27). Other events you could
+see stay in Kalendar. `GET /api/v1/map/events` returns those of them that are
+upcoming, that you're still allowed to see, and that have a parseable
+OpenStreetMap `location_url`, or no `location_url` and a Konnected Place
+(pinned at the Place, with its name). The event page's location link goes to
+`/hub/map?event=<slug>`, which focuses that event; the Map asks for
+`?event=<slug>` too, so that one event gets its pin even when you haven't
+answered it, if you may see it.
 
 ## API
 
