@@ -98,7 +98,7 @@ RSpec.describe 'API V1 Calls Recording uploads' do
         at = Time.current.to_i
         signature = OpenSSL::HMAC.hexdigest('SHA256', secret, "#{at}.#{body.to_json}")
         post '/api/v1/calls/recordings/start', params: body.merge(size: 20).to_json, headers: {
-          'Content-Type' => 'application/json', 'X-Kronk-Timestamp' => at.to_s, 'X-Kronk-Signature' => "sha256=#{signature}",
+          'Content-Type' => 'application/json', 'X-Kronk-Timestamp' => at.to_s, 'X-Kronk-Signature' => "sha256=#{signature}"
         }
 
         expect(response).to have_http_status(401)

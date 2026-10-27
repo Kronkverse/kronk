@@ -42,7 +42,7 @@ RSpec.describe 'API V1 Calls Recordings' do
       get '/api/v1/calls/recordings', params: { kind: 'kuddle', id: kuddle.id }, headers: headers
 
       expect(response).to have_http_status(200)
-      expect(response.parsed_body.pluck('id')).to eq [newer, older].map { |r| r.id.to_s }
+      expect(response.parsed_body.pluck('id')).to eq([newer, older].map { |r| r.id.to_s })
       expect(response.parsed_body.first).to include(
         'url' => 'https://bucket.example/play?signed',
         'download_url' => 'https://bucket.example/download?signed',

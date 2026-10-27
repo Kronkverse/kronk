@@ -156,6 +156,8 @@ const RecordingItem: React.FC<{
         ]}
       />
       {playing && (
+        // A call recording has no captions to offer.
+        // eslint-disable-next-line jsx-a11y/media-has-caption
         <video
           className='call-recordings__player'
           src={recording.url}

@@ -1,7 +1,7 @@
-import classNames from 'classnames';
-
 import type { MessageDescriptor } from 'react-intl';
 import { defineMessages, useIntl } from 'react-intl';
+
+import classNames from 'classnames';
 
 import AppsIcon from '@/material-icons/400-24px/apps.svg?react';
 import CallEndIcon from '@/material-icons/400-24px/call_end.svg?react';

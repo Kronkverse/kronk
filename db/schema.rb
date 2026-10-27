@@ -2890,7 +2890,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
   add_foreign_key "call_recordings", "accounts", column: "started_by_account_id", on_delete: :nullify
-  add_foreign_key "call_recordings", "booth_lives", on_delete: :cascade
+  add_foreign_key "call_recordings", "booth_lives", column: "booth_live_id", on_delete: :cascade
   add_foreign_key "call_recordings", "huddle_sessions", on_delete: :cascade
   add_foreign_key "canonical_email_blocks", "accounts", column: "reference_account_id", on_delete: :cascade
   add_foreign_key "challenge_conditions", "proposal_votes", on_delete: :cascade, validate: false

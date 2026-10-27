@@ -14,13 +14,13 @@ Kronk's own server takes people only with a pass, a token Kronk signs
 (decisions.md, 2026-10-27, "Kronk's own Jitsi"). The server is configuration,
 not code, read once in `config/initializers/1_kronk_jitsi.rb`:
 
-| Variable                 | What it does                                                                                                                                                                           |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `JITSI_DOMAIN`           | The server's bare host (default `meet.talitamoss.info`, the old open one). Reaches the CSP, Kalendar's Huddle events and the web client (`jitsiDomain` in `initial_state.ts`).         |
-| `JITSI_JWT_SECRET`       | The shared HS256 secret. Blank: no tokens, and Kronk works on an open server as it always did (no Record either).                                                                      |
-| `JITSI_JWT_APP_ID`       | The token's `iss`, the server's app id. Default `kronk`.                                                                                                                               |
-| `JITSI_ROOM_PREFIX`      | Put before every room name Kronk hands Jitsi (shadow sets `shadow-`), so two Kronks can share a server. Applied in passes, the head count and who-is-in; never stored. |
-| `JITSI_RECORDING_SECRET` | Signs the recorder's calls to Kronk (Recordings, below). Blank: those endpoints are off.                                                                                               |
+| Variable                 | What it does                                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `JITSI_DOMAIN`           | The server's bare host (default `meet.talitamoss.info`, the old open one). Reaches the CSP, Kalendar's Huddle events and the web client (`jitsiDomain` in `initial_state.ts`). |
+| `JITSI_JWT_SECRET`       | The shared HS256 secret. Blank: no tokens, and Kronk works on an open server as it always did (no Record either).                                                              |
+| `JITSI_JWT_APP_ID`       | The token's `iss`, the server's app id. Default `kronk`.                                                                                                                       |
+| `JITSI_ROOM_PREFIX`      | Put before every room name Kronk hands Jitsi (shadow sets `shadow-`), so two Kronks can share a server. Applied in passes, the head count and who-is-in; never stored.         |
+| `JITSI_RECORDING_SECRET` | Signs the recorder's calls to Kronk (Recordings, below). Blank: those endpoints are off.                                                                                       |
 
 Never put a value in the repo; they live in the environment.
 
