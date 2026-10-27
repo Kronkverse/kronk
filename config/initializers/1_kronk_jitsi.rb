@@ -32,15 +32,17 @@ Rails.application.configure do
   # Where a call recording is played from: a short-lived signed URL on the
   # bucket's own host (not the media CDN), which the CSP's media-src must
   # allow. Nil without S3.
+  s3_bucket = ENV.fetch('S3_BUCKET', '')
+  s3_endpoint = ENV.fetch('S3_ENDPOINT', '')
   config.x.kronk_call_recordings_host =
-    if ENV['S3_ENABLED'] == 'true' && ENV['S3_BUCKET'].present?
-      if ENV['S3_ENDPOINT'].present?
-        endpoint = URI.parse(ENV['S3_ENDPOINT'])
-        host = ENV['S3_OVERRIDE_PATH_STYLE'] == 'true' ? "#{ENV['S3_BUCKET']}.#{endpoint.host}" : endpoint.host
+    if ENV.fetch('S3_ENABLED', 'false') == 'true' && s3_bucket.present?
+      if s3_endpoint.present?
+        endpoint = URI.parse(s3_endpoint)
+        host = ENV.fetch('S3_OVERRIDE_PATH_STYLE', 'false') == 'true' ? "#{s3_bucket}.#{endpoint.host}" : endpoint.host
         port = endpoint.port == endpoint.default_port ? '' : ":#{endpoint.port}"
         "#{endpoint.scheme}://#{host}#{port}"
       else
-        "https://#{ENV['S3_BUCKET']}.s3.#{ENV.fetch('S3_REGION', 'us-east-1')}.amazonaws.com"
+        "https://#{s3_bucket}.s3.#{ENV.fetch('S3_REGION', 'us-east-1')}.amazonaws.com"
       end
     end
 end

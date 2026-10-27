@@ -35,12 +35,12 @@ class CallRecording < ApplicationRecord
 
   # The ready recordings of a call target, newest first.
   def self.for_target(target)
-    scope = ready.where(kind: target.kind)
+    scope = ready.where(kind: target.kind).newest_first
     case target.kind
     when 'kuddle' then scope.where(huddle_session_id: target.id)
     when 'booth_live' then scope.where(booth_live_id: target.id)
     else scope
-    end.newest_first
+    end
   end
 
   def self.build_for(target, filename:, size:, started_by: nil)

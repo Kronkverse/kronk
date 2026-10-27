@@ -89,7 +89,7 @@ class Api::V1::Calls::RecordingUploadsController < Api::BaseController
   def verify_signature!
     timestamp = request.headers[TIMESTAMP_HEADER].to_s
     signature = request.headers[SIGNATURE_HEADER].to_s
-    fresh = timestamp.match?(/\A\d{1,12}\z/) && (Time.now.to_i - timestamp.to_i).abs <= MAX_SKEW.to_i
+    fresh = timestamp.match?(/\A\d{1,12}\z/) && (Time.current.to_i - timestamp.to_i).abs <= MAX_SKEW.to_i
     expected = "sha256=#{OpenSSL::HMAC.hexdigest('SHA256', Kronk::Jitsi.recording_secret, "#{timestamp}.#{request.raw_post}")}"
 
     return if fresh && ActiveSupport::SecurityUtils.secure_compare(expected, signature)
