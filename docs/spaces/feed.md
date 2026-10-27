@@ -164,6 +164,11 @@ Photos and videos mix freely in one post, in the order they were added
 (Tal, 2026-10-12): the gallery shows a video as a tile with its length, and
 the full-screen viewer plays it. Until then a post was either photos or a
 single video. An audio file still has to be posted on its own.
+The card shows at most **four tiles** (proposal 117490082074180046, 2026-10-27),
+on the feed and on the post's own page alike. With more, the fourth carries
+**+N**, the number not shown, and tapping it opens the viewer at the fifth
+(`components/media_gallery.jsx`). Before, all 30 laid out in rows and a
+big post ran on for screens.
 
 ## How korners reach the feed
 

@@ -17,6 +17,8 @@ import { formatTime } from 'mastodon/features/video';
 
 import { autoPlayGif, displayMedia, useBlurhash } from '../initial_state';
 
+const MAX_TILES = 4;
+
 class Item extends PureComponent {
 
   static propTypes = {
@@ -29,6 +31,8 @@ class Item extends PureComponent {
     displayWidth: PropTypes.number,
     visible: PropTypes.bool.isRequired,
     autoplay: PropTypes.bool,
+    // On the last tile of a post with more than four: how many aren't shown.
+    moreCount: PropTypes.number,
   };
 
   static defaultProps = {
@@ -79,6 +83,13 @@ class Item extends PureComponent {
     e.stopPropagation();
   };
 
+  // "+N" opens the viewer at the first photo not shown.
+  handleMoreClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.props.onClick(this.props.index + 1);
+  };
+
   handleImageLoad = () => {
     this.setState({ loaded: true });
   };
@@ -88,7 +99,7 @@ class Item extends PureComponent {
   };
 
   render () {
-    const { attachment, lang, index, size, standalone, displayWidth, visible } = this.props;
+    const { attachment, lang, index, size, standalone, displayWidth, visible, moreCount } = this.props;
 
     let badges = [], thumbnail;
 
@@ -103,16 +114,6 @@ class Item extends PureComponent {
       height = 50;
     }
 
-    // Past four, the gallery is a justified flex layout rather than a fixed
-    // grid: every item is the same height and grows in proportion to its own
-    // aspect ratio, so each row spans the full width instead of leaving a
-    // ragged gap. Falls back to 3/2 when dimensions are not known yet.
-    const aspect = Number(attachment.getIn(['meta', 'small', 'aspect'])) || 1.5;
-    const justified =
-      size > 4
-        ? { flexGrow: aspect, flexBasis: `${Math.round(aspect * 140)}px` }
-        : undefined;
-
     const description = attachment.getIn(['translation', 'description']) || attachment.get('description');
 
     if (description?.length > 0) {
@@ -121,7 +122,7 @@ class Item extends PureComponent {
 
     if (attachment.get('type') === 'unknown') {
       return (
-        <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} style={justified} key={attachment.get('id')}>
+        <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} key={attachment.get('id')}>
           <a className='media-gallery__item-thumbnail' href={attachment.get('remote_url') || attachment.get('url')} style={{ cursor: 'pointer' }} title={description} lang={lang} target='_blank' rel='noopener'>
             <Blurhash
               hash={attachment.get('blurhash')}
@@ -200,7 +201,7 @@ class Item extends PureComponent {
     }
 
     return (
-      <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--error': this.state.error, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} style={justified} key={attachment.get('id')}>
+      <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--error': this.state.error, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} key={attachment.get('id')}>
         <Blurhash
           hash={attachment.get('blurhash')}
           dummy={!useBlurhash}
@@ -215,6 +216,15 @@ class Item extends PureComponent {
           <div className='media-gallery__item__badges'>
             {badges}
           </div>
+        )}
+
+        {visible && moreCount > 0 && (
+          <button type='button' className='media-gallery__more' onClick={this.handleMoreClick}>
+            <span aria-hidden='true'>+{moreCount}</span>
+            <span className='sr-only'>
+              <FormattedMessage id='media_gallery.more' defaultMessage='{count} more' values={{ count: moreCount }} />
+            </span>
+          </button>
         )}
       </div>
     );
@@ -314,14 +324,16 @@ class MediaGallery extends PureComponent {
     let children;
 
     const style = {};
-    const size   = media.size;
 
-    // Past four attachments the grid flows into as many rows as it needs, so a
-    // forced aspect ratio just reserves empty space below the images. Below
-    // five, the fixed 2x2 grid fills the ratio exactly, so it still applies.
+    // A post shows at most four tiles (Kronk takes up to 30 photos). Past
+    // four, the last tile carries "+N" and opens the viewer at the fifth.
+    const shown = media.take(MAX_TILES);
+    const size  = shown.size;
+    const moreCount = media.size - size;
+
     if (this.isFullSizeEligible()) {
       style.aspectRatio = `${this.props.media.getIn([0, 'meta', 'small', 'aspect'])}`;
-    } else if (size <= 4) {
+    } else {
       style.aspectRatio = '3 / 2';
     }
 
@@ -330,7 +342,7 @@ class MediaGallery extends PureComponent {
     if (this.isFullSizeEligible()) {
       children = <Item standalone autoplay={autoplay} onClick={this.handleClick} attachment={media.get(0)} lang={lang} displayWidth={width} visible={visible} />;
     } else {
-      children = media.map((attachment, i) => <Item key={attachment.get('id')} autoplay={autoplay} onClick={this.handleClick} attachment={attachment} index={i} lang={lang} size={size} displayWidth={width} visible={visible || uncached} />);
+      children = shown.map((attachment, i) => <Item key={attachment.get('id')} autoplay={autoplay} onClick={this.handleClick} attachment={attachment} index={i} lang={lang} size={size} displayWidth={width} visible={visible || uncached} moreCount={i === size - 1 ? moreCount : 0} />);
     }
 
     return (
