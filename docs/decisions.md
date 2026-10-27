@@ -17,6 +17,19 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — The composer title is a text box
+
+The title at the top of every composer (`<ComposeTitle>`) was drawn as a
+heading: the display serif on a bare underline, no box. People read it as a
+heading and not as somewhere to type (Kommons "Title doesnt look like a
+text box", Tal).
+
+**Decision (Tal):** the title is boxed like every other field in the kit
+(same border, radius, surface and focus ring as `<ComposeInput>`) and keeps
+the display serif at its larger size, so it still reads as the record's
+name. Supersedes "the display serif, no box" in Korner Standard L13
+(2026-10-23, One composer, one Konnect).
+
 ## 2026-10-27 — Booth live: music sound, the crowd on screen, recorded into a set
 
 The Booth's live sets ran on a voice call: the browser cleaned the music
