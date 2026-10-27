@@ -33,7 +33,7 @@ RSpec.describe 'Feed posts', :inline_jobs, :js, :streaming do
 
     within('.status-wachuneed-card') { expect(page).to have_content('Red bike') }
     fill_in 'Write a reply...', with: 'Still going?'
-    find('input[placeholder="Write a reply..."]').send_keys(:enter)
+    find('textarea[placeholder="Write a reply..."]').send_keys(:enter)
 
     expect(page).to have_css('.status-replies__item', text: 'Still going?')
     expect(Status.where(in_reply_to_id: listing.reload.status_id).pick(:text)).to eq 'Still going?'
