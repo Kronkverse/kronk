@@ -19,6 +19,9 @@ RSpec.describe 'Huddle', :inline_jobs, :js, :streaming do
     # The lobby asks the Jitsi host how many people are in the Main Huddle,
     # a server this suite does not run.
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    # A Kuddle's page starts the Jitsi call, and CI's browser has no camera
+    # or microphone to give it.
+    ignore_js_error(/gum\.not_found/)
   end
 
   it 'creates a Kuddle from the New Kuddle route and goes into it' do
