@@ -269,7 +269,8 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   then **ended**. A set nobody ended counts as ended 12 hours after it
   started, and one that never started drops off the list 6 hours after
   its start time (`STALE_AFTER`, `MISSED_AFTER`), so a closed tab can't
-  leave a ghost "live now". Nothing of the performance is stored.
+  leave a ghost "live now". Nothing of the performance is stored unless
+  the host records it (below).
 - **API** (`Api::V1::BoothLivesController`, members only because the
   room key is the way in): `index` (live, then upcoming soonest first),
   `show`, `create` (no `starts_at` means now), `update`, `destroy` (not
@@ -285,16 +286,22 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   they press **Go live** there. **Later** schedules it, and can tell the
   feed at once. Tell my feed is on by default with a reach picker.
 - **The room** (`/hub/booth/live/:id`, `components/live_room.tsx`, on
-  `<KornerDetail>`). The host joins with Jitsi's pre-join screen (to pick
-  their mixer or interface), camera off, and audio processing off: no
-  echo cancelling, noise suppression, gain control or high-pass filter,
-  and stereo Opus at 510 kbps, so music isn't treated as speech.
-  Listeners tap **Listen in** (browsers only play sound after a tap) and
-  join muted with a cut-down toolbar: chat, raise hand, reactions, tile
-  view, full screen and leave. The page polls the set every 20 seconds,
-  so Listen in appears when the host goes live, and asks the Jitsi
-  server who's in the room every 15 seconds, as Huddle's lobby does
-  ("N in the room"). **End set** asks first; the ended page offers the
+  `<KornerDetail>`). Everyone joins with a pass for the set
+  (`POST /api/v1/calls/token`, `kind: booth_live`; `docs/spaces/huddle.md`,
+  The Jitsi server): whoever the set's reach allows, while it is live, and
+  the host from when it's planned. The host's pass makes them the room's
+  moderator. Jitsi's toolbar is hidden and Kronk's controls sit under the
+  room (`<CallControls>`). The host joins with Jitsi's pre-join screen (the
+  one Jitsi screen kept, to pick their mixer or interface), camera off,
+  and audio processing off: no echo cancelling, noise suppression, gain
+  control or high-pass filter, and stereo Opus at 510 kbps, so music isn't
+  treated as speech. Their controls are mic, camera, share screen, hand,
+  tile view, leave and Record. Listeners tap **Listen in** (browsers only
+  play sound after a tap) and join muted, with Jitsi's keyboard shortcuts
+  off and only raise hand, tile view and leave in their controls. The
+  page polls the set every 20 seconds, so Listen in appears when the host
+  goes live, and asks the Jitsi server who's in the room every 15
+  seconds, as Huddle's lobby does ("N in the room"). **End set** asks first; the ended page offers the
   host **Upload the recording**.
 - **Remind me.** On a scheduled set someone else is playing, Remind me
   (`booth_live_reminders`, `POST` / `DELETE /api/v1/booth_lives/:id/remind`)
@@ -326,6 +333,28 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
     takes those nudges back.
   - **The host's own feed.** Tell my feed posts at the reach they pick,
     as before.
+
+### Recording a live set
+
+With Kronk's Jitsi server set up for it (`JITSI_JWT_SECRET`,
+`JITSI_RECORDING_SECRET` and S3 storage; `docs/spaces/huddle.md`,
+Recordings), the host can press **Record** under the room. Everyone in it
+sees "Recording" while it runs, and the get-ready panel says so
+beforehand. The server's recorder uploads the file to a private object in
+Kronk's storage once the recording stops.
+
+- **It is the host's** (Tal, 2026-10-27). Only the host (and staff) can
+  see a live set's recording, because it's theirs to publish as a set.
+  Listeners never get it.
+- **After the set**, the ended page tells the host "Your recording is
+  ready", with **Download the recording** and **Upload the recording**,
+  the usual upload (`/hub/booth/composer`), and the recording itself to
+  play or delete. The upload takes a file from the host's device, so it
+  can't take the stored recording directly yet: the host downloads it,
+  then uploads it. Deleting the recording, or the live set, deletes the
+  file.
+- Without recording set up, the get-ready panel still says Kronk doesn't
+  record the room, and the host records on their own set-up as before.
 
 ## Feed projection and reactions
 
@@ -380,10 +409,14 @@ subject to the Mates gate.
   PayPal.me or bank details as text), shown on their sets and live rooms,
   with Kronk handling no money. Proposed in Kommons; My sets is where the
   musician would set it.
-- **Live sets: who can talk.** Listeners join muted with no mic button,
-  but without Jitsi tokens (see `docs/spaces/huddle.md`, Open) the Jitsi
-  server can't stop anyone unmuting. Tokens would make the host the only
-  one with a mic.
+- **Live sets: who can talk.** Listeners join muted, with no mic in their
+  controls and Jitsi's shortcuts off. The server still lets any
+  participant unmute; only Jitsi's own moderation (muting everyone but
+  the host) would stop it, and Kronk's controls don't offer that yet.
+- **Publishing a recording straight from storage.** The upload flow takes
+  a file from the device; a "use this recording" path for the stored one
+  would save the host a download and an upload.
+- **Chat and reactions** in the room went with Jitsi's toolbar.
 - **Live sets: reach and Kalendar.** Every member can see and join a live
   set, as with recorded sets. A Kalendar event can't link to a live set
   yet: `korner_attachments` resolves a slug to one model (the manifest's
