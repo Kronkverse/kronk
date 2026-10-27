@@ -113,6 +113,10 @@ one (Tal, 2026-09-14).
 - **Nothing tags the person answered.** Neither the composer nor the comment
   box under a post puts "@name" in front; the parent's author is told by the
   reply itself (`status.replied`, `PostStatusService#publish_reply_nudge!`).
+- **You can tag someone in a comment.** Typing `@` and a name in either
+  comment box under a post offers matching people, your Mates first, and
+  picking one puts their handle in (`CaptionTextarea`, the same box album
+  captions use).
 - **A korner post opens as its card.** The post page picks the same card the
   feed does (`components/korner_cards.tsx`) and leaves the text out with it.
 - **Long text folds behind _Read more_ in the feed, and opens in place.** The

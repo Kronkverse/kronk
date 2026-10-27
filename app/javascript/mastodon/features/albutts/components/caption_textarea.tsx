@@ -16,7 +16,8 @@ import { createAccountFromServerJSON } from 'mastodon/models/account';
 // autocompletes `@user` while typing — the same affordance the main
 // Mastodon composer offers, but with a self-contained local state so
 // multiple captions can be edited on one page without a shared redux
-// slice fighting over which token is "active".
+// slice fighting over which token is "active". The comment boxes under
+// a post (`components/status_replies.jsx`) use it too.
 //
 // Hashtag autocomplete is deliberately NOT wired up: we don't
 // encourage `#` in caption UX. The tagging architecture (server-side
@@ -63,6 +64,10 @@ interface CaptionTextareaProps {
   'data-key'?: string;
   // So a <label htmlFor> can name it.
   id?: string;
+  autoFocus?: boolean;
+  // Keys the suggestion list doesn't take (it takes arrows, Enter, Tab
+  // and Escape while it is open), e.g. a comment box's Enter-to-send.
+  onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
 export const CaptionTextarea = forwardRef<
@@ -79,6 +84,8 @@ export const CaptionTextarea = forwardRef<
     maxLength,
     'data-key': dataKey,
     id,
+    autoFocus,
+    onKeyDown,
   },
   ref,
 ) {
@@ -172,7 +179,10 @@ export const CaptionTextarea = forwardRef<
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (suggestions.length === 0) return;
+      if (suggestions.length === 0) {
+        onKeyDown?.(e);
+        return;
+      }
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedIndex((i) => (i + 1) % suggestions.length);
@@ -186,13 +196,17 @@ export const CaptionTextarea = forwardRef<
         if (picked) {
           e.preventDefault();
           applySuggestion(picked);
+        } else {
+          onKeyDown?.(e);
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
         closeSuggestions();
+      } else {
+        onKeyDown?.(e);
       }
     },
-    [applySuggestion, closeSuggestions, selectedIndex, suggestions],
+    [applySuggestion, closeSuggestions, onKeyDown, selectedIndex, suggestions],
   );
 
   const handleBlur = useCallback(() => {
@@ -223,6 +237,8 @@ export const CaptionTextarea = forwardRef<
         rows={rows}
         maxLength={maxLength}
         data-key={dataKey}
+        // eslint-disable-next-line jsx-a11y/no-autofocus
+        autoFocus={autoFocus}
       />
       {suggestions.length > 0 && (
         <ul className='caption-textarea__suggestions' role='listbox'>
