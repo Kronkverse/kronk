@@ -30,10 +30,13 @@ import { Stage } from 'mastodon/components/stage';
 import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
+import { KuddleFollow } from './kuddle_follow';
+import type { KuddleFollowState } from './kuddle_follow';
+
 // Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
 const JITSI_DOMAIN = jitsiDomain;
 
-interface HuddleRoomJSON {
+interface HuddleRoomJSON extends KuddleFollowState {
   id: string;
   name: string;
   description: string | null;
@@ -116,6 +119,11 @@ const leaveStyle: CSSProperties = {
   color: '#fff',
   cursor: 'pointer',
 };
+const headerActionsStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+};
 const jitsiWrapStyle: CSSProperties = { flex: 1, minHeight: '400px' };
 const jitsiInnerStyle: CSSProperties = { width: '100%', height: '100%' };
 
@@ -175,6 +183,10 @@ export const LiveRoom: React.FC = () => {
         jitsiApiRef.current = null;
       }
     };
+  }, []);
+
+  const handleFollowChange = useCallback((state: KuddleFollowState) => {
+    setRoom((current) => (current ? { ...current, ...state } : current));
   }, []);
 
   const handleLeave = useCallback(() => {
@@ -242,9 +254,17 @@ export const LiveRoom: React.FC = () => {
         <div style={inRoomWrapStyle}>
           <div style={inRoomHeaderStyle}>
             <span style={nameStyle}>{room.name}</span>
-            <button type='button' onClick={handleLeave} style={leaveStyle}>
-              {intl.formatMessage(messages.leave)}
-            </button>
+            <div style={headerActionsStyle}>
+              <KuddleFollow
+                roomId={room.id}
+                name={room.name}
+                state={room}
+                onChange={handleFollowChange}
+              />
+              <button type='button' onClick={handleLeave} style={leaveStyle}>
+                {intl.formatMessage(messages.leave)}
+              </button>
+            </div>
           </div>
           <div style={jitsiWrapStyle}>
             <div ref={jitsiContainerRef} style={jitsiInnerStyle} />

@@ -1178,6 +1178,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120100) do
     t.index ["account_id", "year"], name: "index_generated_annual_reports_on_account_id_and_year", unique: true
   end
 
+  create_table "huddle_follows", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "following", default: true, null: false
+    t.bigint "huddle_session_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "huddle_session_id"], name: "index_huddle_follows_on_account_id_and_huddle_session_id", unique: true
+    t.index ["huddle_session_id"], name: "index_huddle_follows_on_huddle_session_id"
+  end
+
   create_table "huddle_participants", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -2898,6 +2908,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120100) do
   add_foreign_key "freethedream_reads", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_reads", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
+  add_foreign_key "huddle_follows", "accounts", on_delete: :cascade
+  add_foreign_key "huddle_follows", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :cascade

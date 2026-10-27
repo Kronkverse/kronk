@@ -22,7 +22,10 @@ import { apiRequestGet } from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-interface HuddleRoomJSON {
+import { KuddleFollow } from './kuddle_follow';
+import type { KuddleFollowState } from './kuddle_follow';
+
+interface HuddleRoomJSON extends KuddleFollowState {
   id: string;
   name: string;
   description: string | null;
@@ -50,9 +53,55 @@ const messages = defineMessages({
   },
 });
 
-export const RoomsList: React.FC = () => {
+// One Kuddle's card: the whole card opens it, with Follow beside the link
+// (a button can't sit inside a link).
+const RoomCard: React.FC<{
+  room: HuddleRoomJSON;
+  onFollowChange: (id: string, state: KuddleFollowState) => void;
+}> = ({ room: r, onFollowChange }) => {
   const intl = useIntl();
   const HuddleIcon = useKornerIcon('huddle');
+  const handleChange = useCallback(
+    (state: KuddleFollowState) => {
+      onFollowChange(r.id, state);
+    },
+    [r.id, onFollowChange],
+  );
+
+  return (
+    <li className='huddle-rooms__card'>
+      <Link
+        to={`/hub/huddle/kuddle/${r.id}`}
+        className='huddle-rooms__card-link'
+      >
+        <span className='huddle-rooms__card-icon' aria-hidden='true'>
+          <Icon id='huddle' icon={HuddleIcon} />
+        </span>
+        <span className='huddle-rooms__card-body'>
+          <span className='huddle-rooms__card-name'>{r.name}</span>
+          {r.description && (
+            <span className='huddle-rooms__card-desc'>{r.description}</span>
+          )}
+          <span className='huddle-rooms__card-occ'>
+            {intl.formatMessage(messages.occupancy, {
+              count: r.occupancy,
+            })}
+          </span>
+        </span>
+      </Link>
+      <KuddleFollow
+        className='huddle-rooms__card-follow'
+        roomId={r.id}
+        name={r.name}
+        state={r}
+        onChange={handleChange}
+      />
+    </li>
+  );
+};
+
+export const RoomsList: React.FC = () => {
+  const intl = useIntl();
   const [rooms, setRooms] = useState<HuddleRoomJSON[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,6 +122,15 @@ export const RoomsList: React.FC = () => {
     void fetchRooms();
   }, [fetchRooms]);
 
+  const handleFollowChange = useCallback(
+    (id: string, state: KuddleFollowState) => {
+      setRooms((current) =>
+        current.map((r) => (r.id === id ? { ...r, ...state } : r)),
+      );
+    },
+    [],
+  );
+
   return (
     <section className='huddle-rooms'>
       <header className='huddle-rooms__header'>
@@ -89,29 +147,11 @@ export const RoomsList: React.FC = () => {
 
       <ul className='huddle-rooms__grid'>
         {rooms.map((r) => (
-          <li key={r.id} className='huddle-rooms__card'>
-            <Link
-              to={`/hub/huddle/kuddle/${r.id}`}
-              className='huddle-rooms__card-link'
-            >
-              <span className='huddle-rooms__card-icon' aria-hidden='true'>
-                <Icon id='huddle' icon={HuddleIcon} />
-              </span>
-              <span className='huddle-rooms__card-body'>
-                <span className='huddle-rooms__card-name'>{r.name}</span>
-                {r.description && (
-                  <span className='huddle-rooms__card-desc'>
-                    {r.description}
-                  </span>
-                )}
-                <span className='huddle-rooms__card-occ'>
-                  {intl.formatMessage(messages.occupancy, {
-                    count: r.occupancy,
-                  })}
-                </span>
-              </span>
-            </Link>
-          </li>
+          <RoomCard
+            key={r.id}
+            room={r}
+            onFollowChange={handleFollowChange}
+          />
         ))}
       </ul>
     </section>

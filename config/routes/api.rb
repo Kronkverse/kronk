@@ -75,7 +75,11 @@ namespace :api, format: false do
     # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.
     namespace :huddle do
       resources :rooms, only: [:index, :create] do
-        member { post :join }
+        member do
+          post :join
+          post :follow
+          post :unfollow
+        end
       end
       # The Main Huddle's head-count, for the home feed's banner.
       resource :count, only: [:show]

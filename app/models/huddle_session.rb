@@ -38,6 +38,9 @@ class HuddleSession < ApplicationRecord
   # `KornerAttachment.to_target('huddle', id).where(kind: 'link').first&.source_record`.
   has_many   :huddle_participants, dependent: :destroy
   has_many   :participants, through: :huddle_participants, source: :account
+  # Follow / Unfollow on a Kuddle (docs/spaces/huddle.md, Following a
+  # Kuddle). Huddle::Follows adds the Krew members who follow without a row.
+  has_many   :huddle_follows, dependent: :delete_all
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :session_url, presence: true, length: { maximum: 400 }
