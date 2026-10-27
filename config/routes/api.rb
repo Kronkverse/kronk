@@ -84,6 +84,12 @@ namespace :api, format: false do
       # The Main Huddle's head-count, for the home feed's banner.
       resource :count, only: [:show]
     end
+
+    # Kronk's calls on its Jitsi server (docs/decisions.md, 2026-10-27): a
+    # pass into one.
+    namespace :calls do
+      resource :token, only: [:create]
+    end
     resource :token_balance, only: [:show]
 
     # FreeTheDream's shared map (docs/spaces/freethedream.md): the page's

@@ -6,7 +6,8 @@
 # GET /api/v1/huddle/count rather than asking Jitsi itself.
 #
 # `fetch` asks Jitsi (nil when it can't say); a Kuddle is asked by its Jitsi
-# room key (`session_url`). `remember` / `last_seen` keep the latest Main
+# room key (`session_url`). The key is what Kronk stores; the name asked
+# about carries JITSI_ROOM_PREFIX (Kronk::Jitsi.room_name). `remember` / `last_seen` keep the latest Main
 # count in Redis, and `remember_kuddle` / `last_seen_kuddles` each Kuddle's,
 # so a "People are huddling" nudge can say how many are there now without
 # storing a number on the nudge.
@@ -14,12 +15,13 @@ module Kronk
   module HuddleCount
     extend Redisable
 
-    ROOM = 'huddle'
+    ROOM = Kronk::Jitsi::MAIN_ROOM
     LAST_SEEN_KEY = 'huddle:main:count'
     LAST_SEEN_TTL = 5.minutes
 
     def self.fetch(room = ROOM)
-      url = "https://#{Rails.configuration.x.kronk_jitsi_domain}/room-size?room=#{CGI.escape(room.to_s)}&domain=meet.jitsi"
+      name = Kronk::Jitsi.room_name(room)
+      url = "https://#{Kronk::Jitsi.domain}/room-size?room=#{CGI.escape(name)}&domain=#{Kronk::Jitsi::XMPP_DOMAIN}"
 
       Request.new(:get, url).perform do |response|
         case response.code
