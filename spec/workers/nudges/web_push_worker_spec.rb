@@ -18,9 +18,10 @@ RSpec.describe Nudges::WebPushWorker do
 
   before do
     # The encryption and request are Web::PushNotificationWorker's; this is
-    # about what goes into them.
-    allow(worker).to receive(:perform_standard_request) { sent << JSON.parse(worker.send(:push_notification_json)) }
-    allow(worker).to receive(:perform_legacy_request) { sent << JSON.parse(worker.send(:push_notification_json)) }
+    # about what goes into them. (`__send__`, because the worker defines a
+    # private `send` of its own.)
+    allow(worker).to receive(:perform_standard_request) { sent << JSON.parse(worker.__send__(:push_notification_json)) }
+    allow(worker).to receive(:perform_legacy_request) { sent << JSON.parse(worker.__send__(:push_notification_json)) }
   end
 
   def choose(style)

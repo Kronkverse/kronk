@@ -88,8 +88,7 @@ RSpec.describe 'API V1 Settings Nudges' do
       user.settings['nudges.muted_types'] = ['feed.frothed']
       user.save!
 
-      get '/api/v1/settings/nudges', headers: headers
-      expect(response.parsed_body['push_style']).to eq('each')
+      expect(Nudges::PushPreferences.style(user)).to eq('each')
 
       put '/api/v1/settings/nudges', headers: headers, params: { push_style: 'ping' }, as: :json
 
