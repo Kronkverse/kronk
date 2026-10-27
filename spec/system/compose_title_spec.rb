@@ -39,6 +39,6 @@ RSpec.describe 'Composer title', :js, :streaming do
 
     expect(looks['title'].except('font')).to eq(looks['field'].except('font'))
     expect(looks['title']['border']).to eq('1px solid 1px solid')
-    expect(looks['title']['font']).not_to eq(looks['field']['font'])
+    expect(looks['title']['font']).to_not eq(looks['field']['font'])
   end
 end
