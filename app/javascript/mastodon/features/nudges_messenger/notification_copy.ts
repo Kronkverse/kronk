@@ -135,6 +135,11 @@ const sentences = defineMessages({
     id: 'nudges.notification.huddle.gathering',
     defaultMessage: 'People are huddling',
   },
+  // The same for a Kuddle you follow; the line under it names the Kuddle.
+  huddleKuddleGathering: {
+    id: 'nudges.notification.huddle.kuddle_gathering',
+    defaultMessage: 'People are in a Kuddle you follow',
+  },
   freethedreamMyceliumMatched: {
     id: 'nudges.notification.freethedream.mycelium_matched',
     defaultMessage: '{who} needs something you shared from your Mycelium',
@@ -181,6 +186,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'map.challenged': sentences.mapChallenged,
   'rose.received': sentences.roseReceived,
   'huddle.gathering': sentences.huddleGathering,
+  'huddle.kuddle_gathering': sentences.huddleKuddleGathering,
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,

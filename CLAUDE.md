@@ -166,6 +166,7 @@ server-side strings go in `config/locales/kronk/overrides.yml`.
 | nudge, Nudges                        | bell                             | the space; its two faces are Notifications and Messages |
 | froth                                | like, favourite                  | code stays `favourite`                                  |
 | Konnect, Konnected, Diskonnect       | attach, attached, link           | records across spaces; code stays `attachment`          |
+| Kuddle                               | room, Huddle room                | a topical Huddle; code stays `room` / `HuddleSession`   |
 | steward                              | moderator                        | reserved — don't repurpose                              |
 
 The K-grammar (Kalendar, Kommons, Kuestions) is the house style for names.

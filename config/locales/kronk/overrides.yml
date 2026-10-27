@@ -155,6 +155,7 @@ en:
       generic: "%{who} has something for you in %{korner}"
       huddle:
         gathering: People are huddling
+        kuddle_gathering: People are in a Kuddle you follow
       kalendar:
         rsvpd_going: "%{who} is going to your event"
         rsvpd_interested: "%{who} is interested in your event"
@@ -195,6 +196,10 @@ en:
       huddle_now:
         one: 1 in the Huddle now
         other: "%{count} in the Huddle now"
+      kuddle: The %{name} Kuddle
+      kuddle_now:
+        one: 1 person is in the %{name} Kuddle now
+        other: "%{count} people are in the %{name} Kuddle now"
   user_mailer:
     announcement_published:
       description: 'From the people who run %{domain}:'
@@ -369,6 +374,7 @@ en-GB:
       generic: "%{who} has something for you in %{korner}"
       huddle:
         gathering: People are huddling
+        kuddle_gathering: People are in a Kuddle you follow
       kalendar:
         rsvpd_going: "%{who} is going to your event"
         rsvpd_interested: "%{who} is interested in your event"
@@ -409,6 +415,10 @@ en-GB:
       huddle_now:
         one: 1 in the Huddle now
         other: "%{count} in the Huddle now"
+      kuddle: The %{name} Kuddle
+      kuddle_now:
+        one: 1 person is in the %{name} Kuddle now
+        other: "%{count} people are in the %{name} Kuddle now"
   user_mailer:
     announcement_published:
       description: 'From the people who run %{domain}:'

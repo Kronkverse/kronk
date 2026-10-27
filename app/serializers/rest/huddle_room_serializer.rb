@@ -19,6 +19,10 @@ class REST::HuddleRoomSerializer < ActiveModel::Serializer
              :last_active_at, :created_at
 
   attribute :is_host, if: :current_user?
+  # Whether the viewer follows this Kuddle, and whether it is one of their
+  # Krews' (Huddle::Follows). A list passes `follow_states` worked out once.
+  attribute :followed, if: :current_user?
+  attribute :followed_via_krew, if: :current_user?
 
   def id
     object.id.to_s
@@ -50,7 +54,22 @@ class REST::HuddleRoomSerializer < ActiveModel::Serializer
   end
   # rubocop:enable Naming/PredicatePrefix
 
+  def followed
+    follow_state[:followed] || false
+  end
+
+  def followed_via_krew
+    follow_state[:via_krew] || false
+  end
+
   def current_user?
     !current_user.nil?
+  end
+
+  private
+
+  def follow_state
+    @follow_state ||= instance_options.dig(:follow_states, object.id) ||
+                      Huddle::Follows.state_for(current_user.account, [object]).fetch(object.id, {})
   end
 end

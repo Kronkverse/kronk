@@ -1,7 +1,7 @@
 // Huddle Rooms — open topical Huddle spaces (Coworking, Meetings,
 // Music, Late-night, …) rendered on `/hub/huddle` between the Main
 // Huddle lobby and (future) Krew Huddles. Phase 9.6. Discovery only;
-// each card links to the per-Room lobby at `/hub/huddle/room/:id`.
+// each card links to the Room (a Kuddle, to people) at `/hub/huddle/kuddle/:id`.
 // New Rooms are made in RoomComposer, inside the shared <ComposeShell>,
 // from the composer field kit (_compose_fields.scss).
 
@@ -45,6 +45,8 @@
 }
 
 .huddle-rooms__card {
+  display: flex;
+  align-items: center;
   border-radius: var(--radius-medium);
   overflow: hidden;
   border: 1px solid var(--background-border-color, rgb(255 255 255 / 12%));
@@ -60,12 +62,20 @@
 }
 
 .huddle-rooms__card-link {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
   text-decoration: none;
   color: inherit;
+}
+
+// Follow / Following, beside the card's link (features/live/kuddle_follow.tsx).
+.huddle-rooms__card-follow {
+  flex: 0 0 auto;
+  margin-inline-end: 12px;
 }
 
 .huddle-rooms__card-icon {

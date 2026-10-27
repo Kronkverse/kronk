@@ -404,6 +404,8 @@ Rails.application.routes.draw do
   get '/hub/you', to: 'home#index'
   get '/hub/freethedream', to: 'home#index'
   get '/hub/freethedream/*path', to: 'home#index', format: false
+  # A Room is a Kuddle wherever people see it (decisions.md, 2026-10-27).
+  get '/hub/huddle/room/:id', to: redirect('/hub/huddle/kuddle/%{id}')
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
