@@ -254,6 +254,37 @@ $booth-accent: var(--accent);
   }
 }
 
+// An album's or EP's tracks on its page (album_tracks.tsx): the track
+// list's rows, with the name as the play button and the length at the end.
+.booth-album__play {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-text);
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    cursor: default;
+    text-decoration: none;
+  }
+}
+
+.booth-album__length {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: $darker-text-color;
+}
+
 // ─── Upload form ──────────────────────────────────────────────────────────────
 
 .booth-upload-form__field {
@@ -295,6 +326,69 @@ $booth-accent: var(--accent);
   input[type='file'] {
     display: none;
   }
+}
+
+// One recording or an album: two pills side by side.
+.booth-upload-form__shape {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// The album tracks editor (album_tracks_field.tsx): number, title, length,
+// then move up, move down and remove.
+.booth-album-field__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booth-album-field__track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-small);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.booth-album-field .booth-album-field__number,
+.booth-album-field .booth-album-field__length {
+  flex: none;
+  min-width: 1.5em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  color: $darker-text-color;
 }
 
 .booth-upload-form__file-picker {

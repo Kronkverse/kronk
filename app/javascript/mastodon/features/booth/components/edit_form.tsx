@@ -13,8 +13,20 @@ import {
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 
+import {
+  ALBUM_KINDS,
+  RECORDING_KINDS,
+  albumTracks,
+  isAlbumKind,
+} from '../kinds';
 import type { BoothSet } from '../types';
 
+import {
+  AlbumTracksField,
+  albumReady,
+  draftsFromTracks,
+} from './album_tracks_field';
+import type { AlbumTrackDraft } from './album_tracks_field';
 import { CoverPositionEditor } from './cover_position_editor';
 import { CreditsField, creditsPayload } from './credits_field';
 import type { CreditDraft } from './credits_field';
@@ -108,6 +120,12 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const [kind, setKind] = useState(set.kind);
   const [description, setDescription] = useState(set.description);
   const [tracklistText, setTracklistText] = useState(set.tracklist_text ?? '');
+  // An album or EP edits its tracks; one recording can't become one here,
+  // or the other way round, since that changes what the files are.
+  const isAlbum = isAlbumKind(set.kind);
+  const [tracks, setTracks] = useState<AlbumTrackDraft[]>(() =>
+    draftsFromTracks(albumTracks(set)),
+  );
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   // Free the picked image's blob when it's replaced or the form closes.
@@ -196,9 +214,27 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
           cover_offset_y: coverOffsetY,
           event_name: eventName,
           event_date: eventDate,
-          // Always sent, so clearing the box clears the list.
-          tracklist_text: tracklistText,
         };
+        if (isAlbum) {
+          // The running order as it stands: tracks the album keeps by id,
+          // new files uploaded first.
+          const order: Record<string, unknown>[] = [];
+          for (const track of tracks) {
+            if (track.id) {
+              order.push({ id: track.id, title: track.title.trim() });
+            } else if (track.file) {
+              order.push({
+                audio_id: await uploadMedia(track.file),
+                title: track.title.trim(),
+                duration_seconds: track.duration_seconds,
+              });
+            }
+          }
+          payload.tracks = order;
+        } else {
+          // Always sent, so clearing the box clears the list.
+          payload.tracklist_text = tracklistText;
+        }
         if (description) payload.description = description;
 
         if (removeCover) {
@@ -227,6 +263,8 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
     kind,
     description,
     tracklistText,
+    isAlbum,
+    tracks,
     coverFile,
     coverOffsetY,
     removeCover,
@@ -242,7 +280,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
       submitLabel={intl.formatMessage(messages.save)}
       submittingLabel={intl.formatMessage(messages.saving)}
       submitting={saving}
-      canSubmit={title.trim() !== ''}
+      canSubmit={title.trim() !== '' && (!isAlbum || albumReady(tracks))}
       onSubmit={handleSubmit}
       onCancel={onCancel}
     >
@@ -260,7 +298,20 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
 
       <CreditsField value={credits} onChange={setCredits} disabled={saving} />
 
-      <KindSelect value={kind} onChange={setKind} disabled={saving} />
+      <KindSelect
+        value={kind}
+        onChange={setKind}
+        disabled={saving}
+        kinds={isAlbum ? ALBUM_KINDS : RECORDING_KINDS}
+      />
+
+      {isAlbum && (
+        <AlbumTracksField
+          value={tracks}
+          onChange={setTracks}
+          disabled={saving}
+        />
+      )}
 
       <ComposeField label={intl.formatMessage(messages.event)}>
         <ComposeInput
@@ -297,17 +348,19 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         disabled={saving}
       />
 
-      <ComposeField
-        label={intl.formatMessage(messages.tracklist)}
-        hint={intl.formatMessage(messages.tracklistHint)}
-      >
-        <ComposeTextarea
-          value={tracklistText}
-          onChange={handleTracklistChange}
-          rows={6}
-          disabled={saving}
-        />
-      </ComposeField>
+      {!isAlbum && (
+        <ComposeField
+          label={intl.formatMessage(messages.tracklist)}
+          hint={intl.formatMessage(messages.tracklistHint)}
+        >
+          <ComposeTextarea
+            value={tracklistText}
+            onChange={handleTracklistChange}
+            rows={6}
+            disabled={saving}
+          />
+        </ComposeField>
+      )}
 
       {/* The cover: a position editor and a file picker, not a kit field. */}
       <div className='booth-upload-form__field'>

@@ -17,6 +17,43 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — Booth albums are sets made of tracks
+
+Cassidy's Kommons proposal "Albums to live in Musik?"
+([#117292076963057258](https://kronk.info/hub/kommons/p/117292076963057258),
+on `booth.index`) asked for music albums to live in the Booth. Albutts'
+albums are photo albums, which is where the confusion came from. Tal: "if
+we can ensure that someone in the Booth can upload an album, then we can
+close this proposal."
+
+Before this, a set was one audio file with an optional timed track list.
+One long file with timestamps is a mix, not an album: listeners can't
+skip cleanly between songs and the musician has to stitch their files
+together first.
+
+**Decision:** an album or EP is a `BoothSet` of kind `album` or `ep`
+whose audio is an ordered list of tracks, each its own uploaded file
+(`booth_set_tracks`), in place of the single file. Every other kind is
+unchanged. See `docs/spaces/booth.md`, Albums.
+
+- **A kind of set, not a new record.** An album shares everything a set
+  has (title, cover, credits, notes, genres, saves, shoutouts, plays, the
+  feed card, Konnect, Musik and My sets), so a separate `BoothAlbum`
+  would have repeated all of it. Two kinds rather than one `album` with
+  a flag, because musicians say "EP" and the filter can tell them apart.
+- **Tracks are their own table**, not a jsonb list like the timed track
+  list: each one holds an upload, and uploads need a real foreign key to
+  be protected from deletion (`on_delete: :restrict`, as for set audio,
+  2026-09-04) and the media vacuum.
+- **Plays count per album**, not per track: the number is the artist's
+  sense of who listened, and moving between tracks isn't a new listen.
+- **An album plays straight through** regardless of Play next, which is
+  about moving on to another set.
+- **No converting** between an album and one recording on the edit form:
+  it changes what the files are, and is better done as a new upload.
+
+---
+
 ## 2026-10-27 — Brands live in Wachuneed, listed by backing
 
 Tahlia's Kommons proposal "Reccomened brands space"

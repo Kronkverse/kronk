@@ -7,6 +7,7 @@ import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 
 import { useBoothPlayback } from '../booth_playback_context';
+import { albumTracks } from '../kinds';
 
 import { Waveform } from './waveform';
 
@@ -22,6 +23,10 @@ const messages = defineMessages({
   close: { id: 'booth.dock.close', defaultMessage: 'Close player' },
   playNext: { id: 'booth.dock.play_next', defaultMessage: 'Play next' },
   upNext: { id: 'booth.dock.up_next', defaultMessage: 'Up next: {title}' },
+  trackOf: {
+    id: 'booth.dock.track_of',
+    defaultMessage: 'Track {number} of {count}',
+  },
 });
 
 // BoothDock — the fixed bottom transport for the Booth page, built on the
@@ -49,6 +54,8 @@ export const BoothDock: React.FC = () => {
     autoNext,
     setAutoNext,
     activeSet,
+    activeTrack,
+    activeTrackIndex,
     playing,
     currentTime,
     duration,
@@ -74,7 +81,14 @@ export const BoothDock: React.FC = () => {
   if (!activeSet) return null;
 
   const progressPct = duration > 0 ? Math.min(1, currentTime / duration) : 0;
-  const total = duration > 0 ? duration : (activeSet.duration_seconds ?? 0);
+  const knownLength = activeTrack
+    ? activeTrack.duration_seconds
+    : activeSet.duration_seconds;
+  const total = duration > 0 ? duration : (knownLength ?? 0);
+  // On an album or EP the dock names the track, and the next track is
+  // what plays next, Play next or not.
+  const tracks = albumTracks(activeSet);
+  const nextTrack = activeTrack ? tracks[activeTrackIndex + 1] : undefined;
 
   return (
     <div
@@ -97,13 +111,26 @@ export const BoothDock: React.FC = () => {
           )}
         </div>
 
-        <div className='booth-dock__meta'>
-          <b>{activeSet.title}</b>
-          <span>
-            {activeSet.artist_name}
-            {activeSet.event_name ? ` · ${activeSet.event_name}` : ''}
-          </span>
-        </div>
+        {activeTrack ? (
+          <div className='booth-dock__meta'>
+            <b>{activeTrack.title}</b>
+            <span>
+              {activeSet.title} · {activeSet.artist_name} ·{' '}
+              {intl.formatMessage(messages.trackOf, {
+                number: activeTrackIndex + 1,
+                count: tracks.length,
+              })}
+            </span>
+          </div>
+        ) : (
+          <div className='booth-dock__meta'>
+            <b>{activeSet.title}</b>
+            <span>
+              {activeSet.artist_name}
+              {activeSet.event_name ? ` · ${activeSet.event_name}` : ''}
+            </span>
+          </div>
+        )}
 
         <div className='booth-dock__transport'>
           <button
@@ -157,10 +184,17 @@ export const BoothDock: React.FC = () => {
             />
             {intl.formatMessage(messages.playNext)}
           </label>
-          {autoNext && upNext && (
+          {nextTrack ? (
             <span className='booth-dock__up-next'>
-              {intl.formatMessage(messages.upNext, { title: upNext.title })}
+              {intl.formatMessage(messages.upNext, { title: nextTrack.title })}
             </span>
+          ) : (
+            autoNext &&
+            upNext && (
+              <span className='booth-dock__up-next'>
+                {intl.formatMessage(messages.upNext, { title: upNext.title })}
+              </span>
+            )
           )}
         </div>
 
