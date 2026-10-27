@@ -197,8 +197,14 @@ namespace :api, format: false do
         # "Remind me" when a scheduled set goes live.
         post :remind
         delete :remind, action: :unremind
+        # The crowd on screen: shoutouts, reactions, requests, Now playing.
+        # Member routes, not nested resources: Rails singularises `lives` to
+        # `life`, so a nested route's key would be `booth_life_id`.
+        get :moments, to: 'booth_live_moments#index'
+        post :moments, to: 'booth_live_moments#create'
       end
     end
+    resources :booth_live_moments, only: [:destroy]
 
     resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
       member do

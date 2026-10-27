@@ -155,6 +155,7 @@ en:
         tagged: "%{who} tagged you in an album photo"
       booth:
         frothed: "%{who} frothed your set"
+        set_ready: Your live set is ready to publish
         tagged: "%{who} credited you as an artist on a set"
       feed:
         frothed: "%{who} frothed your post"
@@ -386,6 +387,7 @@ en-GB:
         tagged: "%{who} tagged you in an album photo"
       booth:
         frothed: "%{who} frothed your set"
+        set_ready: Your live set is ready to publish
         tagged: "%{who} credited you as an artist on a set"
       feed:
         frothed: "%{who} frothed your post"

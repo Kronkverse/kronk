@@ -252,6 +252,7 @@ export const LiveRoom: React.FC = () => {
             call={call}
             onLeave={handleLeave}
             leaveLabel={intl.formatMessage(messages.leave)}
+            inputPicker
           />
           <CallRecordings kind='kuddle' id={room.id} />
           <AttachmentSection

@@ -85,6 +85,54 @@ RSpec.describe 'API V1 Calls Recording uploads' do
       expect(response).to have_http_status(422)
     end
 
+    describe 'audio' do
+      let(:live) { Fabricate(:booth_live, account: maker, started_at: 1.hour.ago, ended_at: 1.minute.ago) }
+
+      it 'takes an audio file of a live set, with media "audio"', :aggregate_failures do
+        signed_post '/api/v1/calls/recordings/start', { room: live.room_key, filename: 'set.m4a', size: 1_000, media: 'audio' }
+
+        expect(response).to have_http_status(201)
+        expect(response.parsed_body).to include('media' => 'audio', 'upload_headers' => { 'Content-Type' => 'audio/mp4' })
+        expect(CallRecording.last).to have_attributes(kind: 'booth_live', booth_live: live, media: 'audio', content_type: 'audio/mp4')
+      end
+
+      it 'knows .ogg, .opus and .mp3 too, and reads the medium from the name when it isn’t said', :aggregate_failures do
+        { 'set.ogg' => 'audio/ogg', 'set.opus' => 'audio/ogg', 'set.mp3' => 'audio/mpeg' }.each do |filename, type|
+          signed_post '/api/v1/calls/recordings/start', { room: live.room_key, filename: filename, size: 10 }
+          expect(CallRecording.last).to have_attributes(media: 'audio', content_type: type)
+        end
+
+        signed_post '/api/v1/calls/recordings/start', { room: live.room_key, filename: 'set.mp4', size: 10 }
+        expect(CallRecording.last.media).to eq 'video'
+      end
+
+      it 'refuses a medium the file isn’t, or one it doesn’t know', :aggregate_failures do
+        signed_post '/api/v1/calls/recordings/start', { room: live.room_key, filename: 'set.mp4', size: 10, media: 'audio' }
+        expect(response).to have_http_status(422)
+
+        signed_post '/api/v1/calls/recordings/start', { room: live.room_key, filename: 'set.m4a', size: 10, media: 'video' }
+        expect(response).to have_http_status(422)
+
+        signed_post '/api/v1/calls/recordings/start', { room: live.room_key, filename: 'set.m4a', size: 10, media: 'hologram' }
+        expect(response).to have_http_status(422)
+
+        expect(CallRecording.count).to eq 0
+      end
+
+      it 'pairs the video and the audio of one recording, whichever comes first', :aggregate_failures do
+        signed_post '/api/v1/calls/recordings/start', { room: live.room_key, filename: 'set.mp4', size: 10, media: 'video' }
+        video = CallRecording.find(response.parsed_body['id'])
+        expect(response.parsed_body['pair_id']).to be_nil
+
+        signed_post '/api/v1/calls/recordings/start', { room: live.room_key, filename: 'set.m4a', size: 10, media: 'audio' }
+        audio = CallRecording.find(response.parsed_body['id'])
+        expect(response.parsed_body['pair_id']).to eq video.id.to_s
+
+        expect(video.reload.pair).to eq audio
+        expect(audio.pair).to eq video
+      end
+    end
+
     describe 'the signature' do
       let(:body) { { room: 'huddle', filename: 'h.mp4', size: 10 } }
 
@@ -139,7 +187,7 @@ RSpec.describe 'API V1 Calls Recording uploads' do
       signed_post "/api/v1/calls/recordings/#{recording.id}/complete", { duration: 600 }
 
       expect(response).to have_http_status(200)
-      expect(response.parsed_body).to eq('id' => recording.id.to_s, 'status' => 'ready', 'size' => 123)
+      expect(response.parsed_body).to eq('id' => recording.id.to_s, 'media' => 'video', 'status' => 'ready', 'size' => 123)
       expect(recording.reload).to have_attributes(status: 'ready', size: 123, duration: 600)
     end
 
@@ -168,6 +216,22 @@ RSpec.describe 'API V1 Calls Recording uploads' do
       expect(response).to have_http_status(413)
       expect(CallRecording.exists?(recording.id)).to be false
       expect(Kronk::CallRecordingStorage).to have_received(:delete).with(recording.storage_key)
+    end
+
+    it 'makes a live set’s audio into a draft set, and not its video', :aggregate_failures do
+      live = Fabricate(:booth_live, account: maker, started_at: 1.hour.ago, ended_at: 1.minute.ago)
+      target = Kronk::CallTarget.find!('booth_live', live.id)
+      video = CallRecording.build_for(target, filename: 'set.mp4', size: 10).tap(&:save!)
+      audio = CallRecording.build_for(target, filename: 'set.opus', size: 10, media: 'audio').tap(&:save!)
+      allow(Kronk::CallRecordingStorage).to receive(:stored_size).and_return(10)
+
+      signed_post "/api/v1/calls/recordings/#{video.id}/complete", {}
+      expect(response.parsed_body).to include('media' => 'video', 'status' => 'ready')
+      expect(Booth::LiveRecordingSetWorker).to_not have_enqueued_sidekiq_job(video.id)
+
+      signed_post "/api/v1/calls/recordings/#{audio.id}/complete", {}
+      expect(response.parsed_body).to include('media' => 'audio', 'status' => 'ready')
+      expect(Booth::LiveRecordingSetWorker).to have_enqueued_sidekiq_job(audio.id)
     end
 
     it 'needs the signature too' do
