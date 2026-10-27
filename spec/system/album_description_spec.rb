@@ -19,6 +19,9 @@ RSpec.describe 'Album description when adding photos', :js, :streaming do
 
   before do
     as_a_logged_in_user
+    # Specs skip image processing, so an uploaded photo has no resized files
+    # for the album's thumbnails to load (as in albutts_spec).
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
   end
 
   def open_add_photos(album)
