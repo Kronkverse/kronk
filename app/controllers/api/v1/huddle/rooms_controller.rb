@@ -28,8 +28,9 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
              .order(Arel.sql('last_active_at DESC NULLS LAST'))
              .limit(100)
 
-    render json: @rooms, each_serializer: REST::HuddleRoomSerializer,
-                         follow_states: Huddle::Follows.state_for(current_account, @rooms)
+    render json: @rooms,
+           each_serializer: REST::HuddleRoomSerializer,
+           follow_states: Huddle::Follows.state_for(current_account, @rooms)
   end
 
   # POST /api/v1/huddle/rooms/:id/join — someone went into the Room. Marks

@@ -147,11 +147,7 @@ export const RoomsList: React.FC = () => {
 
       <ul className='huddle-rooms__grid'>
         {rooms.map((r) => (
-          <RoomCard
-            key={r.id}
-            room={r}
-            onFollowChange={handleFollowChange}
-          />
+          <RoomCard key={r.id} room={r} onFollowChange={handleFollowChange} />
         ))}
       </ul>
     </section>
