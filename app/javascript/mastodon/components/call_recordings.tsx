@@ -42,11 +42,17 @@ const messages = defineMessages({
     defaultMessage: 'It goes for everyone, and can’t be brought back.',
   },
   length: { id: 'calls.recordings.length', defaultMessage: '{length} long' },
+  audio: { id: 'calls.recordings.audio', defaultMessage: 'Sound only' },
+  video: { id: 'calls.recordings.video', defaultMessage: 'Video' },
 });
 
 export interface CallRecording {
   id: string;
   kind: CallKind;
+  // A recording can come as video, audio, or both (`pair_id` is the other
+  // file of the same recording).
+  media: 'video' | 'audio';
+  pair_id: string | null;
   created_at: string;
   duration: number | null;
   size: number;
@@ -152,11 +158,24 @@ const RecordingItem: React.FC<{
       <KornerMeta
         items={[
           date,
+          intl.formatMessage(
+            recording.media === 'audio' ? messages.audio : messages.video,
+          ),
           length && intl.formatMessage(messages.length, { length }),
         ]}
       />
-      {playing && (
-        // A call recording has no captions to offer.
+      {/* A call's recording has no captions to offer. */}
+      {playing && recording.media === 'audio' && (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
+        <audio
+          className='call-recordings__player call-recordings__player--audio'
+          src={recording.url}
+          controls
+          autoPlay
+          preload='metadata'
+        />
+      )}
+      {playing && recording.media !== 'audio' && (
         // eslint-disable-next-line jsx-a11y/media-has-caption
         <video
           className='call-recordings__player'

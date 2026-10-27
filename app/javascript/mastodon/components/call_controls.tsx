@@ -1,3 +1,5 @@
+import { useCallback, useId, useState } from 'react';
+
 import type { MessageDescriptor } from 'react-intl';
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -10,11 +12,14 @@ import DesktopMacIcon from '@/material-icons/400-24px/desktop_mac.svg?react';
 import FitScreenIcon from '@/material-icons/400-24px/fit_screen.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import MicOffIcon from '@/material-icons/400-24px/mic_off.svg?react';
+import MusicNoteIcon from '@/material-icons/400-24px/music_note.svg?react';
 import RadioButtonCheckedIcon from '@/material-icons/400-24px/radio_button_checked.svg?react';
 import StopIcon from '@/material-icons/400-24px/stop.svg?react';
+import TuneIcon from '@/material-icons/400-24px/tune.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/videocam.svg?react';
 import VideocamOffIcon from '@/material-icons/400-24px/videocam_off.svg?react';
 import WavingHandIcon from '@/material-icons/400-24px/waving_hand.svg?react';
+import { CallInputPanel } from 'mastodon/components/call_input_picker';
 import { IconButton } from 'mastodon/components/icon_button';
 import { useCallState } from 'mastodon/hooks/useCallState';
 import type { Call, CallState } from 'mastodon/jitsi';
@@ -28,6 +33,12 @@ import type { Call, CallState } from 'mastodon/jitsi';
 // start of the bar. Record / Stop recording is there only for a moderator,
 // on a server that can keep the file. Leave is there from the start, before
 // the call has come up (or if it never does).
+//
+// A live set's host also has Music sound (on by default: the browser's
+// voice processing off; off for talking) and, with `inputPicker`, Sound
+// input: which microphone or sound card the call uses, and its level
+// (components/call_input_picker.tsx). Huddle and Kuddles have the picker
+// too.
 
 const messages = defineMessages({
   label: { id: 'calls.controls.label', defaultMessage: 'Call controls' },
@@ -62,6 +73,15 @@ const messages = defineMessages({
     defaultMessage: 'Stop recording',
   },
   leave: { id: 'calls.controls.leave', defaultMessage: 'Leave' },
+  musicOn: {
+    id: 'calls.controls.music_on',
+    defaultMessage: 'Music sound is on. Turn it off for talking',
+  },
+  musicOff: {
+    id: 'calls.controls.music_off',
+    defaultMessage: 'Music sound is off. Turn it on for music',
+  },
+  input: { id: 'calls.controls.input', defaultMessage: 'Sound input' },
   recording: { id: 'calls.recording', defaultMessage: 'Recording' },
   recordingHint: {
     id: 'calls.recording_hint',
@@ -76,6 +96,8 @@ interface Props {
   leaveLabel?: string;
   // A Booth listener: hand, view and leave, no mic, camera or screen.
   listenOnly?: boolean;
+  // Sound input: pick the microphone or sound card, and see its level.
+  inputPicker?: boolean;
   // The mini window: smaller buttons that wrap.
   compact?: boolean;
   // Buttons of the page's own, after the call's (the mini window's way back
@@ -88,11 +110,17 @@ const CallButtons: React.FC<{
   call: Call;
   state: CallState;
   listenOnly: boolean;
-}> = ({ call, state, listenOnly }) => {
+  // The Sound input button, and the panel it opens.
+  input: { open: boolean; panelId: string; onToggle: () => void } | null;
+}> = ({ call, state, listenOnly, input }) => {
   const intl = useIntl();
   // The label for a toggle: what pressing it does now.
   const label = (on: boolean, yes: MessageDescriptor, no: MessageDescriptor) =>
     intl.formatMessage(on ? yes : no);
+  const musicSound = state.musicSound;
+  const handleMusic = useCallback(() => {
+    if (musicSound !== null) call.setMusicSound(!musicSound);
+  }, [call, musicSound]);
 
   return (
     <>
@@ -130,6 +158,28 @@ const CallButtons: React.FC<{
             }
             onClick={call.toggleShareScreen}
           />
+          {musicSound !== null && (
+            <IconButton
+              className='call-controls__button'
+              active={musicSound}
+              title={label(musicSound, messages.musicOn, messages.musicOff)}
+              icon='music_note'
+              iconComponent={MusicNoteIcon}
+              onClick={handleMusic}
+            />
+          )}
+          {input && (
+            <IconButton
+              className='call-controls__button'
+              active={input.open}
+              expanded={input.open}
+              ariaControls={input.panelId}
+              title={intl.formatMessage(messages.input)}
+              icon='tune'
+              iconComponent={TuneIcon}
+              onClick={input.onToggle}
+            />
+          )}
         </>
       )}
       <IconButton
@@ -172,12 +222,22 @@ export const CallControls: React.FC<Props> = ({
   onLeave,
   leaveLabel,
   listenOnly = false,
+  inputPicker = false,
   compact = false,
   children,
 }) => {
   const intl = useIntl();
   const state = useCallState(call);
   const leave = leaveLabel ?? intl.formatMessage(messages.leave);
+  const panelId = useId();
+  const [inputOpen, setInputOpen] = useState(false);
+  const handleToggleInput = useCallback(() => {
+    setInputOpen((open) => !open);
+  }, []);
+  const withInput = inputPicker && !listenOnly && !!call?.canPickInput;
+  const input = withInput
+    ? { open: inputOpen, panelId, onToggle: handleToggleInput }
+    : null;
 
   return (
     <div
@@ -202,7 +262,12 @@ export const CallControls: React.FC<Props> = ({
         aria-label={intl.formatMessage(messages.label)}
       >
         {call && state && (
-          <CallButtons call={call} state={state} listenOnly={listenOnly} />
+          <CallButtons
+            call={call}
+            state={state}
+            listenOnly={listenOnly}
+            input={input}
+          />
         )}
         {children}
         <IconButton
@@ -213,6 +278,14 @@ export const CallControls: React.FC<Props> = ({
           onClick={onLeave}
         />
       </div>
+
+      {call && state && withInput && inputOpen && (
+        <CallInputPanel
+          call={call}
+          devicesVersion={state.devicesVersion}
+          id={panelId}
+        />
+      )}
     </div>
   );
 };

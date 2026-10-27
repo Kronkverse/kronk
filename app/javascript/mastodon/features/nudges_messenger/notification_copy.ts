@@ -126,6 +126,11 @@ const sentences = defineMessages({
     id: 'nudges.notification.booth.went_live',
     defaultMessage: '{who} is live in the Booth now',
   },
+  // To the host, about their own set: nobody else did anything.
+  boothSetReady: {
+    id: 'nudges.notification.booth.set_ready',
+    defaultMessage: 'Your live set is ready to publish',
+  },
   mapChallenged: {
     id: 'nudges.notification.map.challenged',
     defaultMessage: '{who} thinks your pin on the Map is out of date',
@@ -187,6 +192,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'booth.tagged': sentences.boothTagged,
   'booth.went_live': sentences.boothWentLive,
   'booth.shouted': sentences.boothShouted,
+  'booth.set_ready': sentences.boothSetReady,
   'map.challenged': sentences.mapChallenged,
   'rose.received': sentences.roseReceived,
   'huddle.gathering': sentences.huddleGathering,

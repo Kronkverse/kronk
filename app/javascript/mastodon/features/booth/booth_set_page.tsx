@@ -75,6 +75,16 @@ const messages = defineMessages({
     id: 'booth.set_page.draft',
     defaultMessage: 'Only you can see this set',
   },
+  draftOwner: {
+    id: 'booth.set_page.draft_owner',
+    defaultMessage:
+      'Only you can see this set. Check it over, then publish it so members can hear it.',
+  },
+  publish: { id: 'booth.set_page.publish', defaultMessage: 'Publish' },
+  publishFailed: {
+    id: 'booth.set_page.publish_failed',
+    defaultMessage: 'Couldn’t publish it just now. Try again.',
+  },
   justUploaded: {
     id: 'booth.set_page.just_uploaded',
     defaultMessage:
@@ -187,6 +197,22 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
       .catch(() => undefined);
   }, [id]);
 
+  // A draft (a live set's recording comes as one): publishing it puts it
+  // in the Booth, then offers Share to feed as an upload does.
+  const handlePublish = useCallback(() => {
+    if (!id) return;
+    void api()
+      .patch<BoothSet>(`/api/v1/booth_sets/${id}`, { published: true })
+      .then((res) => {
+        setSet(res.data);
+        setOfferShare(true);
+        return undefined;
+      })
+      .catch(() => {
+        dispatch(showAlert({ message: messages.publishFailed }));
+      });
+  }, [id, dispatch]);
+
   useRegisterPageAction(
     {
       key: 'edit',
@@ -260,9 +286,20 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         }
         banner={
           !set.published ? (
-            <span className='booth-set__notice'>
-              {intl.formatMessage(messages.draft)}
-            </span>
+            isOwner ? (
+              <div className='booth-set__notice'>
+                <span>{intl.formatMessage(messages.draftOwner)}</span>
+                <KornerPill
+                  variant='primary'
+                  label={intl.formatMessage(messages.publish)}
+                  onClick={handlePublish}
+                />
+              </div>
+            ) : (
+              <span className='booth-set__notice'>
+                {intl.formatMessage(messages.draft)}
+              </span>
+            )
           ) : offerShare && isOwner ? (
             <div className='booth-set__notice'>
               <span>{intl.formatMessage(messages.justUploaded)}</span>

@@ -18,11 +18,20 @@ module Kronk
     PLAY_URL_TTL     = 3.hours
     DOWNLOAD_URL_TTL = 10.minutes
 
-    CONTENT_TYPES = {
+    # Video, and the audio-only file the recorder makes from a live set
+    # (docs/spaces/huddle.md, Recordings). `.opus` is Opus in Ogg.
+    VIDEO_TYPES = {
       '.mp4' => 'video/mp4',
       '.webm' => 'video/webm',
       '.mkv' => 'video/x-matroska',
     }.freeze
+    AUDIO_TYPES = {
+      '.m4a' => 'audio/mp4',
+      '.ogg' => 'audio/ogg',
+      '.opus' => 'audio/ogg',
+      '.mp3' => 'audio/mpeg',
+    }.freeze
+    CONTENT_TYPES = VIDEO_TYPES.merge(AUDIO_TYPES).freeze
 
     module_function
 
@@ -32,6 +41,16 @@ module Kronk
 
     def content_type_for(filename)
       CONTENT_TYPES[File.extname(filename.to_s).downcase]
+    end
+
+    # 'video' or 'audio' by the file's extension, nil for anything else.
+    def media_for(filename)
+      extension = File.extname(filename.to_s).downcase
+      if VIDEO_TYPES.key?(extension)
+        'video'
+      elsif AUDIO_TYPES.key?(extension)
+        'audio'
+      end
     end
 
     def key_for(filename)
@@ -56,6 +75,13 @@ module Kronk
       object(key).content_length
     rescue Aws::S3::Errors::NotFound, Aws::S3::Errors::NoSuchKey
       nil
+    end
+
+    # Saves the object to a local file (Booth::LiveRecordingSet, which makes
+    # a set's audio from it).
+    def download(key, path)
+      object(key).get(response_target: path)
+      path
     end
 
     def delete(key)

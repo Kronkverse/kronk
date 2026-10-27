@@ -26,7 +26,7 @@ class Api::V1::BoothLivesController < Api::BaseController
   end
 
   def show
-    render json: @booth_live, serializer: REST::BoothLiveSerializer
+    render json: @booth_live, serializer: REST::BoothLiveSerializer, with_tracklist: true
   end
 
   def create
