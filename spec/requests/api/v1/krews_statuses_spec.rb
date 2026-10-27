@@ -87,4 +87,31 @@ RSpec.describe 'API V1 Krews statuses' do
 
     expect(response.parsed_body.pluck(:id)).to eq [open_post.id.to_s]
   end
+
+  # The Krew page's feed loads more through the standard timeline paging:
+  # a `Link: rel=next` header while there may be older posts, max_id to
+  # go back, since_id to pick up newer ones.
+  describe 'paging' do
+    let!(:posts) { Array.new(3) { Fabricate(:status, account: user.account).tap { |s| krew.statuses << s } } }
+
+    it 'links to the next page while there may be more' do
+      get "/api/v1/krews/#{krew.slug}/statuses", params: { limit: 2 }, headers: headers
+
+      expect(response.parsed_body.pluck(:id)).to eq [posts[2].id.to_s, posts[1].id.to_s]
+      expect(response.headers['Link']).to include('rel="next"', "max_id=#{posts[1].id}")
+    end
+
+    it 'goes back with max_id and stops linking at the end' do
+      get "/api/v1/krews/#{krew.slug}/statuses", params: { limit: 2, max_id: posts[1].id }, headers: headers
+
+      expect(response.parsed_body.pluck(:id)).to eq [posts[0].id.to_s]
+      expect(response.headers['Link']).to be_nil
+    end
+
+    it 'picks up newer posts with since_id' do
+      get "/api/v1/krews/#{krew.slug}/statuses", params: { since_id: posts[0].id }, headers: headers
+
+      expect(response.parsed_body.pluck(:id)).to eq [posts[2].id.to_s, posts[1].id.to_s]
+    end
+  end
 end

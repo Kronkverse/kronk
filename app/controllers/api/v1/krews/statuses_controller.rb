@@ -5,7 +5,9 @@
 #   GET  /api/v1/krews/:krew_id/statuses
 #     Returns statuses targeted at this krew via the statuses_krews
 #     join, most recent first, that the viewer may see (StatusPolicy).
-#     Signed in only. Standard cursor pagination.
+#     Signed in only. Standard cursor pagination: max_id for older,
+#     since_id / min_id for newer, and a `Link: rel=next` header while
+#     there may be more, so the Krew page's feed (StatusList) can load more.
 #
 #   POST /api/v1/krews/:krew_id/statuses
 #     Composes a new Status via PostStatusService and joins it to this
@@ -23,9 +25,13 @@ class Api::V1::Krews::StatusesController < Api::BaseController
 
   def index
     scope = @krew.statuses.reorder(id: :desc).includes(:account)
-    scope = scope.where(Status.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
+    newer_than = params[:since_id].presence || params[:min_id].presence
+    scope = scope.where(Status.arel_table[:id].gt(newer_than)) if newer_than
 
-    render json: visible_page(scope),
+    statuses = visible_page(scope)
+    set_pagination_headers(next_path)
+
+    render json: statuses,
            each_serializer: REST::StatusSerializer,
            relationships: StatusRelationshipsPresenter.new(@statuses, current_user.account_id)
   end
@@ -71,16 +77,31 @@ class Api::V1::Krews::StatusesController < Api::BaseController
     limit = limit_param(DEFAULT_LIMIT)
     max_id = params[:max_id].presence
     @statuses = []
+    @next_max_id = nil
 
     MAX_SCANS.times do
       batch = (max_id ? scope.where(Status.arel_table[:id].lt(max_id)) : scope).limit(limit).to_a
       @statuses.concat(batch.select { |status| StatusPolicy.new(current_account, status).show? })
-      break if batch.size < limit || @statuses.size >= limit
+      # A full batch means there may be older candidates.
+      @next_max_id = batch.size < limit ? nil : batch.last.id
+      break if @next_max_id.nil? || @statuses.size >= limit
 
-      max_id = batch.last.id
+      max_id = @next_max_id
     end
 
-    @statuses = @statuses.first(limit)
+    # A full page: the next one starts after its last post.
+    if @statuses.size > limit || (@statuses.size == limit && @next_max_id)
+      @statuses = @statuses.first(limit)
+      @next_max_id = @statuses.last.id
+    end
+
+    @statuses
+  end
+
+  def next_path
+    return if @next_max_id.nil?
+
+    api_v1_krew_statuses_url(params[:krew_id], pagination_params(max_id: @next_max_id))
   end
 
   # Accept slug or numeric id — mirrors Api::V1::KrewsController#set_krew.

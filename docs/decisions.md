@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — The Krew page lists the Krew's posts again
+
+Kommons "Krew space feed"
+(https://kronk.info/hub/kommons/p/117503771043856693), Tal: "The feed in a
+krew page should show posts and content specific to the krew in a
+scrollable fashion."
+
+**Decision:** members see the Krew's posts on the Krew page, last, below
+the chat: the standard feed card in the standard timeline, newest first,
+loading more as they scroll (`GET /api/v1/krews/:id/statuses`, now with
+`max_id` paging and a `Link: rel=next` header). Someone outside the Krew
+sees nothing new. What's happening stays on top as the short summary; the
+list is where you go on to read.
+
+**Supersedes:** the part of 2026-10-18 (What's happening on top) that took
+the list of the Krew's posts off the page. That list was the first tile,
+open on arrival, and made the page clunky; this one sits at the foot of the
+page and opens nothing on arrival. See `docs/spaces/krew.md`, The surfaces.
+
+---
+
 ## 2026-10-27 — The Map's badge counts Mates' pin moves
 
 Kommons "Notifications on location updates"
