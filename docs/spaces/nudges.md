@@ -221,6 +221,18 @@ little left to do.
 live timer. Reactions: at most 3 distinct per message, enforced on the
 server (`REACTION_CAP`).
 
+Sharing a post into a chat: the Nudge button on a post
+(`components/status/nudge_button.tsx`) and "Send to a Kronker" on the share
+sheet (`components/share_sheet.tsx`) open `/nudges/with/<account>` with the
+link in history state (`attachStatusUrl`, plus excerpt and author). The
+composer reads it once (`features/nudges_messenger/shared_link.ts`), shows it
+as a compact `<StandardCard>` above the text box with an × to leave it out,
+and takes it out of history straight away, so a reload doesn't attach it
+again. It goes as the message's last line, after whatever was typed (or
+alone), so the sent message renders it the way any link in a message
+renders: a post as its card (`inline_status_card.tsx`), a Kronk link as its
+`<KronkLinkCard>`.
+
 **5. Settings.** See [Nudge settings](#nudge-settings) below.
 
 **6. Legacy archive** at `/nudges/legacy`: a read-only list of your old
@@ -505,10 +517,6 @@ Traps when removing things:
   Kommons types onto the bus and retire `Kronk::KornerNotifier`.
 - **`invite_accepted` and `birthday`** are written but never shown. Give
   them a renderer (the Notifications face is the obvious home) or stop writing them.
-- **Sharing a post into a chat arrives without the post.** The Nudge button
-  on a post and "send in Nudges" on the share sheet open the right chat
-  (`/nudges/with/<account>`) and pass the post along in history state, but
-  the messenger's composer does not read it. Only the retired 1.x thread did.
 - **System notices are a second source.** The four legacy types are merged
   into the Notifications list on the client, by time. Moving them onto the
   bus would make them ordinary notifications and remove the merge.

@@ -2,6 +2,8 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { useHistory, useLocation } from 'react-router-dom';
+
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import SendIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
@@ -10,7 +12,19 @@ import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import UploadFileIcon from '@/material-icons/400-24px/upload_file.svg?react';
 import { apiUploadMedia } from 'mastodon/api/nudges_conversations';
+import { IconButton } from 'mastodon/components/icon_button';
+import {
+  CardActions,
+  CardBadge,
+  CardBody,
+  CardMeta,
+  CardTitle,
+  StandardCard,
+} from 'mastodon/components/standard_card';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
+
+import type { SharedLink } from './shared_link';
+import { bodyWithLink, readSharedLink, withoutSharedLink } from './shared_link';
 
 const messages = defineMessages({
   placeholder: {
@@ -34,6 +48,11 @@ const messages = defineMessages({
   remove: {
     id: 'nudges.composer.remove_attachment',
     defaultMessage: 'Remove attachment',
+  },
+  shared: { id: 'nudges.composer.shared', defaultMessage: 'Sharing' },
+  removeShared: {
+    id: 'nudges.composer.remove_shared',
+    defaultMessage: "Don't share this",
   },
   uploading: {
     id: 'nudges.composer.uploading',
@@ -132,6 +151,24 @@ export const Composer: React.FC<ComposerProps> = ({
   const recordingTimerRef = useRef<number | null>(null);
   const recordingCancelledRef = useRef(false);
 
+  // A post (or other link) shared into this chat from the Nudge button or
+  // the share sheet rides in history state. Read it once, then take it out
+  // of history so a reload doesn't attach it again.
+  const history = useHistory();
+  const location = useLocation();
+  const [sharedLink, setSharedLink] = useState<SharedLink | null>(() =>
+    readSharedLink(location.state),
+  );
+  useEffect(() => {
+    if (!readSharedLink(location.state)) return;
+    history.replace({ ...location, state: withoutSharedLink(location.state) });
+    // Once, on mount: the composer is keyed on the conversation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const handleRemoveShared = useCallback(() => {
+    setSharedLink(null);
+  }, []);
+
   // Persist unsent text per conversation (shared draft mechanism). Silent
   // restore — no pill — matching a chat input's expectation that a draft is
   // just there. Inert without a conversationId.
@@ -172,7 +209,9 @@ export const Composer: React.FC<ComposerProps> = ({
   }, []);
 
   const submit = useCallback(async () => {
-    const body = value.trim();
+    // The shared link goes as the message's last line, so it renders the
+    // way any link in a message does (a post as its card).
+    const body = bodyWithLink(value, sharedLink);
     if ((!body && staged.length === 0) || sending) return;
     setSending(true);
     try {
@@ -181,12 +220,13 @@ export const Composer: React.FC<ComposerProps> = ({
         staged.map((m) => m.id),
       );
       setValue('');
+      setSharedLink(null);
       clearStaged();
       inputRef.current?.focus();
     } finally {
       setSending(false);
     }
-  }, [value, staged, sending, onSend, clearStaged]);
+  }, [value, sharedLink, staged, sending, onSend, clearStaged]);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -401,7 +441,9 @@ export const Composer: React.FC<ComposerProps> = ({
   );
 
   const canSend =
-    (value.trim() !== '' || staged.length > 0) && !sending && !uploading;
+    (value.trim() !== '' || staged.length > 0 || sharedLink !== null) &&
+    !sending &&
+    !uploading;
   const canAttachMore = staged.length < MAX_MEDIA;
 
   return (
@@ -413,6 +455,31 @@ export const Composer: React.FC<ComposerProps> = ({
       // the gesture from reaching the barrel's swipe handler.
       onPointerDown={stopPointerDown}
     >
+      {sharedLink && (
+        <StandardCard
+          as='div'
+          variant='flow'
+          className='nudges-composer__shared'
+        >
+          <CardBadge>{intl.formatMessage(messages.shared)}</CardBadge>
+          {sharedLink.authorName && (
+            <CardTitle>{sharedLink.authorName}</CardTitle>
+          )}
+          {sharedLink.authorAcct && (
+            <CardMeta>@{sharedLink.authorAcct}</CardMeta>
+          )}
+          <CardBody>{sharedLink.body ?? sharedLink.url}</CardBody>
+          <CardActions>
+            <IconButton
+              icon='close'
+              iconComponent={CloseIcon}
+              title={intl.formatMessage(messages.removeShared)}
+              onClick={handleRemoveShared}
+            />
+          </CardActions>
+        </StandardCard>
+      )}
+
       {(staged.length > 0 || uploading || uploadError !== null) && (
         <div className='nudges-composer__staged'>
           {uploading && (
