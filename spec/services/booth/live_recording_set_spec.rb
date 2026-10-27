@@ -4,7 +4,8 @@ require 'rails_helper'
 
 # docs/spaces/booth.md, Recording a live set: a live set's audio recording
 # becomes a draft set for its host.
-RSpec.describe Booth::LiveRecordingSet do
+# Real attachment processing: the type (audio) and length are read there.
+RSpec.describe Booth::LiveRecordingSet, :attachment_processing do
   let(:host) { Fabricate(:account, display_name: 'Rosa') }
   let(:live) do
     Fabricate(:booth_live, account: host, title: 'Friday Warm-up', description: 'Deep cuts', genres: %w(house dub),

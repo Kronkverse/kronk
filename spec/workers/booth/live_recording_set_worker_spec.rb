@@ -2,7 +2,8 @@
 
 require 'rails_helper'
 
-RSpec.describe Booth::LiveRecordingSetWorker do
+# Real attachment processing: the type (audio) and length are read there.
+RSpec.describe Booth::LiveRecordingSetWorker, :attachment_processing do
   let(:host)   { Fabricate(:account) }
   let(:live)   { Fabricate(:booth_live, account: host, started_at: 2.hours.ago, ended_at: 1.hour.ago) }
   let(:target) { Kronk::CallTarget.find!('booth_live', live.id) }
