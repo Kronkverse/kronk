@@ -177,9 +177,11 @@ GEM
     crack (1.0.1)
       bigdecimal
       rexml
-    crass (1.0.7)
-    css_parser (1.22.0)
+    crass (1.0.8)
+    css_parser (3.3.0)
       addressable
+      base64
+      ssrf_filter (~> 1.5)
     csv (3.3.5)
     database_cleaner-active_record (2.2.2)
       activerecord (>= 5.a)
@@ -610,8 +612,8 @@ GEM
     pastel (0.8.0)
       tty-color (~> 0.5)
     pg (1.6.2)
-    pghero (3.7.0)
-      activerecord (>= 7.1)
+    pghero (4.1.0)
+      activerecord (>= 7.2)
     playwright-ruby-client (1.55.0)
       concurrent-ruby (>= 1.1.6)
       mime-types (>= 3.0)
@@ -820,8 +822,8 @@ GEM
       fugit (~> 1.1, >= 1.11.1)
     safety_net_attestation (0.5.0)
       jwt (>= 2.0, < 4.0)
-    sanitize (7.0.0)
-      crass (~> 1.0.2)
+    sanitize (7.0.1)
+      crass (~> 1.0.8)
       nokogiri (>= 1.16.8)
     scenic (1.9.0)
       activerecord (>= 4.0.0)
@@ -856,6 +858,7 @@ GEM
     simplecov-html (0.13.2)
     simplecov-lcov (0.9.0)
     simplecov_json_formatter (0.1.4)
+    ssrf_filter (1.6.0)
     stackprof (0.2.27)
     starry (0.2.0)
       base64
