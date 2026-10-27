@@ -1,21 +1,25 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import {
   apiCreateChronicle,
+  apiCreateSeries,
+  apiListMySeries,
   apiUpdateChronicle,
   apiUploadChroniclePicture,
 } from 'mastodon/api/kronikles';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
   ApiChronicleJSON,
+  ApiChronicleSeriesJSON,
   ChronicleKind,
 } from 'mastodon/api_types/kronikles';
 import {
   ComposeBody,
   ComposeField,
   ComposeHint,
+  ComposeInput,
   ComposeSelect,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
@@ -79,7 +83,35 @@ const messages = defineMessages({
       'A picture sits where its line is in your text. Type between the square brackets to give it a caption; delete the line to remove it.',
   },
   kindLabel: { id: 'kronikles.composer.kind_label', defaultMessage: 'Kind' },
+  seriesLabel: {
+    id: 'kronikles.composer.series_label',
+    defaultMessage: 'Series',
+  },
+  seriesNone: {
+    id: 'kronikles.composer.series_none',
+    defaultMessage: 'Not in a Series',
+  },
+  seriesNew: {
+    id: 'kronikles.composer.series_new',
+    defaultMessage: 'New Series…',
+  },
+  seriesHint: {
+    id: 'kronikles.composer.series_hint',
+    defaultMessage:
+      'Optional. It goes in as the last chapter; reorder chapters on the Series page.',
+  },
+  seriesTitle: {
+    id: 'kronikles.composer.series_title',
+    defaultMessage: 'Title of the new Series',
+  },
+  seriesFailed: {
+    id: 'kronikles.composer.series_failed',
+    defaultMessage: 'Could not make that Series.',
+  },
 });
+
+// The Series choice's value for "make a new one".
+const NEW_SERIES = 'new';
 
 const KINDS: readonly ChronicleKind[] = [
   'essay',
@@ -111,6 +143,9 @@ interface ChronicleDraftParams {
   visibility?: ReachValue;
   krew_ids?: string[];
   konnections?: KonnectTarget[];
+  // The Series it goes in: an id, NEW_SERIES with its title, or none.
+  series?: string;
+  new_series_title?: string;
 }
 
 interface Props {
@@ -149,6 +184,26 @@ export const ChronicleComposer: React.FC<Props> = ({
     editingChronicle?.krews?.map((k) => k.id) ?? [],
   );
   const availableKrews = useAvailableKrews();
+
+  // The Series it is a chapter of (docs/spaces/kronikles.md, Series): one
+  // of yours, a new one made on submit, or none.
+  const [series, setSeries] = useState(editingChronicle?.series?.id ?? '');
+  const [newSeriesTitle, setNewSeriesTitle] = useState('');
+  const [mySeries, setMySeries] = useState<ApiChronicleSeriesJSON[]>([]);
+  useEffect(() => {
+    const guard = { stale: false };
+    void (async () => {
+      try {
+        const list = await apiListMySeries();
+        if (!guard.stale) setMySeries(list);
+      } catch {
+        // No list, no choices: the Kronikle can still be written.
+      }
+    })();
+    return () => {
+      guard.stale = true;
+    };
+  }, []);
   const handleToggleKrew = useCallback((id: string) => {
     setKrewIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
@@ -196,6 +251,8 @@ export const ChronicleComposer: React.FC<Props> = ({
       setKind(p.kind ?? 'essay');
       setVisibility(p.visibility ?? 'public');
       setKrewIds(p.krew_ids ?? []);
+      setSeries(p.series ?? '');
+      setNewSeriesTitle(p.new_series_title ?? '');
       restoreKonnect(p.konnections);
       setThumbs(
         (d?.media_attachments ?? []).map((m) => ({
@@ -220,6 +277,8 @@ export const ChronicleComposer: React.FC<Props> = ({
         visibility,
         krew_ids: krewIds,
         konnections: konnect.saved,
+        series,
+        new_series_title: newSeriesTitle,
       },
       mediaIds: thumbs
         .filter((t) => body.includes(`(picture:${t.id})`))
@@ -289,9 +348,10 @@ export const ChronicleComposer: React.FC<Props> = ({
     () =>
       title.trim().length > 0 &&
       body.trim().length > 0 &&
+      (series !== NEW_SERIES || newSeriesTitle.trim().length > 0) &&
       !pending &&
       !deleting,
-    [title, body, pending, deleting],
+    [title, body, series, newSeriesTitle, pending, deleting],
   );
 
   const handleTitleChange = useCallback(
@@ -312,14 +372,46 @@ export const ChronicleComposer: React.FC<Props> = ({
     },
     [],
   );
+  const handleSeriesChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setSeries(e.target.value);
+    },
+    [],
+  );
+  const handleNewSeriesTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewSeriesTitle(e.target.value);
+    },
+    [],
+  );
+
+  // A new Series is made first, and chosen, so a failed publish that is
+  // tried again doesn't make a second one.
+  const resolveSeries = useCallback(async (): Promise<string | null> => {
+    if (series !== NEW_SERIES) return series === '' ? null : series;
+    try {
+      const made = await apiCreateSeries({ title: newSeriesTitle.trim() });
+      setMySeries((prev) => [made, ...prev]);
+      setSeries(made.id);
+      setNewSeriesTitle('');
+      return made.id;
+    } catch {
+      throw new Error(intl.formatMessage(messages.seriesFailed));
+    }
+  }, [intl, newSeriesTitle, series]);
 
   const submit = useCallback(() => {
     if (!canSubmit) return;
     setPending(true);
     setError(null);
     void (async () => {
-      const params = { title: title.trim(), body, kind };
       try {
+        const params = {
+          title: title.trim(),
+          body,
+          kind,
+          series_id: await resolveSeries(),
+        };
         if (editingChronicle) {
           // Reach is locked while editing — see the ReachDropdown below.
           onUpdated?.(
@@ -355,6 +447,7 @@ export const ChronicleComposer: React.FC<Props> = ({
     krewIds,
     onCreated,
     onUpdated,
+    resolveSeries,
     title,
     visibility,
   ]);
@@ -416,6 +509,37 @@ export const ChronicleComposer: React.FC<Props> = ({
           ))}
         </ComposeSelect>
       </ComposeField>
+
+      <ComposeField
+        label={intl.formatMessage(messages.seriesLabel)}
+        hint={intl.formatMessage(messages.seriesHint)}
+      >
+        <ComposeSelect
+          value={series}
+          onChange={handleSeriesChange}
+          disabled={pending}
+        >
+          <option value=''>{intl.formatMessage(messages.seriesNone)}</option>
+          {mySeries.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.title}
+            </option>
+          ))}
+          <option value={NEW_SERIES}>
+            {intl.formatMessage(messages.seriesNew)}
+          </option>
+        </ComposeSelect>
+      </ComposeField>
+      {series === NEW_SERIES && (
+        <ComposeField label={intl.formatMessage(messages.seriesTitle)}>
+          <ComposeInput
+            value={newSeriesTitle}
+            onChange={handleNewSeriesTitleChange}
+            maxLength={240}
+            disabled={pending}
+          />
+        </ComposeField>
+      )}
 
       <div className='kronikles-composer__tools'>
         <button type='button' onClick={handleHeading} disabled={pending}>

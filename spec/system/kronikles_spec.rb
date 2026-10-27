@@ -49,4 +49,34 @@ RSpec.describe 'Kronikles', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.kronikles-markdown__figure img')
     expect(Chronicle.last.pictures.count).to eq 1
   end
+
+  # docs/spaces/kronikles.md, Series.
+  it 'reads a Series chapter by chapter, and opens its contents' do
+    series = ChronicleSeries.create!(owner: bob.account, title: 'The long walk')
+    first = Chronicle.create!(owner: bob.account, title: 'Setting out', kind: :short_story, visibility: :public, body: 'We left at dawn.', series: series)
+    Chronicle.create!(owner: bob.account, title: 'The river', kind: :short_story, visibility: :public, body: 'Cold water.', series: series)
+
+    visit "/hub/kronikles/#{first.id}"
+
+    expect(page).to have_content('Chapter 1 of 2')
+    click_on 'Next chapter'
+    expect(page).to have_css('.kronikles-reader__title', text: 'The river')
+    expect(page).to have_content('Chapter 2 of 2')
+
+    click_on 'Contents'
+    expect(page).to have_css('.korner-detail__title', text: 'The long walk')
+    expect(page).to have_css('.kronikles-series__chapter', count: 2)
+    expect(page).to have_css('.kronikles-series__chapter:first-child .kronikles-series__title', text: 'Setting out')
+  end
+
+  it 'shows a Series once in the directory' do
+    series = ChronicleSeries.create!(owner: bob.account, title: 'The long walk')
+    Chronicle.create!(owner: bob.account, title: 'Setting out', kind: :short_story, visibility: :public, body: 'We left at dawn.', series: series)
+    Chronicle.create!(owner: bob.account, title: 'The river', kind: :short_story, visibility: :public, body: 'Cold water.', series: series)
+
+    visit '/hub/kronikles'
+
+    expect(page).to have_css('.kronikles-card--series', count: 1, text: 'The long walk')
+    expect(page).to have_no_css('.kronikles-card__title', text: 'Setting out')
+  end
 end

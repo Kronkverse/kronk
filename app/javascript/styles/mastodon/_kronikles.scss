@@ -256,3 +256,134 @@
     object-fit: cover;
   }
 }
+
+// Series (docs/spaces/kronikles.md, Series). A chapter's place in its
+// Series, at the head of the reader and as Previous / Next at its foot.
+.kronikles-chapter-nav {
+  &--head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+
+    a {
+      color: var(--accent-text);
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &--foot {
+    margin: 32px 0 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+// A Series' page: its cover, and the contents (one line per chapter).
+.kronikles-series {
+  .korner-detail__subtitle {
+    white-space: pre-line;
+  }
+
+  &__cover {
+    display: block;
+    inline-size: 100%;
+    max-block-size: 320px;
+    object-fit: cover;
+    border-radius: var(--radius-large);
+  }
+
+  &__contents {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__chapter {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  &__number {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--accent-text);
+    min-inline-size: 1.5em;
+    text-align: end;
+  }
+
+  &__link {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+    color: var(--text-primary);
+    text-decoration: none;
+
+    &:hover .kronikles-series__title,
+    &:focus-visible .kronikles-series__title {
+      text-decoration: underline;
+    }
+  }
+
+  &__title {
+    font-family: var(--font-display);
+    font-size: 17px;
+  }
+
+  &__excerpt {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__controls {
+    grid-column: 2;
+  }
+
+  &__error {
+    color: var(--warning-red);
+    font-size: 13px;
+  }
+
+  &__cover-preview {
+    display: block;
+    inline-size: 100%;
+    max-block-size: 180px;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+    margin-bottom: 8px;
+  }
+
+  &__cover-remove {
+    margin-top: 8px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
