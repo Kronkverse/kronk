@@ -1,6 +1,6 @@
-// A Huddle Room — Phase 9.6 discovery slice.
+// A Huddle Room, called a Kuddle wherever people see it.
 //
-// Mounted at `/hub/huddle/room/:id`. Fetches the Room's shape from
+// Mounted at `/hub/huddle/kuddle/:id` (`/hub/huddle/room/:id` redirects). Fetches the Room's shape from
 // `GET /api/v1/huddle/rooms` (finding by id) and goes straight into
 // the call: the same Jitsi iframe the Main Huddle uses, scoped to the
 // Room's `session_url` (unique per row so two Rooms named "Coworking"
@@ -69,7 +69,7 @@ const messages = defineMessages({
   leave: { id: 'huddle.room.leave', defaultMessage: 'Unhuddle' },
   notFound: {
     id: 'huddle.room.not_found',
-    defaultMessage: 'Room not found or has been retired.',
+    defaultMessage: 'This Kuddle is not here, or has been retired.',
   },
 });
 

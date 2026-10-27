@@ -40,7 +40,7 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
 
   def create
     krew = linked_krew
-    return render json: { error: 'you can only Konnect a Room to a Krew you are in' }, status: 422 if krew == false
+    return render json: { error: 'you can only Konnect a Kuddle to a Krew you are in' }, status: 422 if krew == false
 
     room = HuddleRoom::CreateService.new.call(
       account: current_account,

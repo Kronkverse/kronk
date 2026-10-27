@@ -1,4 +1,5 @@
-// RoomComposer — "New Room", Huddle's composer (the Ж menu's compose
+// RoomComposer — "New Kuddle", Huddle's composer (Kuddle is what people
+// see; the code still says Room) (the Ж menu's compose
 // action, config/korners/huddle.yaml `compose:`). Drawn in the shared
 // <ComposeShell> like every korner's composer: a name and a line about the
 // Room. No icon: Kronk has no emoji, and every Room's tile wears the Huddle
@@ -43,12 +44,12 @@ const NAME_MAX = 80;
 const DESCRIPTION_MAX = 200;
 
 const messages = defineMessages({
-  label: { id: 'huddle.composer.label', defaultMessage: 'New Room' },
+  label: { id: 'huddle.composer.label', defaultMessage: 'New Kuddle' },
   subtitle: {
     id: 'huddle.composer.subtitle',
-    defaultMessage: 'An open room anyone can drop into.',
+    defaultMessage: 'An open Kuddle anyone can drop into.',
   },
-  name: { id: 'huddle.composer.name', defaultMessage: 'Room name' },
+  name: { id: 'huddle.composer.name', defaultMessage: 'Kuddle name' },
   description: {
     id: 'huddle.composer.description',
     defaultMessage: 'What is it for?',
@@ -61,7 +62,7 @@ const messages = defineMessages({
   creating: { id: 'huddle.composer.creating', defaultMessage: 'Creating…' },
   error: {
     id: 'huddle.composer.error',
-    defaultMessage: 'Could not create the Room. Try again?',
+    defaultMessage: 'Could not make the Kuddle. Try again?',
   },
 });
 

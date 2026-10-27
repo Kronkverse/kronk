@@ -1,7 +1,7 @@
-// Rooms list — the open topical Huddle Rooms surface on
+// Rooms list (Kuddles, to the people using them) — the open topical Huddle Rooms surface on
 // `/hub/huddle`. Sits between the Main Huddle lobby chrome and the
 // "Huddle Up" button. Fetches from `GET /api/v1/huddle/rooms` and
-// links each Room card to `/hub/huddle/room/:id`, which goes straight
+// links each Room card to `/hub/huddle/kuddle/:id`, which goes straight
 // into that Room's call.
 //
 // Discovery only. "New Room" is the Ж menu's compose action
@@ -35,13 +35,13 @@ interface HuddleRoomJSON {
 const messages = defineMessages({
   heading: {
     id: 'huddle.rooms.heading',
-    defaultMessage: 'Rooms',
+    defaultMessage: 'Kuddles',
   },
   empty: {
     id: 'huddle.rooms.empty',
     // Empty-state copy points at the Ж menu per the Korner
     // Standard — no click target inline.
-    defaultMessage: 'No rooms yet — start one via the Ж menu.',
+    defaultMessage: 'No Kuddles yet. Start one from the Ж menu.',
   },
   occupancy: {
     id: 'huddle.rooms.occupancy',
@@ -91,7 +91,7 @@ export const RoomsList: React.FC = () => {
         {rooms.map((r) => (
           <li key={r.id} className='huddle-rooms__card'>
             <Link
-              to={`/hub/huddle/room/${r.id}`}
+              to={`/hub/huddle/kuddle/${r.id}`}
               className='huddle-rooms__card-link'
             >
               <span className='huddle-rooms__card-icon' aria-hidden='true'>

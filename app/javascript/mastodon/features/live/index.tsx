@@ -212,7 +212,7 @@ const Live: React.FC<{
   }, [history, returnToSource]);
   const handleRoomCreated = useCallback(
     (room: CreatedRoom) => {
-      history.push(`/hub/huddle/room/${room.id}`);
+      history.push(`/hub/huddle/kuddle/${room.id}`);
     },
     [history],
   );
