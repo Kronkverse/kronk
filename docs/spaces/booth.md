@@ -235,6 +235,9 @@ Added 2026-10-09 (Kommons proposal 116651831854514343). `booth_sets.tracklist`
 is a jsonb array of `{ start_seconds, artist, title }`. `start_seconds` and
 `artist` are optional; `title` is required.
 
+- **From a live set.** A set made from a live set's recording starts with
+  the host's Now playing as its track list, each track at the time it was
+  marked (see [Recording a live set](#recording-a-live-set)).
 - **Entering it.** Both the upload form and the owner's edit form have one
   textarea, one track per line: `12:34 Artist - Title`, `1:02:03 Artist –
 Title`, `[4:00] Title` or just `Title`. The API takes that text as
@@ -293,17 +296,17 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   moderator. Jitsi's toolbar is hidden and Kronk's controls sit under the
   room (`<CallControls>`). The host joins with Jitsi's pre-join screen (the
   one Jitsi screen kept, to pick their mixer or interface), camera off,
-  and audio processing off: no echo cancelling, noise suppression, gain
-  control or high-pass filter, and stereo Opus at 510 kbps, so music isn't
-  treated as speech. Their controls are mic, camera, share screen, hand,
-  tile view, leave and Record. Listeners tap **Listen in** (browsers only
-  play sound after a tap) and join muted, with Jitsi's keyboard shortcuts
-  off and only raise hand, tile view and leave in their controls. The
-  page polls the set every 20 seconds, so Listen in appears when the host
-  goes live, and asks who's in the room every 15 seconds, as Huddle's
-  lobby does ("N in the room"), through Kronk (`GET
-/api/v1/calls/presence`): the Jitsi server answers that only to Kronk. **End set** asks first; the ended page offers the
-  host **Upload the recording**.
+  and with [Music sound](#music-sound) on. Their controls are mic, camera,
+  share screen, Music sound, Sound input, hand, tile view, leave and
+  Record. Listeners tap **Listen in** (browsers only play sound after a
+  tap) and join [to listen only](#music-sound), with raise hand, tile view
+  and leave in their controls. The page polls the set every 20 seconds,
+  so Listen in appears when the host goes live, and asks who's in the room
+  every 15 seconds, as Huddle's lobby does ("N in the room"), through
+  Kronk (`GET /api/v1/calls/presence`): the Jitsi server answers that only
+  to Kronk. While it's live, [the crowd is on
+  screen](#the-crowd-on-screen). **End set** asks first; the ended page
+  takes the host to [their set](#recording-a-live-set).
 - **Remind me.** On a scheduled set someone else is playing, Remind me
   (`booth_live_reminders`, `POST` / `DELETE /api/v1/booth_lives/:id/remind`)
   asks for a Nudge. When the host goes live, `Booth::LiveNotifier` sends
@@ -335,25 +338,176 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   - **The host's own feed.** Tell my feed posts at the reach they pick,
     as before.
 
+### Music sound
+
+A live set's call is set up for music (decisions.md, 2026-10-27, "Booth
+live: music sound, the crowd on screen, recorded into a set"). It is all
+in `mastodon/jitsi.ts`, given to Jitsi as `configOverwrite` for
+`booth_live` calls only; the Huddle and Kuddles are untouched. Keys a
+Jitsi server doesn't know are ignored.
+
+- **Sound, both ways.** Stereo Opus at 510 kbps, Opus's ceiling:
+  `audioQuality: { stereo: true, opusMaxAverageBitrate: 510000,
+enableOpusDtx: false }`, and the older top-level `stereo` and
+  `opusMaxAverageBitrate` for servers that read those. Listeners get it
+  too, because stereo is agreed per connection.
+- **Music sound** (the host's music note button, on by default). On, the browser's
+  voice processing is off: `disableAP`, `disableAEC` (echo cancelling),
+  `disableNS` (noise suppression), `disableAGC` (gain control),
+  `disableHPF` (high-pass filter), and `enableNoisyMicDetection: false`.
+  Off, they're back on, for a talk segment. The switch sends
+  `overwriteConfig` and then picks the same input again
+  (`setAudioInputDevice`), because the browser applies processing when an
+  input is opened. The bitrate and stereo stay, which does a voice no
+  harm.
+- **Sound input** (the host's tune button; the Huddle and Kuddles have it
+  too, `<CallControls inputPicker>`). Lists the computer's inputs through
+  the call (`getAvailableDevices`) and switches between them
+  (`setAudioInputDevice`), with a level meter and a "Too loud" warning
+  near full scale. The External API doesn't report the local level, so
+  the meter opens the same input on Kronk's page (`getUserMedia`,
+  processing off) and reads it with an `AnalyserNode`, only while the
+  panel is open; the browser asks once for the microphone on Kronk's page
+  too. Device ids differ between Kronk's page and the call's (browsers key
+  them by origin), so it finds the input by its label.
+- **Listen-only listeners.** A listener opens no microphone or camera
+  (`disableInitialGUM`, and `startWithAudioMuted` / `startWithVideoMuted`),
+  has no keyboard shortcuts (`disableShortcuts`), no tile of their own
+  (`disableSelfView`), no menu on others' video (`remoteVideoMenu`), no
+  audio levels worked out (`disableAudioLevels`), and no mic, camera or
+  screen in their controls. They receive video from at most three people
+  (`channelLastN: 3`; listeners send nothing, so that is the host and
+  whoever plays with them), and their stage pins whoever moderates
+  (`pinParticipant`, found through `getRoomsInfo` and
+  `participantRoleChanged`), which asks the bridge for the host's video at
+  its best. Each listener costs the bridge one stream out, not one per
+  person in the room.
+- **The equipment** (the get-ready panel says it too): the mixer's or
+  audio interface's USB out into the laptop, Chrome, that device picked
+  as the microphone (pre-join screen or Sound input), Music sound on, and
+  headphones, so the room doesn't play back into the mic.
+
+### The crowd on screen
+
+While a set is live, listeners' shoutouts, reactions and track requests,
+and the host's Now playing, show over the call for everyone watching, and
+go into the call, so the recording has them too
+(`features/booth/crowd.ts`, `components/live_crowd.tsx`).
+
+- **`BoothLiveMoment`** (`booth_live_moments`): `booth_live`, `account`,
+  `kind` (`shoutout`, `reaction`, `request`, `track`), `body` (up to 200
+  characters; for a reaction one of `froth`, `applause`, `rewind`),
+  `artist` and `title` (a track), and `at_seconds`, how far into the set it
+  came (from `started_at`, set by the server). Its own table rather than
+  set shoutouts: a live set has no set yet, and three of the four kinds
+  aren't shoutouts. Nothing is copied to the set afterwards except the
+  tracks, because the set may reach more people than the live set did.
+- **API** (`Api::V1::BoothLiveMomentsController`, members only).
+  `GET /api/v1/booth_lives/:id/moments?since_id=` lists them oldest first
+  (up to 100 after `since_id`; without it, the latest 50).
+  `POST /api/v1/booth_lives/:id/moments` with `kind` and `body` (a track's
+  `body` is "Artist - Title", read like a track list line) answers the
+  moment; 422 if the set isn't live, 429 for a second one from the same
+  person within two seconds (`THROTTLE`). `DELETE
+  /api/v1/booth_live_moments/:id` for its author, the host or a steward.
+  All of it follows the set's reach (`BoothLive#visible_to?`): outside it
+  the set isn't there (404). Only the host can post a `track` (403).
+- **Live updates.** Kronk's streaming server carries per-person timelines,
+  not a channel per live set with a reach check, so the room polls every
+  four seconds with `since_id` while you're in it. The first answer is
+  what was there already and isn't shown again.
+- **On screen.** Each new moment shows over the call for six seconds, the
+  newest five at most, in an `aria-live="polite"` list: the name and the
+  words, "Request: …", "Now playing: …", or the reaction (Froth, Applause,
+  Rewind!). It fades in and out, and just appears and goes for anyone
+  with `prefers-reduced-motion`. Clicks pass through to the call.
+- **Sending.** Under the room a listener has one line ("Say something to
+  Rosa, or name a track to request") with **Shout out** and **Request**,
+  and Froth, Applause and Rewind!. The host has **Now playing (Artist -
+  Title)** and **Mark as playing**; the line "Now playing: …" shows to
+  everyone above the call.
+- **Into the call.** The host's page sends each new moment, once, into the
+  call as a text message to everyone (External API
+  `executeCommand('sendEndpointTextMessage', '', text)`; an empty
+  recipient broadcasts), and sends the current track again when
+  recording starts. One sender, so each message arrives once whoever
+  posted it. A listener's page sends nothing into the call.
+
+**The message** (`CrowdMessage`, version 1). `text` is a JSON object, no
+other keys, all always present:
+
+```json
+{ "kronk": 1, "type": "shoutout", "name": "Rosa", "text": "This tune!", "at": 754 }
+```
+
+| Key     | Type    | What it is                                                                                                 |
+| ------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `kronk` | number  | The version, `1`. Ignore any other.                                                                         |
+| `type`  | string  | `shoutout`, `reaction`, `request` or `track`. Ignore one you don't know (a later type may be added in 1).   |
+| `name`  | string  | The sender's display name (the host's for a `track`). Plain text.                                           |
+| `text`  | string  | A shoutout's or request's words (up to 200 characters); a reaction's key, `froth`, `applause` or `rewind`; a track as `Artist – Title` (en dash), or just `Title`. Plain text. |
+| `at`    | integer | Whole seconds since the set went live.                                                                      |
+
+For the script on the Jitsi server's page that draws them in the call:
+
+- In the Jitsi page it arrives as the conference event
+  `ENDPOINT_MESSAGE_RECEIVED` (`JitsiMeetJS.events.conference`), with
+  `(participant, payload)` where `payload` is
+  `{ "name": "endpoint-text-message", "text": "<the JSON above>" }`. A
+  page embedding the call through the External API gets the same as
+  `endpointTextMessageReceived`, `{ senderInfo: { id, jid }, eventData:
+{ name, text } }`.
+- Parse `text`, and drop anything that isn't JSON or isn't `kronk: 1`.
+  Draw `name` and `text` as text, never as HTML: they are what members
+  typed.
+- A `track` replaces what's playing (the same track may come twice, at
+  recording start); the other types pop up and fade, as Kronk's overlay
+  does (six seconds, five at most).
+- Draw only on the recorder's page (Jibri joins with `iAmRecorder`), not
+  for people: they see Kronk's own overlay over the call, and would see it
+  twice.
+- Messages sent before the recorder joined aren't seen; that is why the
+  host's page repeats Now playing when recording starts.
+
 ### Recording a live set
 
 With Kronk's Jitsi server set up for it (`JITSI_JWT_SECRET`,
 `JITSI_RECORDING_SECRET` and S3 storage; `docs/spaces/huddle.md`,
 Recordings), the host can press **Record** under the room. Everyone in it
 sees "Recording" while it runs, and the get-ready panel says so
-beforehand. The server's recorder uploads the file to a private object in
-Kronk's storage once the recording stops.
+beforehand. When the recording stops, the server's finalize script
+uploads it to private objects in Kronk's storage, as a video and as an
+audio file (`media`, paired; `docs/spaces/huddle.md` has the contract).
 
 - **It is the host's** (Tal, 2026-10-27). Only the host (and staff) can
   see a live set's recording, because it's theirs to publish as a set.
   Listeners never get it.
-- **After the set**, the ended page tells the host "Your recording is
-  ready", with **Download the recording** and **Upload the recording**,
-  the usual upload (`/hub/booth/composer`), and the recording itself to
-  play or delete. The upload takes a file from the host's device, so it
-  can't take the stored recording directly yet: the host downloads it,
-  then uploads it. Deleting the recording, or the live set, deletes the
-  file.
+- **The audio becomes a draft set.** When a live set's audio file is
+  complete, `Booth::LiveRecordingSetWorker` (the `pull` queue) runs
+  `Booth::LiveRecordingSet`: it downloads the file to a temporary folder
+  and attaches it as a `MediaAttachment`, the way an upload is, then
+  makes an unpublished `BoothSet` for the host: kind `live_recording`,
+  the live set's title, description and genres, its start as
+  `event_date`, its Now playing as the track list, the host as the
+  artist. A live set has no cover or co-hosts, so the set has none. It is
+  made once (`booth_lives.booth_set_id`), and the host is nudged "Your
+  live set is ready to publish" (`booth.set_ready`, Publish opening the
+  set).
+- **Why download and attach.** A set's audio must be a `MediaAttachment`
+  (`booth_sets.audio_attachment_id`), and a `MediaAttachment`'s file goes
+  through Paperclip, which transcodes audio to MP3 (VBR quality 2, about
+  190 kbps, like every uploaded set), reads its length and stores it
+  under the media path. Copying the object inside storage would skip all
+  three, so a job downloads it instead, out of the request.
+- **After the set**, the ended page tells the host "Your set is ready to
+  publish", with **Publish your set** (the draft's page, whose banner has
+  **Publish**, then Share to feed as for an upload) and **Download
+  video**. While the audio is being made into the set it says so; a
+  recording with no audio file (an older finalize script) still offers
+  **Download the recording** and **Upload the recording**. The recordings
+  themselves are listed under it, video and sound only, to play, download
+  or delete. Deleting a recording, or the live set, deletes its file; the
+  set keeps its own copy of the audio.
 - Without recording set up, the get-ready panel still says Kronk doesn't
   record the room, and the host records on their own set-up as before.
 
@@ -410,14 +564,27 @@ subject to the Mates gate.
   PayPal.me or bank details as text), shown on their sets and live rooms,
   with Kronk handling no money. Proposed in Kommons; My sets is where the
   musician would set it.
-- **Live sets: who can talk.** Listeners join muted, with no mic in their
-  controls and Jitsi's shortcuts off. The server still lets any
-  participant unmute; only Jitsi's own moderation (muting everyone but
-  the host) would stop it, and Kronk's controls don't offer that yet.
-- **Publishing a recording straight from storage.** The upload flow takes
-  a file from the device; a "use this recording" path for the stored one
-  would save the host a download and an upload.
-- **Chat and reactions** in the room went with Jitsi's toolbar.
+- **Live sets: who can talk.** Listeners open no microphone and have no
+  mic in their controls. The server still lets any participant send
+  audio; only Jitsi's own moderation (muting everyone but the host, or
+  visitors, below) would stop it, and Kronk's controls don't offer that
+  yet.
+- **Big audiences.** The get-ready panel still says a room plays best to
+  about 35 people; listen-only listeners should carry more, up to about
+  100, which wants measuring on the server before the panel says so. Past
+  that, Jitsi's visitors mode (listeners on separate, receive-only
+  servers) is the way, and isn't set up or built.
+- **Co-hosts and a cover for live sets.** A live set has one host and no
+  cover, so the set made from it has neither; both would carry over if
+  added.
+- **Live shoutouts on the set.** A live set's shoutouts aren't copied to
+  the set made from it, because the set may reach more people than the
+  live set did. Asking each person, or copying only for sets for
+  everyone, would be the way.
+- **Music sound, checked on the server.** Turning Music sound off and on
+  mid-set relies on Jitsi reopening the same input when it's picked
+  again; on a server that doesn't, the change applies at the next input
+  change.
 - **Live sets: reach and Kalendar.** Every member can see and join a live
   set, as with recorded sets. A Kalendar event can't link to a live set
   yet: `korner_attachments` resolves a slug to one model (the manifest's

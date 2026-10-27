@@ -48,7 +48,10 @@ Never put a value in the repo; they live in the environment.
   call's events report (mute, sharing, hand, tile view, recording, whether
   you moderate). While a call is recorded everyone in it sees "Recording"
   at the start of the bar. Leave is there before the call comes up, so a
-  call that never loads can still be left.
+  call that never loads can still be left. The Main Huddle and Kuddles
+  also have **Sound input** (`inputPicker`): pick the microphone or sound
+  card, with a level meter (`docs/spaces/booth.md`, Music sound, which
+  also has a live set's own settings).
 
 **Kuddles.** A Room is called a **Kuddle** wherever people see it (Tal,
 2026-10-27): the list, the composer ("New Kuddle"), the Konnect noun ("the
@@ -228,8 +231,13 @@ a finalize script on the Jitsi server hands the file to Kronk.
   and `Kronk::CallTarget` hold the rules.
 - **Where they show.** Under a Kuddle's call and in the Main Huddle's
   lobby (`<CallRecordings>`, `components/call_recordings.tsx`): each with
-  its date and length, Play (inline), Download and Delete for whoever may.
-  Nothing shows when there are none.
+  its date, Video or Sound only, and length, Play (inline), Download and
+  Delete for whoever may. Nothing shows when there are none.
+- **Video and audio.** A recording can come as a video file, an audio
+  file, or both (`media`; each of a pair points at the other, `pair_id`).
+  A live set's audio file becomes a draft set for its host
+  (`docs/spaces/booth.md`, Recording a live set). Elsewhere it is a
+  recording like any other.
 - **Storage.** A private object under `call_recordings/<random>/<filename>`
   (after `S3_KEY_PREFIX`) in the bucket Paperclip already uses
   (`Kronk::CallRecordingStorage`), uploaded straight there by the recorder.
@@ -238,30 +246,69 @@ a finalize script on the Jitsi server hands the file to Kronk.
   `download_url` to save (ten minutes);
   `DELETE /api/v1/calls/recordings/:id` deletes one. The CSP's
   `media-src` allows the bucket's own host. Without S3 (local development) recording is off.
-- **The recorder's side** (`Api::V1::Calls::RecordingUploadsController`).
-  Every call is signed: `X-Kronk-Timestamp: <unix seconds>` and
+- **The recorder's side** (`Api::V1::Calls::RecordingUploadsController`),
+  the contract the finalize script follows. Every request is signed:
+  `X-Kronk-Timestamp: <unix seconds>` and
   `X-Kronk-Signature: sha256=<hex HMAC-SHA256 of "<timestamp>.<raw body>">`
   with `JITSI_RECORDING_SECRET`, refused (401) if wrong or more than five
-  minutes off.
-  - `POST /api/v1/calls/recordings/start` with `{ room, filename, size }`
-    (and optionally `duration` in seconds and `started_by`, a Kronk
-    account id). Kronk takes the prefix off `room` and finds the Main
-    Huddle, a live set (`room_key`) or a Kuddle (`session_url`); anything
-    else is a 404, over 4 GB a 413, a filename that isn't a plain
-    `.mp4`, `.webm` or `.mkv` a 422. It answers 201 with
-    `{ id, upload_url, upload_method, upload_headers, expires_in }`
-    (`upload_method` is `PUT`, `upload_headers` the `Content-Type` to
-    send), and the row is `pending`.
-  - The recorder PUTs the file to `upload_url` with those headers within
-    the hour.
-  - `POST /api/v1/calls/recordings/:id/complete` (body `{}` or
-    `{ duration }`) checks the object is there and marks the row `ready`:
-    200 `{ id, status, size }`, 422 if nothing is uploaded yet, 413 (and
-    the file deleted) if it's over 4 GB.
+  minutes off. Bodies are JSON (`Content-Type: application/json`).
+
+  The script runs these three steps **once per file**: for the video, then
+  for the audio (either order works), with the same `room` both times.
+
+  1. `POST /api/v1/calls/recordings/start` with
+     `{ "room", "filename", "size", "media" }`, and optionally
+     `"duration"` (whole seconds) and `"started_by"` (a Kronk account id,
+     the moderator's pass's `context.user.id`):
+
+     ```json
+     { "room": "booth-3f9c…", "filename": "friday_2026-10-27.m4a", "size": 81234567, "media": "audio", "duration": 5400 }
+     ```
+
+     - `room` is the Jitsi room name. Kronk takes `JITSI_ROOM_PREFIX` and
+       any `@muc…` off it and finds the Main Huddle, a live set
+       (`room_key`) or a Kuddle (`session_url`); anything else is a 404.
+     - `filename` is plain (`[A-Za-z0-9][A-Za-z0-9._-]*`, up to 200
+       characters) and its extension says what it is:
+
+       | `media` | Extensions and the `Content-Type` Kronk asks for                                   |
+       | ------- | ----------------------------------------------------------------------------------- |
+       | `video` | `.mp4` `video/mp4`, `.webm` `video/webm`, `.mkv` `video/x-matroska`                   |
+       | `audio` | `.m4a` `audio/mp4`, `.ogg` `audio/ogg`, `.opus` `audio/ogg` (Opus in Ogg), `.mp3` `audio/mpeg` |
+
+     - `media` is `"video"` or `"audio"`. Left out, the extension decides
+       (so an older script's `.mp4` is a video). A `media` the extension
+       doesn't match, or any other value, is a 422.
+     - `size` is bytes; over 4 GB is a 413.
+
+     It answers 201
+     `{ "id", "media", "pair_id", "upload_url", "upload_method": "PUT", "upload_headers": { "Content-Type": … }, "expires_in": 3600 }`,
+     and the row is `pending`. `pair_id` is the other file of the same
+     recording when Kronk found it: the newest unpaired file of the other
+     medium for the same call, started within the last two hours (so on
+     the second file's start, it's the first file's `id`; on the first,
+     null).
+  2. `PUT` the file to `upload_url` with exactly `upload_headers`, within
+     `expires_in` seconds. This goes to storage, not to Kronk.
+  3. `POST /api/v1/calls/recordings/<id>/complete` with `{}` or
+     `{ "duration" }`. Kronk checks the object is there and marks the row
+     `ready`: 200 `{ "id", "media", "status": "ready", "size" }`; 422 if
+     nothing is uploaded yet (the script can PUT again and repeat); 413,
+     and the file deleted, if it's over 4 GB. Completing a ready one again
+     answers 200 and changes nothing.
+
+  A live set's audio, once complete, is made into the host's draft set in
+  the background; the script doesn't wait for it. If the script uploads
+  only a video, the host gets the recording as before and uploads a set
+  by hand. Copying Jibri's own audio into `.m4a` (`ffmpeg -i in.mp4 -vn
+  -c:a copy out.m4a`) adds no second loss; its quality is whatever
+  Jibri's encoder was set to, and Kronk makes a set's audio MP3 like any
+  upload.
 - **Data.** `call_recordings`: `kind` (`huddle | kuddle | booth_live`),
   `huddle_session_id` or `booth_live_id`, `started_by_account_id`,
-  `status` (`pending | ready`), `storage_key`, `filename`, `content_type`,
-  `size`, `duration`, `completed_at`.
+  `media` (`video | audio`, default `video`), `pair_id` (the other file of
+  the same recording), `status` (`pending | ready`), `storage_key`,
+  `filename`, `content_type`, `size`, `duration`, `completed_at`.
 
 ## Moderation — flat and distributed
 

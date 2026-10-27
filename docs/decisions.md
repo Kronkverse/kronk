@@ -17,6 +17,59 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — Booth live: music sound, the crowd on screen, recorded into a set
+
+The Booth's live sets ran on a voice call: the browser cleaned the music
+up as if it were speech, listeners joined as full participants, the crowd
+had no way to be heard, and a recording had to be downloaded and uploaded
+again to become a set (`docs/spaces/booth.md`, Live sets).
+
+**Decision (Tal):**
+
+- **Music sound.** A live set's call is stereo Opus at 510 kbps both ways,
+  and the host's browser does no voice processing (`disableAP` and the
+  four single switches). **Music sound** under the room turns processing
+  back on for talking. Only `booth_live` calls; the Huddle is a
+  conversation and stays one. **Sound input** (pick the USB sound card,
+  see its level) is under every Kronk call, because a Kuddle has
+  musicians in it too.
+- **Listeners listen.** They open no microphone or camera, have no
+  shortcuts or controls to be heard, receive video from at most three
+  people, and pin the host. The bridge then sends each listener one
+  stream, which is what lets a room grow.
+- **The crowd on screen.** Shoutouts, reactions (Froth, Applause,
+  Rewind!) and track requests, and the host's Now playing, are rows of
+  their own (`booth_live_moments`), inside the set's reach and only while
+  it's live. Kronk draws them over the call for everyone, and the host's
+  page sends each into the call as a small versioned JSON message
+  (`{ kronk: 1, type, name, text, at }`, documented in booth.md), so a
+  script on the Jitsi server's page draws them for the recorder. The room
+  polls every four seconds: the streaming server has no per-set channel
+  with a reach check, and adding one is more than this needs.
+- **The host's page is the one sender into the call.** Each moment then
+  arrives once, whoever sent it and wherever they were.
+- **Recorded into a set.** The recorder uploads a video and an audio file
+  of each recording (`media`, paired). A live set's audio becomes an
+  unpublished `live_recording` set for the host, with the live set's
+  title, words, genres and Now playing as its track list, and the host is
+  nudged to publish it. A set's audio is a `MediaAttachment`, so a job
+  downloads the file and attaches it like an upload (Paperclip's MP3
+  transcode, length and media path), rather than copying the object in
+  storage, which would skip all three.
+
+**Not attempted:** Jitsi's visitors mode for audiences past about 100;
+co-hosts and a cover for live sets; copying a live set's shoutouts onto
+the set (the set may reach more people than the live set did); the
+overlay script itself, which lives on the Jitsi server and is Tal's.
+
+**Why:** the Booth is for music made by people on Kronk, and a live set
+is where a musician meets the crowd. Sound that sounds like the set, a
+crowd that can be seen and heard on screen and in the recording, and a
+recording that becomes the set without a download and an upload, make
+going live worth doing.
+
+---
+
 ## 2026-10-27 — Booth albums are sets made of tracks
 
 Cassidy's Kommons proposal "Albums to live in Musik?"
