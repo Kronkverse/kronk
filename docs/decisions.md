@@ -17,6 +17,46 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — Rooms are Kuddles, and you can follow one
+
+Kommons "Notification for additional Huddles"
+(https://kronk.info/hub/kommons/p/117487031129520906): only the Main
+Huddle sent "People are huddling"; the other rooms sent nothing.
+
+**Decision (Tal):**
+
+- **A Room is a Kuddle** in everything people see (list, composer,
+  Konnect noun, nudges, the share card). Code, tables and the API keep
+  saying room. The page moves to `/hub/huddle/kuddle/:id`; the old
+  `/hub/huddle/room/:id` forwards.
+- **Follow / Unfollow a Kuddle.** Its maker follows it. A Kuddle its
+  maker Konnected to a Krew they are in is followed by every member of
+  that Krew, worked out from membership, not stored per person. Unfollow
+  is stored (`huddle_follows.following = false`) on any Kuddle: that is
+  how a Krew member stops, and it holds if the Kuddle is later linked to
+  another of their Krews. Only the maker's link makes a Krew Kuddle, the
+  same rule as every link that shares (2026-10-27, "Konnect shares only
+  what its owner chose"), so nobody can sign a Krew up for nudges.
+  "Follow" is used for Kuddles on purpose; korners are still tuned into.
+- **A nudge for each Kuddle you follow**, by the Main Huddle's rules: the
+  same once-a-minute watch asks the Jitsi server how many are in each
+  open Kuddle with a follower (by its room key; at most 20 a run, most
+  recently active first), the same number setting, once per gathering,
+  tune-out, Push and quiet hours. It has its own row, on by default, so
+  the Main Huddle's and the Kuddles' can be turned off apart. It says
+  "People are in a Kuddle you follow", with the Kuddle named under it.
+- **Not attempted:** leaving out someone who is alone in the Kuddle. The
+  server gets a count, not who, so the rule is count at or above your
+  number, as for the Main Huddle. The Jitsi embed and server are
+  untouched; a separate Jitsi overhaul is planned.
+
+**Why:** the people who use a Kuddle are the ones who want to hear when
+it fills, and a Krew's Kuddle belongs to its members already. Computing
+Krew follows from membership means nothing to backfill or tidy when
+people join or leave.
+
+---
+
 ## 2026-10-27 — The Map shows only your events
 
 Kommons "Events on Map"
@@ -32,6 +72,8 @@ location link opens `/hub/map?event=<slug>`, and that one event is pinned
 while you may see it, answered or not.
 
 **Supersedes:** the Map pinning every visible upcoming event (docs/spaces/map.md, Events).
+
+---
 
 ---
 
@@ -53,6 +95,8 @@ only what a push says: the per-row Push switches and quiet hours still decide
 whether one is sent. Legacy notifications that still push are sent as the
 same ping, so the choice holds for everything that reaches the phone
 (`docs/spaces/nudges.md`, Push).
+
+---
 
 ---
 
