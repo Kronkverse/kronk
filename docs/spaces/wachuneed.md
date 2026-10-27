@@ -4,9 +4,9 @@
 
 Wachuneed ("what you need") is where members list things for each other: art
 they make, stuff they have, services they offer, and the things they're
-looking for. Trust comes from being in the
+looking for, and the brands they back. Trust comes from being in the
 same Kronk community, not from a reputation system. This doc describes what is
-built as of 2026-10-09.
+built as of 2026-10-27.
 
 **Kronk does not broker payment.** A listing is for discovery and contact.
 Buyer and seller sort out payment themselves (cash, bank transfer, barter,
@@ -45,7 +45,7 @@ the same way: "Message the poster".
 
 ## What you can do
 
-**Browse.** `/hub/wachuneed` has four sections (manifest `views`, rotator
+**Browse.** `/hub/wachuneed` has six sections (manifest `views`, rotator
 header). The space is Wachuneed; the sections have plain names (Tal,
 2026-10-12; they were Wachuneed, Wachumissing and Wachugot, and the old
 addresses redirect):
@@ -58,8 +58,11 @@ addresses redirect):
   grid.
 - **Shops** (`/hub/wachuneed/shops`): every shop with something on offer
   (see Shops below).
+- **Brands** (`/hub/wachuneed/brands`): brands members back (see Brands
+  below).
 - **Mine** (`/hub/wachuneed/mine`): your own listings of both kinds in
   every state (`?mine=true`).
+- **Requests** (`/hub/wachuneed/requests`): see Requests below.
 
 An empty section says what belongs there and carries the one button that
 fixes it: **List something**, or **Post a wanted ad** in Desired.
@@ -390,6 +393,72 @@ Not built: a counter-offer (`amount_cents` is there for it), a message with
 the request (the API takes one; the page doesn't ask), requests lapsing,
 and counted stock going down on accept.
 
+## Brands
+
+Brands whose mission members have looked into and respect (Tal,
+2026-10-27; Kommons "Reccomened brands space",
+https://kronk.info/hub/kommons/p/117432251243226073). A section of
+Wachuneed, not a korner of its own. A brand is not a listing: nothing is
+sold through it, it has no reach, and it never reaches the feed.
+
+- **Proposing one.** In Brands, + on the Ж menu is **Propose a brand**. It
+  opens the brand composer over the list (`brand_composer.tsx`, on
+  `<ComposeShell>`; `/hub/wachuneed/brands?brand=new`): a logo or picture
+  (optional, `<PhotoDropZone>`), the name, its website (http or https; a
+  bare `zorali.com` is sent as `https://zorali.com`), **Why we back them**
+  (required: it is the point of the list) and an optional category from a
+  fixed list (`WachuneedBrand::CATEGORIES`: Clothing, Art, Food and drink,
+  Home and garden, Health and body, Outdoors, Something else). One brand
+  per name, whatever the case. A new brand keeps a draft
+  (`wachuneed`/`brand`). No Konnect row: a brand isn't Wachuneed's record
+  to Konnect.
+- **Backing.** Any member backs a brand once, from its page (**Back this
+  brand**), and can take it back (**Backed · take it back**). The proposer
+  backs it from the start and can't take that back; taking the brand down
+  is how they withdraw it.
+- **Listed or Proposed.** A brand shows in the Brands list once
+  `WachuneedBrand::BACKERS_TO_LIST` members (3, the proposer counted) back
+  it. Until then it is under **Proposed** (`?show=proposed`), so people can
+  find it and back it; its tile says "1 of 3 backers". Brands lists A to Z,
+  Proposed newest first; nothing is ranked. If a backer takes their backing
+  back and a brand falls below three, it goes back to Proposed.
+- **A brand's page** (`/hub/wachuneed/brands/:id`, `brand_page.tsx`) is
+  the standard detail page (`<KornerDetail>`): the picture as the hero, the
+  name, then a facts line with its website (opens in a new tab,
+  `rel="noopener noreferrer nofollow"`), the category, how many back it and
+  who proposed it. A brand still gathering backers says how many more it
+  needs. Then why we back them, and the faces of who backs it, first to
+  back first (up to `WachuneedBrand::MAX_FACES`).
+- **Changing or taking it down.** The proposer edits from **Edit** on the Ж
+  menu (`?edit=1`, the same composer), which ends with **Take this brand
+  down** (asks first). Taking it down deletes it and its backings.
+- **Moderation.** Staff who handle reports (`manage_reports`) see
+  **Remove** on any brand's page; it does the same as a take-down
+  (`WachuneedBrandPolicy`). There is no report button; a brand that
+  shouldn't be there is taken down after the fact.
+- **Who sees them.** Every signed-in member, except brands proposed by
+  someone who blocks you. No reach to pick.
+- **Nudge.** The first time a brand has the backers it needs, its
+  proposer is nudged: "Ana backed your brand, and it is in Brands now",
+  opening the brand (`wachuneed.brand.listed`, directed, once per brand:
+  `wachuneed_brands.listed_at`).
+
+**API** (`Api::V1::Wachuneed::BrandsController`,
+`BrandBackingsController`, serialized by `REST::WachuneedBrandSerializer`):
+`GET /api/v1/wachuneed/brands` (listed, A to Z; `status=proposed` for the
+rest, newest first; `category=` narrows either; up to 120),
+`GET …/brands/:id` (adds `backers` and `picture_id`), `POST …/brands`
+(`name`, `url`, `why`, `category`, `picture_id`: your own unattached
+upload), `PATCH …/brands/:id` (the proposer; 403 otherwise),
+`DELETE …/brands/:id` (the proposer or staff), and
+`POST | DELETE …/brands/:id/backing`. Every brand carries `backers_count`,
+`backers_to_list`, `listed`, `backed` (you back it), `can_edit` and
+`can_remove`. A bad address is a 422 that says so.
+
+Not built: the split the proposal floated between friends' brands and
+larger ones, searching brands, a category filter in the app (the API has
+one), and Kronk search.
+
 ## Feed and profile
 
 A live listing gets a companion `Status` from `Wachuneed::PublishListing`
@@ -438,6 +507,11 @@ a hit shows only to whoever can see the listing (`PolicyFilter`).
   `amount_cents` is for a counter-offer, which nothing makes yet. `accept!`
   reserves a one-off. The model publishes `wachuneed.offer.made`,
   `.accepted` and `.declined` on the korner event bus.
+- **`wachuneed_brands`**: `account_id` (who proposed it), `name` (unique
+  ignoring case), `url`, `why`, `category`, `media_attachment_id` (the
+  picture, excluded from the unattached-media sweep), `listed_at` (when it
+  first had the backers it needs). **`wachuneed_brand_backings`**: one row
+  per member per brand (`wachuneed_brand_id`, `account_id`, unique).
 - Media prefix `spaces/wachuneed/`.
 
 Old URLs (`/market`, `/hub/marketplace`, `/hub/martketplace`) 301 to
@@ -465,7 +539,8 @@ returned to Wachuneed, slug and all, on 2026-09-07.
 - **Trust signals.** The design shows mutual Mates, shared Krews and time on
   Kronk beside a listing, with no stars or reviews (a real concern goes to
   Kommons). Not built.
-- **Notifications.** The manifest declares none. The `notify_on_offer` and
+- **Notifications.** The manifest declares none, though requests and
+  brands nudge through the Nudges bus (`nudges.yaml`). The `notify_on_offer` and
   `default_publish_visibility` settings are declared but unused, and the
   feed card is always public whatever the latter says.
 - **`subcategory`.** Unused; remove it or give it a purpose.
