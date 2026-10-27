@@ -18,6 +18,8 @@ class Chronicle < ApplicationRecord
   belongs_to :status, optional: true, inverse_of: :chronicle
   has_many :chronicle_pictures, dependent: :destroy
   has_many :pictures, through: :chronicle_pictures, source: :media_attachment
+  # A chapter of one of its owner's Series, or none (ChronicleSeries).
+  belongs_to :series, class_name: 'ChronicleSeries', optional: true, inverse_of: :chapters
 
   # A picture in the body: `![caption](picture:<media id>)`, on a line of
   # its own. The id is one of the owner's own uploaded images.
@@ -25,6 +27,7 @@ class Chronicle < ApplicationRecord
   MAX_PICTURES = 30
 
   after_save :sync_pictures!, if: :saved_change_to_body?
+  before_save :place_in_series, if: :will_save_change_to_series_id?
 
   # Kind labels — displayed as a badge on the reader and the feed card,
   # filterable in the directory once the picker earns a place. `other`
@@ -44,6 +47,7 @@ class Chronicle < ApplicationRecord
   # is required so an empty submit is rejected at the model layer, not
   # just the composer.
   validates :body, presence: true
+  validate :series_is_owners, if: :will_save_change_to_series_id?
 
   scope :recent, -> { order(created_at: :desc) }
 
@@ -81,7 +85,40 @@ class Chronicle < ApplicationRecord
     end
   end
 
+  # Where this Kronikle sits among the chapters of its Series that `viewer`
+  # can see: its number, how many there are, and the ones either side.
+  # Nil when it is in no Series. A chapter the viewer can't see is never
+  # counted or pointed to.
+  def chapter_for(viewer)
+    return if series.nil?
+
+    ids = series.chapters_visible_to(viewer).pluck(:id)
+    at  = ids.index(id)
+    return if at.nil?
+
+    {
+      number: at + 1,
+      count: ids.size,
+      previous_id: at.positive? ? ids[at - 1].to_s : nil,
+      next_id: ids[at + 1]&.to_s,
+    }
+  end
+
   private
+
+  # Only into one of the owner's own Series.
+  def series_is_owners
+    errors.add(:series, :invalid) if series.present? && series.owner_id != owner_id
+  end
+
+  # A Kronikle joining a Series goes last; leaving one, it has no place.
+  def place_in_series
+    self.series_position = if series_id.nil?
+                             nil
+                           else
+                             (Chronicle.where(series_id: series_id).where.not(id: id).maximum(:series_position) || 0) + 1
+                           end
+  end
 
   # Reachable adapter (instance side).
   def reachable_owner_id

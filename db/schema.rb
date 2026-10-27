@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -648,17 +648,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
     t.index ["media_attachment_id"], name: "index_chronicle_pictures_on_media_attachment_id"
   end
 
+  create_table "chronicle_series", force: :cascade do |t|
+    t.bigint "cover_media_attachment_id"
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.bigint "owner_id", null: false
+    t.string "title", limit: 240, null: false
+    t.datetime "updated_at", null: false
+    t.index ["cover_media_attachment_id"], name: "index_chronicle_series_on_cover_media_attachment_id"
+    t.index ["owner_id"], name: "index_chronicle_series_on_owner_id"
+  end
+
   create_table "chronicles", force: :cascade do |t|
     t.text "body", default: "", null: false
     t.datetime "created_at", null: false
     t.integer "kind", default: 0, null: false
     t.bigint "owner_id", null: false
+    t.bigint "series_id"
+    t.integer "series_position"
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
     t.datetime "updated_at", null: false
     t.integer "visibility", default: 0, null: false
     t.index ["kind"], name: "index_chronicles_on_kind"
     t.index ["owner_id"], name: "index_chronicles_on_owner_id"
+    t.index ["series_id", "series_position"], name: "index_chronicles_on_series_id_and_series_position"
     t.index ["status_id"], name: "index_chronicles_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_chronicles_on_visibility"
   end
@@ -2812,7 +2826,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
   add_foreign_key "challenge_responses", "challenge_conditions", on_delete: :cascade, validate: false
   add_foreign_key "chronicle_pictures", "chronicles", on_delete: :cascade
   add_foreign_key "chronicle_pictures", "media_attachments", on_delete: :cascade
+  add_foreign_key "chronicle_series", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "chronicle_series", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "chronicles", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "chronicles", "chronicle_series", column: "series_id", on_delete: :nullify
   add_foreign_key "chronicles", "statuses", on_delete: :nullify
   add_foreign_key "conversation_mutes", "accounts", name: "fk_225b4212bb", on_delete: :cascade
   add_foreign_key "conversation_mutes", "conversations", on_delete: :cascade
