@@ -2777,6 +2777,7 @@
   "nudges.notification.freethedream.mycelium_matched": "{who} needs something you shared from your Mycelium",
   "nudges.notification.generic": "{who} has something for you in {korner}",
   "nudges.notification.huddle.gathering": "People are huddling",
+  "nudges.notification.huddle.kuddle_gathering": "People are in a Kuddle you follow",
   "nudges.notification.kalendar.going": "{who} is going to your event",
   "nudges.notification.kalendar.interested": "{who} is interested in your event",
   "nudges.notification.kalendar.not_going": "{who} can't make your event",

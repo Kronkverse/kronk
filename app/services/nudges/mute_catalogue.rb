@@ -66,10 +66,11 @@ module Nudges
       'map.challenged' => { korner: 'map', label: 'A Mate thinks your pin on the Map is out of date' },
       'rose.received' => { korner: 'rose', label: 'A Mate sends you a rose' },
       'huddle.gathering' => { korner: 'huddle', label: 'People are huddling (as many as your number below)' },
+      'huddle.kuddle_gathering' => { korner: 'huddle', label: 'People gather in a Kuddle you follow (as many as your number below)' },
     }.freeze
 
     # Nudges delivered by calling Nudges::EventRouter directly, or made
-    # outright (huddle.gathering, Huddle::FomoNotifier; booth.went_live,
+    # outright (huddle.gathering and huddle.kuddle_gathering, Huddle::FomoNotifier; booth.went_live,
     # Booth::LiveNotifier), rather than through
     # a `listens:` entry.
     HAND_WIRED = %w(
@@ -77,6 +78,7 @@ module Nudges
       albutts.tagged
       booth.went_live
       huddle.gathering
+      huddle.kuddle_gathering
       profile.posted_on
     ).freeze
 

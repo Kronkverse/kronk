@@ -113,7 +113,8 @@ notifications:
       interactive: false
 
 # Fomo noto (Kommons, 2026-10-21): "People are huddling" once the Main
-# Huddle has this many in it. Read by Huddle::FomoNotifier (its
+# Huddle has this many in it, and the same for each Kuddle you follow
+# (2026-10-27, its own row huddle.kuddle_gathering). Read by Huddle::FomoNotifier (its
 # DEFAULT_THRESHOLD matches `default`). The nudge is made outright, not on
 # the bus, so like Albutts' hand-wired ones it isn't under `notifications:`;
 # its row (Nudges::MuteCatalogue, huddle.gathering) has the switches that
@@ -127,7 +128,7 @@ settings:
     max: 35
     scope: user
     label: Tell me when this many are huddling
-    description: In the Main Huddle. Once per gathering; the switches above turn it off.
+    description: In the Main Huddle and the Kuddles you follow. Once per gathering; the switches above turn it off.
 
 emits:
   - huddle.started
