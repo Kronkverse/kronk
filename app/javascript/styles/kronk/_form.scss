@@ -586,16 +586,16 @@ input.kronk-form__input {
 // `--field-font-size` to its size, and keeps it.
 @media (pointer: coarse) {
   input:not(
-      [type='button'],
-      [type='checkbox'],
-      [type='color'],
-      [type='file'],
-      [type='image'],
-      [type='radio'],
-      [type='range'],
-      [type='reset'],
-      [type='submit']
-    ),
+    [type='button'],
+    [type='checkbox'],
+    [type='color'],
+    [type='file'],
+    [type='image'],
+    [type='radio'],
+    [type='range'],
+    [type='reset'],
+    [type='submit']
+  ),
   textarea,
   select {
     font-size: max(16px, var(--field-font-size, 16px)) !important;
