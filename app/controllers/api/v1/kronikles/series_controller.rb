@@ -35,7 +35,7 @@ class Api::V1::Kronikles::SeriesController < Api::BaseController
     if @series.save
       render json: @series, serializer: REST::ChronicleSeriesSerializer, status: 201
     else
-      render json: { error: @series.errors.full_messages.to_sentence }, status: :unprocessable_entity # rubocop:disable I18n/RailsI18n/DecorateString
+      render json: { error: @series.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
   end
 
@@ -58,7 +58,7 @@ class Api::V1::Kronikles::SeriesController < Api::BaseController
     if @series.reorder_chapters!(params[:chapter_ids])
       render json: @series.chapters.includes(:owner), each_serializer: REST::ChronicleSummarySerializer
     else
-      render json: { error: 'Name every chapter of the Series once.' }, status: :unprocessable_entity
+      render json: { error: 'Name every chapter of the Series once.' }, status: :unprocessable_entity # rubocop:disable I18n/RailsI18n/DecorateString
     end
   end
 
