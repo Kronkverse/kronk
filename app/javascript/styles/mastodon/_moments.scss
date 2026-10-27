@@ -23,8 +23,9 @@
   // Clear the notch, the status bar and the home indicator: on an iPhone
   // home-screen app the page runs under them (viewport-fit=cover), and the
   // close button at the top must stay where a finger can reach it.
-  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
-    max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  padding: max(20px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
 
   &--loading,
   &--error {
