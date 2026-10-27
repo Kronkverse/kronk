@@ -22,6 +22,9 @@ class BoothLive < ApplicationRecord
        suffix: :scope
   belongs_to :status, optional: true, inverse_of: :booth_live
   has_many :reminders, class_name: 'BoothLiveReminder', inverse_of: :booth_live, dependent: :delete_all
+  # Its recording, made on the Jitsi server, for the host to publish as a set
+  # (docs/spaces/booth.md, Recording a live set). Destroying deletes the file.
+  has_many :call_recordings, dependent: :destroy
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, length: { maximum: 2000 }

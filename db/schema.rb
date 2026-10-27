@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_120400) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -621,6 +621,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120400) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_bulk_imports_on_account_id"
     t.index ["id"], name: "index_bulk_imports_unconfirmed", where: "(state = 0)"
+  end
+
+  create_table "call_recordings", force: :cascade do |t|
+    t.bigint "booth_live_id"
+    t.datetime "completed_at"
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.integer "duration"
+    t.string "filename", null: false
+    t.bigint "huddle_session_id"
+    t.string "kind", null: false
+    t.bigint "size", null: false
+    t.bigint "started_by_account_id"
+    t.string "status", default: "pending", null: false
+    t.string "storage_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booth_live_id"], name: "index_call_recordings_on_booth_live_id"
+    t.index ["huddle_session_id"], name: "index_call_recordings_on_huddle_session_id"
+    t.index ["kind", "status", "created_at"], name: "index_call_recordings_on_kind_and_status_and_created_at"
+    t.index ["started_by_account_id"], name: "index_call_recordings_on_started_by_account_id"
+    t.index ["storage_key"], name: "index_call_recordings_on_storage_key", unique: true
   end
 
   create_table "canonical_email_blocks", force: :cascade do |t|
@@ -2868,6 +2889,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120400) do
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
+  add_foreign_key "call_recordings", "accounts", column: "started_by_account_id", on_delete: :nullify
+  add_foreign_key "call_recordings", "booth_lives", on_delete: :cascade
+  add_foreign_key "call_recordings", "huddle_sessions", on_delete: :cascade
   add_foreign_key "canonical_email_blocks", "accounts", column: "reference_account_id", on_delete: :cascade
   add_foreign_key "challenge_conditions", "proposal_votes", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "accounts", on_delete: :cascade, validate: false

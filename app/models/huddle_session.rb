@@ -41,6 +41,9 @@ class HuddleSession < ApplicationRecord
   # Follow / Unfollow on a Kuddle (docs/spaces/huddle.md, Following a
   # Kuddle). Huddle::Follows adds the Krew members who follow without a row.
   has_many   :huddle_follows, dependent: :delete_all
+  # A Kuddle's recordings (docs/spaces/huddle.md, Recordings). Destroying
+  # deletes their files.
+  has_many   :call_recordings, dependent: :destroy
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :session_url, presence: true, length: { maximum: 400 }
