@@ -130,7 +130,9 @@ class FanOutOnWriteService < BaseService
       # record is invisible to the recipient). The router bypasses
       # the Mate gate for directed events per
       # docs/spaces/nudges.md (Nudges spec) § Relevance engine Tier 1.
-      route_mention_nudges(mentions) unless update?
+      # A local post's mentions are nudged by ProcessMentionsService
+      # (`status.mentioned`); routing them here too sent each one twice.
+      route_mention_nudges(mentions) unless update? || @status.local?
 
       next unless update?
 
@@ -143,9 +145,10 @@ class FanOutOnWriteService < BaseService
     end
   end
 
-  # Fire a Nudges::EventRouter delivery for each fresh mention so the
-  # recipient's messenger picks up "@X mentioned you". Skipped on the
-  # edit / update path — a re-mention on an update shouldn't double up.
+  # Fire a Nudges::EventRouter delivery for each fresh mention in a post
+  # from elsewhere, so the recipient's messenger picks up "@X mentioned
+  # you". Skipped on the edit / update path — a re-mention on an update
+  # shouldn't double up.
   def route_mention_nudges(mentions)
     actor = @account
     mentions.each do |mention|
