@@ -181,6 +181,7 @@ en:
         mate: "%{who} nudged you"
       nudges:
         mention: "%{who} mentioned you"
+      ping: Something new on Kronk
       profile:
         posted_on: "%{who} posted on your profile"
       rose:
@@ -394,6 +395,7 @@ en-GB:
         mate: "%{who} nudged you"
       nudges:
         mention: "%{who} mentioned you"
+      ping: Something new on Kronk
       profile:
         posted_on: "%{who} posted on your profile"
       rose:

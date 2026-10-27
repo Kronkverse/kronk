@@ -8,9 +8,17 @@
 # unless the person turned it off; a row muted in Nudges is never pushed,
 # because it is never delivered. Stored as the list of rows turned off, so
 # a row added later is pushed by default, like every other.
+#
+# How a push reads is a separate choice (`nudges.push_style`, proposal
+# "Changing our Notification for web/app"): `each` says what happened,
+# `ping` sends one notification with no names and no words, "Something new
+# on Kronk", that replaces the one before. The rows and quiet hours still
+# decide whether anything is sent at all.
 module Nudges
   module PushPreferences
     SETTING = 'nudges.push_off_types'
+    STYLE_SETTING = 'nudges.push_style'
+    STYLES = %w(each ping).freeze
 
     MESSAGE_ROWS = {
       'messages.mate' => 'A Mate sends you a message',
@@ -34,6 +42,17 @@ module Nudges
       return false if user.nil?
 
       !off_keys(user).include?(key)
+    end
+
+    def style(user)
+      return 'each' if user.nil?
+
+      value = user.settings[STYLE_SETTING].to_s
+      STYLES.include?(value) ? value : 'each'
+    end
+
+    def ping?(user)
+      style(user) == 'ping'
     end
 
     def message_rows(user)

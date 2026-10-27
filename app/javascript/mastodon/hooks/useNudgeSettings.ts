@@ -19,6 +19,10 @@ export interface NudgeSettingRow {
   push: boolean;
 }
 
+// How a push reads: each one says what happened, or every push is the
+// same contentless "Something new on Kronk" (Nudges::PushPreferences).
+export type PushStyle = 'each' | 'ping';
+
 export interface QuietHours {
   start: string;
   end: string;
@@ -29,6 +33,7 @@ interface Payload {
   message_types: NudgeSettingRow[];
   muted_types: string[];
   push_off_types: string[];
+  push_style: PushStyle;
   quiet_hours: QuietHours;
 }
 
@@ -113,6 +118,15 @@ export function useNudgeSettings() {
     [save],
   );
 
+  const setPushStyle = useCallback(
+    (push_style: PushStyle) => {
+      const current = dataRef.current;
+      if (!current) return;
+      void save({ ...current, push_style }, { push_style });
+    },
+    [save],
+  );
+
   const setQuietHours = useCallback(
     (quiet_hours: QuietHours) => {
       const current = dataRef.current;
@@ -127,9 +141,11 @@ export function useNudgeSettings() {
     types: data?.types ?? [],
     messageTypes: data?.message_types ?? [],
     quietHours: data?.quiet_hours ?? null,
+    pushStyle: data?.push_style ?? null,
     status,
     setShown,
     setPushed,
+    setPushStyle,
     setQuietHours,
   };
 }

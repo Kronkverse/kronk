@@ -39,4 +39,22 @@ RSpec.describe Nudges::PushPayload do
 
     expect(payload).to include(title: 'Ana nudged you', body: nil, url: "/nudges/#{conversation.id}", tag: "nudges-chat-#{conversation.id}")
   end
+
+  describe '.ping' do
+    it 'says only that something is new, under one tag, and opens Nudges' do
+      payload = described_class.ping(at: Time.utc(2026, 10, 27, 9, 0))
+
+      expect(payload).to eq(
+        kronk_nudge: true,
+        ping: true,
+        title: 'Something new on Kronk',
+        body: nil,
+        icon: nil,
+        url: '/nudges',
+        tag: 'kronk-ping',
+        timestamp: '2026-10-27T09:00:00Z',
+        preferred_locale: 'en'
+      )
+    end
+  end
 end

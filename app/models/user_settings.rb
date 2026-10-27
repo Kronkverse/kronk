@@ -102,9 +102,12 @@ class UserSettings
   # nothing muted. `push_off_types` is the rows (those, plus
   # `messages.mate` / `messages.krew`) kept off the phone
   # (`Nudges::PushPreferences`); empty = everything delivered is pushed.
+  # `push_style` is how a push reads: `each` says what happened, `ping`
+  # sends one "Something new on Kronk" that replaces the last.
   namespace :nudges do
     setting :muted_types, default: []
     setting :push_off_types, default: []
+    setting :push_style, default: 'each', in: %w(each ping)
   end
 
   # Kronk feed reach: how wide a slice of the network the home column

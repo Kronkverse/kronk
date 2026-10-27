@@ -336,6 +336,19 @@ store:
   `Nudges::WebPushWorker` subclasses `Web::PushNotificationWorker` for the
   encryption and request; the service worker shows a `kronk_nudge` payload
   as sent.
+- **How push tells you** (2026-10-27, mangobee's Kommons proposal "Changing
+  our Notification for web/app"). Under **This device** on
+  `/settings/notifications`: **Each one** (the default, as above) or **Just
+  a ping**. With Just a ping every push is the same notification, "Something
+  new on Kronk", with no name, no words and no picture, under one tag
+  (`kronk-ping`), so a new one replaces the last instead of stacking; a tap
+  opens Nudges. Stored as `nudges.push_style` (`each` or `ping`), read by
+  `Nudges::PushPreferences.ping?`; `Nudges::WebPushWorker` sends
+  `Nudges::PushPayload.ping` and the service worker shows it with the fixed
+  tag and nothing else. A legacy `Notification` that still pushes goes the
+  same way (`NotifyService` hands it to `Nudges::WebPushWorker` as
+  `notification`), so nothing on the lock screen says who or what. The Push
+  switches and quiet hours still decide whether anything is sent at all.
 - **Turning it on, and choosing** (Tal, 2026-10-19). The browser only asks
   when someone taps, so **Turn on notifications** sits at the top of Nudges →
   Notifications (`components/push_prompt.tsx`; dismissible) and under
