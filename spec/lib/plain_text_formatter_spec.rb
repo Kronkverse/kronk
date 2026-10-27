@@ -12,6 +12,14 @@ RSpec.describe PlainTextFormatter do
       it 'returns the raw text' do
         expect(subject).to eq '<p>a text by a nerd who uses an HTML tag in text</p>'
       end
+
+      context 'when text contains a markdown link' do
+        let(:status) { Fabricate.build(:status, text: 'Read [the plan](https://example.com/plan) first', uri: nil) }
+
+        it 'keeps only the link text' do
+          expect(subject).to eq 'Read the plan first'
+        end
+      end
     end
 
     context 'when status is remote' do

@@ -14,7 +14,9 @@ class PlainTextFormatter
 
   def to_s
     if local?
-      text
+      # Kronk: a local post's markdown link reads as its text, the way the
+      # post itself shows it, not as `[text](url)`.
+      text&.gsub(Extractor::MARKDOWN_LINK_RE, '\1')
     else
       begin
         node = Nokogiri::HTML5.fragment(insert_newlines)
