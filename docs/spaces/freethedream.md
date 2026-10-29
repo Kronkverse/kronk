@@ -408,8 +408,15 @@ shadow.
   built for its viewer by `Freethedream::View`, including a `can` block
   saying what they may do. Specs:
   `spec/requests/api/v1/freethedream/mechanism_spec.rb`.
-- **Page** (`features/freethedream/`): the Frame's view picker over **All
-  emergences**, **Mine** and **Mycelium** (`mycelium.tsx`); detail routes
+- **Page** (`features/freethedream/`): the landing sits in `<KornerShell>`,
+  and its title is the Frame's rotator (`header.rotator: true`), turning
+  through **All emergences**, **Mine** and **Mycelium** (`mycelium.tsx`),
+  each with its tagline from `views:`. FreeTheDream draws no badge, title
+  or tab row of its own (Standard L11); until 2026-10-29 it sat in a bare
+  `<Stage>` under a fixed title and a row of text pills, the one korner
+  with taglined views that didn't rotate. Spec:
+  `spec/system/freethedream_spec.rb`. Detail routes, each in a plain
+  `<Stage>`, are
   for a project or section (`/p/:name`) and an item (`/i/:name`), by name
   (`Kronk::NamedLink`; an old number still opens it). From my
   Mycelium on rows is `from_my_mycelium.tsx`; the category chips are
