@@ -42,10 +42,14 @@ import {
 // portfolio), where cropping a tall painting or a wide panorama to a square
 // would cut the work. Same cards, same slots; only the media's shape and the
 // arrangement change.
+//
+// `row` is one line of the same tiles that scrolls sideways, the next tile
+// peeking in at the edge: for a shelf among others down a page, like the
+// Booth's By artist and By kind (2026-10-29).
 interface SpaceGridProps {
   children: React.ReactNode;
   className?: string;
-  layout?: 'grid' | 'masonry';
+  layout?: 'grid' | 'masonry' | 'row';
 }
 
 export const SpaceGrid: React.FC<SpaceGridProps> = ({
@@ -56,7 +60,7 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
   <ul
     className={[
       'space-grid',
-      layout === 'masonry' ? 'space-grid--masonry' : null,
+      layout === 'grid' ? null : `space-grid--${layout}`,
       className,
     ]
       .filter(Boolean)

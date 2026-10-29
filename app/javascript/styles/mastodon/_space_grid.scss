@@ -20,6 +20,27 @@
   }
 }
 
+// Row: one line of tiles that scrolls sideways, the next one peeking in so
+// it reads as more to see (`<SpaceGrid layout='row'>`).
+.space-grid--row {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 0.75rem) / 2.25);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.5rem;
+
+  @media (width >= 720px) {
+    grid-template-columns: none;
+    grid-auto-columns: calc((100% - 3rem) / 4.25);
+  }
+
+  .space-grid__cell {
+    scroll-snap-align: start;
+  }
+}
+
 // Masonry: images keep their own shape and tiles stack down columns, two on
 // a phone and three from 720px (fewer than the grid's four, because a whole
 // image needs more width than a square crop to read). Each tile stays in one

@@ -69,7 +69,14 @@ which opens the same form as the grid card's menu.
     to one **kind** (`kind`, see [Kinds](#kinds)) and to one of the most
     used genres (`genre`). **Sort** is the listener's choice of Newest
     (pages by `max_id`), Fewest listens or Longest (page by `offset`); the
-    Booth never ranks for anyone. How the Booth works (upload, get heard,
+    Booth never ranks for anyone. **View** (first on the row) picks the
+    layout: **Grid**, or rows that scroll sideways, **By artist** (one row
+    per artist, uploader or credited as in Artists, newest first) or **By
+    kind** (Mixes, Live recordings and so on). The rows are drawn from the
+    newest 200 sets (`limit`, at most 200); each has **See all**, the
+    artist's page or the grid on that kind. Sort, Kind and Genre apply to
+    the grid only; a search shows its matches in the grid. Picking a
+    View closes its panel. How the Booth works (upload, get heard,
     credit who played, go live, save) is in About this space, the Ж
     bubble's i, from the manifest's `about:`; the page carries no banner
     (decisions.md, 2026-10-26). The empty state links to the composer,

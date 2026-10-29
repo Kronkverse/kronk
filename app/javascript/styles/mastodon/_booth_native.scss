@@ -1659,3 +1659,49 @@
     color: var(--accent);
   }
 }
+
+// Musik's By artist and By kind: rows that scroll sideways (index.tsx,
+// MusikShelves; the row itself is <SpaceGrid layout='row'>).
+.booth-shelves {
+  display: grid;
+  gap: 1.75rem;
+  min-width: 0;
+}
+
+.booth-shelf {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.booth-shelf__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.booth-shelf__title {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.booth-shelf__all {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
