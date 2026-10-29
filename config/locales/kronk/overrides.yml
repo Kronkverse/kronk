@@ -140,6 +140,47 @@ en:
         title: Security keys on
   errors:
     noscript_html: To use Kronk, please enable JavaScript.
+  # Jitsi's own words in a Booth live set's room, served to the Jitsi
+  # server by Api::V1::Calls::BrandingsController. Keys follow Jitsi's
+  # lang/main.json; {{…}} is Jitsi's placeholder, not Rails'.
+  kronk_jitsi:
+    booth_live:
+      dialog:
+        kickSystemTitle: You were taken out of the set
+        kickTitle: "{{participantDisplayName}} took you out of the set"
+        sessTerminatedReason: The set has ended
+      lonelyMeetingExperience:
+        youAreAlone: Nobody's listening yet
+      notify:
+        connectedOneMember: "{{name}} is listening"
+        connectedThreePlusMembers: "{{name}} and lots of others are listening"
+        connectedTwoMembers: "{{first}} and {{second}} are listening"
+        leftOneMember: "{{name}} left"
+        leftThreePlusMembers: "{{name}} and lots of others left"
+        leftTwoMembers: "{{first}} and {{second}} left"
+        suggestRecordingTitle: Record this set
+      participantsPane:
+        headings:
+          participantsList: In the room ({{count}})
+      prejoin:
+        joinMeeting: Into the booth
+        premeeting: Before the set
+        recordingWarning: This set may be recorded
+      recording:
+        expandedOn: This set is being recorded
+        pending: Getting ready to record the set…
+      startupoverlay:
+        genericTitle: The set needs your microphone and camera.
+      toolbar:
+        accessibilityLabel:
+          endConference: End the set for everyone
+          hangup: Leave the set
+          leaveConference: Leave the set
+        endConference: End the set for everyone
+        hangup: Leave the set
+        leaveConference: Leave the set
+      videoStatus:
+        recording: This set is being recorded.
   mail_subscriptions:
     unsubscribe:
       confirmation_html: Are you sure you want to unsubscribe from receiving %{type} for Kronk on %{domain} to your email at %{email}? You can always re-subscribe from your <a href="%{settings_path}">email notification settings</a>.
@@ -372,6 +413,47 @@ en-GB:
         title: Security keys on
   errors:
     noscript_html: To use Kronk, please enable JavaScript.
+  # Jitsi's own words in a Booth live set's room, served to the Jitsi
+  # server by Api::V1::Calls::BrandingsController. Keys follow Jitsi's
+  # lang/main.json; {{…}} is Jitsi's placeholder, not Rails'.
+  kronk_jitsi:
+    booth_live:
+      dialog:
+        kickSystemTitle: You were taken out of the set
+        kickTitle: "{{participantDisplayName}} took you out of the set"
+        sessTerminatedReason: The set has ended
+      lonelyMeetingExperience:
+        youAreAlone: Nobody's listening yet
+      notify:
+        connectedOneMember: "{{name}} is listening"
+        connectedThreePlusMembers: "{{name}} and lots of others are listening"
+        connectedTwoMembers: "{{first}} and {{second}} are listening"
+        leftOneMember: "{{name}} left"
+        leftThreePlusMembers: "{{name}} and lots of others left"
+        leftTwoMembers: "{{first}} and {{second}} left"
+        suggestRecordingTitle: Record this set
+      participantsPane:
+        headings:
+          participantsList: In the room ({{count}})
+      prejoin:
+        joinMeeting: Into the booth
+        premeeting: Before the set
+        recordingWarning: This set may be recorded
+      recording:
+        expandedOn: This set is being recorded
+        pending: Getting ready to record the set…
+      startupoverlay:
+        genericTitle: The set needs your microphone and camera.
+      toolbar:
+        accessibilityLabel:
+          endConference: End the set for everyone
+          hangup: Leave the set
+          leaveConference: Leave the set
+        endConference: End the set for everyone
+        hangup: Leave the set
+        leaveConference: Leave the set
+      videoStatus:
+        recording: This set is being recorded.
   mail_subscriptions:
     unsubscribe:
       confirmation_html: Are you sure you want to unsubscribe from receiving %{type} for Kronk on %{domain} to your email at %{email}? You can always re-subscribe from your <a href="%{settings_path}">email notification settings</a>.
