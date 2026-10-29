@@ -4,6 +4,7 @@ import { useHistory } from 'react-router-dom';
 
 import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { useOpenProposer } from 'mastodon/features/kommons/use_open_proposer';
 
 import { ROOT_ID, buildTree } from '../../kommons_tree/data/layout';
 import type { KommonsNode } from '../../kommons_tree/data/nodes';
@@ -46,6 +47,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
     () => new Set([ROOT_ID]),
   );
   const history = useHistory();
+  const openProposer = useOpenProposer();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -473,20 +475,17 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
       // Push a location object (pathname + search kept separate). A string like
       // `/x?q=1` is stuffed whole into `pathname` by the app's history wrapper,
       // which breaks route matching — see components/router.tsx.
+      // In pick mode the Proposer opens over the picker, scoped to the
+      // choice, so cancelling leaves the picker where it was.
       const spaceTarget = node.korner ?? node.space;
       if (spaceTarget) {
-        history.push(
-          pick
-            ? {
-                pathname: '/hub/kommons/propose',
-                search: `?space=${spaceTarget}`,
-              }
-            : {
-                pathname: `/hub/kommons/space/${spaceTarget}`,
-                search: '?from=lattice',
-                state: { backTo: DIRECTORY_PATH },
-              },
-        );
+        if (pick) openProposer({ space: spaceTarget });
+        else
+          history.push({
+            pathname: `/hub/kommons/space/${spaceTarget}`,
+            search: '?from=lattice',
+            state: { backTo: DIRECTORY_PATH },
+          });
         return;
       }
       // A Finger opens its meta page — info about this page, the proposals
@@ -494,15 +493,13 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
       // the product page: the tree is a governance surface, not a launcher.
       // In pick mode it opens the Proposer scoped to this page instead.
       if (node.url) {
-        history.push(
-          pick
-            ? { pathname: '/hub/kommons/propose', search: `?node=${node.id}` }
-            : {
-                pathname: `/hub/kommons/node/${node.id}`,
-                search: '?from=lattice',
-                state: { backTo: DIRECTORY_PATH },
-              },
-        );
+        if (pick) openProposer({ node: node.id });
+        else
+          history.push({
+            pathname: `/hub/kommons/node/${node.id}`,
+            search: '?from=lattice',
+            state: { backTo: DIRECTORY_PATH },
+          });
         return;
       }
       // Anything left either opens its branch or opens its page. Tapping a
@@ -522,7 +519,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
         });
       }
     },
-    [tree, history, pick, open],
+    [tree, history, pick, open, openProposer],
   );
 
   // The in-tree composer went with the leaf panel on 2026-09-10: the panel's
@@ -532,8 +529,8 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   //
   // The "+ Propose a new Korner" pill retired 2026-08-11 — the korner's
   // compose bubble (floating `Ж`) already routes to the Proposer via manifest
-  // `compose.route`. The deep link `/hub/kommons/propose?kind=new_korner`
-  // still works if a caller ever wants to reach it directly.
+  // `compose.route`; the Hub's "Propose a Korner" tile opens it in
+  // new-korner mode.
 
   return (
     <div

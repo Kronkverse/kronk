@@ -3,13 +3,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useHistory, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import { Stage } from 'mastodon/components/stage';
 
 import { KommonsProposalList } from './components/proposal_list';
+import { useOpenProposer } from './use_open_proposer';
 
 // The page for a single node (/hub/kommons/node/:nodeId) — reached by tapping
 // a page in the Kommons tree.
@@ -54,7 +55,6 @@ const messages = defineMessages({
 const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
   const { nodeId = '' } = useParams<{ nodeId: string }>();
   const intl = useIntl();
-  const history = useHistory();
 
   const [nodes, setNodes] = useState<ApiKommonsNode[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -80,15 +80,11 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
   const node = nodes.find((n) => n.id === nodeId);
   const name = node?.label ?? nodeId;
 
-  // Location object, not a string: the app's history wrapper folds a
-  // `path?query` string whole into the pathname, so the composer would open
-  // unscoped (see components/router.tsx, and propose_picker.tsx:63).
+  // The composer opens over this page, so cancelling leaves you on it.
+  const openProposer = useOpenProposer();
   const proposeHere = useCallback(() => {
-    history.push({
-      pathname: '/hub/kommons/propose',
-      search: `?node=${nodeId}`,
-    });
-  }, [history, nodeId]);
+    openProposer({ node: nodeId });
+  }, [openProposer, nodeId]);
 
   // Kronk's org pages are Rails-served, so a full navigation; SPA routes use
   // an in-app link.

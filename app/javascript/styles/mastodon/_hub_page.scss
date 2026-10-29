@@ -120,8 +120,12 @@ $tile-shadow-2: #17151f;
     padding: 8px;
     // stylelint-disable-next-line declaration-property-value-disallowed-list -- matches the tile's chunky 20px radius (see comment above &__tile)
     border-radius: 20px;
+    border: 0;
+    background: none;
     color: var(--text-primary);
+    font: inherit;
     text-decoration: none;
+    cursor: pointer;
 
     &:focus-visible {
       outline: 3px solid var(--kronk-purple-bright);

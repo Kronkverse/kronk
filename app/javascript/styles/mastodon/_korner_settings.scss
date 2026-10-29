@@ -287,10 +287,10 @@
     font-style: italic;
   }
 
-  // Cross-space CTA — the "Propose a change to X" link the settings
-  // rebuild added on every generic-korner settings surface (routes to
-  // /hub/kommons/composer?space=<slug>). Purple-pill treatment so it
-  // reads as a primary action, not a plain link.
+  // Cross-space CTA — the "Propose a change to X" button the settings
+  // rebuild added on every generic-korner settings surface (opens the
+  // proposal composer over the page, scoped to the space). Purple-pill
+  // treatment so it reads as a primary action, not a plain link.
   &__propose-cta {
     align-self: flex-start;
     display: inline-flex;
@@ -307,7 +307,9 @@
     font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 600;
+    line-height: inherit;
     text-decoration: none;
+    cursor: pointer;
     transition:
       background var(--dur-fast) var(--ease-out),
       transform var(--dur-fast) var(--ease-out);

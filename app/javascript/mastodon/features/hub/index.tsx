@@ -11,6 +11,7 @@ import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Icon } from 'mastodon/components/icon';
 import { SpaceHeader } from 'mastodon/components/space_header';
 import { Stage } from 'mastodon/components/stage';
+import { useOpenProposer } from 'mastodon/features/kommons/use_open_proposer';
 import { useKorners } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -39,25 +40,6 @@ const messages = defineMessages({
     defaultMessage: 'Missing something? Draft it via Kommons.',
   },
 });
-
-// Route to the Kommons propose page in "new korner" mode. The propose page
-// reads `kind=new_korner` and swaps into its tailored korner-composer copy
-// (title = korner name, structured fields).
-//
-// Was `node=kommons.new_korner` until 2026-09-10, when that node went: it was
-// the Proposer with a query string, not a space, and the Directory carries one
-// node per space. The kind of proposal is not a fact about which page it is
-// about, so it travels on its own parameter now.
-//
-// Must be a Location object — Kronk's history wrapper mangles a raw
-// `pathname?query` string into the pathname (see components/router.tsx),
-// which sends the link to /hub/kommons/… without the query and drops the
-// user on the proposals list. ProposePicker hit the same rake — see
-// propose_picker.tsx:64.
-const PROPOSE_KORNER_TARGET = {
-  pathname: '/hub/kommons/propose',
-  search: '?kind=new_korner',
-};
 
 // The settings gear sits above the tile link (position: absolute), so
 // even without stopPropagation it never bubbles into the Link. The
@@ -131,25 +113,34 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
 // "+" tile — always the last tile in the live board. Missing a
 // korner? Draft one via Kommons. Same shell as `KornerTile` so it sits
 // inside the same grid rhythm, minus the gear + activity affordances.
+//
+// Opens the proposal composer over the Hub in "new korner" mode
+// (`kind: 'new_korner'`: the tailored korner-composer copy and fields), so
+// cancelling leaves you on the Hub (Kommons "Proposer Composer", 2026-10-29).
 const ProposeKornerTile: React.FC = () => {
   const intl = useIntl();
   const label = intl.formatMessage(messages.proposeKorner);
   const tip = intl.formatMessage(messages.proposeKornerTip);
+  const openProposer = useOpenProposer();
+  const handleClick = useCallback(() => {
+    openProposer({ kind: 'new_korner' });
+  }, [openProposer]);
 
   return (
     <div
       className='hub-page__tile hub-page__tile--propose'
       data-slug='__propose__'
     >
-      <Link
-        to={PROPOSE_KORNER_TARGET}
+      <button
+        type='button'
+        onClick={handleClick}
         className='hub-page__tile-link'
         aria-label={label}
       >
         <Icon id='add' icon={AddIcon} className='hub-page__tile-glyph' />
         <span className='hub-page__tile-name'>{label}</span>
         <span className='hub-page__tile-tip'>{tip}</span>
-      </Link>
+      </button>
     </div>
   );
 };

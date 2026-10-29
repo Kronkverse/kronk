@@ -9,7 +9,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import api, {
   apiRequestGet,
@@ -19,6 +19,7 @@ import api, {
 import type { ApiKornerSettingJSON } from 'mastodon/api_types/korners';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
+import { ProposeButton } from 'mastodon/features/kommons/propose_button';
 import { NudgeSwitches } from 'mastodon/features/settings/nudge_switches';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
@@ -573,18 +574,12 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
                 heading={<FormattedMessage {...messages.proposeSection} />}
                 hint={<FormattedMessage {...messages.proposeHint} />}
               >
-                <Link
-                  to={{
-                    pathname: '/hub/kommons/composer',
-                    search: `?space=${encodeURIComponent(slug ?? '')}`,
-                  }}
-                  className='korner-settings__propose-cta'
-                >
+                <ProposeButton space={slug ?? ''}>
                   <FormattedMessage
                     {...messages.proposeCTA}
                     values={{ name: korner?.name ?? slug }}
                   />
-                </Link>
+                </ProposeButton>
               </SettingsSection>
             )}
           </>

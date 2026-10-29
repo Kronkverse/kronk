@@ -21,6 +21,8 @@ import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { SpaceInfoDialog } from 'mastodon/components/space_info_dialog';
 import { selectWalkthroughForceZhOpen } from 'mastodon/components/walkthrough/runner';
+import type { ProposalScope } from 'mastodon/features/kommons/kommons_composer';
+import { useOpenProposer } from 'mastodon/features/kommons/use_open_proposer';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppSelector } from 'mastodon/store';
@@ -205,6 +207,9 @@ interface PostTarget {
   // colliding with the app history wrapper — see MoonItem.href note.
   href: string | { pathname: string; search?: string; hash?: string };
   label: string;
+  // On a Kommons space or node page: a proposal about it, opened over the
+  // page instead of followed as a link.
+  propose?: ProposalScope;
 }
 
 // Whether a korner page is one of the korner's own views (its landing, or
@@ -246,33 +251,23 @@ const usePostTarget = (): PostTarget | null => {
         korner.compose.label &&
         (onSpaceOrNode || isKornerView(location.pathname, views))
       ) {
-        // On a Kommons Space page the propose action carries the space it's
-        // about, so the composer lands the new proposal on that space.
-        // On a Kommons space/meta page a space is already chosen, so go
-        // straight to the Proposer scoped to it. Everywhere else the korner's
-        // compose route applies — for Kommons that's the target picker (choose
-        // the page first); for other korners it's their native create action.
+        // On a Kommons space/meta page a space is already chosen, so the
+        // Proposer opens over that page, scoped to it. Everywhere else the
+        // korner's compose route applies — for Kommons that's the target
+        // picker (choose the page first); for other korners it's their
+        // native create action.
         const spaceMatch = SPACE_RE.exec(location.pathname);
         const nodeMatch = NODE_RE.exec(location.pathname);
-        // Location-object form on purpose: passing a string like
-        // `/hub/kommons/propose?space=<slug>` to <Link to=…> collides with
-        // the app history wrapper (components/router.tsx normalizePath) —
-        // it folds a string into { pathname }, so ?query stays embedded in
-        // the pathname and useLocation().search never sees it. The composer
-        // then reads space='' and opens unscoped. Same gotcha as
-        // propose_picker.tsx:63-65 (Tal 2026-09-05).
-        const href: MoonItem['href'] = spaceMatch
-          ? {
-              pathname: '/hub/kommons/propose',
-              search: `?space=${spaceMatch[1]}`,
-            }
+        const propose: ProposalScope | undefined = spaceMatch
+          ? { space: spaceMatch[1] }
           : nodeMatch
-            ? {
-                pathname: '/hub/kommons/propose',
-                search: `?node=${nodeMatch[1]}`,
-              }
-            : korner.compose.route;
-        return { href, label: korner.compose.label };
+            ? { node: nodeMatch[1] }
+            : undefined;
+        return {
+          href: korner.compose.route,
+          label: korner.compose.label,
+          propose,
+        };
       }
       return null;
     }
@@ -387,11 +382,7 @@ export const spaceSlugForPath = (pathname: string): string | null => {
 };
 
 interface ProposeTarget {
-  href: {
-    pathname: string;
-    search: string;
-    state?: { returnTo: string };
-  };
+  scope: ProposalScope;
   label: string;
 }
 
@@ -402,22 +393,10 @@ const useProposeTarget = (): ProposeTarget | null => {
   return useMemo(() => {
     const nodeId = nodeIdForPath(location.pathname);
     if (!nodeId) return null;
-    // Location-object form on purpose — same ?query gotcha as
-    // usePostTarget above (components/router.tsx normalizePath folds a
-    // string href into pathname and the composer reads node='' unscoped).
-    // Proposing from another space is a detour: say where from, so the
-    // composer can put you back there when it closes (Tal 2026-10-12, Kommons
-    // proposal "Proposal submission return"). Inside Kommons there is nowhere
-    // to return to; the new proposal's own page is the right place to land.
-    const state = location.pathname.startsWith('/hub/kommons')
-      ? undefined
-      : { returnTo: location.pathname };
+    // The composer opens over this page, so you never leave it (Kommons
+    // "Proposer Composer", 2026-10-29; see proposer_modal.tsx).
     return {
-      href: {
-        pathname: '/hub/kommons/composer',
-        search: `?node=${nodeId}`,
-        ...(state ? { state } : {}),
-      },
+      scope: { node: nodeId },
       label: intl.formatMessage(messages.propose),
     };
   }, [location.pathname, intl]);
@@ -547,7 +526,6 @@ interface MoonItem {
         pathname: string;
         search?: string;
         hash?: string;
-        state?: { returnTo: string };
       };
   onClick?: () => void;
   external?: boolean;
@@ -643,6 +621,7 @@ export const KronkMenu = () => {
   const post = usePostTarget();
   const propose = useProposeTarget();
   const proposeIcon = useKornerIcon('kommons');
+  const openProposer = useOpenProposer();
   const location = useLocation();
   // Only a space whose manifest has loaded gets the i moon.
   const space = useKorner(spaceSlugForPath(location.pathname) ?? undefined);
@@ -681,6 +660,16 @@ export const KronkMenu = () => {
         label: pagePost.label,
         Icon: pagePost.icon,
         onClick: pagePost.onClick,
+      });
+    } else if (post?.propose) {
+      const scope = post.propose;
+      list.push({
+        key: 'post',
+        label: post.label,
+        Icon: AddIcon,
+        onClick: () => {
+          openProposer(scope);
+        },
       });
     } else if (post) {
       list.push({
@@ -732,10 +721,11 @@ export const KronkMenu = () => {
     if (propose) {
       list.push({
         key: 'propose',
-        href: propose.href,
         label: propose.label,
         Icon: proposeIcon,
-        external: false,
+        onClick: () => {
+          openProposer(propose.scope);
+        },
       });
     }
     list.push({
@@ -767,6 +757,7 @@ export const KronkMenu = () => {
     openInfo,
     propose,
     proposeIcon,
+    openProposer,
     settings,
     intl,
     location.pathname,

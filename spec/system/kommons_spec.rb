@@ -22,7 +22,9 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     fill_in 'Search for a page…', with: 'floating'
     find('.propose-picker__result', text: 'Floating menu').click
 
-    expect(page).to have_current_path('/hub/kommons/composer?node=menu.index')
+    # The composer opens over the picker, about the page chosen.
+    expect(page).to have_css('.compose-shell', text: 'Floating menu')
+    expect(page).to have_current_path('/hub/kommons/pick')
   end
 
   # Everyone starts tuned out of Kommons; that is about the feed, not the way in.
@@ -79,7 +81,40 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     find('.kronk-menu__trigger').click
     click_on 'Propose a change'
 
-    expect(page).to have_current_path('/hub/kommons/composer?node=kommons.index')
+    expect(page).to have_css('.compose-shell', text: 'Propose a change to Proposals')
+    expect(page).to have_current_path('/hub/kommons')
+  end
+
+  # Kommons "Proposer Composer" (decisions.md, 2026-10-29): the composer
+  # opens over the page you are on, and cancelling leaves you there.
+  it 'opens the composer over the page you are on, and cancelling stays there' do
+    visit '/hub/rose'
+    expect(page).to have_css('.kronk-menu__trigger')
+
+    find('.kronk-menu__trigger').click
+    click_on 'Propose a change'
+
+    expect(page).to have_css('.compose-shell')
+    expect(page).to have_current_path('/hub/rose')
+
+    within('.compose-shell') { click_on 'Cancel' }
+
+    expect(page).to have_no_css('.compose-shell')
+    expect(page).to have_current_path('/hub/rose')
+  end
+
+  it 'proposes a new korner from the Hub without leaving it' do
+    visit '/hub'
+
+    find('.hub-page__tile--propose .hub-page__tile-link').click
+
+    expect(page).to have_css('.compose-shell', text: 'Propose a new Korner')
+    expect(page).to have_current_path('/hub')
+
+    find('.compose-shell__close').click
+
+    expect(page).to have_no_css('.compose-shell')
+    expect(page).to have_current_path('/hub')
   end
 
   it 'claims an open proposal from its tile, and joins one somebody else has claimed' do
