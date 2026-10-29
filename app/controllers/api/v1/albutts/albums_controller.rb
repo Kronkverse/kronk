@@ -168,7 +168,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
       next unless @album.reload.visible_to?(account)
 
       # Straight to the router, as a tag in a photo's caption is
-      # (`Albutts::PublishPhoto#notify_tagged!`): one notice, one person.
+      # (`Albutts::TagNudges`): one notice, one person.
       Nudges::EventRouter.deliver(
         actor: current_account,
         recipient: account,

@@ -193,7 +193,8 @@ en:
         added_photo: "%{who} added to an album you share"
         contribution_granted: "%{who} let you add photos to their album"
         contribution_requested: "%{who} asked to add photos to your album"
-        tagged: "%{who} tagged you in an album photo"
+        tagged: "%{who} tagged you in an album"
+        tagged_photo: "%{who} tagged you in a photo"
       booth:
         frothed: "%{who} frothed your set"
         set_ready: Your live set is ready to publish
@@ -466,7 +467,8 @@ en-GB:
         added_photo: "%{who} added to an album you share"
         contribution_granted: "%{who} let you add photos to their album"
         contribution_requested: "%{who} asked to add photos to your album"
-        tagged: "%{who} tagged you in an album photo"
+        tagged: "%{who} tagged you in an album"
+        tagged_photo: "%{who} tagged you in a photo"
       booth:
         frothed: "%{who} frothed your set"
         set_ready: Your live set is ready to publish

@@ -22,6 +22,7 @@
 #     "created_at":         "2026-10-10T01:23:45Z",
 #     "seen":               false,
 #     "count":              3,
+#     "times":              1,                       # how often it happened, when a burst collapsed onto it
 #     "actors":             [<AccountJSON>, ...]      # newest first, capped
 #   }
 class Api::V1::Nudges::NotificationsController < Api::BaseController
@@ -88,6 +89,7 @@ class Api::V1::Nudges::NotificationsController < Api::BaseController
       created_at: newest.created_at.iso8601,
       seen: group.seen?,
       count: actors.size,
+      times: newest.times,
       actors: ActiveModelSerializers::SerializableResource.new(
         actors.first(ACTORS_SHOWN),
         each_serializer: REST::AccountSerializer

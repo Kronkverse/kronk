@@ -174,7 +174,7 @@ RSpec.describe Nudges::EventRouter do
     end
 
     context 'with an aggregation window (a burst on one subject)' do
-      before { make_mates!(alice, bob) }
+      let(:carol) { Fabricate(:account) }
 
       # Mirrors the albutts `album_new_photo` case: repeated activity on
       # the same source ref (Album) within the window collapses onto one
@@ -193,6 +193,8 @@ RSpec.describe Nudges::EventRouter do
           aggregate_window: 15.minutes,
         }
       end
+
+      before { make_mates!(alice, bob) }
 
       it 'collapses a second delivery in-window onto the first event' do
         first  = described_class.deliver(**agg_args)
@@ -251,6 +253,37 @@ RSpec.describe Nudges::EventRouter do
         travel(5.minutes) { described_class.deliver(**agg_args.merge(verb: 'removed_photo')) }
 
         expect(Nudges::Event.count).to eq(2)
+      end
+
+      it 'counts what a collapsed event stands for' do
+        first = described_class.deliver(**agg_args)
+        travel(5.minutes) { described_class.deliver(**agg_args.merge(actor: carol, directed: true)) }
+
+        expect(first.reload.times).to eq(2)
+      end
+
+      context 'with aggregate_per_actor (one person\'s photo drop)' do
+        let(:drop_args) do
+          agg_args.merge(
+            aggregate_per_actor: true,
+            push_collapsed: false,
+            cta_route: '/hub/albutts/albums/7?photo=1',
+            collapsed_cta_route: '/hub/albutts/albums/7',
+            directed: true
+          )
+        end
+
+        it 'collapses only the same actor, pushes once, and opens the album once it is several' do
+          allow(Nudges::PushWorker).to receive(:perform_async)
+
+          first = described_class.deliver(**drop_args)
+          travel(2.minutes) { described_class.deliver(**drop_args) }
+          travel(3.minutes) { described_class.deliver(**drop_args.merge(actor: carol)) }
+
+          expect(first.reload).to have_attributes(times: 2, cta_route: '/hub/albutts/albums/7')
+          expect(Nudges::Event.addressed_to(bob).count).to eq(2)
+          expect(Nudges::PushWorker).to have_received(:perform_async).twice
+        end
       end
 
       it 'never aggregates without a window (default behaviour is preserved)' do

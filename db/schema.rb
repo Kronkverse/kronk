@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1895,6 +1895,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
     t.bigint "source_id"
     t.string "source_korner_slug", null: false
     t.string "source_type"
+    t.integer "times", default: 1, null: false
     t.string "verb", null: false
     t.index ["actor_account_id"], name: "index_nudges_events_on_actor_account_id"
     t.index ["conversation_id", "created_at"], name: "index_nudges_events_on_convo_recency", order: { created_at: :desc }

@@ -44,14 +44,53 @@ RSpec.describe 'Albutts tagging', :inline_jobs do
   end
 
   describe 'an @name in a photo caption' do
-    it 'tells that person they were tagged, and leads to the album' do
-      album = create_album('Coast')
+    def photo_tags(account)
+      Nudges::Event.where(recipient_account_id: account.id, source_korner_slug: 'albutts', verb: 'tagged_photo')
+    end
+
+    def add_photo(album, caption)
       media = Fabricate(:media_attachment, account: user.account, status: nil)
+      post "/api/v1/albutts/albums/#{album.id}/photos", headers: headers, params: { photo: { media_id: media.id, caption: caption } }
+      expect(response).to have_http_status(201)
+      AlbumPhoto.find(response.parsed_body['id'])
+    end
 
-      post "/api/v1/albutts/albums/#{album.id}/photos", headers: headers, params: { photo: { media_id: media.id, caption: '@ana on the rocks' } }
+    it 'tells that person they were tagged, and leads to the photo' do
+      album = create_album('Coast')
 
-      expect(response).to have_http_status(201).or have_http_status(200)
-      expect(tagged(ana).pick(:cta_route)).to eq "/hub/albutts/albums/#{album.id}"
+      photo = add_photo(album, '@ana on the rocks')
+
+      expect(photo_tags(ana).sole).to have_attributes(times: 1, cta_route: "/hub/albutts/albums/#{album.id}?photo=#{photo.id}")
+    end
+
+    it 'sends one nudge, and one push, for a photo drop that tags them several times' do
+      album = create_album('Northern Rivers')
+      allow(Nudges::PushWorker).to receive(:perform_async)
+
+      add_photo(album, '@ana on the rocks')
+      travel(2.minutes) { add_photo(album, 'Swimming, @ana') }
+      travel(4.minutes) { add_photo(album, '@ana again') }
+
+      expect(photo_tags(ana).sole).to have_attributes(times: 3, cta_route: "/hub/albutts/albums/#{album.id}")
+      expect(Nudges::PushWorker).to have_received(:perform_async).with('event', photo_tags(ana).sole.id).once
+    end
+
+    it 'starts a new nudge for a later photo drop' do
+      album = create_album('Coast')
+
+      add_photo(album, '@ana on the rocks')
+      travel(Albutts::PublishPhotoBatch::QUIET + 1.minute) { add_photo(album, '@ana, the next day') }
+
+      expect(photo_tags(ana).count).to eq 2
+    end
+
+    it 'keeps a tag in the album description apart' do
+      album = create_album('With @ana at the coast')
+
+      add_photo(album, '@ana on the rocks')
+
+      expect(tagged(ana).count).to eq 1
+      expect(photo_tags(ana).count).to eq 1
     end
   end
 end

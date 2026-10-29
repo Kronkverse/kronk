@@ -98,6 +98,12 @@ const sentences = defineMessages({
     id: 'nudges.notification.albutts.tagged',
     defaultMessage: '{who} tagged you in an album',
   },
+  // `times` is how many photos in one photo drop (Albutts::TagNudges).
+  albuttsTaggedPhoto: {
+    id: 'nudges.notification.albutts.tagged_photo',
+    defaultMessage:
+      '{who} tagged you in {times, plural, one {a photo} other {# photos}}',
+  },
   spaceInvited: {
     id: 'nudges.notification.space.invited',
     defaultMessage: '{who} invited you to take a look',
@@ -211,6 +217,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'albutts.added_photo': sentences.albuttsAddedPhoto,
   'profile.posted_on': sentences.profilePostedOn,
   'albutts.tagged': sentences.albuttsTagged,
+  'albutts.tagged_photo': sentences.albuttsTaggedPhoto,
   'mates.mate_requested': sentences.matesRequested,
   'mates.mate_accepted': sentences.matesAccepted,
   'krew.join_requested': sentences.krewJoinRequested,

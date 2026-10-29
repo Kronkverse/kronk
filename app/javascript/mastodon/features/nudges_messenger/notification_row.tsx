@@ -188,7 +188,11 @@ export const NotificationRow: React.FC<RowProps> = ({ item, fresh }) => {
 
   const sentence = intl.formatMessage(
     sentenceFor(item.source_korner_slug, item.verb) ?? genericSentence,
-    { who, korner: korner?.name ?? item.source_korner_slug },
+    {
+      who,
+      korner: korner?.name ?? item.source_korner_slug,
+      times: item.times,
+    },
   );
 
   return (
