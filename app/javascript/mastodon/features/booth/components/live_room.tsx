@@ -209,6 +209,17 @@ const messages = defineMessages({
     defaultMessage: 'A room plays best to up to about 35 people.',
   },
   host: { id: 'booth.live.host', defaultMessage: 'Hosted by {name}' },
+  // The controls under the room speak of a set, not a call.
+  controls: { id: 'booth.live.controls', defaultMessage: 'Set controls' },
+  leaveSet: { id: 'booth.live.leave', defaultMessage: 'Leave the set' },
+  stepOut: {
+    id: 'booth.live.step_out',
+    defaultMessage: 'Step out of the room. The set stays live',
+  },
+  recordingHint: {
+    id: 'booth.live.recording_hint',
+    defaultMessage: 'This set is being recorded',
+  },
 });
 
 interface Props {
@@ -755,6 +766,12 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
           <CallControls
             call={call}
             onLeave={leaveRoom}
+            leaveLabel={intl.formatMessage(
+              owner ? messages.stepOut : messages.leaveSet,
+            )}
+            leaveIcon='logout'
+            label={intl.formatMessage(messages.controls)}
+            recordingHint={intl.formatMessage(messages.recordingHint)}
             listenOnly={!owner}
             inputPicker={owner}
           />
