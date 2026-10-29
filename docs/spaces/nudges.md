@@ -432,10 +432,13 @@ the `status_nudges` flag. The flag is off by default and **on in
 production** (`config/feature_flags.yaml`). There is no `status.reblogged`
 (nothing local can boost) and no `status.quoted`.
 
-`status.mentioned` goes to each person once, however often the post names
-them, and an edit nudges only the people it newly mentions. It is the only
-mention nudge for a local post: `FanOutOnWriteService#route_mention_nudges`
-handles mentions in posts from other servers only.
+`status.mentioned` goes only to Mates of the author who can open the post
+(`Kronk::MentionNudges`; [`feed.md`](feed.md), Mentions), to each once,
+however often the post names them. A new post sends it from
+`PostStatusService`, and an edit from `ProcessMentionsService`, to the people
+it newly mentions. It is the only mention nudge for a local post:
+`FanOutOnWriteService#route_mention_nudges` handles mentions in posts from
+other servers only.
 
 ### Hand-wired subscribers
 
