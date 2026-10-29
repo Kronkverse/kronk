@@ -7,6 +7,44 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.5 "Rose"] - 2026-10-29
+
+- Kuestion prompt off the name (#2346)
+- Mates list for Mates (#2347)
+- No Unmate in lists (#2351)
+- Krew access marks (#2354)
+- Release cut resolves mechanical conflicts (#2355)
+- Konnect sharing rules (#2378)
+- Konnect drafts and picker (#2379)
+- Kommunity: everyone list (#2348)
+- Konnect only (#2380)
+- Maps without WebGL (#2352)
+- Links read as text in notifications (#2384)
+- Release counts any proposal link (#2382)
+- Kronikles Series (#2393)
+- Read more in place (#2383)
+- Four photos and +N (#2388)
+- Photo download in place (#2392)
+- Nudge a post (#2390)
+- One nudge per mention (#2386)
+- Tagging in comments (#2387)
+- Search finds members (#2395)
+- Album description and push pings (#2396)
+- Map shows your events (#2385)
+- Kronikles reactions and tiles (#2394)
+- Album description spec fix (#2398)
+- Kuddles (#2397)
+- Map badge for Mates' pin moves (#2389)
+- Krew posts (#2391)
+- Wachuneed Brands (#2399)
+- Booth albums (#2400)
+- Gem advisories (#2402)
+- Kronk's own Jitsi (#2401)
+- Booth live (#2403)
+- Composer title box (#2404)
+- Moments exit (#2405)
+- No zoom when typing (#2406)
+
 ### [2.1.4 "Rose"] - 2026-10-26
 
 - Events link to emergence and Krew together (#2282)
