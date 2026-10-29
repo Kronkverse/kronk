@@ -576,6 +576,8 @@
   "booth.live.ended_owner": "Recorded it on your set-up? Upload it as a set so people can listen back.",
   "booth.live.error": "Could not set up the live set. Try again.",
   "booth.live.go_live": "Go live",
+  "booth.live.go_note": "Nobody can listen in until you go live.",
+  "booth.live.go_note_joined": "You’re in the room. Nobody can listen in until you go live.",
   "booth.live.host": "Hosted by {name}",
   "booth.live.how_to": "To play live yourself, open the Ж menu, choose Upload or go live, then Go live.",
   "booth.live.join_failed": "Couldn’t get into the room just now. Try again.",

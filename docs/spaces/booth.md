@@ -286,7 +286,8 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   (`/hub/booth/composer/live`, `components/live_composer.tsx`). **Now**
   opens the room with the host's get-ready panel (input, screen-share
   audio, headphones, recording, room size); the set is only live once
-  they press **Go live** there. **Later** schedules it, and can tell the
+  they press **Go live** there, in its own panel at the top of the
+  room (not among the header's small actions). **Later** schedules it, and can tell the
   feed at once. Tell my feed is on by default with a reach picker.
 - **The room** (`/hub/booth/live/:id`, `components/live_room.tsx`, on
   `<KornerDetail>`). Everyone joins with a pass for the set
