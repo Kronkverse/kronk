@@ -89,6 +89,7 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
   # docs/spaces/booth.md, Musik: View lays the sets out in rows, one per
   # artist or one per kind (Tal's proposal "Music arranging").
   it 'lays Musik out in rows by artist and by kind' do
+    row = ->(title) { find('.booth-shelf__title', exact_text: title).ancestor('.booth-shelf') }
     Fabricate(:booth_set, account: ash, title: 'Second wind', kind: 'live_recording', published: true,
                           audio_attachment: Fabricate(:media_attachment, account: ash))
 
@@ -96,7 +97,7 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
     click_on 'View: Grid'
     click_on 'By artist'
 
-    within('.booth-shelf', text: 'Lena K') do
+    within(row.call('Lena K')) do
       expect(page).to have_css('.space-grid--row')
       expect(page).to have_content('Dawn at the point')
       expect(page).to have_no_content('Second wind')
@@ -104,7 +105,7 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
 
     click_on 'View: By artist'
     click_on 'By kind'
-    within('.booth-shelf', text: 'Live recordings') do
+    within(row.call('Live recordings')) do
       expect(page).to have_content('Second wind')
       click_on 'See all'
     end
