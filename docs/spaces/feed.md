@@ -146,6 +146,13 @@ to tag their mates").
   mention link in the post, and the engine still writes a legacy `mention`
   notification for it. That one shows only in the legacy archive, not in
   Nudges, and doesn't push (`Nudges::PushPreferences.skip_legacy_push?`).
+- **Tagging people in a photo is the same.** The Tag people pickers (a
+  post's photo in the composer, `TagPeopleModal`; tagging in a photo you
+  can see, `SelfTagModal`; a Moment, `MomentsTagPeoplePanel`) offer your
+  Mates only, through the same search, and `POST /api/v1/media/:id/tags`
+  refuses anyone but yourself or a Mate (422, "You can only tag your
+  Mates."). Tags made before 2026-10-29 stay. Albutts tags with an @name in
+  a caption, so it follows the rules above (albutts.md, Tagging people).
 
 ### The composer's draft
 

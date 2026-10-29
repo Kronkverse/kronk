@@ -3,7 +3,7 @@ import { useState, useCallback, useRef, memo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { closeModal } from 'mastodon/actions/modal';
-import api from 'mastodon/api';
+import { apiSearchMatesToMention } from 'mastodon/api/accounts';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import {
@@ -17,7 +17,7 @@ const messages = defineMessages({
   title: { id: 'tag_people.title', defaultMessage: 'Tag people' },
   searchPlaceholder: {
     id: 'tag_people.search',
-    defaultMessage: 'Search for a person…',
+    defaultMessage: 'Search your Mates…',
   },
   done: { id: 'tag_people.done', defaultMessage: 'Done' },
   remove: { id: 'tag_people.remove', defaultMessage: 'Remove' },
@@ -88,12 +88,10 @@ export const TagPeopleModal: React.FC<{
       }
       setSearching(true);
       searchTimeout.current = setTimeout(() => {
-        void api()
-          .get<ApiAccountJSON[]>('/api/v1/accounts/search', {
-            params: { q: value, limit: 5 },
-          })
-          .then((r) => {
-            setSuggestions(r.data);
+        // Your Mates only (apiSearchMatesToMention says why).
+        apiSearchMatesToMention(value.trim(), 5)
+          .then((accounts) => {
+            setSuggestions(accounts);
             setSearching(false);
           })
           .catch(() => {

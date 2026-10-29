@@ -32,6 +32,8 @@ module Albutts
       status.active_mentions.includes(:account).find_each do |mention|
         recipient = mention.account
         next if recipient.nil? || !recipient.local? || recipient.id == @contributor.id
+        # Only a Mate is told (Tal 2026-10-29: you tag only your Mates).
+        next unless @contributor.mate?(recipient)
         next unless @album.visible_to?(recipient)
 
         deliver(recipient)

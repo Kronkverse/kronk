@@ -17,6 +17,20 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — Tag only your Mates in photos and Moments
+
+Tal: photo and Moments tagging should be Mates only, like @mentions now
+are (the earlier entry today, "Tag only your Mates").
+
+**Decision:** every Tag people picker (a post's photo, tagging in a photo
+you can see, a Moment) suggests only your Mates, through the same Mates
+search as @mentions, and `POST /api/v1/media/:id/tags` refuses anyone but
+yourself or a Mate with a 422. Albutts tags with @names, so a caption or
+album description nudges only Mates who can open the album. Tags made
+before stay. Booth's artist credits are not tags and are unchanged.
+
+---
+
 ## 2026-10-29 — Kuddles outlive their maker's account
 
 Tal, on purging an account also deleting the Kuddles it had started and
