@@ -2900,6 +2900,8 @@
   "nudges.notification.system.followed_up": "Followed up",
   "nudges.notification.system.proposal_challenged": "Your proposal was challenged by a block vote",
   "nudges.notification.system.proposal_update": "A proposal you are part of has moved on",
+  "nudges.notification.system.proposals_actioned": "{count} of your proposals were actioned",
+  "nudges.notification.system.proposals_actioned.subject": "{title} and {others, plural, one {# other} other {# others}}",
   "nudges.notification.system.task_assigned": "A task was assigned to you",
   "nudges.notification.wachuneed.brand_listed": "{who} backed your brand, and it is in Brands now",
   "nudges.notification.wachuneed.offer_accepted": "{who} accepted your request",
