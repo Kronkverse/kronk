@@ -55,10 +55,125 @@ RSpec.describe 'Posts on a profile', :inline_jobs do
       expect(timeline_of(owner.account, as: stranger)).to include('Between Mates')
     end
 
-    it 'does not take a post meant for you alone' do
-      post_on_profile(visibility: 'self_only')
+    it 'does not take a direct one' do
+      post_on_profile(visibility: 'direct')
 
       expect(response).to have_http_status(422)
+    end
+
+    # "Only on <name>'s profile" (docs/spaces/profile.md, Posts from Mates;
+    # decisions.md 2026-10-29): `self_only` with a profile.
+    context 'when it is only on their profile' do
+      let(:my_mate)    { Fabricate(:user) }
+      let(:their_mate) { Fabricate(:user) }
+      let(:outsider)   { Fabricate(:user) }
+
+      before do
+        mates!(me, my_mate.account)
+        mates!(owner.account, their_mate.account)
+        outsider.account.follow!(me)
+        outsider.account.follow!(owner.account)
+      end
+
+      def home_feed_of(account)
+        HomeFeed.new(account).get(40).map(&:id)
+      end
+
+      def show_status(status, as:)
+        get "/api/v1/statuses/#{status.id}", headers: as ? headers_for(as) : {}
+      end
+
+      it 'is on their profile for whoever can see it, and in no feed at all' do
+        post_on_profile(visibility: 'self_only', text: 'Just here')
+        status = Status.last
+
+        expect(response).to have_http_status(200)
+        expect(status).to have_attributes(visibility: 'self_only', profile_account_id: owner.account.id)
+        expect(Nudges::Event.where(recipient_account_id: owner.account.id, source_korner_slug: 'profile', verb: 'posted_on')).to exist
+
+        [user, owner, stranger, my_mate].each do |viewer|
+          expect(timeline_of(owner.account, as: viewer)).to include('Just here')
+        end
+        expect(timeline_of(me, as: user)).to include('Just here')
+
+        [me, owner.account, my_mate.account, their_mate.account, outsider.account, stranger.account].each do |account|
+          expect(home_feed_of(account)).to_not include(status.id)
+        end
+      end
+
+      it 'is hidden with the profile from those who cannot see it' do
+        owner.account.update!(profile_visibility: :mates)
+        post_on_profile(visibility: 'self_only', text: 'Just here')
+        status = Status.last
+
+        expect(timeline_of(owner.account, as: stranger)).to_not include('Just here')
+        show_status(status, as: stranger)
+        expect(response).to have_http_status(404)
+        show_status(status, as: nil)
+        expect(response).to have_http_status(404)
+
+        show_status(status, as: their_mate)
+        expect(response).to have_http_status(200)
+        expect(timeline_of(owner.account, as: their_mate)).to include('Just here')
+      end
+
+      it 'opens for anyone who can see the profile, and not when signed out' do
+        post_on_profile(visibility: 'self_only')
+        status = Status.last
+
+        show_status(status, as: stranger)
+        expect(response).to have_http_status(200)
+        show_status(status, as: nil)
+        expect(response).to have_http_status(404)
+      end
+
+      it 'cannot be boosted' do
+        post_on_profile(visibility: 'self_only')
+        status = Status.last
+
+        post "/api/v1/statuses/#{status.id}/reblog", headers: headers_for(stranger)
+
+        expect(response).to_not have_http_status(200)
+        expect(Status.where(reblog_of_id: status.id)).to be_empty
+      end
+
+      it 'takes no Krews or added people' do
+        krew = Krew.create!(slug: 'walkers', name: 'Walkers', access: 'open')
+        krew.krew_memberships.create!(account: me)
+        krew.krew_memberships.create!(account: outsider.account)
+
+        post '/api/v1/statuses', headers: headers, params: {
+          status: 'Just here', visibility: 'self_only', profile_account_id: owner.account.id,
+          krew_ids: [krew.id], audience_grant_ids: [outsider.account.id]
+        }
+        status = Status.last
+
+        expect(status.krews).to be_empty
+        expect(status.granted_accounts).to be_empty
+        expect(home_feed_of(outsider.account)).to_not include(status.id)
+      end
+
+      it 'shows comments under it to whoever can see the post' do
+        post_on_profile(visibility: 'self_only')
+        status = Status.last
+
+        post '/api/v1/statuses', headers: headers_for(owner), params: { status: 'Thank you!', in_reply_to_id: status.id }
+        reply = Status.last
+
+        show_status(reply, as: stranger)
+        expect(response).to have_http_status(200)
+
+        get "/api/v1/statuses/#{status.id}/context", headers: headers_for(stranger)
+        expect(response.parsed_body['descendants'].pluck('id')).to include(reply.id.to_s)
+      end
+
+      it 'tells its author who can see it' do
+        post_on_profile(visibility: 'self_only')
+
+        get "/api/v1/statuses/#{Status.last.id}/audience", headers: headers
+
+        expect(response.parsed_body['profile_account']).to include('id' => owner.account.id.to_s, 'acct' => 'ana')
+      end
     end
 
     it 'is refused once they turn posts from Mates off' do

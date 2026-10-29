@@ -33,7 +33,15 @@ class Api::V1::Statuses::AudiencesController < Api::V1::Statuses::BaseController
       krews: @status.krews.map { |krew| { id: krew.id.to_s, name: krew.name, slug: krew.slug } },
       added: serialize_accounts(@status.granted_accounts),
       removed: serialize_accounts(@status.excluded_accounts),
+      # "Only on <name>'s profile" (Status#profile_only?): whose profile
+      # decides who sees it.
+      profile_account: (profile_account_json if @status.profile_only?),
     }
+  end
+
+  def profile_account_json
+    account = @status.profile_account
+    { id: account.id.to_s, acct: account.acct, display_name: account.display_name }
   end
 
   def serialize_accounts(accounts)

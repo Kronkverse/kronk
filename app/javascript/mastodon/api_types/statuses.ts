@@ -259,4 +259,6 @@ export interface ApiStatusAudienceJSON {
   krews: ApiStatusAudienceKrewJSON[];
   added: ApiAccountJSON[];
   removed: ApiAccountJSON[];
+  // Set when the post is "Only on <name>'s profile".
+  profile_account: { id: string; acct: string; display_name: string } | null;
 }

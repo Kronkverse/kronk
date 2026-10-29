@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — Only on a Mate's profile
+
+Kommons "Posting to mates profile". Tal: "the 'me' option isn't so it's
+invisible, it's so it doesn't appear on feed. So posting to a Mate's timeline
+means it appears to you and your Mate, but not the general timeline, but if
+someone views the Mate's timeline, they'd see it."
+
+**Decision:** "Just me" keeps meaning only you, everywhere. On a Mate's
+profile the composer's narrowest rung is **Only on <name>'s profile** instead.
+It is stored as `self_only` with `profile_account_id` set (no new
+visibility): it enters no home feed, stream or search and cannot be boosted,
+and the profile shows it to anyone who can see that profile, and to the
+author. The owner is still nudged. Comments under it follow it. It carries no
+Krews or added people, since those would put it in feeds. Supersedes the
+rule (2026-10-12) that a post on a profile cannot be Just me.
+
 ## 2026-10-29 — Tag only your Mates
 
 Tal: "users should only be able to tag their mates." Kronk holds to "No

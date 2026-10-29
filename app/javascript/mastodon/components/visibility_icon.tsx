@@ -5,6 +5,7 @@ import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
+import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
 import type { StatusVisibility } from 'mastodon/models/status';
 
@@ -59,12 +60,33 @@ const messages = defineMessages({
     id: 'privacy.self_only.short',
     defaultMessage: 'Just me',
   },
+  profile_only_short: {
+    id: 'privacy.profile_only.short',
+    defaultMessage: 'Only on {name}’s profile',
+  },
 });
 
-export const VisibilityIcon: React.FC<{ visibility: StatusVisibility }> = ({
-  visibility,
-}) => {
+// `profileName` is whose profile the post was written on, when it was. A
+// `self_only` post there is "Only on <name>'s profile" (docs/spaces/profile.md,
+// Posts from Mates), seen by whoever can see that profile, so it wears a
+// person and not the Just me lock.
+export const VisibilityIcon: React.FC<{
+  visibility: StatusVisibility;
+  profileName?: string;
+}> = ({ visibility, profileName }) => {
   const intl = useIntl();
+
+  if (visibility === 'self_only' && profileName) {
+    return (
+      <Icon
+        id='person'
+        icon={PersonIcon}
+        aria-label={intl.formatMessage(messages.profile_only_short, {
+          name: profileName,
+        })}
+      />
+    );
+  }
 
   const kronkverseFace = {
     icon: 'zhe',

@@ -77,8 +77,9 @@ class StatusPolicy < ApplicationPolicy
   # `visibility` alone, ignoring any additive krew targeting.
   def visible_by_reach?
     if self_scoped?
-      # Reach: self_only — the author's own timeline, no one else.
-      owned?
+      # Reach: self_only — the author's own timeline, no one else; or, on a
+      # Mate's profile, whoever can see that profile.
+      owned? || on_visible_profile?
     elsif mates_scoped?
       # Reach: mates — the author + their mutual connections.
       owned? || author_mate?
@@ -123,6 +124,24 @@ class StatusPolicy < ApplicationPolicy
   # is one of these — a migrated krew post is self_only.)
   def restricted_scope?
     self_scoped? || mates_scoped? || orbit_scoped?
+  end
+
+  # "Only on <name>'s profile" (Status#profile_only?, docs/spaces/profile.md):
+  # seen by whoever can see that profile. A comment under one is `self_only`
+  # too (comments take their post's reach), so it follows its post.
+  def on_visible_profile?
+    return false if current_account.nil?
+
+    profile = profile_only_post&.profile_account
+    profile.present? && profile.profile_visible_to?(current_account)
+  end
+
+  def profile_only_post
+    return record if record.profile_only?
+    return unless record.reply?
+
+    root = record.thread_root
+    root if root.profile_only?
   end
 
   def author_mate?

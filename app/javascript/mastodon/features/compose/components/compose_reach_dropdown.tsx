@@ -1,11 +1,14 @@
 import { useCallback, useMemo } from 'react';
 
+import { defineMessages, useIntl } from 'react-intl';
+
+import type { Map as ImmutableMap } from 'immutable';
 import { List as ImmutableList } from 'immutable';
 
 import { changeComposeKrewTargets } from 'mastodon/actions/compose';
 import { changeComposeVisibility } from 'mastodon/actions/compose_typed';
 import type { StatusVisibility } from 'mastodon/api_types/statuses';
-import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import type { ReachValue, SelfRung } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
@@ -20,6 +23,21 @@ import { ComposeAudienceMenu } from './compose_audience_menu';
 // Mastodon's unlisted/private/direct are not offered — the Kronk ladder is the
 // whole menu.
 
+// On a Mate's profile (docs/spaces/profile.md, Posts from Mates) the
+// narrowest rung is "Only on <name>'s profile" instead of Just me: the same
+// `self_only`, which the profile then shows to whoever can see it. It goes to
+// no feed, so it takes no Krews or people; the server drops any.
+const messages = defineMessages({
+  profileOnly: {
+    id: 'reach.profile_only',
+    defaultMessage: 'Only on {name}’s profile',
+  },
+  profileOnlyHint: {
+    id: 'reach.profile_only_hint',
+    defaultMessage: 'Not in anyone’s feed',
+  },
+});
+
 // Reach tiers only — `krew` is the additive submenu, not a rung.
 const LADDER: readonly ReachValue[] = ['self_only', 'mates', 'orbit', 'public'];
 
@@ -28,7 +46,17 @@ interface Props {
 }
 
 export const ComposeReachDropdown: React.FC<Props> = ({ disabled = false }) => {
+  const intl = useIntl();
   const dispatch = useAppDispatch();
+  const profileName = useAppSelector(
+    (state) =>
+      (
+        state.compose.get('profile_target') as ImmutableMap<
+          string,
+          string
+        > | null
+      )?.get('name') ?? null,
+  );
   const privacy = useAppSelector(
     (state) => state.compose.get('privacy') as StatusVisibility,
   );
@@ -84,17 +112,35 @@ export const ComposeReachDropdown: React.FC<Props> = ({ disabled = false }) => {
     [privacy],
   );
 
+  const selfRung: SelfRung | undefined = useMemo(
+    () =>
+      profileName === null
+        ? undefined
+        : {
+            label: intl.formatMessage(messages.profileOnly, {
+              name: profileName,
+            }),
+            hint: intl.formatMessage(messages.profileOnlyHint),
+          },
+    [intl, profileName],
+  );
+  const profileOnly = selfRung !== undefined && value === 'self_only';
+
   return (
     <ReachDropdown
       value={value}
       onChange={handleChange}
       disabled={disabled}
-      krews={krews}
+      krews={profileOnly ? undefined : krews}
       selectedKrewIds={selectedKrewIds}
       onToggleKrew={handleToggleKrew}
-      // People layer — hidden for public (a public post can't be restricted).
-      peopleSlot={value === 'public' ? undefined : <ComposeAudienceMenu />}
+      // People layer — hidden for public (a public post can't be restricted)
+      // and for one only on a profile (the profile decides).
+      peopleSlot={
+        value === 'public' || profileOnly ? undefined : <ComposeAudienceMenu />
+      }
       peopleCount={peopleCount}
+      selfRung={selfRung}
     />
   );
 };

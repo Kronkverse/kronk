@@ -463,6 +463,7 @@ class Status extends ImmutablePureComponent {
         <StatusProfileLabel
           acct={status.getIn(['profile_account', 'acct'])}
           name={status.getIn(['profile_account', 'display_name']) || status.getIn(['profile_account', 'acct'])}
+          only={status.get('visibility') === 'self_only'}
         />
       );
     }
@@ -633,7 +634,7 @@ class Status extends ImmutablePureComponent {
 
             <div onClick={this.handleHeaderClick} onAuxClick={this.handleHeaderClick} className='status__info'>
               <Link to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}`} className='status__relative-time'>
-                <span className='status__visibility-icon'><VisibilityIcon visibility={status.get('visibility')} /></span>
+                <span className='status__visibility-icon'><VisibilityIcon visibility={status.get('visibility')} profileName={status.getIn(['profile_account', 'display_name']) || status.getIn(['profile_account', 'acct'])} /></span>
                 <RelativeTimestamp timestamp={status.get('created_at')} />{status.get('edited_at') && <abbr title={intl.formatMessage(messages.edited, { date: intl.formatDate(status.get('edited_at'), { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) })}> *</abbr>}
               </Link>
 
