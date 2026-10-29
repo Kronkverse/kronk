@@ -150,6 +150,13 @@ RSpec.describe Kronk::ProposalStates do
         expect { described_class.action!(proposal) }
           .to change { status_notifications_for(account.id).count }.by(1)
         expect(proposal.reload.status).to eq('actioned')
+        expect(status_notifications_for(account.id).last.group_key).to be_nil
+      end
+
+      it 'groups the notice under its batch' do
+        described_class.action!(proposal, batch: 'shipped-1')
+
+        expect(status_notifications_for(account.id).last.group_key).to eq 'proposal_status_changed-actioned-shipped-1'
       end
 
       it 'actions a claimed proposal and keeps the claimant on record' do

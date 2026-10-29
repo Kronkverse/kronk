@@ -107,7 +107,13 @@ module Kronk
     # proposal may action, and never the proposer. Without it (`by: nil`) it's
     # the back end — the shell or a steward's last-task tick — which may action
     # an open or claimed proposal.
-    def action!(proposal, by: nil)
+    #
+    # `batch:` names a run that actions many at once (a release's
+    # `kommons:proposals:action_shipped`). Every proposer's notices from one
+    # batch share a group, so five proposals shipped together are one
+    # "5 of your proposals were actioned" nudge, not five
+    # (docs/spaces/nudges.md, Grouped notices).
+    def action!(proposal, by: nil, batch: nil)
       proposal.with_lock do
         if by
           require_state!(proposal, 'claimed', 'action')
@@ -120,7 +126,7 @@ module Kronk
         proposal.update!(status: :actioned)
       end
 
-      notify_proposer(proposal)
+      notify_proposer(proposal, group_key: batch && "proposal_status_changed-actioned-#{batch}")
       proposal
     end
 
@@ -185,14 +191,18 @@ module Kronk
     # Deliberately non-fatal: a notification failing must never leave a
     # proposal half-transitioned. The state change is the contract, the
     # nudge is a courtesy.
-    def notify_proposer(proposal)
+    #
+    # `group_key` puts the notice in a group with others of the same batch;
+    # without one it stands alone, as it always has.
+    def notify_proposer(proposal, group_key: nil)
       return if Nudges::MuteCatalogue.notification_muted?(proposal.created_by_account, 'proposal_status_changed')
 
       Notification.create!(
         account_id: proposal.created_by_account_id,
         from_account: Account.representative,
         activity: proposal,
-        type: 'proposal_status_changed'
+        type: 'proposal_status_changed',
+        group_key: group_key
       )
     rescue => e
       Rails.logger.error("Failed to notify proposer of proposal #{proposal.id}: #{e.class} #{e.message}")
