@@ -2,7 +2,7 @@
 
 # One call Kronk runs on Jitsi: the Main Huddle, a Kuddle or a Booth live set
 # (docs/decisions.md, 2026-10-27, "Kronk's own Jitsi"). Who may join it, who
-# moderates it, who sees and removes its recordings, and its Jitsi room name,
+# moderates it, who sees its recordings, and its Jitsi room name,
 # in one place, for passes (Api::V1::Calls::TokensController) and recordings
 # (CallRecording, CallRecordingPolicy).
 #
@@ -106,11 +106,6 @@ module Kronk
       return moderator?(account) if kind == 'booth_live'
 
       visible_to?(account)
-    end
-
-    # Removing a recording: whoever moderates the call.
-    def recordings_manageable_by?(account)
-      recordings_visible_to?(account) && moderator?(account)
     end
 
     private

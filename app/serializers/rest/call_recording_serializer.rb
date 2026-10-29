@@ -2,11 +2,10 @@
 
 # A ready call recording, for someone allowed to see it
 # (Api::V1::Calls::RecordingsController). `url` plays it and `download_url`
-# saves it: both signed and short-lived, never a public object. `can_delete`
-# is the viewer's own.
+# saves it: both signed and short-lived, never a public object.
 class REST::CallRecordingSerializer < ActiveModel::Serializer
   attributes :id, :kind, :media, :pair_id, :created_at, :duration, :size,
-             :filename, :content_type, :url, :download_url, :can_delete
+             :filename, :content_type, :url, :download_url
 
   def id
     object.id.to_s
@@ -27,9 +26,5 @@ class REST::CallRecordingSerializer < ActiveModel::Serializer
 
   def download_url
     Kronk::CallRecordingStorage.download_url(object.storage_key, object.filename)
-  end
-
-  def can_delete
-    instance_options[:can_delete] || false
   end
 end

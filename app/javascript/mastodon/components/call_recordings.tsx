@@ -2,18 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { apiRequestDelete, apiRequestGet } from 'mastodon/api';
+import { apiRequestGet } from 'mastodon/api';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
-import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import type { CallKind } from 'mastodon/jitsi';
 
 // A call's recordings (docs/spaces/huddle.md, Recordings): the one thing a
 // call leaves behind. GET /api/v1/calls/recordings lists the ready ones the
-// viewer may see, each with short-lived signed URLs to play and to save;
-// whoever moderates the call can delete one. Says nothing when there are
-// none, so a call that was never recorded looks as it always did.
+// viewer may see, each with short-lived signed URLs to play and to save.
+// Nobody deletes one: once recorded, it is kept (docs/decisions.md,
+// 2026-10-29). Says nothing when there are none, so a call that was never
+// recorded looks as it always did.
 
 const messages = defineMessages({
   heading: { id: 'calls.recordings.heading', defaultMessage: 'Recordings' },
@@ -36,19 +36,6 @@ const messages = defineMessages({
     id: 'calls.recordings.download_label',
     defaultMessage: 'Download the recording from {date}',
   },
-  remove: { id: 'calls.recordings.delete', defaultMessage: 'Delete' },
-  removeLabel: {
-    id: 'calls.recordings.delete_label',
-    defaultMessage: 'Delete the recording from {date}',
-  },
-  removeTitle: {
-    id: 'calls.recordings.delete_title',
-    defaultMessage: 'Delete this recording?',
-  },
-  removeBody: {
-    id: 'calls.recordings.delete_body',
-    defaultMessage: 'It goes for everyone, and can’t be brought back.',
-  },
   length: { id: 'calls.recordings.length', defaultMessage: '{length} long' },
   audio: { id: 'calls.recordings.audio', defaultMessage: 'Sound only' },
   video: { id: 'calls.recordings.video', defaultMessage: 'Video' },
@@ -68,7 +55,6 @@ export interface CallRecording {
   content_type: string;
   url: string;
   download_url: string;
-  can_delete: boolean;
 }
 
 // The ready recordings of one call, refetched when it changes. Empty while
@@ -78,7 +64,7 @@ export const useCallRecordings = (
   kind: CallKind,
   id?: string,
   enabled = true,
-): [CallRecording[], (removed: string) => void] => {
+): CallRecording[] => {
   const [recordings, setRecordings] = useState<CallRecording[]>([]);
 
   useEffect(() => {
@@ -100,11 +86,7 @@ export const useCallRecordings = (
     };
   }, [kind, id, enabled]);
 
-  const forget = useCallback((removed: string) => {
-    setRecordings((current) => current.filter((r) => r.id !== removed));
-  }, []);
-
-  return [recordings, forget];
+  return recordings;
 };
 
 // 3725 → "1:02:05", 754 → "12:34".
@@ -149,10 +131,8 @@ const recordingEntries = (recordings: CallRecording[]): RecordingEntry[] => {
 const RecordingItem: React.FC<{
   recording: CallRecording;
   sound: CallRecording | null;
-  onRemoved: (id: string) => void;
-}> = ({ recording, sound, onRemoved }) => {
+}> = ({ recording, sound }) => {
   const intl = useIntl();
-  const [confirmDialog, confirm] = useConfirmDialog();
   const [playing, setPlaying] = useState(false);
   const date = intl.formatDate(recording.created_at, {
     weekday: 'short',
@@ -175,27 +155,6 @@ const RecordingItem: React.FC<{
   const handleDownloadSound = useCallback(() => {
     if (sound) window.location.assign(sound.download_url);
   }, [sound]);
-
-  const handleRemove = useCallback(() => {
-    void (async () => {
-      const ok = await confirm({
-        title: intl.formatMessage(messages.removeTitle),
-        message: intl.formatMessage(messages.removeBody),
-        confirmLabel: intl.formatMessage(messages.remove),
-        destructive: true,
-      });
-      if (!ok) return;
-      // Deleting a recording deletes its sound file too.
-      for (const file of sound ? [recording, sound] : [recording]) {
-        try {
-          await apiRequestDelete(`v1/calls/recordings/${file.id}`);
-          onRemoved(file.id);
-        } catch {
-          // Still there; it stays listed.
-        }
-      }
-    })();
-  }, [confirm, intl, recording, sound, onRemoved]);
 
   return (
     <li className='call-recordings__item'>
@@ -256,25 +215,15 @@ const RecordingItem: React.FC<{
             onClick={handleDownloadSound}
           />
         )}
-        {recording.can_delete && (
-          <KornerPill
-            variant='destructive'
-            label={intl.formatMessage(messages.remove)}
-            ariaLabel={intl.formatMessage(messages.removeLabel, { date })}
-            onClick={handleRemove}
-          />
-        )}
       </KornerActionBar>
-      {confirmDialog}
     </li>
   );
 };
 
-// A list of recordings, with Play, Download and (for whoever may) Delete.
+// A list of recordings, one entry each, with Play and Download.
 export const CallRecordingList: React.FC<{
   recordings: CallRecording[];
-  onRemoved: (id: string) => void;
-}> = ({ recordings, onRemoved }) => {
+}> = ({ recordings }) => {
   const intl = useIntl();
 
   if (recordings.length === 0) return null;
@@ -290,7 +239,6 @@ export const CallRecordingList: React.FC<{
             key={recording.id}
             recording={recording}
             sound={sound}
-            onRemoved={onRemoved}
           />
         ))}
       </ul>
@@ -303,7 +251,7 @@ export const CallRecordings: React.FC<{ kind: CallKind; id?: string }> = ({
   kind,
   id,
 }) => {
-  const [recordings, forget] = useCallRecordings(kind, id);
+  const recordings = useCallRecordings(kind, id);
 
-  return <CallRecordingList recordings={recordings} onRemoved={forget} />;
+  return <CallRecordingList recordings={recordings} />;
 };

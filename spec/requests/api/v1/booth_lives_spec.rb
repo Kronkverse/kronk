@@ -115,6 +115,16 @@ RSpec.describe 'API V1 Booth Lives' do
       expect(response).to have_http_status(403)
     end
 
+    it 'keeps a set that was recorded, since its recordings are kept', :aggregate_failures do
+      booth_live = Fabricate(:booth_live, account: user.account, started_at: 1.hour.ago, ended_at: 1.minute.ago)
+      CallRecording.build_for(Kronk::CallTarget.new('booth_live', booth_live), filename: 'set.mp4', size: 100).save!
+
+      delete "/api/v1/booth_lives/#{booth_live.id}", headers: headers
+
+      expect(response).to have_http_status(403)
+      expect(BoothLive.exists?(booth_live.id)).to be true
+    end
+
     it 'nudges whoever asked to be reminded, even if they tuned out of the Booth', :aggregate_failures do
       host = Fabricate(:user).account
       booth_live = Fabricate(:booth_live, account: host)

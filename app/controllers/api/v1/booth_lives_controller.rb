@@ -44,7 +44,9 @@ class Api::V1::BoothLivesController < Api::BaseController
   end
 
   def destroy
-    raise Mastodon::NotPermittedError if @booth_live.live?
+    # Deleting a set takes its recordings, which are kept once recorded
+    # (docs/decisions.md, 2026-10-29).
+    raise Mastodon::NotPermittedError if @booth_live.live? || @booth_live.call_recordings.exists?
 
     @booth_live.destroy!
     render_empty
