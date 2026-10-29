@@ -17,6 +17,28 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — Shop sections become Kollections, shown as rows
+
+Kommons "Kollections" (Tal, https://kronk.info/hub/kommons/p/117522474156930637):
+a shop should group its products into Kollections (a line of tinctures, a
+line of creams), each a row of item cards that scrolls sideways, one under
+another.
+
+**Decision:** Kollections are the shop sections that already existed
+(`listing_shop_sections`: named, ordered, removable, a listing in one or in
+none), renamed for members. No new table: building a second grouping
+beside sections would give a shop two ways to say the same thing. The shop
+page draws each Kollection as a `<SpaceGrid layout='row'>` (the shared row,
+under the 2026-10-29 phone rule that a row of tiles may scroll sideways
+while the page scrolls only down), with "Everything else" last; a shop with
+no Kollections keeps the grid. The owner fills them from the shop page
+(Arrange Kollections, Add an item at the end of each row, Add a Kollection)
+as well as from Shop details. Code and the API keep `section`.
+
+Not yet: a new item made from a row's Add an item tile does not land in
+that row's Kollection by itself; the shop item composer would need to take
+the Kollection, and that composer is being reworked for Goods & Services.
+
 ## 2026-10-29 — No Konnect row in the proposal composer
 
 Kommons "'Konnect' Button" (Tal): "The proposal composer probably doesn't

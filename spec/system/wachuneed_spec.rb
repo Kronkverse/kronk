@@ -45,14 +45,14 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
   # docs/spaces/wachuneed.md, Shops.
   describe 'shops' do
-    it 'opens a shop from the Ж menu on Shops, with a section, and lands on its page' do
+    it 'opens a shop from the Ж menu on Shops, with a Kollection, and lands on its page' do
       visit '/hub/wachuneed/shops'
 
       find('.kronk-menu__trigger').click
       find('.kronk-menu__moon[title="Open a shop"]').click
       fill_in 'Shop name', with: 'Bob Aromas'
-      click_on 'Add a section'
-      fill_in 'Section name', with: 'Skin Care'
+      click_on 'Add a Kollection'
+      fill_in 'Kollection name', with: 'Skin Care'
       click_on 'Open shop'
 
       expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
@@ -105,10 +105,45 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
         expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
         find('.kronk-menu__trigger').click
-        click_on 'Add an item'
+        find('.kronk-menu__moon[title="Add an item"]').click
 
         expect(page).to have_css('.compose-shell')
         within('.compose-shell') { expect(page).to have_field('What is it called?') }
+      end
+
+      # Kommons "Kollections" (117522474156930637).
+      it 'shows each Kollection as a row, and lets the owner move an item into one and add a Kollection' do
+        visit "/hub/wachuneed/shop/#{bob.account.username}"
+
+        expect(page).to have_css('.wachuneed-shop__section .space-grid--row', count: 2)
+        within('.wachuneed-shop__section', text: 'Everything else') { expect(page).to have_content('Loose candle') }
+        # The owner's tile at the end of each row.
+        within('.wachuneed-shop__section', text: 'Skin Care') { expect(page).to have_link('Add an item') }
+
+        click_on 'Arrange Kollections'
+        find('select[aria-label="Kollection for Loose candle"]').select('Skin Care')
+
+        within('.wachuneed-shop__section', text: 'Skin Care') { expect(page).to have_content('Loose candle') }
+        expect(Listing.find_by(title: 'Loose candle').listing_shop_section.name).to eq 'Skin Care'
+
+        click_on 'Add a Kollection'
+        expect(page).to have_current_path('/hub/wachuneed/my-shop?kollection=new')
+        expect(page).to have_field('Kollection name', count: 2)
+      end
+
+      it 'shows a visitor only the Kollections with something in them, with no owner controls' do
+        ana  = Fabricate(:account, username: 'ana')
+        shop = ListingShop.create!(account: ana, name: 'Ana Oils')
+        oils = shop.sections.create!(name: 'Oils', position: 0)
+        shop.sections.create!(name: 'Tinctures', position: 1)
+        Listing.create!(account: ana, title: 'Rose oil', category: 'goods', state: 'live', listing_shop_section: oils)
+
+        visit '/hub/wachuneed/shop/ana'
+
+        expect(page).to have_css('.wachuneed-shop__section-name', text: 'Oils')
+        expect(page).to have_no_css('.wachuneed-shop__section-name', text: 'Tinctures')
+        expect(page).to have_no_link('Add an item')
+        expect(page).to have_no_button('Arrange Kollections')
       end
 
       it 'leads from the Wachuneed shelf on the profile to the shop, not from under the profile header' do
