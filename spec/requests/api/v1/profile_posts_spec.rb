@@ -85,7 +85,7 @@ RSpec.describe 'Posts on a profile', :inline_jobs do
 
       it 'is on their profile for whoever can see it, and in no feed at all' do
         post_on_profile(visibility: 'self_only', text: 'Just here')
-        status = Status.last
+        status = Status.find(response.parsed_body['id'])
 
         expect(response).to have_http_status(200)
         expect(status).to have_attributes(visibility: 'self_only', profile_account_id: owner.account.id)
@@ -104,7 +104,7 @@ RSpec.describe 'Posts on a profile', :inline_jobs do
       it 'is hidden with the profile from those who cannot see it' do
         owner.account.update!(profile_visibility: :mates)
         post_on_profile(visibility: 'self_only', text: 'Just here')
-        status = Status.last
+        status = Status.find(response.parsed_body['id'])
 
         expect(timeline_of(owner.account, as: stranger)).to_not include('Just here')
         show_status(status, as: stranger)
@@ -119,7 +119,7 @@ RSpec.describe 'Posts on a profile', :inline_jobs do
 
       it 'opens for anyone who can see the profile, and not when signed out' do
         post_on_profile(visibility: 'self_only')
-        status = Status.last
+        status = Status.find(response.parsed_body['id'])
 
         show_status(status, as: stranger)
         expect(response).to have_http_status(200)
@@ -129,7 +129,7 @@ RSpec.describe 'Posts on a profile', :inline_jobs do
 
       it 'cannot be boosted' do
         post_on_profile(visibility: 'self_only')
-        status = Status.last
+        status = Status.find(response.parsed_body['id'])
 
         post "/api/v1/statuses/#{status.id}/reblog", headers: headers_for(stranger)
 
@@ -146,7 +146,7 @@ RSpec.describe 'Posts on a profile', :inline_jobs do
           status: 'Just here', visibility: 'self_only', profile_account_id: owner.account.id,
           krew_ids: [krew.id], audience_grant_ids: [outsider.account.id]
         }
-        status = Status.last
+        status = Status.find(response.parsed_body['id'])
 
         expect(status.krews).to be_empty
         expect(status.granted_accounts).to be_empty
@@ -155,10 +155,10 @@ RSpec.describe 'Posts on a profile', :inline_jobs do
 
       it 'shows comments under it to whoever can see the post' do
         post_on_profile(visibility: 'self_only')
-        status = Status.last
+        status = Status.find(response.parsed_body['id'])
 
         post '/api/v1/statuses', headers: headers_for(owner), params: { status: 'Thank you!', in_reply_to_id: status.id }
-        reply = Status.last
+        reply = Status.find(response.parsed_body['id'])
 
         show_status(reply, as: stranger)
         expect(response).to have_http_status(200)
@@ -170,7 +170,7 @@ RSpec.describe 'Posts on a profile', :inline_jobs do
       it 'tells its author who can see it' do
         post_on_profile(visibility: 'self_only')
 
-        get "/api/v1/statuses/#{Status.last.id}/audience", headers: headers
+        get "/api/v1/statuses/#{response.parsed_body['id']}/audience", headers: headers
 
         expect(response.parsed_body['profile_account']).to include('id' => owner.account.id.to_s, 'acct' => 'ana')
       end

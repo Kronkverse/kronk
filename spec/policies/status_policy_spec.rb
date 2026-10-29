@@ -104,7 +104,7 @@ RSpec.describe StatusPolicy, type: :model do
 
       # "Only on <name>'s profile" (docs/spaces/profile.md, Posts from Mates).
       context "when self_only on a Mate's profile" do
-        let(:owner) { Fabricate(:account, username: 'owner') }
+        let(:owner) { Fabricate(:account, username: 'ana') }
 
         before do
           status.visibility = :self_only
