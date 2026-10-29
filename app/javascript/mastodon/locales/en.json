@@ -2862,6 +2862,7 @@
   "nudges.notification.albutts.contribution_granted": "{who} let you add photos to their album",
   "nudges.notification.albutts.contribution_requested": "{who} asked to add photos to your album",
   "nudges.notification.albutts.tagged": "{who} tagged you in an album",
+  "nudges.notification.albutts.tagged_photo": "{who} tagged you in {times, plural, one {a photo} other {# photos}}",
   "nudges.notification.booth.frothed": "{who} frothed your set",
   "nudges.notification.booth.set_ready": "Your live set is ready to publish",
   "nudges.notification.booth.shouted": "{who} gave your set a shoutout",
