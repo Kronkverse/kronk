@@ -95,7 +95,8 @@ module Kronk
         },
       }
 
-      JWT.encode(payload, jwt_secret, 'HS256')
+      # Jitsi refuses a pass whose header lacks typ: JWT ("Invalid typ").
+      JWT.encode(payload, jwt_secret, 'HS256', { typ: 'JWT' })
     end
   end
 end

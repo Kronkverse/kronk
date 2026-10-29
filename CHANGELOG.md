@@ -7,6 +7,10 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.6 "Rose"] - 2026-10-29
+
+- Call passes typ (#2408)
+
 ### [2.1.5 "Rose"] - 2026-10-29
 
 - Kuestion prompt off the name (#2346)
