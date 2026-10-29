@@ -285,7 +285,8 @@ Kommons "Post to a profile").
   beside Nudge and Rose. It opens the ordinary composer with "Posting on
   <name>'s profile" above it (`compose/components/profile_target_indicator.tsx`);
   the x there makes it an ordinary post again. The reach picker works as for
-  any post, except that it cannot be "Just me".
+  any post, except that its narrowest rung is **Only on <name>'s profile**
+  instead of Just me (below).
 - **What it is.** Still the author's post (`statuses.profile_account_id`
   names the profile). It travels as any post of theirs does, and wherever it
   shows it says **On <name>'s profile**.
@@ -293,6 +294,19 @@ Kommons "Post to a profile").
   (`AccountStatusesFilter#with_profile_posts`). Who sees it there follows
   the author: everyone for a public one, the author's Mates for a narrower
   one, and always the author and the owner.
+- **Only on <name>'s profile** (Tal, 2026-10-29; Kommons "Posting to mates
+  profile"). Stored as `self_only` with `profile_account_id`
+  (`Status#profile_only?`). It goes into **no** home feed (not the author's,
+  not the owner's, nobody's), stream or search, and cannot be boosted. On
+  the profile it is seen by **anyone who can see that profile**
+  (`Account#profile_visible_to?`; never signed out), and by the author; the
+  post page 404s for everyone else (`StatusPolicy#on_visible_profile?`).
+  Comments under it take its reach and follow it. It takes no Krews and no
+  added or removed people (the server drops them). The owner is still told,
+  and people it mentions are told only if they can see the profile. It shows
+  **Only on <name>'s profile, not in feeds** above it and a person, not the
+  Just me lock, by its time; "Who can see this?" says the same. "Just me"
+  itself still means only you.
 - **The owner is told** ("posted on your profile"), and can take any such
   post off from its menu, **Remove from my profile**
   (`DELETE /api/v1/statuses/:id/profile_post`). The post is not deleted; it

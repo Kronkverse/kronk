@@ -264,7 +264,9 @@ class PostStatusService < BaseService
 
   # A post on someone's profile (docs/spaces/profile.md, Posts from Mates).
   # Their Mates may, unless they have turned it off; and it has to be a post
-  # they could read, so not one for the author alone.
+  # they could read, so not a direct one. `self_only` here is "Only on
+  # <name>'s profile" (Status#profile_only?): it goes to no feed, so it takes
+  # no Krews and no added or removed people: the profile decides who sees it.
   def validate_profile_target!
     target_id = @options[:profile_account_id]
     return if target_id.blank? || target_id.to_s == @account.id.to_s
@@ -272,8 +274,9 @@ class PostStatusService < BaseService
     target = Account.local.find_by(id: target_id)
     allowed = target.present? && @account.mate?(target) && target.user&.settings&.[]('profile_posts') != false
     raise Mastodon::NotPermittedError, 'You cannot post on that profile' unless allowed
-    raise Mastodon::ValidationError, 'A post on a profile cannot be for you alone' if %w(self_only direct).include?(@visibility.to_s)
+    raise Mastodon::ValidationError, 'A post on a profile cannot be a direct one' if @visibility.to_s == 'direct'
 
+    @options = @options.except(:krew_ids, :audience_grant_ids, :audience_exclude_ids) if @visibility.to_s == 'self_only'
     @profile_account = target
   end
 

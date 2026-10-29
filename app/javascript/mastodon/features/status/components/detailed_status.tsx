@@ -32,6 +32,7 @@ import MediaGallery from 'mastodon/components/media_gallery';
 import { PictureInPicturePlaceholder } from 'mastodon/components/picture_in_picture_placeholder';
 import StatusContent from 'mastodon/components/status_content';
 import { StatusEventCard } from 'mastodon/components/status_event_card';
+import { StatusProfileLabel } from 'mastodon/components/status_profile_label';
 import { QuotedStatus } from 'mastodon/components/status_quoted';
 import { VisibilityIcon } from 'mastodon/components/visibility_icon';
 import { Audio } from 'mastodon/features/audio';
@@ -311,9 +312,25 @@ export const DetailedStatus: React.FC<{
     );
   }
 
+  // Written on someone's profile (docs/spaces/profile.md, Posts from Mates).
+  const profileAcct = status.getIn(['profile_account', 'acct']) as
+    | string
+    | undefined;
+  const profileDisplayName = status.getIn([
+    'profile_account',
+    'display_name',
+  ]) as string | undefined;
+  const profileName = profileDisplayName?.length
+    ? profileDisplayName
+    : profileAcct;
+
   const visibilityLink = (
     <>
-      ·<VisibilityIcon visibility={status.get('visibility')} />
+      ·
+      <VisibilityIcon
+        visibility={status.get('visibility')}
+        profileName={profileName}
+      />
     </>
   );
 
@@ -418,6 +435,13 @@ export const DetailedStatus: React.FC<{
               defaultMessage='Private mention'
             />
           </div>
+        )}
+        {profileAcct && profileName && (
+          <StatusProfileLabel
+            acct={profileAcct}
+            name={profileName}
+            only={status.get('visibility') === 'self_only'}
+          />
         )}
         <Link
           to={`/@${status.getIn(['account', 'acct'])}`}

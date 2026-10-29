@@ -51,7 +51,9 @@ and how wide a feed reads:
 
 - **Just me** reaches no feed at all, not even the author's own home feed,
   and sends no mention or quote notifications. The post shows only on the
-  profile.
+  profile. Written on a Mate's profile, the same `self_only` is **Only on
+  <name>'s profile**: still in no feed, but seen on that profile by whoever
+  can see it ([`profile.md`](profile.md), Posts from Mates).
 - **The old Mastodon visibilities are retired** as choices. The composer
   hides `unlisted`, `private`, `direct` and `limited`, and old rows were
   folded at cutover (decisions.md, 2026-08-28 and 2026-09-16). Slot 5 is
