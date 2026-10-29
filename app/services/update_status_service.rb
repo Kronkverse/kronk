@@ -206,6 +206,20 @@ class UpdateStatusService < BaseService
     apply_visibility_change! if @options.key?(:visibility)
     apply_krew_changes!      if @options.key?(:krew_ids)
     apply_people_layer!      if @options.key?(:audience_grant_ids) || @options.key?(:audience_exclude_ids)
+    keep_profile_only_to_profile!
+  end
+
+  # "Only on <name>'s profile" (Status#profile_only?) takes no Krews and no
+  # added or removed people, as when it was posted (PostStatusService
+  # #validate_profile_target!): the profile decides who sees it.
+  def keep_profile_only_to_profile!
+    return unless @status.profile_only?
+    return unless @status.krews.exists? || @status.granted_accounts.exists? || @status.excluded_accounts.exists?
+
+    @status.krews             = []
+    @status.granted_accounts  = []
+    @status.excluded_accounts = []
+    @audience_changed         = true
   end
 
   def apply_visibility_change!

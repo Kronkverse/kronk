@@ -61,6 +61,11 @@ class FanOutOnWriteService < BaseService
       notify_about_update! if update?
     end
 
+    # "Only on <name>'s profile" (Status#profile_only?) goes to no feed, but
+    # people it mentions who can see that profile are told, as for any post
+    # on a profile.
+    notify_mentioned_accounts! if @status.profile_only? && !@options[:skip_notifications]
+
     case @status.visibility.to_sym
     when :public, :unlisted, :private
       deliver_to_all_followers!
@@ -119,6 +124,7 @@ class FanOutOnWriteService < BaseService
 
   def notify_mentioned_accounts!
     @status.active_mentions.where.not(id: @options[:silenced_account_ids] || []).joins(:account).merge(Account.local).select(:id, :account_id).reorder(nil).find_in_batches do |mentions|
+      mentions = mentions.select { |mention| StatusPolicy.new(mention.account, @status).show? } if @status.profile_only?
       LocalNotificationWorker.push_bulk(mentions) do |mention|
         [mention.account_id, mention.id, 'Mention', 'mention']
       end

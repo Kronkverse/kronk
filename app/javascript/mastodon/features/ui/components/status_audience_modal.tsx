@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react';
 import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import { apiGetStatusAudience } from 'mastodon/api/statuses';
 import type { ApiStatusAudienceJSON } from 'mastodon/api_types/statuses';
+import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
@@ -31,6 +33,10 @@ const messages = defineMessages({
   krews: { id: 'status.audience.krews', defaultMessage: 'Krews' },
   letIn: { id: 'status.audience.let_in', defaultMessage: 'Also let in' },
   keptOut: { id: 'status.audience.kept_out', defaultMessage: 'Kept out' },
+  profileOnly: {
+    id: 'status.audience.profile_only',
+    defaultMessage: 'Only on {name}’s profile',
+  },
 });
 
 // The base audience, in words. mates/orbit aren't enumerable person-lists, so
@@ -130,6 +136,9 @@ export const StatusAudienceModal: React.FC<{
     audience && REACH_VALUES.includes(audience.visibility as ReachValue)
       ? (audience.visibility as ReachValue)
       : 'public';
+  const profileName = audience?.profile_account
+    ? audience.profile_account.display_name || audience.profile_account.acct
+    : null;
 
   return (
     <div className='modal-root__modal dialog-modal status-audience'>
@@ -160,21 +169,49 @@ export const StatusAudienceModal: React.FC<{
 
         {audience && (
           <>
-            <div className='status-audience__scope'>
-              <ScopeMark
-                kind={REACH_META[reach].mark}
-                size={28}
-                className='status-audience__scope-mark'
-              />
-              <div className='status-audience__scope-text'>
-                <span className='status-audience__scope-label'>
-                  {intl.formatMessage(reachMessages[REACH_META[reach].labelId])}
-                </span>
-                <span className='status-audience__scope-blurb'>
-                  {scopeBlurb(reach, audience.mates_count)}
-                </span>
+            {profileName ? (
+              // "Only on <name>'s profile" (docs/spaces/profile.md, Posts
+              // from Mates): the profile decides, so no reach to describe.
+              <div className='status-audience__scope'>
+                <Icon
+                  id='person'
+                  icon={PersonIcon}
+                  className='status-audience__scope-mark'
+                />
+                <div className='status-audience__scope-text'>
+                  <span className='status-audience__scope-label'>
+                    {intl.formatMessage(messages.profileOnly, {
+                      name: profileName,
+                    })}
+                  </span>
+                  <span className='status-audience__scope-blurb'>
+                    <FormattedMessage
+                      id='status.audience.blurb.profile_only'
+                      defaultMessage='Anyone who can see {name}’s profile, on that profile only. Not in anyone’s feed.'
+                      values={{ name: profileName }}
+                    />
+                  </span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className='status-audience__scope'>
+                <ScopeMark
+                  kind={REACH_META[reach].mark}
+                  size={28}
+                  className='status-audience__scope-mark'
+                />
+                <div className='status-audience__scope-text'>
+                  <span className='status-audience__scope-label'>
+                    {intl.formatMessage(
+                      reachMessages[REACH_META[reach].labelId],
+                    )}
+                  </span>
+                  <span className='status-audience__scope-blurb'>
+                    {scopeBlurb(reach, audience.mates_count)}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {audience.krews.length > 0 && (
               <div className='status-audience__group'>

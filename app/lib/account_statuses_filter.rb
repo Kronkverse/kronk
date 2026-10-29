@@ -40,7 +40,8 @@ class AccountStatusesFilter
   # (docs/spaces/profile.md, Posts from Mates). A post on a profile is still
   # its author's, so who may see it follows the author: everyone for a public
   # one, the author's Mates for a narrower one, and always the two people it
-  # is between.
+  # is between. One "Only on <name>'s profile" (`self_only`) is for this
+  # profile, so it is seen by whoever can see the profile.
   def with_profile_posts(own)
     return own if account.unavailable? || (!anonymous? && blocked?)
 
@@ -53,9 +54,10 @@ class AccountStatusesFilter
       elsif author?
         on_profile
       else
-        on_profile.distributable_visibility
-                  .or(on_profile.where(account_id: current_account.id))
-                  .or(on_profile.where(visibility: %i(mates orbit private), account_id: current_account.mates.select(:id)))
+        shared = on_profile.distributable_visibility
+                           .or(on_profile.where(account_id: current_account.id))
+                           .or(on_profile.where(visibility: %i(mates orbit private), account_id: current_account.mates.select(:id)))
+        account.profile_visible_to?(current_account) ? shared.or(on_profile.where(visibility: :self_only)) : shared
       end
 
     Status.where(id: own.reselect(:id)).or(Status.where(id: visible.select(:id)))
