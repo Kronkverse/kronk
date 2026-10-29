@@ -24,6 +24,11 @@ not code, read once in `config/initializers/1_kronk_jitsi.rb`:
 
 Never put a value in the repo; they live in the environment.
 
+One setting lives on the Jitsi server itself: `config.brandingDataUrl`
+pointed at Kronk's `/api/v1/calls/branding`, which rewords Jitsi's own
+sentences for a Booth live set and leaves every other call as Jitsi says it
+(`docs/spaces/booth.md`, Live sets, The words).
+
 - **Passes.** `POST /api/v1/calls/token` with `kind` (`huddle`, `kuddle` or
   `booth_live`) and `id` answers
   `{ domain, room, jwt, moderator, recording }`. `room` is the Jitsi name

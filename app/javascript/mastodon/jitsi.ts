@@ -279,6 +279,29 @@ const listenerConfig = {
   channelLastN: LISTENER_LAST_N,
 };
 
+// A live set's words (docs/spaces/booth.md, Live sets, The words). Jitsi
+// talks of a meeting; a set isn't one. What config can change, it changes
+// here: the pre-join screen names the set (`callDisplayName`, which Jitsi
+// shows before the call has a subject, in place of the room's name), and
+// Jitsi's own recording warning and "Record this meeting" are off, since
+// the get-ready panel and Kronk's controls say it. Jitsi's own sentences
+// ("Join meeting", "… joined the meeting") can't be overwritten from here:
+// the Jitsi server fetches them from Kronk (Api::V1::Calls::BrandingsController).
+const liveSetConfig = (subject: string | undefined) => ({
+  ...(subject ? { callDisplayName: subject } : {}),
+  recordings: { showPrejoinWarning: false, suggestRecording: false },
+});
+
+// The host's pre-join screen, without "Join without audio" or the phone
+// dial-in: a set is played into the room.
+const livePrejoinConfig = {
+  prejoinPageEnabled: true,
+  prejoinConfig: {
+    enabled: true,
+    hideExtraJoinButtons: ['no-audio', 'by-phone'],
+  },
+};
+
 const fields = (data: unknown): Record<string, unknown> =>
   typeof data === 'object' && data !== null
     ? (data as Record<string, unknown>)
@@ -309,6 +332,9 @@ export function createCall({
 }: CreateCallOptions): Call | null {
   const Jitsi = jitsiConstructor();
   if (!Jitsi || !jitsiHost) return null;
+  // The host plays with music sound, everyone else listens: either way, a
+  // Booth live set.
+  const liveSet = music || listenOnly;
 
   const api = new Jitsi(jitsiHost, {
     roomName: pass.room,
@@ -319,13 +345,12 @@ export function createCall({
     userInfo: { displayName, avatarUrl },
     configOverwrite: {
       ...baseConfig,
-      ...(prejoin
-        ? { prejoinPageEnabled: true, prejoinConfig: { enabled: true } }
-        : {}),
+      ...(prejoin ? livePrejoinConfig : {}),
       ...(subject ? { subject } : {}),
       startWithAudioMuted: startAudioMuted,
       startWithVideoMuted: startVideoMuted,
-      ...(music || listenOnly ? liveSoundConfig : {}),
+      ...(liveSet ? liveSoundConfig : {}),
+      ...(liveSet ? liveSetConfig(subject) : {}),
       ...(music ? processingConfig(true) : {}),
       ...(listenOnly ? listenerConfig : {}),
     },

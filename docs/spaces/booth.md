@@ -295,11 +295,12 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   The Jitsi server): whoever the set's reach allows, while it is live, and
   the host from when it's planned. The host's pass makes them the room's
   moderator. Jitsi's toolbar is hidden and Kronk's controls sit under the
-  room (`<CallControls>`). The host joins with Jitsi's pre-join screen (the
+  room (`<CallControls>`), in [a set's words](#the-words), not a call's. The host joins with Jitsi's pre-join screen (the
   one Jitsi screen kept, to pick their mixer or interface), camera off,
   and with [Music sound](#music-sound) on. Their controls are mic, camera,
-  share screen, Music sound, Sound input, hand, tile view, leave and
-  Record. Listeners tap **Listen in** (browsers only play sound after a
+  share screen, Music sound, Sound input, hand, tile view, leave ("Step
+  out of the room": the set stays live, and **Back into the room** brings
+  them back) and Record. Listeners tap **Listen in** (browsers only play sound after a
   tap) and join [to listen only](#music-sound), with raise hand, tile view
   and leave in their controls. The page polls the set every 20 seconds,
   so Listen in appears when the host goes live, and asks who's in the room
@@ -387,6 +388,59 @@ enableOpusDtx: false }`, and the older top-level `stereo` and
   audio interface's USB out into the laptop, Chrome, that device picked
   as the microphone (pre-join screen or Sound input), Music sound on, and
   headphones, so the room doesn't play back into the mic.
+
+### The words
+
+A live set is a set, not a meeting (Kommons proposal "Live Booth",
+117522383027218146, 2026-10-29). Jitsi talks of meetings and calls, so
+everything a member sees in the room is reworded, in three places.
+
+- **Kronk's controls.** `<CallControls>` takes the page's own words
+  (`leaveLabel`, `label`, `recordingHint`) and a door for leave in place of
+  the hang-up handset (`leaveIcon='logout'`). The Booth's: "Set controls",
+  "Leave the set" (a listener), "Step out of the room. The set stays live"
+  (the host), "This set is being recorded". The Huddle and Kuddles keep
+  "Call controls", "Unhuddle" and the handset.
+- **Jitsi's settings** (`liveSetConfig` in `mastodon/jitsi.ts`, live sets
+  only). The pre-join screen names the set (`callDisplayName`), not the
+  room's key ("Shadow Booth 3f9a…"), and has no "Join without audio" or
+  phone dial-in (`prejoinConfig.hideExtraJoinButtons`). Jitsi's "Other
+  participants may be recording this call" and "Record this meeting" are
+  off (`recordings.showPrejoinWarning`, `recordings.suggestRecording`):
+  the get-ready panel and Kronk's controls say it.
+- **Jitsi's own sentences** ("Join meeting", "You are the only one in the
+  meeting", "Rosa joined the meeting", "This meeting is being recorded")
+  live in Jitsi's page and no embed setting changes them. Jitsi's dynamic
+  branding does: Kronk serves them at `GET /api/v1/calls/branding`
+  (`Api::V1::Calls::BrandingsController`, open, copy only), and the Jitsi
+  server's `config.js` points at it with
+  `config.brandingDataUrl = 'https://<kronk>/api/v1/calls/branding'`.
+  Jitsi then asks with `?conferenceFqn=<room>` before every call; a live
+  set's room (`booth-` and 20 hex digits, after any prefix) gets
+  `{ labels: { en, enGB } }`, laid over Jitsi's English, and any other
+  room `{}`, Jitsi's defaults. The words are `kronk_jitsi.booth_live` in
+  `config/locales/kronk/overrides.yml`, keyed as Jitsi's `lang/main.json`:
+
+  | Jitsi key                                            | Jitsi says                                           | The Booth says                            |
+  | ---------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------- |
+  | `prejoin.joinMeeting` (title and button)             | Join meeting                                         | Into the booth                            |
+  | `prejoin.premeeting`                                 | Pre meeting                                          | Before the set                            |
+  | `prejoin.recordingWarning`                           | Other participants may be recording this call        | This set may be recorded                  |
+  | `lonelyMeetingExperience.youAreAlone`                | You are the only one in the meeting                  | Nobody's listening yet                    |
+  | `notify.connected*Member(s)`                         | {name} joined the meeting                            | {name} is listening                       |
+  | `notify.left*Member(s)`                              | {name} left the meeting                              | {name} left                               |
+  | `notify.suggestRecordingTitle`                       | Record this meeting                                  | Record this set                           |
+  | `recording.expandedOn`, `videoStatus.recording`      | The meeting is (currently) being recorded            | This set is being recorded                |
+  | `recording.pending`                                  | Preparing to record the meeting…                     | Getting ready to record the set…          |
+  | `dialog.sessTerminatedReason`                        | The meeting has been terminated                      | The set has ended                         |
+  | `dialog.kickTitle`, `kickSystemTitle`                | … kicked you out of the meeting                      | … took you out of the set                 |
+  | `participantsPane.headings.participantsList`         | Meeting participants ({count})                       | In the room ({count})                     |
+  | `startupoverlay.genericTitle`                        | The meeting needs to use your microphone and camera. | The set needs your microphone and camera. |
+  | `toolbar.hangup`, `leaveConference`, `endConference` | Leave meeting, End meeting for all                   | Leave the set, End the set for everyone   |
+
+  Until the server has `brandingDataUrl`, Jitsi's own sentences stay as
+  they are; everything else above works without it. "Tune in" isn't used:
+  it means tuning in to a space.
 
 ### The crowd on screen
 
