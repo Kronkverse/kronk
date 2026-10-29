@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
 
 import {
   apiClearKlotData,
@@ -14,6 +13,7 @@ import {
 import type { ApiKlotSelfJSON, ApiKlotViewerJSON } from 'mastodon/api/klot';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
+import { ProposeButton } from 'mastodon/features/kommons/propose_button';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
@@ -294,18 +294,12 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
           heading={<FormattedMessage {...messages.proposeSection} />}
           hint={<FormattedMessage {...messages.proposeHint} />}
         >
-          <Link
-            to={{
-              pathname: '/hub/kommons/composer',
-              search: '?space=klot',
-            }}
-            className='korner-settings__propose-cta'
-          >
+          <ProposeButton space='klot'>
             <FormattedMessage
               {...messages.proposeCTA}
               values={{ name: 'Klot' }}
             />
-          </Link>
+          </ProposeButton>
         </SettingsSection>
 
         <SettingsSection

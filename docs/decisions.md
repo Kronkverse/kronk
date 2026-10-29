@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — The proposal composer opens over the page you are on
+
+Starting a proposal from anywhere (the Ж menu's Propose a change, the Hub's
+Propose a Korner tile, a space's settings) sent you to Kommons and opened the
+composer there; cancelling went back by navigating again (Kommons "Proposer
+Composer", Tal: "it just opens the composer for a proposal over the top of
+whatever page you're currently on").
+
+**Decision:** every way into the proposal composer from inside the app opens
+it over the current page, through the modal root (`useOpenProposer`, the
+`PROPOSER` modal), with the scope as a prop. The address doesn't change and
+Cancel or Back leaves you where you were. After opening one, inside Kommons
+you land on the proposal; elsewhere you stay and are told it's open, as
+before (2026-10-12). The `/hub/kommons/composer` route stays for links and
+the Konnect picker's New proposal; `state.returnTo`, which carried the way
+back, is gone. Detail: `docs/spaces/kommons.md`.
+
 ## 2026-10-27 — The composer title is a text box
 
 The title at the top of every composer (`<ComposeTitle>`) was drawn as a
