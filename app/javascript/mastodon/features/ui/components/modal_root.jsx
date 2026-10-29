@@ -99,6 +99,7 @@ export const MODAL_COMPONENTS = {
   'TAG_PEOPLE': () => Promise.resolve({ default: TagPeopleModal }),
   'SELF_TAG': () => Promise.resolve({ default: SelfTagModal }),
   'ALBUM_LIGHTBOX': () => import('mastodon/features/albutts/components/album_lightbox_modal'),
+  'PROPOSER': () => import('mastodon/features/kommons/proposer_modal'),
 };
 
 export default class ModalRoot extends PureComponent {

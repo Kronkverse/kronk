@@ -3,13 +3,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useHistory } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { Stage } from 'mastodon/components/stage';
 import { Lattice } from 'mastodon/features/kommons_lattice/components/lattice';
 import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';
 import { fromApiNodes } from 'mastodon/features/kommons_tree/data/nodes';
+
+import { useOpenProposer } from './use_open_proposer';
 
 const messages = defineMessages({
   title: { id: 'propose_picker.title', defaultMessage: 'Open a Proposal' },
@@ -21,11 +22,11 @@ const messages = defineMessages({
 
 // Step one of proposing: pick the page your proposal is about. Browse the
 // Kommons map (in pick mode — selecting a node opens the Proposer scoped to it)
-// or search for the page by name. Every result / node routes to
-// /hub/kommons/composer?node=<id>, so the proposal lands on that page.
+// or search for the page by name. Every result / node opens the Proposer over
+// the picker, scoped to it, so the proposal lands on that page.
 const ProposePicker: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const history = useHistory();
+  const openProposer = useOpenProposer();
   const [nodes, setNodes] = useState<KommonsNode[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState('');
@@ -70,15 +71,9 @@ const ProposePicker: React.FC<{ multiColumn?: boolean }> = () => {
   const pickResult = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const id = e.currentTarget.dataset.id;
-      // Location object, not a string — the history wrapper mangles `?query`
-      // into pathname otherwise (see components/router.tsx).
-      if (id)
-        history.push({
-          pathname: '/hub/kommons/composer',
-          search: `?node=${id}`,
-        });
+      if (id) openProposer({ node: id });
     },
-    [history],
+    [openProposer],
   );
 
   return (
