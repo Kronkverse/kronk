@@ -134,6 +134,9 @@ export interface CallState {
   tileView: boolean;
   recording: boolean;
   moderator: boolean;
+  // In the conference itself, past Jitsi's pre-join screen. A call that
+  // starts something on joining (a live set's recording) waits for it.
+  inConference: boolean;
   // Record is offered only on a server that knows who moderates and with
   // somewhere to keep the file (the pass's `recording`).
   canRecord: boolean;
@@ -365,6 +368,7 @@ export function createCall({
     tileView: false,
     recording: false,
     moderator: pass.moderator,
+    inConference: false,
     canRecord: pass.recording && pass.jwt !== null,
     musicSound: music ? true : null,
     devicesVersion: 0,
@@ -429,6 +433,7 @@ export function createCall({
     videoConferenceJoined: (data) => {
       const id = fields(data).id;
       localId = typeof id === 'string' ? id : null;
+      update({ inConference: true });
       pinModerator();
     },
     participantJoined: () => {
