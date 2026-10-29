@@ -571,9 +571,10 @@ audio file (`media`, paired; `docs/spaces/huddle.md` has the contract).
   video**. While the audio is being made into the set it says so; a
   recording with no audio file (an older finalize script) still offers
   **Download the recording** and **Upload the recording**. The recordings
-  themselves are listed under it, video and sound only, to play, download
-  or delete. Deleting a recording, or the live set, deletes its file; the
-  set keeps its own copy of the audio.
+  themselves are listed under it, to play or download (a video and its
+  sound file as one recording, with Download sound). Nobody can delete a recording,
+  and a live set that has one can't be deleted either (Tal, 2026-10-29;
+  `docs/spaces/huddle.md`, Recordings).
 - Without recording set up, the get-ready panel still says Kronk doesn't
   record the room, and the host records on their own set-up as before.
 

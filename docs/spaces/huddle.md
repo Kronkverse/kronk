@@ -232,15 +232,21 @@ a finalize script on the Jitsi server hands the file to Kronk.
 - **Who sees one.** A Kuddle's: anyone who can see the Kuddle. The Main
   Huddle's: every signed-in member. A live set's: its host (and staff),
   for them to publish as a set (`docs/spaces/booth.md`, Recording a live
-  set). Who may delete: the Kuddle's maker, the set's host, staff; the
-  Main Huddle's, staff. Deleting takes the file too. `CallRecordingPolicy`
-  and `Kronk::CallTarget` hold the rules.
+  set). `CallRecordingPolicy` and `Kronk::CallTarget` hold the rules.
+- **Kept for good** (Tal, 2026-10-29; decisions.md). Nobody can delete a
+  recording through the app: no Delete, no API for it, staff included.
+  A live set with a recording can't be deleted either (403), since that
+  would take its recordings. Kuddles are retired, never deleted, so theirs
+  stay. What still removes one: a file the recorder uploads over 4 GB is
+  refused and deleted, and purging an account deletes its Kuddles and live
+  sets, and so their recordings, by foreign key. There is no admin or
+  `tootctl` path; anything else is by hand on the server.
 - **Where they show.** Under a Kuddle's call and in the Main Huddle's
   lobby (`<CallRecordings>`, `components/call_recordings.tsx`): each with
-  its date, length, Play (inline), Download and Delete for whoever may. A
-  video and its sound file (a pair) show as one recording, with **Download
-  sound** beside Download, and Delete takes both; a file on its own says
-  Video or Sound only. Nothing shows when there are none.
+  its date, length, Play (inline) and Download. A video and its sound
+  file (a pair) show as one recording, with **Download sound** beside
+  Download; a file on its own says Video or Sound only. Nothing shows when
+  there are none.
 - **Video and audio.** A recording can come as a video file, an audio
   file, or both (`media`; each of a pair points at the other, `pair_id`).
   A live set's audio file becomes a draft set for its host
@@ -251,8 +257,7 @@ a finalize script on the Jitsi server hands the file to Kronk.
   (`Kronk::CallRecordingStorage`), uploaded straight there by the recorder.
   Never a public object: `GET /api/v1/calls/recordings?kind=&id=` lists the
   ready ones with signed URLs, `url` to play (three hours) and
-  `download_url` to save (ten minutes);
-  `DELETE /api/v1/calls/recordings/:id` deletes one. The CSP's
+  `download_url` to save (ten minutes). There is no `DELETE`. The CSP's
   `media-src` allows the bucket's own host. Without S3 (local development) recording is off.
 - **The recorder's side** (`Api::V1::Calls::RecordingUploadsController`),
   the contract the finalize script follows. Every request is signed:

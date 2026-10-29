@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — Recordings can't be deleted
+
+Kommons "Recordings" (Tal): "Also it appears anyone can delete? Maybe once
+recorded, they live forever?" Until now the Kuddle's maker, a live set's
+host and staff could delete a call's recording, file and all.
+
+**Decision (Tal):** once recorded, a recording is kept. Nobody deletes one
+through the app: the Delete button and `DELETE /api/v1/calls/recordings/:id`
+are gone (staff included), and a live set that has a recording can't be
+deleted, since that would take its recordings. There was no admin or
+`tootctl` path to keep. Supersedes "The Kuddle's maker, the host or staff
+can delete one, file and all" in 2026-10-27, "Kronk's own Jitsi".
+
+The proposal's other two asks (a running count beside "Recording", and a
+video and its sound file listed as one recording) landed in #2426.
+
+---
+
 ## 2026-10-29 — Only on a Mate's profile
 
 Kommons "Posting to mates profile". Tal: "the 'me' option isn't so it's
@@ -63,6 +81,8 @@ too. The album composer's bespoke chips (who can add photos, who sees a Krew
 album) and ghost buttons moved over, and `<ComposeShell>`'s footer reads
 only tokens (`--accent`, `--dur-fast`, `--elevation-menu`). Nothing was
 removed: which options a composer should drop is still open.
+
+---
 
 ## 2026-10-29 — No Konnect row in the proposal composer
 

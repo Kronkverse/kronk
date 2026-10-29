@@ -42,7 +42,8 @@ class HuddleSession < ApplicationRecord
   # Kuddle). Huddle::Follows adds the Krew members who follow without a row.
   has_many   :huddle_follows, dependent: :delete_all
   # A Kuddle's recordings (docs/spaces/huddle.md, Recordings). Destroying
-  # deletes their files.
+  # deletes their files; the app retires a Kuddle rather than deleting it,
+  # which keeps them (a purged account's Kuddles still go, by foreign key).
   has_many   :call_recordings, dependent: :destroy
 
   validates :title, presence: true, length: { maximum: 200 }
