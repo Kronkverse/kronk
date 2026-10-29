@@ -39,8 +39,8 @@ import { KINDS, kindMessage } from './kinds';
 import type { BoothCredit, BoothKind, BoothSet } from './types';
 import { useBoothLives } from './use_booth_lives';
 import { useBoothSets } from './use_booth_sets';
-import { useBoothShelves } from './use_booth_shelves';
 import type { BoothSort } from './use_booth_sets';
+import { useBoothShelves } from './use_booth_shelves';
 
 // The Booth — Musik (every set, searchable and sortable), Live (sets
 // played live on Huddle's Jitsi server, now and coming up), My sets (your
@@ -368,11 +368,13 @@ const MusikShelves: React.FC<{
         if (!key) continue;
         const shelf = byKey.get(key) ?? {
           key,
+          // A blank display name falls back to the handle, then the name.
           title:
-            credit.account?.display_name ||
-            credit.account?.acct ||
-            credit.name ||
-            key,
+            [
+              credit.account?.display_name,
+              credit.account?.acct,
+              credit.name,
+            ].find(Boolean) ?? key,
           sets: [],
         };
         if (!shelf.sets.includes(set) && shelf.sets.length < SHELF_SIZE) {
@@ -748,9 +750,7 @@ const MusikView: React.FC = () => {
         </div>
       )}
 
-      {rows && layout !== 'grid' && (
-        <MusikShelves by={layout} onKind={handleShelfKind} />
-      )}
+      {rows && <MusikShelves by={layout} onKind={handleShelfKind} />}
 
       {!rows && loading && (
         <LoadingState label={intl.formatMessage(messages.loading)} />
