@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — Rows may scroll sideways on a phone; the page doesn't
+
+Tal, asked whether Wachuneed's Offered, Desired and Shops rows could scroll
+sideways: "the kommunity disover space has a horizontal scroll designed
+specifically for phones, and portals recent work just created a horizontal
+scroll. This should definitely be a thing on phones."
+
+**Decision:** a row of tiles inside a page may scroll sideways on a phone,
+with the next tile peeking in, as Kommunity Discover and Musik's rows do.
+Build it with the shared row (`<SpaceGrid layout='row'>`), not a hand-rolled
+one. The page itself still scrolls only up and down: Stage shapes keep
+`overflow-x: hidden`, wide content wraps, and there is no swiping between
+whole panes. This narrows the 2026-08-13 rule ("only vertical scroll"),
+which had been read as banning every sideways row. FreeTheDream keeps the
+grid it moved to on 2026-10-22; Tal chose that over bringing its rows back.
+
+---
+
 ## 2026-10-29 — Recordings can't be deleted
 
 Kommons "Recordings" (Tal): "Also it appears anyone can delete? Maybe once
