@@ -5,7 +5,18 @@
       "namespace": "android_app",
       "package_name": "info.kronk.app",
       "sha256_cert_fingerprints": [
+        "ED:45:40:6F:24:AA:45:BB:63:AE:69:4D:50:47:2D:EE:D1:89:10:FD:1D:5B:62:7C:33:7D:3D:B9:B6:EC:3F:49",
         "4B:5A:40:0A:A0:FE:A1:A4:B2:7B:19:96:74:E1:0F:06:CD:FC:12:B2:A8:83:B4:A3:F5:65:12:25:1D:22:9D:7C"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "info.kronk.app.shadow",
+      "sha256_cert_fingerprints": [
+        "D7:A5:EF:EC:2E:FA:6E:F0:21:CF:AD:E6:3C:61:AE:C0:E4:DA:36:71:28:78:F0:83:15:44:71:22:A4:6E:E9:81"
       ]
     }
   }
