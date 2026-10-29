@@ -49,7 +49,7 @@ module Nudges
       'albutts.contribution_requested' => { korner: 'albutts', label: 'Someone asks to add photos to your album' },
       'albutts.contribution_granted' => { korner: 'albutts', label: 'You can now add photos to an album' },
       'albutts.added_photo' => { korner: 'albutts', label: 'Someone adds to an album you share' },
-      'albutts.tagged' => { korner: 'albutts', label: 'Someone tags you in an album' },
+      'albutts.tagged' => { korner: 'albutts', label: 'Someone tags you in an album or its photos' },
       'kalendar.rsvpd_{status}' => { korner: 'kalendar', label: 'Someone answers the invite to your event' },
       'event_invitation' => { korner: 'kalendar', label: 'Someone invites you to an event' },
       'wachuneed.offered' => { korner: 'wachuneed', label: 'Someone makes an offer on your listing' },
@@ -96,8 +96,12 @@ module Nudges
 
     # A delivered `<korner>.<verb>` that is the same thing as another row.
     # FanOutOnWriteService routes a mention as `nudges.mention`, alongside
-    # Kronk::StatusNudges' `feed.mentioned`.
-    ALIASES = { 'nudges.mention' => 'feed.mentioned' }.freeze
+    # Kronk::StatusNudges' `feed.mentioned`. A tag in an album photo
+    # (Albutts::TagNudges) is the same row as a tag in the album.
+    ALIASES = {
+      'nudges.mention' => 'feed.mentioned',
+      'albutts.tagged_photo' => 'albutts.tagged',
+    }.freeze
 
     # Legacy notification type => row, for types that have one.
     LEGACY_TYPES = {

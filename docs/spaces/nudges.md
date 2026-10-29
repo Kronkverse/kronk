@@ -90,6 +90,12 @@ What `Nudges::EventRouter.deliver` does today:
    declares an aggregation window and a matching event addressed to you (same
    verb and source) is still inside it, the new one collapses onto that
    event, re-floats it and makes it unseen again instead of adding a row.
+   The event's `times` counts what it now stands for. A caller can narrow
+   the match to the same actor (`aggregate_per_actor:`), keep a burst to
+   its first push (`push_collapsed: false`) and send a tap somewhere else
+   once it is several (`collapsed_cta_route:`): a photo drop tagging you
+   twenty times is one row, "Sam tagged you in 20 photos", that buzzed once
+   (`Albutts::TagNudges`, `docs/spaces/albutts.md`).
 
 The router does not create or touch a conversation. It used to file each
 event in the Mate chat between A and you, which meant a stranger frothing
@@ -248,7 +254,9 @@ renders: a post as its card (`inline_status_card.tsx`), a Kronk link as its
   - **Rows come from what is delivered**: one per `listens:` entry, keyed
     `<source_korner>.<verb>` (`kommons.backed`, `feed.frothed`,
     `mates.mate_requested`); the router calls outside the manifest
-    (`albutts.added_photo`, `albutts.tagged`, `profile.posted_on`); and
+    (`albutts.added_photo`, `albutts.tagged`, `profile.posted_on`; a tag
+    in an album photo, `albutts.tagged_photo`, is the `albutts.tagged`
+    row); and
     notices that still
     exist only on the legacy store, under the key they had before
     (`kommons.proposal_challenged`, `kommons.proposal_status_changed`,
@@ -278,13 +286,13 @@ renders: a post as its card (`inline_status_card.tsx`), a Kronk link as its
 
 ### Data model
 
-| Table                             | Model                            | Holds                                                                                                    |
-| --------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `nudges_conversations`            | `Nudges::Conversation`           | `kind` (`mate`/`krew`), the Mate pair or `krew_id`, `last_activity_at`, Mate read pointers, `expires_at` |
-| `nudges_conversation_memberships` | `Nudges::ConversationMembership` | Krew member, read pointers, `muted`, pending invite (`invited_by`)                                       |
-| `nudges_conversation_messages`    | `Nudges::ConversationMessage`    | author, body, media ids, voice attachment, `reactions` (JSONB), `deleted_at`, `expires_at`               |
-| `nudges_events`                   | `Nudges::Event`                  | actor, recipient, `seen_at`, `source_korner_slug`, `verb`, `source_type`/`source_id`, `interaction`, CTA |
-| `nudges_relationships`            | `Nudges::Relationship`           | Mate pair, combined `message_count`, `last_milestone_hit`                                                |
+| Table                             | Model                            | Holds                                                                                                             |
+| --------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `nudges_conversations`            | `Nudges::Conversation`           | `kind` (`mate`/`krew`), the Mate pair or `krew_id`, `last_activity_at`, Mate read pointers, `expires_at`          |
+| `nudges_conversation_memberships` | `Nudges::ConversationMembership` | Krew member, read pointers, `muted`, pending invite (`invited_by`)                                                |
+| `nudges_conversation_messages`    | `Nudges::ConversationMessage`    | author, body, media ids, voice attachment, `reactions` (JSONB), `deleted_at`, `expires_at`                        |
+| `nudges_events`                   | `Nudges::Event`                  | actor, recipient, `seen_at`, `source_korner_slug`, `verb`, `source_type`/`source_id`, `interaction`, CTA, `times` |
+| `nudges_relationships`            | `Nudges::Relationship`           | Mate pair, combined `message_count`, `last_milestone_hit`                                                         |
 
 **Unread** (`Nudges::Conversation#unread_count_for`) counts unseen messages
 and unseen chat lines. Opening a conversation marks everything read. A muted
@@ -329,7 +337,7 @@ store:
 - **What the phone shows** (`Nudges::PushPayload`): who, in the space's own
   words, from `nudges.push` in `config/locales/kronk/overrides.yml` (kept in
   step with `notification_copy.ts`): "Ana sent you a rose", "Ana tagged you
-  in an album photo", with the thing's name under it when it has one. A
+  in a photo", with the thing's name under it when it has one. A
   message says only "Ana nudged you" or "Ana nudged Growers", never what it
   says, so nothing private sits on a lock screen. A tap opens the chat or
   the notification's page. One chat's messages replace each other (`tag`).

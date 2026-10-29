@@ -275,15 +275,26 @@ An @name tags someone (Tal, 2026-10-13). There is no separate people field.
 
 - **In a photo's caption:** the caption box suggests names as you type
   (`components/caption_textarea.tsx`), the name links to their profile
-  (`caption_text.tsx`), and they are told "tagged you in an album".
-  `Albutts::PublishPhoto#notify_tagged!` sends it: a photo's post is kept out
-  of fan-out, which is what normally announces a mention, so until
+  (`caption_text.tsx`), and they are told "Sam tagged you in a photo",
+  with the album's name under it, opening that photo. `Albutts::TagNudges`
+  sends it once the photo exists (verb `tagged_photo`): a photo's post is
+  kept out of fan-out, which is what normally announces a mention, so until
   2026-10-13 nobody was told.
-- **In the album's description:** the same box, the same link, and the same
-  notice, sent once when a name first appears
-  (`Api::V1::Albutts::AlbumsController#notify_tagged!`).
-- Only someone who can open the album is told. The notice leads to the
-  album.
+- **One nudge per photo drop** (Tal, 2026-10-29). Tagged in twenty photos
+  in one go, you get one nudge: "Sam tagged you in 20 photos", opening the
+  album, and one push (the first). A drop is a burst as the feed counts it
+  (`Albutts::PublishPhotoBatch::QUIET`, 10 minutes with no new photo from
+  them): each tag collapses onto that person's last tag nudge for the album
+  while it is inside the window, and someone else's tags in the same album
+  stay their own row.
+- **In the album's description:** the same box and the same link; the
+  notice says "tagged you in an album" (verb `tagged`), sent once when a
+  name first appears (`Api::V1::Albutts::AlbumsController#notify_tagged!`),
+  and opens the album.
+- Only someone who can open the album is told. Muting "Someone tags you in
+  an album or its photos" silences both.
+- A name added later by editing a caption is still told as an ordinary
+  mention ("mentioned you"), through `ProcessMentionsService`.
 - **On your profile** (Tal, 2026-10-21, mangobee's proposal "Tagging
   ability's in albuts"): the photos you're tagged in can be a shelf on your
   profile, **Tagged in photos**. You put it on, like any shelf (it's

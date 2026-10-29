@@ -44,7 +44,8 @@ module Nudges
     def initialize(actor:, recipient:, source_korner_slug:, verb:,
                    source_type: nil, source_id: nil,
                    interaction: 'passive', cta_label: nil, cta_route: nil,
-                   aggregate_window: nil, directed: false)
+                   aggregate_window: nil, aggregate_per_actor: false,
+                   push_collapsed: true, collapsed_cta_route: nil, directed: false)
       @actor              = actor
       @recipient          = recipient
       @source_korner_slug = source_korner_slug.to_s
@@ -55,7 +56,10 @@ module Nudges
       @cta_label          = cta_label
       @cta_route          = cta_route
       @aggregate_window   = aggregate_window
-      @directed           = directed
+      @aggregate_per_actor = aggregate_per_actor
+      @push_collapsed = push_collapsed
+      @collapsed_cta_route = collapsed_cta_route
+      @directed = directed
     end
 
     def call
@@ -119,16 +123,20 @@ module Nudges
     # collapse key is (source_type, source_id, verb), so for albutts
     # `album_new_photo` it is (Album, album_id, added_photo): exactly the
     # manifest's `key: album_id`, actor-agnostic.
+    #
+    # `aggregate_per_actor:` narrows it to the same actor: one person's
+    # tags in one photo drop collapse, someone else's stay their own row
+    # ("Sam tagged you in 3 photos", Albutts::TagNudges).
     def aggregable_event
       return nil if @aggregate_window.nil?
       return nil if @source_type.blank? || @source_id.blank?
 
-      Nudges::Event
-        .addressed_to(@recipient)
-        .where(verb: @verb, source_type: @source_type, source_id: @source_id)
-        .where(Nudges::Event.arel_table[:created_at].gteq(@aggregate_window.ago))
-        .order(created_at: :desc)
-        .first
+      scope = Nudges::Event
+              .addressed_to(@recipient)
+              .where(verb: @verb, source_type: @source_type, source_id: @source_id)
+              .where(Nudges::Event.arel_table[:created_at].gteq(@aggregate_window.ago))
+      scope = scope.where(actor_account_id: @actor.id) if @aggregate_per_actor
+      scope.order(created_at: :desc).first
     end
 
     # Re-float the collapsed event to now and surface the latest actor, so
@@ -139,10 +147,17 @@ module Nudges
     # skip validations/callbacks (update_columns) and re-publish and re-push
     # by hand — the after_create hooks only fire on insert, and this is
     # deliberately not an insert.
+    #
+    # `times` counts what the row now stands for. `push_collapsed: false`
+    # keeps a burst to the one push its first event made (a photo drop
+    # tagging you in twenty photos buzzes once), and `collapsed_cta_route:`
+    # is where a tap goes once it is more than one thing.
     def collapse_onto(event)
-      event.update_columns(actor_account_id: @actor.id, created_at: Time.current, seen_at: nil)
+      changes = { actor_account_id: @actor.id, created_at: Time.current, seen_at: nil, times: event.times + 1 }
+      changes[:cta_route] = @collapsed_cta_route if @collapsed_cta_route && event.interactive?
+      event.update_columns(changes)
       Nudges::StreamPublisher.event_created(event)
-      Nudges::PushWorker.perform_async('event', event.id)
+      Nudges::PushWorker.perform_async('event', event.id) if @push_collapsed
       event
     end
 
