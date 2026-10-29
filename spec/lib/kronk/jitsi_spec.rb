@@ -41,7 +41,7 @@ RSpec.describe Kronk::Jitsi do
       token = described_class.pass(account: account, room: 'huddle', moderator: true, avatar: 'https://example.com/a.png', now: now)
       claims, header = JWT.decode(token, 's3cret', true, algorithm: 'HS256', verify_expiration: false, verify_not_before: false)
 
-      expect(header['alg']).to eq 'HS256'
+      expect(header).to include('alg' => 'HS256', 'typ' => 'JWT')
       expect(claims).to include(
         'iss' => 'kronk', 'aud' => 'jitsi', 'sub' => 'meet.jitsi', 'room' => 'huddle',
         'iat' => now.to_i, 'nbf' => now.to_i - 60, 'exp' => (now + 2.hours).to_i
