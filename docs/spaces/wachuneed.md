@@ -135,8 +135,9 @@ order) and `photo_url`, the cover. There is no delete endpoint.
 
 ## Shops
 
-A shop is one seller's live offers on a page of their own, under sections
-they name (Tal, 2026-10-12; Kommons "Market Layout"). It is a view of
+A shop is one seller's live offers on a page of their own, in Kollections
+they name (Tal, 2026-10-12; Kommons "Market Layout"; named Kollections
+2026-10-29). It is a view of
 listings the seller already has, not a second thing to fill: a listing keeps
 appearing in Offered and the feed exactly as before.
 
@@ -144,13 +145,20 @@ appearing in Offered and the feed exactly as before.
   the Ж menu is **Open a shop** (Kommons "Open a shop button", 2026-10-21:
   it was a button on Mine, out of place beside Shops)
   (`/hub/wachuneed/my-shop`, `features/wachuneed/shop_edit.tsx`): a name, an
-  optional line and picture (your avatar until you add one), your sections
-  in the order you want (up to `ListingShop::MAX_SECTIONS`), and two
+  optional line and picture (your avatar until you add one), your
+  Kollections in the order you want (up to `ListingShop::MAX_SECTIONS`), and two
   settings. One shop per account. **Close shop** removes the page and its
-  sections and leaves every listing up.
-- **Sections** are the seller's own words. The listing form shows **Section
-  of your shop** once you have sections; a listing sits in one or in none.
-  Removing a section drops its listings back to "Everything else".
+  Kollections and leaves every listing up.
+- **Kollections** (Tal, 2026-10-29; Kommons "Kollections",
+  https://kronk.info/hub/kommons/p/117522474156930637) are lines of what
+  the seller makes, in their own words: a line of tinctures, a line of
+  creams. Underneath they are the shop's sections
+  (`listing_shop_sections`; called Sections until then). The seller names,
+  orders and removes them in **Shop details**. A listing sits in one or in
+  none: the listing form and the shop item composer still ask **Section of
+  your shop**, and the shop page's **Arrange Kollections** changes it in
+  place. Removing a Kollection drops its listings back to "Everything
+  else".
 - **The shop page** is `/hub/wachuneed/shop/<username>`
   (`shop_page.tsx`), the shop front. It is the standard detail page
   (`<KornerDetail>`; rebuilt on it 2026-10-13 after Tal found the first
@@ -160,10 +168,21 @@ appearing in Offered and the feed exactly as before.
   subtitle: the shop's name and line. Facts line (`<KornerMeta>`): the
   seller, the place, how many listings. One action: **Message the seller**
   (same rule as on a listing, `can_message`). Then what the shop says of
-  itself (about, how to pay, pickup and postage), its sections as pills
-  that jump down the page when there is more than one, and each section
-  that has something in it over a `<SpaceGrid>`, ending with "Everything
-  else". Wanted ads are not part of a shop. The owner changes the shop from
+  itself (about, how to pay, pickup and postage), its Kollections as pills
+  that jump down the page when there is more than one, and each Kollection
+  that has something in it as a row that scrolls sideways, the next tile
+  peeking in (`<SpaceGrid layout='row'>`), ending with "Everything else". A
+  shop with no Kollections shows its items in the ordinary grid. Wanted ads
+  are not part of a shop.
+- **The owner on their own shop page** sees every Kollection, empty ones
+  too, each row ending in an **Add an item** tile (it opens the shop item
+  composer; the new item lands in no Kollection until placed), **Add a
+  Kollection** under the last row (Shop details, with a new one ready to
+  name: `/hub/wachuneed/my-shop?kollection=new`), and **Arrange
+  Kollections** in the action bar, which lists each row's items with a
+  choice of Kollection beside them. A change saves at once, as the listing's
+  own edit (`PATCH /api/v1/wachuneed/listings/:id` with
+  `listing_shop_section_id`). The owner changes the shop from
   **Edit** on the Ж menu, and **+** there is **Add an item**: in your own
   shop and in the builder it opens the shop item composer, where everywhere
   else in Wachuneed it is **New listing** (the page registers a page action

@@ -6,16 +6,18 @@ import { Link, useHistory, useParams } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import { apiUpdateWachuneedListing } from 'mastodon/api/wachuneed';
 import { apiGetWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
+import { ComposeSelect } from 'mastodon/components/compose_fields';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
-import { SpaceGrid } from 'mastodon/components/space_grid';
+import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
@@ -26,13 +28,17 @@ import { ListingCard } from './listing_card';
 // detail shell (`<KornerDetail>`, docs/design.md, Detail pages): the covers
 // of its newest items as the hero, the shop's name and line as title and
 // subtitle, who and where as the facts line, Message the seller as the one
-// action, then what the shop says of itself and its live offers under the
-// sections the seller named, in their order; anything left unplaced sits
-// under "Everything else". Wanted ads are not part of a shop.
+// action, then what the shop says of itself and its live offers, one row
+// that scrolls sideways per Kollection the seller named, in their order;
+// anything in none is the last row, "Everything else". A shop with no
+// Kollections shows its items in the grid. Wanted ads are not part of a
+// shop.
 //
-// The owner's way in to change it is Edit on the Ж menu, and + there adds
-// an item to the shop (for everyone else it is New listing): the page
-// carries neither.
+// The owner's way in to change the shop is Edit on the Ж menu, and + there
+// adds an item (for everyone else it is New listing). On their own shop the
+// owner also sees every Kollection, empty ones too, with an Add an item tile
+// at the end of each row, Add a Kollection under the last, and Arrange,
+// which puts each item's Kollection beside it to change.
 
 const messages = defineMessages({
   title: { id: 'wachuneed.title', defaultMessage: 'Wachuneed' },
@@ -71,7 +77,29 @@ const messages = defineMessages({
     id: 'wachuneed.shops.count',
     defaultMessage: '{count, plural, one {# listing} other {# listings}}',
   },
-  sections: { id: 'wachuneed.shop.sections', defaultMessage: 'Sections' },
+  sections: { id: 'wachuneed.shop.sections', defaultMessage: 'Kollections' },
+  addKollection: {
+    id: 'wachuneed.shop.kollection_add',
+    defaultMessage: 'Add a Kollection',
+  },
+  arrange: {
+    id: 'wachuneed.shop.arrange',
+    defaultMessage: 'Arrange Kollections',
+  },
+  arrangeDone: { id: 'wachuneed.shop.arrange_done', defaultMessage: 'Done' },
+  arrangeHint: {
+    id: 'wachuneed.shop.arrange_hint',
+    defaultMessage: 'Choose the Kollection each item sits in.',
+  },
+  kollectionOf: {
+    id: 'wachuneed.shop.kollection_of',
+    defaultMessage: 'Kollection for {title}',
+  },
+  none: { id: 'wachuneed.shop.kollection_none', defaultMessage: 'None' },
+  moveError: {
+    id: 'wachuneed.shop.move_error',
+    defaultMessage: "Couldn't move that item. Try again.",
+  },
 });
 
 interface Shelf {
@@ -80,9 +108,14 @@ interface Shelf {
   listings: ApiListingJSON[];
 }
 
-// Sections in the seller's order, each with its listings; then whatever
-// has no section. Empty sections are left out for a visitor.
-const shelve = (shop: ApiShopJSON, restName: string): Shelf[] => {
+// Kollections in the seller's order, each with its listings; then whatever
+// is in none. Empty Kollections are left out, except for the owner, who
+// fills them from here.
+const shelve = (
+  shop: ApiShopJSON,
+  restName: string,
+  isOwner: boolean,
+): Shelf[] => {
   const listings = shop.listings ?? [];
   const sections = shop.sections ?? [];
   const known = new Set(sections.map((section) => section.id));
@@ -95,7 +128,9 @@ const shelve = (shop: ApiShopJSON, restName: string): Shelf[] => {
   const rest = listings.filter(
     (l) => !l.shop_section_id || !known.has(l.shop_section_id),
   );
-  const filled = shelves.filter((shelf) => shelf.listings.length > 0);
+  const filled = shelves.filter(
+    (shelf) => isOwner || shelf.listings.length > 0,
+  );
 
   if (rest.length > 0) {
     // With no sections at all there is nothing for "else" to be else to.
@@ -132,6 +167,9 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
   const history = useHistory();
   const [shop, setShop] = useState<ApiShopJSON | null>(null);
   const [loading, setLoading] = useState(true);
+  // The owner's Arrange: each item's Kollection beside it, to change.
+  const [arranging, setArranging] = useState(false);
+  const [moveError, setMoveError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -191,10 +229,54 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
     isOwner,
   );
 
+  const handleAddKollection = useCallback(() => {
+    history.push({
+      pathname: '/hub/wachuneed/my-shop',
+      search: '?kollection=new',
+    });
+  }, [history]);
+  const handleArrange = useCallback(() => {
+    setArranging((on) => !on);
+    setMoveError(false);
+  }, []);
+
+  // Moving an item is the listing's own edit (owner only on the server),
+  // sending just the Kollection; the page follows without a reload.
+  const handleMove = useCallback<React.ChangeEventHandler<HTMLSelectElement>>(
+    (e) => {
+      const listingId = e.currentTarget.dataset.id;
+      const sectionId = e.currentTarget.value || null;
+      if (!listingId) return;
+      setMoveError(false);
+      apiUpdateWachuneedListing(listingId, {
+        listing_shop_section_id: sectionId,
+      })
+        .then(() => {
+          setShop((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  listings: (prev.listings ?? []).map((l) =>
+                    l.id === listingId
+                      ? { ...l, shop_section_id: sectionId }
+                      : l,
+                  ),
+                }
+              : prev,
+          );
+          return undefined;
+        })
+        .catch(() => {
+          setMoveError(true);
+        });
+    },
+    [],
+  );
+
   const restName = intl.formatMessage(messages.rest);
   const shelves = useMemo(
-    () => (shop ? shelve(shop, restName) : []),
-    [shop, restName],
+    () => (shop ? shelve(shop, restName, isOwner) : []),
+    [shop, restName, isOwner],
   );
 
   if (loading) {
@@ -222,6 +304,9 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
   const owner = shop.account.display_name || `@${shop.account.acct}`;
   const covers = shop.preview_photos ?? [];
   const count = (shop.listings ?? []).length;
+  const kollections = shop.sections ?? [];
+  // Rows once the seller has Kollections; until then, the grid.
+  const layout = kollections.length > 0 ? 'row' : 'grid';
 
   return (
     <KornerDetail
@@ -251,8 +336,22 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
         />
       }
       actions={
-        // Whoever can see the shop can message the seller from it.
-        !isOwner && shop.can_message ? (
+        // Whoever can see the shop can message the seller from it. The
+        // owner arranges their items, once there are Kollections to
+        // arrange them in.
+        isOwner ? (
+          kollections.length > 0 && count > 0 ? (
+            <KornerActionBar align='center'>
+              <KornerPill
+                variant={arranging ? 'primary' : undefined}
+                label={intl.formatMessage(
+                  arranging ? messages.arrangeDone : messages.arrange,
+                )}
+                onClick={handleArrange}
+              />
+            </KornerActionBar>
+          ) : null
+        ) : shop.can_message ? (
           <KornerActionBar align='center'>
             <KornerPill
               variant='primary'
@@ -310,6 +409,14 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
         />
       )}
 
+      {arranging ? (
+        <p className='wachuneed-shop__hint' role='status'>
+          {intl.formatMessage(
+            moveError ? messages.moveError : messages.arrangeHint,
+          )}
+        </p>
+      ) : null}
+
       {shelves.map((shelf) => (
         <section
           key={shelf.key}
@@ -319,13 +426,62 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
           {shelf.name ? (
             <h2 className='wachuneed-shop__section-name'>{shelf.name}</h2>
           ) : null}
-          <SpaceGrid>
+          <SpaceGrid layout={layout}>
             {shelf.listings.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
+            {isOwner ? (
+              <SpaceCard
+                to='/hub/wachuneed/my-shop?item=new'
+                placeholder={<AddIcon className='wachuneed-shop__add-icon' />}
+                title={intl.formatMessage(messages.add)}
+              />
+            ) : null}
           </SpaceGrid>
+          {arranging && shelf.listings.length > 0 ? (
+            <ul className='wachuneed-shop__arrange'>
+              {shelf.listings.map((listing) => (
+                <li key={listing.id} className='wachuneed-shop__arrange-item'>
+                  <span className='wachuneed-shop__arrange-title'>
+                    {listing.title}
+                  </span>
+                  <ComposeSelect
+                    data-id={listing.id}
+                    value={
+                      listing.shop_section_id &&
+                      kollections.some((k) => k.id === listing.shop_section_id)
+                        ? listing.shop_section_id
+                        : ''
+                    }
+                    onChange={handleMove}
+                    aria-label={intl.formatMessage(messages.kollectionOf, {
+                      title: listing.title,
+                    })}
+                  >
+                    <option value=''>
+                      {intl.formatMessage(messages.none)}
+                    </option>
+                    {kollections.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {k.name}
+                      </option>
+                    ))}
+                  </ComposeSelect>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </section>
       ))}
+
+      {isOwner && shelves.length > 0 ? (
+        <KornerActionBar align='center'>
+          <KornerPill
+            label={intl.formatMessage(messages.addKollection)}
+            onClick={handleAddKollection}
+          />
+        </KornerActionBar>
+      ) : null}
     </KornerDetail>
   );
 };
