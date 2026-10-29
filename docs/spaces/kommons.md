@@ -60,7 +60,8 @@ Other routes (all in `features/ui/index.jsx`, signed-in only):
 - `/hub/kommons/composer` (and the older `/hub/kommons/propose`): the
   composer overlay over Kommons, for links and the Konnect picker's New
   proposal. It takes `?node=<id>`, `?space=<slug>` or `?kind=new_korner`.
-  Steps you add become tasks; staged files upload as attachments.
+  Steps you add become tasks; staged files upload as attachments. It has
+  no Konnect row: a proposal is Konnected from its page (2026-10-29).
 - `/hub/kommons/settings`: per-user settings (below).
 - Redirects: `/governance` and `/governance/*` → `/hub/kommons` (Rails,
   301); `/hub/kommons/tree` → `/hub/kommons/lattice` (Rails);

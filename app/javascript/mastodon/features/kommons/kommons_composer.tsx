@@ -22,7 +22,6 @@ import {
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
-import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useAppDispatch } from 'mastodon/store';
@@ -98,7 +97,6 @@ interface ProposalDraftParams {
   kornerGlyph?: string;
   kornerIcon?: string;
   kornerPurpose?: string;
-  konnections?: KonnectTarget[];
 }
 
 // A draft hangs off the space or page it proposes a change to. Node ids
@@ -245,10 +243,11 @@ export const KommonsComposer: React.FC<Props> = ({
   const [kornerGlyph, setKornerGlyph] = useState('');
   const [kornerIcon, setKornerIcon] = useState('');
   const [kornerPurpose, setKornerPurpose] = useState('');
-  // What the new proposal will be Konnected to (decisions.md, 2026-10-23).
-  // Both kinds of proposal make a Proposal, so both Konnect.
+  // No Konnect row here (Kommons "'Konnect' Button", 2026-10-29): a
+  // proposal is Konnected from its own page. Opened from a record's Konnect
+  // picker (New proposal, `?konnect=`), the new proposal is still Konnected
+  // to that record, which is what the person asked for.
   const konnect = useKonnect('kommons');
-  const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go, here and on the
@@ -265,11 +264,10 @@ export const KommonsComposer: React.FC<Props> = ({
       setKornerGlyph(p.kornerGlyph ?? '');
       setKornerIcon(p.kornerIcon ?? '');
       setKornerPurpose(p.kornerPurpose ?? '');
-      restoreKonnect(p.konnections);
       setDocs([]);
       setError(null);
     },
-    [restoreKonnect],
+    [],
   );
 
   const draft = useDraft<ProposalDraftParams>({
@@ -286,9 +284,8 @@ export const KommonsComposer: React.FC<Props> = ({
             kornerGlyph,
             kornerIcon,
             kornerPurpose,
-            konnections: konnect.saved,
           }
-        : { title, body, steps, konnections: konnect.saved },
+        : { title, body, steps },
     },
     hasContent:
       (isNewKorner
@@ -533,7 +530,7 @@ export const KommonsComposer: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
-      konnect={konnect}
+      konnect={null}
     >
       {isNewKorner ? (
         // Korner Composer fields — manifest-shape hints captured as
