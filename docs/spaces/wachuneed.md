@@ -518,11 +518,117 @@ Old URLs (`/market`, `/hub/marketplace`, `/hub/martketplace`) 301 to
 `/hub/wachuneed`. The korner was briefly renamed mARTketplace in July 2026 and
 returned to Wachuneed, slug and all, on 2026-09-07.
 
+## Bookings (proposed)
+
+Not built. A design for Kommons "Goods & Services"
+(https://kronk.info/hub/kommons/p/117522445809187696, Tal, 2026-10-29):
+"Message the poster" is a cop out for a service; a member should see when a
+naturopath can take them, or book a ride at a time, from one place to
+another. Written down to agree the shape before any code.
+
+**Kinds of bookable service.** A service listing (`category: service`, on
+offer) picks one way to be booked, or none (today's Ask for this /
+Message the poster):
+
+- **Appointment**: the provider's open times, cut into slots of a set
+  length (a 60-minute session, a 30-minute lesson). The member picks a
+  free slot. Where it happens is the listing's Konnected Place, or "online",
+  or "at yours".
+- **Trip**: a time plus a **from** and a **to**, each picked on the Map
+  (a Place, or a pin dropped for this booking only). For rides, moving,
+  delivery. The provider sees both on a small map before confirming.
+- **Open request**: no calendar. The member proposes a day, a time and the
+  details in their own words; the provider confirms, or offers another
+  time. For work that doesn't fit slots (a commission, a garden job).
+
+This also answers "maybe people should choose their own form of shop": the
+shop stays one shop, and each item says how it is had (Ask for this, or one
+of the three above). A shop of only appointments reads as a booking page.
+
+**Availability (the provider).** On the item, in the shop item composer:
+weekly hours (days and times), slot length, a gap between bookings, how
+far ahead people can book, and how much notice is needed. Days off are
+blocks on top. Times are stored in UTC with the provider's time zone and
+shown to each member in theirs. Nothing reads anyone's outside calendar.
+
+**The flow.**
+
+1. The member picks a slot (Appointment), a time and the two places
+   (Trip), or writes their request (Open), plus the item's variations and
+   extras as today, and sends it. An Appointment slot is held while the
+   request waits, so two people can't ask for the same time.
+2. The provider confirms or declines in **Requests**, the same view and
+   cards as today's requests. Confirming can also be automatic, the
+   provider's choice per item.
+3. Either side can cancel up to the start, with an optional line. A
+   cancelled slot opens again. No fees, no penalties: Kronk takes no money.
+4. After the time passes the booking is just done; nothing asks for a
+   rating (no stars, as in Trust signals below).
+
+**Nudges.** Directed, like requests: the provider when asked, the member
+when confirmed, declined or offered another time, either side when the
+other cancels, and both a reminder before it starts (the day before and an
+hour before; to be confirmed). Reminders need a scheduled job, which Nudges
+doesn't have yet.
+
+**Kalendar.** A confirmed booking shows to the two of them only, in
+Kalendar's Me face, as a private entry, not a Kalendar `Event` (an event
+has a reach, a feed card and RSVPs; a booking has none). Undecided: whether
+Kalendar grows a "private to two" entry, or reads bookings directly.
+
+**Payment is out of scope.** As with everything in Wachuneed, Kronk holds
+no money, takes no deposit and settles nothing. A booking is two people
+agreeing a time; paying is between them, in their chat.
+
+**Kronk principles.**
+
+- Who can book is who can see the item (its reach and Krews), the same rule
+  as messaging. No booking reaches anyone outside that.
+- A provider's open times show only as free or taken. Nobody but the two
+  of them sees who booked what. No booking history is kept beyond what
+  each of them can see in Requests and Kalendar, and nothing is built for
+  counting, ranking or profiling people's bookings.
+- A from/to on a Trip is shared with the provider only, and only on that
+  booking; it never reaches the Map for anyone else.
+
+**Data sketch.**
+
+- `listings.booking_mode`: `none | appointment | trip | open`
+  (default `none`).
+- `listing_availabilities`: `listing_id`, `weekday`, `starts_at_minute`,
+  `ends_at_minute`, plus on the listing `slot_minutes`, `buffer_minutes`,
+  `book_ahead_days`, `notice_hours`, `time_zone`.
+- `listing_unavailabilities`: `listing_id`, `starts_at`, `ends_at` (days off).
+- Bookings extend `listing_offers` rather than adding a second request
+  table: `starts_at`, `ends_at`, `from_place_id`, `to_place_id` (Map
+  Places, or a booking-only point), `cancelled_by_id`, `cancelled_at`, and
+  states `pending | accepted | declined | withdrawn | cancelled | expired`.
+  A partial unique index on (`listing_id`, `starts_at`) over held states
+  keeps a slot to one booking.
+
+**Questions for Tal.**
+
+1. Is the three-way split (Appointment, Trip, Open request) the right
+   one, or is there a fourth (a class or workshop many people book into,
+   which overlaps Kalendar events)?
+2. Can one item offer more than one way (slots, or ask for another time)?
+3. Should the provider confirm every booking, or may they let bookings
+   confirm themselves?
+4. Is a group class one item with seats, or a Kalendar event that Konnects
+   to the shop item?
+5. Reminders: when, and can a member turn them off per booking?
+6. Should a Trip's from and to be any point on the map, or only Places?
+7. Does a confirmed booking go in Kalendar for both, and is a private
+   two-person entry in Kalendar acceptable?
+8. Cancelling: allowed any time up to the start, or can a provider set a
+   notice period (with no fee, since Kronk takes none)?
+
 ## Open
 
 - **Counter-offers.** A request is at the asked price; offering less
   (`listing_offers.amount_cents`) is not built.
-- **Interaction modes.** The design lets the seller pick per listing:
+- **Interaction modes.** Bookings (proposed, above) is the current
+  design for `book_service`. The older design lets the seller pick per listing:
   `buy_now`, `buy_or_bargain` (or nearest offer), `book_service`,
   `contact_to_discuss`, `workshop_join`. None exist in code. Undecided: whether
   a listing can switch mode, and how deep `book_service` and `workshop_join`
