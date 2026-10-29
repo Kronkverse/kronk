@@ -103,6 +103,15 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/rose')
   end
 
+  # Kommons "'Konnect' Button" (decisions.md, 2026-10-29): a proposal is
+  # Konnected from its page, so its composer has no Konnect row.
+  it 'has no Konnect row in the proposal composer' do
+    visit '/hub/kommons/composer'
+
+    expect(page).to have_css('.compose-shell', text: 'Open a Proposal')
+    expect(page).to have_no_css('.compose-shell .konnect-row')
+  end
+
   it 'proposes a new korner from the Hub without leaving it' do
     visit '/hub'
 

@@ -17,6 +17,19 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — No Konnect row in the proposal composer
+
+Kommons "'Konnect' Button" (Tal): "The proposal composer probably doesn't
+need a 'konnect' button." Writing a proposal is saying what should change;
+what it relates to is added after, on the proposal's page.
+
+**Decision:** the proposal composer passes `konnect={null}`, so it draws no
+Konnect row, and its drafts no longer keep Konnections. Proposals still take
+Konnections: the proposal page's Konnected section is unchanged, and a
+proposal made from a record's Konnect picker (New proposal) is still
+Konnected to that record. An exception to "One composer, one Konnect"
+(2026-10-23) and Korner Standard L14, for this composer only.
+
 ## 2026-10-29 — The proposal composer opens over the page you are on
 
 Starting a proposal from anywhere (the Ж menu's Propose a change, the Hub's
