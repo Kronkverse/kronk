@@ -250,7 +250,9 @@ The workflow for building a proposal:
    lines, and any other proposal link in the body, into
    `config/shipped_proposals.yaml`, and the production deploy runs
    `kommons:proposals:action_shipped`, which actions every listed proposal
-   still open or claimed. The proposer is asked to close it. A proposal whose
+   still open or claimed. The proposer is asked to close it; several of
+   theirs in one run come as one notice ("3 of your proposals were
+   actioned", `docs/spaces/nudges.md`, Grouped notices). A proposal whose
    PR carried no line is marked by hand: **Mark actioned** for the claimant,
    or `tootctl kommons action <id>`.
 5. **The proposer closes it,** which returns backers' stakes and pays the

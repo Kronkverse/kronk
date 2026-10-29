@@ -23,6 +23,15 @@ const messages = defineMessages({
     id: 'nudges.notification.system.proposal_update',
     defaultMessage: 'A proposal you are part of has moved on',
   },
+  proposalsActioned: {
+    id: 'nudges.notification.system.proposals_actioned',
+    defaultMessage: '{count} of your proposals were actioned',
+  },
+  proposalsActionedSubject: {
+    id: 'nudges.notification.system.proposals_actioned.subject',
+    defaultMessage:
+      '{title} and {others, plural, one {# other} other {# others}}',
+  },
   proposalChallenged: {
     id: 'nudges.notification.system.proposal_challenged',
     defaultMessage: 'Your proposal was challenged by a block vote',
@@ -81,9 +90,16 @@ export const SystemNoticeRow: React.FC<Props> = ({
         ? undefined
         : group.proposal?.proposal_id;
 
+  // A release that actioned several of your proposals at once sends them as
+  // one group (docs/spaces/nudges.md, Grouped notices). It is visited as a
+  // whole, by its group key.
+  const batched =
+    group.type === 'proposal_status_changed' && group.notifications_count > 1;
+  const visitKey = batched ? group.group_key : proposalId;
+
   const handleClick = useCallback(() => {
-    if (proposalId) onVisit(proposalId);
-  }, [proposalId, onVisit]);
+    if (visitKey) onVisit(visitKey);
+  }, [visitKey, onVisit]);
 
   if (group.type === 'email_confirmation_reminder') {
     const email = group.emailConfirmationEmail;
@@ -106,6 +122,37 @@ export const SystemNoticeRow: React.FC<Props> = ({
   }
 
   if (!proposalId) return null;
+
+  // A batch opens the board, where your actioned proposals are pinned to
+  // the top.
+  if (batched) {
+    const count = group.notifications_count;
+    const done = visited.has(group.group_key);
+    const title = group.proposal?.proposal_title;
+    return (
+      <NotificationRowShell
+        to='/hub/kommons'
+        fresh={fresh && !done}
+        quiet={done}
+        timestamp={group.latest_page_notification_at}
+        media={<SystemMark id='done_all' icon={DoneAllIcon} />}
+        sentence={
+          done
+            ? intl.formatMessage(messages.followedUp)
+            : intl.formatMessage(messages.proposalsActioned, { count })
+        }
+        subject={
+          title
+            ? intl.formatMessage(messages.proposalsActionedSubject, {
+                title,
+                others: count - 1,
+              })
+            : undefined
+        }
+        onClick={handleClick}
+      />
+    );
+  }
 
   const done = visited.has(proposalId);
   let sentence: string;
