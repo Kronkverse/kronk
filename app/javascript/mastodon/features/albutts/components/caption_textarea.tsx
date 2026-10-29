@@ -7,7 +7,7 @@ import {
   useState,
 } from 'react';
 
-import { apiRequestGet } from 'mastodon/api';
+import { apiSearchMatesToMention } from 'mastodon/api/accounts';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -111,19 +111,19 @@ export const CaptionTextarea = forwardRef<
     setSelectedIndex(0);
   }, []);
 
-  // Fetch account suggestions for the token under the caret. Hits
-  // the same endpoint the main compose slice uses, so it shares the
-  // server's throttle and cache.
+  // Fetch account suggestions for the token under the caret: your Mates
+  // only, from the same search the main composer uses
+  // (apiSearchMatesToMention says why).
   const fetchForToken = useCallback(async (token: string, start: number) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     try {
-      const data = await apiRequestGet<ApiAccountJSON[]>('v1/accounts/search', {
-        q: token.slice(1),
-        resolve: false,
-        limit: 6,
-      });
+      const data = await apiSearchMatesToMention(
+        token.slice(1),
+        6,
+        controller.signal,
+      );
       if (controller.signal.aborted) return;
       setSuggestions(data.map((account) => ({ kind: 'account', account })));
       setTokenStart(start);

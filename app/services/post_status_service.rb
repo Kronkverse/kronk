@@ -100,6 +100,8 @@ class PostStatusService < BaseService
     end
 
     publish_reply_nudge!
+    # ProcessMentionsService ran above without saving, so it told no one.
+    Kronk::MentionNudges.publish(@status, @status.active_mentions.includes(:account))
     publish_profile_post_nudge!
     add_profile_gallery!
   end
