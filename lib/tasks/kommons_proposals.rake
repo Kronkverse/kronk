@@ -276,6 +276,9 @@ namespace :kommons do
       path = Rails.root.join('config', 'shipped_proposals.yaml')
       shipped = (path.exist? && YAML.safe_load_file(path)) || {}
 
+      # One run is one batch: a proposer with several proposals in it gets one
+      # grouped notice, not one each (docs/spaces/nudges.md, Grouped notices).
+      batch = "shipped-#{Time.now.utc.to_i}"
       actioned = 0
       shipped.each do |version, ids|
         Array(ids).each do |id|
@@ -286,7 +289,7 @@ namespace :kommons do
           end
           next unless Proposal::ACTIVE_STATES.include?(proposal.status)
 
-          Kronk::ProposalStates.action!(proposal) unless dry_run
+          Kronk::ProposalStates.action!(proposal, batch: batch) unless dry_run
           actioned += 1
           log.call("##{id} (#{version}): #{proposal.title}#{' (dry-run)' if dry_run}")
         rescue => e

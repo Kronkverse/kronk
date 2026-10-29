@@ -133,6 +133,28 @@ activity lines are not in chats.
   **a new listen entry should come with its sentence**, and with a badge
   icon if its verb is an action people already know by one.
 
+### Grouped notices
+
+A release can action many proposals at once (`kommons:proposals:action_shipped`
+on deploy). Each one tells its proposer, and those notices are on the legacy
+store, so they use Mastodon's own grouping: a shared `group_key` on the
+`Notification` rows, which `/api/v2/notifications` returns as one group with a
+`notifications_count` when the client lists the type in `grouped_types`.
+
+- **Who picks the key.** `proposal_status_changed` is in
+  `Notification::Groups::BATCH_GROUPED_NOTIFICATION_TYPES`: groupable, but
+  `set_group_key!` leaves it alone. The writer chooses.
+  `Kronk::ProposalStates.action!(proposal, batch:)` keys the proposer's notice
+  `proposal_status_changed-actioned-<batch>`, and the rake task passes one
+  batch per run. Actioned any other way (the claimant in the app, `tootctl`),
+  it has no key and stands alone.
+- **The row.** One notice reads as before. Several read "5 of your proposals
+  were actioned", quoting the latest title "and 4 others", and open
+  `/hub/kommons`, where your actioned proposals are pinned to the top
+  (`system_notice_row.tsx`). Tapping it marks the whole group followed up.
+- **Push.** None: the Kommons notices are not pushed (see below), so a batch
+  sends nothing to the phone either.
+
 ### Surfaces
 
 **1. Pillar.** The Nudges pillar in `hub_switcher.tsx`. Its icon comes from

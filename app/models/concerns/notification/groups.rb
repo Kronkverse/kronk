@@ -3,8 +3,14 @@
 module Notification::Groups
   extend ActiveSupport::Concern
 
+  # Kronk notices whose group is chosen by whoever writes them, not by
+  # `set_group_key!`: a release actioning several of your proposals at once
+  # gives them one key (Kronk::ProposalStates.action!, `batch:`). One that
+  # stands alone has no key and is its own group.
+  BATCH_GROUPED_NOTIFICATION_TYPES = %i(proposal_status_changed).freeze
+
   # `set_group_key!` needs to be updated if this list changes
-  GROUPABLE_NOTIFICATION_TYPES = %i(favourite reblog follow admin.sign_up).freeze
+  GROUPABLE_NOTIFICATION_TYPES = (%i(favourite reblog follow admin.sign_up) + BATCH_GROUPED_NOTIFICATION_TYPES).freeze
   MAXIMUM_GROUP_SPAN_HOURS = 12
 
   included do
@@ -12,7 +18,7 @@ module Notification::Groups
   end
 
   def set_group_key!
-    return if filtered? || GROUPABLE_NOTIFICATION_TYPES.exclude?(type)
+    return if filtered? || GROUPABLE_NOTIFICATION_TYPES.exclude?(type) || BATCH_GROUPED_NOTIFICATION_TYPES.include?(type)
 
     type_prefix = case type
                   when :favourite, :reblog
