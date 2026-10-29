@@ -238,9 +238,16 @@ a finalize script on the Jitsi server hands the file to Kronk.
   A live set with a recording can't be deleted either (403), since that
   would take its recordings. Kuddles are retired, never deleted, so theirs
   stay. What still removes one: a file the recorder uploads over 4 GB is
-  refused and deleted, and purging an account deletes its Kuddles and live
-  sets, and so their recordings, by foreign key. There is no admin or
-  `tootctl` path; anything else is by hand on the server.
+  refused and deleted, and purging an account deletes its live sets, and so
+  their recordings, by foreign key. Its Kuddles stay (below). There is no
+  admin or `tootctl` path; anything else is by hand on the server.
+- **A Kuddle outlives its maker** (Tal, 2026-10-29: "Kuddles aren't owned by
+  anyone, the live sets are"; decisions.md). Purging the account that made
+  a Kuddle sets its `host_account_id` to null (the foreign key is
+  `ON DELETE SET NULL`); the Kuddle and its recordings stay. With no maker,
+  anyone signed in looks after it (`Kronk::KornerRecords`, so `is_host` is
+  true for everyone) and everyone in its call moderates it
+  (`Kronk::CallTarget`), so anyone in can start a recording.
 - **Where they show.** Under a Kuddle's call and in the Main Huddle's
   lobby (`<CallRecordings>`, `components/call_recordings.tsx`): each with
   its date, length, Play (inline) and Download. A video and its sound
@@ -336,7 +343,8 @@ The intended rule: every participant has the same powers (mute someone, remove
 someone from the current session), with no host role, so moderation is never a
 prize. No room locks or permanent bans; those would go through Krew governance.
 Kronk code does not implement any of this. With passes, the server makes a
-Kuddle's maker and staff (and a live set's host) moderators, which today
+Kuddle's maker and staff (everyone in a Kuddle whose maker's account is
+gone; and a live set's host) moderators, which today
 means they can record; Kronk's controls offer nothing else a moderator does.
 The manifest's `maintainers: [moderator]` is korner-level upkeep, not an
 in-session role.
@@ -357,7 +365,8 @@ longer makes Huddle-type events (its edit form lost the type toggle on
 - `huddle_sessions`: `title`, `description`, `icon` (no longer written or
   sent; older rows may hold an emoji), `scope`, `state`
   (`draft | scheduled | live | ended`), `session_url` (the Jitsi room key),
-  optional schedule, `host_account_id` (the creator for Rooms),
+  optional schedule, `host_account_id` (the creator for Rooms; null once
+  that account is purged),
   `last_active_at`, `retired_at`, optional `status_id`.
 - `huddle_participants`: one row per join, with `joined_at` / `left_at`.
 - `huddle_follows`: `account_id`, `huddle_session_id` (unique together),
@@ -375,9 +384,9 @@ longer makes Huddle-type events (its edit form lost the type toggle on
 - **Chat and reactions** were Jitsi toolbar buttons and went with the
   toolbar. Bringing them back means Kronk controls for them.
 - **Recordings left behind.** A `pending` row whose upload never finished
-  stays (nobody sees it). Deleting an account removes its Kuddles and live
-  sets at the database, and their recording rows with them, but not the
-  files. Both want a sweep.
+  stays (nobody sees it). Deleting an account removes its live sets at the
+  database, and their recording rows with them, but not the files. Both
+  want a sweep.
 - **Kalendar's Huddle events** still store a link straight to the Jitsi
   room (`events.huddle_url`), which a token-only server won't open.
 - **The Main Huddle row is unused.** The page hard-codes the Jitsi room. Either

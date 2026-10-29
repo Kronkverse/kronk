@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — Kuddles outlive their maker's account
+
+Tal, on purging an account also deleting the Kuddles it had started and
+their recordings: "Kuddles aren't owned by anyone, the live sets are".
+
+**Decision:** a Kuddle stays when the account that made it is purged.
+`huddle_sessions.host_account_id` is now nullable and its foreign key
+`ON DELETE SET NULL` (it was `CASCADE`), so the Kuddle and its recordings
+are kept with no maker. A Kuddle with no maker is looked after by anyone
+signed in (Konnecting it, taking off what others Konnected) and moderated
+by everyone in it, as the syntropic rule and Huddle's flat moderation
+(`docs/spaces/huddle.md`) ask. Live sets are owned: a purged host's live
+sets, and so their recordings, still go with the account.
+
+---
+
 ## 2026-10-29 — Rows may scroll sideways on a phone; the page doesn't
 
 Tal, asked whether Wachuneed's Offered, Desired and Shops rows could scroll

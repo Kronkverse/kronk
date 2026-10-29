@@ -30,7 +30,10 @@ class HuddleSession < ApplicationRecord
   # rows aren't retired on day zero of the reaper's first run.
   ROOM_IDLE_RETIRE_AFTER = 6.months
 
-  belongs_to :host_account, class_name: 'Account'
+  # Who made it. Nil once that account is purged: a Kuddle isn't owned by
+  # anyone, so it stays, and with no maker anyone signed in looks after it
+  # (Kronk::KornerRecords, Kronk::CallTarget; decisions.md, 2026-10-29).
+  belongs_to :host_account, class_name: 'Account', optional: true
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :huddle_session
   # `has_one :event` retired 2026-08-15 alongside the
   # `events.huddle_session_id` FK drop (Phase 6b). The link now lives
@@ -43,7 +46,7 @@ class HuddleSession < ApplicationRecord
   has_many   :huddle_follows, dependent: :delete_all
   # A Kuddle's recordings (docs/spaces/huddle.md, Recordings). Destroying
   # deletes their files; the app retires a Kuddle rather than deleting it,
-  # which keeps them (a purged account's Kuddles still go, by foreign key).
+  # which keeps them, and purging its maker leaves it too.
   has_many   :call_recordings, dependent: :destroy
 
   validates :title, presence: true, length: { maximum: 200 }

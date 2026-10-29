@@ -39,7 +39,11 @@ module Kronk
       'Question' => ->(question, account) { question.created_by_account_id == account.id },
       # Anyone in the Krew, not only its seeder.
       'Krew' => ->(krew, account) { krew.member?(account) },
-      'HuddleSession' => ->(session, account) { session.host_account_id == account.id },
+      # Its maker; once a Kuddle's maker is purged, anyone signed in (a
+      # Kuddle isn't owned by anyone, decisions.md 2026-10-29).
+      'HuddleSession' => lambda { |session, account|
+        session.host_account_id == account.id || (session.room? && session.host_account_id.nil?)
+      },
     }.freeze
 
     # What a search may turn up, where that's narrower than what a link

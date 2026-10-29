@@ -10,8 +10,9 @@
 #     tuning out of Huddle quiets its feed and nudges, not the room).
 #     Moderated by staff. Recordings: every signed-in member.
 #   * Kuddle: open to everyone signed in while it isn't retired (a retired
-#     one isn't there). Moderated by its maker and staff. Recordings: whoever
-#     can see the Kuddle.
+#     one isn't there). Moderated by its maker and staff; once the maker's
+#     account is purged, by everyone in it. Recordings: whoever can see the
+#     Kuddle.
 #   * Booth live set: whoever its reach allows (BoothLive#visible_to?), while
 #     it is live; its host from when it's planned until it ends. Moderated by
 #     the host and staff. Its recording is the host's to publish as a set, so
@@ -112,7 +113,7 @@ module Kronk
 
     def host?(account)
       case kind
-      when 'kuddle' then record.host_account_id == account.id
+      when 'kuddle' then record.host_account_id.nil? || record.host_account_id == account.id
       when 'booth_live' then record.account_id == account.id
       else false
       end
