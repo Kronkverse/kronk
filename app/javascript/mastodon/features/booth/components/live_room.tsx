@@ -170,6 +170,15 @@ const messages = defineMessages({
     id: 'booth.live.announced',
     defaultMessage: 'You’re live, and your feed has been told',
   },
+  goNote: {
+    id: 'booth.live.go_note',
+    defaultMessage: 'Nobody can listen in until you go live.',
+  },
+  goNoteJoined: {
+    id: 'booth.live.go_note_joined',
+    defaultMessage:
+      'You’re in the room. Nobody can listen in until you go live.',
+  },
   readyTitle: {
     id: 'booth.live.ready_title',
     defaultMessage: 'Before you go live',
@@ -567,14 +576,6 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
         actions={
           state !== 'ended' && (
             <KornerActionBar>
-              {owner && state === 'scheduled' && (
-                <KornerPill
-                  variant='primary'
-                  label={intl.formatMessage(messages.goLive)}
-                  onClick={handleGoLive}
-                  disabled={busy || !scriptReady}
-                />
-              )}
               {owner && state === 'live' && !joined && (
                 <KornerPill
                   variant='primary'
@@ -609,6 +610,26 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
           )
         }
       >
+        {/* Go live sits on its own at the top of the room, not in the
+            header's row of small actions, where a host in the room
+            missed it. */}
+        {owner && state === 'scheduled' && (
+          <section className='booth-live__go'>
+            <p className='booth-live__go-note'>
+              {intl.formatMessage(
+                joined ? messages.goNoteJoined : messages.goNote,
+              )}
+            </p>
+            <KornerPill
+              variant='primary'
+              className='booth-live__go-button'
+              label={intl.formatMessage(messages.goLive)}
+              onClick={handleGoLive}
+              disabled={busy || !scriptReady}
+            />
+          </section>
+        )}
+
         {state === 'ended' && owner && draftSetId && (
           <EmptyState
             title={intl.formatMessage(messages.setReady)}

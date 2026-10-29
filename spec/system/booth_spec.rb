@@ -72,6 +72,20 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
     expect(mine.reload.credits.map(&:label)).to eq ['Ash', 'Lena K']
   end
 
+  # docs/spaces/booth.md, The room: a host in the room missed Go live in the
+  # header's row of small actions, so it has its own panel at the top.
+  it 'gives the host of a planned set Go live on its own, not in the header' do
+    live = Fabricate(:booth_live, account: bob.account)
+
+    visit "/hub/booth/live/#{live.id}"
+
+    within('.booth-live__go') do
+      expect(page).to have_content('Nobody can listen in until you go live.')
+      expect(page).to have_button('Go live')
+    end
+    expect(page).to have_no_css('.korner-detail__actions button', text: 'Go live')
+  end
+
   # docs/spaces/booth.md, Albums.
   describe 'albums' do
     it 'lists an album\'s tracks on its page, in order' do
