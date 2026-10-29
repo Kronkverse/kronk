@@ -8,11 +8,11 @@ import { Link, useHistory } from 'react-router-dom';
 import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import { CallControls } from 'mastodon/components/call_controls';
-import { ComposeCheck } from 'mastodon/components/compose_fields';
 import {
   CallRecordingList,
   useCallRecordings,
 } from 'mastodon/components/call_recordings';
+import { ComposeCheck } from 'mastodon/components/compose_fields';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
