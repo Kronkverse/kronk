@@ -22,8 +22,12 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
       expect(page).to have_css('h1.space-header__title', text: 'All emergences')
       expect(page).to have_css('.space-header__tagline', text: 'Every emergence on Kronk')
     end
-    expect(page).to have_no_css('.space-view-picker')
-    expect(page).to have_no_css('[role="tablist"], [role="tab"]')
+    # The Frame's pillar bar is a tablist too; only the korner's own
+    # surface (the Stage) must carry none.
+    within('.kronk-stage') do
+      expect(page).to have_no_css('.space-view-picker')
+      expect(page).to have_no_css('[role="tablist"], [role="tab"]')
+    end
 
     find('.scope-title__nav--next').click
 
