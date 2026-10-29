@@ -52,7 +52,8 @@ sentences for a Booth live set and leaves every other call as Jitsi says it
   recording works. It sends the call's API commands and shows what the
   call's events report (mute, sharing, hand, tile view, recording, whether
   you moderate). While a call is recorded everyone in it sees "Recording"
-  at the start of the bar. Leave is there before the call comes up, so a
+  at the start of the bar, with how long it has run (from when their page
+  saw it start, so someone who joins later counts from joining). Leave is there before the call comes up, so a
   call that never loads can still be left. The Main Huddle and Kuddles
   also have **Sound input** (`inputPicker`): pick the microphone or sound
   card, with a level meter (`docs/spaces/booth.md`, Music sound, which
@@ -236,8 +237,10 @@ a finalize script on the Jitsi server hands the file to Kronk.
   and `Kronk::CallTarget` hold the rules.
 - **Where they show.** Under a Kuddle's call and in the Main Huddle's
   lobby (`<CallRecordings>`, `components/call_recordings.tsx`): each with
-  its date, Video or Sound only, and length, Play (inline), Download and
-  Delete for whoever may. Nothing shows when there are none.
+  its date, length, Play (inline), Download and Delete for whoever may. A
+  video and its sound file (a pair) show as one recording, with **Download
+  sound** beside Download, and Delete takes both; a file on its own says
+  Video or Sound only. Nothing shows when there are none.
 - **Video and audio.** A recording can come as a video file, an audio
   file, or both (`media`; each of a pair points at the other, `pair_id`).
   A live set's audio file becomes a draft set for its host

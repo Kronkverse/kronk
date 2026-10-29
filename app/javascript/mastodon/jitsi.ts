@@ -137,6 +137,9 @@ export interface CallState {
   // In the conference itself, past Jitsi's pre-join screen. A call that
   // starts something on joining (a live set's recording) waits for it.
   inConference: boolean;
+  // When this page saw the recording start (ms), null while not recording.
+  // Someone who joins a call already being recorded counts from joining.
+  recordingSince: number | null;
   // Record is offered only on a server that knows who moderates and with
   // somewhere to keep the file (the pass's `recording`).
   canRecord: boolean;
@@ -369,6 +372,7 @@ export function createCall({
     recording: false,
     moderator: pass.moderator,
     inConference: false,
+    recordingSince: null,
     canRecord: pass.recording && pass.jwt !== null,
     musicSound: music ? true : null,
     devicesVersion: 0,
@@ -466,7 +470,12 @@ export function createCall({
     },
     recordingStatusChanged: (data) => {
       const { on, mode } = fields(data);
-      if (mode === undefined || mode === 'file') update({ recording: !!on });
+      if (mode === undefined || mode === 'file') {
+        update({
+          recording: !!on,
+          recordingSince: on ? (state.recordingSince ?? Date.now()) : null,
+        });
+      }
     },
     participantRoleChanged: (data) => {
       const { id, role } = fields(data);

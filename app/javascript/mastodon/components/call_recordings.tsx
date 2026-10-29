@@ -24,6 +24,14 @@ const messages = defineMessages({
   },
   hide: { id: 'calls.recordings.hide', defaultMessage: 'Hide' },
   download: { id: 'calls.recordings.download', defaultMessage: 'Download' },
+  downloadSound: {
+    id: 'calls.recordings.download_sound',
+    defaultMessage: 'Download sound',
+  },
+  downloadSoundLabel: {
+    id: 'calls.recordings.download_sound_label',
+    defaultMessage: 'Download the sound of the recording from {date}',
+  },
   downloadLabel: {
     id: 'calls.recordings.download_label',
     defaultMessage: 'Download the recording from {date}',
@@ -109,10 +117,40 @@ export const recordingLength = (seconds: number | null): string | null => {
   return `${h > 0 ? `${h}:` : ''}${mm}:${String(s).padStart(2, '0')}`;
 };
 
+// One recording as people see it: the video, with its sound file when
+// Kronk kept both (`pair_id`), or a file on its own.
+interface RecordingEntry {
+  recording: CallRecording;
+  sound: CallRecording | null;
+}
+
+const recordingEntries = (recordings: CallRecording[]): RecordingEntry[] => {
+  const byId = new Map(recordings.map((r) => [r.id, r]));
+  const shown = new Set<string>();
+  const entries: RecordingEntry[] = [];
+  for (const r of recordings) {
+    if (shown.has(r.id)) continue;
+    shown.add(r.id);
+    const other = r.pair_id ? byId.get(r.pair_id) : undefined;
+    if (other && !shown.has(other.id) && other.media !== r.media) {
+      shown.add(other.id);
+      entries.push(
+        r.media === 'audio'
+          ? { recording: other, sound: r }
+          : { recording: r, sound: other },
+      );
+    } else {
+      entries.push({ recording: r, sound: null });
+    }
+  }
+  return entries;
+};
+
 const RecordingItem: React.FC<{
   recording: CallRecording;
+  sound: CallRecording | null;
   onRemoved: (id: string) => void;
-}> = ({ recording, onRemoved }) => {
+}> = ({ recording, sound, onRemoved }) => {
   const intl = useIntl();
   const [confirmDialog, confirm] = useConfirmDialog();
   const [playing, setPlaying] = useState(false);
@@ -134,6 +172,9 @@ const RecordingItem: React.FC<{
     // A signed URL that answers "save as", so the page stays put.
     window.location.assign(recording.download_url);
   }, [recording.download_url]);
+  const handleDownloadSound = useCallback(() => {
+    if (sound) window.location.assign(sound.download_url);
+  }, [sound]);
 
   const handleRemove = useCallback(() => {
     void (async () => {
@@ -144,23 +185,27 @@ const RecordingItem: React.FC<{
         destructive: true,
       });
       if (!ok) return;
-      try {
-        await apiRequestDelete(`v1/calls/recordings/${recording.id}`);
-        onRemoved(recording.id);
-      } catch {
-        // Still there; the row stays.
+      // Deleting a recording deletes its sound file too.
+      for (const file of sound ? [recording, sound] : [recording]) {
+        try {
+          await apiRequestDelete(`v1/calls/recordings/${file.id}`);
+          onRemoved(file.id);
+        } catch {
+          // Still there; it stays listed.
+        }
       }
     })();
-  }, [confirm, intl, recording.id, onRemoved]);
+  }, [confirm, intl, recording, sound, onRemoved]);
 
   return (
     <li className='call-recordings__item'>
       <KornerMeta
         items={[
           date,
-          intl.formatMessage(
-            recording.media === 'audio' ? messages.audio : messages.video,
-          ),
+          !sound &&
+            intl.formatMessage(
+              recording.media === 'audio' ? messages.audio : messages.video,
+            ),
           length && intl.formatMessage(messages.length, { length }),
         ]}
       />
@@ -202,6 +247,15 @@ const RecordingItem: React.FC<{
           ariaLabel={intl.formatMessage(messages.downloadLabel, { date })}
           onClick={handleDownload}
         />
+        {sound && (
+          <KornerPill
+            label={intl.formatMessage(messages.downloadSound)}
+            ariaLabel={intl.formatMessage(messages.downloadSoundLabel, {
+              date,
+            })}
+            onClick={handleDownloadSound}
+          />
+        )}
         {recording.can_delete && (
           <KornerPill
             variant='destructive'
@@ -231,10 +285,11 @@ export const CallRecordingList: React.FC<{
         {intl.formatMessage(messages.heading)}
       </h3>
       <ul className='call-recordings__list'>
-        {recordings.map((recording) => (
+        {recordingEntries(recordings).map(({ recording, sound }) => (
           <RecordingItem
             key={recording.id}
             recording={recording}
+            sound={sound}
             onRemoved={onRemoved}
           />
         ))}
