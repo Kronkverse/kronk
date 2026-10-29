@@ -19,6 +19,9 @@ class Api::V1::MediaTagsController < Api::BaseController
   def create
     tagged_account = Account.find_by(id: params[:account_id])
     return render json: { error: 'Account not found' }, status: 422 if tagged_account.nil?
+    # Only yourself or one of your Mates (Tal 2026-10-29, as with @mentions;
+    # docs/spaces/feed.md, Mentions). Tags made before stay.
+    return render json: { error: I18n.t('kronk.media_tags.mates_only') }, status: 422 unless taggable?(tagged_account)
 
     status = @media_attachment.status
     is_owner = @media_attachment.account_id == current_account.id
@@ -62,6 +65,10 @@ class Api::V1::MediaTagsController < Api::BaseController
   end
 
   private
+
+  def taggable?(account)
+    account.id == current_account.id || current_account.mate?(account)
+  end
 
   def set_media_attachment
     @media_attachment = MediaAttachment.find(params[:medium_id])

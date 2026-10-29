@@ -159,8 +159,9 @@ export const apiGetNudgeThread = (id: string) =>
   }>(`v1/accounts/${id}/nudge_thread`);
 
 // Who an @ can suggest, in every box that can mention someone (the composer,
-// comments, album captions): your Mates only, never everyone (Tal
-// 2026-10-29: "users should only be able to tag their mates"). The server
+// comments, album captions), and who a photo's or Moment's Tag people picker
+// offers: your Mates only, never everyone (Tal 2026-10-29: "users should
+// only be able to tag their mates"). The server
 // searches them (GET /api/v1/nudges/mates?q=), names that start with `q`
 // first, so a Mate past the first page is still found.
 export const apiSearchMatesToMention = (

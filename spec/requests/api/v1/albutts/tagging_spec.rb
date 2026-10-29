@@ -8,6 +8,13 @@ RSpec.describe 'Albutts tagging', :inline_jobs do
   let(:token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
   let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
   let!(:ana)    { Fabricate(:user, account_attributes: { username: 'ana' }).account }
+  let!(:bo)     { Fabricate(:user, account_attributes: { username: 'bo' }).account }
+
+  # Only Mates are told (Tal 2026-10-29): ana is one, bo isn't.
+  before do
+    user.account.follow!(ana)
+    ana.follow!(user.account)
+  end
 
   def tagged(account)
     Nudges::Event.where(recipient_account_id: account.id, source_korner_slug: 'albutts', verb: 'tagged')
@@ -33,6 +40,12 @@ RSpec.describe 'Albutts tagging', :inline_jobs do
 
       put "/api/v1/albutts/albums/#{album.id}", headers: headers, params: { album: { description: 'At the coast with @Ana' } }
       expect(tagged(ana).count).to eq 1
+    end
+
+    it 'does not tell someone who is not your Mate' do
+      create_album('With @bo at the coast')
+
+      expect(tagged(bo)).to be_empty
     end
 
     it 'does not tell someone who cannot open the album, or yourself' do
@@ -82,6 +95,14 @@ RSpec.describe 'Albutts tagging', :inline_jobs do
       travel(Albutts::PublishPhotoBatch::QUIET + 1.minute) { add_photo(album, '@ana, the next day') }
 
       expect(photo_tags(ana).count).to eq 2
+    end
+
+    it 'does not tell someone who is not your Mate' do
+      album = create_album('Coast')
+
+      add_photo(album, '@bo on the rocks')
+
+      expect(photo_tags(bo)).to be_empty
     end
 
     it 'keeps a tag in the album description apart' do

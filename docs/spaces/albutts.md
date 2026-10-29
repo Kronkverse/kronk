@@ -291,8 +291,11 @@ An @name tags someone (Tal, 2026-10-13). There is no separate people field.
   notice says "tagged you in an album" (verb `tagged`), sent once when a
   name first appears (`Api::V1::Albutts::AlbumsController#notify_tagged!`),
   and opens the album.
-- Only someone who can open the album is told. Muting "Someone tags you in
-  an album or its photos" silences both.
+- **Mates only** (Tal, 2026-10-29; feed.md, Mentions). The box suggests
+  only your Mates, and only a Mate who can open the album is told, in a
+  caption or the description (`Albutts::TagNudges`, `notify_tagged!`).
+  Anyone else's @name is just text. Muting "Someone tags you in an album or
+  its photos" silences both.
 - A name added later by editing a caption is still told as an ordinary
   mention ("mentioned you"), through `ProcessMentionsService`.
 - **On your profile** (Tal, 2026-10-21, mangobee's proposal "Tagging

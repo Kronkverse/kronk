@@ -1657,6 +1657,8 @@ en:
     map:
       presence:
         place_failed: Could not drop your pin. Try again in a moment.
+    media_tags:
+      mates_only: You can only tag your Mates.
     signup:
       account:
         avatar_hint: Optional. You can add one any time.
