@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — Tag only your Mates
+
+Tal: "users should only be able to tag their mates." Kronk holds to "No
+reach without consent": a mention reached anyone, since @-suggestions listed
+every member (Mates first) and a typed handle told whoever it named.
+
+**Decision:** every @-suggestion (the composer, comment boxes, album
+captions) lists your Mates only, searched on the server
+(`GET /api/v1/nudges/mates?q=`). The "mentioned you" nudge goes only to Mates
+of the author who can open the post (`Kronk::MentionNudges`), for new posts
+too: since #2386 a new post's mentions nudged no one at all. A non-Mate's
+handle typed by hand stays a mention link and still gets the engine's legacy
+`mention` notification, which shows only in the legacy archive and doesn't
+push. Taking it out means changing Mastodon's `ProcessMentionsService` and
+its specs, and is left open.
+
 ## 2026-10-29 — Composer options are kit pills
 
 Kommons "Composers are too busy" (Tal, 2026-10-21, from Albutts): the drafts

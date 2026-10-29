@@ -9,9 +9,18 @@ RSpec.describe ProcessMentionsService do
   let(:bob)   { Fabricate(:user, account_attributes: { username: 'bob' }).account }
   let(:carol) { Fabricate(:user, account_attributes: { username: 'carol' }).account }
 
+  let(:dave)  { Fabricate(:user, account_attributes: { username: 'dave' }).account }
+
+  # Only Mates are told (Kronk::MentionNudges, decisions.md 2026-10-29).
+  def mates!(one, two)
+    one.follow!(two)
+    two.follow!(one)
+  end
+
   before do
-    bob
-    carol
+    mates!(alice, bob)
+    mates!(alice, carol)
+    dave
     allow(Kronk::StatusNudges).to receive(:publish)
   end
 
@@ -25,6 +34,23 @@ RSpec.describe ProcessMentionsService do
     subject.call(status)
 
     expect(Kronk::StatusNudges).to nudged(bob).once
+  end
+
+  it 'nudges no one who is not a Mate of the author' do
+    status = Fabricate(:status, account: alice, text: 'Hello @bob and @dave')
+
+    subject.call(status)
+
+    expect(Kronk::StatusNudges).to nudged(bob).once
+    expect(Kronk::StatusNudges).to_not nudged(dave)
+  end
+
+  it 'nudges no one about a post they cannot open' do
+    status = Fabricate(:status, account: alice, visibility: :self_only, text: 'Note to self about @bob')
+
+    subject.call(status)
+
+    expect(Kronk::StatusNudges).to_not nudged(bob)
   end
 
   context 'when a post is edited' do

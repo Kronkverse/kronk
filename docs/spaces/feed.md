@@ -113,10 +113,10 @@ one (Tal, 2026-09-14).
 - **Nothing tags the person answered.** Neither the composer nor the comment
   box under a post puts "@name" in front; the parent's author is told by the
   reply itself (`status.replied`, `PostStatusService#publish_reply_nudge!`).
-- **You can tag someone in a comment.** Typing `@` and a name in either
-  comment box under a post offers matching people, your Mates first, and
-  picking one puts their handle in (`CaptionTextarea`, the same box album
-  captions use).
+- **You can tag a Mate in a comment.** Typing `@` and a name in either
+  comment box under a post offers your matching Mates, and picking one puts
+  their handle in (`CaptionTextarea`, the same box album captions use). See
+  [Mentions](#mentions).
 - **A korner post opens as its card.** The post page picks the same card the
   feed does (`components/korner_cards.tsx`) and leaves the text out with it.
 - **Long text folds behind _Read more_ in the feed, and opens in place.** The
@@ -124,6 +124,26 @@ one (Tal, 2026-09-14).
   post's own page never folds (`detailed` on `components/status.jsx`).
 - **The home feed shows no replies at all**
   (`FeedManager#filter_from_home`). Search labels a comment as a Comment.
+
+### Mentions
+
+**You can only tag your Mates** (Tal, 2026-10-29: "users should only be able
+to tag their mates").
+
+- **Suggestions are your Mates only.** Typing `@` and a name in the
+  composer, a comment box or an album caption offers your Mates whose
+  username or display name has it, names that start with it first
+  (`apiSearchMatesToMention` → `GET /api/v1/nudges/mates?q=`). Nobody else
+  is suggested.
+- **Only a Mate is told.** The "mentioned you" nudge (`status.mentioned`,
+  `Kronk::MentionNudges`) goes to Mates of the author who can open the post,
+  once each: for a new post from `PostStatusService`, for the people an edit
+  newly names from `ProcessMentionsService`. Typing a non-Mate's handle
+  nudges no one.
+- **Still Mastodon underneath.** A typed handle of any member still becomes a
+  mention link in the post, and the engine still writes a legacy `mention`
+  notification for it. That one shows only in the legacy archive, not in
+  Nudges, and doesn't push (`Nudges::PushPreferences.skip_legacy_push?`).
 
 ### The composer's draft
 
