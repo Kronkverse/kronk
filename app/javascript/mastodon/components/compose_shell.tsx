@@ -40,8 +40,9 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // `konnect.commit(slug, id)` once its create succeeds. The prop is required,
 // so a composer can't leave Konnect out by forgetting it; `null` is for the
 // composers that make nothing new to Konnect: editing a record (Konnect it
-// from its page), adding to one that exists (photos to an album), and
-// korners that opt out (`no_attachments:`, e.g. Moments).
+// from its page), adding to one that exists (photos to an album),
+// korners that opt out (`no_attachments:`, e.g. Moments), and a Kommons
+// proposal, which is Konnected from its page (decisions.md, 2026-10-29).
 //
 // Multi-composer korners (Maps: Post + Place; Albutts: Album +
 // Contribute) can render a small chip pair via the `switcher` slot
