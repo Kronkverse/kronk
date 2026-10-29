@@ -253,7 +253,13 @@
 // Mobile: the sidebar is hidden and the grid collapses to one column,
 // so the Stage cell already spans full width. Keep it in row 2 only,
 // leaving the row-3 track for the fixed BottomBand tab-bar.
-@container frame (width <= 889px) {
+// A media query, not `@container frame`: the grid tracks, the right
+// band and the chrome's right fade all switch on the viewport (which
+// includes the page scrollbar), while the frame container is the
+// viewport minus that scrollbar. With a container query here, a window
+// 890px to ~905px wide kept the rail and its fade but let the Stage
+// span the whole width, so the last column of tiles ran under the fade.
+@media (width <= 889px) {
   .kronk-frame:has(.kronk-stage) .kronk-frame__stage {
     grid-column: 1 / -1;
     grid-row: 2;
