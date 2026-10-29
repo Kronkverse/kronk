@@ -36,6 +36,27 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_checked_field("Something I'm looking for")
   end
 
+  # Kommons "Home Page" (117522482475089755).
+  it 'opens on a row each of Offered, Desired and Shops, each with See all' do
+    ana = Fabricate(:account, username: 'ana')
+    Listing.create!(account: ana, title: 'Clay mug', category: 'creation', state: 'live')
+    Listing.create!(account: ana, title: 'A ladder', category: 'goods', kind: 'wanted', state: 'live')
+
+    visit '/hub/wachuneed'
+
+    within('section[aria-label="Offered"]') { expect(page).to have_css('.space-grid--row .space-card', text: 'Clay mug') }
+    within('section[aria-label="Desired"]') do
+      expect(page).to have_css('.space-grid--row .space-card', text: 'A ladder')
+      expect(page).to have_no_content('Clay mug')
+    end
+    # No shop yet, so no Shops row.
+    expect(page).to have_no_css('section[aria-label="Shops"]')
+
+    within('section[aria-label="Offered"]') { click_on 'See all' }
+    expect(page).to have_current_path('/hub/wachuneed/offered')
+    expect(page).to have_css('.space-grid .space-card', text: 'Clay mug')
+  end
+
   it 'takes the old section addresses to the new ones' do
     visit '/hub/wachuneed/wachugot'
 
@@ -68,12 +89,12 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         Listing.create!(account: bob.account, title: 'Loose candle', category: 'goods', state: 'live')
       end
 
-      it 'shows the shop across the top of Offered and its listings under their sections' do
+      it 'shows the shop in the Shops row of the landing and its listings under their sections' do
         visit '/hub/wachuneed'
 
         # A card, as in Shops, not a pill.
-        within('.wachuneed-shops') do
-          expect(page).to have_css('.space-card', text: '2 listings')
+        within('section[aria-label="Shops"]') do
+          expect(page).to have_css('.space-grid--row .space-card', text: '2 listings')
           click_on 'Bob Aromas'
         end
 
