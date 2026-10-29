@@ -11,4 +11,6 @@ export interface Alert {
   action?: TranslatableString;
   values?: TranslatableValues;
   onClick?: () => void;
+  /** Set by showAlertForError. Only one error alert is shown at a time. */
+  error?: boolean;
 }
