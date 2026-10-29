@@ -216,6 +216,8 @@
   "albutts.title": "Albutts",
   "alert.rate_limited.message": "Please retry after {retry_time, time, medium}.",
   "alert.rate_limited.title": "Rate limited",
+  "alert.server_error.message": "The server didn’t answer. Try again shortly.",
+  "alert.server_error.title": "Kronk is having a moment",
   "alert.unexpected.message": "An unexpected error occurred.",
   "alert.unexpected.title": "Oops!",
   "all_settings_footer.link": "All settings",

@@ -25,6 +25,14 @@ const messages = defineMessages({
     id: 'alert.rate_limited.message',
     defaultMessage: 'Please retry after {retry_time, time, medium}.',
   },
+  serverTitle: {
+    id: 'alert.server_error.title',
+    defaultMessage: 'Kronk is having a moment',
+  },
+  serverMessage: {
+    id: 'alert.server_error.message',
+    defaultMessage: 'The server didn’t answer. Try again shortly.',
+  },
 });
 
 export const dismissAlert = createAction<{ key: number }>('alerts/dismiss');
@@ -53,12 +61,24 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
         values: {
           retry_time: new Date(headers['x-ratelimit-reset'] as string),
         },
+        error: true,
+      });
+    }
+
+    // Gateway and server failures (502 while the server restarts, etc.)
+    // carry no useful body; a bare status code isn't something people read.
+    if (status >= 500 && !data.error) {
+      return showAlert({
+        title: messages.serverTitle,
+        message: messages.serverMessage,
+        error: true,
       });
     }
 
     return showAlert({
       title: `${status}`,
-      message: data.error ?? statusText,
+      message: data.error ?? (statusText || messages.unexpectedMessage),
+      error: true,
     });
   }
 
@@ -72,5 +92,6 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
   return showAlert({
     title: messages.unexpectedTitle,
     message: messages.unexpectedMessage,
+    error: true,
   });
 };
