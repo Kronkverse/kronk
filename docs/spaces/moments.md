@@ -27,7 +27,9 @@ replies; that Status never appears in a feed, on a profile or in search
 Plus an optional caption (up to 500 chars). Still photos can carry **text
 overlays** (`text_overlays` JSONB, up to 12, shape-checked by the model),
 and people can be **tagged** on a photo, which sends them a `media_tag`
-notification (`MomentsController#notify_media_tags!`).
+notification (`MomentsController#notify_media_tags!`). You can tag only
+yourself and your Mates: the picker offers your Mates only and the server
+refuses anyone else (Tal, 2026-10-29; feed.md, Mentions).
 
 Moments aren't Kategory-tagged and don't federate.
 

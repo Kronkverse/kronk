@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import api from 'mastodon/api';
+import { apiSearchMatesToMention } from 'mastodon/api/accounts';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
@@ -16,7 +16,8 @@ import { Icon } from 'mastodon/components/icon';
 // submit. No pending_media_tags global store here.
 //
 // UI is a floating card, positioned inside the composer hero by its
-// parent. Search debounces at 250ms against /api/v1/accounts/search.
+// parent. Search debounces at 250ms and finds your Mates only
+// (apiSearchMatesToMention).
 
 export interface TaggedAccountLite {
   accountId: string;
@@ -31,7 +32,7 @@ const messages = defineMessages({
   },
   placeholder: {
     id: 'moments.tag_people.placeholder',
-    defaultMessage: 'Search for a person…',
+    defaultMessage: 'Search your Mates…',
   },
   done: {
     id: 'moments.tag_people.done',
@@ -153,13 +154,11 @@ export const MomentsTagPeoplePanel: React.FC<Props> = ({
       searchTimer.current = setTimeout(() => {
         searchIdRef.current += 1;
         const mySearchId = searchIdRef.current;
-        void api()
-          .get<ApiAccountJSON[]>('/api/v1/accounts/search', {
-            params: { q: trimmed, limit: 5, resolve: false },
-          })
-          .then((r) => {
+        // Your Mates only (apiSearchMatesToMention says why).
+        apiSearchMatesToMention(trimmed, 5)
+          .then((accounts) => {
             if (mySearchId !== searchIdRef.current) return;
-            setSuggestions(r.data);
+            setSuggestions(accounts);
             setSearching(false);
           })
           .catch(() => {

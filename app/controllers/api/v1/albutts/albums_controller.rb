@@ -157,14 +157,16 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
 
   # Tagging people in an album (Kommons #117430484820960056): an @name in
   # the description tells that person, once, when the name first appears.
-  # Only someone who can open the album is told; a name that matches nobody
-  # here is just text. A photo's caption needs none of this: the photo is a
+  # Only a Mate who can open the album is told; any other name is just
+  # text. A photo's caption needs none of this: the photo is a
   # post, and a post's mentions already notify.
   def notify_tagged!(before:)
     already = tagged_accounts(before).map(&:id)
 
     tagged_accounts(@album.description).each do |account|
       next if account.id == current_account.id || already.include?(account.id)
+      # Only a Mate is told (Tal 2026-10-29: you tag only your Mates).
+      next unless current_account.mate?(account)
       next unless @album.reload.visible_to?(account)
 
       # Straight to the router, as a tag in a photo's caption is

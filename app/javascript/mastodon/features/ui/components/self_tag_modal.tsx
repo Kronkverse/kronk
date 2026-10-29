@@ -3,7 +3,7 @@ import { useState, useCallback, useRef, memo, useEffect } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { closeModal } from 'mastodon/actions/modal';
-import api from 'mastodon/api';
+import { apiSearchMatesToMention } from 'mastodon/api/accounts';
 import {
   apiAddMediaTag,
   apiGetMediaTags,
@@ -18,7 +18,7 @@ const messages = defineMessages({
   title: { id: 'tag_media.title', defaultMessage: 'Tag people' },
   searchPlaceholder: {
     id: 'tag_media.search',
-    defaultMessage: 'Search for a person…',
+    defaultMessage: 'Search your Mates…',
   },
   tagMyself: { id: 'tag_media.tag_myself', defaultMessage: 'Tag myself' },
   remove: { id: 'tag_media.remove', defaultMessage: 'Remove' },
@@ -107,12 +107,10 @@ export const SelfTagModal: React.FC<{
       }
       setSearching(true);
       searchTimeout.current = setTimeout(() => {
-        void api()
-          .get<ApiAccountJSON[]>('/api/v1/accounts/search', {
-            params: { q: value, limit: 5 },
-          })
-          .then((r) => {
-            setSuggestions(r.data);
+        // Your Mates only (apiSearchMatesToMention says why).
+        apiSearchMatesToMention(value.trim(), 5)
+          .then((accounts) => {
+            setSuggestions(accounts);
             setSearching(false);
           })
           .catch(() => {
