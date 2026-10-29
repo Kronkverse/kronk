@@ -564,6 +564,11 @@ containing block for `position: fixed` descendants.
   row stacks. The rule on `.kronk-frame` itself has to be a media query (an
   element can't query its own container); descendants use
   `@container frame (width <= 889px)`. Some band rules are still plain `@media`.
+  Anything that decides whether the right rail's track exists (the grid
+  tracks, the RightBand, the chrome's right fade, the Stage cell's column)
+  must use the same `@media` query: the container is the viewport minus the
+  page scrollbar, so mixing the two leaves a band of widths (890px to about
+  905px) where the rail and its fade show but the Stage runs underneath them.
 - **≤ 629px** also hides the top rail.
 
 Wider breakpoints are the korner's business.
