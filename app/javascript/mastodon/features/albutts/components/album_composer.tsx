@@ -32,6 +32,7 @@ import {
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { KrewMultiSelect } from 'mastodon/components/krew_multi_select';
 import type {
   KrewOption,
@@ -1409,13 +1410,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                 })}
               </ComposeHint>
               <div className='albutts-composer__inline-actions'>
-                <button
-                  type='button'
-                  className='albutts-btn albutts-btn--ghost'
+                <KornerPill
+                  label={intl.formatMessage(messages.krewAlbumOff)}
                   onClick={handleKrewAlbumOff}
-                >
-                  {intl.formatMessage(messages.krewAlbumOff)}
-                </button>
+                />
               </div>
             </>
           )}
@@ -1430,40 +1428,25 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
             </ComposeHint>
           ) : (
             <>
-              <div
-                className='albutts-composer__contribution-chips'
-                role='radiogroup'
-              >
-                <button
-                  type='button'
-                  role='radio'
-                  aria-checked={addMode === 'me'}
-                  className={`albutts-composer__contribution-chip${addMode === 'me' ? ' albutts-composer__contribution-chip--selected' : ''}`}
+              <div className='albutts-composer__choices'>
+                <KornerPill
+                  label={intl.formatMessage(messages.contributionMe)}
+                  active={addMode === 'me'}
                   onClick={handleContributionMe}
                   disabled={!!createdAlbum}
-                >
-                  {intl.formatMessage(messages.contributionMe)}
-                </button>
-                <button
-                  type='button'
-                  role='radio'
-                  aria-checked={contributionOpen}
-                  className={`albutts-composer__contribution-chip${contributionOpen ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                />
+                <KornerPill
+                  label={intl.formatMessage(messages.contributionOpen)}
+                  active={contributionOpen}
                   onClick={handleContributionOpen}
                   disabled={!!createdAlbum}
-                >
-                  {intl.formatMessage(messages.contributionOpen)}
-                </button>
-                <button
-                  type='button'
-                  role='radio'
-                  aria-checked={chosenAdd}
-                  className={`albutts-composer__contribution-chip${chosenAdd ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                />
+                <KornerPill
+                  label={intl.formatMessage(messages.contributionRestricted)}
+                  active={chosenAdd}
                   onClick={handleContributionRestricted}
                   disabled={!!createdAlbum}
-                >
-                  {intl.formatMessage(messages.contributionRestricted)}
-                </button>
+                />
               </div>
               {chosenAdd && (
                 <ComposeField
@@ -1502,15 +1485,12 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
             })}
           </ComposeHint>
           <div className='albutts-composer__inline-actions'>
-            <button
-              type='button'
-              className='albutts-btn albutts-btn--ghost'
-              onClick={handleRetryFailed}
-            >
-              {intl.formatMessage(messages.retryUploads, {
+            <KornerPill
+              label={intl.formatMessage(messages.retryUploads, {
                 count: uploadFailedCount,
               })}
-            </button>
+              onClick={handleRetryFailed}
+            />
           </div>
         </>
       )}
@@ -1578,15 +1558,12 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
       {createdAlbum && failedCount > 0 && !pending && (
         <div className='albutts-composer__inline-actions'>
-          <button
-            type='button'
-            className='albutts-btn albutts-btn--ghost'
-            onClick={handleRetryFailed}
-          >
-            {intl.formatMessage(messages.retryFailed, {
+          <KornerPill
+            label={intl.formatMessage(messages.retryFailed, {
               count: failedCount,
             })}
-          </button>
+            onClick={handleRetryFailed}
+          />
         </div>
       )}
     </ComposeShell>
@@ -1819,28 +1796,22 @@ const KrewAudienceField: React.FC<{
 
   return (
     <ComposeSection title={intl.formatMessage(messages.krewAudience)}>
-      <div className='albutts-composer__contribution-chips' role='radiogroup'>
-        <button
-          type='button'
-          role='radio'
-          aria-checked={value === 'krew'}
-          className={`albutts-composer__contribution-chip${value === 'krew' ? ' albutts-composer__contribution-chip--selected' : ''}`}
+      <div className='albutts-composer__choices'>
+        <KornerPill
+          label={intl.formatMessage(messages.krewAudienceKrew, {
+            krew: krew.name,
+          })}
+          active={value === 'krew'}
           onClick={chooseKrew}
           disabled={disabled}
-        >
-          {intl.formatMessage(messages.krewAudienceKrew, { krew: krew.name })}
-        </button>
+        />
         {canEveryone && (
-          <button
-            type='button'
-            role='radio'
-            aria-checked={value === 'everyone'}
-            className={`albutts-composer__contribution-chip${value === 'everyone' ? ' albutts-composer__contribution-chip--selected' : ''}`}
+          <KornerPill
+            label={intl.formatMessage(messages.krewAudienceEveryone)}
+            active={value === 'everyone'}
             onClick={chooseEveryone}
             disabled={disabled}
-          >
-            {intl.formatMessage(messages.krewAudienceEveryone)}
-          </button>
+          />
         )}
       </div>
       {!canEveryone && (
