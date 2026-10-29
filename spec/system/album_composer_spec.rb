@@ -19,10 +19,14 @@ RSpec.describe 'Album composer, who can add', :js, :streaming do
         .krew_memberships.create!(account: bob.account, role: 'member', source: 'direct')
   end
 
+  # Kommons "Composers are too busy": the choices are the kit's KornerPills,
+  # one lit, not bespoke chips.
   it 'starts at Just me' do
     visit '/hub/albutts/composer'
 
-    expect(page).to have_css('.albutts-composer__contribution-chip--selected', text: 'Just me')
+    expect(page).to have_css('.albutts-composer__choices .korner-pill--active', text: 'Just me')
+    expect(page).to have_css('.albutts-composer__choices .korner-pill', count: 3)
+    expect(page).to have_no_css('.albutts-composer__contribution-chip')
   end
 
   it 'makes it a Krew album when one of your Krews is Konnected, and goes back' do
@@ -33,9 +37,9 @@ RSpec.describe 'Album composer, who can add', :js, :streaming do
       click_on 'Growers'
     end
 
-    expect(page).to have_css('.albutts-composer__contribution-chip--selected', text: 'Only Growers')
+    expect(page).to have_css('.albutts-composer__choices .korner-pill--active', text: 'Only Growers')
     click_on 'Keep it mine'
-    expect(page).to have_css('.albutts-composer__contribution-chip--selected', text: 'Just me')
+    expect(page).to have_css('.albutts-composer__choices .korner-pill--active', text: 'Just me')
     expect(page).to have_no_css('.konnect-row .space-tile', text: 'Growers')
   end
 end

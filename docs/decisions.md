@@ -17,6 +17,21 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-29 — Composer options are kit pills
+
+Kommons "Composers are too busy" (Tal, 2026-10-21, from Albutts): the drafts
+area at the top was too busy, and the options at the bottom were poorly
+designed. The drafts half was already done by "Drafts are quiet"
+(2026-10-22): one quiet line under the body, only when a draft came back.
+
+**Decision:** the options a composer offers are the kit's `<KornerPill>`s,
+the chosen one lit (`active`), as Booth's and Maps' composers already do;
+small actions inside a composer (Keep it mine, Retry) are `<KornerPill>`s
+too. The album composer's bespoke chips (who can add photos, who sees a Krew
+album) and ghost buttons moved over, and `<ComposeShell>`'s footer reads
+only tokens (`--accent`, `--dur-fast`, `--elevation-menu`). Nothing was
+removed: which options a composer should drop is still open.
+
 ## 2026-10-29 — No Konnect row in the proposal composer
 
 Kommons "'Konnect' Button" (Tal): "The proposal composer probably doesn't
