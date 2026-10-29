@@ -25,6 +25,7 @@ import { FeedDrum } from 'mastodon/components/feed_drum';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { useIdentity } from 'mastodon/identity_context';
 import { useAppSelector } from 'mastodon/store';
 
@@ -164,10 +165,13 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     [history],
   );
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/art')) return;
     if (autoOpenComposer) history.replace('/hub/art');
-  }, [autoOpenComposer, history]);
+  }, [autoOpenComposer, history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: ApiArtPieceJSON) => {

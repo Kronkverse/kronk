@@ -18,7 +18,18 @@ export type BoothKind =
   | 'live_recording'
   | 'track'
   | 'podcast'
-  | 'spoken_word';
+  | 'spoken_word'
+  | 'album'
+  | 'ep';
+
+// One track of an album or EP: its own audio file, in running order. Not
+// the same as a `BoothTrack`, which names a stretch of one recording.
+export interface BoothAlbumTrack {
+  id: string;
+  title: string;
+  duration_seconds: number | null;
+  audio_url: string | null;
+}
 
 // Someone who made a set. The uploader is always first and always verified.
 // After them come the people they credited: a tagged Kronk account, which
@@ -54,6 +65,8 @@ export interface BoothSet {
   saved?: boolean;
   tracklist?: BoothTrack[];
   tracklist_text?: string;
+  // An album's or EP's tracks; empty for every other kind.
+  tracks?: BoothAlbumTrack[];
   is_owner?: boolean;
   can_moderate?: boolean;
   account: {
@@ -82,6 +95,10 @@ export interface BoothLive {
   is_owner: boolean;
   // Whether you asked for a Nudge when it starts.
   reminded: boolean;
+  // The host's Now playing so far, oldest first (only on a single set).
+  tracklist?: BoothTrack[];
+  // The draft set made from its recording; only the host is sent it.
+  booth_set_id?: string | null;
   account: {
     id: string;
     acct: string;
@@ -89,6 +106,30 @@ export interface BoothLive {
     display_name: string;
     avatar: string;
   };
+}
+
+// The crowd on screen in a live set (crowd.ts).
+export type BoothLiveMomentKind = 'shoutout' | 'reaction' | 'request' | 'track';
+
+export interface BoothLiveMoment {
+  id: string;
+  kind: BoothLiveMomentKind;
+  body: string;
+  artist: string | null;
+  title: string | null;
+  // What goes on screen: the words, a reaction's key, or the track.
+  text: string;
+  // Seconds into the set.
+  at_seconds: number;
+  created_at: string;
+  account: {
+    id: string;
+    acct: string;
+    username: string;
+    display_name: string;
+    avatar: string;
+  };
+  can_remove: boolean;
 }
 
 // A listener's note on a set, optionally pinned to a moment in it.

@@ -35,6 +35,11 @@ resources:
   - name: chronicles
     primary: true
     path: /hub/kronikles/:id
+  # A writer's Kronikles as ordered chapters, page /hub/kronikles/series/:id
+  # (docs/spaces/kronikles.md, Series). Not primary, so not Konnectable on
+  # its own: a Series has no audience of its own to check a Konnection or a
+  # preview against, only its chapters'. Konnect a chapter instead.
+  - name: chronicle_series
 
 storage:
   db_namespace: chronicle_ # primary table: `chronicles`

@@ -2,8 +2,6 @@ import { useCallback, useEffect } from 'react';
 
 import { useIntl, defineMessages } from 'react-intl';
 
-import classNames from 'classnames';
-
 import { useIdentity } from '@/mastodon/identity_context';
 import {
   fetchRelationships,
@@ -23,9 +21,11 @@ import { useBreakpoint } from '../features/ui/hooks/useBreakpoint';
 // (docs/spaces/feed.md (Mates)): **Mate?** is the invitation
 // (send a Mates request — the "?" reads it as a question you're
 // asking them, not an imperative); **Mating…** is a pending
-// outgoing request (tap to withdraw); **Unmate** removes an
-// established Mate; **Accept** converts an inbound request to
-// Mates (auto-mutual).
+// outgoing request (tap to withdraw); **Accept** converts an inbound
+// request to Mates (auto-mutual). Once you are Mates the button
+// renders nothing: Unmate lives only on the per-person settings
+// screen (`/@:acct/settings`), never in a list, card or peek
+// (Kommons proposal #117481297515130656, 2026-10-25).
 //
 // Copy unified into one word family (Kommons proposal
 // #117047168766649089, 2026-08-06): button verb and state noun share
@@ -40,7 +40,6 @@ const longMessages = defineMessages({
   unmute: { id: 'account.unmute_short', defaultMessage: 'Unmute' },
   mate: { id: 'account.mate', defaultMessage: 'Mate?' },
   mating: { id: 'account.mating', defaultMessage: 'Mating…' },
-  unmate: { id: 'account.unmate', defaultMessage: 'Unmate' },
   mateAccept: { id: 'account.mate_accept', defaultMessage: 'Accept' },
   editProfile: { id: 'account.edit_profile', defaultMessage: 'Edit profile' },
 });
@@ -67,12 +66,8 @@ export const FollowButton: React.FC<{
   const relationship = useAppSelector((state) =>
     accountId ? state.relationships.get(accountId) : undefined,
   );
-  // A "connected" state (mutual Mate or an outgoing pending request) styles
-  // the button as secondary; an established Mate additionally reads as
-  // destructive, because the action is Unmate.
-  const isMate = relationship?.mate ?? false;
+  // An outgoing pending request styles the button as secondary.
   const isPending = relationship?.requested ?? false;
-  const connected = isMate || isPending;
 
   useEffect(() => {
     if (accountId && signedIn) {
@@ -106,8 +101,8 @@ export const FollowButton: React.FC<{
           modalProps: { account },
         }),
       );
-    } else if (relationship.mate || relationship.requested) {
-      // Unmate an established Mate, or withdraw a pending outgoing request.
+    } else if (relationship.requested) {
+      // Withdraw a pending outgoing request.
       dispatch(unmateAccount(accountId));
     } else {
       // Send a Mate request. If the other side already requested us,
@@ -137,9 +132,6 @@ export const FollowButton: React.FC<{
   } else if (relationship.blocking) {
     label = intl.formatMessage(messages.unblock);
     disabled = false;
-  } else if (relationship.mate) {
-    label = intl.formatMessage(messages.unmate);
-    disabled = false;
   } else if (relationship.requested) {
     label = intl.formatMessage(messages.mating);
     disabled = false;
@@ -160,13 +152,19 @@ export const FollowButton: React.FC<{
     return null;
   }
 
+  // An established Mate: nothing to offer here (see the header comment).
+  // Muting and blocking still show, so they can be undone where seen.
+  if (relationship?.mate && !relationship.muting && !relationship.blocking) {
+    return null;
+  }
+
   return (
     <Button
       onClick={handleClick}
       disabled={disabled}
-      secondary={connected}
+      secondary={isPending}
       compact={compact}
-      className={classNames(className, { 'button--destructive': isMate })}
+      className={className}
     >
       {label}
     </Button>

@@ -47,4 +47,33 @@
     pointer-events: none;
     z-index: 2;
   }
+
+  // No WebGL: a plain box in the same frame, carrying the place's name
+  // when the caller has one (see the component's header comment).
+  &--no-map {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 1rem;
+    border: 1px solid var(--border-default);
+    text-align: center;
+
+    // The feed card's wrapper sets line-height 0 for the canvas.
+    line-height: 1.4;
+  }
+
+  &__label {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  &__note {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
 }

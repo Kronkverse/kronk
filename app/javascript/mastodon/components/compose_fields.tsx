@@ -11,8 +11,8 @@ import classNames from 'classnames';
 // The composer field kit (docs/korners/korner_standard.md, L13; docs/design.md,
 // Composers). Every composer builds its body from these, inside
 // <ComposeShell>, so every space's composer reads alike: the title in the
-// display serif, every other field in the body sans, one label size, one
-// input size, one focus ring. A composer adds only the fields that are its
+// display serif, every other field in the body sans, all in the same box,
+// one label size, one input size, one focus ring. A composer adds only the fields that are its
 // own; it does not style inputs, labels or sections itself.
 //
 //   <ComposeTitle value={title} onChange={…} placeholder='Name it' />
@@ -29,7 +29,8 @@ import classNames from 'classnames';
 // Konnect row the shell draws), not fields. Who sees it is the shell's
 // header reach control.
 
-// The record's name: one line, the display serif, no box.
+// The record's name: one line, the display serif, boxed like the other
+// fields so it reads as a text box.
 export const ComposeTitle = forwardRef<
   HTMLInputElement,
   InputHTMLAttributes<HTMLInputElement>

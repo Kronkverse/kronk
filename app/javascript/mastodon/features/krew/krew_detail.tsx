@@ -43,15 +43,17 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
+import { KrewAccessMark, requirementSummary } from './krew_access_mark';
 import { KrewAlbums } from './krew_albums';
 import { KrewChat } from './krew_chat';
 import { KrewEvents } from './krew_events';
 import { KrewPhotoField } from './krew_photo_field';
+import { KrewPosts } from './krew_posts';
 import { KrewSpaceIcon } from './krew_space_icon';
 
 // Krew page (/hub/krew/:id): identity, the faces, then for members What's
-// happening, the spaces and the Krew's chat (docs/spaces/krew.md, The
-// surfaces). Settings lives on the floating space menu.
+// happening, the spaces, the Krew's chat and its posts (docs/spaces/krew.md,
+// The surfaces). Settings lives on the floating space menu.
 
 // What's happening sits above the grid: the last few things done in the
 // Krew. The grid's tiles open their space below it, one at a time, and
@@ -90,6 +92,10 @@ const messages = defineMessages({
   withdraw: {
     id: 'krew.detail.withdraw',
     defaultMessage: 'Take back my request',
+  },
+  needsHeading: {
+    id: 'krew.detail.needs_heading',
+    defaultMessage: 'To join:',
   },
   inviteOnlyHint: {
     id: 'krew.detail.invite_only_hint',
@@ -135,7 +141,6 @@ const messages = defineMessages({
     id: 'krew.events.new',
     defaultMessage: 'New event for this Krew',
   },
-  inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
   happening: {
     id: 'krew.detail.happening',
@@ -768,15 +773,10 @@ export const KrewDetail = () => {
               <div className='krew-detail__identity'>
                 <h1 className='krew-detail__name'>
                   {krew.name}
-                  {krew.access === 'invite_only' && (
-                    <span
-                      className='krew-detail__marker'
-                      aria-label={intl.formatMessage(messages.inviteOnly)}
-                      title={intl.formatMessage(messages.inviteOnly)}
-                    >
-                      ⚿
-                    </span>
-                  )}
+                  <KrewAccessMark
+                    access={krew.access}
+                    className='krew-detail__marker'
+                  />
                 </h1>
                 <div className='krew-detail__submeta'>
                   <span className='krew-detail__slug'>@{krew.slug}</span>
@@ -836,6 +836,20 @@ export const KrewDetail = () => {
                     </p>
                   </>
                 )}
+                {krew.access === 'requirement_gated' &&
+                  !hasInviteLink &&
+                  krew.requirements.length > 0 && (
+                    <div className='krew-detail__needs'>
+                      <p className='krew-detail__section-hint'>
+                        <FormattedMessage {...messages.needsHeading} />
+                      </p>
+                      <ul className='krew-detail__needs-list'>
+                        {krew.requirements.map((req) => (
+                          <li key={req.id}>{requirementSummary(req, intl)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 {canJoinNow && (
                   <button
                     type='button'
@@ -969,11 +983,11 @@ export const KrewDetail = () => {
             )}
 
             {isMember && openNow === 'kalendar' && (
-              <KrewEvents krewId={krew.id} canLink={!krew.archived} />
+              <KrewEvents krewId={krew.id} />
             )}
 
             {isMember && openNow === 'albutts' && (
-              <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
+              <KrewAlbums krewId={krew.id} />
             )}
 
             {isMember && activity && (
@@ -982,6 +996,9 @@ export const KrewDetail = () => {
                 onRead={handleChatRead}
               />
             )}
+
+            {/* The Krew's posts, last, so the page scrolls on into them. */}
+            {isMember && <KrewPosts krewId={krew.id} />}
           </>
         )}
       </div>

@@ -275,10 +275,19 @@
   // standardised `<StatusEngagement>` bar (`.albutts-photo__engagement`
   // below) carries reaction counts on its icons.
 
+  // A caption is about its one photo; in the grid it shows a few lines and
+  // the rest is in the lightbox. A long story pasted into one photo's
+  // caption otherwise stretched that tile far past its neighbours (Kommons
+  // "Album Description", 2026-10-22).
   &__caption {
     padding: 0 10px 10px;
     font-size: 12px;
     opacity: 0.85;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow-wrap: anywhere;
   }
 
   &__engagement {
@@ -1002,6 +1011,14 @@
     font-size: 12px;
     color: var(--text-muted);
     margin: 0;
+  }
+
+  &__captions-note {
+    margin-top: 12px;
+  }
+
+  &__album-description {
+    margin-bottom: 4px;
   }
 
   // The visibility button strip is now the shared

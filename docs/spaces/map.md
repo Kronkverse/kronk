@@ -20,7 +20,8 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 
 - **Map** (`mates`, default, `/hub/map`) — a MapLibre map with your Mates'
   pins, a people strip (a face per pin, your own slot last; tap to
-  centre), upcoming Kalendar events as markers, and Places.
+  centre), your upcoming Kalendar events (hosting, going or interested) as
+  markers, and Places.
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
   after your Mates' (Kommons "Treks list of Mates before Mine",
@@ -36,6 +37,27 @@ Place composer). The legacy bare
 The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
 DO Spaces, drawn in Kronk colours (`basemap.ts`). No third-party map
 provider.
+
+### Without WebGL
+
+MapLibre draws with WebGL, and some browsers have it turned off (a hardened
+privacy mode, a blocked GPU driver, a remote desktop). Its constructor then
+throws "Failed to initialize WebGL". Every map checks `supportsWebGL()`
+(`basemap.ts`) first and wraps map creation in try/catch, then falls back:
+
+- **Pin previews** (`<MapPinPreview>`, in feed event cards, event and Place
+  pages, profile locations) become a plain box with the place's name, when
+  the caller passes `label`, and a "no map" note.
+- **The Mates map and a trek's route** show `<MapNeedsWebGL>`, an
+  `<EmptyState>` saying the map needs WebGL.
+- **The pin picker** shows the same note in the map's place; search and
+  "Centre on me" still work, and choosing a result or locating pins that
+  spot at once.
+
+Feed korner cards also sit in a `<SilentErrorBoundary>`
+(`components/korner_cards.tsx`), so any card that throws drops out of its
+post rather than reaching the app-level error page. From Kommons "error
+report on login" (https://kronk.info/hub/kommons/p/117504037032494231).
 
 ### First Nations Country
 
@@ -100,6 +122,15 @@ as a Redis key with a seven-day life (`POST
 /api/v1/map/presence/:account_id/challenge`, event `map.pin.challenged`). It
 only works on a pin you can already see.
 
+**On the Map's tile.** The Map's number (its Hub tile and the side nav)
+counts a Mate putting their pin on the map or moving it since you last
+opened the Map, alongside new trek posts (Kommons "Notifications on location
+updates", 2026-10-27). Only pins you could see count, the same rule as the
+map itself (Mates, shared with Mates); a note edit doesn't, since it leaves
+`placed_at` alone. Opening the Map clears it. `MapStream` in
+`lib/kronk/korner_content_streams.rb`; the badge is the shared one
+(`hub.md`, Updates). No nudge and no push.
+
 The privacy rules:
 
 - **The raw point is never stored.** `PresenceState.place!` coarsens it
@@ -160,25 +191,31 @@ Place, not a field on each space's record (decisions.md, 2026-10-23).
 Model: `MapPlace` (`map_places`: `name` up to 120, `address`, `latitude`
 and `longitude` as exact decimals, `account_id` of its maker).
 
-- **A Place is seen by whoever can see something Konnected to it, and its
-  maker** (`MapPlace#visible_to?`, Tal 2026-10-23). It has no audience of
-  its own: a Place linked from a Mates-only party is seen by that party's
-  Mates, one linked from a public event by every member, and one with
-  nothing Konnected by its maker alone. "Can see" is the linked record's
-  own rule (`Kronk::KornerRecords.visible?`). One you can't see answers
+- **A Place is seen by its maker, and by whoever can see something its
+  maker Konnected it to** (`MapPlace#visible_to?`, Tal 2026-10-23;
+  decisions.md 2026-10-27). It has no audience of its own: a Place its
+  maker linked from their Mates-only party is seen by that party's Mates,
+  one linked from a public event by every member, and one with no such
+  link by its maker alone. A link someone else makes to it never widens
+  it. A suspended or deleted maker's Places are seen by nobody else.
+  "Can see" is the linked record's own rule
+  (`Kronk::KornerRecords.visible?`). One you can't see answers
   404 everywhere (its page, `GET /places/:id`, the map, the Konnect
   picker), so a guessed id says nothing. It says where something is, never
   who is there: presence (people's pins) is separate, Mates-only and
   coarsened, and never takes part in Konnecting.
 - **Its maker looks after it**: they edit and delete it and decide what it
   links out to. Anyone who can see a Place can Konnect their own record to
-  it (which widens who sees it to that record's audience). If the maker's
-  account goes, the Place stays (`account_id` is nulled).
+  it; that doesn't widen who sees the Place, and doesn't make it the
+  record's location (below). Deleting the maker's account deletes their
+  Places and their Konnections (`DeleteAccountService`); a row whose
+  `account_id` is nulled is seen by nobody.
 - **How lists check it.** Who sees a linked event or album has no SQL
-  form, so a list reads Places the viewer made or that have any
-  Konnection (`made_or_konnected`, at most 1000 rows, after the box or
-  search narrows them), loads their Konnections in one query, and checks
-  each in Ruby (`MapPlace.visible_among`). The Konnect picker does the
+  form, so a list reads Places the viewer made or that have a Konnection
+  their maker made (`made_or_konnected`, at most 1000 rows, after the box
+  or search narrows them), loads those Konnections in one query and their
+  other ends in one per korner (`MapPlace.preload_konnections`), and
+  checks each in Ruby (`MapPlace.visible_among`). The Konnect picker does the
   same through `KornerRecords::FOUND_BY`.
 - **Konnecting.** `map.yaml`'s primary resource is `map_places` (`path:
 /hub/map/places/:id`), with `attaches:`/`accepts:` links to and from
@@ -222,8 +259,11 @@ and `longitude` as exact decimals, `account_id` of its maker).
   Android app): an event's `location_name` (the Place's name) and
   `location_url` (an OpenStreetMap link to its point), a kar's `location`
   (`{ lat, lng, label }`), a listing's `location`, and the event pins
-  below. Only a link the record's owner made counts, either way round;
-  the oldest wins. Lists read the Places in two queries
+  below. Only the record's owner's own Place counts, and only through a
+  link they made, either way round; the oldest wins. Someone else's Place
+  Konnected to the record shows in its Konnected section but isn't its
+  location: the Place is read live, so its maker could otherwise move the
+  record by editing theirs (decisions.md, 2026-10-27). Lists read the Places in two queries
   (`Kronk::RecordPlace.preload`); an event inside a status reads its own
   when it has no location.
 - **Pins moved over.** Migration `20261023140100` gave every pinned event
@@ -239,10 +279,15 @@ or `name` and `address` alone), `PATCH` and `DELETE` (the maker only).
 
 ## Events
 
-`GET /api/v1/map/events` returns upcoming Kalendar events you're allowed to
-see that have a parseable OpenStreetMap `location_url`, or no `location_url`
-and a Konnected Place (pinned at the Place, with its name). The event page's
-location link goes to `/hub/map?event=<slug>`, which focuses that event.
+The Map shows only your events: the ones you host, and the ones you're
+going to or interested in (decisions.md, 2026-10-27). Other events you could
+see stay in Kalendar. `GET /api/v1/map/events` returns those of them that are
+upcoming, that you're still allowed to see, and that have a parseable
+OpenStreetMap `location_url`, or no `location_url` and a Konnected Place
+(pinned at the Place, with its name). The event page's location link goes to
+`/hub/map?event=<slug>`, which focuses that event; the Map asks for
+`?event=<slug>` too, so that one event gets its pin even when you haven't
+answered it, if you may see it.
 
 ## API
 

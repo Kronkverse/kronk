@@ -13,7 +13,8 @@ import { apiGetMapEvents } from 'mastodon/api/map';
 import type { ApiMapEventPinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 
-// Event layer — draws Kalendar event pins on top of the Mates map.
+// Event layer — draws Kalendar event pins on top of the Mates map: your
+// events only (hosting, going, interested), plus a deep-linked one.
 // Kept as its own module (not mixed into mates_view's clustering /
 // anonymisation model) because events don't share those constraints:
 // event locations are already visibility-gated at the Event level,
@@ -63,12 +64,14 @@ export const EventLayer: React.FC<Props> = ({ map, ready }) => {
     return params.get('event');
   }, [location.search]);
 
-  // ── Fetch events on mount ────────────────────────────────────────
+  // ── Fetch events ─────────────────────────────────────────────────
+  // Your events, plus the deep-linked one so its pin shows even when you
+  // haven't answered it. Refetched when the deep link changes.
   useEffect(() => {
-    void apiGetMapEvents()
+    void apiGetMapEvents(requestedSlug)
       .then(setEvents)
       .catch(() => undefined);
-  }, []);
+  }, [requestedSlug]);
 
   // ── Render markers ───────────────────────────────────────────────
   useEffect(() => {

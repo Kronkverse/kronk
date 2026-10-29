@@ -10,6 +10,18 @@ const messages = defineMessages({
     id: 'status_booth_card.badge',
     defaultMessage: 'SET',
   },
+  albumBadge: {
+    id: 'status_booth_card.badge_album',
+    defaultMessage: 'ALBUM',
+  },
+  epBadge: {
+    id: 'status_booth_card.badge_ep',
+    defaultMessage: 'EP',
+  },
+  tracks: {
+    id: 'status_booth_card.tracks',
+    defaultMessage: '{count, plural, one {# track} other {# tracks}}',
+  },
 });
 
 interface BoothSet {
@@ -20,6 +32,9 @@ interface BoothSet {
   duration_seconds?: number | null;
   cover_url?: string | null;
   event_name?: string | null;
+  kind?: string | null;
+  // Only an album or EP counts its tracks.
+  track_count?: number | null;
 }
 
 const formatDuration = (seconds: number): string => {
@@ -39,6 +54,18 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
     ? formatDuration(set.duration_seconds)
     : null;
 
+  // An album or EP says so, and how many tracks; a set is a SET.
+  const badgeLabel = intl.formatMessage(
+    set.kind === 'album'
+      ? messages.albumBadge
+      : set.kind === 'ep'
+        ? messages.epBadge
+        : messages.badge,
+  );
+  const tracksLabel = set.track_count
+    ? intl.formatMessage(messages.tracks, { count: set.track_count })
+    : null;
+
   const genresLabel =
     set.genres && set.genres.length > 0
       ? set.genres.slice(0, 3).join(' · ')
@@ -53,7 +80,7 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
       badge={{
         icon: HeadphonesIcon,
         iconId: 'headphones',
-        label: intl.formatMessage(messages.badge),
+        label: badgeLabel,
         tag: set.event_name,
       }}
     >
@@ -70,6 +97,9 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
         <CardMeta className='status-korner-card__meta'>
           {genresLabel && (
             <span className='status-booth-card__genres'>{genresLabel}</span>
+          )}
+          {tracksLabel && (
+            <span className='status-booth-card__duration'>{tracksLabel}</span>
           )}
           {durationLabel && (
             <span className='status-booth-card__duration'>{durationLabel}</span>

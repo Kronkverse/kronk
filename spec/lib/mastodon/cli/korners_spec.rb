@@ -765,7 +765,7 @@ RSpec.describe Mastodon::CLI::Korners do
       takers = Kronk::KornerRegistry.all.select { |m| Array(m.accepts).any? { |e| e.is_a?(Hash) && e['kind'].to_s == 'link' } }
       expect(takers.to_h { |m| [m.slug, m.konnect&.dig('noun')] }).to eq(
         'albutts' => 'album', 'art' => 'art piece', 'booth' => 'set', 'cinema' => 'film', 'freethedream' => 'emergence',
-        'huddle' => 'room', 'kalendar' => 'event', 'karporn' => 'kar', 'kommons' => 'proposal', 'krew' => 'Krew',
+        'huddle' => 'Kuddle', 'kalendar' => 'event', 'karporn' => 'kar', 'kommons' => 'proposal', 'krew' => 'Krew',
         'kronikles' => 'kronikle', 'kuestions' => 'Kuestion', 'map' => 'place', 'wachuneed' => 'listing'
       )
     end

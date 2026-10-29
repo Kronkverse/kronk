@@ -86,6 +86,7 @@ import {
   Hub,
   Booth,
   Wachuneed,
+  WachuneedBrand,
   WachuneedListingDetail,
   WachuneedNew,
   WachuneedShop,
@@ -309,13 +310,15 @@ class SwitchingColumnsArea extends PureComponent {
             {/* Huddle is a korner surface at /hub/huddle; the legacy
                 /huddle path forwards to it. `/hub/huddle` renders the
                 Main Huddle lobby + the open Rooms discovery list
-                (Phase 9.6). `/hub/huddle/room/:id` goes straight into
-                that Room's Jitsi call. `/hub/huddle/composer` opens the New
+                (Phase 9.6). `/hub/huddle/kuddle/:id` goes straight into
+                that Room's Jitsi call (Rooms are Kuddles to the people
+                using them; the old `/hub/huddle/room/:id` forwards). `/hub/huddle/composer` opens the New
                 Room composer over the lobby (`?krew=<id>` picks a Krew to
                 Konnect it to); the old `/hub/huddle/new` forwards there,
                 query and all. Krew Huddles come with Phase 9.1/9.2. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
-            {signedIn && <WrappedRoute path='/hub/huddle/room/:id' exact component={LiveRoom} content={children} />}
+            <Redirect from='/hub/huddle/room/:id' to='/hub/huddle/kuddle/:id' exact />
+            {signedIn && <WrappedRoute path='/hub/huddle/kuddle/:id' exact component={LiveRoom} content={children} />}
             <Redirect from='/hub/huddle/new' to={{ ...this.props.location, pathname: '/hub/huddle/composer' }} exact />
             {signedIn && <WrappedRoute path='/hub/huddle/composer' exact component={Live} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle' exact component={Live} content={children} />}
@@ -430,6 +433,9 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/wachuneed/listings/:id' exact component={WachuneedListingDetail} content={children} />
             {signedIn && <WrappedRoute path='/hub/wachuneed/my-shop' exact component={WachuneedShopEdit} content={children} />}
             <WrappedRoute path='/hub/wachuneed/shop/:acct' exact component={WachuneedShop} content={children} />
+            {/* One brand (docs/spaces/wachuneed.md, Brands); the list is
+                the brands view of the route below. */}
+            <WrappedRoute path='/hub/wachuneed/brands/:id' exact component={WachuneedBrand} content={children} />
             <WrappedRoute path={['/hub/wachuneed/requests', '/hub/wachuneed']} component={Wachuneed} content={children} />
             {/* Connections retired with them — it listed follow requests
                 alongside followers and following. Requests keep their own
@@ -529,9 +535,11 @@ class SwitchingColumnsArea extends PureComponent {
             <Redirect from='/accounts/:id/following' to='/@:id' />
             <Redirect from='/users/:acct/followers' to='/@:acct' />
             <Redirect from='/users/:acct/following' to='/@:acct' />
-            {/* The Mates list is off for now (Tal 2026-10-18). Must sit before
-                the /@:acct/:statusId wildcard so `mates` isn't a status id. */}
-            <Redirect from='/@:acct/mates' to='/@:acct' exact />
+            {/* The Mates list, under the profile block, for the member and
+                their Mates only (Tal 2026-10-26; docs/spaces/profile.md).
+                Must sit before the /@:acct/:statusId wildcard so `mates`
+                isn't a status id. */}
+            <WrappedRoute path='/@:acct/mates' exact component={ProfileSpace} content={children} />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />

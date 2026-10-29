@@ -113,8 +113,15 @@ one (Tal, 2026-09-14).
 - **Nothing tags the person answered.** Neither the composer nor the comment
   box under a post puts "@name" in front; the parent's author is told by the
   reply itself (`status.replied`, `PostStatusService#publish_reply_nudge!`).
+- **You can tag someone in a comment.** Typing `@` and a name in either
+  comment box under a post offers matching people, your Mates first, and
+  picking one puts their handle in (`CaptionTextarea`, the same box album
+  captions use).
 - **A korner post opens as its card.** The post page picks the same card the
   feed does (`components/korner_cards.tsx`) and leaves the text out with it.
+- **Long text folds behind _Read more_ in the feed, and opens in place.** The
+  button unfolds the card where it is; it doesn't go to the post's page. The
+  post's own page never folds (`detailed` on `components/status.jsx`).
 - **The home feed shows no replies at all**
   (`FeedManager#filter_from_home`). Search labels a comment as a Comment.
 
@@ -161,6 +168,11 @@ Photos and videos mix freely in one post, in the order they were added
 (Tal, 2026-10-12): the gallery shows a video as a tile with its length, and
 the full-screen viewer plays it. Until then a post was either photos or a
 single video. An audio file still has to be posted on its own.
+The card shows at most **four tiles** (proposal 117490082074180046, 2026-10-27),
+on the feed and on the post's own page alike. With more, the fourth carries
+**+N**, the number not shown, and tapping it opens the viewer at the fifth
+(`components/media_gallery.jsx`). Before, all 30 laid out in rows and a
+big post ran on for screens.
 
 ## How korners reach the feed
 

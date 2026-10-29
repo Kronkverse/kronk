@@ -202,17 +202,18 @@ const SettingsKitDemo: React.FC = () => {
           {
             key: 'open',
             label: 'Open',
-            description: 'Anyone can join directly.',
+            description: 'Anyone can find it and join.',
           },
           {
             key: 'invite_only',
             label: 'Invite-only',
-            description: 'People need an invite link to join.',
+            description: 'Hidden. Only people a member brings in can join.',
           },
           {
             key: 'gated',
-            label: 'Requirement-gated',
-            description: 'Add requirements below that people must meet.',
+            label: 'Has requirements',
+            description:
+              'Anyone can find it. People who meet the requirements below can join.',
           },
         ]}
       />
@@ -709,14 +710,6 @@ export const StyleGuide = () => (
               </p>
             </div>
             <div className='profile-card__actions'>
-              <button
-                type='button'
-                className='profile-card__icon profile-card__icon--mate profile-card__icon--mate'
-                aria-label='Unmate'
-                title='Mates'
-              >
-                <Icon id='mate' icon={CheckIcon} />
-              </button>
               <a
                 className='profile-card__icon profile-card__icon--open'
                 href='/styleguide#profile-card'

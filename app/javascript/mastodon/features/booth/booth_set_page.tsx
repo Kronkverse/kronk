@@ -23,6 +23,7 @@ import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
 import { useBoothPlayback } from './booth_playback_context';
+import { AlbumTracks } from './components/album_tracks';
 import { AudioPlayer } from './components/audio_player';
 import type { PlayerMarker } from './components/audio_player';
 import { EditForm } from './components/edit_form';
@@ -30,7 +31,7 @@ import { ShareForm } from './components/share_form';
 import { Shoutouts, useShoutouts } from './components/shoutouts';
 import { Tracklist } from './components/tracklist';
 import { formatDuration } from './format';
-import { kindMessage } from './kinds';
+import { isAlbumKind, kindLabel } from './kinds';
 import { toggleSave } from './save';
 import type { BoothSet } from './types';
 
@@ -73,6 +74,16 @@ const messages = defineMessages({
   draft: {
     id: 'booth.set_page.draft',
     defaultMessage: 'Only you can see this set',
+  },
+  draftOwner: {
+    id: 'booth.set_page.draft_owner',
+    defaultMessage:
+      'Only you can see this set. Check it over, then publish it so members can hear it.',
+  },
+  publish: { id: 'booth.set_page.publish', defaultMessage: 'Publish' },
+  publishFailed: {
+    id: 'booth.set_page.publish_failed',
+    defaultMessage: 'Couldn’t publish it just now. Try again.',
   },
   justUploaded: {
     id: 'booth.set_page.just_uploaded',
@@ -186,6 +197,22 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
       .catch(() => undefined);
   }, [id]);
 
+  // A draft (a live set's recording comes as one): publishing it puts it
+  // in the Booth, then offers Share to feed as an upload does.
+  const handlePublish = useCallback(() => {
+    if (!id) return;
+    void api()
+      .patch<BoothSet>(`/api/v1/booth_sets/${id}`, { published: true })
+      .then((res) => {
+        setSet(res.data);
+        setOfferShare(true);
+        return undefined;
+      })
+      .catch(() => {
+        dispatch(showAlert({ message: messages.publishFailed }));
+      });
+  }, [id, dispatch]);
+
   useRegisterPageAction(
     {
       key: 'edit',
@@ -259,9 +286,20 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         }
         banner={
           !set.published ? (
-            <span className='booth-set__notice'>
-              {intl.formatMessage(messages.draft)}
-            </span>
+            isOwner ? (
+              <div className='booth-set__notice'>
+                <span>{intl.formatMessage(messages.draftOwner)}</span>
+                <KornerPill
+                  variant='primary'
+                  label={intl.formatMessage(messages.publish)}
+                  onClick={handlePublish}
+                />
+              </div>
+            ) : (
+              <span className='booth-set__notice'>
+                {intl.formatMessage(messages.draft)}
+              </span>
+            )
           ) : offerShare && isOwner ? (
             <div className='booth-set__notice'>
               <span>{intl.formatMessage(messages.justUploaded)}</span>
@@ -278,7 +316,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         meta={
           <KornerMeta
             items={[
-              intl.formatMessage(kindMessage(set.kind)),
+              kindLabel(set, intl),
               set.genres.length > 0 && set.genres.join(', '),
               set.event_name &&
                 (set.event_date
@@ -324,7 +362,16 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
           </KornerActionBar>
         }
       >
-        <AudioPlayer set={set} markers={markers} onMarker={handleMarker} />
+        {/* An album's time runs per track, so shoutouts aren't pins on
+            it; its tracks follow the player instead. */}
+        {isAlbumKind(set.kind) ? (
+          <>
+            <AudioPlayer set={set} />
+            <AlbumTracks set={set} />
+          </>
+        ) : (
+          <AudioPlayer set={set} markers={markers} onMarker={handleMarker} />
+        )}
 
         {/* Who made it: the uploader, then everyone they credited. A
             tagged account is unverified until that person confirms it; a

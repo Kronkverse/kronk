@@ -12,8 +12,9 @@ import {
   huddleMinimized,
   huddleExpanded,
 } from 'mastodon/actions/huddle';
+import { CallControls } from 'mastodon/components/call_controls';
+import { CallRecordings } from 'mastodon/components/call_recordings';
 import { Stage } from 'mastodon/components/stage';
-import type { JitsiApi } from 'mastodon/features/huddle_pip/jitsi_session';
 import {
   createJitsiContainer,
   disposeJitsiSession,
@@ -21,7 +22,17 @@ import {
   setJitsiSession,
   setJitsiSlot,
 } from 'mastodon/features/huddle_pip/jitsi_session';
-import { jitsiDomain, me } from 'mastodon/initial_state';
+import { parseKonnectParam } from 'mastodon/hooks/useKonnect';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
+import { me } from 'mastodon/initial_state';
+import type { Call } from 'mastodon/jitsi';
+import {
+  createCall,
+  getCallPass,
+  getCallPresence,
+  jitsiHost,
+  loadJitsi,
+} from 'mastodon/jitsi';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { RoomComposer } from './room_composer';
@@ -32,16 +43,16 @@ const messages = defineMessages({
   heading: { id: 'live.title', defaultMessage: 'Huddle' },
   join: { id: 'live.join', defaultMessage: 'Huddle Up' },
   leave: { id: 'live.leave', defaultMessage: 'Unhuddle' },
+  joinFailed: {
+    id: 'live.join_failed',
+    defaultMessage: 'Couldn’t get into the Huddle just now. Try again.',
+  },
   roomDescription: {
     id: 'live.room_description',
     defaultMessage:
       'Huddle is a live video space for the Kronk community to hang out, co-create, share wisdom, stories, art and more. Authentic presence is welcomed in the Huddle.',
   },
 });
-
-// Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
-const JITSI_DOMAIN = jitsiDomain;
-const ROOM_NAME = 'huddle';
 
 // The call lives outside this page (huddle_pip/jitsi_session.ts) so that
 // leaving the page doesn't end it: it shrinks into the floating mini window
@@ -168,15 +179,10 @@ const inRoomCountStyle: React.CSSProperties = {
   color: 'var(--secondary-text-color)',
   fontSize: '13px',
 };
-const leaveButtonStyle: React.CSSProperties = {
-  padding: '6px 16px',
-  fontSize: '13px',
-  fontWeight: 600,
-  borderRadius: '8px',
-  border: 'none',
-  backgroundColor: '#e03131',
-  color: '#ffffff',
-  cursor: 'pointer',
+const joinFailedStyle: React.CSSProperties = {
+  fontSize: '14px',
+  color: 'var(--warning-red)',
+  margin: 0,
 };
 const jitsiWrapperStyle: React.CSSProperties = {
   flex: 1,
@@ -187,9 +193,10 @@ const jitsiWrapperStyle: React.CSSProperties = {
 // `autoOpenComposer` is set by the `/hub/huddle/composer` route (the Ж
 // menu's compose target for this korner — see config/korners/
 // huddle.yaml; `/hub/huddle/new` redirects there). While it's set the
-// New Room composer is open over the lobby; `?krew=<id>` picks a Krew to
-// Konnect the Room to. Cancelling puts the URL back to `/hub/huddle`,
-// creating goes into the new Room.
+// New Room composer is open over the lobby; `?konnect=krew:<id>` (or the
+// older `?krew=<id>`) Konnects the Room to a Krew and keys its draft to
+// that Krew. Cancelling goes back to the record it was opened from, or to
+// `/hub/huddle`; creating goes into the new Room.
 const Live: React.FC<{
   multiColumn?: boolean;
   autoOpenComposer?: boolean;
@@ -198,24 +205,29 @@ const Live: React.FC<{
   const dispatch = useAppDispatch();
   const history = useHistory();
   const location = useLocation();
-  const composerKrewId = autoOpenComposer
-    ? new URLSearchParams(location.search).get('krew')
+  const konnectFrom = autoOpenComposer
+    ? parseKonnectParam(location.search)
     : null;
+  const composerKrewId = konnectFrom?.slug === 'krew' ? konnectFrom.id : null;
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
+    if (returnToSource('/hub/huddle')) return;
     history.replace('/hub/huddle');
-  }, [history]);
+  }, [history, returnToSource]);
   const handleRoomCreated = useCallback(
     (room: CreatedRoom) => {
-      history.push(`/hub/huddle/room/${room.id}`);
+      history.push(`/hub/huddle/kuddle/${room.id}`);
     },
     [history],
   );
   // The call area on this page: the call is drawn over it.
   const slotRef = useRef<HTMLDivElement>(null);
-  const jitsiApiRef = useRef<JitsiApi | null>(null);
+  const callRef = useRef<Call | null>(null);
   const mountedRef = useRef(true);
 
   const [inRoom, setInRoom] = useState(false);
+  const [call, setCall] = useState<Call | null>(null);
+  const [joinFailed, setJoinFailed] = useState(false);
   const [apiLoaded, setApiLoaded] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
   const [lobbyParticipants, setLobbyParticipants] = useState<string[]>([]);
@@ -254,8 +266,9 @@ const Live: React.FC<{
       if (huddleWasMinimized) {
         const existing = getJitsiSession();
         if (existing) {
-          jitsiApiRef.current = existing.api;
-          setParticipantCount(existing.api.getNumberOfParticipants());
+          callRef.current = existing.call;
+          setCall(existing.call);
+          setParticipantCount(existing.call.api.getNumberOfParticipants());
           setInRoom(true);
         } else {
           setAutoJoining(true);
@@ -279,8 +292,8 @@ const Live: React.FC<{
   useEffect(() => {
     if (!inRoom) return undefined;
     const poll = window.setInterval(() => {
-      if (jitsiApiRef.current) {
-        setParticipantCount(jitsiApiRef.current.getNumberOfParticipants());
+      if (callRef.current) {
+        setParticipantCount(callRef.current.api.getNumberOfParticipants());
       }
     }, 5000);
     return () => {
@@ -295,23 +308,18 @@ const Live: React.FC<{
     }
   }, [inRoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The Jitsi script, once, from the configured server.
   useEffect(() => {
-    if (
-      document.querySelector(
-        'script[src="https://' + JITSI_DOMAIN + '/external_api.js"]',
-      )
-    ) {
-      setApiLoaded(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://' + JITSI_DOMAIN + '/external_api.js';
-    script.async = true;
-    script.onload = () => {
-      setApiLoaded(true);
+    let cancelled = false;
+    loadJitsi()
+      .then(() => {
+        if (!cancelled) setApiLoaded(true);
+        return undefined;
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
     };
-    document.head.appendChild(script);
   }, []);
 
   // Leaving the page mid-call keeps the call: it moves into the floating
@@ -329,30 +337,13 @@ const Live: React.FC<{
   }, [dispatch]);
 
   useEffect(() => {
-    if (inRoom) return undefined;
+    if (inRoom || !jitsiHost) return undefined;
 
+    // Kronk asks the Jitsi server, which answers only Kronk.
     const fetchRoomInfo = async () => {
       try {
-        const roomUrl =
-          'https://' +
-          JITSI_DOMAIN +
-          '/room?room=' +
-          ROOM_NAME +
-          '&domain=meet.jitsi';
-        const response = await fetch(roomUrl);
-        if (!response.ok) {
-          setLobbyParticipants([]);
-          return;
-        }
-        const data = (await response.json()) as {
-          jid: string;
-          display_name: string;
-          email: string;
-        }[];
-        const names = data
-          .map((p) => p.display_name)
-          .filter((name): name is string => !!name);
-        setLobbyParticipants(names);
+        const { names } = await getCallPresence('huddle');
+        setLobbyParticipants(names ?? []);
       } catch {
         setLobbyParticipants([]);
       }
@@ -369,6 +360,7 @@ const Live: React.FC<{
 
   const joinRoom = useCallback(() => {
     if (!apiLoaded) return;
+    setJoinFailed(false);
     setInRoom(true);
   }, [apiLoaded]);
 
@@ -382,92 +374,58 @@ const Live: React.FC<{
 
   const leaveRoom = useCallback(() => {
     disposeJitsiSession();
-    jitsiApiRef.current = null;
+    callRef.current = null;
     dispatch(huddleLeft());
     if (!mountedRef.current) return;
+    setCall(null);
     setParticipantCount(0);
     setInRoom(false);
   }, [dispatch]);
 
+  // In: a pass for the Main Huddle (a token, on a server that takes them),
+  // then the call, on document.body so it can follow you round Kronk.
+  // Jitsi's toolbar is hidden; Kronk's controls sit under the call.
   useEffect(() => {
-    if (!inRoom || !apiLoaded) return;
-    if (jitsiApiRef.current) return;
+    if (!inRoom || !apiLoaded || callRef.current) return undefined;
+    let cancelled = false;
+    const failed = () => {
+      if (cancelled) return;
+      dispatch(huddleLeft());
+      setJoinFailed(true);
+      setInRoom(false);
+    };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-    const JitsiMeetExternalAPI = (window as any).JitsiMeetExternalAPI;
-    if (!JitsiMeetExternalAPI) return;
-
-    const container = createJitsiContainer();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const api = new JitsiMeetExternalAPI(JITSI_DOMAIN, {
-      roomName: ROOM_NAME,
-      parentNode: container,
-      width: '100%',
-      height: '100%',
-      userInfo: {
-        displayName: currentUsername ? '@' + currentUsername : 'Kronker',
-        avatarUrl: currentAvatar,
-      },
-      configOverwrite: {
-        prejoinPageEnabled: false,
-        disableDeepLinking: true,
-        prejoinConfig: { enabled: false },
-        startWithAudioMuted: false,
-        startWithVideoMuted: false,
-        subject: 'The Huddle',
-        hideConferenceTimer: true,
-        defaultLogoUrl: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
-        dynamicBrandingUrl: `https://${JITSI_DOMAIN}/branding.json`,
-        disableInviteFunctions: true,
-        enableClosePage: false,
-        disablePassword: true,
-        toolbarButtons: [
-          'microphone',
-          'camera',
-          'chat',
-          'desktop',
-          'fullscreen',
-          'raisehand',
-          'tileview',
-          'toggle-camera',
-          'select-background',
-          'settings',
-          'participants-pane',
-          'filmstrip',
-        ],
-      },
-      interfaceConfigOverwrite: {
-        SHOW_JITSI_WATERMARK: true,
-        SHOW_BRAND_WATERMARK: false,
-        SHOW_POWERED_BY: false,
-        HIDE_INVITE_MORE_HEADER: true,
-        DEFAULT_REMOTE_DISPLAY_NAME: 'Kronker',
-        DEFAULT_LOGO_URL: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
-        DEFAULT_WELCOME_PAGE_LOGO_URL: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
-        JITSI_WATERMARK_LINK: window.location.origin,
-      },
-    }) as JitsiApi;
-
-    jitsiApiRef.current = api;
-    setJitsiSession({ api, container });
-
-    api.addListener('videoConferenceJoined', () => {
-      if (jitsiApiRef.current) {
-        jitsiApiRef.current.executeCommand('password', '');
-        if (currentUsername) {
-          jitsiApiRef.current.executeCommand(
-            'displayName',
-            '@' + currentUsername,
-          );
+    getCallPass('huddle')
+      .then((pass) => {
+        if (cancelled || callRef.current) return undefined;
+        const container = createJitsiContainer();
+        const created = createCall({
+          parentNode: container,
+          pass,
+          displayName: currentUsername ? '@' + currentUsername : 'Kronker',
+          avatarUrl: currentAvatar,
+          subject: 'The Huddle',
+        });
+        if (!created) {
+          container.remove();
+          failed();
+          return undefined;
         }
-      }
-    });
+        callRef.current = created;
+        setCall(created);
+        setJitsiSession({ call: created, container });
+        // Hanging up inside the call, here or in the mini window.
+        created.api.addListener('readyToClose', () => {
+          leaveRoom();
+        });
+        return undefined;
+      })
+      .catch(failed);
 
-    // Hanging up inside the call, here or in the mini window.
-    api.addListener('readyToClose', () => {
-      leaveRoom();
-    });
-  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom]);
+    return () => {
+      cancelled = true;
+    };
+  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom, dispatch]);
 
   const handleJoinRoom = useCallback(() => {
     joinRoom();
@@ -571,11 +529,13 @@ const Live: React.FC<{
               {intl.formatMessage(messages.join)}
             </button>
 
-            <p style={footerStyle}>
-              Powered by Jitsi Meet
-              <br />
-              End-to-end encrypted
-            </p>
+            {joinFailed && (
+              <p style={joinFailedStyle} role='alert'>
+                {intl.formatMessage(messages.joinFailed)}
+              </p>
+            )}
+
+            <p style={footerStyle}>Powered by Jitsi Meet</p>
 
             {/* Rooms — the open topical Huddle spaces (Coworking,
                 Meetings, Music, …) live beneath the Main Huddle
@@ -583,6 +543,8 @@ const Live: React.FC<{
                 config/korners/huddle.yaml `compose:`); this list
                 is discovery only. Phase 9.6. */}
             <RoomsList />
+
+            <CallRecordings kind='huddle' />
           </div>
         ) : (
           <div style={inRoomContainerStyle}>
@@ -597,15 +559,18 @@ const Live: React.FC<{
                   </span>
                 )}
               </div>
-              <button onClick={leaveRoom} style={leaveButtonStyle}>
-                {intl.formatMessage(messages.leave)}
-              </button>
             </div>
             {/* The call is drawn over this box (jitsi_session.ts). */}
             <div
               ref={slotRef}
               style={jitsiWrapperStyle}
               data-huddle-slot='docked'
+            />
+            <CallControls
+              call={call}
+              onLeave={leaveRoom}
+              leaveLabel={intl.formatMessage(messages.leave)}
+              inputPicker
             />
           </div>
         )}

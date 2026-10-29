@@ -5,7 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { useHistory } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import { apiDeleteFilm } from 'mastodon/api/cinema';
+import { apiDeleteFilm, apiGetFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
@@ -108,6 +108,15 @@ export const FilmViewer: React.FC<Props> = ({ film, onChange }) => {
     });
   }, [deleting, intl, film.id, history, confirmThen]);
 
+  // Same as set or cleared in the Konnected section: the film's audience
+  // (its reach above) changed with it.
+  const handleAudienceChange = useCallback(() => {
+    if (!onChange) return;
+    apiGetFilm(film.id)
+      .then(onChange)
+      .catch(() => undefined);
+  }, [film.id, onChange]);
+
   const ownerAccount = createAccountFromServerJSON(film.owner);
 
   return (
@@ -153,6 +162,7 @@ export const FilmViewer: React.FC<Props> = ({ film, onChange }) => {
         korner='cinema'
         recordId={film.id}
         canManage={film.is_owner}
+        onAudienceChange={handleAudienceChange}
       />
 
       {editing && (

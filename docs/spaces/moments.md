@@ -110,6 +110,15 @@ Status is kept out of every feed.
    (`features/moments/people.ts`). `show` returns 404 for a Moment you can't
    see.
 
+   **Getting out.** The close button (×, top right, a 44px ring), Escape,
+   or a tap anywhere off the photo closes it: a step back, or the Moments
+   korner when it was opened cold. An iPhone home-screen app has no Back
+   button or back swipe, so the × is the way out and has to be seen
+   (Kommons "Make a way to exit Moments", 2026-10-27). The viewer is
+   mounted on `document.body`, like `<ComposeShell>`, so the phone tab bar
+   and the Ж button don't sit over it, and its padding clears the notch and
+   the home indicator (`env(safe-area-inset-*)`).
+
 All three read `GET /api/v1/moments` (`filter=log` for the Log, otherwise
 live; `account_id` to narrow to one author), capped at 60.
 

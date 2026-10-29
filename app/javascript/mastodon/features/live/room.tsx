@@ -1,10 +1,12 @@
-// A Huddle Room — Phase 9.6 discovery slice.
+// A Huddle Room, called a Kuddle wherever people see it.
 //
-// Mounted at `/hub/huddle/room/:id`. Fetches the Room's shape from
-// `GET /api/v1/huddle/rooms` (finding by id) and goes straight into
-// the call: the same Jitsi iframe the Main Huddle uses, scoped to the
-// Room's `session_url` (unique per row so two Rooms named "Coworking"
-// don't collide on the Jitsi side). There is no lobby; tapping the
+// Mounted at `/hub/huddle/kuddle/:id` (`/hub/huddle/room/:id` redirects).
+// Fetches the Room's shape from `GET /api/v1/huddle/rooms` (finding by id)
+// and goes straight into the call: a pass for the Kuddle
+// (POST /api/v1/calls/token; the Jitsi room is its `session_url`, unique per
+// row so two Rooms named "Coworking" don't collide on the Jitsi side), then
+// the call with Kronk's controls under it (mastodon/jitsi.ts,
+// components/call_controls.tsx). There is no lobby; tapping the
 // Room on `/hub/huddle` (or creating it) is the join. Leaving goes
 // back to `/hub/huddle`. The Frame's `← Huddle` badge is the way
 // back, so the page draws no back chip of its own.
@@ -13,8 +15,9 @@
 // no auto-rejoin state machine. Rooms are come-and-go; the Main
 // Huddle carries the "you're always in it" affordance.
 //
-// Below the call sits the Room's "Attached" block (huddle takes and makes
-// links like every korner with records); its host manages it.
+// Below the call sit the Kuddle's recordings, for anyone who can see it, and
+// its "Attached" block (huddle takes and makes links like every korner with
+// records); its host manages it.
 
 import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -26,14 +29,18 @@ import { useHistory, useParams } from 'react-router-dom';
 
 import { apiRequestGet, apiRequestPost } from 'mastodon/api';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
+import { CallControls } from 'mastodon/components/call_controls';
+import { CallRecordings } from 'mastodon/components/call_recordings';
 import { Stage } from 'mastodon/components/stage';
-import { jitsiDomain, me } from 'mastodon/initial_state';
+import { me } from 'mastodon/initial_state';
+import type { Call } from 'mastodon/jitsi';
+import { createCall, getCallPass, loadJitsi } from 'mastodon/jitsi';
 import { useAppSelector } from 'mastodon/store';
 
-// Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
-const JITSI_DOMAIN = jitsiDomain;
+import { KuddleFollow } from './kuddle_follow';
+import type { KuddleFollowState } from './kuddle_follow';
 
-interface HuddleRoomJSON {
+interface HuddleRoomJSON extends KuddleFollowState {
   id: string;
   name: string;
   description: string | null;
@@ -42,34 +49,15 @@ interface HuddleRoomJSON {
   is_host?: boolean;
 }
 
-interface JitsiApi {
-  dispose: () => void;
-  addListener: (event: string, callback: () => void) => void;
-  executeCommand: (command: string, ...args: string[]) => void;
-  getNumberOfParticipants: () => number;
-}
-
-interface JitsiOptions {
-  roomName: string;
-  parentNode: HTMLDivElement;
-  userInfo?: { displayName: string; email: string };
-  configOverwrite?: Record<string, unknown>;
-  interfaceConfigOverwrite?: Record<string, unknown>;
-}
-
-type JitsiConstructor = new (domain: string, options: JitsiOptions) => JitsiApi;
-
-declare global {
-  interface Window {
-    JitsiMeetExternalAPI?: JitsiConstructor;
-  }
-}
-
 const messages = defineMessages({
   leave: { id: 'huddle.room.leave', defaultMessage: 'Unhuddle' },
   notFound: {
     id: 'huddle.room.not_found',
-    defaultMessage: 'Room not found or has been retired.',
+    defaultMessage: 'This Kuddle is not here, or has been retired.',
+  },
+  joinFailed: {
+    id: 'huddle.room.join_failed',
+    defaultMessage: 'Couldn’t get into this Kuddle just now.',
   },
 });
 
@@ -106,15 +94,10 @@ const inRoomHeaderStyle: CSSProperties = {
   padding: '12px 16px',
   borderBottom: '1px solid var(--background-border-color)',
 };
-const leaveStyle: CSSProperties = {
-  padding: '6px 16px',
-  fontSize: '13px',
-  fontWeight: 600,
-  borderRadius: '8px',
-  border: 'none',
-  background: '#e03131',
-  color: '#fff',
-  cursor: 'pointer',
+const headerActionsStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
 };
 const jitsiWrapStyle: CSSProperties = { flex: 1, minHeight: '400px' };
 const jitsiInnerStyle: CSSProperties = { width: '100%', height: '100%' };
@@ -128,7 +111,9 @@ export const LiveRoom: React.FC = () => {
   const joinedRef = useRef(false);
   const [apiLoaded, setApiLoaded] = useState(false);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
-  const jitsiApiRef = useRef<JitsiApi | null>(null);
+  const callRef = useRef<Call | null>(null);
+  const [call, setCall] = useState<Call | null>(null);
+  const [joinFailed, setJoinFailed] = useState(false);
   const currentAccount = useAppSelector((state) =>
     me ? state.accounts.get(me) : undefined,
   );
@@ -151,79 +136,83 @@ export const LiveRoom: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    if (
-      document.querySelector(
-        'script[src="https://' + JITSI_DOMAIN + '/external_api.js"]',
-      )
-    ) {
-      setApiLoaded(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://' + JITSI_DOMAIN + '/external_api.js';
-    script.async = true;
-    script.onload = () => {
-      setApiLoaded(true);
+    let cancelled = false;
+    loadJitsi()
+      .then(() => {
+        if (!cancelled) setApiLoaded(true);
+        return undefined;
+      })
+      .catch(() => {
+        if (!cancelled) setJoinFailed(true);
+      });
+    return () => {
+      cancelled = true;
     };
-    document.head.appendChild(script);
   }, []);
 
+  // Leaving the page ends the call (a Kuddle's call doesn't follow you).
+  const mountedRef = useRef(true);
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      if (jitsiApiRef.current) {
-        jitsiApiRef.current.dispose();
-        jitsiApiRef.current = null;
-      }
+      mountedRef.current = false;
+      callRef.current?.dispose();
+      callRef.current = null;
     };
+  }, []);
+
+  const handleFollowChange = useCallback((state: KuddleFollowState) => {
+    setRoom((current) => (current ? { ...current, ...state } : current));
   }, []);
 
   const handleLeave = useCallback(() => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.dispose();
-      jitsiApiRef.current = null;
-    }
+    callRef.current?.dispose();
+    callRef.current = null;
+    setCall(null);
     history.push('/hub/huddle');
   }, [history]);
 
   // Opening the Room is the join: once the Room and the Jitsi script are
-  // both in, embed the call. `joinedRef` keeps it to one embed per visit.
+  // both in, get a pass and embed the call. `joinedRef` keeps it to one
+  // embed per visit, whatever else about the Room changes meanwhile.
   useEffect(() => {
-    if (!room || !apiLoaded || joinedRef.current) return undefined;
+    if (!room || !apiLoaded || joinedRef.current) return;
     joinedRef.current = true;
-    let cancelled = false;
 
-    const join = () => {
-      if (
-        cancelled ||
-        !window.JitsiMeetExternalAPI ||
-        !jitsiContainerRef.current
-      )
-        return;
-      const displayName =
-        currentAccount?.get('display_name') ??
-        currentAccount?.get('username') ??
-        'Guest';
-      const api = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
-        roomName: room.session_url,
-        parentNode: jitsiContainerRef.current,
-        userInfo: { displayName, email: '' },
+    void getCallPass('kuddle', room.id)
+      .then((pass) => {
+        if (!mountedRef.current || !jitsiContainerRef.current) {
+          return undefined;
+        }
+        const displayName =
+          currentAccount?.get('display_name') ??
+          currentAccount?.get('username') ??
+          'Kronker';
+        const created = createCall({
+          parentNode: jitsiContainerRef.current,
+          pass,
+          displayName,
+          avatarUrl: currentAccount?.get('avatar'),
+          subject: room.name,
+        });
+        if (!created) {
+          setJoinFailed(true);
+          return undefined;
+        }
+        // Hanging up inside Jitsi leaves the Room, same as Unhuddle.
+        created.api.addListener('readyToClose', handleLeave);
+        callRef.current = created;
+        setCall(created);
+        // Tell Kronk the Room is in use (keeps it listed first, and keeps
+        // the reaper away). Best effort: the call doesn't depend on it.
+        void apiRequestPost(`v1/huddle/rooms/${room.id}/join`).catch(() => {
+          /* best effort */
+        });
+        return undefined;
+      })
+      .catch(() => {
+        if (mountedRef.current) setJoinFailed(true);
       });
-      // Hanging up inside Jitsi leaves the Room, same as Unhuddle.
-      api.addListener('readyToClose', handleLeave);
-      jitsiApiRef.current = api;
-      // Tell Kronk the Room is in use (keeps it listed first, and keeps the
-      // reaper away). Best effort: the call itself doesn't depend on it.
-      void apiRequestPost(`v1/huddle/rooms/${room.id}/join`).catch(() => {
-        /* best effort */
-      });
-    };
-    join();
-
-    return () => {
-      cancelled = true;
-      // Torn down before the embed happened: let the next run try again.
-      if (!jitsiApiRef.current) joinedRef.current = false;
-    };
   }, [room, apiLoaded, currentAccount, handleLeave]);
 
   if (error) {
@@ -242,13 +231,30 @@ export const LiveRoom: React.FC = () => {
         <div style={inRoomWrapStyle}>
           <div style={inRoomHeaderStyle}>
             <span style={nameStyle}>{room.name}</span>
-            <button type='button' onClick={handleLeave} style={leaveStyle}>
-              {intl.formatMessage(messages.leave)}
-            </button>
+            <div style={headerActionsStyle}>
+              <KuddleFollow
+                roomId={room.id}
+                name={room.name}
+                state={room}
+                onChange={handleFollowChange}
+              />
+            </div>
           </div>
           <div style={jitsiWrapStyle}>
             <div ref={jitsiContainerRef} style={jitsiInnerStyle} />
           </div>
+          {joinFailed && (
+            <p style={descStyle} role='alert'>
+              {intl.formatMessage(messages.joinFailed)}
+            </p>
+          )}
+          <CallControls
+            call={call}
+            onLeave={handleLeave}
+            leaveLabel={intl.formatMessage(messages.leave)}
+            inputPicker
+          />
+          <CallRecordings kind='kuddle' id={room.id} />
           <AttachmentSection
             korner='huddle'
             recordId={room.id}

@@ -10,6 +10,11 @@ class REST::ChronicleSerializer < ActiveModel::Serializer
 
   attribute :is_owner
 
+  # The backing Status (Kronikles::PublishChronicle), which carries the
+  # reactions: the reader puts the shared reactions bar on it, as Albutts,
+  # Moments and Treks do. Nil until it is published.
+  attribute :status_id
+
   # The pictures the body places, for the reader to resolve
   # `![caption](picture:<id>)` against. Never a URL from the body itself.
   attribute :pictures
@@ -36,6 +41,30 @@ class REST::ChronicleSerializer < ActiveModel::Serializer
     Kronk::Audience.leader_preview(object, current_user&.account)
   end
 
+  # The Series it is a chapter of (docs/spaces/kronikles.md, Series), and
+  # where it sits there: counted over the chapters the viewer can see, so a
+  # chapter they can't see is never numbered or pointed to. Both nil when
+  # it is in no Series. Lists carry the Series (the directory shows it as one
+  # tile) but not the chapter.
+  attribute :series
+  attribute :chapter, unless: -> { instance_options[:list] }
+
+  def series
+    return if object.series.nil?
+
+    cover = object.series.cover_media_attachment&.file&.url(:small)
+    {
+      id: object.series.id.to_s,
+      title: object.series.title,
+      cover_url: cover.present? ? full_asset_url(cover) : nil,
+      chapter_count: visible_chapter_ids.size,
+    }
+  end
+
+  def chapter
+    object.chapter_for(current_user&.account)
+  end
+
   def id
     object.id.to_s
   end
@@ -52,6 +81,10 @@ class REST::ChronicleSerializer < ActiveModel::Serializer
     end
   end
 
+  def status_id
+    object.status_id&.to_s
+  end
+
   def excerpt
     object.excerpt
   end
@@ -64,5 +97,11 @@ class REST::ChronicleSerializer < ActiveModel::Serializer
 
   def created_at
     object.created_at.iso8601
+  end
+
+  private
+
+  def visible_chapter_ids
+    @visible_chapter_ids ||= object.series.chapters_visible_to(current_user&.account).pluck(:id)
   end
 end

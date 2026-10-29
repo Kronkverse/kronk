@@ -42,6 +42,30 @@ RSpec.describe Kronk::Search::PolicyFilter do
       expect(result.statuses).to be_empty
     end
 
+    it 'leaves out accounts from other servers and the instance actor' do
+      member = Fabricate(:account)
+      remote = Fabricate(:account, domain: 'elsewhere.example', username: 'faraway')
+
+      hits = [member, remote, Account.representative].map { |a| { type: :accounts, id: a.id } }
+
+      result = described_class.filter(hits, viewer)
+
+      expect(result.accounts).to contain_exactly(member)
+    end
+
+    it 'leaves out posts from other servers and the instance actor' do
+      remote = Fabricate(:account, domain: 'elsewhere.example', username: 'faraway')
+      remote_post = Fabricate(:status, account: remote, visibility: :public, local: false, uri: 'https://elsewhere.example/1')
+      actor_post = Fabricate(:status, account: Account.representative, visibility: :public)
+      member_post = Fabricate(:status, visibility: :public)
+
+      hits = [remote_post, actor_post, member_post].map { |s| { type: :statuses, id: s.id } }
+
+      result = described_class.filter(hits, viewer)
+
+      expect(result.statuses).to contain_exactly(member_post)
+    end
+
     it 'excludes tags that are not curated' do
       uncurated_tag = Fabricate(:tag, name: 'notcurated', curated: false)
       hits = [{ type: :kategories, id: uncurated_tag.id }]

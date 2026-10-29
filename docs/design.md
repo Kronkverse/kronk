@@ -759,6 +759,14 @@ built:
 The phone tab-bar (`HubSwitcher variant="bottom"`) has the same five pillars as
 icon tabs. It has no wire and no arrival glint.
 
+**Text fields are at least 16px on a touch screen.** iOS Safari zooms the page
+into a field under 16px when it takes focus, and stays zoomed. One rule in
+`styles/kronk/_form.scss` (No zoom on focus) holds every `input`, `textarea`
+and `select` to 16px under `(pointer: coarse)`, so no field sets this itself.
+A field drawn bigger on purpose (`.compose-title`) sets `--field-font-size` to
+its size and keeps it. User zoom stays on: never set `maximum-scale` or
+`user-scalable=no`. Spec: `spec/system/touch_input_zoom_spec.rb`.
+
 ---
 
 ## Platform primitives
@@ -861,9 +869,10 @@ or `project:`) and `project`, `booth`/`upload`, `kuestions`/`kuestion`.
 What a draft can't keep yet: files a composer only uploads when you post. The
 photos of a kar or an art piece, a film's video, a Booth set's audio and
 cover, and a Kronikle's Konnected korners or an event's are kept as text only;
-a trek keeps its route only while under 200,000 characters. Moments and the
-Kommons tree composer keep nothing yet (Moments uploads on Share; the tree
-composer isn't in the shell). Each needs its uploads moved to when the file is
+a trek keeps its route only while under 200,000 characters. Moments, the
+Kommons tree composer and Wachuneed's New listing page keep nothing yet
+(Moments uploads on Share; the tree composer and `new_listing.tsx` aren't in
+the shell). Each needs its uploads moved to when the file is
 picked, as albums do.
 
 Nudges keep a per-device draft per conversation instead
@@ -880,10 +889,19 @@ the person adds. Pass it to `<ComposeShell konnect={…}>`: the shell draws the
 **Konnect row** at the foot of the body, above the drafts line, in the same
 space tiles as a page's Konnected block (`.space-tiles`, one tile per record
 with a × to drop it, then a dashed Konnect tile that opens the picker in its
-pick-don't-save mode). Tiles reflow; nothing scrolls sideways. After the
+pick-don't-save mode). Tiles reflow; nothing scrolls sideways. The picker
+never offers what is Konnected already: the row's records in a composer,
+everything Konnected either way on a record's page. After the
 create succeeds the composer calls `konnect.commit(<its slug>, <new id>)`;
-a link that fails never fails the create. Keep `konnect.saved` in the draft
-(`konnections`) and `restore` it in `apply`. A composer that makes nothing
+a link that fails never fails the create, and `commit` names it in an alert
+itself ("Couldn't Konnect the Ember event"), so the composer needn't. Keep
+`konnect.saved` in the draft (`konnections`) and `restore` it in `apply`.
+`saved` never holds the record the composer was opened from: that comes
+from the URL each time, so a draft picked up later without `?konnect=`
+isn't Konnected to it or following its audience. Cancel from a composer
+opened from a record goes back to it (`useKonnectReturn()` in the korner's
+close handler: a step back, or the record's page on a cold load), not to
+the space's directory. A composer that makes nothing
 new to Konnect passes `konnect={null}`: editing a record (Konnect it from its
 page), adding to one that exists (photos to an album, a hand-over), a record
 that isn't its korner's linkable one (a trek, a FreeTheDream item), or a
@@ -892,7 +910,8 @@ through Konnect too, not fields of their own (Korner Standard L13): where a
 thing is, is a Konnection to a Map Place. In a composer's picker, Map opens
 the map straight away (`components/konnect_map.tsx`): existing Places listed
 above the search results, or a pin plus a name and an address you can type,
-which makes the Place and picks it without leaving the composer; whatever
+which makes the Place and picks it without leaving the composer (whatever
+fails is said in the map's own panel); whatever
 reads a location falls back to the Konnected Place (`Kronk::RecordPlace`,
 decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The
 korner's manifest then says
@@ -1031,10 +1050,12 @@ move.
 
 ### State indicators
 
-| Primitive        | What it does                                                                                          | Where                                                                |
-| ---------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<EmptyState>`   | The "nothing here yet" pattern: muted title, optional body, optional CTA. No icon (the badge has it). | `components/empty_state.tsx`, `styles/mastodon/_kronk_states.scss`   |
-| `<LoadingState>` | Mastodon's `<LoadingIndicator>` in Kronk layout, with an optional label, inline.                      | `components/loading_state.tsx`, `styles/mastodon/_kronk_states.scss` |
+| Primitive                            | What it does                                                                                                        | Where                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<EmptyState>`                       | The "nothing here yet" pattern: muted title, optional body, optional CTA. No icon (the badge has it).               | `components/empty_state.tsx`, `styles/mastodon/_kronk_states.scss`   |
+| `<LoadingState>`                     | Mastodon's `<LoadingIndicator>` in Kronk layout, with an optional label, inline.                                    | `components/loading_state.tsx`, `styles/mastodon/_kronk_states.scss` |
+| `<SilentErrorBoundary>`              | Renders nothing in place of a child that throws, so one self-contained piece (a feed card) can't take down the app. | `components/silent_error_boundary.tsx`                               |
+| `<MapNeedsWebGL>`, `supportsWebGL()` | What a map shows without WebGL, and the check every MapLibre map makes first (docs/spaces/map.md, Without WebGL).   | `components/map_needs_webgl.tsx`, `features/map_v2/basemap.ts`       |
 
 ### Inter-korner communication
 
@@ -1048,6 +1069,14 @@ move.
 | `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. New … opens a `konnect.make` korner's composer with `?konnect=`; `onPick` returns the record instead (composers), where Map opens the map to pick a Place or make one.                                                              | `components/attachment_picker.tsx`                                                                            |
 | `konnect:` in manifests            | A korner's Konnections: `make` (the picker offers its composer) and `effects` (what a Konnection with a space does, matching `Kronk::AttachmentEffects`). Checked by `korners doctor`.                                                                                                                                                                       | `config/korners/*.yaml`, `app/lib/kronk/korner_konnect.rb`                                                    |
 | `<EventSearch>`                    | A form field that picks one Kalendar event: the same candidates search, upcoming first with a "Show past events" toggle, the pick as a chip (title and date) with Change. Krew requirements use it.                                                                                                                                                          | `components/event_search.tsx`                                                                                 |
+
+### Calls
+
+| Primitive           | What it does                                                                                                                                                                                                                                                                                                                        | Where                                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `mastodon/jitsi.ts` | Kronk's Jitsi calls: the checked host and its script (loaded once), `getCallPass(kind, id)` for a pass, and `createCall({ parentNode, pass, displayName, … })`, one embed config with Jitsi's toolbar hidden, returning a `Call` that holds the call's state.                                                                       | `jitsi.ts`, `hooks/useCallState.ts`. docs/spaces/huddle.md, The Jitsi server                           |
+| `<CallControls>`    | The control bar under every call: mic, camera, screen, hand, tile view, leave, Record for a moderator, and the "Recording" marker. `compact` for the Huddle's mini window, `listenOnly` for a Booth listener, `inputPicker` for Sound input (`<CallInputPanel>`: the input and its level). A live set's host also gets Music sound. | `components/call_controls.tsx`, `components/call_input_picker.tsx`, `styles/mastodon/_kronk_call.scss` |
+| `<CallRecordings>`  | A call's recordings with Play, Download and Delete; silent when there are none. `useCallRecordings` and `<CallRecordingList>` for a page that shows them its own way.                                                                                                                                                               | `components/call_recordings.tsx`                                                                       |
 
 ### Where the spread bites
 

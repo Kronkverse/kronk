@@ -8,12 +8,14 @@
 #     message_types: [{ key, label, push }, ...],
 #     muted_types: [...],
 #     push_off_types: [...],
+#     push_style: 'each' | 'ping',
 #     quiet_hours: { start: 'HH:MM', end: 'HH:MM' }
 #   }
 #   PUT /api/v1/settings/nudges  body: any of { muted_types: [...],
-#     push_off_types: [...], quiet_hours: { start, end } }
+#     push_off_types: [...], push_style, quiet_hours: { start, end } }
 #
-# `push` is "send this to my phone" (Nudges::PushPreferences). Quiet hours
+# `push` is "send this to my phone" (Nudges::PushPreferences); `push_style`
+# is how a push reads: each one says what happened, or just a ping. Quiet hours
 # hold push back, never the nudge itself (Nudges::QuietHours); equal start
 # and end turns them off.
 #
@@ -27,6 +29,7 @@ class Api::V1::Settings::NudgesController < Api::BaseController
   before_action :require_user!
 
   TIME = /\A([01]\d|2[0-3]):[0-5]\d\z/
+  OTHER_FIELDS = %i(push_off_types push_style quiet_hours).freeze
 
   def show
     render json: payload
@@ -35,7 +38,7 @@ class Api::V1::Settings::NudgesController < Api::BaseController
   def update
     # A form-encoded empty list arrives as no key at all, so a request
     # carrying neither of the other fields is about the mute list.
-    if params.key?(:muted_types) || !(params.key?(:push_off_types) || params.key?(:quiet_hours))
+    if params.key?(:muted_types) || OTHER_FIELDS.none? { |field| params.key?(field) }
       known = Nudges::MuteCatalogue.keys.to_set
       current_user.settings[Nudges::MuteCatalogue::SETTING] = incoming(:muted_types).select { |k| known.include?(k) }
     end
@@ -43,6 +46,7 @@ class Api::V1::Settings::NudgesController < Api::BaseController
       known = Nudges::PushPreferences.keys.to_set
       current_user.settings[Nudges::PushPreferences::SETTING] = incoming(:push_off_types).select { |k| known.include?(k) }
     end
+    save_push_style if params.key?(:push_style)
     current_user.save!
     save_quiet_hours if params.key?(:quiet_hours)
 
@@ -53,6 +57,13 @@ class Api::V1::Settings::NudgesController < Api::BaseController
 
   def incoming(name)
     Array(params[name]).map(&:to_s).uniq
+  end
+
+  def save_push_style
+    style = params[:push_style].to_s
+    raise Mastodon::ValidationError, 'push_style is each or ping' unless Nudges::PushPreferences::STYLES.include?(style)
+
+    current_user.settings[Nudges::PushPreferences::STYLE_SETTING] = style
   end
 
   def save_quiet_hours
@@ -75,6 +86,7 @@ class Api::V1::Settings::NudgesController < Api::BaseController
       message_types: Nudges::PushPreferences.message_rows(current_user),
       muted_types: muted.select { |k| known.include?(k) },
       push_off_types: push_off,
+      push_style: Nudges::PushPreferences.style(current_user),
       quiet_hours: quiet_hours,
     }
   end

@@ -8,6 +8,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
 import { parseKonnectParam } from 'mastodon/hooks/useKonnect';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 
 import { EventComposer } from './event_composer';
 import type { CreatedEvent } from './event_composer';
@@ -114,12 +115,15 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
     [history, location.pathname],
   );
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/kalendar')) return;
     // If we arrived via /composer or /new, drop back to the plain
     // Spiral URL so the composer doesn't reopen on refresh.
     if (autoOpenComposer) history.replace('/hub/kalendar');
-  }, [autoOpenComposer, history]);
+  }, [autoOpenComposer, history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: CreatedEvent) => {

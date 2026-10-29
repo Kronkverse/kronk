@@ -31,6 +31,11 @@ RSpec.describe 'Location from a Konnected Place' do
     Event.find(response.parsed_body['id'])
   end
 
+  def pins_for_events(user)
+    get '/api/v1/map/events', headers: headers_for(user)
+    response.parsed_body.index_by { |pin| pin['title'] }
+  end
+
   describe 'events' do
     it "reads the Place's name and point when the event has no location" do
       event = create_event('Picnic')
@@ -61,6 +66,19 @@ RSpec.describe 'Location from a Konnected Place' do
 
       expect(response.parsed_body).to include('location_name' => 'The rotunda',
                                               'location_url' => 'https://www.openstreetmap.org/?mlat=-33.87&mlon=151.21')
+      # Its page shows the Place alone (decisions.md, 2026-10-27), and its
+      # edit form the own address, to remove.
+      expect(response.parsed_body).to include('place_id' => place.id.to_s,
+                                              'own_location' => { 'name' => 'The rotunda', 'url' => 'https://www.openstreetmap.org/?mlat=-33.87&mlon=151.21' })
+    end
+
+    it 'has no own location when it reads its Place' do
+      event = create_event('Picnic')
+      link('kalendar', event.id)
+
+      get "/api/v1/events/#{event.id}", headers: headers_for(author)
+
+      expect(response.parsed_body).to include('place_id' => place.id.to_s, 'own_location' => nil)
     end
 
     it "doesn't let someone else's Place say where the event is" do
@@ -72,6 +90,22 @@ RSpec.describe 'Location from a Konnected Place' do
       get "/api/v1/events/#{event.id}", headers: headers_for(author)
 
       expect(response.parsed_body['location_name']).to be_nil
+    end
+
+    # decisions.md, 2026-10-27: the Place is read live, so someone else's
+    # would let its maker move the event, and hand the event's audience an
+    # address they can't otherwise see.
+    it "doesn't take its location from someone else's Place, even when its host Konnected it" do
+      event = create_event('Picnic')
+      theirs = MapPlace.create!(account: stranger.account, name: 'Somewhere else', latitude: 1, longitude: 1)
+      link('kalendar', event.id, to: theirs)
+
+      get "/api/v1/events/#{event.id}", headers: headers_for(author)
+      expect(response.parsed_body['location_name']).to be_nil
+      expect(pins_for_events(author)).to_not have_key('Picnic')
+
+      # Konnected all the same.
+      expect(Kronk::AttachmentEffects.between('kalendar', event.id, 'map', theirs.id)).to exist
     end
 
     it 'reads the Places of a whole list' do
@@ -94,7 +128,9 @@ RSpec.describe 'Location from a Konnected Place' do
     end
 
     it 'pins an event with no location at its Place' do
-      link('kalendar', create_event('Picnic').id)
+      picnic = create_event('Picnic')
+      link('kalendar', picnic.id)
+      EventRsvp.create!(event: picnic, account: stranger.account, status: :going)
 
       pin = pins_for(stranger)['Picnic']
 
@@ -104,7 +140,9 @@ RSpec.describe 'Location from a Konnected Place' do
     end
 
     it "keeps to the event's reach" do
-      link('kalendar', create_event('Just me', visibility: 'self_only').id)
+      hidden = create_event('Just me', visibility: 'self_only')
+      link('kalendar', hidden.id)
+      EventRsvp.create!(event: hidden, account: stranger.account, status: :going)
 
       expect(pins_for(stranger)).to_not have_key('Just me')
       expect(pins_for(author)).to have_key('Just me')
@@ -127,6 +165,7 @@ RSpec.describe 'Location from a Konnected Place' do
 
       get "/api/v1/karporn/kars/#{bare.id}", headers: headers_for(author)
       expect(response.parsed_body['location']).to include('label' => 'Fitzroy Gardens', 'lat' => be_within(0.0001).of(-37.8136))
+      expect(response.parsed_body['place_id']).to eq(place.id.to_s)
 
       get '/api/v1/karporn/kars', headers: headers_for(author), params: { scope: 'mine' }
       labels = response.parsed_body.to_h { |kar| [kar['title'], kar.dig('location', 'label')] }
@@ -143,6 +182,7 @@ RSpec.describe 'Location from a Konnected Place' do
 
       get "/api/v1/wachuneed/listings/#{bare.id}", headers: headers_for(author)
       expect(response.parsed_body['location']).to eq('Fitzroy Gardens')
+      expect(response.parsed_body['place_id']).to eq(place.id.to_s)
 
       get '/api/v1/wachuneed/listings', headers: headers_for(author), params: { mine: true }
       locations = response.parsed_body.to_h { |listing| [listing['title'], listing['location']] }

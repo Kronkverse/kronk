@@ -74,6 +74,53 @@ RSpec.describe 'Attachments across korners' do
     expect { album.destroy! }.to change(KornerAttachment, :count).by(-1)
   end
 
+  it 'Konnects two records once, whichever way round' do
+    proposal.update!(created_by_account: user.account)
+    attach('albutts', album, 'kommons', proposal)
+    expect(response).to have_http_status(200)
+
+    expect { attach('kommons', proposal, 'albutts', album) }.to_not change(KornerAttachment, :count)
+    expect(response).to have_http_status(422)
+    expect(response.parsed_body['error']).to eq('Already Konnected')
+  end
+
+  describe 'changing or removing a link you have nothing to do with' do
+    let(:owner_token) { Fabricate(:accessible_access_token, resource_owner_id: other.id, scopes: 'read:statuses write:statuses') }
+    let(:hidden_album) { Album.create!(owner: other.account, title: 'Secret plans', visibility: :self_only) }
+    let!(:link) do
+      KornerAttachment.create!(source_slug: 'albutts', source_id: hidden_album.id, target_slug: 'kommons', target_id: proposal.id,
+                               kind: 'link', created_by_account: other.account)
+    end
+
+    it "answers 404 to clearing Same as on a link it can't see, and sends neither end" do
+      patch "/api/v1/attachments/#{link.id}", headers: headers, params: { audience_follows: nil }
+
+      expect(response).to have_http_status(404)
+      expect(response.body).to_not include('Secret plans')
+      expect(response.body).to_not include('Build a shed')
+    end
+
+    it 'answers 403 to changing a link it can see but looks after neither end of' do
+      hidden_album.update!(visibility: :public)
+      patch "/api/v1/attachments/#{link.id}", headers: headers, params: { audience_follows: nil }
+
+      expect(response).to have_http_status(403)
+      expect(response.body).to_not include('Secret plans')
+    end
+
+    it "answers 404 to removing a link it can't see" do
+      expect { delete "/api/v1/attachments/#{link.id}", headers: headers }.to_not change(KornerAttachment, :count)
+      expect(response).to have_http_status(404)
+    end
+
+    it 'still lets the owner of an end clear it' do
+      patch "/api/v1/attachments/#{link.id}", headers: { 'Authorization' => "Bearer #{owner_token.token}" }, params: { audience_follows: nil }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['source']['title']).to eq('Secret plans')
+    end
+  end
+
   describe 'searching for something to attach' do
     it 'finds proposals, which it could not before' do
       proposal

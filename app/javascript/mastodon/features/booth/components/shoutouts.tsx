@@ -10,6 +10,7 @@ import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { useBoothPlayback } from '../booth_playback_context';
 import { formatDuration } from '../format';
+import { isAlbumKind } from '../kinds';
 import type { BoothSet, BoothShoutout } from '../types';
 
 // Shoutouts on a set (docs/spaces/booth.md, Shoutouts): listeners' notes,
@@ -155,7 +156,9 @@ export const Shoutouts: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Only a set that's playing (or paused mid-way) has a moment to pin to.
-  const listening = activeSet?.id === set.id && currentTime > 0;
+  // An album's time is one track's, so its shoutouts aren't pinned.
+  const listening =
+    activeSet?.id === set.id && currentTime > 0 && !isAlbumKind(set.kind);
   const artist = set.artists[0]?.account?.display_name ?? set.artist_name;
 
   const handleBody = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

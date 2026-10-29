@@ -30,11 +30,13 @@ class ProcessMentionsService < BaseService
   # commits, and only for mentions that survived the block/domain filtering in
   # #assign_mentions! — a blocked mention is dropped there, and must not notify.
   # Silent mentions are skipped: they exist precisely so someone does not get
-  # told.
+  # told. One per person however often they are named (a repeated name
+  # appears in @current_mentions once per repeat), and on an edit only the
+  # people newly mentioned: everyone in @previous_mentions was told already.
   def publish_mention_nudges!
     return unless @save_records
 
-    @current_mentions.each do |mention|
+    (@current_mentions.uniq - @previous_mentions).each do |mention|
       next if mention.silent?
       next unless mention.account&.local?
 

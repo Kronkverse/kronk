@@ -33,12 +33,13 @@ members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
 
 An album or event made earlier, or outside the Krew, can be linked to it
 afterwards (Kommons "Link Existing Albums (and more)", 2026-10-17). On the
-Krew page, a member's **Link one of your albums** and **Link one of your
-events** list their own that aren't in the Krew yet; **Unlink** takes one
-back out. Past events count: the events list shows what's coming up,
-soonest first, and **Link a past event** below it adds the ones already
-been, most recent first (`GET /api/v1/events?filter=mine&when=upcoming`
-or `when=past`; plain `filter=mine` is still every event you made).
+Krew page that is **Konnect** (the Kalendar picker offers past events a tap
+away), and **Diskonnect** on its card takes it back out. The Albums and
+Events lists the tiles open are lists only; their own "Link one of your …"
+pickers and Unlink buttons went on 2026-10-27 (decisions.md, "Konnect
+only: leftovers removed"). `GET /api/v1/events?filter=mine&when=upcoming`
+or `when=past` still serves the picker; plain `filter=mine` is every event
+you made.
 
 - Albums: `POST/DELETE /api/v1/albutts/albums/:album_id/krews` adds the
   Krew to `album_krews`. Owner only, and only a Krew they're in.
@@ -46,7 +47,7 @@ or `when=past`; plain `filter=mine` is still every event you made).
   post: the event's maker only, and only a Krew they're in. Invite-only
   events can't be linked; they stay for their invitees. Either end can
   unlink (decisions.md, 2026-10-21), so the `DELETE` takes the maker or
-  **anyone in the Krew**, and Unlink shows to them all.
+  **anyone in the Krew**, and Diskonnect shows to them all.
 - **Posts follow.** A Krew on a post is set when the post is made, so
   `Kronk::StatusKrews` adds the Krew to the posts the album already has
   (the album post and each photo's), or the event's, and takes it off on
@@ -60,8 +61,8 @@ or `when=past`; plain `filter=mine` is still every event you made).
   is added to the Krew's audience. Unlinking from either takes it off both.
 - **A link is a link, however it's made** (decisions.md, 2026-10-22). Each
   of these keeps a korner attachment between the record and the Krew, so
-  both show it in their **Konnected** blocks: the Link buttons above, the
-  Attach picker from the album, the event or the Krew (either direction
+  both show it in their **Konnected** blocks: the Konnect picker from the
+  album, the event or the Krew (either direction
   works the same), the Krews picked in an album's or event's composer, and
   a Krew album (`albums.krew_id`), which stays linked to its own Krew and
   can't be unlinked from it. `Kronk::AttachmentEffects` turns a link into
@@ -154,18 +155,27 @@ All in `app/javascript/mastodon/features/krew/`.
 - **`/hub/krew`** (`index.tsx`): the directory, with two views on the
   standard rotating title: **Yours** (your Krews, including invite-only ones,
   most recently active first) and **Discover** (listed Krews). Each card
-  shows the Krew's photo (its initial when it has none) and the member
-  count. A Discover row carries the way in beside it:
-  **Join** for an open Krew, **Ask to join** for an `approval` one, and
-  "Asked to join" or "You're in" once that is so. A requirement-gated Krew
-  has no button on the row.
+  shows the Krew's photo (its initial when it has none), the member
+  count, and beside the name a small icon for its access
+  (`krew_access_mark.tsx`: open, asks to join, has requirements,
+  invite-only; decisions.md, 2026-10-26). A Discover row carries the way
+  in beside it: **Join** for an open Krew, **Ask to join** for an
+  `approval` one, **See what's needed** (to the Krew page) for a
+  requirement-gated one, and "Asked to join" or "Member" once that is so.
 - **`/hub/krew/composer`** (`krew_composer.tsx`): "Gather a Krew", the shared
-  `<ComposeShell>` overlay on the directory. Name, description, access,
-  spaces to attach, requirements, and people to invite. `/hub/krew/new` is an
-  alias.
-- **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name,
-  description, then the way in for someone not in it (Join, Ask to join, or
-  a note that it needs an invite). Under the name are **the faces**: a few
+  `<ComposeShell>` overlay on the directory. Name, description, people to
+  invite, access, and requirements; its Konnect row is how a new Krew gets
+  albums, events or a Huddle (Konnecting or making one turns that space on),
+  so there is no list of spaces to tick (2026-10-27). Access is four radio
+  cards in plain words, the same as Settings: Open, Ask to join,
+  Invite-only (hidden; only people a member brings in), Has requirements.
+  Requirements can be an event or a region, as in Settings; a row left
+  unfinished stops the Krew being made and says what it is missing.
+  `/hub/krew/new` is an alias.
+- **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name
+  (with the same access icon), description, then the way in for someone
+  not in it (Join, Ask to join, or a note that it needs an invite; a
+  requirement-gated Krew lists its requirements above Join). Under the name are **the faces**: a few
   of the people in it, how many, and for members a badge when people are
   asking to join. Tapping them opens **People** below the grid (tapping
   again closes it): for members, the people asking to join with "Let them
@@ -191,6 +201,14 @@ All in `app/javascript/mastodon/features/krew/`.
     (`krew_chat.tsx`, the messenger's `ConversationView` without its
     header), with "Open in Nudges" beside the heading. It is marked read
     once it has been on screen, not when the page opens.
+  - **Posts**: last on the page, the posts sent to the Krew, newest first,
+    as the standard feed card in the standard timeline (`krew_posts.tsx`,
+    `StatusListContainer` on the `krew:<id>` timeline,
+    `expandKrewTimeline`). The page scrolls on into them and more load as
+    the end comes into view (`GET :id/statuses` pages with `max_id` and a
+    `Link: rel=next` header). Only posts the member may see are listed
+    (each goes through `StatusPolicy`). Back by Tal's "Krew space feed"
+    proposal (decisions.md, 2026-10-27).
 
   The Ж menu's **+** makes something for the Krew in the open space, with
   the normal composer: **Post to <Krew>** (the post composer with the Krew
@@ -207,7 +225,7 @@ All in `app/javascript/mastodon/features/krew/`.
   invite link, spaces, membership (Leave) and Archive. Archive shows only to
   a sole member; while others are in, Membership says a Krew is archived
   when its last member leaves. Requirements to join show only while Access
-  is Requirement-gated. Spaces are the Krew page's icon tiles, each with a ×
+  is Has requirements. Spaces are the Krew page's icon tiles, each with a ×
   to take it out, plus Add a space (a tray of the spaces it can turn on).
 
 **Chat.** Each Krew has one group conversation in Nudges
@@ -261,9 +279,9 @@ two can't collide.
 - **The page for someone outside the Krew** is its name, description,
   faces and the way in. What's happening and the spaces are for members,
   even when a Krew album or post is shown to everyone.
-- **No list of a Krew's posts.** What's happening names the latest post,
-  and each post opens on its own, but older posts sent to the Krew have no
-  list on the page (`GET :id/statuses` still serves one).
+- **New Krew posts don't arrive live.** The Posts list picks up new posts
+  when the page is opened again (`since_id`), not while it is open; there
+  is no Krew stream.
 - **Should invite-only Krews be listed?** They are hidden from Discover, so
   nobody can ask to join one. Listing them would show Krews whose makers
   chose hidden; "Ask to join" is the listed kind of closed Krew for now.

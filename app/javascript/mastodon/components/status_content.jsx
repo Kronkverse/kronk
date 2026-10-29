@@ -9,7 +9,7 @@ import { withRouter } from 'react-router-dom';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 
-import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
+import ExpandMoreIcon from '@/material-icons/400-24px/expand_more.svg?react';
 import { Icon }  from 'mastodon/components/icon';
 import { Poll } from 'mastodon/components/poll';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -154,6 +154,13 @@ class StatusContent extends PureComponent {
     this.startXY = null;
   };
 
+  // Read more opens the text where it is; it doesn't leave the feed.
+  handleReadMore = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.props.onCollapsedToggle?.(false);
+  };
+
   handleTranslate = () => {
     this.props.onTranslate();
   };
@@ -186,7 +193,7 @@ class StatusContent extends PureComponent {
   render () {
     const { status, intl, statusContent } = this.props;
 
-    const renderReadMore = this.props.onClick && status.get('collapsed');
+    const renderReadMore = this.props.onClick && this.props.collapsible && status.get('collapsed');
     const contentLocale = intl.locale.replace(/[_-].*/, '');
     const targetLanguages = this.props.languages?.get(status.get('language') || 'und');
     const renderTranslate = this.props.onTranslate && this.props.identity.signedIn && ['public', 'unlisted'].includes(status.get('visibility')) && status.get('search_index').trim().length > 0 && targetLanguages?.includes(contentLocale);
@@ -199,8 +206,8 @@ class StatusContent extends PureComponent {
     });
 
     const readMoreButton = renderReadMore && (
-      <button className='status__content__read-more-button' onClick={this.props.onClick} key='read-more'>
-        <FormattedMessage id='status.read_more' defaultMessage='Read more' /><Icon id='angle-right' icon={ChevronRightIcon} />
+      <button type='button' className='status__content__read-more-button' onClick={this.handleReadMore} key='read-more'>
+        <FormattedMessage id='status.read_more' defaultMessage='Read more' /><Icon id='angle-down' icon={ExpandMoreIcon} />
       </button>
     );
 

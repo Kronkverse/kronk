@@ -66,6 +66,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.wachuneed.offer_declined',
     defaultMessage: '{who} declined your request',
   },
+  wachuneedBrandListed: {
+    id: 'nudges.notification.wachuneed.brand_listed',
+    defaultMessage: '{who} backed your brand, and it is in Brands now',
+  },
   freethedreamInvited: {
     id: 'nudges.notification.freethedream.invited',
     defaultMessage: '{who} invited you to have a look at an emergence',
@@ -122,6 +126,11 @@ const sentences = defineMessages({
     id: 'nudges.notification.booth.went_live',
     defaultMessage: '{who} is live in the Booth now',
   },
+  // To the host, about their own set: nobody else did anything.
+  boothSetReady: {
+    id: 'nudges.notification.booth.set_ready',
+    defaultMessage: 'Your live set is ready to publish',
+  },
   mapChallenged: {
     id: 'nudges.notification.map.challenged',
     defaultMessage: '{who} thinks your pin on the Map is out of date',
@@ -134,6 +143,11 @@ const sentences = defineMessages({
   huddleGathering: {
     id: 'nudges.notification.huddle.gathering',
     defaultMessage: 'People are huddling',
+  },
+  // The same for a Kuddle you follow; the line under it names the Kuddle.
+  huddleKuddleGathering: {
+    id: 'nudges.notification.huddle.kuddle_gathering',
+    defaultMessage: 'People are in a Kuddle you follow',
   },
   freethedreamMyceliumMatched: {
     id: 'nudges.notification.freethedream.mycelium_matched',
@@ -178,12 +192,15 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'booth.tagged': sentences.boothTagged,
   'booth.went_live': sentences.boothWentLive,
   'booth.shouted': sentences.boothShouted,
+  'booth.set_ready': sentences.boothSetReady,
   'map.challenged': sentences.mapChallenged,
   'rose.received': sentences.roseReceived,
   'huddle.gathering': sentences.huddleGathering,
+  'huddle.kuddle_gathering': sentences.huddleKuddleGathering,
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,
+  'wachuneed.brand_listed': sentences.wachuneedBrandListed,
   // No longer sent (the invite went, 2026-10-19); kept so old nudges read.
   'freethedream.invited': sentences.freethedreamInvited,
   'freethedream.mentioned': sentences.freethedreamMentioned,

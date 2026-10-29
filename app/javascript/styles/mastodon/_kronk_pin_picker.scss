@@ -167,6 +167,17 @@
     }
   }
 
+  // No WebGL: the note and "Centre on me" in the map's place; the
+  // search above still works.
+  &__no-map {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 1.5rem;
+  }
+
   &__map {
     position: relative;
     flex: 1 1 auto;

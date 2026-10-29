@@ -130,7 +130,6 @@ export const apiCreateKrew = (params: {
   discoverable?: boolean;
   governance_framework?: string;
   governance_threshold?: number;
-  korner_attachments?: KrewKornerSlug[];
   requirements?: KrewRequirementInput[];
   invite_account_ids?: string[];
 }) => apiRequestPost<ApiKrewJSON>('v1/krews', params);

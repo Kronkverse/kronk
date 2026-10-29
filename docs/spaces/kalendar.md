@@ -39,8 +39,11 @@ Krews, and the Konnect row. Where it is, is a Konnection to a Map Place
 (Konnect → Map opens the map to pick or make one without leaving the composer;
 decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The event
 reads its `location_name` and `location_url` from that Place when its own are
-empty; older events, and the Android app, keep their own. The edit form has
-no location fields either: Konnect a Place from the event's page. Every event made here is an in-person event with RSVP on.
+empty; older events, and the Android app, keep their own. The event page
+shows where it is once: as the Place's card in Konnected when it has one
+(then its own address, if it also has one, isn't shown), otherwise its own
+address and map (decisions.md, 2026-10-27). Every event made here is an
+in-person event with RSVP on.
 
 **Who sees it.** An event posts a companion `Status` (`source_korner:
 'kalendar'`) that carries its reach, using the standard reach ladder and Krews
@@ -82,12 +85,20 @@ host if the two are Mates.
 **Invitations.** `POST /api/v1/events/:id/invite` writes `EventInvitation`
 rows and sends an `event_invitation` notification.
 
-**Editing.** The event page (`features/events/event_detail.tsx`) uses the older
-`CreateEventForm` for edits, which also exposes `recurrence_rule`. The
-Konnected section sits right under the form, so an album or a Huddle Room is
-Konnected there, as on the event's page. The form no longer offers "spawn an
-album" or an Event/Huddle type (decisions.md 2026-10-23); it doesn't send
-`event_type`, so an existing event keeps the type it has.
+**Editing.** The Ж menu's Edit event on the event page
+(`features/events/event_detail.tsx`) opens the same `EventComposer` over the
+page, as albums and films do (decisions.md, 2026-10-27). It edits title,
+description, start and end, and cover, and saves them with a `PATCH`; Delete
+event is at its foot. It has no reach control (an event's audience is its
+post's, set when it is posted), no invitees (the page's Invite) and no
+Konnect row: the page's Konnected section, still there underneath, is where
+an album, a Huddle Room, a Krew or a Place is Konnected or Diskonnected. It
+sends no `event_type`, `rsvp_enabled` or `recurrence_rule`, so an event keeps
+what it has. An older event with an address typed into it
+(`own_location` in the API) shows that address with **Remove**, which sends
+`location_name` and `location_url` empty; that is the only location control.
+The older `CreateEventForm`, and the unrouted `features/events` page that
+also used it, were deleted.
 
 **API:** `/api/v1/events` (index with `filter=upcoming|past|mine|invited`,
 show, create, update, destroy, plus `rsvp`, `attendees`, `invite`,
@@ -115,8 +126,9 @@ Kalendar is the source side of `korner_attachments`
 - **No spawns.** `spawn_album` (an album made with the event, deleted with it)
   was retired 2026-10-23; the API ignores it. Albums spawned before then are
   still deleted with their event (`kind: spawn` rows cascade).
-- **Map:** events whose `location_url` is a parseable OpenStreetMap link, or
-  that have none and a Konnected Place, show as pins on Map
+- **Map:** your events (the ones you host, are going to or are interested
+  in) whose `location_url` is a parseable OpenStreetMap link, or that have
+  none and a Konnected Place, show as pins on Map
   (`/api/v1/map/events`), and the event page links to
   `/hub/map?event=<slug>`.
 
@@ -149,9 +161,9 @@ card is `StatusEventCard`.
   cards, the event page, Map and Nudges still show a `huddle` event as one, and
   the Android app still creates and edits them (`event_type`) and opens
   `huddle_url`. Dropping them waits on the app. The `events.spawn_album`
-  column is unused since 2026-10-23. `max_attendees` has no UI.
-- **Two edit paths.** Create uses `EventComposer`, edit uses the older
-  `CreateEventForm`. Worth bringing edit onto the composer.
+  column is unused since 2026-10-23. `max_attendees` has no UI, and since
+  2026-10-27 neither has `recurrence_rule` (the old edit form had a Repeat
+  menu).
 
 ## History
 

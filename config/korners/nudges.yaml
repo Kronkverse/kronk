@@ -183,6 +183,18 @@ listens:
     source_type: Listing
     source_id_key: listing_id
     interaction: passive
+  # A brand you proposed has the backers it needs and is in Brands now
+  # (docs/spaces/wachuneed.md, Brands). Once per brand. Directed: the
+  # backer who brought it there needn't be your Mate.
+  - event: wachuneed.brand.listed
+    source_korner: wachuneed
+    verb: brand_listed
+    directed: true
+    source_type: WachuneedBrand
+    source_id_key: brand_id
+    interaction: interactive
+    cta_label: 'See your brand'
+    cta_route: '/hub/wachuneed/brands/{brand_id}'
   # Someone tagged you (@username) in an emergence's talk. Directed: it's
   # addressed to you.
   - event: freethedream.comment.mentioned

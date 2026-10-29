@@ -1,23 +1,27 @@
 # frozen_string_literal: true
 
-# How many people are in the Main Huddle, from the Jitsi server's room-size
-# endpoint (docs/spaces/huddle.md). Only a number, never who. The home
-# feed's LiveBanner reads the remembered count through
+# How many people are in the Main Huddle, or in a Kuddle, from the Jitsi
+# server's room-size endpoint (docs/spaces/huddle.md). Only a number, never
+# who. The home feed's LiveBanner reads the remembered Main count through
 # GET /api/v1/huddle/count rather than asking Jitsi itself.
 #
-# `fetch` asks Jitsi (nil when it can't say). `remember` / `last_seen` keep
-# the latest count in Redis, so a "People are huddling" nudge can say how
-# many are there now without storing a number on the nudge.
+# `fetch` asks Jitsi (nil when it can't say); a Kuddle is asked by its Jitsi
+# room key (`session_url`). The key is what Kronk stores; the name asked
+# about carries JITSI_ROOM_PREFIX (Kronk::Jitsi.room_name). `remember` / `last_seen` keep the latest Main
+# count in Redis, and `remember_kuddle` / `last_seen_kuddles` each Kuddle's,
+# so a "People are huddling" nudge can say how many are there now without
+# storing a number on the nudge.
 module Kronk
   module HuddleCount
     extend Redisable
 
-    ROOM = 'huddle'
+    ROOM = Kronk::Jitsi::MAIN_ROOM
     LAST_SEEN_KEY = 'huddle:main:count'
     LAST_SEEN_TTL = 5.minutes
 
-    def self.fetch
-      url = "https://#{Rails.configuration.x.kronk_jitsi_domain}/room-size?room=#{ROOM}&domain=meet.jitsi"
+    def self.fetch(room = ROOM)
+      name = Kronk::Jitsi.room_name(room)
+      url = "https://#{Kronk::Jitsi.domain}/room-size?room=#{CGI.escape(name)}&domain=#{Kronk::Jitsi::XMPP_DOMAIN}"
 
       Request.new(:get, url).perform do |response|
         case response.code
@@ -26,7 +30,34 @@ module Kronk
         end
       end
     rescue HTTP::Error, OpenSSL::SSL::SSLError, Mastodon::Error, JSON::ParserError, ArgumentError, TypeError => e
-      Rails.logger.warn("Huddle count unavailable: #{e.class}: #{e.message}")
+      Rails.logger.warn("Huddle count unavailable for #{room}: #{e.class}: #{e.message}")
+      nil
+    end
+
+    WHO_TTL = 10.seconds
+
+    # Display names of who is in `room` now (Jitsi's /room, from
+    # mod_muc_size), for a lobby or a live set's listener count. The server
+    # answers only Kronk's own address, so browsers ask Kronk
+    # (Api::V1::Calls::PresencesController), never Jitsi. Cached for a few
+    # seconds per room: every lobby polls. nil when Jitsi can't say.
+    def self.who(room)
+      name = Kronk::Jitsi.room_name(room)
+      key = "huddle:who:#{name}"
+      cached = redis.get(key)
+      return JSON.parse(cached) if cached
+
+      url = "https://#{Kronk::Jitsi.domain}/room?room=#{CGI.escape(name)}&domain=#{Kronk::Jitsi::XMPP_DOMAIN}"
+      names = Request.new(:get, url).perform do |response|
+        case response.code
+        when 404 then []
+        when 200 then Array(JSON.parse(response.body_with_limit)).filter_map { |p| p['display_name'].presence if p.is_a?(Hash) }
+        end
+      end
+      redis.set(key, names.to_json, ex: WHO_TTL.to_i) unless names.nil?
+      names
+    rescue HTTP::Error, OpenSSL::SSL::SSLError, Mastodon::Error, JSON::ParserError, ArgumentError, TypeError => e
+      Rails.logger.warn("Huddle presence unavailable for #{room}: #{e.class}: #{e.message}")
       nil
     end
 
@@ -38,6 +69,24 @@ module Kronk
     # Jitsi isn't answering): better to say nothing than an old number.
     def self.last_seen
       redis.get(LAST_SEEN_KEY)&.to_i
+    end
+
+    def self.remember_kuddle(id, count)
+      redis.set(kuddle_key(id), count, ex: LAST_SEEN_TTL.to_i)
+    end
+
+    # { id => count } for the Kuddles seen lately; the rest are left out.
+    def self.last_seen_kuddles(ids)
+      ids = Array(ids)
+      return {} if ids.empty?
+
+      ids.zip(redis.mget(*ids.map { |id| kuddle_key(id) })).each_with_object({}) do |(id, count), seen|
+        seen[id] = count.to_i unless count.nil?
+      end
+    end
+
+    def self.kuddle_key(id)
+      "huddle:kuddle:#{id}:count"
     end
   end
 end

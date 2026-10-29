@@ -15,8 +15,8 @@ about:
   how:
     - "Tap Huddle Up to join the Main Huddle. It's always open, and everyone's welcome."
     - 'Keep the Main Huddle going in a small window while you move around Kronk.'
-    - 'Or tap a Room to drop into it. Rooms are open topics anyone can join.'
-    - 'Make a new Room from the Ж menu: a name and a line about it. You can Konnect it to a Krew of yours, and it shows on their page.'
+    - 'Or tap a Kuddle to drop into it. Kuddles are open topics anyone can join.'
+    - 'Make a new Kuddle from the Ж menu: a name and a line about it. You can Konnect it to a Krew of yours, and it shows on their page.'
     - "Tap Unhuddle when you're done."
 purpose: 'To give Kronk a room to be in together — live video for when presence beats a thread.'
 icon:
@@ -27,7 +27,7 @@ version: 2.0.0 # split from Kalendar in the rebuild
 resources:
   - name: huddle_sessions
     primary: true
-    path: /hub/huddle/room/:id
+    path: /hub/huddle/kuddle/:id # a Room is a Kuddle to people; /room/:id redirects
   - name: huddle_participants
 
 storage:
@@ -52,32 +52,34 @@ security:
   federates: false
 
 # Ж-menu compose action. Any signed-in user can open a new open
-# Room (see docs/spaces/huddle.md § Three categories); the create
+# Room ("New Kuddle": people call Rooms Kuddles) (see docs/spaces/huddle.md § Three categories); the create
 # affordance lives on the floating Kronk menu per the Korner
 # Standard (docs/korners/adding_a_korner.md §11.5 — "Never build a
 # per-page 'Add' / 'New X' / 'Create' button"). Route mounts the
 # Huddle shell with `autoOpenComposer`, which opens RoomComposer in the
-# shared <ComposeShell> (`?krew=<id>` picks a Krew to Konnect the Room
-# to). Creating goes straight into the new Room's call; cancelling puts
-# the URL back to `/hub/huddle`. `/hub/huddle/new` redirects here.
+# shared <ComposeShell>. Opened with `?konnect=<slug>:<id>` (or the older
+# `?krew=<id>`), RoomComposer Konnects the Room to that record through
+# useKonnect, and a Krew's keys the draft to it. Creating goes straight
+# into the new Room's call; cancelling goes back to the record it was
+# opened from, or to `/hub/huddle`. `/hub/huddle/new` redirects here.
 # Konnect (decisions.md, 2026-10-23): a Konnection with a Room is only the
-# link. `konnect: { make: true }` waits for RoomComposer to take
-# `?konnect=` through useKonnect (it reads only `?krew=` so far).
+# link.
 
 # Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
 # Korner attachments §2.6): this korner's Konnections and how they work.
 konnect:
   # What one of its records is called wherever Kronk names it beside
   # its title ("the Ember event"), so records that share a title can be
-  # told apart (decisions.md, 2026-10-26).
-  noun: room
+  # told apart (decisions.md, 2026-10-26). A Room is a Kuddle to the people
+  # using it (decisions.md, 2026-10-27); the code still says room.
+  noun: Kuddle
   # The Konnect picker can make a new one from anywhere: "New …" opens
   # `compose.route` with `?konnect=<source slug>:<source id>`, and the
   # composer Konnects what it makes to that source.
   make: true
 
 compose:
-  label: 'New Room'
+  label: 'New Kuddle'
   route: '/hub/huddle/composer'
 
 feed_projection:
@@ -111,7 +113,8 @@ notifications:
       interactive: false
 
 # Fomo noto (Kommons, 2026-10-21): "People are huddling" once the Main
-# Huddle has this many in it. Read by Huddle::FomoNotifier (its
+# Huddle has this many in it, and the same for each Kuddle you follow
+# (2026-10-27, its own row huddle.kuddle_gathering). Read by Huddle::FomoNotifier (its
 # DEFAULT_THRESHOLD matches `default`). The nudge is made outright, not on
 # the bus, so like Albutts' hand-wired ones it isn't under `notifications:`;
 # its row (Nudges::MuteCatalogue, huddle.gathering) has the switches that
@@ -125,7 +128,7 @@ settings:
     max: 35
     scope: user
     label: Tell me when this many are huddling
-    description: In the Main Huddle. Once per gathering; the switches above turn it off.
+    description: In the Main Huddle and the Kuddles you follow. Once per gathering; the switches above turn it off.
 
 emits:
   - huddle.started
@@ -165,7 +168,7 @@ attaches:
     lifecycle: keep
 
 hub_teaser:
-  static: 'Live rooms, open the door and drop in.'
+  static: 'The Huddle and its Kuddles: open the door and drop in.'
 
 launch:
   blurb: 'Huddle — live video, when it makes sense to be in the room together.'

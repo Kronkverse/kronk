@@ -99,7 +99,7 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(page).to have_css('.compose-shell', text: 'New event')
   end
 
-  it 'makes a new Huddle room for the Krew from the Konnect picker' do
+  it 'makes a new Kuddle for the Krew from the Konnect picker' do
     # The Huddle lobby under the composer asks the Jitsi host who is in, a
     # server this suite does not run (as in huddle_spec).
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
@@ -107,7 +107,7 @@ RSpec.describe 'Krew page', :js, :streaming do
     within('.attachment-section') { click_on 'Konnect' }
     within('.attachment-picker') do
       click_on 'Huddle'
-      click_on 'New Room'
+      click_on 'New Kuddle'
     end
 
     expect(page).to have_current_path("/hub/huddle/composer?konnect=krew:#{krew.id}")
@@ -180,5 +180,45 @@ RSpec.describe 'Krew page', :js, :streaming do
 
     find('.krew-detail__faces').click
     expect(page).to have_no_css('.krew-detail__people')
+  end
+
+  # decisions.md, 2026-10-27: a new Krew's spaces come from Konnect, not a
+  # list to tick, and a requirement left unfinished stops it being made
+  # instead of being dropped.
+  it 'offers plain access choices and no list of spaces' do
+    visit '/hub/krew/composer'
+
+    within('.compose-shell') do
+      expect(page).to have_no_text('Korners')
+      expect(page).to have_no_text(/invite link/i)
+      expect(page).to have_css('.konnect-row')
+      expect(page).to have_css('.krew-composer__radio', count: 4)
+      expect(page).to have_field('Open', type: 'radio', checked: true, visible: :all)
+    end
+  end
+
+  it 'holds back a Krew until its requirement is finished' do
+    visit '/hub/krew/composer'
+
+    within('.compose-shell') do
+      find('.compose-title').fill_in(with: 'Seed savers')
+      find('.krew-composer__radio', text: 'Has requirements').click
+      click_on '+ Add requirement'
+      expect(page).to have_no_css('option', text: 'Vouched by a member')
+      find('.compose-shell__submit').click
+
+      expect(page).to have_text('Name a region, or remove this requirement.')
+    end
+    expect(Krew.where(name: 'Seed savers')).to be_empty
+
+    within('.compose-shell') do
+      fill_in 'Region (e.g. Melbourne)', with: 'Melbourne'
+      find('.compose-shell__submit').click
+    end
+
+    expect(page).to have_current_path(%r{/hub/krew/seed-savers})
+    krew = Krew.find_by!(name: 'Seed savers')
+    expect(krew.access).to eq 'requirement_gated'
+    expect(krew.krew_requirements.pluck(:kind)).to eq ['located_in']
   end
 end

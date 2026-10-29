@@ -6,7 +6,6 @@ import { Helmet } from 'react-helmet';
 import {
   Route,
   Switch,
-  Link,
   useHistory,
   useLocation,
   useRouteMatch,
@@ -16,11 +15,17 @@ import { apiGetChronicle, apiListChronicles } from 'mastodon/api/kronikles';
 import type { ChroniclesScope } from 'mastodon/api/kronikles';
 import type { ApiChronicleJSON } from 'mastodon/api_types/kronikles';
 import { FeedDrum } from 'mastodon/components/feed_drum';
+import { Icon } from 'mastodon/components/icon';
+import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { ChronicleComposer } from './components/chronicle_composer';
-import { ChronicleReader } from './components/chronicle_reader';
+import { ChronicleReader, KIND_LABEL } from './components/chronicle_reader';
+import { SeriesRoute } from './components/series_page';
+import { SeriesRow } from './components/series_row';
 
 const messages = defineMessages({
   title: { id: 'kronikles.title', defaultMessage: 'Kronikles' },
@@ -78,6 +83,9 @@ export const Kronikles: React.FC<{ multiColumn?: boolean }> = () => {
         <Route path='/hub/kronikles' exact>
           <Directory />
         </Route>
+        <Route path='/hub/kronikles/series/:id' exact>
+          <SeriesRoute />
+        </Route>
         {/* :id must come last so the scope segments above match first. */}
         <Route path='/hub/kronikles/:id' exact>
           <ChronicleRoute />
@@ -101,6 +109,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const scope = useCurrentScope();
   const [chronicles, setChronicles] = useState<ApiChronicleJSON[] | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
+  const kornerGlyph = useKornerIcon('kronikles');
 
   useEffect(() => {
     if (autoOpenComposer) setComposerOpen(true);
@@ -128,10 +137,13 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     [history],
   );
 
+  const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/kronikles')) return;
     if (autoOpenComposer) history.replace('/hub/kronikles');
-  }, [autoOpenComposer, history]);
+  }, [autoOpenComposer, history, returnToSource]);
 
   const handleCreated = useCallback(
     (created: ApiChronicleJSON) => {
@@ -158,18 +170,31 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
         {emptyMessage}
       </p>
     ) : (
-      <ul className='kronikles-directory__list'>
-        {chronicles.map((c) => (
-          <li key={c.id} className='kronikles-directory__row'>
-            <Link to={`/hub/kronikles/${c.id}`} className='kronikles-card'>
-              <div className='kronikles-card__kind'>{c.kind}</div>
-              <div className='kronikles-card__title'>{c.title}</div>
-              <p className='kronikles-card__excerpt'>{c.excerpt}</p>
-              <div className='kronikles-card__owner'>@{c.owner.acct}</div>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      // The shared tile grid, like every other space's list of made things
+      // (docs/design.md, Platform primitives): the first picture in the
+      // Kronikle, or the korner's glyph, over its title, author and kind. A
+      // Series is one tile.
+      <SpaceGrid className='kronikles-directory__grid'>
+        {chronicles.map((c) =>
+          c.series ? (
+            <SeriesRow
+              key={`series-${c.series.id}`}
+              chronicle={c}
+              series={c.series}
+            />
+          ) : (
+            <SpaceCard
+              key={c.id}
+              to={`/hub/kronikles/${c.id}`}
+              image={c.pictures[0]?.preview_url ?? null}
+              placeholder={<Icon id='korner-kronikles' icon={kornerGlyph} />}
+              title={c.title}
+              meta={`@${c.owner.acct}`}
+              tag={intl.formatMessage(KIND_LABEL[c.kind])}
+            />
+          ),
+        )}
+      </SpaceGrid>
     );
 
   return (

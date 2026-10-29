@@ -22,6 +22,14 @@ class BoothLive < ApplicationRecord
        suffix: :scope
   belongs_to :status, optional: true, inverse_of: :booth_live
   has_many :reminders, class_name: 'BoothLiveReminder', inverse_of: :booth_live, dependent: :delete_all
+  # Its recording, made on the Jitsi server, for the host to publish as a set
+  # (docs/spaces/booth.md, Recording a live set). Destroying deletes the file.
+  has_many :call_recordings, dependent: :destroy
+  # Shoutouts, reactions, requests and the host's Now playing, while it's
+  # live (docs/spaces/booth.md, The crowd on screen).
+  has_many :moments, class_name: 'BoothLiveMoment', inverse_of: :booth_live, dependent: :delete_all
+  # The draft set made from its audio recording (Booth::LiveRecordingSetWorker).
+  belongs_to :booth_set, optional: true
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, length: { maximum: 2000 }
@@ -77,6 +85,12 @@ class BoothLive < ApplicationRecord
 
   def ended?
     state == 'ended'
+  end
+
+  # What the host marked as Now playing, in order, as a set's track list
+  # (BoothSet#tracklist): `start_seconds` is how far into the set it came.
+  def tracklist
+    moments.tracks.limit(BoothSet::TRACKLIST_MAX).map(&:to_track)
   end
 
   # Going live tells everyone tuned in to the Booth, and anyone who asked

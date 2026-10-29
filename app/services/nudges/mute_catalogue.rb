@@ -55,6 +55,7 @@ module Nudges
       'wachuneed.offered' => { korner: 'wachuneed', label: 'Someone makes an offer on your listing' },
       'wachuneed.offer_accepted' => { korner: 'wachuneed', label: 'Your offer is accepted' },
       'wachuneed.offer_declined' => { korner: 'wachuneed', label: 'Your offer is declined' },
+      'wachuneed.brand_listed' => { korner: 'wachuneed', label: 'A brand you proposed is in Brands' },
       'freethedream.mentioned' => { korner: 'freethedream', label: 'Someone tags you in an emergence’s talk' },
       'freethedream.mycelium_matched' => { korner: 'freethedream', label: 'A new need fits something you shared from your Mycelium' },
       'kuestions.answered' => { korner: 'kuestions', label: 'Someone answers your question' },
@@ -66,10 +67,11 @@ module Nudges
       'map.challenged' => { korner: 'map', label: 'A Mate thinks your pin on the Map is out of date' },
       'rose.received' => { korner: 'rose', label: 'A Mate sends you a rose' },
       'huddle.gathering' => { korner: 'huddle', label: 'People are huddling (as many as your number below)' },
+      'huddle.kuddle_gathering' => { korner: 'huddle', label: 'People gather in a Kuddle you follow (as many as your number below)' },
     }.freeze
 
     # Nudges delivered by calling Nudges::EventRouter directly, or made
-    # outright (huddle.gathering, Huddle::FomoNotifier; booth.went_live,
+    # outright (huddle.gathering and huddle.kuddle_gathering, Huddle::FomoNotifier; booth.went_live,
     # Booth::LiveNotifier), rather than through
     # a `listens:` entry.
     HAND_WIRED = %w(
@@ -77,6 +79,7 @@ module Nudges
       albutts.tagged
       booth.went_live
       huddle.gathering
+      huddle.kuddle_gathering
       profile.posted_on
     ).freeze
 

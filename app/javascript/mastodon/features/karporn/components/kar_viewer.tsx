@@ -142,7 +142,9 @@ export const KarViewer: React.FC<Props> = ({ kar, onChange }) => {
           <span aria-hidden>·</span>
           <span>{intl.formatMessage(VISIBILITY_LABEL[kar.visibility])}</span>
         </div>
-        {kar.location && (
+        {/* Where it is shows once: as its Place's card in Konnected when
+            it has one (decisions.md, 2026-10-27). */}
+        {kar.location && !kar.place_id && (
           <div className='karporn-viewer__location'>
             <Icon id='location_on' icon={LocationOnIcon} />
             <span>

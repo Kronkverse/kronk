@@ -13,6 +13,7 @@ Earlier designs are in git history (see [History](#history)).
 | URL                | What it is                                                                       |
 | ------------------ | -------------------------------------------------------------------------------- |
 | `/@:acct`          | The profile: block, Profile face, then their timeline                            |
+| `/@:acct/mates`    | The block, then their Mates list (them and their Mates only)                     |
 | `/@:acct/settings` | Your settings for this person (signed in only)                                   |
 | `/@:acct/tagged/…` | A tag-filtered timeline. Not a face; it keeps its own route and draws the block. |
 
@@ -23,14 +24,15 @@ Earlier designs are in git history (see [History](#history)).
 **Redirects.** Old profile pages redirect rather than 404, because links to
 them exist in the wild:
 
-- `/posts` and `/mates` (the old Timeline and Mates faces) → `/@:acct`.
+- `/posts` (the old Timeline face) → `/@:acct`.
 - `/followers`, `/following` (and the `/accounts/…`, `/users/…` spellings) →
   `/@:acct`.
 - `/featured`, `/with_replies`, `/media` → `/@:acct`.
 - `/@:acct/nudges` → `/nudges`.
 - `/@:acct/edit` → `/@:acct` (editing happens on the profile, below).
 - On the server, `FollowerAccountsController` and `FollowingAccountsController`
-  send browsers to `/@:acct/mates`, which lands on the profile.
+  send browsers to `/@:acct/mates`, the Mates list (or, for someone who may
+  not see it, a line saying so).
 
 These retire **pages, not data**. The ActivityPub `followers`/`following`
 collections and the REST endpoints (`/api/v1/accounts/:id/followers`,
@@ -45,7 +47,7 @@ only place identity is drawn.
 ("You're Mates", "Blocking", …), and a row of actions:
 
 - the relationship button (`FollowButton`: Mate? / Mating… / Accept). Once you
-  are Mates, Unmate lives on the per-person settings screen, not here;
+  are Mates it shows nothing, here or anywhere else it is used;
 - **Nudge**, a link to `/nudges/<accountId>`;
 - **Rose** (see [`rose.md`](rose.md));
 - **Share**, which opens the shared `<ShareSheet>`.
@@ -298,28 +300,46 @@ Kommons "Post to a profile").
 - **Turning it off.** Privacy settings, **Mates can post on my profile**
   (user setting `profile_posts`, on by default). Off, the server refuses.
 
-## The Mates list (off)
+## The Mates list
 
-**Off for now** (Tal, 2026-10-18): `/@:acct/mates` redirects to the profile
-and the Mates count isn't a link, until it is settled who may see whose Mates.
-The code below is kept for when it comes back.
+**Mates only** (Tal, 2026-10-26: "mates list visible to their mates only").
+`/@:acct/mates` shows the profile block and, under it, the person's Mates, to
+the person themselves and to their Mates. Tapping the Mates count opens it;
+the back chip returns to the profile. It was off from 2026-10-18 until this
+was settled.
 
 A Mate is a mutual follow (see [`feed.md`](feed.md) for how Mates work). Mates
 is the only relationship a profile shows, to anyone, including the owner. A
 one-way follow has no list and no count (Tal, 2026-09-04). Pending requests
 live at `/mate_requests`.
 
-The list was a plain, paginated one (`features/mates_tab/`):
+**Who sees it.** The rule is held in three places that must agree:
+
+- **Server** (`Api::V1::Accounts::MatesController#hide_results?`): the owner
+  always gets the list. Anyone else gets an empty list (200, `[]`) unless they
+  are signed in and `Account#mate?` them, the account doesn't hide its
+  connections (`hide_collections`, which hides it from Mates too), doesn't
+  block them, and its profile is visible to them
+  (`Account#profile_visible_to?`, so a `self_only` profile hides it). Accounts
+  the viewer muted or blocked are filtered out. Specs:
+  `spec/requests/api/v1/accounts/mates_spec.rb`.
+- **The count** (`components/profile_block.tsx`, `canSeeMates`): a link only
+  when the viewer is the owner, or `relationship.mate` and the account's
+  `hide_collections` is off. For anyone else it is plain text. The count
+  itself (`mates_count`) is shown to everyone who sees the block.
+- **The page** (`features/profile/index.tsx`): the same test; someone who
+  may not see the list, who reaches the URL anyway, gets an `<EmptyState>`
+  ("Only their Mates can see who their Mates are.").
+
+The list is plain and paginated (`features/mates_tab/`):
 
 - `useMatesList()` resolves the handle with `accounts/lookup`, then pages
-  through `GET /api/v1/accounts/:id/mates`
-  (`Api::V1::Accounts::MatesController`). Results are full
+  through `GET /api/v1/accounts/:id/mates`. Results are full
   `REST::AccountSerializer` records, paginated by Follow row id in the `Link`
   header.
-- Each row is the shared `<Account>` row. Pagination is a "Load more" button.
-- **Privacy** matches the old followers list: `hide_collections` hides the list
-  from everyone but the owner, a viewer the subject blocks sees nothing, and
-  accounts the viewer muted or blocked are filtered out.
+- Each row is the shared `<Account>` row, under a `.korner-section-heading`
+  and a `<BackToKorner>` chip. Loading, empty and error are `<LoadingState>`
+  and `<EmptyState>`; "Load more" is a `<KornerPill>`.
 
 Not to be confused with `GET /api/v1/accounts/:id/matuals` (Mates in common, a
 capped preview).
@@ -336,6 +356,14 @@ migration that says "will be backfilled later" isn't finished.
 person, reached from the Ж menu's Settings while you're on their profile. It
 has: mute, block, your private note about them, remove Mate, and report. On
 your own profile it points you at your account's Privacy settings instead.
+
+**Unmate lives only here.** No list row, hover card, profile peek card or
+profile block offers it: `FollowButton` and the peek card's `MateIconButton`
+render nothing for someone who is already your Mate. Ending a Mateship is a
+deliberate act on one person, not a button beside every name in a list
+(Kommons proposal
+[#117481297515130656](https://kronk.info/hub/kommons/p/117481297515130656),
+2026-10-25).
 
 ## Cutover
 

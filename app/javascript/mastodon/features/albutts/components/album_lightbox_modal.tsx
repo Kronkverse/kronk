@@ -21,6 +21,7 @@ import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
 import { useAppDispatch } from 'mastodon/store';
+import { handleMediaDownloadClick } from 'mastodon/utils/download_media';
 
 import { CaptionText } from './caption_text';
 import type { CaptionTextareaHandle } from './caption_textarea';
@@ -73,7 +74,7 @@ const messages = defineMessages({
   },
   captionPlaceholder: {
     id: 'albutts.lightbox.caption_placeholder',
-    defaultMessage: 'Add a description (optional)',
+    defaultMessage: 'Caption for this photo (optional)',
   },
   saveCaption: {
     id: 'albutts.lightbox.save_caption',
@@ -282,14 +283,22 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     (mayCaption || mayCover) && !editing,
   );
 
+  // The photo's media attachment. Saved in place by `downloadMedia`; the
+  // link to the same-origin MediaController#download is its fallback.
+  const downloadAttachment = current?.status.media_attachments[0];
+  const handleDownloadClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      handleMediaDownloadClick(e, downloadAttachment);
+    },
+    [downloadAttachment],
+  );
+
   if (!current) return null;
 
   const hasPrev = index > 0;
   const hasNext = index < localPhotos.length - 1;
   const contributor = current.contributor;
-  // The photo's media attachment, downloaded through the same-origin
-  // MediaController#download (a link to the storage host only opens it).
-  const downloadId = current.status.media_attachments[0]?.id;
+  const downloadId = downloadAttachment?.id;
   const credit = contributor.display_name || contributor.username;
 
   return (
@@ -307,6 +316,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
               className='icon-button'
               href={`/media/${downloadId}/download`}
               download
+              onClick={handleDownloadClick}
               title={intl.formatMessage(messages.download)}
               aria-label={intl.formatMessage(messages.download)}
             >

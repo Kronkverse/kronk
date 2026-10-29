@@ -166,6 +166,7 @@ server-side strings go in `config/locales/kronk/overrides.yml`.
 | nudge, Nudges                        | bell                             | the space; its two faces are Notifications and Messages |
 | froth                                | like, favourite                  | code stays `favourite`                                  |
 | Konnect, Konnected, Diskonnect       | attach, attached, link           | records across spaces; code stays `attachment`          |
+| Kuddle                               | room, Huddle room                | a topical Huddle; code stays `room` / `HuddleSession`   |
 | steward                              | moderator                        | reserved — don't repurpose                              |
 
 The K-grammar (Kalendar, Kommons, Kuestions) is the house style for names.
@@ -442,8 +443,11 @@ Proposal: https://kronk.info/hub/kommons/p/117292062013500413
 ```
 
 When the PR ships, the deploy marks that proposal actioned and its proposer is
-asked to close it. If the proposal takes several PRs, write `Part of proposal:`
-on all but the last, so it is not called built early.
+asked to close it. Any proposal link in the body counts, so a link that is only
+context still marks it actioned: leave it out, or quote the proposal's title
+instead. If the proposal takes several PRs, write `Part of proposal:` on all
+but the last, so it is not called built early. A fix that turns out to solve a
+proposal gets the line added as soon as that is noticed.
 
 Three habits worth keeping:
 
@@ -513,8 +517,10 @@ shadow for a later release. `bin/release` does the mechanics:
    ever bumped — see **Versioning**), adds a changelog entry from the PR titles,
    and opens the PR into `main`, titled with the version. A ready PR that can't
    apply on its own — because it builds on work that isn't ready — is left out
-   and named in the PR body. Edit the changelog wording in the PR if it needs
-   it. It also gathers the `Proposal:` lines of the PRs it took into
+   and named in the PR body. A conflict only in Markdown docs (both sides
+   kept) or in `db/schema.rb`'s version line (the later one kept) is resolved
+   instead, and the PR body lists those files to read before merging. Edit the
+   changelog wording in the PR if it needs it. It also gathers the `Proposal:` lines of the PRs it took into
    `config/shipped_proposals.yaml` and lists them in the PR body.
 
 3. **Check it.** The release tree is `main` plus the picked PRs, not exactly
@@ -556,7 +562,7 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.1.4 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
+Production is `2.1.5 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
 release, minors included, is "Rose" (decisions.md, 2026-10-19).
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —

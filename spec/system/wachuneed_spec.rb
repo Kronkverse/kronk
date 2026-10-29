@@ -334,4 +334,42 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(page).to have_css('.listing-photos--full .listing-photos__photo', count: 2)
     end
   end
+
+  # docs/spaces/wachuneed.md, Brands.
+  describe 'brands' do
+    it 'proposes a brand from Proposed and lands on its page, waiting for backers' do
+      visit '/hub/wachuneed/brands?show=proposed'
+
+      expect(page).to have_css('.empty-state__title', text: 'Nothing waiting for backers')
+      within('.empty-state') { click_on 'Propose a brand' }
+      find('[aria-label="Name"]').set('Patagonia')
+      find('input[placeholder="https://"]').set('https://www.patagonia.com')
+      find('[aria-label="Why we back them"]').set('They repair what they sell.')
+      click_on 'Propose', exact: true
+
+      expect(page).to have_current_path(%r{\A/hub/wachuneed/brands/\d+\z})
+      brand = WachuneedBrand.find_by!(name: 'Patagonia')
+      expect(page).to have_current_path("/hub/wachuneed/brands/#{brand.id}")
+      expect(page).to have_css('.wachuneed-brand__why', text: 'They repair what they sell.')
+      expect(page).to have_text('1 of 3 backers')
+      expect(brand.backers).to eq [bob.account]
+    end
+
+    it 'lists a brand once enough members back it, and opens it from the list' do
+      brand = WachuneedBrand.create!(account: Fabricate(:account), name: 'Fairphone', url: 'https://www.fairphone.com', why: 'Phones you can fix.')
+      brand.back!(Fabricate(:account))
+      brand.back!(Fabricate(:account))
+
+      visit '/hub/wachuneed/brands'
+
+      click_on 'Fairphone'
+
+      expect(page).to have_current_path("/hub/wachuneed/brands/#{brand.id}")
+      expect(page).to have_css('.wachuneed-brand__why', text: 'Phones you can fix.')
+      click_on 'Back this brand'
+
+      expect(page).to have_text('4 backers')
+      expect(brand.reload.backed_by?(bob.account)).to be true
+    end
+  end
 end

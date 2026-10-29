@@ -17,6 +17,8 @@
 # Members-only Krew Huddles are not built (docs/spaces/huddle.md). The
 # caller checks the account may link that Krew.
 #
+# The maker follows the new Room (a Kuddle, to people).
+#
 # Publishes `huddle.room.created` on success so Nudges / activity
 # surfaces can hear the birth of a new hangout.
 module HuddleRoom
@@ -42,6 +44,9 @@ module HuddleRoom
           state: 'live',
           last_active_at: Time.current
         )
+        # Whoever makes a Kuddle follows it (docs/spaces/huddle.md, Following
+        # a Kuddle).
+        HuddleFollow.create!(account: account, huddle_session: room)
         Kronk::AttachmentEffects.link!('huddle', room.id, 'krew', krew.id, account) if krew
         room
       end

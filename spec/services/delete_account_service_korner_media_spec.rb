@@ -52,6 +52,31 @@ RSpec.describe DeleteAccountService do
     end
   end
 
+  describe 'an account with a Booth album' do
+    let(:account) { Fabricate(:account) }
+    let(:opener)  { Fabricate(:media_attachment, account: account) }
+    let(:closer)  { Fabricate(:media_attachment, account: account) }
+    let!(:album) do
+      set = BoothSet.new(account: account, title: 'Tides', artist_name: 'BludPlum', kind: 'album', published: true)
+      set.tracks.build(audio_attachment: opener, title: 'One', position: 0)
+      set.tracks.build(audio_attachment: closer, title: 'Two', position: 1)
+      set.save!
+      set
+    end
+
+    it "refuses to delete a track's audio while the album uses it" do
+      expect { opener.destroy }.to raise_error(ActiveRecord::InvalidForeignKey)
+    end
+
+    it 'deletes the account, the album, its tracks and their audio', :aggregate_failures do
+      expect { subject.call(account, reserve_username: false) }.to_not raise_error
+
+      expect(BoothSet.exists?(album.id)).to be(false)
+      expect(BoothSetTrack.where(booth_set_id: album.id)).to_not exist
+      expect(MediaAttachment.where(id: [opener.id, closer.id])).to_not exist
+    end
+  end
+
   describe 'deleting media a Booth set still points at' do
     let(:account) { Fabricate(:account) }
     let(:media)   { Fabricate(:media_attachment, account: account) }
@@ -68,6 +93,28 @@ RSpec.describe DeleteAccountService do
       expect { media.destroy }.to raise_error(ActiveRecord::InvalidForeignKey)
 
       expect(booth_set.reload.audio_attachment_id).to eq(media.id)
+    end
+  end
+
+  # A Place is an exact spot, often someone's home: it goes with its maker,
+  # and so do its Konnections, whether or not the account row is kept.
+  describe "an account's Map Places" do
+    let(:account) { Fabricate(:account) }
+    let(:friend)  { Fabricate(:account) }
+
+    [true, false].each do |reserve|
+      it "removes them with their Konnections (reserve_username: #{reserve})", :aggregate_failures do
+        place = MapPlace.create!(account: account, name: 'Home', address: '1 Quiet St', latitude: -37.8, longitude: 144.9)
+        event = Event.create!(account: friend, title: 'Picnic', start_time: 2.days.from_now)
+        KornerAttachment.create!(source_slug: 'map', source_id: place.id, target_slug: 'kalendar', target_id: event.id,
+                                 kind: 'link', created_by_account: account)
+
+        subject.call(account, reserve_username: reserve)
+
+        expect(MapPlace.exists?(place.id)).to be(false)
+        expect(KornerAttachment.where(source_slug: 'map', source_id: place.id)).to_not exist
+        expect(Event.exists?(event.id)).to be(true)
+      end
     end
   end
 end

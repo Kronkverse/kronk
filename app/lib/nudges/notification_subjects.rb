@@ -94,20 +94,35 @@ module Nudges
         next unless StatusPolicy.new(@viewer, status).show?
 
         @pages[status.id] = status.kronk_page
-        text = status.spoiler_text.presence || status.moment&.caption.presence ||
-               PlainTextFormatter.new(status.text, status.local?).to_s
+        text = status.spoiler_text.presence ||
+               PlainTextFormatter.new(status.moment&.caption.presence || status.text, status.local?).to_s
         [status.id, clip(text)]
       end.to_h
     end
 
     # How many are in the Huddle now, not when the nudge was made: it is a
     # moment, and a number from an hour ago would mislead. Nothing once it
-    # has emptied or the count is unknown.
+    # has emptied or the count is unknown. A Kuddle is named either way
+    # ("2 people are in the Ember Kuddle now", or "The Ember Kuddle").
     def huddle_titles(ids)
-      count = Kronk::HuddleCount.last_seen
-      return {} unless count&.positive?
+      sessions = HuddleSession.where(id: ids).pluck(:id, :scope, :title)
+      main_count = Kronk::HuddleCount.last_seen
+      kuddle_counts = Kronk::HuddleCount.last_seen_kuddles(sessions.reject { |_, scope, _| scope == 'main' }.map(&:first))
 
-      ids.index_with { I18n.t('nudges.subjects.huddle_now', count: count) }
+      sessions.each_with_object({}) do |(id, scope, name), titles|
+        found = scope == 'main' ? main_title(main_count) : kuddle_title(clip(name), kuddle_counts[id])
+        titles[id] = found if found
+      end
+    end
+
+    def main_title(count)
+      I18n.t('nudges.subjects.huddle_now', count: count) if count&.positive?
+    end
+
+    def kuddle_title(name, count)
+      return I18n.t('nudges.subjects.kuddle_now', count: count, name: name) if count&.positive?
+
+      I18n.t('nudges.subjects.kuddle', name: name)
     end
 
     def clip(text)

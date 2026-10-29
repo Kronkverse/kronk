@@ -75,10 +75,25 @@ namespace :api, format: false do
     # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.
     namespace :huddle do
       resources :rooms, only: [:index, :create] do
-        member { post :join }
+        member do
+          post :join
+          post :follow
+          post :unfollow
+        end
       end
       # The Main Huddle's head-count, for the home feed's banner.
       resource :count, only: [:show]
+    end
+
+    # Kronk's calls on its Jitsi server (docs/decisions.md, 2026-10-27): a
+    # pass into one, and its recordings. `start` and `complete` are the
+    # recorder's, signed with JITSI_RECORDING_SECRET, not a member's.
+    namespace :calls do
+      resource :token, only: [:create]
+      resource :presence, only: [:show]
+      post 'recordings/start', to: 'recording_uploads#create', as: :recording_upload
+      post 'recordings/:id/complete', to: 'recording_uploads#complete', as: :recording_upload_complete
+      resources :recordings, only: [:index, :destroy]
     end
     resource :token_balance, only: [:show]
 
@@ -182,8 +197,14 @@ namespace :api, format: false do
         # "Remind me" when a scheduled set goes live.
         post :remind
         delete :remind, action: :unremind
+        # The crowd on screen: shoutouts, reactions, requests, Now playing.
+        # Member routes, not nested resources: Rails singularises `lives` to
+        # `life`, so a nested route's key would be `booth_life_id`.
+        get :moments, to: 'booth_live_moments#index'
+        post :moments, to: 'booth_live_moments#create'
       end
     end
+    resources :booth_live_moments, only: [:destroy]
 
     resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
       member do
@@ -294,6 +315,10 @@ namespace :api, format: false do
       put    :shop, to: 'shops#upsert'
       put    'shop/order', to: 'shops#order'
       delete :shop, to: 'shops#destroy'
+      # Brands members back (docs/spaces/wachuneed.md, Brands).
+      resources :brands, only: [:index, :show, :create, :update, :destroy] do
+        resource :backing, only: [:create, :destroy], controller: 'brand_backings'
+      end
     end
 
     # Albutts — shared albums. Photos are nested under an album; each
@@ -336,6 +361,12 @@ namespace :api, format: false do
     # story / poetry / letter / journal / other).
     namespace :kronikles do
       resources :chronicles, only: [:index, :show, :create, :update, :destroy]
+      # A writer's Kronikles as ordered chapters (docs/spaces/kronikles.md,
+      # Series). Seen as far as its chapters are; changed by its owner.
+      resources :series, only: [:index, :show, :create, :update, :destroy] do
+        member { put :reorder }
+        resources :chapters, only: [:index, :create, :destroy], controller: 'series_chapters'
+      end
     end
 
     # Cinema — single-author short films. Direct MP4 upload via the
@@ -426,6 +457,9 @@ namespace :api, format: false do
       get 'kronkers', to: 'layers#kronkers'
       get 'orbit',    to: 'layers#orbit'
       get 'krews',    to: 'layers#krews'
+      # Everyone (Tal 2026-10-26): the whole directory of people the
+      # viewer may find, Mates included, alphabetical, offset-paged.
+      get 'everyone', to: 'everyone#index'
       # Orb — top-N local accounts + follow edges between them.
       # Powers the <KronkOrb> Fibonacci sphere; response is cached
       # server-side (see OrbController::CACHE_TTL).

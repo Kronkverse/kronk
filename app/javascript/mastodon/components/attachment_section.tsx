@@ -29,6 +29,7 @@ import { useAttachments } from 'mastodon/hooks/useAttachments';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useRecordName } from 'mastodon/hooks/useRecordName';
+import { serverError } from 'mastodon/utils/api_error';
 
 // AttachmentSection — the "Konnected" block on every korner detail page
 // (docs/korners/adding_a_korner.md (Korner attachments) §4.2): what this
@@ -55,6 +56,11 @@ import { useRecordName } from 'mastodon/hooks/useRecordName';
 // what it is ("the Ember event"), since a situation's records often share a
 // title (hooks/useRecordName; decisions.md, 2026-10-26). Pages of records that
 // can't follow (an event, a Krew) get the markers only.
+//
+// The picker it opens leaves out what is Konnected already. A Diskonnect or
+// a Same as change that fails says why, under the grid. A page that shows
+// the record's own audience passes `onAudienceChange` to fetch it again
+// after Same as is set or cleared here.
 //
 // Renders nothing when there is nothing to show and nothing to add, so a
 // detail page with no Konnections stays clean.
@@ -86,6 +92,10 @@ const messages = defineMessages({
   followError: {
     id: 'attachment_section.follow_error',
     defaultMessage: 'Couldn’t change who sees it: {reason}',
+  },
+  diskonnectError: {
+    id: 'attachment_section.diskonnect_error',
+    defaultMessage: 'Couldn’t Diskonnect {title}: {reason}',
   },
   krewsCantOpen: {
     id: 'attachment_section.krews_cant_open',
@@ -121,7 +131,8 @@ interface AttachmentSectionProps {
   // The Krew page's Konnect opens its tray of spaces first.
   renderKonnect?: (openPicker: () => void) => React.ReactNode;
   // This record's audience changed here (Same as set or cleared), for a
-  // page that shows it.
+  // page that shows it: fetch the record again so its audience label is
+  // current. Left out, only the tiles here update.
   onAudienceChange?: () => void;
   // Under the grid, inside the section (the Krew page's tray). A function
   // gets the one that opens the picker.
@@ -152,7 +163,8 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   const { attached, attachedFrom, loading, removeLink, refresh } =
     useAttachments(korner, recordId);
   const [confirmDialog, confirmThen] = useConfirmThen();
-  const [followError, setFollowError] = useState<string | null>(null);
+  // A Same as change or a Diskonnect that failed.
+  const [linkError, setLinkError] = useState<string | null>(null);
   const targets = useAttachTargets(korner);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -193,6 +205,16 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     return rows;
   }, [attached, attachedFrom, excludeKey, excludeSlugKey]);
 
+  // Everything Konnected already, either way, for the picker to leave
+  // out: what the page shows in its own way included.
+  const linked = useMemo(
+    () => [
+      ...attached.map((a) => ({ slug: a.target_slug, id: a.target_id })),
+      ...attachedFrom.map((a) => ({ slug: a.source_slug, id: a.source_id })),
+    ],
+    [attached, attachedFrom],
+  );
+
   // This record can take another's audience: its korner can follow, and
   // whoever looks after it is here.
   const canFollow = canManage && AUDIENCE_FOLLOWERS.includes(korner);
@@ -219,7 +241,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
             audience: audienceText(intl, link.own.audience, korner, 'long'),
           });
       confirmThen(question, 'confirm', () => {
-        setFollowError(null);
+        setLinkError(null);
         apiUpdateAttachmentAudience(
           link.attachment.id,
           follow ? link.otherEnd : null,
@@ -230,16 +252,28 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
             return undefined;
           })
           .catch((e: unknown) => {
-            const reason =
-              (e as { response?: { data?: { error?: string } } }).response?.data
-                ?.error ?? '';
-            setFollowError(
-              intl.formatMessage(messages.followError, { reason }),
-            );
+            const reason = serverError(e) ?? '';
+            setLinkError(intl.formatMessage(messages.followError, { reason }));
           });
       });
     },
     [confirmThen, intl, names, korner, refresh, onAudienceChange],
+  );
+
+  // Diskonnect one, saying so if it fails.
+  const diskonnect = useCallback(
+    (link: KonnectedLink) => {
+      setLinkError(null);
+      removeLink(link.attachment.id).catch((e: unknown) => {
+        setLinkError(
+          intl.formatMessage(messages.diskonnectError, {
+            title: names.the({ ...link.other, slug: link.otherSlug }),
+            reason: serverError(e) ?? '',
+          }),
+        );
+      });
+    },
+    [removeLink, intl, names],
   );
 
   // Honest notes: Konnected records whose people can't open this one. Only
@@ -295,7 +329,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
               link={link}
               canManage={canManage}
               canFollow={canFollow && followable(link)}
-              onRemove={removeLink}
+              onRemove={diskonnect}
               onFollow={changeFollow}
             />
           ))}
@@ -311,7 +345,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
             link={link}
             canManage={canManage}
             canFollow={canFollow && followable(link)}
-            onRemove={removeLink}
+            onRemove={diskonnect}
             onFollow={changeFollow}
           />
         ))}
@@ -355,9 +389,12 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
         );
       })}
 
-      {followError && (
-        <p className='attachment-section__note attachment-section__note--error'>
-          {followError}
+      {linkError && (
+        <p
+          className='attachment-section__note attachment-section__note--error'
+          role='alert'
+        >
+          {linkError}
         </p>
       )}
 
@@ -371,6 +408,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
           sourceId={recordId}
           onClose={closePicker}
           onAttached={refresh}
+          exclude={linked}
         />
       )}
     </section>
@@ -422,7 +460,7 @@ interface KonnectedTileProps {
   canManage: boolean;
   // Offer Same as on this tile (make or stop).
   canFollow: boolean;
-  onRemove: (id: string) => Promise<void>;
+  onRemove: (link: KonnectedLink) => void;
   onFollow: (link: KonnectedLink, follow: boolean) => void;
 }
 
@@ -439,18 +477,19 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
 }) => {
   const intl = useIntl();
   const names = useRecordName();
-  const { attachment, other, otherSlug } = link;
+  const { other, otherSlug } = link;
   // The other korner's icon; a Kronk-purple circle for unmanifested slugs.
   const OtherIcon = useKornerIcon(otherSlug);
-  const title = other.title ?? other.slug;
+  // Untitled, it is "This album", never its korner's slug.
+  const title = other.title ?? names.The({ ...other, slug: otherSlug });
   // What it is, under its title, and in full for the buttons' labels.
   const noun = names.noun(otherSlug, other.noun);
   const named = names.the({ ...other, slug: otherSlug });
   const following = leads(link);
 
   const handleRemove = useCallback(() => {
-    void onRemove(attachment.id);
-  }, [attachment.id, onRemove]);
+    onRemove(link);
+  }, [link, onRemove]);
   const handleFollow = useCallback(() => {
     onFollow(link, !following);
   }, [link, following, onFollow]);

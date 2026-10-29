@@ -318,6 +318,9 @@ export const ProfileBlock: React.FC<Props> = ({
   const bare = minimal || hidden || gated;
   const isSelf = accountId === me;
   const editable = editing && isSelf && !bare;
+  // Who may open the Mates list: the same rule as the server's.
+  const canSeeMates =
+    isSelf || (Boolean(relationship?.mate) && !account.hide_collections);
   // `acct` carries the domain for remote accounts; the block shows the
   // username alone. The full address is still what the API and the AP
   // collections speak — this is a display decision, not a data one.
@@ -531,8 +534,12 @@ export const ProfileBlock: React.FC<Props> = ({
 
       {!bare && (
         <div className='profile-block__counts'>
-          {/* Counts only: the timeline is under the profile, and the
-              Mates list is off for now (Tal 2026-10-18). */}
+          {/* The posts count is plain: the timeline is under the
+              profile. The Mates count opens the Mates list, but only for
+              someone who may see it (Tal 2026-10-26): you, and your
+              Mates unless you hide your connections. For anyone else it
+              stays plain text; the server gives them an empty list
+              anyway (Api::V1::Accounts::MatesController). */}
           <span title={intl.formatNumber(account.statuses_count)}>
             <ShortNumber
               value={account.statuses_count}
@@ -540,9 +547,25 @@ export const ProfileBlock: React.FC<Props> = ({
             />
           </span>
 
-          <span title={intl.formatNumber(account.mates_count)}>
-            <ShortNumber value={account.mates_count} renderer={MatesCounter} />
-          </span>
+          {canSeeMates ? (
+            <Link
+              to={`/@${account.acct}/mates`}
+              className='profile-block__count-link'
+              title={intl.formatNumber(account.mates_count)}
+            >
+              <ShortNumber
+                value={account.mates_count}
+                renderer={MatesCounter}
+              />
+            </Link>
+          ) : (
+            <span title={intl.formatNumber(account.mates_count)}>
+              <ShortNumber
+                value={account.mates_count}
+                renderer={MatesCounter}
+              />
+            </span>
+          )}
 
           <span className='profile-block__joined'>
             <FormattedMessage

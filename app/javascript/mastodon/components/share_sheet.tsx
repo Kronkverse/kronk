@@ -18,8 +18,8 @@ import { useAppDispatch } from 'mastodon/store';
 //
 //   1. Send in Nudges — search Kronkers by handle/name → tap → the
 //      Nudge thread opens with the link pre-attached as a post card
-//      (uses the existing `attachStatusUrl` location-state contract
-//      NudgesThread reads on mount).
+//      (the `attachStatusUrl` location-state contract the Nudges
+//      composer reads on mount, features/nudges_messenger/shared_link.ts).
 //   2. Copy link — clipboard + toast confirmation.
 //   3. Share… — native OS share sheet on capable browsers (mobile +
 //      Safari desktop). Hidden when `navigator.share` isn't available.
@@ -152,10 +152,10 @@ export const ShareSheet: React.FC<Props> = ({
 
   const handleSelect = useCallback(
     (account: ApiAccountJSON) => {
-      // Hand off to the Nudges thread with the link pre-attached via
-      // the existing NudgeLocationState contract — the thread reads
-      // `attachStatusUrl` (+ optional author metadata) on mount and
-      // renders a post-share card in its compose bar.
+      // Hand off to the Nudges chat with the link pre-attached: the
+      // composer reads `attachStatusUrl` (+ optional author metadata) on
+      // mount and shows it as a card above the text box
+      // (features/nudges_messenger/shared_link.ts).
       history.push(`/nudges/with/${account.id}`, {
         attachStatusUrl: url,
         attachStatusBody: body ?? title,

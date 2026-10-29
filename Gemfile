@@ -30,6 +30,7 @@ gem 'charlock_holmes', '~> 0.7.7'
 gem 'chewy', '~> 7.3'
 gem 'devise'
 gem 'devise-two-factor'
+gem 'jwt', '~> 2.10' # Kronk: passes into Kronk's own Jitsi (app/lib/kronk/jitsi.rb)
 gem 'meilisearch', '~> 0.30' # Kronk 2.0 search backend — see lib/kronk/search
 
 group :pam_authentication, optional: true do

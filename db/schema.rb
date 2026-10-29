@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -485,6 +485,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
     t.index ["status_id"], name: "index_bookmarks_on_status_id"
   end
 
+  create_table "booth_live_moments", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "artist"
+    t.integer "at_seconds", default: 0, null: false
+    t.text "body", default: "", null: false
+    t.bigint "booth_live_id", null: false
+    t.datetime "created_at", null: false
+    t.string "kind", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_live_moments_on_account_id"
+    t.index ["booth_live_id", "id"], name: "index_booth_live_moments_on_booth_live_id_and_id"
+  end
+
   create_table "booth_live_reminders", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "booth_live_id", null: false
@@ -497,6 +511,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
 
   create_table "booth_lives", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.bigint "booth_set_id"
     t.datetime "created_at", null: false
     t.text "description", default: "", null: false
     t.datetime "ended_at"
@@ -509,6 +524,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
     t.datetime "updated_at", null: false
     t.integer "visibility", default: 0, null: false
     t.index ["account_id"], name: "index_booth_lives_on_account_id"
+    t.index ["booth_set_id"], name: "index_booth_lives_on_booth_set_id"
     t.index ["room_key"], name: "index_booth_lives_on_room_key", unique: true
     t.index ["starts_at"], name: "index_booth_lives_on_starts_at"
   end
@@ -534,6 +550,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
     t.index ["account_id", "booth_set_id"], name: "index_booth_set_saves_on_account_id_and_booth_set_id", unique: true
     t.index ["account_id"], name: "index_booth_set_saves_on_account_id"
     t.index ["booth_set_id"], name: "index_booth_set_saves_on_booth_set_id"
+  end
+
+  create_table "booth_set_tracks", force: :cascade do |t|
+    t.bigint "audio_attachment_id", null: false
+    t.bigint "booth_set_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "duration_seconds"
+    t.integer "position", default: 0, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["audio_attachment_id"], name: "index_booth_set_tracks_on_audio_attachment_id"
+    t.index ["booth_set_id", "position"], name: "index_booth_set_tracks_on_booth_set_id_and_position"
   end
 
   create_table "booth_sets", force: :cascade do |t|
@@ -611,6 +639,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
     t.index ["id"], name: "index_bulk_imports_unconfirmed", where: "(state = 0)"
   end
 
+  create_table "call_recordings", force: :cascade do |t|
+    t.bigint "booth_live_id"
+    t.datetime "completed_at"
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.integer "duration"
+    t.string "filename", null: false
+    t.bigint "huddle_session_id"
+    t.string "kind", null: false
+    t.string "media", default: "video", null: false
+    t.bigint "pair_id"
+    t.bigint "size", null: false
+    t.bigint "started_by_account_id"
+    t.string "status", default: "pending", null: false
+    t.string "storage_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booth_live_id"], name: "index_call_recordings_on_booth_live_id"
+    t.index ["huddle_session_id"], name: "index_call_recordings_on_huddle_session_id"
+    t.index ["kind", "status", "created_at"], name: "index_call_recordings_on_kind_and_status_and_created_at"
+    t.index ["pair_id"], name: "index_call_recordings_on_pair_id"
+    t.index ["started_by_account_id"], name: "index_call_recordings_on_started_by_account_id"
+    t.index ["storage_key"], name: "index_call_recordings_on_storage_key", unique: true
+  end
+
   create_table "canonical_email_blocks", force: :cascade do |t|
     t.string "canonical_email_hash", default: "", null: false
     t.datetime "created_at", null: false
@@ -648,17 +700,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
     t.index ["media_attachment_id"], name: "index_chronicle_pictures_on_media_attachment_id"
   end
 
+  create_table "chronicle_series", force: :cascade do |t|
+    t.bigint "cover_media_attachment_id"
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.bigint "owner_id", null: false
+    t.string "title", limit: 240, null: false
+    t.datetime "updated_at", null: false
+    t.index ["cover_media_attachment_id"], name: "index_chronicle_series_on_cover_media_attachment_id"
+    t.index ["owner_id"], name: "index_chronicle_series_on_owner_id"
+  end
+
   create_table "chronicles", force: :cascade do |t|
     t.text "body", default: "", null: false
     t.datetime "created_at", null: false
     t.integer "kind", default: 0, null: false
     t.bigint "owner_id", null: false
+    t.bigint "series_id"
+    t.integer "series_position"
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
     t.datetime "updated_at", null: false
     t.integer "visibility", default: 0, null: false
     t.index ["kind"], name: "index_chronicles_on_kind"
     t.index ["owner_id"], name: "index_chronicles_on_owner_id"
+    t.index ["series_id", "series_position"], name: "index_chronicles_on_series_id_and_series_position"
     t.index ["status_id"], name: "index_chronicles_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_chronicles_on_visibility"
   end
@@ -1162,6 +1228,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
     t.datetime "viewed_at"
     t.integer "year", null: false
     t.index ["account_id", "year"], name: "index_generated_annual_reports_on_account_id_and_year", unique: true
+  end
+
+  create_table "huddle_follows", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "following", default: true, null: false
+    t.bigint "huddle_session_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "huddle_session_id"], name: "index_huddle_follows_on_account_id_and_huddle_session_id", unique: true
+    t.index ["huddle_session_id"], name: "index_huddle_follows_on_huddle_session_id"
   end
 
   create_table "huddle_participants", force: :cascade do |t|
@@ -2685,6 +2761,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
     t.index ["unconfirmed_email"], name: "index_users_on_unconfirmed_email", where: "(unconfirmed_email IS NOT NULL)"
   end
 
+  create_table "wachuneed_brand_backings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "wachuneed_brand_id", null: false
+    t.index ["account_id"], name: "index_wachuneed_brand_backings_on_account_id"
+    t.index ["wachuneed_brand_id", "account_id"], name: "index_wachuneed_brand_backings_on_brand_and_account", unique: true
+  end
+
+  create_table "wachuneed_brands", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.datetime "listed_at"
+    t.bigint "media_attachment_id"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.text "why", null: false
+    t.index "lower((name)::text)", name: "index_wachuneed_brands_on_lower_name", unique: true
+    t.index ["account_id"], name: "index_wachuneed_brands_on_account_id"
+    t.index ["media_attachment_id"], name: "index_wachuneed_brands_on_media_attachment_id"
+  end
+
   create_table "web_push_subscriptions", force: :cascade do |t|
     t.bigint "access_token_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -2791,13 +2891,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
   add_foreign_key "blocks", "accounts", name: "fk_4269e03e65", on_delete: :cascade
   add_foreign_key "bookmarks", "accounts", on_delete: :cascade
   add_foreign_key "bookmarks", "statuses", on_delete: :cascade
+  add_foreign_key "booth_live_moments", "accounts", on_delete: :cascade
+  add_foreign_key "booth_live_moments", "booth_lives", column: "booth_live_id", on_delete: :cascade
   add_foreign_key "booth_live_reminders", "accounts", on_delete: :cascade
   add_foreign_key "booth_live_reminders", "booth_lives", column: "booth_live_id", on_delete: :cascade
   add_foreign_key "booth_lives", "accounts", on_delete: :cascade
+  add_foreign_key "booth_lives", "booth_sets", on_delete: :nullify, validate: false
   add_foreign_key "booth_set_artists", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_set_saves", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_saves", "booth_sets", on_delete: :cascade
+  add_foreign_key "booth_set_tracks", "booth_sets", on_delete: :cascade
+  add_foreign_key "booth_set_tracks", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_sets", "accounts", on_delete: :cascade
   add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
@@ -2806,13 +2911,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
+  add_foreign_key "call_recordings", "accounts", column: "started_by_account_id", on_delete: :nullify
+  add_foreign_key "call_recordings", "booth_lives", column: "booth_live_id", on_delete: :cascade
+  add_foreign_key "call_recordings", "call_recordings", column: "pair_id", on_delete: :nullify, validate: false
+  add_foreign_key "call_recordings", "huddle_sessions", on_delete: :cascade
   add_foreign_key "canonical_email_blocks", "accounts", column: "reference_account_id", on_delete: :cascade
   add_foreign_key "challenge_conditions", "proposal_votes", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "challenge_conditions", on_delete: :cascade, validate: false
   add_foreign_key "chronicle_pictures", "chronicles", on_delete: :cascade
   add_foreign_key "chronicle_pictures", "media_attachments", on_delete: :cascade
+  add_foreign_key "chronicle_series", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "chronicle_series", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "chronicles", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "chronicles", "chronicle_series", column: "series_id", on_delete: :nullify, validate: false
   add_foreign_key "chronicles", "statuses", on_delete: :nullify
   add_foreign_key "conversation_mutes", "accounts", name: "fk_225b4212bb", on_delete: :cascade
   add_foreign_key "conversation_mutes", "conversations", on_delete: :cascade
@@ -2881,6 +2993,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
   add_foreign_key "freethedream_reads", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_reads", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
+  add_foreign_key "huddle_follows", "accounts", on_delete: :cascade
+  add_foreign_key "huddle_follows", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :cascade
@@ -3055,6 +3169,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_130100) do
   add_foreign_key "users", "invites", on_delete: :nullify
   add_foreign_key "users", "oauth_applications", column: "created_by_application_id", on_delete: :nullify
   add_foreign_key "users", "user_roles", column: "role_id", on_delete: :nullify
+  add_foreign_key "wachuneed_brand_backings", "accounts", on_delete: :cascade
+  add_foreign_key "wachuneed_brand_backings", "wachuneed_brands", on_delete: :cascade
+  add_foreign_key "wachuneed_brands", "accounts", on_delete: :cascade
+  add_foreign_key "wachuneed_brands", "media_attachments", on_delete: :nullify
   add_foreign_key "web_push_subscriptions", "oauth_access_tokens", column: "access_token_id", on_delete: :cascade
   add_foreign_key "web_push_subscriptions", "users", on_delete: :cascade
   add_foreign_key "web_settings", "users", name: "fk_11910667b2", on_delete: :cascade

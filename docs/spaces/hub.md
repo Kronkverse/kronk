@@ -50,6 +50,9 @@ says what an update is:
 - **Kalendar:** an event post, until the event is over. Cancelled events
   don't count.
 - **Moments:** each live Moment (it has no post of its own).
+- **Map:** its trek posts, plus a Mate putting their pin on the map or
+  moving it. A pin has no post, so it counts by when it moved (`placed_at`)
+  against the time inside the baseline id.
 - **Kommunity:** someone new you could find there, a member who joined since
   you last looked. Who you could find follows their findability
   (`Account.kommunity_discoverable_to`), not who you follow. It has no posts,

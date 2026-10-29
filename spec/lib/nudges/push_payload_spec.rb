@@ -22,13 +22,33 @@ RSpec.describe Nudges::PushPayload do
 
   it 'says how many are huddling, from no one in particular' do
     allow(Kronk::HuddleCount).to receive(:last_seen).and_return(3)
-    huddle = HuddleSession.create!(title: 'Huddle', session_url: 'huddle-test', scope: 'room', state: 'live', host_account: ana)
+    huddle = HuddleSession.create!(title: 'Huddle', session_url: 'huddle', scope: 'main', state: 'live', host_account: ana)
     event = Fabricate(:nudges_event, conversation: nil, actor_account: nil, recipient_account: bob, source_korner_slug: 'huddle', verb: 'gathering',
                                      source_type: 'HuddleSession', source_id: huddle.id, interaction: 'interactive', cta_route: '/hub/huddle')
 
     payload = described_class.new(event, recipient: bob).as_json
 
     expect(payload).to include(title: 'People are huddling', body: '3 in the Huddle now', icon: nil, url: '/hub/huddle')
+  end
+
+  it 'names the Kuddle people are in, and how many are there now' do
+    kuddle = HuddleSession.create!(title: 'Ember', session_url: 'ember-1a2b', scope: 'room', state: 'live', host_account: ana)
+    allow(Kronk::HuddleCount).to receive(:last_seen_kuddles).and_return(kuddle.id => 2)
+    event = Fabricate(:nudges_event, conversation: nil, actor_account: nil, recipient_account: bob, source_korner_slug: 'huddle', verb: 'kuddle_gathering',
+                                     source_type: 'HuddleSession', source_id: kuddle.id, interaction: 'interactive', cta_route: "/hub/huddle/kuddle/#{kuddle.id}")
+
+    payload = described_class.new(event, recipient: bob).as_json
+
+    expect(payload).to include(title: 'People are in a Kuddle you follow', body: '2 people are in the Ember Kuddle now', url: "/hub/huddle/kuddle/#{kuddle.id}")
+  end
+
+  it 'still names the Kuddle once it has emptied' do
+    kuddle = HuddleSession.create!(title: 'Ember', session_url: 'ember-1a2b', scope: 'room', state: 'live', host_account: ana)
+    allow(Kronk::HuddleCount).to receive(:last_seen_kuddles).and_return({})
+    event = Fabricate(:nudges_event, conversation: nil, actor_account: nil, recipient_account: bob, source_korner_slug: 'huddle', verb: 'kuddle_gathering',
+                                     source_type: 'HuddleSession', source_id: kuddle.id, interaction: 'interactive', cta_route: "/hub/huddle/kuddle/#{kuddle.id}")
+
+    expect(described_class.new(event, recipient: bob).as_json[:body]).to eq('The Ember Kuddle')
   end
 
   it 'says who wrote a message, never what it says' do
@@ -38,5 +58,23 @@ RSpec.describe Nudges::PushPayload do
     payload = described_class.new(message, recipient: bob).as_json
 
     expect(payload).to include(title: 'Ana nudged you', body: nil, url: "/nudges/#{conversation.id}", tag: "nudges-chat-#{conversation.id}")
+  end
+
+  describe '.ping' do
+    it 'says only that something is new, under one tag, and opens Nudges' do
+      payload = described_class.ping(at: Time.utc(2026, 10, 27, 9, 0))
+
+      expect(payload).to eq(
+        kronk_nudge: true,
+        ping: true,
+        title: 'Something new on Kronk',
+        body: nil,
+        icon: nil,
+        url: '/nudges',
+        tag: 'kronk-ping',
+        timestamp: '2026-10-27T09:00:00Z',
+        preferred_locale: 'en'
+      )
+    end
   end
 end

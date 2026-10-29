@@ -10,9 +10,11 @@
 #     name, description, and optionally krew_id, a Krew the creator is in,
 #     which the new Room is Konnected (linked) to. The Room stays open.
 #   POST /api/v1/huddle/rooms/:id/join — mark a Room active as someone enters
+#   POST /api/v1/huddle/rooms/:id/follow, /unfollow — Follow or Unfollow a
+#     Kuddle (a Room, to people; Huddle::Follows). Both answer with the Room.
 class Api::V1::Huddle::RoomsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read }, only: [:index]
-  before_action -> { doorkeeper_authorize! :write }, only: [:create, :join]
+  before_action -> { doorkeeper_authorize! :write }, only: [:create, :join, :follow, :unfollow]
   before_action :require_user!
 
   def index
@@ -26,7 +28,9 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
              .order(Arel.sql('last_active_at DESC NULLS LAST'))
              .limit(100)
 
-    render json: @rooms, each_serializer: REST::HuddleRoomSerializer
+    render json: @rooms,
+           each_serializer: REST::HuddleRoomSerializer,
+           follow_states: Huddle::Follows.state_for(current_account, @rooms)
   end
 
   # POST /api/v1/huddle/rooms/:id/join — someone went into the Room. Marks
@@ -38,9 +42,23 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
     render json: room, serializer: REST::HuddleRoomSerializer
   end
 
+  def follow
+    room = HuddleSession.rooms.not_retired.find(params[:id])
+    Huddle::Follows.follow!(current_account, room)
+    render json: room, serializer: REST::HuddleRoomSerializer
+  end
+
+  # Stored as a choice, so a Krew member stops following their Krew's
+  # Kuddle too.
+  def unfollow
+    room = HuddleSession.rooms.not_retired.find(params[:id])
+    Huddle::Follows.unfollow!(current_account, room)
+    render json: room, serializer: REST::HuddleRoomSerializer
+  end
+
   def create
     krew = linked_krew
-    return render json: { error: 'you can only Konnect a Room to a Krew you are in' }, status: 422 if krew == false
+    return render json: { error: 'you can only Konnect a Kuddle to a Krew you are in' }, status: 422 if krew == false
 
     room = HuddleRoom::CreateService.new.call(
       account: current_account,

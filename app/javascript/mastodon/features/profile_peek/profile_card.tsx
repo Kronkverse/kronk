@@ -4,7 +4,6 @@ import { useIntl, defineMessages } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
-import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
@@ -51,7 +50,6 @@ const messages = defineMessages({
   },
   mate: { id: 'profile_card.mate', defaultMessage: 'Mate?' },
   mating: { id: 'profile_card.mating', defaultMessage: 'Withdraw request' },
-  unmate: { id: 'profile_card.unmate', defaultMessage: 'Unmate' },
   openProfile: {
     id: 'profile_card.open_profile',
     defaultMessage: 'Open profile',
@@ -86,13 +84,15 @@ const matualsCopy = (
   return intl.formatMessage(messages.matualsMore, { first: lead, rest });
 };
 
-// The icon button that carries the Mate state. Three visuals: send
-// (person + plus), pending (hourglass), mate (check). Own account
+// The icon button that carries the Mate state. Two visuals: send
+// (person + plus) and pending (hourglass). An established Mate gets no
+// button at all — Unmate lives only on the per-person settings screen
+// (Kommons proposal #117481297515130656, 2026-10-25). Own account
 // hides the button — the CTA is "edit profile" and lives on the
 // shelved profile header, not on a peek of yourself.
 //
 // Exported for the people strip in search, so a person found there can be
-// asked to be a Mate with the same button and the same three states.
+// asked to be a Mate with the same button and the same states.
 export const MateIconButton: React.FC<{ accountId: string }> = ({
   accountId,
 }) => {
@@ -109,27 +109,21 @@ export const MateIconButton: React.FC<{ accountId: string }> = ({
 
   const handleClick = useCallback(() => {
     if (!signedIn || !relationship) return;
-    if (relationship.mate || relationship.requested) {
+    if (relationship.requested) {
       dispatch(unmateAccount(accountId));
     } else {
       dispatch(mateAccount(accountId));
     }
   }, [dispatch, accountId, signedIn, relationship]);
 
-  if (accountId === me) return null;
+  if (accountId === me || relationship?.mate) return null;
 
-  const state: 'mate' | 'pending' | 'send' = relationship?.mate
-    ? 'mate'
-    : relationship?.requested
-      ? 'pending'
-      : 'send';
+  const state: 'pending' | 'send' = relationship?.requested
+    ? 'pending'
+    : 'send';
 
   const label = intl.formatMessage(
-    state === 'mate'
-      ? messages.unmate
-      : state === 'pending'
-        ? messages.mating
-        : messages.mate,
+    state === 'pending' ? messages.mating : messages.mate,
   );
 
   return (
@@ -143,13 +137,7 @@ export const MateIconButton: React.FC<{ accountId: string }> = ({
     >
       <Icon
         id='mate'
-        icon={
-          state === 'mate'
-            ? CheckIcon
-            : state === 'pending'
-              ? HourglassIcon
-              : PersonAddIcon
-        }
+        icon={state === 'pending' ? HourglassIcon : PersonAddIcon}
       />
     </button>
   );

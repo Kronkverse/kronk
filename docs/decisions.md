@@ -17,6 +17,513 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-27 — The composer title is a text box
+
+The title at the top of every composer (`<ComposeTitle>`) was drawn as a
+heading: the display serif on a bare underline, no box. People read it as a
+heading and not as somewhere to type (Kommons "Title doesnt look like a
+text box", Tal).
+
+**Decision (Tal):** the title is boxed like every other field in the kit
+(same border, radius, surface and focus ring as `<ComposeInput>`) and keeps
+the display serif at its larger size, so it still reads as the record's
+name. Supersedes "the display serif, no box" in Korner Standard L13
+(2026-10-23, One composer, one Konnect).
+
+## 2026-10-27 — Booth live: music sound, the crowd on screen, recorded into a set
+
+The Booth's live sets ran on a voice call: the browser cleaned the music
+up as if it were speech, listeners joined as full participants, the crowd
+had no way to be heard, and a recording had to be downloaded and uploaded
+again to become a set (`docs/spaces/booth.md`, Live sets).
+
+**Decision (Tal):**
+
+- **Music sound.** A live set's call is stereo Opus at 510 kbps both ways,
+  and the host's browser does no voice processing (`disableAP` and the
+  four single switches). **Music sound** under the room turns processing
+  back on for talking. Only `booth_live` calls; the Huddle is a
+  conversation and stays one. **Sound input** (pick the USB sound card,
+  see its level) is under every Kronk call, because a Kuddle has
+  musicians in it too.
+- **Listeners listen.** They open no microphone or camera, have no
+  shortcuts or controls to be heard, receive video from at most three
+  people, and pin the host. The bridge then sends each listener one
+  stream, which is what lets a room grow.
+- **The crowd on screen.** Shoutouts, reactions (Froth, Applause,
+  Rewind!) and track requests, and the host's Now playing, are rows of
+  their own (`booth_live_moments`), inside the set's reach and only while
+  it's live. Kronk draws them over the call for everyone, and the host's
+  page sends each into the call as a small versioned JSON message
+  (`{ kronk: 1, type, name, text, at }`, documented in booth.md), so a
+  script on the Jitsi server's page draws them for the recorder. The room
+  polls every four seconds: the streaming server has no per-set channel
+  with a reach check, and adding one is more than this needs.
+- **The host's page is the one sender into the call.** Each moment then
+  arrives once, whoever sent it and wherever they were.
+- **Recorded into a set.** The recorder uploads a video and an audio file
+  of each recording (`media`, paired). A live set's audio becomes an
+  unpublished `live_recording` set for the host, with the live set's
+  title, words, genres and Now playing as its track list, and the host is
+  nudged to publish it. A set's audio is a `MediaAttachment`, so a job
+  downloads the file and attaches it like an upload (Paperclip's MP3
+  transcode, length and media path), rather than copying the object in
+  storage, which would skip all three.
+
+**Not attempted:** Jitsi's visitors mode for audiences past about 100;
+co-hosts and a cover for live sets; copying a live set's shoutouts onto
+the set (the set may reach more people than the live set did); the
+overlay script itself, which lives on the Jitsi server and is Tal's.
+
+**Why:** the Booth is for music made by people on Kronk, and a live set
+is where a musician meets the crowd. Sound that sounds like the set, a
+crowd that can be seen and heard on screen and in the recording, and a
+recording that becomes the set without a download and an upload, make
+going live worth doing.
+
+---
+
+## 2026-10-27 — Booth albums are sets made of tracks
+
+Cassidy's Kommons proposal "Albums to live in Musik?"
+([#117292076963057258](https://kronk.info/hub/kommons/p/117292076963057258),
+on `booth.index`) asked for music albums to live in the Booth. Albutts'
+albums are photo albums, which is where the confusion came from. Tal: "if
+we can ensure that someone in the Booth can upload an album, then we can
+close this proposal."
+
+Before this, a set was one audio file with an optional timed track list.
+One long file with timestamps is a mix, not an album: listeners can't
+skip cleanly between songs and the musician has to stitch their files
+together first.
+
+**Decision:** an album or EP is a `BoothSet` of kind `album` or `ep`
+whose audio is an ordered list of tracks, each its own uploaded file
+(`booth_set_tracks`), in place of the single file. Every other kind is
+unchanged. See `docs/spaces/booth.md`, Albums.
+
+- **A kind of set, not a new record.** An album shares everything a set
+  has (title, cover, credits, notes, genres, saves, shoutouts, plays, the
+  feed card, Konnect, Musik and My sets), so a separate `BoothAlbum`
+  would have repeated all of it. Two kinds rather than one `album` with
+  a flag, because musicians say "EP" and the filter can tell them apart.
+- **Tracks are their own table**, not a jsonb list like the timed track
+  list: each one holds an upload, and uploads need a real foreign key to
+  be protected from deletion (`on_delete: :restrict`, as for set audio,
+  2026-09-04) and the media vacuum.
+- **Plays count per album**, not per track: the number is the artist's
+  sense of who listened, and moving between tracks isn't a new listen.
+- **An album plays straight through** regardless of Play next, which is
+  about moving on to another set.
+- **No converting** between an album and one recording on the edit form:
+  it changes what the files are, and is better done as a new upload.
+
+---
+
+## 2026-10-27 — Brands live in Wachuneed, listed by backing
+
+Tahlia's Kommons proposal "Reccomened brands space"
+(https://kronk.info/hub/kommons/p/117432251243226073): "We all have many
+friends doing really cool shit, let's collate them all here together and
+support our wider Kommunity", in categories such as clothing or art.
+
+**Decision (Tal):** a **Brands** section inside Wachuneed, not a new
+korner: brands whose mission members have looked into and respect.
+
+- **Anyone proposes, members decide.** Any member proposes a brand (name,
+  website, why we back them, an optional category and picture). It joins
+  the list once three members back it, the proposer counted
+  (`WachuneedBrand::BACKERS_TO_LIST`); until then it waits under
+  Proposed. No steward approves a brand: backing is the gate, spread among
+  the people who use the list (Err syntropic, 2026-10-19). The threshold is
+  a constant so it can move without a migration.
+- **Undo after the fact.** The proposer edits or takes down their own;
+  staff who handle reports can remove any. No report flow of its own.
+- **No ranking.** Listed brands go A to Z, Proposed newest first, never by
+  backing count: the count is shown, not used to order.
+- **Not a listing.** A brand sells nothing through Kronk, has no reach
+  (every signed-in member sees it), no feed card and no Konnections. Its
+  own tables (`wachuneed_brands`, `wachuneed_brand_backings`) rather than a
+  third listing `kind`, which would have dragged price, reach, photos and
+  requests along with it.
+- **Told once.** The proposer is nudged the first time their brand is
+  listed, not each time it crosses back over three.
+
+Detail: `docs/spaces/wachuneed.md`, Brands.
+
+---
+
+## 2026-10-27 — The Krew page lists the Krew's posts again
+
+Kommons "Krew space feed"
+(https://kronk.info/hub/kommons/p/117503771043856693), Tal: "The feed in a
+krew page should show posts and content specific to the krew in a
+scrollable fashion."
+
+**Decision:** members see the Krew's posts on the Krew page, last, below
+the chat: the standard feed card in the standard timeline, newest first,
+loading more as they scroll (`GET /api/v1/krews/:id/statuses`, now with
+`max_id` paging and a `Link: rel=next` header). Someone outside the Krew
+sees nothing new. What's happening stays on top as the short summary; the
+list is where you go on to read.
+
+**Supersedes:** the part of 2026-10-18 (What's happening on top) that took
+the list of the Krew's posts off the page. That list was the first tile,
+open on arrival, and made the page clunky; this one sits at the foot of the
+page and opens nothing on arrival. See `docs/spaces/krew.md`, The surfaces.
+
+---
+
+---
+
+## 2026-10-27 — The Map's badge counts Mates' pin moves
+
+Kommons "Notifications on location updates"
+(https://kronk.info/hub/kommons/p/117482796448402351): when a Mate adds their
+location or moves it, show it on the Map's korner card.
+
+**Decision:** the Map's unread badge counts a Mate placing or moving their pin
+since you last opened the Map, on top of its trek posts. Only pins you could
+see on the map count. A pin is one row per person, overwritten in place, so it
+has no new id to count by: it counts by `placed_at` against the time inside the
+baseline id (ids are time-based), and opening the Map advances the baseline to
+now. It is the first badge counted by time rather than by id; an adapter whose
+updates aren't one relation answers `#unread_count` itself
+(`Kronk::KornerSeen.counts_for`). No nudge and no push.
+
+---
+
+## 2026-10-27 — Kronk's own Jitsi: passes, Kronk controls, recordings
+
+Kronk's calls (the Main Huddle, Kuddles, the Booth's live sets) move from
+an open Jitsi server anyone could walk into to Kronk's own, which lets
+people in only with a token (JWT) Kronk signs. With the server knowing who
+is who, Kronk can draw its own controls and keep recordings.
+
+**Decision (Tal):**
+
+- **A pass per call.** `POST /api/v1/calls/token` (`kind`: `huddle`,
+  `kuddle` or `booth_live`, and `id`) gives the room's Jitsi name and an
+  HS256 token good for two hours, for whoever may join: every signed-in
+  member for the Main Huddle (tuning out of Huddle quiets its feed and
+  nudges, not the room), anyone signed in for an open Kuddle (a retired one
+  is a 404), and whoever a live set's reach allows while it is live (its
+  host from when it's planned). The Kuddle's maker, the set's host and
+  staff (`manage_reports`) get a moderator's token; the Main Huddle has no
+  maker, so only staff. `Kronk::CallTarget` holds these rules.
+- **Configuration, not code.** `JITSI_JWT_SECRET` (blank: no tokens, the old
+  open server), `JITSI_JWT_APP_ID`, `JITSI_ROOM_PREFIX` (shadow sets
+  `shadow-`, so shadow and production can share one server without
+  meeting; put on every room name Kronk hands Jitsi, never stored) and
+  `JITSI_RECORDING_SECRET`, all in `config/initializers/1_kronk_jitsi.rb`.
+  Secrets stay in the environment.
+- **Kronk draws the controls.** Jitsi's toolbar, pre-join screen, deep
+  links, invites and watermarks are off (`mastodon/jitsi.ts`, one config
+  for every call). Kronk's bar under the call (`<CallControls>`) has mic,
+  camera, screen, raise hand, tile view and leave, and Record / Stop
+  recording for a moderator, everywhere a call is drawn, the mini window
+  included. Its state comes from the call's events. A Booth listener's bar
+  has no mic, camera or screen. The Booth's host keeps Jitsi's pre-join
+  screen, the one place to pick a mixer or audio interface.
+- **Recordings are the one thing a call leaves.** Huddles were "the moment,
+  not the artefact" (`docs/spaces/huddle.md`, Nothing persists); a
+  recording is now the one exception, by Tal's choice: a call can be kept
+  when whoever runs it decides to. It stays in the spirit of the rule
+  because it is never silent: only a moderator can start one, and
+  everyone in the call sees "Recording" while it runs. Nothing else (who
+  was there, chat, a feed card) is kept. Who sees
+  it follows the call: a Kuddle's, anyone who can see the Kuddle; the Main
+  Huddle's, every signed-in member; a live set's goes to its host alone,
+  to publish as a set. The Kuddle's maker, the host or staff can delete
+  one, file and all.
+- **Files never pass through Kronk and are never public.** The server's
+  recorder (Jibri) asks Kronk for a signed upload URL (HMAC with
+  `JITSI_RECORDING_SECRET`), PUTs the file to a private object in Kronk's
+  own bucket, and tells Kronk it's done. People play and download through
+  signed URLs that expire.
+
+**Not attempted:** chat and reactions in a call (they were Jitsi toolbar
+buttons, and are gone with it); the Booth's upload taking a stored
+recording directly (the host downloads it and uploads it); a sweep for
+objects left behind when an account's deletion takes a Kuddle or a live
+set at the database.
+
+**Why:** an open room name was the whole lock, so a Booth listener could
+unmute and anyone with a link could join. Signing passes puts Kronk's
+rules (who's in, who moderates) on the server itself, and drawing the
+controls ourselves makes a call look and behave like the rest of Kronk.
+
+---
+
+## 2026-10-27 — Rooms are Kuddles, and you can follow one
+
+Kommons "Notification for additional Huddles"
+(https://kronk.info/hub/kommons/p/117487031129520906): only the Main
+Huddle sent "People are huddling"; the other rooms sent nothing.
+
+**Decision (Tal):**
+
+- **A Room is a Kuddle** in everything people see (list, composer,
+  Konnect noun, nudges, the share card). Code, tables and the API keep
+  saying room. The page moves to `/hub/huddle/kuddle/:id`; the old
+  `/hub/huddle/room/:id` forwards.
+- **Follow / Unfollow a Kuddle.** Its maker follows it. A Kuddle its
+  maker Konnected to a Krew they are in is followed by every member of
+  that Krew, worked out from membership, not stored per person. Unfollow
+  is stored (`huddle_follows.following = false`) on any Kuddle: that is
+  how a Krew member stops, and it holds if the Kuddle is later linked to
+  another of their Krews. Only the maker's link makes a Krew Kuddle, the
+  same rule as every link that shares (2026-10-27, "Konnect shares only
+  what its owner chose"), so nobody can sign a Krew up for nudges.
+  "Follow" is used for Kuddles on purpose; korners are still tuned into.
+- **A nudge for each Kuddle you follow**, by the Main Huddle's rules: the
+  same once-a-minute watch asks the Jitsi server how many are in each
+  open Kuddle with a follower (by its room key; at most 20 a run, most
+  recently active first), the same number setting, once per gathering,
+  tune-out, Push and quiet hours. It has its own row, on by default, so
+  the Main Huddle's and the Kuddles' can be turned off apart. It says
+  "People are in a Kuddle you follow", with the Kuddle named under it.
+- **Not attempted:** leaving out someone who is alone in the Kuddle. The
+  server gets a count, not who, so the rule is count at or above your
+  number, as for the Main Huddle. The Jitsi embed and server are
+  untouched; a separate Jitsi overhaul is planned.
+
+**Why:** the people who use a Kuddle are the ones who want to hear when
+it fills, and a Krew's Kuddle belongs to its members already. Computing
+Krew follows from membership means nothing to backfill or tidy when
+people join or leave.
+
+---
+
+## 2026-10-27 — The Map shows only your events
+
+Kommons "Events on Map"
+(https://kronk.info/hub/kommons/p/117483841086601552): the Map pinned every
+upcoming event you were allowed to see, so it filled with other people's
+events.
+
+**Decision (Tal):** the Map's events are only your own: the ones you host,
+plus the ones you're going to or interested in. Every other event stays
+findable in Kalendar. An event's reach still applies: an answered event you
+may no longer see has no pin. One exception keeps the event page working: its
+location link opens `/hub/map?event=<slug>`, and that one event is pinned
+while you may see it, answered or not.
+
+**Supersedes:** the Map pinning every visible upcoming event (docs/spaces/map.md, Events).
+
+---
+
+---
+
+## 2026-10-27 — Push can be just a ping
+
+mangobee's Kommons proposal "Changing our Notification for web/app"
+(https://kronk.info/hub/kommons/p/116684543811893646, approved by Tal):
+"ping users that there is a notification awaiting them on Kronk ... gather
+all notifications under one bundle", so people come to them at their own
+pace.
+
+**Decision:** push has a second way to read, chosen on
+`/settings/notifications` under **How push tells you**: **Each one** (what
+it did before, and still the default) or **Just a ping**. A ping is one
+notification, "Something new on Kronk", with no names, words or picture,
+always under the same tag so it replaces the last one, and it opens Nudges.
+It is a per-person setting (`nudges.push_style`), not per device. It changes
+only what a push says: the per-row Push switches and quiet hours still decide
+whether one is sent. Legacy notifications that still push are sent as the
+same ping, so the choice holds for everything that reaches the phone
+(`docs/spaces/nudges.md`, Push).
+
+---
+
+---
+
+## 2026-10-27 — Search finds Kronk's own members
+
+Tal: "the search picks up users from different servers". Federation is
+closed (limited mode, empty allowlist), but about 200 accounts from other
+servers are still in the database from before, and search (the top bar,
+Mate search, @-suggestions) offered them as if they were people here.
+
+- **Search shows members only.** People: local accounts, never the
+  instance actor (`Kronk::Search::PolicyFilter#filter_accounts`,
+  `Api::V1::Accounts::SearchController`). Posts: members' own
+  (`filter_statuses`). The upstream `AccountSearchService` is left as it
+  is, so its specs and upstream merges keep working; the filter sits where
+  Kronk's responses are made.
+- **The instance actor's posts can't break search any more.** Two stray
+  posts from May 2026 belong to it; its username is a host name, which the
+  post routes refuse, so any search that matched them (pasting a kronk.info
+  link into the composer did) answered 500.
+
+---
+
+## 2026-10-27 — Kronikles get a Series
+
+Kommons proposal "Kronikles"
+([#117504092528767330](https://kronk.info/hub/kommons/p/117504092528767330)):
+"would be nice to have different types of story ie> chapters. Be great to
+be able to link chapters together".
+
+**Decision (Tal):** a **Series** record. A writer makes a Series (title,
+optional description and cover) and puts their own Kronikles in it as
+ordered chapters. Readers of a chapter see its Series, "Chapter N of M"
+and Previous / Next; the Series has its own page with its contents
+(`docs/spaces/kronikles.md`, Series).
+
+- **A Series is seen only as far as its chapters are.** It has no audience
+  of its own: each Kronikle keeps its reach and Krews, a reader sees and
+  counts only the chapters they can see, and a Series with none they can
+  see is a 404. A Series-level audience would either widen chapters past
+  what their writer chose for each (no reach without consent) or have to
+  be kept in step with them. Its writer always sees it, so an empty one
+  can be filled.
+- **One Series per Kronikle, the writer's own.** No shared or multi-author
+  Series: Kronikles is single-author (its space doc), and putting your
+  writing in someone else's Series is a reach question this doesn't need.
+- **Deleting a Series keeps its Kronikles.** The Series is a way of
+  reading them, not where they live.
+- **One entry in the directory, not a Series face.** The directory's faces
+  are one axis (All / Mine / Mates': whose writing); a Series tab would put
+  a second axis on that rotator. A Series sits where its newest visible
+  chapter would, so the list stays newest first with no ranking.
+- **Not Konnectable on its own.** It's a secondary resource in the
+  manifest: Konnect and previews check a record's audience, and a Series
+  has none to check. Konnect a chapter. If people ask for it, give it an
+  audience rule in `Kronk::KornerRecords` first.
+- Positions are a plain `series_position` integer, rewritten whole on
+  reorder (a writer's Series is small), as Art's featured pieces are.
+
+---
+
+---
+
+## 2026-10-26 — Maps fall back without WebGL; feed cards can't crash the app
+
+Kommons "error report on login"
+(https://kronk.info/hub/kommons/p/117504037032494231): on a device without
+WebGL, an event card's map preview on Home threw "Failed to initialize
+WebGL", and nothing between it and the app-level error boundary caught it,
+so the whole app showed the error page.
+
+**Decision:** a map without WebGL says so instead of throwing. Every MapLibre
+map checks `supportsWebGL()` and catches a failed construction; the pin
+preview becomes a plain box with the place's name, full maps show an
+`<EmptyState>`, and the pin picker keeps its search working
+(`docs/spaces/map.md`, Without WebGL). Separately, every korner card in the
+feed renders inside `<SilentErrorBoundary>`: one bad card disappears from its
+post, the rest of the page stays. Silent rather than an error card because a
+post's text still carries it, and a broken card has nothing useful to show.
+
+---
+
+## 2026-10-26 — Kommunity: Discover first, an Everyone list, Orb last
+
+Tal's Kommons proposal "Landing Page"
+([#117483791865274639](https://kronk.info/hub/kommons/p/117483791865274639),
+on `kommunity.index`): "Kommunity landing page should be the 'Discover'
+page, the Orb should be last. Also having a straight up list should be a
+middle page, with a full list of 'Visible' Users (if they choose to be
+visible)".
+
+**Decision:** Kommunity's views are **Discover** (the landing view, bare
+`/hub/kommunity`), **Everyone** (new, `/hub/kommunity/everyone`,
+`GET /api/v1/kommunity/everyone`) and **Orb**, in that order. Supersedes
+Orb as the landing view.
+
+- **Everyone lists only people who chose to be visible to you**:
+  findability `everyone`, or `orbit` when you are in their Orbit
+  (`Account.kommunity_discoverable_to`, the test Discover already uses).
+  `nobody` is never listed, even for their Mates or Krew: being someone's
+  Mate doesn't override their choice. Blocks and mutes, either way, take
+  someone off.
+- **Visible Mates are in.** That is what separates it from Discover, which
+  stays a place for meeting someone new.
+- **Alphabetical**, by display name then username, with a name-or-handle
+  search. Not by activity: a directory ordered by anything else is ranking
+  the community for you. So it pages by offset rather than an id cursor.
+- **Named Everyone**, not Kronkers, which is already a Discover layer.
+
+---
+
+## 2026-10-27 — Konnect shares only what its owner chose
+
+An audit of Konnect found links reaching further than their makers
+meant: a Mate could Konnect their own public record to someone's
+Mates-only Place (their home, say) and open it to everyone; a Place's
+maker could move other people's events by editing a Place they had used;
+a Krew member's link to someone else's event linked it to the Krew's
+emergence in its maker's name, and taking that link off took the event
+out of the Krew; and the picker and the link API handed back records
+their asker couldn't open.
+
+**Decision:**
+
+- **A Place is seen through its maker's links only.** It is seen by its
+  maker and by whoever can see something its maker Konnected it to. A
+  link someone else makes Konnects their record to it but never widens
+  who sees it. A suspended or deleted maker's Places are seen by nobody,
+  and deleting an account deletes its Places. Refines "A Place is seen by
+  whoever can see something Konnected to it" (2026-10-23, Map Places).
+- **A record's location is only its owner's own Place.** Besides being
+  linked by the record's owner (2026-10-23), the Place must be theirs.
+  Someone else's Place Konnected to it shows in the Konnected section
+  but isn't where the record is, so nobody else's edit moves it, and the
+  record never hands its audience an address they can't see.
+- **Only the owner's link shares, and only taking that off unshares.** A
+  link someone else makes between a Krew (or emergence) and a record
+  stays a link: it doesn't add the emergence, and removing it leaves the
+  owner's links and the Krew's place in the audience alone. Removing an
+  owner's link still takes an event off its Krew and emergence together
+  (2026-10-22).
+- **Two records are Konnected once.** A link the other way round to one
+  that exists is refused (422, "Already Konnected").
+- **A link you can't see is not found.** Changing one needs you to look
+  after one of its ends (404 if you can't see it, 403 if you can), and
+  the picker offers only records you could open: a model's SQL
+  visibility scope only narrows the search (Event's settles only
+  invite-only), and each record is then checked as opening it would be.
+
+## 2026-10-27 — Konnect only: leftovers removed
+
+When Konnect became the one way to link records (2.1.4), the older ways of
+doing the same job stayed beside it, so several pages offered two controls
+for one thing. They are gone:
+
+- **Krew composer:** no Korners section to tick. Konnecting or making an
+  album or an event in its Konnect row already turns that space on
+  (2026-10-25), so it stops sending `korner_attachments`. Access is four
+  radio cards in plain words, the same as Krew settings (Open, Ask to join,
+  Invite-only, Has requirements; no "invite link", no "Requirement-gated").
+  "Vouched by a member" can't be set from it, as in settings, and a
+  requirement row left unfinished stops the Krew being made instead of
+  being dropped without a word.
+- **Krew page, Albums and Events:** no "Link one of your albums/events" or
+  Unlink of their own. Konnect and Diskonnect on the page do it.
+- **FreeTheDream:** the event card's "Or link one of your events" and its
+  own composer are gone. Make the event opens Kalendar's composer with
+  `?konnect=freethedream:<id>`.
+- **Event edit:** the Kalendar composer edits too, over the page, with the
+  page's Konnected section left as it is. The old `CreateEventForm` and the
+  unrouted Events page are deleted. An older event's own typed address
+  shows there with Remove, the only location control.
+- **Where it is, once.** An event, kar or listing with a Konnected Place
+  shows where it is as the Place's card, not also as a line (or, for an
+  event, a map) of its own. That holds for an event that also has an older
+  address: the Place wins on its page. The serializers send `place_id` for
+  it.
+- **Kommons:** the new-Korner intro no longer mentions `config/korners/`.
+
+**Why:** two ways to do one thing make people wonder which is right, and
+whether they do the same. Konnect is the one way (2026-10-23, One
+composer, one Konnect), so what it does is not repeated elsewhere.
+
+**Supersedes:** the Krew page's own Link and Unlink (2026-10-17, Kommons
+"Link Existing Albums (and more)"), Korners in Gather a Krew, the
+FreeTheDream event linker, and "An event with its own typed address keeps
+its map" (2026-10-26, Konnected records show themselves) when it also has a
+Place.
+
 ## 2026-10-26 — A korner's post is your words and its card
 
 Tal: going live posted "a generated text as a post 'Live now in the

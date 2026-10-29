@@ -14,8 +14,10 @@ class Vacuum::MediaAttachmentsVacuum
     'albums' => %w(cover_media_attachment_id),
     'art_piece_photos' => %w(media_attachment_id),
     'art_pieces' => %w(cover_media_attachment_id),
+    'booth_set_tracks' => %w(audio_attachment_id),
     'booth_sets' => %w(audio_attachment_id cover_attachment_id),
     'chronicle_pictures' => %w(media_attachment_id),
+    'chronicle_series' => %w(cover_media_attachment_id),
     'drafts' => %w(media_attachment_ids),
     'events' => %w(image_id),
     'films' => %w(video_media_attachment_id),
@@ -27,6 +29,7 @@ class Vacuum::MediaAttachmentsVacuum
     'moments' => %w(media_attachment_id voice_media_attachment_id),
     'nudge_messages' => %w(media_attachment_id voice_attachment_id),
     'nudges_conversation_messages' => %w(media_attachment_id media_attachment_ids voice_attachment_id),
+    'wachuneed_brands' => %w(media_attachment_id),
   }.freeze
 
   # Array columns hold several ids; the rest hold one. Arrays are matched

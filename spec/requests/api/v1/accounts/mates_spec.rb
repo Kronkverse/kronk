@@ -16,6 +16,9 @@ RSpec.describe 'API V1 Accounts Mates' do
   # one-way case, which the followers list would never have returned but
   # a naive mutual query could.
   let(:carol)   { Fabricate(:account) }
+  # The viewer. Only the account itself and its Mates may see the list
+  # (Tal, 2026-10-26), so the default viewer is a Mate of account.
+  let(:viewer)  { user.account }
 
   before do
     alice.follow!(account)
@@ -25,21 +28,85 @@ RSpec.describe 'API V1 Accounts Mates' do
   end
 
   describe 'GET /api/v1/accounts/:account_id/mates' do
-    it 'returns only mutual follows', :aggregate_failures do
+    before do
+      next if viewer == account
+
+      viewer.follow!(account)
+      account.follow!(viewer)
+    end
+
+    it 'returns only mutual follows to a Mate', :aggregate_failures do
       get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }, headers: headers
 
       expect(response).to have_http_status(200)
       expect(response.content_type)
         .to start_with('application/json')
       expect(response.parsed_body)
-        .to contain_exactly(hash_including(id: alice.id.to_s))
+        .to contain_exactly(hash_including(id: alice.id.to_s), hash_including(id: viewer.id.to_s))
+    end
+
+    context 'when the viewer is the account itself' do
+      let(:user) { account.user }
+
+      it 'returns their own mates' do
+        get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }, headers: headers
+
+        expect(response.parsed_body)
+          .to contain_exactly(hash_including(id: alice.id.to_s))
+      end
+    end
+
+    context 'when the viewer follows the account but is not followed back' do
+      before { account.unfollow!(viewer) }
+
+      it 'hides results' do
+        get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }, headers: headers
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body).to eq []
+      end
+    end
+
+    context 'when the viewer has no connection to the account' do
+      before do
+        account.unfollow!(viewer)
+        viewer.unfollow!(account)
+      end
+
+      it 'hides results' do
+        get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }, headers: headers
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body).to eq []
+      end
+    end
+
+    context 'when the profile is shown to its owner only' do
+      before { account.update(profile_visibility: :self_only) }
+
+      it 'hides results from a Mate' do
+        get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }, headers: headers
+
+        expect(response.parsed_body).to eq []
+      end
+    end
+
+    context 'when signed out' do
+      it 'hides results' do
+        get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body).to eq []
+      end
     end
 
     it 'does not return blocked users' do
       user.account.block!(alice)
       get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }, headers: headers
 
-      expect(response.parsed_body.size).to eq 0
+      # The viewer is a Mate too, so they still see themselves.
+      expect(response.parsed_body)
+        .to contain_exactly(hash_including(id: viewer.id.to_s))
     end
 
     context 'when the requesting user is blocked' do
@@ -55,7 +122,7 @@ RSpec.describe 'API V1 Accounts Mates' do
     context 'when the account hides its collections' do
       before { account.update(hide_collections: true) }
 
-      it 'hides results from another viewer' do
+      it 'hides results from a Mate' do
         get "/api/v1/accounts/#{account.id}/mates", params: { limit: 5 }, headers: headers
 
         expect(response.parsed_body.size).to eq 0
