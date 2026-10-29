@@ -24,6 +24,9 @@ export interface ApiNudgeNotificationJSON {
   seen: boolean;
   // Distinct actors in the group; `actors` carries the most recent few.
   count: number;
+  // How many times it happened, when a burst collapsed onto one row
+  // ("Sam tagged you in 3 photos"). 1 for everything else.
+  times: number;
   actors: ApiAccountJSON[];
 }
 
