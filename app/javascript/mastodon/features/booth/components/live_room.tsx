@@ -12,6 +12,7 @@ import {
   CallRecordingList,
   useCallRecordings,
 } from 'mastodon/components/call_recordings';
+import { ComposeCheck } from 'mastodon/components/compose_fields';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
@@ -170,6 +171,7 @@ const messages = defineMessages({
     id: 'booth.live.announced',
     defaultMessage: 'You’re live, and your feed has been told',
   },
+  recordSet: { id: 'booth.live.record_set', defaultMessage: 'Record this set' },
   goNote: {
     id: 'booth.live.go_note',
     defaultMessage: 'Nobody can listen in until you go live.',
@@ -211,7 +213,7 @@ const messages = defineMessages({
   tipRecordServer: {
     id: 'booth.live.tip_record_server',
     defaultMessage:
-      'To keep the set, press Record under the room. Everyone sees it is being recorded, and the file comes to you afterwards to publish as a set.',
+      'The set is recorded from when you go live, unless you untick Record this set. Everyone sees it is being recorded, and the file comes to you afterwards to publish as a set.',
   },
   tipSize: {
     id: 'booth.live.tip_size',
@@ -263,6 +265,26 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
     ? live.account.display_name || live.account.username
     : '';
   const callState = useCallState(call);
+  // Record this set (on by default where the server records): going live
+  // starts the recording once the host is in the room, once. Stopping it
+  // later is theirs, and it doesn't start again on its own.
+  const [recordSet, setRecordSet] = useState(true);
+  const autoRecord = useRef(false);
+  const handleRecordSet = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setRecordSet(e.target.checked);
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!call || !callState?.inConference || !autoRecord.current) return;
+    if (callState.recording) {
+      autoRecord.current = false;
+    } else if (callState.canRecord && callState.moderator) {
+      autoRecord.current = false;
+      call.startRecording();
+    }
+  }, [call, callState]);
   // What the host last marked as playing, from the poll or the set itself.
   const [playing, setPlaying] = useState<{ text: string; at: number } | null>(
     null,
@@ -460,12 +482,13 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
         dispatch(
           showAlert({ message: told ? messages.announced : messages.wentLive }),
         );
+        autoRecord.current = jitsiRecording && recordSet;
         joinRoom(true);
       } finally {
         setBusy(false);
       }
     })();
-  }, [live, announce, dispatch, joinRoom]);
+  }, [live, announce, dispatch, joinRoom, recordSet]);
 
   const handleRejoin = useCallback(() => {
     joinRoom(true);
@@ -631,6 +654,15 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
                 joined ? messages.goNoteJoined : messages.goNote,
               )}
             </p>
+            {jitsiRecording && (
+              <ComposeCheck
+                className='booth-live__go-record'
+                label={intl.formatMessage(messages.recordSet)}
+                checked={recordSet}
+                onChange={handleRecordSet}
+                disabled={busy}
+              />
+            )}
             <KornerPill
               variant='primary'
               className='booth-live__go-button'

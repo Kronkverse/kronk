@@ -534,7 +534,12 @@ For the script on the Jitsi server's page that draws them in the call:
 
 With Kronk's Jitsi server set up for it (`JITSI_JWT_SECRET`,
 `JITSI_RECORDING_SECRET` and S3 storage; `docs/spaces/huddle.md`,
-Recordings), the host can press **Record** under the room. Everyone in it
+Recordings), going live records the set: **Record this set**, ticked by
+default in the Go live panel, starts the recording once the host is in
+the room (past the pre-join screen), once (Cassidy's proposal "Live set
+record and download", 2026-10-29). Untick it to play unrecorded. The
+host can still press **Record** or **Stop recording** under the room, and
+a recording they stop doesn't start again on its own. Everyone in it
 sees "Recording" while it runs, and the get-ready panel says so
 beforehand. When the recording stops, the server's finalize script
 uploads it to private objects in Kronk's storage, as a video and as an
