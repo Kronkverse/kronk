@@ -8,6 +8,7 @@ import { apiContributePhoto, apiUpdateAlbum } from 'mastodon/api/albutts';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { CaptionTextarea } from './caption_textarea';
@@ -649,16 +650,13 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
 
         {finished && failedCount > 0 && (
           <div className='albutts-composer__inline-actions'>
-            <button
-              type='button'
-              className='albutts-btn albutts-btn--ghost'
-              onClick={handleRetryFailed}
-              disabled={pending}
-            >
-              {intl.formatMessage(messages.retryFailed, {
+            <KornerPill
+              label={intl.formatMessage(messages.retryFailed, {
                 count: failedCount,
               })}
-            </button>
+              onClick={handleRetryFailed}
+              disabled={pending}
+            />
           </div>
         )}
       </div>
