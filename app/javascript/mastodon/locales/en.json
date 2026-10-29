@@ -778,6 +778,8 @@
   "calls.recordings.delete_title": "Delete this recording?",
   "calls.recordings.download": "Download",
   "calls.recordings.download_label": "Download the recording from {date}",
+  "calls.recordings.download_sound": "Download sound",
+  "calls.recordings.download_sound_label": "Download the sound of the recording from {date}",
   "calls.recordings.heading": "Recordings",
   "calls.recordings.hide": "Hide",
   "calls.recordings.length": "{length} long",

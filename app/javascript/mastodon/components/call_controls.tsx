@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 
 import type { MessageDescriptor } from 'react-intl';
 import { defineMessages, useIntl } from 'react-intl';
@@ -21,6 +21,7 @@ import VideocamIcon from '@/material-icons/400-24px/videocam.svg?react';
 import VideocamOffIcon from '@/material-icons/400-24px/videocam_off.svg?react';
 import WavingHandIcon from '@/material-icons/400-24px/waving_hand.svg?react';
 import { CallInputPanel } from 'mastodon/components/call_input_picker';
+import { recordingLength } from 'mastodon/components/call_recordings';
 import { IconButton } from 'mastodon/components/icon_button';
 import { useCallState } from 'mastodon/hooks/useCallState';
 import type { Call, CallState } from 'mastodon/jitsi';
@@ -229,6 +230,27 @@ const CallButtons: React.FC<{
   );
 };
 
+// How long the recording has run, ticking each second (Tal's proposal
+// "Recordings"). Hidden from screen readers, which would read every tick;
+// "Recording" itself is the status.
+const RecordingClock: React.FC<{ since: number }> = ({ since }) => {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+
+  return (
+    <span className='call-controls__recording-time' aria-hidden='true'>
+      {recordingLength(Math.floor((now - since) / 1000)) ?? '0:00'}
+    </span>
+  );
+};
+
 export const CallControls: React.FC<Props> = ({
   call,
   onLeave,
@@ -268,6 +290,9 @@ export const CallControls: React.FC<Props> = ({
         >
           <span className='call-controls__recording-dot' aria-hidden='true' />
           {intl.formatMessage(messages.recording)}
+          {state.recordingSince !== null && (
+            <RecordingClock since={state.recordingSince} />
+          )}
         </span>
       )}
 
