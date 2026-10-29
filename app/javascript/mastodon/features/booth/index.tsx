@@ -499,6 +499,7 @@ const MusikView: React.FC = () => {
     setKind(null);
     setGenre(null);
     setAllFirst(false);
+    setOpenFilter(null);
   }, []);
   const handleShelfKind = useCallback((k: BoothKind) => {
     setLayout('grid');

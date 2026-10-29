@@ -75,7 +75,8 @@ which opens the same form as the grid card's menu.
     kind** (Mixes, Live recordings and so on). The rows are drawn from the
     newest 200 sets (`limit`, at most 200); each has **See all**, the
     artist's page or the grid on that kind. Sort, Kind and Genre apply to
-    the grid only; a search shows its matches in the grid. How the Booth works (upload, get heard,
+    the grid only; a search shows its matches in the grid. Picking a
+    View closes its panel. How the Booth works (upload, get heard,
     credit who played, go live, save) is in About this space, the Ж
     bubble's i, from the manifest's `about:`; the page carries no banner
     (decisions.md, 2026-10-26). The empty state links to the composer,
