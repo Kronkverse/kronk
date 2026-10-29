@@ -94,7 +94,7 @@ namespace :api, format: false do
       resource :branding, only: [:show]
       post 'recordings/start', to: 'recording_uploads#create', as: :recording_upload
       post 'recordings/:id/complete', to: 'recording_uploads#complete', as: :recording_upload_complete
-      resources :recordings, only: [:index, :destroy]
+      resources :recordings, only: [:index]
     end
     resource :token_balance, only: [:show]
 

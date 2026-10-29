@@ -7,11 +7,15 @@
 # Who sees it is the call's rule (Kronk::CallTarget, CallRecordingPolicy).
 #
 # The file is a private object (Kronk::CallRecordingStorage); destroying the
-# row deletes it.
+# row deletes it. Nobody can delete a recording through the app: once
+# recorded, it is kept (Tal, 2026-10-29). The rows that do go are an upload
+# refused for its size, and the recordings of a call record that is itself
+# destroyed.
 #
 # `media` is `video` or `audio`. The recorder can upload both from one
 # recording (a live set's audio is what becomes a set), and each row of such
-# a pair points at the other (`pair`). A live set's audio, once ready, is
+# a pair points at the other (`pair`); the app shows such a pair as one
+# recording, the video with its sound. A live set's audio, once ready, is
 # made into a draft set for its host (Booth::LiveRecordingSetWorker).
 class CallRecording < ApplicationRecord
   KINDS = Kronk::CallTarget::KINDS

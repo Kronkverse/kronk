@@ -344,7 +344,7 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
   }, [recordingNow, isHost, call]);
 
   // The set's recording, once it's over, for its host to publish.
-  const [recordings, forgetRecording] = useCallRecordings(
+  const recordings = useCallRecordings(
     'booth_live',
     id,
     state === 'ended' && live?.is_owner === true,
@@ -737,10 +737,7 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
           )}
 
         {state === 'ended' && owner && (
-          <CallRecordingList
-            recordings={recordings}
-            onRemoved={forgetRecording}
-          />
+          <CallRecordingList recordings={recordings} />
         )}
 
         {state === 'ended' && !(owner && latestRecording) && (
