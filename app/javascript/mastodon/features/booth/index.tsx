@@ -39,6 +39,7 @@ import { KINDS, kindMessage } from './kinds';
 import type { BoothCredit, BoothKind, BoothSet } from './types';
 import { useBoothLives } from './use_booth_lives';
 import { useBoothSets } from './use_booth_sets';
+import { useBoothShelves } from './use_booth_shelves';
 import type { BoothSort } from './use_booth_sets';
 
 // The Booth — Musik (every set, searchable and sortable), Live (sets
@@ -101,6 +102,15 @@ const messages = defineMessages({
       'New this month and barely heard yet. Be one of the first to listen, and leave a shoutout.',
   },
   seeAll: { id: 'booth.first_listens_all', defaultMessage: 'See all' },
+  viewLabel: { id: 'booth.filter.view', defaultMessage: 'View' },
+  viewChosen: {
+    id: 'booth.filter.view_chosen',
+    defaultMessage: 'View: {view}',
+  },
+  viewGrid: { id: 'booth.view.grid', defaultMessage: 'Grid' },
+  viewArtists: { id: 'booth.view.artists', defaultMessage: 'By artist' },
+  viewKinds: { id: 'booth.view.kinds', defaultMessage: 'By kind' },
+  shelfAll: { id: 'booth.shelf.see_all', defaultMessage: 'See all' },
   everything: {
     id: 'booth.first_listens_back',
     defaultMessage: 'Back to all sets',
@@ -149,7 +159,34 @@ const messages = defineMessages({
 });
 
 const GENRE_CHIPS = 8;
-type FilterKey = 'sort' | 'kind' | 'genre';
+type FilterKey = 'sort' | 'kind' | 'genre' | 'view';
+
+// How Musik lays the sets out: the grid, or rows that scroll sideways, one
+// per artist or one per kind (Tal's proposal "Music arranging").
+type MusikLayout = 'grid' | 'artists' | 'kinds';
+const LAYOUTS: readonly MusikLayout[] = ['grid', 'artists', 'kinds'];
+const LAYOUT_MESSAGES: Record<MusikLayout, MessageDescriptor> = {
+  grid: messages.viewGrid,
+  artists: messages.viewArtists,
+  kinds: messages.viewKinds,
+};
+
+// Row headings for By kind: the plural of each kind.
+const shelfKindMessages = defineMessages({
+  mix: { id: 'booth.shelf.kind.mix', defaultMessage: 'Mixes' },
+  live_recording: {
+    id: 'booth.shelf.kind.live_recording',
+    defaultMessage: 'Live recordings',
+  },
+  track: { id: 'booth.shelf.kind.track', defaultMessage: 'Tracks' },
+  podcast: { id: 'booth.shelf.kind.podcast', defaultMessage: 'Podcasts' },
+  spoken_word: {
+    id: 'booth.shelf.kind.spoken_word',
+    defaultMessage: 'Spoken word',
+  },
+  album: { id: 'booth.shelf.kind.album', defaultMessage: 'Albums' },
+  ep: { id: 'booth.shelf.kind.ep', defaultMessage: 'EPs' },
+});
 
 const SORTS: readonly BoothSort[] = ['newest', 'fewest', 'longest'];
 const SORT_MESSAGES: Record<BoothSort, MessageDescriptor> = {
@@ -232,7 +269,8 @@ const SetGallery: React.FC<{
   onReplace: (set: BoothSet) => void;
   onRemove: (id: string) => void;
   badge?: string;
-}> = ({ sets, onReplace, onRemove, badge }) => {
+  layout?: 'grid' | 'row';
+}> = ({ sets, onReplace, onRemove, badge, layout = 'grid' }) => {
   const history = useHistory();
   const dispatch = useAppDispatch();
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
@@ -264,7 +302,7 @@ const SetGallery: React.FC<{
 
   return (
     <>
-      <SpaceGrid className='booth-gallery'>
+      <SpaceGrid className='booth-gallery' layout={layout}>
         {sets.map((set) => (
           <BoothGridCard
             key={set.id}
@@ -297,6 +335,95 @@ const SetGallery: React.FC<{
   );
 };
 
+// How many sets a row shows before See all.
+const SHELF_SIZE = 12;
+
+// Musik's By artist and By kind: rows that scroll sideways, drawn from the
+// newest sets (use_booth_shelves.ts). An artist is whoever uploaded a set or
+// is credited on it, as in Artists; their row starts with their newest set,
+// and See all opens their page. A kind's See all is the grid on that kind.
+const MusikShelves: React.FC<{
+  by: 'artists' | 'kinds';
+  onKind: (kind: BoothKind) => void;
+}> = ({ by, onKind }) => {
+  const intl = useIntl();
+  const history = useHistory();
+  const { sets, loading, replace, remove } = useBoothShelves();
+
+  const shelves = useMemo(() => {
+    if (by === 'kinds') {
+      return KINDS.map((kind) => ({
+        key: kind,
+        title: intl.formatMessage(shelfKindMessages[kind]),
+        sets: sets.filter((set) => set.kind === kind).slice(0, SHELF_SIZE),
+      })).filter((shelf) => shelf.sets.length > 0);
+    }
+    const byKey = new Map<
+      string,
+      { key: string; title: string; sets: BoothSet[] }
+    >();
+    for (const set of sets) {
+      for (const credit of set.artists) {
+        const key = creditKey(credit);
+        if (!key) continue;
+        const shelf = byKey.get(key) ?? {
+          key,
+          title:
+            credit.account?.display_name ||
+            credit.account?.acct ||
+            credit.name ||
+            key,
+          sets: [],
+        };
+        if (!shelf.sets.includes(set) && shelf.sets.length < SHELF_SIZE) {
+          shelf.sets.push(set);
+        }
+        byKey.set(key, shelf);
+      }
+    }
+    return [...byKey.values()];
+  }, [by, sets, intl]);
+
+  const handleAll = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const key = e.currentTarget.dataset.key ?? '';
+      if (by === 'kinds') onKind(key as BoothKind);
+      else history.push(`/hub/booth/artists/${encodeURIComponent(key)}`);
+    },
+    [by, onKind, history],
+  );
+
+  if (loading) {
+    return <LoadingState label={intl.formatMessage(messages.loading)} />;
+  }
+
+  return (
+    <div className='booth-shelves'>
+      {shelves.map((shelf) => (
+        <section key={shelf.key} className='booth-shelf'>
+          <div className='booth-shelf__head'>
+            <h2 className='booth-shelf__title'>{shelf.title}</h2>
+            <button
+              type='button'
+              className='booth-shelf__all'
+              data-key={shelf.key}
+              onClick={handleAll}
+            >
+              {intl.formatMessage(messages.shelfAll)}
+            </button>
+          </div>
+          <SetGallery
+            sets={shelf.sets}
+            onReplace={replace}
+            onRemove={remove}
+            layout='row'
+          />
+        </section>
+      ))}
+    </div>
+  );
+};
+
 const MusikView: React.FC = () => {
   const intl = useIntl();
   const [input, setInput] = useState('');
@@ -304,6 +431,7 @@ const MusikView: React.FC = () => {
   const [genre, setGenre] = useState<string | null>(null);
   const [kind, setKind] = useState<BoothKind | null>(null);
   const [sort, setSort] = useState<BoothSort>('newest');
+  const [layout, setLayout] = useState<MusikLayout>('grid');
   const [genreChips, setGenreChips] = useState<string[]>([]);
   // "See all" on First listens turns the grid into that list.
   const [allFirst, setAllFirst] = useState(false);
@@ -360,7 +488,24 @@ const MusikView: React.FC = () => {
     setAllFirst(false);
   }, []);
 
+  // A row view drops the filters (they don't apply to rows); a search
+  // still shows its matches in the grid.
+  const handleLayout = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setLayout(
+      (e.currentTarget.dataset.layout as MusikLayout | undefined) ?? 'grid',
+    );
+    setKind(null);
+    setGenre(null);
+    setAllFirst(false);
+  }, []);
+  const handleShelfKind = useCallback((k: BoothKind) => {
+    setLayout('grid');
+    setKind(k);
+    setOpenFilter(null);
+  }, []);
+
   const nothingAtAll = !loading && !filtering && sets.length === 0;
+  const rows = layout !== 'grid' && !filtering && !nothingAtAll;
 
   return (
     <>
@@ -433,34 +578,52 @@ const MusikView: React.FC = () => {
               <button
                 type='button'
                 className={classNames('booth-filterbar__toggle', {
-                  'booth-filterbar__toggle--set': sort !== 'newest',
+                  'booth-filterbar__toggle--set': layout !== 'grid',
                 })}
-                aria-expanded={openFilter === 'sort'}
+                aria-expanded={openFilter === 'view'}
                 aria-controls='booth-filter-panel'
-                data-filter='sort'
+                data-filter='view'
                 onClick={handleToggle}
               >
-                {intl.formatMessage(messages.sortChosen, {
-                  sort: intl.formatMessage(SORT_MESSAGES[sort]),
+                {intl.formatMessage(messages.viewChosen, {
+                  view: intl.formatMessage(LAYOUT_MESSAGES[layout]),
                 })}
               </button>
-              <button
-                type='button'
-                className={classNames('booth-filterbar__toggle', {
-                  'booth-filterbar__toggle--set': kind !== null,
-                })}
-                aria-expanded={openFilter === 'kind'}
-                aria-controls='booth-filter-panel'
-                data-filter='kind'
-                onClick={handleToggle}
-              >
-                {kind
-                  ? intl.formatMessage(messages.kindChosen, {
-                      kind: intl.formatMessage(kindMessage(kind)),
-                    })
-                  : intl.formatMessage(messages.kindLabel)}
-              </button>
-              {genreChips.length > 1 && (
+              {layout === 'grid' && (
+                <button
+                  type='button'
+                  className={classNames('booth-filterbar__toggle', {
+                    'booth-filterbar__toggle--set': sort !== 'newest',
+                  })}
+                  aria-expanded={openFilter === 'sort'}
+                  aria-controls='booth-filter-panel'
+                  data-filter='sort'
+                  onClick={handleToggle}
+                >
+                  {intl.formatMessage(messages.sortChosen, {
+                    sort: intl.formatMessage(SORT_MESSAGES[sort]),
+                  })}
+                </button>
+              )}
+              {layout === 'grid' && (
+                <button
+                  type='button'
+                  className={classNames('booth-filterbar__toggle', {
+                    'booth-filterbar__toggle--set': kind !== null,
+                  })}
+                  aria-expanded={openFilter === 'kind'}
+                  aria-controls='booth-filter-panel'
+                  data-filter='kind'
+                  onClick={handleToggle}
+                >
+                  {kind
+                    ? intl.formatMessage(messages.kindChosen, {
+                        kind: intl.formatMessage(kindMessage(kind)),
+                      })
+                    : intl.formatMessage(messages.kindLabel)}
+                </button>
+              )}
+              {layout === 'grid' && genreChips.length > 1 && (
                 <button
                   type='button'
                   className={classNames('booth-filterbar__toggle', {
@@ -477,6 +640,28 @@ const MusikView: React.FC = () => {
                 </button>
               )}
             </div>
+
+            {openFilter === 'view' && (
+              <div
+                id='booth-filter-panel'
+                className='booth-genres'
+                role='group'
+                aria-label={intl.formatMessage(messages.viewLabel)}
+              >
+                {LAYOUTS.map((l) => (
+                  <button
+                    key={l}
+                    type='button'
+                    className='booth-genres__chip'
+                    aria-pressed={layout === l}
+                    data-layout={l}
+                    onClick={handleLayout}
+                  >
+                    {intl.formatMessage(LAYOUT_MESSAGES[l])}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {openFilter === 'sort' && (
               <div
@@ -563,7 +748,13 @@ const MusikView: React.FC = () => {
         </div>
       )}
 
-      {loading && <LoadingState label={intl.formatMessage(messages.loading)} />}
+      {rows && layout !== 'grid' && (
+        <MusikShelves by={layout} onKind={handleShelfKind} />
+      )}
+
+      {!rows && loading && (
+        <LoadingState label={intl.formatMessage(messages.loading)} />
+      )}
 
       {nothingAtAll && (
         <EmptyState
@@ -584,7 +775,7 @@ const MusikView: React.FC = () => {
         />
       )}
 
-      {!loading && sets.length > 0 && (
+      {!rows && !loading && sets.length > 0 && (
         <SetGallery
           sets={sets}
           onReplace={replace}
@@ -593,7 +784,7 @@ const MusikView: React.FC = () => {
         />
       )}
 
-      {!loading && hasMore && (
+      {!rows && !loading && hasMore && (
         <KornerActionBar align='center'>
           <KornerPill
             label={intl.formatMessage(messages.loadMore)}
