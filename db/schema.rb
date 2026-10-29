@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1256,7 +1256,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
     t.datetime "created_at", null: false
     t.text "description"
     t.datetime "ended_at"
-    t.bigint "host_account_id", null: false
+    t.bigint "host_account_id"
     t.string "icon", limit: 32
     t.datetime "last_active_at"
     t.datetime "retired_at"
@@ -2998,7 +2998,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   add_foreign_key "huddle_follows", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
-  add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :cascade
+  add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :nullify, validate: false
   add_foreign_key "identities", "users", name: "fk_bea040f377", on_delete: :cascade
   add_foreign_key "instance_moderation_notes", "accounts", on_delete: :cascade
   add_foreign_key "invites", "users", on_delete: :cascade
