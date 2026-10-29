@@ -2,6 +2,9 @@
 
 class Api::V1::BoothSetsController < Api::BaseController
   PAGE_SIZE = 40
+  # Musik's By artist and By kind rows are drawn from the newest sets in one
+  # request (`limit`), so they may ask for more than a page.
+  MAX_LIMIT = 200
   # First listens: recent sets that have barely been heard yet, so new
   # voices get a front-row spot instead of a chart.
   FIRST_LISTENS_WINDOW = 30.days
@@ -30,7 +33,7 @@ class Api::V1::BoothSetsController < Api::BaseController
     @booth_sets = listing_scope
                   .includes(:account, :audio_attachment, :cover_attachment, credits: :account, tracks: :audio_attachment)
                   .order(SORTS.fetch(sort_param))
-                  .limit(PAGE_SIZE)
+                  .limit(page_size)
     @booth_sets = @booth_sets.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id)) if current_account
     @booth_sets = page(@booth_sets)
     @booth_sets = @booth_sets.where('? = ANY (booth_sets.genres)', params[:genre].to_s) if params[:genre].present?
@@ -158,6 +161,10 @@ class Api::V1::BoothSetsController < Api::BaseController
   def first_listens(scope)
     scope = scope.where(created_at: FIRST_LISTENS_WINDOW.ago..).where(play_count: ...FIRST_LISTENS_MAX_PLAYS)
     current_account ? scope.where.not(account_id: current_account.id) : scope
+  end
+
+  def page_size
+    params[:limit].present? ? params[:limit].to_i.clamp(1, MAX_LIMIT) : PAGE_SIZE
   end
 
   def sort_param
