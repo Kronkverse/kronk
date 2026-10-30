@@ -14,11 +14,11 @@ import { Loading, projectPath, useLoaded } from './shared';
 const messages = defineMessages({
   emptyAll: {
     id: 'freethedream.empty.all',
-    defaultMessage: 'No emergences yet. Start one from one of your Krews.',
+    defaultMessage: 'No projekts yet. Start one from one of your Krews.',
   },
   emptyMine: {
     id: 'freethedream.empty.mine',
-    defaultMessage: "You haven't joined an emergence yet.",
+    defaultMessage: "You haven't joined a projekt yet.",
   },
   joined: { id: 'freethedream.joined', defaultMessage: 'Joined' },
   asked: { id: 'freethedream.asked_short', defaultMessage: 'Asked' },

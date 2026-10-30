@@ -5,6 +5,14 @@
 `hub_visible: false` (off the Hub and the rail since 2026-10-30: emergences
 live inside Krews and are reached from a Krew's page)
 
+**Called Projekts on screen** since 2026-10-30 (Tal): the space is
+**Projekts** and one of its records a **projekt** (`konnect.noun`), in
+the manifest and every string. FreeTheDream, emergence and `Project` stay
+the names in code, routes and the database, and in this doc. The Konnect
+picker offers projekts only, not their gangs and fractals
+(`Freethedream::Project.attachment_candidates`); a gang already Konnected
+still opens by its id.
+
 ## Purpose
 
 FreeTheDream is **a self-organising system for bringing things to life
