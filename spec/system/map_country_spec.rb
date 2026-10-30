@@ -22,21 +22,9 @@ RSpec.describe 'Map Country', :inline_jobs, :js, :streaming do
 
   it 'opens the Country from a profile' do
     visit '/@ana'
-    page.execute_script(<<~JS)
-      window.__errors = [];
-      const original = console.error;
-      console.error = (...args) => {
-        window.__errors.push(args.map((a) => (a && a.stack) || String(a)).join(' '));
-        original(...args);
-      };
-      window.addEventListener('error', (e) => window.__errors.push(String(e.error && e.error.stack || e.message)));
-    JS
-
     click_on 'On Mardu Country'
 
+    expect(page).to have_current_path(%r{/hub/map\?country=Mardu\z})
     expect(page).to have_css('.map-country__card', text: 'Mardu Country')
-  ensure
-    errors = page.evaluate_script('window.__errors') if page.has_css?('.error-boundary', wait: 0)
-    warn "COUNTRY CRASH:\n#{Array(errors).join("\n---\n")}" if errors
   end
 end

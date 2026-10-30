@@ -9,7 +9,7 @@ import type {
   LocationDescriptorObject,
   Path,
 } from 'history';
-import { createBrowserHistory } from 'history';
+import { createBrowserHistory, parsePath } from 'history';
 
 import { layoutFromWindow } from 'mastodon/is_mobile';
 import { isDevelopment } from 'mastodon/utils/environment';
@@ -40,7 +40,13 @@ function normalizePath(
   path: HistoryPath,
   state?: LocationState,
 ): LocationDescriptorObject<LocationState> {
-  const location = typeof path === 'string' ? { pathname: path } : { ...path };
+  // A string path keeps its ?query and #hash apart from the pathname, as
+  // history's own push does: `{ pathname: '/hub/map?country=X' }` matches no
+  // route (a profile's Country link opened a broken page, 2026-10-30).
+  const location: LocationDescriptorObject<LocationState> =
+    typeof path === 'string'
+      ? { ...parsePath(path), state: undefined }
+      : { ...path };
 
   if (location.state === undefined && state !== undefined) {
     location.state = state;
