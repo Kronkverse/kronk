@@ -5,6 +5,8 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import { apiDeleteAttachment } from 'mastodon/api/attachments';
+import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
 import {
   apiFtdAddDependency,
   apiFtdProject,
@@ -21,6 +23,7 @@ import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useSpaceBack } from 'mastodon/components/space_back';
+import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
@@ -255,6 +258,35 @@ const ProjectView: React.FC<{
   );
   const canAddInside = project.level !== 'fractal' && project.can.add;
 
+  // Kuddles Konnected here show as call frames at the top of the work, not
+  // as tiles (Tal, 2026-10-30: "konnecting a huddle should put a frame
+  // into the space"). Attached reports its Konnections, so a new one shows
+  // at once.
+  const [kuddles, setKuddles] = useState<{ room: string; link: string }[]>([]);
+  const handleKonnections = useCallback((rows: ApiAttachmentJSON[]) => {
+    const seen = new Set<string>();
+    setKuddles(
+      rows.flatMap((row) => {
+        const room =
+          row.target_slug === 'huddle'
+            ? row.target_id
+            : row.source_slug === 'huddle'
+              ? row.source_id
+              : null;
+        if (!room || seen.has(room)) return [];
+        seen.add(room);
+        return [{ room, link: row.id }];
+      }),
+    );
+  }, []);
+  const handleDiskonnect = useCallback((link: string) => {
+    void act(
+      apiDeleteAttachment(link).then(() => {
+        setKuddles((current) => current.filter((k) => k.link !== link));
+      }),
+    );
+  }, []);
+
   const goRoot = useCallback(() => {
     history.push(projectPath(project.root));
   }, [history, project.root]);
@@ -339,6 +371,8 @@ const ProjectView: React.FC<{
         korner: 'freethedream',
         id: project.id,
         canManage: project.can.edit,
+        excludeSlugs: ['huddle'],
+        onKonnections: handleKonnections,
         // Getting together already lists the linked events, and a projekt
         // lives in its Krew.
         exclude: [
@@ -416,6 +450,14 @@ const ProjectView: React.FC<{
 
         <div className='freethedream-layout'>
           <div className='freethedream-layout__main'>
+            {kuddles.map((k) => (
+              <KuddleFrame
+                key={k.room}
+                roomId={k.room}
+                link={k.link}
+                onDiskonnect={project.can.edit ? handleDiskonnect : undefined}
+              />
+            ))}
             {project.top ? (
               <Updates
                 updates={project.updates}

@@ -1,5 +1,7 @@
 import classNames from 'classnames';
 
+import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
+
 import { AttachmentSection } from './attachment_section';
 import type { AttachmentExclude } from './attachment_section';
 import { BackToKorner } from './back_to_korner';
@@ -54,6 +56,8 @@ interface KornerDetailProps {
     id: string | number;
     canManage?: boolean;
     exclude?: AttachmentExclude[];
+    excludeSlugs?: string[];
+    onKonnections?: (rows: ApiAttachmentJSON[]) => void;
   };
   children?: React.ReactNode;
   className?: string;
@@ -98,6 +102,8 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
           recordId={attached.id}
           canManage={attached.canManage}
           exclude={attached.exclude}
+          excludeSlugs={attached.excludeSlugs}
+          onKonnections={attached.onKonnections}
         />
       )}
     </div>

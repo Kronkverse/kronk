@@ -131,6 +131,17 @@ Reading room, and so on). Anyone can join; there's no membership or invite.
   takes `?krew=<id>` (`/hub/huddle/composer?krew=<id>`) to start with that
   Krew picked, as the Kalendar and Albutts composers do; only Krews you're in
   are offered (`useAvailableKrews`), one at most.
+- **A frame in a projekt** (Tal, 2026-10-30: "konnecting a huddle should
+  put a frame into the space"): a Kuddle Konnected to a projekt or a
+  Komponent shows at the top of its page as a frame (`kuddle_frame.tsx`),
+  not a tile: the Kuddle's name (opening its page), how many are in it and
+  **Join the call**. The call then sits in the frame with Kronk's controls,
+  and it follows you like any Kuddle's: leave the page and it floats, and
+  the window's Back comes to the projekt. It is the same call as the
+  Kuddle's own page (`use_kuddle_call.ts`, which `room.tsx` uses too), so
+  moving between the two keeps it. **New Kuddle** from a projekt's Konnect
+  comes back to the projekt and joins the call there. Whoever looks after
+  the projekt can Diskonnect it from the frame.
 - **List:** `GET /api/v1/huddle/rooms` returns non-retired rooms, most
   recently active first (`REST::HuddleRoomSerializer`). Who created a room is
   deliberately not shown.
