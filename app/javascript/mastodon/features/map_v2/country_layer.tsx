@@ -2,12 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import * as maplibregl from 'maplibre-gl';
 
 import countriesUrl from '@/images/first-nations-countries.geojson?url';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import { apiGetCountryPeople } from 'mastodon/api/map_country_names';
+import type {
+  ApiMapCountryPeopleJSON,
+  ApiMapCountryPersonJSON,
+} from 'mastodon/api/map_country_names';
 import { FIRST_NATIONS_COUNTRIES } from 'mastodon/components/first_nations_countries';
 import type { FirstNationsCountry } from 'mastodon/components/first_nations_countries';
 import { Icon } from 'mastodon/components/icon';
@@ -110,7 +115,42 @@ const messages = defineMessages({
     id: 'map.country.add_error',
     defaultMessage: "Couldn't add that name. Try again.",
   },
+  bornHere: { id: 'map.country.born_here', defaultMessage: 'Born here' },
+  livingHere: { id: 'map.country.living_here', defaultMessage: 'Living here' },
+  person: { id: 'map.country.person', defaultMessage: '{name} (@{acct})' },
 });
+
+// A row of faces on the card: who was born on this Country, or lives on it,
+// by their profile (Kommons "map ideas", @mangobee, 2026-10-30). Each opens
+// the profile.
+const People: React.FC<{
+  title: string;
+  people: ApiMapCountryPersonJSON[];
+}> = ({ title, people }) => {
+  const intl = useIntl();
+  if (people.length === 0) return null;
+  return (
+    <div className='map-country__people'>
+      <h3 className='map-country__people-title'>{title}</h3>
+      <ul className='map-country__people-list'>
+        {people.map((p) => (
+          <li key={p.id}>
+            <Link
+              to={`/@${p.acct}`}
+              className='map-country__person'
+              title={intl.formatMessage(messages.person, {
+                name: p.name,
+                acct: p.acct,
+              })}
+            >
+              <img src={p.avatar} alt={p.name} />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 // "You're on <name> Country" names the Country under the middle of the map
 // once it is zoomed in this far; further out the middle is a long way from
@@ -183,6 +223,7 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
   const { names: openList, add, remove } = useCountryNames();
   const [newName, setNewName] = useState('');
   const [addFailed, setAddFailed] = useState(false);
+  const [people, setPeople] = useState<ApiMapCountryPeopleJSON | null>(null);
   const addedByShape = useMemo(() => {
     const byShape = new Map<number, typeof openList>();
     openList.forEach((n) => {
@@ -204,6 +245,26 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
       props.name || (addedByShape.get(props.id)?.[0]?.name ?? ''),
     [addedByShape],
   );
+
+  // Who was born on or lives on the picked Country, by any name it answers
+  // to.
+  const pickedNames = useMemo(
+    () => (picked ? allNames(picked) : []),
+    [picked, allNames],
+  );
+  useEffect(() => {
+    setPeople(null);
+    if (pickedNames.length === 0) return;
+    let cancelled = false;
+    void apiGetCountryPeople(pickedNames)
+      .then((data) => {
+        if (!cancelled) setPeople(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [pickedNames]);
 
   // A profile's "On <name> Country" links here with ?country=<name>.
   const requested = useMemo(
@@ -602,6 +663,18 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
                   </li>
                 ))}
               </ul>
+            )}
+            {people && (
+              <>
+                <People
+                  title={intl.formatMessage(messages.bornHere)}
+                  people={people.born}
+                />
+                <People
+                  title={intl.formatMessage(messages.livingHere)}
+                  people={people.living}
+                />
+              </>
             )}
             <form className='map-country__add' onSubmit={addName}>
               <input
