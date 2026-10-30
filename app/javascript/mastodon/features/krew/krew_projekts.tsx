@@ -22,10 +22,6 @@ const messages = defineMessages({
       'Nothing on the go yet. Start a projekt and everyone in the Krew is in it.',
   },
   newProjekt: { id: 'krew.projekts.new', defaultMessage: 'New projekt' },
-  people: {
-    id: 'krew.projekts.people',
-    defaultMessage: '{count, plural, one {# person} other {# people}}',
-  },
   sorted: {
     id: 'krew.projekts.sorted',
     defaultMessage: '{sorted} of {total} sorted',
@@ -72,18 +68,16 @@ export const KrewProjekts: React.FC<{
             image={p.image_url}
             placeholder='🌱'
             title={p.title}
-            meta={[
-              intl.formatMessage(messages.people, { count: p.members_count }),
+            meta={
               p.done
                 ? intl.formatMessage(messages.done)
-                : p.progress.total > 0 &&
-                  intl.formatMessage(messages.sorted, {
-                    sorted: p.progress.sorted,
-                    total: p.progress.total,
-                  }),
-            ]
-              .filter(Boolean)
-              .join(' · ')}
+                : p.progress.total > 0
+                  ? intl.formatMessage(messages.sorted, {
+                      sorted: p.progress.sorted,
+                      total: p.progress.total,
+                    })
+                  : undefined
+            }
           />
         ))}
         {canStart && (

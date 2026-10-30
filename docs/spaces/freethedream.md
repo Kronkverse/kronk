@@ -250,24 +250,17 @@ getting involved, not for doing the work itself:
   **New talk**, the gangs with talk from other people they haven't
   looked at, with a count (opening a gang clears its count); and **On
   you**, what they're actualising and what they're bringing.
-- **Gangs** as tiles, each with how many people have a hand in it and its
-  progress ("3 of 8 sorted"). **Nobody leads a gang**, so no owner shows on
-  a tile or a gang's page (the owner still exists in the data, for who may
-  edit it). The gangs you have a hand in come first, tagged with any new
-  talk. Members get **+ Coalesce a gang**.
-- **Get involved**: a card for each of **Still needed**, **Thing Bringing**
-  ("Gear and supplies needed"), **Actualise** ("Bring an idea to life")
-  and **On offer**, each with a count, as tiles that reflow (two across on
-  a phone). Phone views scroll vertically only, never sideways (Tal's
-  standing rule; `docs/decisions.md`, 2026-10-22). Each opens its own page,
-  `/p/:id/needed`, `/bring`, `/actualise`, `/offers` (the old `/gear`,
-  `/jobs` and `/ideas` redirect).
-- **Krew**: everyone in the emergence as larger cards that reflow into
-  rows, **whoever did something in it most recently first**, each with
-  what they're on (actualising 2, bringing 3 things) and when they were
-  last active, and **Open the Krew** to its page. Doing something is an
-  update (adding, bringing, jumping on board, marking done), a comment, or
-  joining. Looking at a page is not counted: that would be watching people.
+- **Komponents** as tiles (a Komponent is a gang in the code: Tal,
+  2026-10-30), each with how many people have a hand in it and its
+  progress ("3 of 8 sorted"). **Nobody leads a Komponent**, so no owner
+  shows on a tile or a Komponent's page (the owner still exists in the
+  data, for who may edit it). The ones you have a hand in come first,
+  tagged with any new talk. Members get **+ Add a Komponent**.
+- No lists of work, Krew row or joining on a projekt's own page (Tal,
+  2026-10-30): it is part of its Krew, whose page has its people, and a
+  clearer view of what needs work is still to be designed. The lists'
+  own pages (`/p/:id/needed`, `/bring`, `/actualise`, `/offers`) stay.
+  Done, Hand over and Remove are off the page too.
 - **Activity**: the latest eight things that happened, with who did them
   ("Isabelle is bringing 2 speakers", "Tomas coalesced the gang
   Ceremony"). It keeps itself up to date while the page is open and in
@@ -335,9 +328,9 @@ Edit (including the cover) is on the Ж menu, owner only.
 the cover (an emergence's) as its hero, the centred purple title, a `<KornerMeta>` line and
 `<KornerPill>` actions. On a wide Stage (frame ≥ 1000px) an emergence page
 widens to 72rem: what's yours and the gangs (a grid of tiles) across the
-top, then a main column (on an emergence: Get involved, Krew, Activity; on
-a gang: its lists) and a side column (event, joining, Talk, the owner's
-actions; on a gang, Activity and Talk). On a phone it is one column, main
+top, then a main column (on a projekt: Activity; on a Komponent: its
+lists) and a side column (event and Talk; on a Komponent, Activity and
+Talk). On a phone it is one column, main
 first. The emergence list is the kit's `<SpaceGrid>` of `<SpaceCard>` tiles:
 the cover (or the event's image), the title, one meta line (people, end
 date, Done) and a Joined or Asked tag; what it's about and its progress
@@ -539,7 +532,7 @@ shadow.
   (latest update or comment anywhere in the project, else joining) and
   come newest first; `GET /projects/:id/activity` returns the updates
   alone for the page to poll. List pages at `/p/:id/:list` (`work_page.tsx`,
-  lists in `work.tsx`); the Krew row in `krew_row.tsx`. Specs:
+  lists in `work.tsx`). Specs:
   `overview_spec.rb`, "who's in it" and "the activity".
 - **Emergences** (2026-10-15, `20261015130000`–`20261015130200`): the
   words above; `krew_id` on projects (`Project#ensure_krew!`,

@@ -197,8 +197,8 @@ All in `app/javascript/mastodon/features/krew/`.
     what you could open is listed.
   - **Projekts**: what the Krew is making, after What's happening, as a
     row of cards (`krew_projekts.tsx`, the kit's `SpaceGrid` row): each
-    projekt's cover, title, how many people and how much of what it needs
-    is sorted, opening the projekt. For members a last card, **New
+    projekt's cover, title and how much of what it needs is sorted (no
+    people count: everyone in the Krew is in it), opening the projekt. For members a last card, **New
     projekt**, opens the projekt composer (`/hub/krew/composer/projekt`)
     with this Krew picked (`?konnect=krew:<id>`). A projekt's pages are
     under its Krew (`/hub/krew/<krew>/p/<projekt>`), so back from one comes

@@ -220,9 +220,17 @@
     display: none;
   }
 
+  // The title sits clear of the picture's edge, and title and meta are
+  // centred under it (Tal, 2026-10-30: "too close to the border above it").
   &--grid &__title {
     font-size: 0.875rem;
     -webkit-line-clamp: 2;
+    padding-block-start: 10px;
+    text-align: center;
+  }
+
+  &--grid &__meta {
+    text-align: center;
   }
 
   &--grid &__badge,
