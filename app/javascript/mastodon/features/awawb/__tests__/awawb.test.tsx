@@ -22,7 +22,7 @@ describe('Awawb', () => {
     expect(screen.queryByText('Always was.')).toBeNull();
 
     act(() => {
-      vi.advanceTimersByTime(9000);
+      vi.advanceTimersByTime(4000);
     });
 
     expect(
