@@ -22,6 +22,12 @@ class Api::V1::Freethedream::BaseController < Api::BaseController
     permit!(project.member?(current_account))
   end
 
+  # A projekt in an invite-only Krew is as if it weren't there to anyone
+  # outside the Krew.
+  def require_visible!(project)
+    raise ActiveRecord::RecordNotFound unless project.visible_to?(current_account)
+  end
+
   def render_invalid(record)
     render json: { error: record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end

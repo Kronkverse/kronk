@@ -34,11 +34,30 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     expect(page).to have_current_path('/hub/freethedream/mine')
     expect(page).to have_css('.scope-title h1.space-header__title', text: 'Mine')
 
+    # Mycelium is hidden for now (Tal, 2026-10-30), so Mine turns back to
+    # every emergence.
     find('.scope-title__nav--next').click
 
-    expect(page).to have_current_path('/hub/freethedream/mycelium')
-    expect(page).to have_css('.scope-title h1.space-header__title', text: 'Mycelium')
-    expect(page).to have_css('.scope-title .space-header__tagline', text: 'What you have to share')
+    expect(page).to have_current_path('/hub/freethedream')
+    expect(page).to have_css('.scope-title h1.space-header__title', text: 'All emergences')
+  end
+
+  # docs/spaces/freethedream.md, The Krew: an emergence lives in one of your
+  # Krews, and the Krew page shows it.
+  it 'starts an emergence in one of your Krews, and the Krew page shows it' do
+    krew = Fabricate(:krew, seeded_by: bob.account, name: 'Mayhem')
+
+    visit '/hub/freethedream/composer'
+    fill_in placeholder: 'Mini Doof, Live Stage, First album…', with: 'Mini Doof'
+    expect(page).to have_button('Seed', disabled: true)
+    select 'Mayhem', from: 'Krew'
+    click_on 'Seed'
+
+    expect(page).to have_current_path(%r{/hub/freethedream/p/})
+    expect(Freethedream::Project.find_by(title: 'Mini Doof').krew).to eq krew
+
+    visit "/hub/krew/#{krew.slug}"
+    expect(page).to have_content('Mini Doof', wait: 20)
   end
 
   # docs/spaces/freethedream.md, The Krew: Open the Krew goes to the Krew

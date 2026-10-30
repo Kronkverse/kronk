@@ -17,6 +17,28 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-30 — Emergences live inside Krews
+
+Tal's proposals "More interconnectedness with krew space", "Access of a FTD
+space" and "Coalesce": FreeTheDream and Krew felt like a vague duplication.
+If you join a Krew you should be in its projects, and a project made for a
+Krew should be only as open as the Krew. Tal: one Krew can have several, and
+FreeTheDream can come off the Hub.
+
+**Decision:** an emergence lives in a Krew (`krew_id`, required for a new
+one), and a Krew holds any number. The Krew's people are each emergence's
+people; joining is the Krew's way in, and leaving is leaving the Krew. Who
+sees an emergence follows the Krew: anyone signed in when the Krew is
+listed, only its members when it's invite only. The Krew page shows them as
+Konnected tiles (the link is made with the emergence and can't be taken
+off), and New emergence is started there. FreeTheDream leaves the Hub and
+the rail (`hub_visible: false`, a new manifest field) but keeps its pages.
+Mycelium is hidden until it has a clearer home. An event linked to the Krew
+is the Krew's, no longer also its one emergence's.
+
+**Supersedes** 2026-10-15 (seeding an emergence makes its own Krew, named
+after it, joining set per emergence). docs/spaces/freethedream.md, The Krew.
+
 ## 2026-10-30 — First Nations Country is always on the map
 
 @mangobee: First Nations Country should be the full-time view of Australia on

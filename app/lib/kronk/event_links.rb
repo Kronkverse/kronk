@@ -35,11 +35,10 @@ module Kronk
 
     # After `attachment` was saved by `actor`.
     def linked(attachment, actor)
-      event, krew, slug = resolve(attachment)
+      event, krew, = resolve(attachment)
       return if event.nil? || krew.nil?
 
       share(event, krew, actor)
-      link_emergence(event, krew, actor) if slug == 'krew'
     end
 
     # After `attachment` was removed. Unlinking from either end takes the
@@ -105,18 +104,6 @@ module Kronk
       krew.krew_korners.find_or_create_by!(korner: 'kalendar')
     end
 
-    # The event's maker linked it to a Krew: link it to the Krew's emergence
-    # too. Never someone else's event, as with `share`.
-    def link_emergence(event, krew, actor)
-      return unless event.account_id == actor.id
-
-      project = krew.freethedream_project
-      return if project.nil? || AttachmentEffects.between('kalendar', event.id, 'freethedream', project.id).exists?
-
-      KornerAttachment.create!(source_slug: 'kalendar', source_id: event.id, target_slug: 'freethedream', target_id: project.id,
-                               kind: KornerAttachment::KIND_LINK, created_by_account: actor)
-    end
-
     # Every Krew the event's maker linked it to, directly or through an
     # emergence: someone else's link never makes the Krew an audience.
     def linked_krews(event)
@@ -132,11 +119,11 @@ module Kronk
       links.where(source_slug: 'kalendar', source_id: event.id).or(links.where(target_slug: 'kalendar', target_id: event.id))
     end
 
-    # Every link between `event` and the Krew or its emergence and gangs,
-    # made from either end.
+    # Every link between `event` and the Krew or its projekts and their
+    # gangs, made from either end.
     def group_links(event, krew)
-      project = krew.freethedream_project
-      project_ids = project ? Freethedream::Project.where(id: project.id).or(Freethedream::Project.where(root_id: project.id)).pluck(:id) : []
+      tops = krew.freethedream_projects.pluck(:id)
+      project_ids = Freethedream::Project.where(id: tops).or(Freethedream::Project.where(root_id: tops)).pluck(:id)
       links = links_of(event)
       to_group = ->(slug, ids) { links.where(source_slug: slug, source_id: ids).or(links.where(target_slug: slug, target_id: ids)) }
       to_group.call('krew', krew.id).or(to_group.call('freethedream', project_ids))

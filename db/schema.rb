@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_30_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1202,7 +1202,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["cover_media_attachment_id"], name: "index_freethedream_projects_on_cover_media_attachment_id"
-    t.index ["krew_id"], name: "index_freethedream_projects_on_krew_id", unique: true
+    t.index ["krew_id"], name: "index_freethedream_projects_on_krew_id"
     t.index ["owner_id"], name: "index_freethedream_projects_on_owner_id"
     t.index ["parent_id"], name: "index_freethedream_projects_on_parent_id"
     t.index ["root_id"], name: "index_freethedream_projects_on_root_id"

@@ -7,25 +7,26 @@ import { KornerShell } from 'mastodon/components/korner_shell';
 import { Stage } from 'mastodon/components/stage';
 
 import { ItemPage } from './components/item_page';
-import { Mycelium } from './components/mycelium';
 import { ProjectList } from './components/project_list';
 import { ProjectPage } from './components/project_page';
 import { WorkPage } from './components/work_page';
 
 // FreeTheDream — a self-organising system for bringing things to life
-// together (docs/spaces/freethedream.md). The landing sits in
-// <KornerShell>: the Frame draws the badge, the rotating title (all ·
-// mine · Mycelium, each with its tagline) from the manifest's `views:`,
+// together (docs/spaces/freethedream.md). Emergences live inside Krews
+// and are reached from a Krew's page; the space is off the Hub (Tal,
+// 2026-10-30). The landing sits in <KornerShell>: the Frame draws the
+// badge, the rotating title (all · mine, each with its tagline) from the
+// manifest's `views:`,
 // and the URL picks the view. Emergence and item pages are detail routes
 // in a plain <Stage>. An emergence is a top-level project in the code;
 // its gangs are the projects under it.
 //
 //   /hub/freethedream             every emergence
 //   /hub/freethedream/mine        emergences you're in
-//   /hub/freethedream/mycelium    your Mycelium: what you have, to share
-//   /hub/freethedream/inventory   -> mycelium
-//   /hub/freethedream/composer    seed an emergence (the Ж menu), over
-//                                 every emergence
+//   /hub/freethedream/mycelium    -> every emergence (Mycelium is
+//   /hub/freethedream/inventory      hidden for now, Tal 2026-10-30)
+//   /hub/freethedream/composer    seed an emergence in one of your Krews
+//                                 (a Krew page's Konnect, New emergence)
 //   /hub/freethedream/p/:id       an emergence's landing page (a gang's page)
 //   /hub/freethedream/p/:id/:list one list of its work (needed, bring,
 //                                 actualise, offers; gear, jobs and ideas
@@ -43,7 +44,6 @@ const messages = defineMessages({
 const COMPOSER_PATH = '/hub/freethedream/composer';
 
 const renderMine = () => <ProjectList scope='mine' />;
-const renderMycelium = () => <Mycelium />;
 
 const FreeTheDream: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
@@ -65,8 +65,8 @@ const FreeTheDream: React.FC<{ multiColumn?: boolean }> = () => {
       <Switch>
         <Redirect
           exact
-          from='/hub/freethedream/inventory'
-          to='/hub/freethedream/mycelium'
+          from='/hub/freethedream/(inventory|mycelium)'
+          to='/hub/freethedream'
         />
         <Redirect
           exact
@@ -101,7 +101,6 @@ const FreeTheDream: React.FC<{ multiColumn?: boolean }> = () => {
             views={{
               all: () => <ProjectList scope='all' composer={composing} />,
               mine: renderMine,
-              mycelium: renderMycelium,
             }}
           />
         </Route>
