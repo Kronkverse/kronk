@@ -317,6 +317,12 @@ OpenStreetMap `location_url`, or no `location_url` and a Konnected Place
 `?event=<slug>` too, so that one event gets its pin even when you haven't
 answered it, if you may see it.
 
+**What's on.** An event stays on the map while it is happening (started and
+not yet ended; one with no end time counts as on for three hours), and its pin
+shows when: happening now, it glows and slowly breathes; starting within the
+next week, it glows softly; later ones are plain (`whatsOn` in
+`event_layer.tsx`; still, without the breathing, with reduced motion).
+
 ## API
 
 All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
