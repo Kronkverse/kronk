@@ -265,11 +265,17 @@ const ProjectView: React.FC<{
     ...project.sections.filter((g) => !mineById.has(g.id)),
   ].map((g) => mineById.get(g.id) ?? g);
   const cover = project.cover?.url ?? project.event?.image_url;
-  // The space badge goes one layer up: a gang's to the emergence, a
-  // fractal's to its gang. An emergence's goes to all of FreeTheDream.
+  // The space badge goes one layer up: a gang's to the projekt, a
+  // fractal's to its gang, and a projekt's to the Krew it lives in (Tal,
+  // 2026-10-30), not the list of every projekt.
   const parent = project.ancestors[project.ancestors.length - 1];
+  const krew = project.krew;
   useSpaceBack(
-    parent ? { href: projectPath(parent), label: parent.title } : null,
+    parent
+      ? { href: projectPath(parent), label: parent.title }
+      : krew
+        ? { href: `/hub/krew/${krew.slug}`, label: krew.name }
+        : null,
   );
   const canAddInside = project.level !== 'fractal' && project.can.add;
 

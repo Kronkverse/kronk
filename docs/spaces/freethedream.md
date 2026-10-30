@@ -131,6 +131,11 @@ Krew you're in), and the server Konnects the two
 (`Project#join_krew_members!`, `Kronk::AttachmentEffects.link!`). That link
 can't be taken off (`Kronk::ProjektLinks`), as a Krew album's can't.
 
+**Back from a projekt is its Krew** (Tal, 2026-10-30): the space badge on
+a projekt names its Krew and goes there, as a gang's goes to its projekt
+(`useSpaceBack`). `AutoSpaceBadge` takes a parent outside the korner only
+for a korner that lives inside another space (`hub_visible: false`).
+
 Until 2026-10-30 it was the other way round: seeding an emergence made a
 Krew of its own, named after it (`Project#ensure_krew!`, still there for an
 emergence that somehow has none). Those Krews stay, each holding the

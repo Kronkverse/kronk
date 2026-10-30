@@ -94,6 +94,11 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
 
     find('.krew-detail__projekts .space-card', text: 'Mini Doof').click
     expect(page).to have_current_path("/hub/freethedream/p/#{doof.slug}")
+
+    # Back from a projekt is its Krew, not the list of every projekt.
+    expect(page).to have_css('.space-badge__name', text: krew.name)
+    find('.space-badge').click
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}")
   end
 
   it 'opens on the view its address names' do
