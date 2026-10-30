@@ -80,8 +80,8 @@ fill calms as you zoom in).
   spellings; other names written on the same shape; the boundaries note.
 - **Find a Country**: a search box under the button matches any of those
   names and flies there.
-- **From a profile**: "On <name> Country" links to `/hub/map?country=<name>`,
-  which turns the layer on and opens that Country.
+- **From a profile**: "Born on" and "Living on <name> Country" each link to
+  `/hub/map?country=<name>`, which turns the layer on and opens that Country.
 - **Names** are drawn in Kronk's own type as small markers, each shown only
   when it fits inside its Country at that zoom, and none until zoom 4 (at
   Australia-wide only Mardu fits, and a lone name read as if it were picked;
