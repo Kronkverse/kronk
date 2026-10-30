@@ -10,7 +10,7 @@
 # `location_url` wins over its Place. Tapping a pin opens a preview card
 # with the essentials + a link to /kalendar/<slug>.
 #
-#   GET /api/v1/map/events — pins for my upcoming events
+#   GET /api/v1/map/events — pins for my upcoming events, and ones on now
 #   GET /api/v1/map/events?event=<slug> — the same, plus that one event
 #       when I may see it: an event page's location link opens the Map on
 #       its pin, whether or not I've answered it.
@@ -24,6 +24,8 @@ class Api::V1::Map::EventsController < Api::BaseController
   before_action :require_user!
 
   UPCOMING_WINDOW = 90.days
+  # An event with no end time stays on the map this long after it starts.
+  OPEN_ENDED = 3.hours
   MAX_PINS = 200
   MAX_SCANS = 5
 
@@ -37,7 +39,7 @@ class Api::V1::Map::EventsController < Api::BaseController
   private
 
   def candidate_events
-    Event.upcoming
+    Event.where(upcoming_or_on)
          .order(:id)
          .not_cancelled
          .where(start_time: ..(Time.now.utc + UPCOMING_WINDOW))
@@ -45,6 +47,17 @@ class Api::V1::Map::EventsController < Api::BaseController
          .where(mine)
          .visible_to(current_account)
          .includes(:account, :status)
+  end
+
+  # Upcoming, or on right now (started and not yet over; one with no end
+  # counts as on for OPEN_ENDED), so a pin stays while it's happening and
+  # the map can show it as on now (docs/spaces/map.md, Events).
+  def upcoming_or_on
+    now = Time.now.utc
+    events = Event.arel_table
+    events[:start_time].gt(now)
+                       .or(events[:start_time].lteq(now).and(events[:end_time].gt(now)))
+                       .or(events[:end_time].eq(nil).and(events[:start_time].gt(now - OPEN_ENDED)))
   end
 
   # Hosted by me, or answered going / interested — plus the event the

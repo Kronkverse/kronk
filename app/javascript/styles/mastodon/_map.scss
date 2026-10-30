@@ -1860,6 +1860,38 @@
   &--huddle &__bulb {
     background: var(--kronk-purple-bright);
   }
+
+  // What's on: in the next week a soft glow; happening now a glow that
+  // breathes (event_layer.tsx, whatsOn). Still with reduced motion.
+  &--soon &__bulb {
+    box-shadow: 0 0 10px 2px
+      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
+  }
+
+  &--now &__bulb {
+    box-shadow: 0 0 14px 4px
+      color-mix(in oklab, var(--kronk-purple-bright) 80%, transparent);
+    animation: map-event-on 2.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &--now &__bulb {
+      animation: none;
+    }
+  }
+}
+
+@keyframes map-event-on {
+  0%,
+  100% {
+    box-shadow: 0 0 8px 2px
+      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 18px 6px
+      color-mix(in oklab, var(--kronk-purple-bright) 90%, transparent);
+  }
 }
 
 // Event preview card — the tap-a-pin popup for event markers. Sits
