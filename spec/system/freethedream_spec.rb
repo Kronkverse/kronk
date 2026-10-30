@@ -57,7 +57,24 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     expect(Freethedream::Project.find_by(title: 'Mini Doof').krew).to eq krew
 
     visit "/hub/krew/#{krew.slug}"
-    expect(page).to have_content('Mini Doof', wait: 20)
+    expect(page).to have_css('.krew-detail__projekts .space-card', text: 'Mini Doof', wait: 20)
+  end
+
+  # docs/spaces/krew.md, Projekts: the Krew page's New projekt starts one in
+  # that Krew.
+  it "starts a projekt from its Krew's page" do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    krew = Fabricate(:krew, seeded_by: bob.account, name: 'Mayhem')
+
+    visit "/hub/krew/#{krew.slug}"
+    find('.krew-detail__projekts .space-card', text: 'New projekt', wait: 20).click
+
+    expect(page).to have_select('Krew', selected: 'Mayhem')
+    fill_in placeholder: 'Mini Doof, Live Stage, First album…', with: 'Mini Doof'
+    click_on 'Seed'
+
+    expect(page).to have_current_path(%r{/hub/freethedream/p/})
+    expect(Freethedream::Project.find_by(title: 'Mini Doof').krew).to eq krew
   end
 
   # docs/spaces/freethedream.md, The Krew: Open the Krew goes to the Krew
@@ -72,10 +89,10 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     click_on 'Open the Krew'
 
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
-    expect(page).to have_css('.space-tile', text: 'Mini Doof')
+    expect(page).to have_css('.krew-detail__projekts .space-card', text: 'Mini Doof')
     expect(Krew.count).to eq 1
 
-    find('.space-tile', text: 'Mini Doof').click
+    find('.krew-detail__projekts .space-card', text: 'Mini Doof').click
     expect(page).to have_current_path("/hub/freethedream/p/#{doof.slug}")
   end
 

@@ -52,8 +52,11 @@ export interface FtdMyceliumParams {
   quantity?: number;
 }
 
-export const apiFtdProjects = (scope: 'all' | 'mine') =>
-  apiRequestGet<FtdProjectSummary[]>(`${base}/projects`, { scope });
+export const apiFtdProjects = (scope: 'all' | 'mine', krewId?: string) =>
+  apiRequestGet<FtdProjectSummary[]>(`${base}/projects`, {
+    scope,
+    krew_id: krewId,
+  });
 
 export const apiFtdProject = (id: string) =>
   apiRequestGet<FtdProject>(`${base}/projects/${id}`);

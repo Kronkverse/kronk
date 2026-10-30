@@ -81,10 +81,10 @@ you made.
   with `?konnect=krew:<id>`, so what it makes is Konnected to the Krew; a
   new album or event is the Krew's own (decisions.md, 2026-10-23). Albums
   and events stay in their tiles and aren't repeated as Konnected tiles
-  (`excludeSlugs`). The Krew's FreeTheDream emergences are Konnected tiles
-  here too, and **New emergence** is how one is started: an emergence lives
-  in one Krew, a Krew can hold several, and everyone in the Krew is in each
-  (docs/spaces/freethedream.md, The Krew).
+  (`excludeSlugs`). The Krew's projekts (FreeTheDream) aren't tiles here
+  either: they have their own **Projekts** section (see The surfaces). A
+  projekt lives in one Krew, a Krew can hold several, and everyone in the
+  Krew is in each (docs/spaces/freethedream.md, The Krew).
 
 ## Joining
 
@@ -195,6 +195,15 @@ All in `app/javascript/mastodon/features/krew/`.
     joined. `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`) reads
     them from the records themselves; nothing is stored for it, and only
     what you could open is listed.
+  - **Projekts**: what the Krew is making, after What's happening, as a
+    row of cards (`krew_projekts.tsx`, the kit's `SpaceGrid` row): each
+    projekt's cover, title, how many people and how much of what it needs
+    is sorted, opening the projekt. For members a last card, **New
+    projekt**, opens the projekt composer with this Krew picked
+    (`?konnect=krew:<id>`). `GET /api/v1/freethedream/projects?krew_id=`
+    lists them, only to people who could open them (an invite-only Krew's
+    to its members). Anyone else sees the section on a listed Krew, without
+    New projekt, and nothing when there are none.
   - **Spaces**: a tile for each attached space with a Krew part, which
     **opens it in place** below the grid, one at a time; tapping it again
     closes it. Nothing is open on arrival. **Albutts** shows the Krew's
