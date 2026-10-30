@@ -19,6 +19,7 @@ import {
   createJitsiContainer,
   disposeJitsiSession,
   getJitsiSession,
+  getJitsiSessionFor,
   setJitsiSession,
   setJitsiSlot,
 } from 'mastodon/features/huddle_pip/jitsi_session';
@@ -189,6 +190,8 @@ const jitsiWrapperStyle: React.CSSProperties = {
   minHeight: '400px',
   position: 'relative',
 };
+// The Main Huddle's call, as the mini window knows it (jitsi_session.ts).
+const HUDDLE_PLACE = { key: 'huddle', path: '/hub/huddle' };
 
 // `autoOpenComposer` is set by the `/hub/huddle/composer` route (the Ж
 // menu's compose target for this korner — see config/korners/
@@ -259,21 +262,23 @@ const Live: React.FC<{
   }, [participantCount]);
 
   // On mount: coming back from the mini window picks the same call up again.
-  // If it has gone (a reload ends it), join afresh.
+  // If it has gone (a reload ends it), join afresh. A Kuddle's call in the
+  // mini window stays there: it isn't this page's.
   useEffect(() => {
     if (!autoJoinInitialisedRef.current) {
       autoJoinInitialisedRef.current = true;
       if (huddleWasMinimized) {
-        const existing = getJitsiSession();
+        const existing = getJitsiSessionFor(HUDDLE_PLACE.key);
         if (existing) {
           callRef.current = existing.call;
           setCall(existing.call);
           setParticipantCount(existing.call.api.getNumberOfParticipants());
           setInRoom(true);
-        } else {
+          dispatch(huddleExpanded());
+        } else if (!getJitsiSession()) {
           setAutoJoining(true);
+          dispatch(huddleExpanded());
         }
-        dispatch(huddleExpanded());
       }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -328,7 +333,7 @@ const Live: React.FC<{
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (inRoomRef.current && getJitsiSession()) {
+      if (inRoomRef.current && getJitsiSessionFor(HUDDLE_PLACE.key)) {
         dispatch(
           huddleMinimized({ participantCount: participantCountRef.current }),
         );
@@ -373,7 +378,7 @@ const Live: React.FC<{
   }, [autoJoining, apiLoaded, joinRoom]);
 
   const leaveRoom = useCallback(() => {
-    disposeJitsiSession();
+    disposeJitsiSession(callRef.current ?? undefined);
     callRef.current = null;
     dispatch(huddleLeft());
     if (!mountedRef.current) return;
@@ -413,10 +418,10 @@ const Live: React.FC<{
         }
         callRef.current = created;
         setCall(created);
-        setJitsiSession({ call: created, container });
+        setJitsiSession({ call: created, container, place: HUDDLE_PLACE });
         // Hanging up inside the call, here or in the mini window.
         created.api.addListener('readyToClose', () => {
-          leaveRoom();
+          if (getJitsiSession()?.call === created) leaveRoom();
         });
         return undefined;
       })
