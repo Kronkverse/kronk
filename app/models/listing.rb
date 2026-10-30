@@ -66,6 +66,20 @@ class Listing < ApplicationRecord
   MAX_VARIANT_VALUES = 10
   MAX_VARIANTS       = 60
 
+  # Booking (docs/spaces/wachuneed.md, Booking; Kommons "Goods & Services"):
+  # a listing on offer can be built from parts, each one something the person
+  # booking it gives. `time`: when, from the seller's weekly hours, the times
+  # they post, or (with neither) a time the person suggests. `route`: a from
+  # and a to on the Map, for a job. `details`: what they need, in their own
+  # words. The templates are only where the composer starts; what is stored
+  # is the parts the seller kept.
+  BOOKING_PARTS     = %w(time route details).freeze
+  BOOKING_TEMPLATES = %w(appointment job request).freeze
+  BOOKING_MINUTES   = (5..1440)
+  MAX_BOOKING_HOURS = 21
+  MAX_BOOKING_SLOTS = 60
+  BOOKING_TIME      = /\A([01]\d|2[0-3]):[0-5]\d\z/
+
   belongs_to :account
   # First photo is the cover (docs/spaces/wachuneed.md).
   MAX_PHOTOS = 10
@@ -207,6 +221,64 @@ class Listing < ApplicationRecord
     kept.first(MAX_OPTIONS)
   end
 
+  # Cut to the parts above like the options are: anything unknown is
+  # dropped, settings for a part the seller left out go with it, and a
+  # listing with no parts is not booked at all ({}).
+  def booking=(value)
+    super(self.class.clean_booking(value))
+  end
+
+  def self.clean_booking(value)
+    value = plain(value)
+    return {} unless value.is_a?(Hash)
+
+    parts = BOOKING_PARTS & rows(value['parts']).map(&:to_s)
+    return {} if parts.empty?
+
+    booking = { 'parts' => parts }
+    booking['template'] = value['template'].to_s if BOOKING_TEMPLATES.include?(value['template'].to_s)
+    booking.merge!(clean_booking_time(value)) if parts.include?('time')
+    ask = value['ask'].to_s.strip.first(120)
+    booking['ask'] = ask if parts.include?('details') && ask.present?
+    booking
+  end
+
+  # When the seller is free: weekly hours (a day, from, to, in their time
+  # zone), times they post (each a start, kept only while it is ahead), or
+  # both. `minutes` is how long one booking takes, when there is a set
+  # length.
+  def self.clean_booking_time(value)
+    minutes = value['minutes'].presence&.to_i
+    hours = rows(value['hours']).filter_map do |row|
+      row = plain(row)
+      next unless row.is_a?(Hash)
+
+      day = row['day'].to_s
+      from = row['from'].to_s
+      to = row['to'].to_s
+      next unless day.match?(/\A[0-6]\z/) && from.match?(BOOKING_TIME) && to.match?(BOOKING_TIME) && from < to
+
+      { 'day' => day.to_i, 'from' => from, 'to' => to }
+    end
+    slots = rows(value['slots']).filter_map do |slot|
+      time = Time.zone.parse(slot.to_s)
+      time.utc.iso8601 if time&.future?
+    rescue ArgumentError
+      nil
+    end
+
+    {
+      'minutes' => (minutes if BOOKING_MINUTES.cover?(minutes)),
+      'hours' => hours.uniq.sort_by { |h| [h['day'], h['from']] }.first(MAX_BOOKING_HOURS),
+      'slots' => slots.uniq.sort.first(MAX_BOOKING_SLOTS),
+      'time_zone' => ActiveSupport::TimeZone[value['time_zone'].to_s] ? value['time_zone'].to_s : 'UTC',
+    }.compact
+  end
+
+  def bookable?
+    booking['parts'].present?
+  end
+
   # A list may come as an array, or as a form-encoded hash keyed by index.
   def self.rows(value)
     value = plain(value)
@@ -308,6 +380,7 @@ class Listing < ApplicationRecord
   # Options are for something on offer; a wanted ad has nothing to choose.
   def drop_options_when_wanted
     self.options = [] if wanted? && options.present?
+    self.booking = {} if wanted? && booking.present?
   end
 
   def shop_section_is_own

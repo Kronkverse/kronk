@@ -163,3 +163,25 @@
     }
   }
 }
+
+// How people book it (listing_booking_editor.tsx): the template pills, then
+// the parts, then each part's settings, rows that stack on a phone.
+.wachuneed-booking-edit {
+  &__templates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block-end: 0.75rem;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-block: 0.75rem;
+  }
+
+  &__row {
+    align-items: center;
+  }
+}

@@ -4,6 +4,7 @@ import api, {
   apiRequestPost,
 } from 'mastodon/api';
 import type {
+  ApiListingBookingJSON,
   ApiListingJSON,
   ApiListingOptionJSON,
   ApiListingVariantsJSON,
@@ -60,6 +61,8 @@ export interface CreateListingParams {
   options?: ApiListingOptionJSON[];
   // Replaces what the item comes in when sent; an empty object removes it.
   variants?: ApiListingVariantsJSON | Record<string, never>;
+  // Replaces how it is booked when sent; an empty object turns booking off.
+  booking?: ApiListingBookingJSON;
   ongoing?: boolean;
   availability?: ListingAvailability;
   // false adds the listing without posting it to the feed.

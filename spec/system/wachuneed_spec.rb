@@ -335,6 +335,51 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     end
   end
 
+  # docs/spaces/wachuneed.md, Booking (Kommons "Goods & Services").
+  describe 'booking' do
+    it 'builds a listing from a template, changes its parts, and shows them on its page' do
+      visit '/hub/wachuneed/new'
+
+      fill_in 'A short name — what is it?', with: 'Garden help'
+      choose 'Offerings'
+      click_on 'Job'
+      # A job starts as a time, a from and a to, and what to ask; this one
+      # needs no from and to, takes two hours, and posts one time.
+      uncheck 'From and to'
+      select '2 hours', from: 'How long'
+      fill_in 'What to ask them', with: 'How big is the garden?'
+      click_on 'Add a time'
+      find('input[aria-label="A time you post"]').fill_in with: 1.week.from_now.strftime('%Y-%m-%dT10:00')
+      click_on 'Publish listing'
+
+      expect(page).to have_current_path('/hub/wachuneed/mine')
+      listing = Listing.last
+      expect(listing.booking).to include('parts' => %w(time details), 'template' => 'job', 'minutes' => 120, 'ask' => 'How big is the garden?')
+      expect(listing.booking['slots'].size).to eq 1
+
+      visit "/hub/wachuneed/listings/#{listing.id}"
+
+      within('.wachuneed-booking-summary') do
+        expect(page).to have_content('2 hours').or have_content('120 minutes')
+        expect(page).to have_content('How big is the garden?')
+        expect(page).to have_no_content('A from and a to')
+      end
+    end
+
+    it 'turns booking off again with Ask for this' do
+      listing = Listing.create!(account: bob.account, title: 'Reiki', category: 'service', state: 'live',
+                                booking: { template: 'appointment', parts: %w(time), minutes: 60, hours: [{ day: 1, from: '09:00', to: '17:00' }] })
+
+      visit "/hub/wachuneed/listings/#{listing.slug}/edit"
+      expect(page).to have_field('How long', with: '60')
+      click_on 'Ask for this'
+      click_on 'Save changes'
+
+      expect(page).to have_no_current_path(%r{/edit\z})
+      expect(listing.reload.booking).to eq({})
+    end
+  end
+
   context 'with a listing that has two photos' do
     before do
       listing = Listing.create!(account: bob.account, title: 'Red bike', category: 'goods', state: 'live')
