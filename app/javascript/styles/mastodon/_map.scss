@@ -2023,3 +2023,24 @@
     gap: 0.5rem;
   }
 }
+
+// "On <name> Country" on a pin, Event, Place or Trek (country_line.tsx): a
+// quiet line that opens that Country on the map.
+.map-country-line {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent-text);
+      text-decoration: underline;
+    }
+  }
+}

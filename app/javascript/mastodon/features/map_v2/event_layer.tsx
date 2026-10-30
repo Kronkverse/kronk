@@ -13,6 +13,8 @@ import { apiGetMapEvents } from 'mastodon/api/map';
 import type { ApiMapEventPinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 
+import { CountryLine } from './country_line';
+
 // Event layer — draws Kalendar event pins on top of the Mates map: your
 // events only (hosting, going, interested), plus a deep-linked one.
 // Kept as its own module (not mixed into mates_view's clustering /
@@ -186,6 +188,7 @@ const EventPreviewCard: React.FC<{
       {event.location_name && (
         <div className='map-event-card__location'>{event.location_name}</div>
       )}
+      <CountryLine country={event.country} />
       <Link to={`/hub/kalendar/${event.slug}`} className='map-event-card__open'>
         Open in Kalendar →
       </Link>
