@@ -15,6 +15,8 @@ module Freethedream
 
     validates :verb, inclusion: { in: VERBS }
 
+    after_create_commit { Freethedream::GangNudges.activity_logged(self) }
+
     scope :latest, -> { order(created_at: :desc, id: :desc) }
 
     def self.log!(project:, account:, verb:, item: nil, **data)

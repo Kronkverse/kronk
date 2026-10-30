@@ -89,7 +89,12 @@ export const apiFtdUpdateProject = (id: string, project: FtdProjectParams) =>
 export const apiFtdRemoveProject = (id: string) =>
   apiRequestDelete(`${base}/projects/${id}`);
 
-export type FtdProjectAction = 'join' | 'leave' | 'take_over';
+export type FtdProjectAction =
+  | 'join'
+  | 'leave'
+  | 'join_gang'
+  | 'leave_gang'
+  | 'take_over';
 
 export const apiFtdProjectAction = (id: string, action: FtdProjectAction) =>
   apiRequestPost<FtdProject>(`${base}/projects/${id}/${action}`);

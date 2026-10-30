@@ -261,6 +261,18 @@ getting involved, not for doing the work itself:
   clearer view of what needs work is still to be designed. The lists'
   own pages (`/p/:id/needed`, `/bring`, `/actualise`, `/offers`) stay.
   Done, Hand over and Remove are off the page too.
+- **Joining a Komponent** (Tal, 2026-10-30: "the UX for joining should
+  be simple and intuitive"): on a Komponent's page, anyone in the projekt
+  has one pill at the top, **Join**, then **Joined** (which leaves), with a
+  line saying what it does. Joined people are in its people and its tile
+  says Joined. Joining is how you hear about it: a Nudge when someone says
+  something in its talk, a fractal's or a thing's on its lists
+  (`freethedream.gang.talked`), or adds to it, brings something or takes
+  a job on (`freethedream.gang.updated`; Activity lines). Not the person
+  who did it, only people still in the projekt, and a burst collapses
+  into one (10 minutes). A fractal is heard about through its Komponent
+  (`freethedream_gang_members`, `Freethedream::GangNudges`,
+  `POST /projects/:id/join_gang` and `leave_gang`).
 - **Getting together** (Tal, 2026-10-30), beside the work: the Kalendar
   events made for the projekt or any Komponent or fractal inside it that
   haven't ended, soonest first, as rows of a date tile, the title, when

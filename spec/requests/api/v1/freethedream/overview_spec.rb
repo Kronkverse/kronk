@@ -71,6 +71,49 @@ RSpec.describe 'API V1 FreeTheDream overview' do
     end
   end
 
+  # docs/spaces/freethedream.md, Joining a Komponent.
+  describe 'joining a Komponent' do
+    let(:sound) do
+      api(bob, :post, "/freethedream/projects/#{doof['id']}/join")
+      api(bob, :post, '/freethedream/projects', project: { title: 'Sound', parent_id: doof['id'] })
+    end
+    let(:heard) { [] }
+
+    before do
+      allow(Kronk::KornerEvents).to receive(:publish).and_wrap_original do |original, name, **payload|
+        heard << [name, payload[:recipient_account_id]] if name.start_with?('freethedream.gang.')
+        original.call(name, **payload)
+      end
+    end
+
+    it 'is one tap for someone in the projekt, and shows on the Komponent and its tile', :aggregate_failures do
+      expect(api(alice, :get, "/freethedream/projects/#{sound['id']}")).to include('in_gang' => false, 'can' => include('join_gang' => true))
+
+      expect(api(alice, :post, "/freethedream/projects/#{sound['id']}/join_gang")['in_gang']).to be true
+      expect(api(alice, :get, "/freethedream/projects/#{doof['id']}")['sections'].first).to include('title' => 'Sound', 'joined' => true)
+
+      expect(api(alice, :post, "/freethedream/projects/#{sound['id']}/leave_gang")['in_gang']).to be false
+    end
+
+    it "is only for someone in the projekt, and only a Komponent's", :aggregate_failures do
+      api(cara, :post, "/freethedream/projects/#{sound['id']}/join_gang")
+      expect(response).to have_http_status(403)
+      expect(api(alice, :get, "/freethedream/projects/#{doof['id']}")['can']).to include('join_gang' => false)
+      api(alice, :post, "/freethedream/projects/#{doof['id']}/join_gang")
+      expect(response).to have_http_status(403)
+    end
+
+    it 'tells who joined when people talk in it or add to it, not the one who did', :aggregate_failures do
+      api(alice, :post, "/freethedream/projects/#{sound['id']}/join_gang")
+      api(bob, :post, "/freethedream/projects/#{sound['id']}/join_gang")
+
+      api(bob, :post, '/freethedream/comments', subject_type: 'project', subject_id: sound['id'], body: 'Who has a PA?')
+      api(bob, :post, '/freethedream/items', item: { project_id: sound['id'], kind: 'need', title: 'PA system', quantity: 1 })
+
+      expect(heard).to contain_exactly(['freethedream.gang.talked', alice.account.id], ['freethedream.gang.updated', alice.account.id])
+    end
+  end
+
   describe 'the cover' do
     it 'takes an image the owner uploaded' do
       media = Fabricate(:media_attachment, account: alice.account)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_30_223000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1126,6 +1126,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_180000) do
     t.datetime "updated_at", null: false
     t.bigint "updated_by_account_id"
     t.index ["kind", "key"], name: "index_freethedream_documents_on_kind_and_key", unique: true
+  end
+
+  create_table "freethedream_gang_members", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_gang_members_on_account_id"
+    t.index ["project_id", "account_id"], name: "index_freethedream_gang_members_on_project_id_and_account_id", unique: true
   end
 
   create_table "freethedream_items", force: :cascade do |t|
@@ -2991,6 +3000,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_180000) do
   add_foreign_key "freethedream_comments", "freethedream_items", column: "quoted_item_id", on_delete: :nullify
   add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "depends_on_id", on_delete: :cascade
   add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_gang_members", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_gang_members", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_items", "accounts", column: "owner_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_items", column: "need_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_items", column: "source_idea_id", on_delete: :nullify

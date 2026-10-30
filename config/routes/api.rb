@@ -111,6 +111,8 @@ namespace :api, format: false do
           get :activity
           post :join
           post :leave
+          post :join_gang
+          post :leave_gang
           post :seen
           post :take_over
           post :hand_over

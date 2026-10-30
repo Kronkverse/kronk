@@ -64,6 +64,24 @@ const messages = defineMessages({
     defaultMessage: 'Join {title} to take part',
   },
   takeOver: { id: 'freethedream.take_over', defaultMessage: 'Take this over' },
+  joinGang: { id: 'freethedream.gang.join', defaultMessage: 'Join' },
+  joinedGang: { id: 'freethedream.gang.joined', defaultMessage: 'Joined' },
+  joinGangAria: {
+    id: 'freethedream.gang.join_aria',
+    defaultMessage: 'Join {title}, to hear about its talk and what is added',
+  },
+  leaveGangAria: {
+    id: 'freethedream.gang.leave_aria',
+    defaultMessage: 'You joined {title}. Press to leave it.',
+  },
+  joinGangHint: {
+    id: 'freethedream.gang.join_hint',
+    defaultMessage: 'Join to hear when people talk or add things here.',
+  },
+  joinedGangHint: {
+    id: 'freethedream.gang.joined_hint',
+    defaultMessage: 'You hear when people talk or add things here.',
+  },
   groups: { id: 'freethedream.gangs', defaultMessage: 'Komponents' },
   addGroup: {
     id: 'freethedream.coalesce_gang',
@@ -163,6 +181,18 @@ const ProjectView: React.FC<{
     project.can.edit && composer === null,
   );
 
+  // Joining a Komponent is how you hear about it (Tal, 2026-10-30: "the
+  // UX for joining should be simple and intuitive"): one pill at the top,
+  // Join, then Joined, which leaves again.
+  const handleGang = useCallback(() => {
+    void act(
+      apiFtdProjectAction(
+        project.id,
+        project.in_gang ? 'leave_gang' : 'join_gang',
+      ).then(onChange),
+    );
+  }, [project.id, project.in_gang, onChange]);
+
   const handleTakeOver = useCallback(() => {
     void act(apiFtdProjectAction(project.id, 'take_over').then(onChange));
   }, [project.id, onChange]);
@@ -250,6 +280,29 @@ const ProjectView: React.FC<{
     </KornerActionBar>
   );
 
+  const gangBar =
+    project.level === 'gang' && (project.can.join_gang || project.in_gang) ? (
+      <div className='freethedream-join-gang'>
+        <KornerPill
+          variant={project.in_gang ? 'default' : 'primary'}
+          active={project.in_gang}
+          label={intl.formatMessage(
+            project.in_gang ? messages.joinedGang : messages.joinGang,
+          )}
+          ariaLabel={intl.formatMessage(
+            project.in_gang ? messages.leaveGangAria : messages.joinGangAria,
+            { title: project.title },
+          )}
+          onClick={handleGang}
+        />
+        <span className='freethedream__quiet'>
+          {intl.formatMessage(
+            project.in_gang ? messages.joinedGangHint : messages.joinGangHint,
+          )}
+        </span>
+      </div>
+    ) : null;
+
   // Under an emergence's title: what it's about, then when and where on
   // one quiet line. Nobody leads a gang, so a gang shows no owner.
   const when = project.event ? eventWhen(intl, project.event) : null;
@@ -312,6 +365,7 @@ const ProjectView: React.FC<{
         )
       }
       meta={meta}
+      actions={gangBar}
     >
       <>
         {project.top ? (

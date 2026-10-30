@@ -449,6 +449,20 @@ $freethedream-wide: 1000px;
 }
 
 // The project's Kalendar event on its Overview.
+// Join on a Komponent's page: the pill and a line saying what it does.
+.freethedream-join-gang {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 12px;
+
+  .freethedream__quiet {
+    margin: 0;
+    font-size: 13px;
+  }
+}
+
 // Getting together (event_card.tsx): one row per event, a date tile, what
 // and when, and the Going toggle.
 .freethedream-together {

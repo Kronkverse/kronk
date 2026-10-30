@@ -69,6 +69,18 @@ emits:
       - actor_account_id
       - recipient_account_id
       - project_id
+  # Someone talked in, or added to, a Komponent you joined
+  # (Freethedream::GangNudges). Each person who joined hears of it.
+  - name: freethedream.gang.talked
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - project_id
+  - name: freethedream.gang.updated
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - project_id
   # A need or Actualise item was added that something you've shared into
   # that emergence from your Mycelium could cover. Only you hear of it.
   - name: freethedream.mycelium.matched

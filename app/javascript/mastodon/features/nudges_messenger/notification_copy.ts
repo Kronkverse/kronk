@@ -155,6 +155,14 @@ const sentences = defineMessages({
     id: 'nudges.notification.huddle.kuddle_gathering',
     defaultMessage: 'People are in a Kuddle you follow',
   },
+  freethedreamGangTalked: {
+    id: 'nudges.notification.freethedream.gang_talked',
+    defaultMessage: '{who} said something in a Komponent you joined',
+  },
+  freethedreamGangUpdated: {
+    id: 'nudges.notification.freethedream.gang_updated',
+    defaultMessage: '{who} added to a Komponent you joined',
+  },
   freethedreamMyceliumMatched: {
     id: 'nudges.notification.freethedream.mycelium_matched',
     defaultMessage: '{who} needs something you shared from your Mycelium',
@@ -211,6 +219,8 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'freethedream.invited': sentences.freethedreamInvited,
   'freethedream.mentioned': sentences.freethedreamMentioned,
   'freethedream.mycelium_matched': sentences.freethedreamMyceliumMatched,
+  'freethedream.gang_talked': sentences.freethedreamGangTalked,
+  'freethedream.gang_updated': sentences.freethedreamGangUpdated,
   'kuestions.answered': sentences.kuestionsAnswered,
   'kuestions.frothed': sentences.kuestionsFrothed,
   'booth.frothed': sentences.boothFrothed,
