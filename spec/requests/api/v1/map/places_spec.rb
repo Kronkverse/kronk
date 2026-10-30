@@ -40,6 +40,13 @@ RSpec.describe 'Map places' do
       expect(body['url']).to eq("/hub/map/places/#{body['id']}")
     end
 
+    it 'says which First Nations Country it is on' do
+      post '/api/v1/map/places', headers: headers_for(maker),
+                                 params: { name: 'Victoria Square', address: 'Adelaide', latitude: -34.9285, longitude: 138.6007 }
+
+      expect(response.parsed_body['country']).to include('name' => 'Kaurna')
+    end
+
     it 'finds the point from the address when none is sent' do
       allow(Kronk::Geocoder).to receive(:search).with('Flinders St Station').and_return([{ label: 'Flinders Street Station', lat: -37.8183, lng: 144.9671 }])
 

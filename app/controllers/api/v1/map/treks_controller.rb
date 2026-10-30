@@ -172,6 +172,9 @@ class Api::V1::Map::TreksController < Api::BaseController
       # The stored route is already privacy-trimmed; still, only expose it to
       # someone allowed to see the trek.
       route: trek.visible_to?(current_account) ? trek.route : nil,
+      # The First Nations Countries the route passes through, in order
+      # (Kronk::FirstNationsCountries); only to someone who can see the route.
+      countries: trek.visible_to?(current_account) ? Kronk::FirstNationsCountries.along(trek.route) : [],
       state: trek.state,
       status_id: trek.status_id&.to_s,
       # The published post's reach (§2) — comments mirror it so a reply never

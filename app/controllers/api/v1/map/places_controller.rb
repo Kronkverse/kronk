@@ -139,6 +139,8 @@ class Api::V1::Map::PlacesController < Api::BaseController
       address: place.address,
       latitude: place.latitude.to_f,
       longitude: place.longitude.to_f,
+      # The First Nations Country it is on (Kronk::FirstNationsCountries).
+      country: Kronk::FirstNationsCountries.at(place.latitude, place.longitude),
       url: Kronk::KornerRecords.path_for('map', place),
       maker: place.account && {
         id: place.account.id.to_s,
