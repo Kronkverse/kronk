@@ -26,6 +26,7 @@ module Kronk
         %w(kalendar krew) => Kronk::EventLinks,
         %w(freethedream kalendar) => Kronk::EventLinks,
         %w(albutts krew) => Kronk::AlbumLinks,
+        %w(freethedream krew) => Kronk::ProjektLinks,
       }.merge(Kronk::RecordKrewLinks::SLUGS.to_h { |slug| [[slug, 'krew'].sort, Kronk::RecordKrewLinks] })
     end
 

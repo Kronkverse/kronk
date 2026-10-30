@@ -5,7 +5,9 @@
 # mechanism"). Gangs sit under the emergence and fractals under a gang
 # (Kitchen → Cooking, Cleaning, Storage); nothing goes deeper. Membership lives
 # on the root and covers every gang in it, and the root's Krew holds the
-# same people (see #ensure_krew!).
+# same people. An emergence (a projekt) lives in a Krew, which can hold
+# several, and is Konnected to it, so the Krew page shows it
+# (docs/spaces/freethedream.md, "The Krew").
 #
 # Whoever made a project or part owns it. Nobody else can change or remove
 # it, but if its owner leaves (or their account goes) anyone in the project
@@ -29,7 +31,7 @@ module Freethedream
     belongs_to :owner, class_name: 'Account', optional: true
     belongs_to :source_idea, class_name: 'Freethedream::Item', optional: true
     belongs_to :cover, class_name: 'MediaAttachment', foreign_key: :cover_media_attachment_id, optional: true, inverse_of: false
-    belongs_to :krew, optional: true, inverse_of: :freethedream_project
+    belongs_to :krew, optional: true, inverse_of: :freethedream_projects
 
     has_many :children, class_name: 'Freethedream::Project', foreign_key: :parent_id, inverse_of: :parent, dependent: nil
     has_many :memberships, class_name: 'Freethedream::Membership', dependent: nil
@@ -51,7 +53,7 @@ module Freethedream
 
     before_validation :set_root, on: :create
     after_create :join_owner!, if: :top?
-    after_update :sync_krew, if: -> { krew_id.present? && (saved_change_to_title? || saved_change_to_joining?) }
+    after_create :join_krew_members!, if: -> { top? && krew_id.present? }
 
     scope :top_level, -> { where(parent_id: nil) }
     scope :recent, -> { order(created_at: :desc) }
@@ -85,8 +87,26 @@ module Freethedream
     # Any signed-in person can open a project and see what it's about; only
     # members take part. KornerAttachmentPolicy reads this, so a Kalendar
     # event linked to a project shows on both sides.
+    #
+    # Who sees a projekt follows its Krew (Tal, 2026-10-30): anyone signed
+    # in when the Krew is listed (open, asking to join, or with
+    # requirements), only its members when it's invite only.
     def visible_to?(account)
-      account.present?
+      return false if account.nil?
+
+      krew = top.krew
+      krew.nil? || krew.listed? || krew.member?(account)
+    end
+
+    # How someone outside gets in: the Krew's way in. `open` joins with a
+    # tap, `by_request` asks the Krew, and `krew` means through the Krew
+    # page (an invite, or its requirements).
+    def joining_via_krew
+      case top.krew&.access
+      when nil, 'open' then 'open'
+      when 'approval' then 'by_request'
+      else 'krew'
+      end
     end
 
     # The Kalendar event an in-person project or gang happens at, and the
@@ -244,7 +264,6 @@ module Freethedream
       gone -= Placement.where(item_id: gone).where.not(project_id: subtree_ids).pluck(:item_id) unless top?
 
       transaction do
-        krew&.update!(archived_at: Time.current) if top?
         Comment.where(subject_type: Item.name, subject_id: gone).delete_all
         Comment.where(subject_type: Project.name, subject_id: subtree_ids).delete_all
         Item.where(id: gone).delete_all
@@ -269,6 +288,15 @@ module Freethedream
       memberships.create!(account_id: owner_id, state: :member) if owner_id
     end
 
+    # A new projekt has everyone in its Krew, and is Konnected to it so the
+    # Krew page shows it.
+    def join_krew_members!
+      krew.krew_memberships.where.not(account_id: owner_id).pluck(:account_id).each do |account_id|
+        memberships.find_or_create_by!(account_id: account_id) { |m| m.state = :member }
+      end
+      Kronk::AttachmentEffects.link!('freethedream', id, 'krew', krew_id, owner || krew.seeded_by)
+    end
+
     def parent_is_fixed
       errors.add(:parent_id, :invalid) if parent_id_changed?
     end
@@ -290,13 +318,6 @@ module Freethedream
       base = "emergence-#{base}".delete_suffix('-') unless base.match?(/\A[a-z]/)
       slug = "#{base}-#{id}"
       Krew.exists?(slug: slug) ? "#{slug}-#{SecureRandom.hex(3)}" : slug
-    end
-
-    def sync_krew
-      access = krew_access
-      changes = { name: title, access: access }
-      changes[:invite_token] = SecureRandom.urlsafe_base64(Krew::INVITE_TOKEN_BYTES) if access != 'open' && krew.invite_token.blank?
-      krew.update!(changes)
     end
   end
 end

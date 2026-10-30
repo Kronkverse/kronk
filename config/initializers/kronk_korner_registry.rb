@@ -115,6 +115,10 @@ module Kronk
       # out of. It is otherwise an ordinary manifest — this flag and `mount`
       # are the whole of the difference, which is the point.
       :core,
+      # Off the Hub grid and the korner rail while still a live space with
+      # its own pages (`hub_visible: false`). FreeTheDream's projekts live
+      # inside Krews since 2026-10-30, so the space isn't a place you go to.
+      :hub_visible,
       # A portal korner is a live Kronk-native landing surface (its /hub/<slug>
       # route renders a real component) that links out to an external app.
       # Portals are `enforced: false` because they own no Kronk-side models,
@@ -288,6 +292,7 @@ module Kronk
           nodes: Array(yaml['nodes']),
           mount: yaml['mount'].is_a?(String) ? yaml['mount'] : nil,
           core: yaml['core'] == true,
+          hub_visible: yaml['hub_visible'] != false,
           portal: yaml['portal'].is_a?(Hash) ? yaml['portal'] : nil,
           feature_flag: yaml['feature_flag'],
           enforced: yaml['enforced'] == true

@@ -27,7 +27,7 @@ about:
   what: 'A place to bring things to life together. Someone seeds an emergence, like a doof, an album or a shared house, and the people who join organise it themselves.'
   why: "Big things happen when everyone brings a piece. Nobody approves from above: whoever joins can see what's needed and step up."
   how:
-    - 'Seed an emergence from the Ж menu, or join one. Some are open, some ask you to request.'
+    - "Start an emergence from one of your Krews (Konnect, then New emergence). Everyone in the Krew is in it, and joining the Krew joins you in."
     - 'Coalesce a gang for one part of it, like Kitchen or Sound.'
     - "Add what needs bringing, and say how much of it you'll bring."
     - "Add an idea to Actualise and you're on it, or jump on board someone else's."
@@ -125,7 +125,6 @@ compose:
 views:
   - { key: all, label: 'All emergences', tagline: 'Every emergence on Kronk' }
   - { key: mine, label: 'Mine', tagline: "Emergences you're in" }
-  - { key: mycelium, label: 'Mycelium', tagline: 'What you have to share' }
 
 header:
   # The title is the view switch (the standard rotator, docs/design.md
@@ -140,7 +139,10 @@ launch:
   cta: 'See the emergences'
 
 feature_flag: # not-implemented
-enforced: true # live on the Hub (Tal, 2026-10-13)
+enforced: true # live since 2026-10-13
+# Projekts live inside Krews (Tal, 2026-10-30): a Krew's page shows its
+# projekts and makes new ones, so the space is off the Hub and the rail.
+hub_visible: false
 
 nodes:
   - id: freethedream.index

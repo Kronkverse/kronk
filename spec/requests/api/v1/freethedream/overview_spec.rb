@@ -8,7 +8,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
   let(:alice) { Fabricate(:user) }
   let(:bob)   { Fabricate(:user) }
   let(:cara)  { Fabricate(:user) }
-  let!(:doof) { api(alice, :post, '/freethedream/projects', project: { title: 'Mini Doof' }) }
+  let!(:doof) { api(alice, :post, '/freethedream/projects', project: { title: 'Mini Doof', krew_id: Fabricate(:krew, seeded_by: alice.account).id }) }
 
   def headers_for(user)
     token = Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses')

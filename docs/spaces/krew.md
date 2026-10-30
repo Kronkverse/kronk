@@ -81,7 +81,10 @@ you made.
   with `?konnect=krew:<id>`, so what it makes is Konnected to the Krew; a
   new album or event is the Krew's own (decisions.md, 2026-10-23). Albums
   and events stay in their tiles and aren't repeated as Konnected tiles
-  (`excludeSlugs`).
+  (`excludeSlugs`). The Krew's FreeTheDream emergences are Konnected tiles
+  here too, and **New emergence** is how one is started: an emergence lives
+  in one Krew, a Krew can hold several, and everyone in the Krew is in each
+  (docs/spaces/freethedream.md, The Krew).
 
 ## Joining
 

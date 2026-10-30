@@ -8,7 +8,7 @@ require 'rails_helper'
 RSpec.describe 'API V1 FreeTheDream coordination' do
   let(:alice) { Fabricate(:user) }
   let!(:doof) do
-    api(alice, :post, '/projects', project: { title: 'Mini Doof', ends_on: '2026-12-06' })
+    api(alice, :post, '/projects', project: { title: 'Mini Doof', ends_on: '2026-12-06', krew_id: Fabricate(:krew, seeded_by: alice.account).id })
   end
   let!(:kitchen) { api(alice, :post, '/projects', project: { title: 'Kitchen', parent_id: doof['id'] }) }
   let!(:wash) { api(alice, :post, '/projects', project: { title: 'Wash station', parent_id: doof['id'] }) }
@@ -144,7 +144,7 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
       thread = api(cara, :post, '/comments', subject_type: 'project', subject_id: kitchen['id'], body: 'Enamel or paper?', quoted_item_id: plates['id']).first
       expect(thread['quoted_item']).to eq('id' => plates['id'], 'slug' => 'plates', 'kind' => 'need', 'title' => 'plates', 'quantity' => 20, 'unit' => '', 'covered' => 8, 'more_welcome' => true)
 
-      elsewhere = api(cara, :post, '/projects', project: { title: 'Other doof' })
+      elsewhere = api(cara, :post, '/projects', project: { title: 'Other doof', krew_id: Fabricate(:krew, seeded_by: cara.account).id })
       theirs = api(cara, :post, '/items', item: { project_id: elsewhere['id'], kind: 'need', title: 'cups' })
       api(cara, :post, '/comments', subject_type: 'project', subject_id: kitchen['id'], body: 'These?', quoted_item_id: theirs['id'])
       expect(response).to have_http_status(422)
@@ -182,7 +182,7 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
 
   describe 'setting up in one step' do
     it 'seeds an emergence with its first gangs and the gear all of it needs', :aggregate_failures do
-      camp = api(alice, :post, '/projects', project: { title: 'Camp' },
+      camp = api(alice, :post, '/projects', project: { title: 'Camp', krew_id: Fabricate(:krew, seeded_by: alice.account).id },
                                             sections: ['Kitchen', 'Sound', ' '],
                                             needs: [{ title: 'generator', quantity: 1 }, { title: 'water', quantity: 200, unit: 'L' }])
 
