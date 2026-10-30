@@ -121,7 +121,9 @@ and territory, given on the Kommons proposal on 2026-10-23 and replacing the
 names first read off the Country map). Each suggestion shows its state or
 territory, and the people it belongs to (the Noongar groups) or its other
 name; typing that other name (Eora, Woiwurrung, Boonwurrung, Bininj, Yolngu)
-finds it too. Any other name can be typed. Each saves when you leave the
+finds it too. The open list's names come with it (every name anyone has typed
+here or added on the map; `map.md`, First Nations Country). Any other name can
+be typed, and joins that list. Each saves when you leave the
 field, and a blank one clears it.
 
 Each is a name and nothing else: `accounts.first_nations_country` (where you

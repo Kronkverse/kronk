@@ -2,6 +2,7 @@ import { useCallback, useId, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { useCountryNames } from 'mastodon/hooks/useCountryNames';
 import { useSaveOwnProfile } from 'mastodon/hooks/useSaveOwnProfile';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
@@ -50,19 +51,36 @@ const fold = (text: string) =>
     .replace(/[\u0300-\u036f]/g, '');
 
 // Names (or their other spellings) that start with what's typed come first,
-// then ones that contain it.
-const suggestionsFor = (typed: string): FirstNationsCountry[] => {
+// then ones that contain it. Kronk's list comes with the open list's names:
+// every name someone has typed, or added on the map.
+const suggestionsFor = (
+  typed: string,
+  countries: readonly FirstNationsCountry[],
+): FirstNationsCountry[] => {
   const query = fold(typed.trim());
   if (!query) return [];
   const starts: FirstNationsCountry[] = [];
   const contains: FirstNationsCountry[] = [];
-  FIRST_NATIONS_COUNTRIES.forEach((country) => {
+  countries.forEach((country) => {
     const spellings = [country.name, ...(country.also ?? [])].map(fold);
     if (fold(country.name) === query) return;
     if (spellings.some((s) => s.startsWith(query))) starts.push(country);
     else if (spellings.some((s) => s.includes(query))) contains.push(country);
   });
   return [...starts, ...contains].slice(0, SUGGESTION_LIMIT);
+};
+
+// Kronk's list, then the open list's names that aren't on it already.
+const withOpenList = (added: readonly { name: string }[]) => {
+  const known = new Set(
+    FIRST_NATIONS_COUNTRIES.flatMap((c) => [c.name, ...(c.also ?? [])]).map(
+      fold,
+    ),
+  );
+  const extra = added
+    .filter(({ name }) => !known.has(fold(name)))
+    .map(({ name }) => ({ name, region: '' }));
+  return [...FIRST_NATIONS_COUNTRIES, ...extra];
 };
 
 // "Noongar · WA", "Eora · NSW & ACT", "VIC".
@@ -87,7 +105,12 @@ export const ProfileCountryField: React.FC<Props> = ({ field }) => {
   const [active, setActive] = useState(-1);
   const { status, save } = useSaveOwnProfile();
 
-  const suggestions = useMemo(() => suggestionsFor(value), [value]);
+  const { names: added } = useCountryNames();
+  const countries = useMemo(() => withOpenList(added), [added]);
+  const suggestions = useMemo(
+    () => suggestionsFor(value, countries),
+    [value, countries],
+  );
   const showing = open && suggestions.length > 0;
 
   const commit = useCallback(

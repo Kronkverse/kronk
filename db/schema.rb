@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1626,6 +1626,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_160000) do
     t.index ["user_id"], name: "index_login_activities_on_user_id"
   end
 
+  create_table "map_country_names", force: :cascade do |t|
+    t.bigint "account_id"
+    t.datetime "created_at", null: false
+    t.string "folded", limit: 60, null: false
+    t.string "name", limit: 60, null: false
+    t.datetime "removed_at"
+    t.bigint "removed_by_account_id"
+    t.integer "shape_id"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_map_country_names_on_account_id"
+    t.index ["folded"], name: "index_map_country_names_on_folded", unique: true
+    t.index ["removed_by_account_id"], name: "index_map_country_names_on_removed_by_account_id"
+    t.index ["shape_id"], name: "index_map_country_names_on_shape_id"
+  end
+
   create_table "map_places", force: :cascade do |t|
     t.bigint "account_id"
     t.text "address"
@@ -3035,6 +3050,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_160000) do
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
+  add_foreign_key "map_country_names", "accounts", column: "removed_by_account_id", on_delete: :nullify
+  add_foreign_key "map_country_names", "accounts", on_delete: :nullify
   add_foreign_key "map_places", "accounts", on_delete: :nullify
   add_foreign_key "markers", "users", on_delete: :cascade
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify

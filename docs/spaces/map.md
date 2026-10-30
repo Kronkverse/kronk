@@ -79,7 +79,7 @@ fill calms as you zoom in).
   the Country list (`first_nations_countries.ts`), its region, group and other
   spellings; other names written on the same shape; the boundaries note.
 - **Find a Country**: a search box under the button matches any of those
-  names and flies there.
+  names, and names people have added, and flies there.
 - **From a profile**: "Born on" and "Living on <name> Country" each link to
   `/hub/map?country=<name>`, which turns the layer on and opens that Country.
 - **Names** are drawn in Kronk's own type as small markers, each shown only
@@ -98,6 +98,24 @@ map and matched to the Country list where they can be. Each shape carries
 coastal Countries (Tiwi, Cobourg, the tip of Cape York) and most of Tasmania
 are coarse or unnamed, and some names placed from the sea may be on the wrong
 shape. A shape with no name shows "Not named yet".
+
+**The open list of names.** Country names are still being found, so the list
+stays open (@mangobee, 2026-10-30): `map_country_names` (`MapCountryName`,
+`/api/v1/map/country_names`).
+
+- Every name typed on a profile, born on or living on, joins it as soon as it
+  is saved.
+- On a Country's card anyone can **Add another name**, which ties that name to
+  the shape. The card shows the added names as chips, each saying who added
+  it; the search and `?country=<name>` find a Country by them, and the profile
+  fields suggest them.
+- Only a steward (admin or moderator; @mangobee and Tal) takes a name off,
+  with the × on its chip. A name taken off stays off: typing it again doesn't
+  bring it back.
+
+Names match whatever their case, accents, ŋ, spacing or punctuation, so
+"Yolngu" and "Yolŋu" are one name. Adding a name already on the list (typed on
+a profile, say) gives it the Country; one already given a Country keeps it.
 
 ## Presence
 
@@ -294,7 +312,7 @@ answered it, if you may see it.
 All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
 create, destroy), `presence/self`, `geocode`, `treks` (index, show,
 create, destroy, publish, unpublish), `events`, `places` (index, show,
-create, update, destroy).
+create, update, destroy), `country_names` (index, create, destroy).
 
 ## Open
 
