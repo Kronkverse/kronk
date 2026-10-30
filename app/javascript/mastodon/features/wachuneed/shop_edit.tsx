@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ArrowDownwardIcon from '@/material-icons/400-24px/arrow_downward.svg?react';
@@ -46,7 +46,7 @@ const messages = defineMessages({
   intro: {
     id: 'wachuneed.shop_edit.intro',
     defaultMessage:
-      'A shop puts everything you have on offer on one page of its own, under sections you name. Your listings stay in Offered as they are.',
+      'A shop puts everything you have on offer on one page of its own, in Kollections you name. Your listings stay in Offered as they are.',
   },
   loading: { id: 'wachuneed.shop.loading', defaultMessage: 'Loading shop…' },
   view: { id: 'wachuneed.mine.view_shop', defaultMessage: 'See my shop' },
@@ -101,19 +101,22 @@ const messages = defineMessages({
     id: 'wachuneed.shop_edit.picture_error',
     defaultMessage: "Couldn't upload that picture. Try another?",
   },
-  sections: { id: 'wachuneed.shop_edit.sections', defaultMessage: 'Sections' },
+  sections: {
+    id: 'wachuneed.shop_edit.sections',
+    defaultMessage: 'Kollections',
+  },
   sectionsHint: {
     id: 'wachuneed.shop_edit.sections_hint',
     defaultMessage:
-      'Optional. Name them however suits what you sell, such as Skin Care or Tinctures. You choose a section when you list or edit something.',
+      'Optional. A Kollection is one line of what you sell, such as Tinctures or Creams, and shows as its own row on your shop page. You put an item in one when you add or edit it.',
   },
   sectionName: {
     id: 'wachuneed.shop_edit.section_name',
-    defaultMessage: 'Section name',
+    defaultMessage: 'Kollection name',
   },
   sectionAdd: {
     id: 'wachuneed.shop_edit.section_add',
-    defaultMessage: 'Add a section',
+    defaultMessage: 'Add a Kollection',
   },
   sectionUp: {
     id: 'wachuneed.shop_edit.section_up',
@@ -125,7 +128,7 @@ const messages = defineMessages({
   },
   sectionRemove: {
     id: 'wachuneed.shop_edit.section_remove',
-    defaultMessage: 'Remove section',
+    defaultMessage: 'Remove Kollection',
   },
   visibility: {
     id: 'wachuneed.shop_edit.visibility',
@@ -151,7 +154,7 @@ const messages = defineMessages({
   closeAsk: {
     id: 'wachuneed.shop_edit.close_ask',
     defaultMessage:
-      'Closing removes your shop page and its sections. Your listings stay up exactly as they are.',
+      'Closing removes your shop page and its Kollections. Your listings stay up exactly as they are.',
   },
   closeConfirm: {
     id: 'wachuneed.shop_edit.close_confirm',
@@ -185,8 +188,17 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
   const [about, setAbout] = useState('');
   const [payment, setPayment] = useState('');
   const [handover, setHandover] = useState('');
-  // The builder opens on your items once there is a shop to put them in.
-  const [tab, setTab] = useState<'items' | 'details'>('items');
+  // The builder opens on your items once there is a shop to put them in;
+  // Add a Kollection on the shop page opens Shop details with a new one
+  // ready to name (`?kollection=new`).
+  const { search } = useLocation();
+  const newKollection = useMemo(
+    () => new URLSearchParams(search).get('kollection') === 'new',
+    [search],
+  );
+  const [tab, setTab] = useState<'items' | 'details'>(
+    newKollection ? 'details' : 'items',
+  );
   const [savedSections, setSavedSections] = useState<ApiShopSectionJSON[]>([]);
   // Who can see the shop as saved: where a new item starts.
   const [savedVisibility, setSavedVisibility] =
@@ -229,12 +241,15 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
         setVisibility(shop.visibility);
         setOnProfile(shop.show_on_profile);
         setPicturePreview(shop.picture_url ?? null);
+        const saved = (shop.sections ?? []).map<SectionRow>((section) => ({
+          key: `saved-${section.id}`,
+          id: section.id,
+          name: section.name,
+        }));
         setSections(
-          (shop.sections ?? []).map((section) => ({
-            key: `saved-${section.id}`,
-            id: section.id,
-            name: section.name,
-          })),
+          newKollection && saved.length < MAX_SECTIONS
+            ? [...saved, { key: 'new-from-shop', name: '' }]
+            : saved,
         );
         return undefined;
       })
@@ -248,7 +263,7 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [newKollection]);
 
   const handleName = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
