@@ -96,6 +96,11 @@ fill calms as you zoom in).
   names, and names people have added, and flies there.
 - **From a profile**: "Born on" and "Living on <name> Country" each link to
   `/hub/map?country=<name>`, which opens that Country.
+- **People on a Country**: the card shows faces under "Born here" and
+  "Living here", the people whose profile says so by any name the Country
+  answers to (`GET /api/v1/map/country_people?names[]=…`, matched as the map
+  matches names). Each face opens the profile; it shows no more than the
+  profiles do.
 - **On everything with a place**: a Mate's pin, a Place (card and page), an
   Event pin and a Trek say the Country they're on ("On Kaurna Country";
   "Through Kaurna and Peramangk Country" for a Trek), each opening it here.
