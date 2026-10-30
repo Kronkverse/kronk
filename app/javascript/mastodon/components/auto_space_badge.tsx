@@ -79,8 +79,16 @@ export const AutoSpaceBadge: React.FC = () => {
   const withinSpace =
     cameFrom === `/hub/${slug}` || cameFrom?.startsWith(`/hub/${slug}/`);
 
+  // A korner that lives inside another space (`hub_visible: false`:
+  // Projekts, inside Krews) may name a parent there, so a projekt goes
+  // back to its Krew.
+  const livesInside = korner.hub_visible === false;
   const ownParent =
-    !atSpaceRoot && parent?.href.startsWith(`/hub/${slug}`) ? parent : null;
+    !atSpaceRoot &&
+    parent &&
+    (livesInside || parent.href.startsWith(`/hub/${slug}`))
+      ? parent
+      : null;
 
   const backTo = atSpaceRoot
     ? '/hub'
