@@ -30,7 +30,7 @@ const messages = defineMessages({
   emptyBody: {
     id: 'wachuneed.shops.empty.body',
     defaultMessage:
-      'A shop is a page of your own for what you make or sell, in sections you name.',
+      'A shop is a page of your own for what you make or sell, in Kollections you name.',
   },
   open: { id: 'wachuneed.shop_edit.title_open', defaultMessage: 'Open a shop' },
 });
