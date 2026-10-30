@@ -43,7 +43,7 @@ const messages = defineMessages({
   intro: {
     id: 'freethedream.mycelium.intro',
     defaultMessage:
-      'What you have: skills, things, space, time, money, connections. Only you see it. Share something with an emergence you are in and it is on offer there.',
+      'What you have: skills, things, space, time, money, connections. Only you see it. Share something with a projekt you are in and it is on offer there.',
   },
   add: {
     id: 'freethedream.mycelium.add',
@@ -63,7 +63,7 @@ const messages = defineMessages({
   },
   noProjects: {
     id: 'freethedream.mycelium.no_projects',
-    defaultMessage: 'Join an emergence to share things with it.',
+    defaultMessage: 'Join a projekt to share things with it.',
   },
   removeTitle: {
     id: 'freethedream.mycelium.remove_title',

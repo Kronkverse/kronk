@@ -19,21 +19,21 @@
 # shows it.
 
 slug: freethedream
-name: FreeTheDream
-tagline: 'Seed an emergence. Bring it to life together.'
+name: Projekts
+tagline: 'Seed a projekt. Bring it to life together.'
 # What the i moon's pop-up says (SpaceInfoDialog). A first draft
 # (2026-10-16), for Tal to edit on shadow.
 about:
-  what: 'A place to bring things to life together. Someone seeds an emergence, like a doof, an album or a shared house, and the people who join organise it themselves.'
+  what: 'A place to bring things to life together. Someone seeds a projekt, like a doof, an album or a shared house, and the people who join organise it themselves.'
   why: "Big things happen when everyone brings a piece. Nobody approves from above: whoever joins can see what's needed and step up."
   how:
-    - 'Start an emergence from one of your Krews (Konnect, then New emergence). Everyone in the Krew is in it, and joining the Krew joins you in.'
+    - 'Start a projekt from one of your Krews (Konnect, then New projekt). Everyone in the Krew is in it, and joining the Krew joins you in.'
     - 'Coalesce a gang for one part of it, like Kitchen or Sound.'
     - "Add what needs bringing, and say how much of it you'll bring."
     - "Add an idea to Actualise and you're on it, or jump on board someone else's."
-    - "List what you have in your Mycelium. Only you see it until you share something with an emergence, where it's on offer and meets what's needed."
+    - "List what you have in your Mycelium. Only you see it until you share something with a projekt, where it's on offer and meets what's needed."
     - "Talk it through in threads, and resolve each one once it's settled."
-purpose: 'To let people seed emergences and bring them to life from the bottom up: gangs of people, things to bring, ideas to actualise, and Mycelium: what each person has, ready to share.'
+purpose: 'To let people seed projekts and bring them to life from the bottom up: gangs of people, things to bring, ideas to actualise, and Mycelium: what each person has, ready to share.'
 icon:
   material: spiral
 render_target: native
@@ -99,7 +99,7 @@ feed_projection:
 settings: []
 
 hub_teaser:
-  static: 'Seed an emergence, or join one and bring something to life.'
+  static: 'Seed a projekt, or join one and bring something to life.'
 
 # Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
 # Korner attachments §2.6): this korner's Konnections and how they work.
@@ -108,7 +108,7 @@ konnect:
   # its title ("the Ember event"), so records that share a title can be
   # told apart (decisions.md, 2026-10-26).
   # A gang is the one exception: its records say gang (KornerRecords.noun_for).
-  noun: emergence
+  noun: projekt
   # The Konnect picker can make a new one from anywhere: "New …" opens
   # `compose.route` with `?konnect=<source slug>:<source id>`, and the
   # composer Konnects what it makes to that source.
@@ -116,17 +116,17 @@ konnect:
   # What a Konnection with these spaces does beyond the link itself.
   effects:
     - with: kalendar
-      does: "An event Konnected to an emergence (or one of its gangs) is shared with the emergence's Krew, which joins its audience."
+      does: "An event Konnected to a projekt (or one of its gangs) is shared with the projekt's Krew, which joins its audience."
     - with: krew
-      does: "An emergence lives in one Krew and is Konnected to it when it is made; that link can't be taken off. Konnected to any other Krew it is only a link."
+      does: "A projekt lives in one Krew and is Konnected to it when it is made; that link can't be taken off. Konnected to any other Krew it is only a link."
 
 compose:
-  label: 'Seed an emergence'
+  label: 'Seed a projekt'
   route: '/hub/freethedream/composer'
 
 views:
-  - { key: all, label: 'All emergences', tagline: 'Every emergence on Kronk' }
-  - { key: mine, label: 'Mine', tagline: "Emergences you're in" }
+  - { key: all, label: 'All projekts', tagline: 'Every projekt on Kronk' }
+  - { key: mine, label: 'Mine', tagline: "Projekts you're in" }
 
 header:
   # The title is the view switch (the standard rotator, docs/design.md
@@ -137,8 +137,8 @@ header:
   rotator: true
 
 launch:
-  blurb: 'FreeTheDream — seed an emergence and bring it to life together: gangs, Thing Bringing, Actualise and On offer.'
-  cta: 'See the emergences'
+  blurb: 'Projekts — seed a projekt and bring it to life together: gangs, Thing Bringing, Actualise and On offer.'
+  cta: 'See the projekts'
 
 feature_flag: # not-implemented
 enforced: true # live since 2026-10-13
@@ -150,7 +150,7 @@ nodes:
   - id: freethedream.index
     bucket: hub
     parent: freethedream
-    label: FreeTheDream
+    label: Projekts
     url: /hub/freethedream
     lifecycle: live
     spa: true

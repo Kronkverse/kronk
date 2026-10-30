@@ -78,7 +78,7 @@ const messages = defineMessages({
   upForGrabs: {
     id: 'freethedream.item_up_for_grabs',
     defaultMessage:
-      'Whoever added this has left. Anyone in the emergence can take it over.',
+      'Whoever added this has left. Anyone in the projekt can take it over.',
   },
   onBoard: {
     id: 'freethedream.on_board',
