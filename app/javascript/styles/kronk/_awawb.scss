@@ -24,7 +24,7 @@
     font-weight: 400;
   }
 
-  // The acknowledgement: fades in, holds, fades out over 7s
+  // The acknowledgement: fades in, holds, fades out over 4s
   // (ACKNOWLEDGEMENT_MS). A button, so a tap goes straight on. In Kronk's
   // everyday text, the body sans (@mangobee, 2026-10-30).
   &__ack {
@@ -39,7 +39,7 @@
     text-align: center;
     cursor: pointer;
     opacity: 0;
-    animation: awawb-acknowledge 7s ease-in-out forwards;
+    animation: awawb-acknowledge 4s ease-in-out forwards;
 
     &:focus-visible {
       outline: 2px solid var(--accent);
