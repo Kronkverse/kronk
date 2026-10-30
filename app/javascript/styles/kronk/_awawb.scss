@@ -1,7 +1,8 @@
 // AWAWB — a still page. The Aboriginal flag centred, with
 // "Always was." above and "Always will be." below. Nothing else.
 // Fills the Stage vertically so the trio sits centred no matter
-// how tall the viewport is.
+// how tall the viewport is. Kronk's Acknowledgement of Country comes
+// first, fading in and out before the flag (features/awawb/index.tsx).
 
 .awawb-page {
   min-height: calc(100vh - 4.25rem);
@@ -23,6 +24,48 @@
     font-weight: 400;
   }
 
+  // The acknowledgement: fades in, holds, fades out over 9s
+  // (ACKNOWLEDGEMENT_MS). A button, so a tap goes straight on.
+  &__ack {
+    max-width: 38rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: clamp(1.125rem, 3.2vw, 1.75rem);
+    line-height: 1.5;
+    text-align: center;
+    cursor: pointer;
+    opacity: 0;
+    animation: awawb-acknowledge 9s ease-in-out forwards;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 8px;
+    }
+  }
+
+  // The flag and its two lines, as before, fading in after it.
+  &__flag-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1.25rem, 3vh, 2rem);
+    animation: awawb-arrive 1.2s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__ack {
+      opacity: 1;
+      animation: none;
+    }
+
+    &__flag-screen {
+      animation: none;
+    }
+  }
+
   &__flag {
     // The source SVG is a 24px viewBox — scale it up so the flag
     // becomes the centrepiece rather than a chip between the two
@@ -30,5 +73,33 @@
     width: clamp(180px, 40vmin, 320px);
     height: auto;
     display: block;
+  }
+}
+
+@keyframes awawb-acknowledge {
+  0% {
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes awawb-arrive {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }

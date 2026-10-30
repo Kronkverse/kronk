@@ -729,7 +729,11 @@ The **Membrane** is the platform nav in the TopBand on desktop
 
 - **Pillars:** five, in order: **Me** (`/me`), **Home** (`/home`), **AWAWB**
   (`/awawb`, an Aboriginal-flag glyph), **Hub** (`/hub`), **Nudges**
-  (`/nudges`). It is a `role="tablist"`; each pillar is a `role="tab"` with
+  (`/nudges`). AWAWB is a still page: the flag between "Always was." and
+  "Always will be.", after Kronk's Acknowledgement of Country, which fades in,
+  holds and fades out first each time it opens (about 9 seconds; a tap goes
+  straight on; with reduced motion it changes over without fading). Kommons
+  "Update the flag screen", @mangobee, 2026-10-30. It is a `role="tablist"`; each pillar is a `role="tab"` with
   `aria-selected`.
 - **Icons, not words.** Each pillar shows the icon from its manifest
   (`profile`, `feed`, `hub`, `nudges`); Me shows your avatar. The text label is
