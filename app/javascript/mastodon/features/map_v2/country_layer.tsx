@@ -157,6 +157,11 @@ const People: React.FC<{
 // anywhere you'd be looking.
 const HERE_FROM_ZOOM = 5;
 
+// Whether the map is still drawn: once removed, it throws on any question
+// about its layers or sources.
+const hasStyle = (map: maplibregl.Map) =>
+  Boolean((map as { style?: unknown }).style);
+
 // Case, accents and ŋ don't matter when matching names.
 const fold = (s: string) =>
   s
@@ -437,6 +442,9 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
       );
     }
     return () => {
+      // Leaving the map with a card open (a face on it opens a profile)
+      // removes the map first, and a removed map has no style to ask.
+      if (!hasStyle(map)) return;
       if (previous !== undefined && map.getSource(SOURCE_ID)) {
         map.setFeatureState(
           { source: SOURCE_ID, id: previous },
