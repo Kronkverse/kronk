@@ -30,6 +30,7 @@ import {
 import { CountryLayer } from './country_layer';
 import { CountryPrompt, useShouldOfferCountry } from './country_prompt';
 import { EventLayer } from './event_layer';
+import { NearMe } from './near_me';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
@@ -673,6 +674,17 @@ export const MatesView: React.FC = () => {
             intl={intl}
           />
         )}
+
+        {/* Near me: flies to your pin and lists what's closest. Sits
+            under the in-view panel when that takes the corner. */}
+        <NearMe
+          map={mapRef.current}
+          selfPin={selfPin}
+          pins={pins}
+          lower={anonymising}
+          onSelectPin={handleSelectPin}
+          onOpenPlace={openPlacePanel}
+        />
 
         {/* Off-map compass overlay — a marker at the canvas edge per
             direction that has mates outside the viewport. Absolute-

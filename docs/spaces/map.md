@@ -22,6 +22,10 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
   pins, a people strip (a face per pin, your own slot last; tap to
   centre), your upcoming Kalendar events (hosting, going or interested) as
   markers, and Places.
+  **Near me** (top left, `near_me.tsx`) flies to your pin and lists the
+  five closest Mates, Places (within 50 km) and your Events, each with
+  about how far it is from your pin; a row opens that pin, Place or Event.
+  Without a pin it opens "Put me on the map".
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
   after your Mates' (Kommons "Treks list of Mates before Mine",

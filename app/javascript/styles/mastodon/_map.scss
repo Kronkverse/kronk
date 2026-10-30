@@ -843,6 +843,131 @@
   }
 }
 
+// Near me (features/map_v2/near_me.tsx): a pill top-left that opens a list
+// of the closest Mates, Places and Events. Dropped below the in-view pill
+// when that is showing.
+.map-near-me {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, calc(100% - 32px));
+  pointer-events: none;
+
+  &--lower {
+    top: 64px;
+  }
+
+  &__toggle,
+  &__panel {
+    pointer-events: auto;
+  }
+
+  &__toggle {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      color: var(--accent-text);
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px;
+    max-height: min(420px, 60vh);
+    overflow-y: auto;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+  }
+
+  &__title {
+    margin: 4px 8px 2px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--radius-medium);
+    background: transparent;
+    color: var(--text-primary);
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in oklab, var(--accent) 18%, transparent);
+      outline: none;
+    }
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__km {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+}
+
 .map-in-view {
   position: absolute;
   top: 16px;
