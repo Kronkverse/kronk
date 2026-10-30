@@ -23,7 +23,7 @@ import aboriginalFlag from '@/images/aboriginal-flag.png';
 
 // How long the acknowledgement is on the page, fades included. Matches the
 // `awawb-acknowledge` animation in styles/kronk/_awawb.scss.
-const ACKNOWLEDGEMENT_MS = 9000;
+const ACKNOWLEDGEMENT_MS = 7000;
 
 const messages = defineMessages({
   title: {
