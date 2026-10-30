@@ -85,23 +85,28 @@ never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
   (`GET /api/v1/huddle/count`, the minute-old figure below), not from Jitsi:
   Jitsi answers an empty room with a 404, which every browser logged as a
   failed load on every poll.
-- **The call follows you.** Leaving the Huddle page mid-call doesn't end
-  it: the call shrinks into a small floating window (`HuddlePip`,
+- **The call follows you**, from the Main Huddle and from a Kuddle (Tal's
+  proposal "Navigating away from a huddle", 2026-10-30: Kuddles had never
+  had it). Leaving the call's page mid-call doesn't end it: the call shrinks into a small floating window (`HuddlePip`,
   `features/huddle_pip/`), like a video player's picture-in-picture (Tal,
   2026-10-19). You still see the call and it still sees you, mic and camera
   on. The window has a top bar to drag it by (where you leave it is kept on
   the device), the people count, and Kronk's call controls in a compact
-  form, with a way back to the Huddle. Their state (muted, hand up,
+  form, with a way back to the call's page. A Kuddle's window goes by the
+  Kuddle's name. Their state (muted, hand up,
   recording) belongs to the call, so the window shows what the page
   showed. On a phone it is smaller and sits above the tab bar.
 
   How: Tomas's approach (#2118) keeps the Jitsi iframe in a container on
   `document.body` that no page owns (`huddle_pip/jitsi_session.ts`). That
-  container is always drawn over a "slot": the call area on the Huddle page
+  container is always drawn over a "slot": the call area on the call's page
   (`data-huddle-slot='docked'`) or the mini window's video area
   (`'floating'`). Moving between them only moves the container, so the call
-  is never rebuilt. Coming back to the Huddle picks the same call up; a
-  reload ends it. The browser's own picture-in-picture can't be used: the
+  is never rebuilt. The session knows which call it is (`place`: `huddle` or
+  `kuddle:<id>`, its page and a Kuddle's name), so coming back to that page
+  picks the same call up and another call's page leaves it in the window. One
+  call at a time: joining another (a Kuddle while the Main Huddle is in the
+  window) ends the one before. A reload ends it. The browser's own picture-in-picture can't be used: the
   call is a frame from the Jitsi server, not a video element of ours.
 
 **2. Rooms (Kuddles).** Open, topical, made by anyone signed in (Coworking,
@@ -135,8 +140,8 @@ Reading room, and so on). Anyone can join; there's no membership or invite.
   name and Follow, with Kronk's controls under the call (their leave is
   Unhuddle). Unhuddle goes back to `/hub/huddle`, and so does the Frame's
   `← Huddle` badge (the page draws no back chip of its own). Under the
-  controls are the Kuddle's recordings, if it has any. A room
-  call doesn't follow you yet; leaving the page ends it.
+  controls are the Kuddle's recordings, if it has any. Its call follows
+  you like the Main Huddle's (below, The call follows you).
 - **Retire:** `Scheduler::HuddleRoomReaper` runs daily at 03:15 UTC and
   soft-retires rooms whose `last_active_at` is more than six months old
   (`HuddleSession#retire!` sets `retired_at` and publishes
