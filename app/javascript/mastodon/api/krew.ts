@@ -70,6 +70,8 @@ export interface ApiKrewJSON {
   korners: KrewKornerSlug[];
   requirements: ApiKrewRequirementJSON[];
   image_url: string | null;
+  // The FreeTheDream emergence this is the Krew of; null for any other Krew.
+  emergence: { id: string; slug: string; title: string } | null;
 }
 
 export const apiGetKrews = (

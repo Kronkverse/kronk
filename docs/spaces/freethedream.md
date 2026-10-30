@@ -111,7 +111,11 @@ its link, joins the emergence, and leaving the Krew leaves it
 (`KrewMembership`). Each side checks before it acts, so they don't loop.
 Leaving either takes you off what you were actualising and takes out what you
 shared from your Mycelium. Removing the emergence archives its Krew. The
-landing page's **Krew** row links to the Krew's page.
+landing page's **Krew** row links to the Krew's page (**Open the Krew**), and
+the Krew's page leads back: the emergence is the first tile in its Spaces
+(`REST::KrewSerializer#emergence`), so it reads as that emergence's Krew and
+not a new one (Tal's proposal "'Open the Krew' Button", 2026-10-30). The
+button stays until Projekts live inside Krews.
 
 **One list of requests** (Tal, 2026-10-19: err syntropic). Asking to join a
 by-request emergence is a request to its Krew (`Project#ask_to_join!`),
