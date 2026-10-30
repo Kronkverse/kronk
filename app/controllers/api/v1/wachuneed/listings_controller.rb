@@ -60,6 +60,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     @listing.account = current_account
     @listing.options = params[:options] if params.key?(:options)
     @listing.variants = params[:variants] if params.key?(:variants)
+    @listing.booking = params[:booking] if params.key?(:booking)
 
     ApplicationRecord.transaction do
       @listing.save!
@@ -90,6 +91,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
       # them) and is left alone when absent, like the photos.
       @listing.options = params[:options] if params.key?(:options)
       @listing.variants = params[:variants] if params.key?(:variants)
+      # How it is booked, whole, like the options.
+      @listing.booking = params[:booking] if params.key?(:booking)
       @listing.update!(listing_params)
 
       if params.key?(:media_attachment_ids)

@@ -163,3 +163,38 @@
     }
   }
 }
+
+// How people book it (listing_booking_editor.tsx): the template pills, then
+// the parts, then each part's settings, rows that stack on a phone.
+.wachuneed-booking-edit {
+  &__templates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block-end: 0.75rem;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-block: 0.75rem;
+  }
+
+  // One line even on a phone: day, from, to and remove (or a time and
+  // remove), the inputs sharing what is left.
+  &__row {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: 0.4rem;
+    align-items: center;
+
+    .compose-input {
+      min-width: 0;
+      padding-inline: 0.5rem;
+    }
+  }
+
+  &__row--slot {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}

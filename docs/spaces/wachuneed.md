@@ -420,6 +420,49 @@ Not built: a counter-offer (`amount_cents` is there for it), a message with
 the request (the API takes one; the page doesn't ask), requests lapsing,
 and counted stock going down on accept.
 
+## Booking
+
+Kommons "Goods & Services" (Tal, 2026-10-29,
+https://kronk.info/hub/kommons/p/117522445809187696): "Message the user" is
+a cop out for a service; a member should see when a naturopath can take
+them, or book a ride at a time, from one place to another. Tal's answers
+(on #2423, which held the first design): a listing is **built from parts**,
+with templates as editable presets rather than one fixed mode; the seller
+chooses how they are available (weekly hours, posted times, or both); an
+accepted booking goes into both people's Kalendars; bookings and jobs are
+built together.
+
+Built so far: the parts and the seller's availability, on the listing and
+its page. Booking against them, accepting, and Kalendar come next (Open).
+
+- **Parts** (`Listing::BOOKING_PARTS`), each something the person booking
+  gives: **A time** (`time`), **From and to** (`route`, two places on the
+  Map, for a trip or a job) and **Their details** (`details`, what they
+  need in their own words, asked with the seller's own line).
+- **Templates** (`listing_booking_editor.tsx`, **How people book it** in the
+  listing form, on offer only): **Ask for this** (no parts: today's
+  request), **Appointment** (a time, an hour long, weekdays nine to five),
+  **Job** (a time, from and to, and "What needs doing?") and **Open
+  request** (a time and their details). A template only fills the parts
+  in; the seller ticks parts on or off and changes anything. Which template
+  it started from is kept as a label.
+- **When the seller is free** (with A time): **How long** one booking takes
+  (or no set length), **Weekly hours** (a day, from and to, in the seller's
+  own time zone, kept with them) and **Times you post** (each a start,
+  kept only while it is ahead). Either, both, or neither: with neither,
+  people suggest a time.
+- **On the listing page** (`listing_booking_summary.tsx`): how long it
+  takes, the weekly hours (naming the seller's time zone when it isn't
+  yours), the posted times in your own time, or "Suggest a time", and what
+  else it asks for. **Ask for this** is still how it is asked for.
+- **Stored** as JSON in `listings.booking`, cut to shape by
+  `Listing#booking=` (unknown parts dropped, settings of a part left out
+  dropped with it, bad hours and past times dropped); `{}` is a listing
+  that is not booked. Sent on create; on an edit it replaces the whole
+  thing when present and is left alone when absent. Served on the detail
+  response only. A wanted ad has none. The shop item composer doesn't ask;
+  the listing form can set it on a shop item.
+
 ## Brands
 
 Brands whose mission members have looked into and respect (Tal,
@@ -517,7 +560,8 @@ a hit shows only to whoever can see the listing (`PolicyFilter`).
   media belong to no post, so `Vacuum::MediaAttachmentsVacuum` excludes them
   from its sweep of unattached uploads.
 - **`listings`** also carries `ongoing`, `availability`, `announced`,
-  `variants` and `options` (see The shop builder, Options), and
+  `variants`, `options` and `booking` (see The shop builder, Options,
+  Booking), and
   `visibility` (integer enum `public 0 | mates 1 | orbit 3 | self_only 4`,
   as ArtPiece; see Who can see it). `enquiries` is ignored, to be
   dropped.
@@ -549,12 +593,17 @@ returned to Wachuneed, slug and all, on 2026-09-07.
 
 - **Counter-offers.** A request is at the asked price; offering less
   (`listing_offers.amount_cents`) is not built.
-- **Interaction modes.** The design lets the seller pick per listing:
-  `buy_now`, `buy_or_bargain` (or nearest offer), `book_service`,
-  `contact_to_discuss`, `workshop_join`. None exist in code. Undecided: whether
-  a listing can switch mode, and how deep `book_service` and `workshop_join`
-  tie into Kalendar (is a paid workshop one primitive with two views, or two
-  that reference each other?).
+- **Booking, still to build** (see Booking). Booking against the parts:
+  picking a free time (an hour cut from the weekly hours, or a posted
+  time, held while it waits so two people can't ask for the same one), a
+  from and a to on the Map, the details; the seller accepting or declining
+  in Requests; and an accepted booking or job going into both people's
+  Kalendars, seen only by the two of them. Undecided: a class or workshop
+  that many people book into (one item with seats, or a Kalendar event
+  Konnected to it).
+- **Other interaction modes.** The older design also had `buy_now`,
+  `buy_or_bargain` (or nearest offer) and `contact_to_discuss`. None exist
+  in code beyond Ask for this and Message the poster.
 - **Managing your listings.** Editing and taking down (closing) are built
   (above); there is still no way to reserve or delete a listing from the
   app, and no draft flow. The `auto_close_after_days` setting (default 90)

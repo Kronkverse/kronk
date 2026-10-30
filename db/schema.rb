@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_223000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1581,6 +1581,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_223000) do
     t.bigint "account_id", null: false
     t.boolean "announced", default: true, null: false
     t.string "availability", default: "available", null: false
+    t.jsonb "booking", default: {}, null: false
     t.string "category", null: false
     t.datetime "closed_at"
     t.datetime "created_at", null: false
