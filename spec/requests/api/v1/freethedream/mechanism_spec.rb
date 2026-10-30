@@ -343,6 +343,19 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       Freethedream::Project.find(project['id']).krew
     end
 
+    it "lists one Krew's projekts for its page, hidden ones only to its members", :aggregate_failures do
+      krew = Fabricate(:krew, seeded_by: alice.account)
+      start_project(alice, krew: krew, title: 'Mini Doof')
+      start_project(alice, krew: krew, title: 'First album')
+      start_project(alice, title: 'Elsewhere')
+      hidden = Fabricate(:krew, seeded_by: alice.account, access: 'invite_only')
+      start_project(alice, krew: hidden, title: 'Secret doof')
+
+      expect(api(bob, :get, '/projects', krew_id: krew.id).pluck('title')).to contain_exactly('Mini Doof', 'First album')
+      expect(api(bob, :get, '/projects', krew_id: hidden.id)).to eq []
+      expect(api(alice, :get, '/projects', krew_id: hidden.id).pluck('title')).to eq ['Secret doof']
+    end
+
     it 'keeps one list of requests, whether asked on the emergence or its Krew', :aggregate_failures do
       house = start_project(alice, title: 'Communal house', joining: 'by_request')
       krew = krew_of(house)

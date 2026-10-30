@@ -49,6 +49,7 @@ import { KrewChat } from './krew_chat';
 import { KrewEvents } from './krew_events';
 import { KrewPhotoField } from './krew_photo_field';
 import { KrewPosts } from './krew_posts';
+import { KrewProjekts } from './krew_projekts';
 import { KrewSpaceIcon } from './krew_space_icon';
 
 // Krew page (/hub/krew/:id): identity, the faces, then for members What's
@@ -670,7 +671,8 @@ export const KrewDetail = () => {
   // A member sees the Krew's albums and events in the Albutts and Kalendar
   // tiles, so the Konnected tiles beside them leave those two spaces out
   // and each album or event shows once (decisions.md, 2026-10-22).
-  const konnectedSkip = isMember ? shownSpaces : [];
+  // Its projekts have their own section above, so they aren't tiles too.
+  const konnectedSkip = [...(isMember ? shownSpaces : []), 'freethedream'];
 
   // The + moon makes something for the Krew in whichever space is open, with
   // the normal composer: a post, an album, an event.
@@ -869,6 +871,13 @@ export const KrewDetail = () => {
             )}
 
             {isMember && <Happening activity={activity} />}
+
+            {/* What the Krew is making, before its spaces: the projekts
+                live here rather than as Konnected tiles. */}
+            <KrewProjekts
+              krewId={krew.id}
+              canStart={isMember && !krew.archived}
+            />
 
             {/* One section of tiles: the Krew's spaces, then what it's
                 Konnected to elsewhere, then Konnect. */}

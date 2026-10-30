@@ -11,6 +11,8 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
 
   def index
     scope = Freethedream::Project.top_level.includes(:owner, :cover).recent
+    # One Krew's projekts, for its page (docs/spaces/krew.md, Projekts).
+    scope = scope.where(krew_id: params[:krew_id]) if params[:krew_id].present?
     mine = Freethedream::Membership.member.where(account_id: current_account.id).select(:project_id)
     scope = if params[:scope] == 'mine'
               scope.where(id: mine)

@@ -111,8 +111,9 @@ five for one person
 **An emergence lives in a Krew, and a Krew can hold several** (Tal,
 2026-10-30, the proposals "More interconnectedness with krew space" and
 "Access of a FTD space"). The Krew is the home: its page shows its
-emergences as Konnected tiles, and **Konnect → New emergence** there opens
-the composer with `?konnect=krew:<id>`. The composer asks which of your
+emergences in their own Projekts section, whose **New projekt** card (or
+**Konnect → New projekt**) opens the composer with `?konnect=krew:<id>`
+(docs/spaces/krew.md, The surfaces). The composer asks which of your
 Krews it lives in (`krew_id`, required for a new emergence; only an active
 Krew you're in), and the server Konnects the two
 (`Project#join_krew_members!`, `Kronk::AttachmentEffects.link!`). That link
