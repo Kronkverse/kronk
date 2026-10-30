@@ -1,15 +1,14 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import {
   apiFtdAnswerRequest,
   apiFtdProjectAction,
 } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
-import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
@@ -33,22 +32,17 @@ import {
 // (Tal, 2026-10-16: the button here doubled the moon).
 
 const messages = defineMessages({
-  join: { id: 'freethedream.join', defaultMessage: 'Join' },
-  ask: { id: 'freethedream.ask', defaultMessage: 'Ask to join' },
+  joinKrew: { id: 'freethedream.join_krew', defaultMessage: 'Join {krew}' },
+  askKrew: {
+    id: 'freethedream.ask_krew',
+    defaultMessage: 'Ask to join {krew}',
+  },
   asked: { id: 'freethedream.asked', defaultMessage: 'Asked · Withdraw' },
-  leave: { id: 'freethedream.leave', defaultMessage: 'Leave' },
-  leaveOwnTitle: {
-    id: 'freethedream.leave_own.title',
-    defaultMessage: 'Leave {title}?',
-  },
-  leaveOwnBody: {
-    id: 'freethedream.leave_own.body',
-    defaultMessage:
-      "It's yours. If you leave, it's up for grabs: anyone still in it can take it over.",
-  },
+  openKrew: { id: 'freethedream.krew.open', defaultMessage: 'Open the Krew' },
   getInvolved: {
-    id: 'freethedream.get_involved_here',
-    defaultMessage: 'Want to get involved? Join, then pick up anything here.',
+    id: 'freethedream.get_involved_krew',
+    defaultMessage:
+      "It's {krew}'s emergence. Join the Krew to get involved, then pick up anything here.",
   },
   requests: { id: 'freethedream.requests', defaultMessage: 'Asking to join' },
   accept: { id: 'freethedream.accept', defaultMessage: 'Accept' },
@@ -215,7 +209,9 @@ export const ProjectEvent: React.FC<{
   ) : null;
 
 // Beside the work on a project's page: its Kalendar event, who's asking
-// to join (the Krew's list; anyone in can answer), and Join.
+// to join (the Krew's list; anyone in can answer), and, for someone
+// outside, the way into its Krew. Being in it is being in the Krew, so
+// leaving is the Krew page's (docs/spaces/freethedream.md, The Krew).
 export const ProjectAside: React.FC<{
   project: FtdProject;
   onChange: (p: FtdProject) => void;
@@ -223,25 +219,27 @@ export const ProjectAside: React.FC<{
 }> = ({ project, onChange, refresh }) => {
   const intl = useIntl();
 
-  const member = project.membership === 'member';
-  // Its owner leaving makes it up for grabs, so they're asked first.
-  const [confirmLeave, setConfirmLeave] = useState(false);
+  const history = useHistory();
+  const krew = project.krew;
+  const krewName = krew?.name ?? '';
 
+  // Join or ask the Krew, or withdraw the request; an invite-only or
+  // requirement Krew is joined from its own page.
   const handleMembership = useCallback(() => {
-    if (project.membership === 'member' && project.can.edit) {
-      setConfirmLeave(true);
+    if (project.membership === 'none' && project.joining === 'krew') {
+      if (krew) history.push(`/hub/krew/${krew.slug}`);
       return;
     }
     const action = project.membership === 'none' ? 'join' : 'leave';
     void act(apiFtdProjectAction(project.id, action).then(onChange));
-  }, [project.id, project.membership, project.can.edit, onChange]);
-  const handleLeave = useCallback(() => {
-    setConfirmLeave(false);
-    void act(apiFtdProjectAction(project.id, 'leave').then(onChange));
-  }, [project.id, onChange]);
-  const cancelLeave = useCallback(() => {
-    setConfirmLeave(false);
-  }, []);
+  }, [
+    project.id,
+    project.membership,
+    project.joining,
+    krew,
+    history,
+    onChange,
+  ]);
 
   const handleAnswer = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -259,13 +257,13 @@ export const ProjectAside: React.FC<{
   );
 
   const membershipLabel =
-    project.membership === 'member'
-      ? messages.leave
-      : project.membership === 'requested'
-        ? messages.asked
-        : project.joining === 'open'
-          ? messages.join
-          : messages.ask;
+    project.membership === 'requested'
+      ? intl.formatMessage(messages.asked)
+      : project.joining === 'open'
+        ? intl.formatMessage(messages.joinKrew, { krew: krewName })
+        : project.joining === 'by_request'
+          ? intl.formatMessage(messages.askKrew, { krew: krewName })
+          : intl.formatMessage(messages.openKrew);
 
   return (
     <>
@@ -303,32 +301,23 @@ export const ProjectAside: React.FC<{
         </Panel>
       )}
 
-      <section className='freethedream-panel'>
-        {project.membership === 'none' && (
-          <p className='freethedream__quiet'>
-            {intl.formatMessage(messages.getInvolved)}
-          </p>
-        )}
-        <KornerActionBar>
-          <KornerPill
-            variant={member ? 'default' : 'primary'}
-            label={intl.formatMessage(membershipLabel)}
-            onClick={handleMembership}
-          />
-        </KornerActionBar>
-      </section>
-
-      {confirmLeave && (
-        <ConfirmDialog
-          title={intl.formatMessage(messages.leaveOwnTitle, {
-            title: project.title,
-          })}
-          message={intl.formatMessage(messages.leaveOwnBody)}
-          confirmLabel={intl.formatMessage(messages.leave)}
-          destructive
-          onConfirm={handleLeave}
-          onCancel={cancelLeave}
-        />
+      {project.membership !== 'member' && (
+        <section className='freethedream-panel'>
+          {project.membership === 'none' && (
+            <p className='freethedream__quiet'>
+              {intl.formatMessage(messages.getInvolved, { krew: krewName })}
+            </p>
+          )}
+          <KornerActionBar>
+            <KornerPill
+              variant={
+                project.membership === 'requested' ? 'default' : 'primary'
+              }
+              label={membershipLabel}
+              onClick={handleMembership}
+            />
+          </KornerActionBar>
+        </section>
       )}
     </>
   );

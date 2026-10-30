@@ -1,7 +1,9 @@
 # FreeTheDream (`freethedream`)
 
 **Manifest:** `config/korners/freethedream.yaml` · **Mount:** `/hub/freethedream` ·
-`enforced: true` (native; live on the Hub since 2026-10-13, no feed card yet)
+`enforced: true` (native; live since 2026-10-13, no feed card yet) ·
+`hub_visible: false` (off the Hub and the rail since 2026-10-30: emergences
+live inside Krews and are reached from a Krew's page)
 
 ## Purpose
 
@@ -23,7 +25,7 @@ something, not the thing itself, so the words name the people:
 | **Actualise** (bring an idea to life)  | Jobs, Ideas              | `Item` kind `job`, `Claim`          |
 | **actualiser**; you **jump on board**  | claim a slot             | `Claim`                             |
 | **On offer**                           |                          | `Item` kind `offer`                 |
-| **Krew** (the emergence's people)      | Dreamers                 | the `Krew` it was made with         |
+| **Krew** (the emergence's people)      | Dreamers                 | the `Krew` it lives in (`krew_id`)  |
 
 It is built on a syntropic framework: collaboration is contributor-driven,
 and **Mycelium** (Syntropic World's synergistic audit, Tal 2026-10-19) is
@@ -98,27 +100,46 @@ five for one person
 
 ### The Krew
 
-Everyone in an emergence is in **its Krew** (Tal, 2026-10-15). The Krew is
-made when the emergence is seeded (`Project#ensure_krew!`; emergences seeded
-before then got theirs in `20261015130200_make_freethedream_krews`), named
-after it, seeded by its owner, and **open** or **Ask to join** to match the
-emergence. It's a real Krew: its page, its chat in Nudges, posting to it.
+**An emergence lives in a Krew, and a Krew can hold several** (Tal,
+2026-10-30, the proposals "More interconnectedness with krew space" and
+"Access of a FTD space"). The Krew is the home: its page shows its
+emergences as Konnected tiles, and **Konnect → New emergence** there opens
+the composer with `?konnect=krew:<id>`. The composer asks which of your
+Krews it lives in (`krew_id`, required for a new emergence; only an active
+Krew you're in), and the server Konnects the two
+(`Project#join_krew_members!`, `Kronk::AttachmentEffects.link!`). That link
+can't be taken off (`Kronk::ProjektLinks`), as a Krew album's can't.
 
-**The two hold the same people, both ways** (Tal: two-way). Joining the
-emergence puts you in the Krew and leaving takes you out
-(`Freethedream::Membership`); joining the Krew, from its page, an invite or
-its link, joins the emergence, and leaving the Krew leaves it
-(`KrewMembership`). Each side checks before it acts, so they don't loop.
-Leaving either takes you off what you were actualising and takes out what you
-shared from your Mycelium. Removing the emergence archives its Krew. The
-landing page's **Krew** row links to the Krew's page (**Open the Krew**), and
-the Krew's page leads back: the emergence is the first tile in its Spaces
-(`REST::KrewSerializer#emergence`), so it reads as that emergence's Krew and
-not a new one (Tal's proposal "'Open the Krew' Button", 2026-10-30). The
-button stays until Projekts live inside Krews.
+Until 2026-10-30 it was the other way round: seeding an emergence made a
+Krew of its own, named after it (`Project#ensure_krew!`, still there for an
+emergence that somehow has none). Those Krews stay, each holding the
+emergence it was made with, and `20261030180000_konnect_projekts_to_their_krews`
+Konnected each pair so their Krew pages show them.
 
-**One list of requests** (Tal, 2026-10-19: err syntropic). Asking to join a
-by-request emergence is a request to its Krew (`Project#ask_to_join!`),
+**The Krew's people are the emergence's people.** Everyone in the Krew is
+in each of its emergences: a new emergence starts with all of them, and
+joining the Krew, from its page, an invite or its link, joins every
+emergence in it (`KrewMembership#join_emergence`). Joining from an
+emergence's page joins the Krew (`Freethedream::Membership#join_krew`).
+Leaving is the Krew's: an emergence page has no Leave, and leaving the
+Krew leaves every emergence in it, taking you off what you were
+actualising and out of what you shared from your Mycelium. Removing an
+emergence leaves its Krew as it is. The landing page's **Krew** row links
+to the Krew's page (**Open the Krew**), and the Krew's page leads back
+through the emergence's tile in its Spaces (Tal's proposal "'Open the
+Krew' Button", 2026-10-30).
+
+**Who sees it follows the Krew** (Tal, 2026-10-30). An emergence in a
+listed Krew (open, Ask to join, or with requirements) can be looked at by
+anyone signed in, and only its people act in it; one in an invite-only Krew
+is as if it weren't there to anyone outside (`Project#visible_to?`; 404 on
+its page, its items and Join, and left out of All emergences). The way in
+is the Krew's too (`Project#joining_via_krew`, the `joining` field): **Join
+{Krew}** for an open Krew, **Ask to join {Krew}** for an Ask-to-join one,
+and **Open the Krew** for the rest, which are joined from the Krew's page.
+
+**One list of requests** (Tal, 2026-10-19: err syntropic). Asking to join an
+emergence in an Ask-to-join Krew is a request to that Krew (`Project#ask_to_join!`),
 whether asked on the emergence's page or the Krew's, and everyone in hears.
 Anyone in can let them in or say not now, from either page; the
 emergence's **Asking to join** panel is the Krew's list. Requests made on
@@ -316,18 +337,23 @@ only what's still being worked out.
 
 ### Who can do what
 
-- **Joining.** The seeder chooses per emergence: open to anyone, or by
-  request. Joining or leaving its Krew does the same (see The Krew).
+- **Joining.** It's the Krew's way in: open, Ask to join, or through the
+  Krew's page (see The Krew). An emergence no longer has its own choice.
 - **Inside an emergence, anyone who has joined** coalesces gangs and adds
   to Thing Bringing, Actualise and On offer. Whoever adds something
   **owns** it. Nobody has a veto over anyone else's piece, the seeder
   included.
 - **Ownership moves.** An owner can hand something to another member. If an
   owner leaves, what they made stays, and anyone in the emergence can take
-  it over. The owner of an emergence is asked before they leave it, since
-  leaving makes it up for grabs.
+  it over.
 
 ### Mycelium
+
+**Hidden for now** (Tal, 2026-10-30): with FreeTheDream off the Hub there
+is no clear home for it, so its view (`/hub/freethedream/mycelium` goes to
+every emergence) and **From my Mycelium** (`MYCELIUM_SHOWN` in
+`from_my_mycelium.tsx`) are off. Nothing is deleted; the API and what
+people listed are untouched. What follows is how it works when shown.
 
 Decided by Tal, 2026-10-19 (`docs/decisions.md`). Mycelium is the
 synergistic audit, named for the network under a forest that moves what

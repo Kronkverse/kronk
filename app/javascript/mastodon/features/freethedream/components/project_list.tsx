@@ -14,7 +14,7 @@ import { Loading, projectPath, useLoaded } from './shared';
 const messages = defineMessages({
   emptyAll: {
     id: 'freethedream.empty.all',
-    defaultMessage: 'No emergences yet. Seed one from the Ж menu.',
+    defaultMessage: 'No emergences yet. Start one from one of your Krews.',
   },
   emptyMine: {
     id: 'freethedream.empty.mine',

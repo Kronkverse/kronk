@@ -57,9 +57,13 @@ export const useAllKorners = (): ApiKornerJSON[] => {
 // so the top nav can resolve their icons and names, but they don't
 // belong on the Hub grid or the KornerSidebar. Filtering here keeps
 // consumers from repeating the `core !== true` check ad hoc (which
-// the KornerSidebar was missing before this landed).
+// the KornerSidebar was missing before this landed). A live space that
+// lives inside others (`hub_visible: false`, FreeTheDream inside Krews)
+// is left out the same way.
 export const useKorners = (): ApiKornerJSON[] => {
   return useAppSelector((state) =>
-    Object.values(state.korners).filter((k) => k.core !== true),
+    Object.values(state.korners).filter(
+      (k) => k.core !== true && k.hub_visible !== false,
+    ),
   );
 };

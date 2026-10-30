@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -11,7 +11,6 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
   FtdCategory,
   FtdCover,
-  FtdJoining,
   FtdProject,
 } from 'mastodon/api_types/freethedream';
 import {
@@ -20,13 +19,15 @@ import {
   ComposeHint,
   ComposeInput,
   ComposeSection,
+  ComposeSelect,
   ComposeTextarea,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
-import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { parseKonnectParam, useKonnect } from 'mastodon/hooks/useKonnect';
 
 import { NeedBoxes } from './need_boxes';
 import { CategoryChips, errorOf, parseLine } from './shared';
@@ -120,22 +121,20 @@ const messages = defineMessages({
     defaultMessage:
       'One thing to a box, with how many beside it; Enter for the next. Tap + More welcome where more is welcome. Gear that only one part needs goes in that part.',
   },
-  joining: {
-    id: 'freethedream.compose.joining',
-    defaultMessage: 'Who can join',
+  krew: { id: 'freethedream.compose.krew', defaultMessage: 'Krew' },
+  krewHint: {
+    id: 'freethedream.compose.krew_hint',
+    defaultMessage:
+      'It lives in this Krew: everyone in the Krew is in it, and who can see it follows the Krew.',
   },
-  open: { id: 'freethedream.joining.open', defaultMessage: 'Anyone' },
-  openHint: {
-    id: 'freethedream.joining.open_hint',
-    defaultMessage: 'They join with one tap.',
+  krewPick: {
+    id: 'freethedream.compose.krew_pick',
+    defaultMessage: 'Pick one of your Krews',
   },
-  byRequest: {
-    id: 'freethedream.joining.by_request',
-    defaultMessage: 'By request',
-  },
-  byRequestHint: {
-    id: 'freethedream.joining.by_request_hint',
-    defaultMessage: 'They ask, and you accept.',
+  krewNone: {
+    id: 'freethedream.compose.krew_none',
+    defaultMessage:
+      'An emergence lives in a Krew. Start or join a Krew first, then start it from the Krew page.',
   },
 });
 
@@ -145,7 +144,6 @@ interface ProjectDraftParams {
   title?: string;
   description?: string;
   endsOn?: string;
-  joining?: FtdJoining;
   sections?: string;
   gear?: string[];
   konnections?: KonnectTarget[];
@@ -172,8 +170,13 @@ export const ProjectComposer: React.FC<Props> = ({
   const [endsOn, setEndsOn] = useState(editing?.ends_on ?? '');
   const [cover, setCover] = useState<FtdCover | null>(editing?.cover ?? null);
   const [uploading, setUploading] = useState(false);
-  const [joining, setJoining] = useState<FtdJoining>(
-    editing?.joining ?? 'open',
+  // Which of your Krews a new emergence lives in. Started from a Krew's
+  // page (Konnect, New emergence) it is that Krew, and the Konnection is
+  // the server's to make, so it isn't made twice.
+  const source = useMemo(() => parseKonnectParam(window.location.search), []);
+  const availableKrews = useAvailableKrews();
+  const [krewId, setKrewId] = useState(
+    source?.slug === 'krew' ? source.id : '',
   );
   const [sections, setSections] = useState('');
   const [gear, setGear] = useState<string[]>([]);
@@ -187,7 +190,9 @@ export const ProjectComposer: React.FC<Props> = ({
   // Adding inside an emergence makes a gang; inside a gang, a fractal.
   const fractal = parent?.level === 'gang';
   // What a new one will be Konnected to (decisions.md, 2026-10-23).
-  const konnect = useKonnect('freethedream');
+  const konnect = useKonnect('freethedream', {
+    sourceHandled: source?.slug === 'krew',
+  });
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
@@ -200,7 +205,6 @@ export const ProjectComposer: React.FC<Props> = ({
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
       setEndsOn(p.endsOn ?? '');
-      setJoining(p.joining ?? 'open');
       setSections(p.sections ?? '');
       setGear(p.gear ?? []);
       restoreKonnect(p.konnections);
@@ -229,7 +233,6 @@ export const ProjectComposer: React.FC<Props> = ({
         title,
         description,
         endsOn,
-        joining,
         sections,
         gear,
         konnections: konnect.saved,
@@ -289,12 +292,10 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleCoverRemove = useCallback(() => {
     setCover(null);
   }, []);
-  const handleJoining = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setJoining(e.target.value === 'by_request' ? 'by_request' : 'open');
-    },
-    [],
-  );
+  const handleKrew = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setKrewId(e.target.value);
+  }, []);
+  const newTop = top && !editing;
 
   const handleSubmit = useCallback(() => {
     setBusy(true);
@@ -305,8 +306,8 @@ export const ProjectComposer: React.FC<Props> = ({
       ...(top
         ? {
             ends_on: endsOn || null,
-            joining,
             cover_media_attachment_id: cover?.id ?? null,
+            ...(editing ? {} : { krew_id: krewId }),
           }
         : {}),
     };
@@ -351,7 +352,7 @@ export const ProjectComposer: React.FC<Props> = ({
     endsOn,
     cover,
     fractal,
-    joining,
+    krewId,
     sections,
     gear,
     gearCategory,
@@ -388,7 +389,9 @@ export const ProjectComposer: React.FC<Props> = ({
       )}
       submittingLabel={intl.formatMessage(messages.saving)}
       submitting={busy}
-      canSubmit={title.trim().length > 0 && !uploading}
+      canSubmit={
+        title.trim().length > 0 && !uploading && (!newTop || krewId !== '')
+      }
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
@@ -403,6 +406,27 @@ export const ProjectComposer: React.FC<Props> = ({
         )}
         aria-label={intl.formatMessage(messages.name)}
       />
+      {newTop && (
+        <ComposeField
+          label={intl.formatMessage(messages.krew)}
+          hint={intl.formatMessage(
+            availableKrews.length > 0 ? messages.krewHint : messages.krewNone,
+          )}
+        >
+          {availableKrews.length > 0 && (
+            <ComposeSelect value={krewId} onChange={handleKrew}>
+              <option value='' disabled>
+                {intl.formatMessage(messages.krewPick)}
+              </option>
+              {availableKrews.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.name}
+                </option>
+              ))}
+            </ComposeSelect>
+          )}
+        </ComposeField>
+      )}
       <ComposeBody
         value={description}
         onChange={handleDescription}
@@ -482,36 +506,6 @@ export const ProjectComposer: React.FC<Props> = ({
             <ComposeHint>{intl.formatMessage(messages.gearHint)}</ComposeHint>
           </ComposeSection>
         </>
-      )}
-      {top && (
-        <ComposeSection title={intl.formatMessage(messages.joining)}>
-          <label className='freethedream-form__choice'>
-            <input
-              type='radio'
-              name='joining'
-              value='open'
-              checked={joining === 'open'}
-              onChange={handleJoining}
-            />
-            <span>
-              <strong>{intl.formatMessage(messages.open)}</strong>{' '}
-              {intl.formatMessage(messages.openHint)}
-            </span>
-          </label>
-          <label className='freethedream-form__choice'>
-            <input
-              type='radio'
-              name='joining'
-              value='by_request'
-              checked={joining === 'by_request'}
-              onChange={handleJoining}
-            />
-            <span>
-              <strong>{intl.formatMessage(messages.byRequest)}</strong>{' '}
-              {intl.formatMessage(messages.byRequestHint)}
-            </span>
-          </label>
-        </ComposeSection>
       )}
       {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>

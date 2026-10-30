@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-# Emergences and their gangs. Anyone seeds an emergence; anyone who has
-# joined it coalesces a gang. Only its owner changes or removes it.
+# Emergences (projekts) and their gangs. Anyone in a Krew starts a projekt
+# in it; anyone in the projekt coalesces a gang. Only its owner changes or
+# removes it. Who sees one follows its Krew (Project#visible_to?).
 class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseController
   before_action :set_project, except: [:index, :create]
 
@@ -10,27 +11,37 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
 
   def index
     scope = Freethedream::Project.top_level.includes(:owner, :cover).recent
-    scope = scope.where(id: Freethedream::Membership.where(account_id: current_account.id).select(:project_id)) if params[:scope] == 'mine'
+    mine = Freethedream::Membership.member.where(account_id: current_account.id).select(:project_id)
+    scope = if params[:scope] == 'mine'
+              scope.where(id: mine)
+            else
+              listed = scope.joins(:krew).where(krews: { archived_at: nil }).where.not(krews: { access: 'invite_only' })
+              scope.where(id: listed.select(:id)).or(scope.where(id: mine))
+            end
     render json: scope.limit(100).map { |project| view.project_summary(project) }
   end
 
   def show
+    require_visible!(@project)
     render json: view.project(@project)
   end
 
   # The latest updates alone, so an open page can keep its Activity live
   # without loading the whole project again.
   def activity
+    require_visible!(@project)
     render json: view.activity(@project)
   end
 
   def create
     parent = params.dig(:project, :parent_id).presence && Freethedream::Project.find(params[:project][:parent_id])
     require_member!(parent) if parent
+    krew = parent ? nil : own_krew
+    return render json: { error: 'Pick one of your Krews for it to live in' }, status: 422 if parent.nil? && krew.nil?
 
-    attrs = project_params.except(:done, :cover_media_attachment_id)
+    attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id)
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params[:cover_media_attachment_id].present?
-    project = Freethedream::Project.new(attrs.merge(parent: parent, owner: current_account))
+    project = Freethedream::Project.new(attrs.merge(parent: parent, owner: current_account, krew: krew))
     project.joining = 'open' if parent
     Freethedream::Project.transaction do
       project.save!
@@ -47,8 +58,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   def update
     permit!(@project.owned_by?(current_account))
 
-    attrs = project_params.except(:done, :cover_media_attachment_id)
-    attrs = attrs.except(:joining) unless @project.top?
+    attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id)
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params.key?(:cover_media_attachment_id)
     attrs[:done_at] = done_at(project_params[:done]) if project_params.key?(:done)
     was_done = @project.done?
@@ -65,21 +75,26 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render_empty
   end
 
-  # Join a project, or ask to when it's by request. Joining a part joins
-  # the project it's in.
+  # Join the projekt's Krew, or ask to, which is the way into the projekt
+  # (and every other projekt in that Krew). Joining a part joins the
+  # projekt it's in. An invite-only Krew is joined from its own page.
   def join
+    require_visible!(@project)
     top = @project.top
-    if top.open_joining?
-      top.add_member!(current_account)
-    else
-      top.ask_to_join!(current_account)
+    case top.joining_via_krew
+    when 'open' then top.add_member!(current_account)
+    when 'by_request' then top.ask_to_join!(current_account)
+    else raise Mastodon::NotPermittedError
     end
     render json: view.project(@project)
   end
 
-  # Leave, or withdraw a request (which leaves the Krew too).
+  # Withdraw a request to join. Someone in it leaves the Krew instead, from
+  # the Krew's page: being in a projekt is being in its Krew.
   def leave
-    @project.top.remove_member!(current_account)
+    top = @project.top
+    permit!(!top.member?(current_account))
+    top.remove_member!(current_account)
     render json: view.project(@project)
   end
 
@@ -148,7 +163,13 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   end
 
   def project_params
-    params.expect(project: [:title, :description, :ends_on, :joining, :done, :cover_media_attachment_id])
+    params.expect(project: [:title, :description, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id])
+  end
+
+  # The Krew a new projekt goes into: one of yours that is still going.
+  def own_krew
+    krew = Krew.active.find_by(id: project_params[:krew_id]) if project_params[:krew_id].present?
+    krew if krew&.member?(current_account)
   end
 
   # A cover must be an image the person setting it uploaded. Blank clears it.

@@ -9,7 +9,9 @@ export type FtdCategory =
   | 'connections';
 
 export type FtdItemKind = 'idea' | 'need' | 'job' | 'offer';
-export type FtdJoining = 'open' | 'by_request';
+// How someone outside joins: its Krew's way in (Project#joining_via_krew).
+// `krew` means through the Krew's own page (an invite or requirements).
+export type FtdJoining = 'open' | 'by_request' | 'krew';
 export type FtdMembership = 'none' | 'member' | 'requested';
 
 export interface FtdAccount {
@@ -243,7 +245,7 @@ export interface FtdProject {
   members: FtdAccount[];
   people: FtdPersonRow[];
   // The Krew made with the emergence: everyone in it is in the Krew.
-  krew: { id: string; slug: string; name: string } | null;
+  krew: { id: string; slug: string; name: string; access: string } | null;
   // emergence → gang → fractal (Kitchen → Cooking); nothing goes deeper.
   level: 'emergence' | 'gang' | 'fractal';
   // A gang's or fractal's people and what each is on there.

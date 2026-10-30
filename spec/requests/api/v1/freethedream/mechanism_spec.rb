@@ -19,8 +19,16 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
     response.parsed_body
   end
 
-  def start_project(user, **attrs)
-    api(user, :post, '/projects', project: { title: 'Mini Doof' }.merge(attrs))
+  # A projekt lives in a Krew: one of the user's own, open to join unless
+  # it is `by_request` (an ask-to-join Krew).
+  def start_project(user, joining: 'open', krew: nil, **attrs)
+    krew ||= Fabricate(:krew, seeded_by: user.account, access: joining == 'by_request' ? 'approval' : 'open')
+    api(user, :post, '/projects', project: { title: 'Mini Doof', krew_id: krew.id }.merge(attrs))
+  end
+
+  # Being in a projekt is being in its Krew, so that is what you leave.
+  def leave_krew(user, project)
+    Freethedream::Project.find(project['id']).krew.leave!(user.account)
   end
 
   it 'refuses signed-out requests' do
@@ -141,7 +149,7 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       api(cara, :post, "/projects/#{doof['id']}/join")
       stage = api(bob, :post, '/projects', project: { title: 'Live Stage', parent_id: doof['id'] })
 
-      api(bob, :post, "/projects/#{doof['id']}/leave")
+      leave_krew(bob, doof)
       body = api(cara, :get, "/projects/#{stage['id']}")
       expect(body['up_for_grabs']).to be true
       expect(body['can']['take_over']).to be true
@@ -315,7 +323,7 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       job = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sound tech' })
       api(bob, :post, "/items/#{job['id']}/claim")
 
-      api(bob, :post, "/projects/#{doof['id']}/leave")
+      leave_krew(bob, doof)
       expect(api(alice, :get, "/items/#{job['id']}")['claimers'].pluck('id')).to eq [alice.account_id.to_s]
     end
 
@@ -325,7 +333,7 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       van = grow(bob, 'Van')
       api(bob, :post, "/mycelium/#{van['id']}/offer", project_id: doof['id'])
 
-      api(bob, :post, "/projects/#{doof['id']}/leave")
+      leave_krew(bob, doof)
       expect(api(bob, :get, '/mycelium').first['offered_in']).to be_empty
     end
   end
@@ -350,22 +358,66 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(krew.krew_join_requests.pluck(:account_id)).to eq [bob.account_id]
     end
 
-    it 'makes a Krew with the emergence, seeded by its owner', :aggregate_failures do
-      doof = start_project(alice)
-      krew = krew_of(doof)
+    it 'lives in the Krew it was started in, Konnected to it', :aggregate_failures do
+      krew = Fabricate(:krew, seeded_by: alice.account)
+      krew.krew_memberships.create!(account: bob.account, role: 'member', source: 'direct')
+      doof = start_project(alice, krew: krew)
 
-      expect(krew).to have_attributes(name: 'Mini Doof', access: 'open', seeded_by_account_id: alice.account_id)
-      expect(krew.members).to contain_exactly(alice.account)
-      expect(doof['krew']).to include('id' => krew.id.to_s, 'slug' => krew.slug)
+      expect(krew_of(doof)).to eq krew
+      expect(Freethedream::Project.find(doof['id']).memberships.member.pluck(:account_id)).to contain_exactly(alice.account_id, bob.account_id)
+      expect(doof['krew']).to include('id' => krew.id.to_s, 'slug' => krew.slug, 'access' => 'open')
+      expect(Kronk::AttachmentEffects.between('freethedream', doof['id'].to_i, 'krew', krew.id)).to exist
     end
 
-    it 'joins and leaves the Krew with the emergence', :aggregate_failures do
+    it 'needs one of your own Krews to start one in', :aggregate_failures do
+      api(alice, :post, '/projects', project: { title: 'Mini Doof' })
+      expect(response).to have_http_status(422)
+
+      api(alice, :post, '/projects', project: { title: 'Mini Doof', krew_id: Fabricate(:krew).id })
+      expect(response).to have_http_status(422)
+    end
+
+    it 'holds several projekts in one Krew, with the same people', :aggregate_failures do
+      krew = Fabricate(:krew, seeded_by: alice.account)
+      doof = start_project(alice, krew: krew)
+      house = start_project(alice, krew: krew, title: 'Communal house')
+
+      api(bob, :post, "/projects/#{doof['id']}/join")
+      expect(api(bob, :get, "/projects/#{house['id']}")['membership']).to eq 'member'
+      expect(krew.reload.freethedream_projects.pluck(:title)).to contain_exactly('Mini Doof', 'Communal house')
+    end
+
+    it 'joins the Krew from the emergence, and leaves it only from the Krew', :aggregate_failures do
       doof = start_project(alice)
       api(bob, :post, "/projects/#{doof['id']}/join")
       expect(krew_of(doof).members).to contain_exactly(alice.account, bob.account)
 
       api(bob, :post, "/projects/#{doof['id']}/leave")
-      expect(krew_of(doof).members).to contain_exactly(alice.account)
+      expect(response).to have_http_status(403)
+
+      leave_krew(bob, doof)
+      expect(api(bob, :get, "/projects/#{doof['id']}")['membership']).to eq 'none'
+    end
+
+    it 'keeps an emergence in an invite-only Krew to its members', :aggregate_failures do
+      hidden = start_project(alice, krew: Fabricate(:krew, seeded_by: alice.account, access: 'invite_only'), title: 'Secret garden')
+      shown = start_project(alice)
+
+      api(bob, :get, "/projects/#{hidden['id']}")
+      expect(response).to have_http_status(404)
+      api(bob, :post, "/projects/#{hidden['id']}/join")
+      expect(response).to have_http_status(404)
+      expect(api(bob, :get, '/projects').pluck('id')).to eq [shown['id']]
+      expect(api(alice, :get, '/projects').pluck('id')).to contain_exactly(hidden['id'], shown['id'])
+      expect(api(alice, :get, "/projects/#{hidden['id']}")['joining']).to eq 'krew'
+    end
+
+    it 'keeps an emergence Konnected to its own Krew' do
+      doof = start_project(alice)
+      link = Kronk::AttachmentEffects.between('freethedream', doof['id'].to_i, 'krew', krew_of(doof).id).first
+
+      delete "/api/v1/attachments/#{link.id}", headers: headers_for(alice)
+      expect(response).to have_http_status(422)
     end
 
     it 'joins and leaves the emergence with the Krew', :aggregate_failures do

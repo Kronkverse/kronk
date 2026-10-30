@@ -40,8 +40,6 @@ import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
-import { useRecordName } from 'mastodon/hooks/useRecordName';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -434,25 +432,6 @@ const SpaceTile: React.FC<{
       glyph={<KrewSpaceIcon slug={slug} className='space-tile__glyph' />}
       label={korner?.name ?? slug}
     />
-  );
-};
-
-// The emergence this is the Krew of, first among its spaces, so the Krew
-// reads as that emergence's and leads back to it
-// (docs/spaces/freethedream.md, The Krew).
-const EmergenceTile: React.FC<{
-  emergence: NonNullable<ApiKrewJSON['emergence']>;
-}> = ({ emergence }) => {
-  const FreethedreamIcon = useKornerIcon('freethedream');
-  const noun = useRecordName().noun('freethedream');
-  return (
-    <li>
-      <Link to={`/hub/freethedream/p/${emergence.slug}`} className='space-tile'>
-        <FreethedreamIcon className='space-tile__glyph' />
-        <span className='space-tile__name'>{emergence.title}</span>
-        {noun && <span className='space-tile__kind'>{noun}</span>}
-      </Link>
-    </li>
   );
 };
 
@@ -901,29 +880,18 @@ export const KrewDetail = () => {
                 isMember ? <FormattedMessage {...messages.spaces} /> : undefined
               }
               excludeSlugs={konnectedSkip}
-              exclude={
-                krew.emergence
-                  ? [{ slug: 'freethedream', id: krew.emergence.id }]
-                  : undefined
-              }
               leading={
-                krew.emergence || isMember ? (
-                  <>
-                    {krew.emergence && (
-                      <EmergenceTile emergence={krew.emergence} />
-                    )}
-                    {isMember &&
-                      shownSpaces.map((slug) => (
-                        <li key={slug}>
-                          <SpaceTile
-                            slug={slug as 'albutts' | 'kalendar'}
-                            open={openNow === slug}
-                            onOpen={toggleSpace}
-                          />
-                        </li>
-                      ))}
-                  </>
-                ) : undefined
+                isMember
+                  ? shownSpaces.map((slug) => (
+                      <li key={slug}>
+                        <SpaceTile
+                          slug={slug as 'albutts' | 'kalendar'}
+                          open={openNow === slug}
+                          onOpen={toggleSpace}
+                        />
+                      </li>
+                    ))
+                  : undefined
               }
               renderKonnect={renderKonnect}
             />

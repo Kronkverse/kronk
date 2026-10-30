@@ -12,7 +12,6 @@ import type {
   FtdItem,
   FtdItemKind,
   FtdItemRow,
-  FtdJoining,
   FtdMyceliumItem,
   FtdProject,
   FtdProjectSummary,
@@ -28,8 +27,8 @@ export interface FtdProjectParams {
   title?: string;
   description?: string;
   ends_on?: string | null;
-  joining?: FtdJoining;
   cover_media_attachment_id?: string | null;
+  krew_id?: string;
   done?: boolean;
   parent_id?: string;
 }
