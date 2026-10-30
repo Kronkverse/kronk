@@ -122,7 +122,7 @@ konnect:
 
 compose:
   label: 'Seed a projekt'
-  route: '/hub/freethedream/composer'
+  route: '/hub/krew/composer/projekt'
 
 views:
   - { key: all, label: 'All projekts', tagline: 'Every projekt on Kronk' }

@@ -88,7 +88,7 @@ export const KrewProjekts: React.FC<{
         ))}
         {canStart && (
           <SpaceCard
-            to={`/hub/freethedream/composer${konnectSearch('krew', krewId)}`}
+            to={`/hub/krew/composer/projekt${konnectSearch('krew', krewId)}`}
             placeholder='+'
             title={intl.formatMessage(messages.newProjekt)}
           />

@@ -81,6 +81,8 @@ export interface FtdProjectSummary {
   members_count: number;
   progress: FtdProgress;
   membership: FtdMembership;
+  // The Krew it lives in, for its address (/hub/krew/<krew>/p/<projekt>).
+  krew_slug: string | null;
 }
 
 export interface FtdSectionRow {
@@ -271,6 +273,8 @@ export interface FtdProject {
 }
 
 export interface FtdItem extends FtdItemRow {
+  // Its projekt's Krew, for its address (/hub/krew/<krew>/i/<item>).
+  krew_slug: string | null;
   body: string;
   root: FtdRef;
   up_for_grabs: boolean;

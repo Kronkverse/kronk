@@ -12,7 +12,7 @@ import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { act } from './act';
 import { ItemComposer } from './item_composer';
-import { Loading, projectPath, useLoaded } from './shared';
+import { Loading, projectPath, useKrewAddress, useLoaded } from './shared';
 import type { WorkList } from './work';
 import { RENAMED_LISTS, WorkBody, isWorkList, workMessages } from './work';
 
@@ -43,6 +43,7 @@ const WorkView: React.FC<{
 }> = ({ project, list, onChange }) => {
   const intl = useIntl();
   const [offering, setOffering] = useState(false);
+  useKrewAddress(project.krew?.slug);
   // The space badge goes back to the page this list belongs to.
   useSpaceBack({
     href: projectPath(project),

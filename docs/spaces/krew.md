@@ -199,8 +199,10 @@ All in `app/javascript/mastodon/features/krew/`.
     row of cards (`krew_projekts.tsx`, the kit's `SpaceGrid` row): each
     projekt's cover, title, how many people and how much of what it needs
     is sorted, opening the projekt. For members a last card, **New
-    projekt**, opens the projekt composer with this Krew picked
-    (`?konnect=krew:<id>`). `GET /api/v1/freethedream/projects?krew_id=`
+    projekt**, opens the projekt composer (`/hub/krew/composer/projekt`)
+    with this Krew picked (`?konnect=krew:<id>`). A projekt's pages are
+    under its Krew (`/hub/krew/<krew>/p/<projekt>`), so back from one comes
+    here (docs/spaces/freethedream.md, The Krew). `GET /api/v1/freethedream/projects?krew_id=`
     lists them, only to people who could open them (an invite-only Krew's
     to its members). Anyone else sees the section on a listed Krew, without
     New projekt, and nothing when there are none.

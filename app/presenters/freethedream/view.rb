@@ -47,6 +47,7 @@ module Freethedream
         members_count: Membership.member.where(project_id: project.top_id).count,
         progress: tree.progress(project.id),
         membership: membership_state(project),
+        krew_slug: project.top.krew&.slug,
       }
     end
 
@@ -360,6 +361,7 @@ module Freethedream
       item_row(item).merge(
         body: item.body,
         root: { id: root.id.to_s, slug: root.slug, title: root.title },
+        krew_slug: root.krew&.slug,
         up_for_grabs: item.up_for_grabs?,
         placements: item.projects.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         offers: item.need_kind? ? item.offers.includes(:owner, :need).order(:created_at).map { |o| item_row(o) } : [],
