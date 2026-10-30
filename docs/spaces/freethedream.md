@@ -1,6 +1,6 @@
 # FreeTheDream (`freethedream`)
 
-**Manifest:** `config/korners/freethedream.yaml` · **Mount:** `/hub/freethedream` ·
+**Manifest:** `config/korners/freethedream.yaml` · **Mount:** under its Krew, `/hub/krew/<krew>/p/<projekt>` ·
 `enforced: true` (native; live since 2026-10-13, no feed card yet) ·
 `hub_visible: false` (off the Hub and the rail since 2026-10-30: emergences
 live inside Krews and are reached from a Krew's page)
@@ -131,10 +131,22 @@ Krew you're in), and the server Konnects the two
 (`Project#join_krew_members!`, `Kronk::AttachmentEffects.link!`). That link
 can't be taken off (`Kronk::ProjektLinks`), as a Krew album's can't.
 
-**Back from a projekt is its Krew** (Tal, 2026-10-30): the space badge on
-a projekt names its Krew and goes there, as a gang's goes to its projekt
-(`useSpaceBack`). `AutoSpaceBadge` takes a parent outside the korner only
-for a korner that lives inside another space (`hub_visible: false`).
+**A projekt lives inside its Krew, not in a space of its own** (Tal,
+2026-10-30). Its pages are under the Krew: `/hub/krew/<krew>/p/<projekt>`
+(a gang's and a fractal's too, `…/p/<projekt>/<list>` for a list of its
+work) and `/hub/krew/<krew>/i/<item>`, so they wear the Krew's badge and
+back goes to the Krew (a gang's to its projekt). There is no list of every
+projekt and no settings page: `/hub/freethedream`, its views and
+`/hub/freethedream/settings` go to your Krews. The composer is
+`/hub/krew/composer/projekt` (the manifest's `compose.route`), over the
+Krews page; the Krew page's New projekt and the Konnect picker's New
+projekt open it with `?konnect=<source>`, and Cancel goes back there. The
+korner itself stays, out of sight (`hub_visible: false`): its manifest is
+what Konnect, link previews and search read. Addresses the server makes
+(`path:` on the primary resource, notifications) are still
+`/hub/freethedream/p/<id>` and `/i/<id>`; the page moves them under the
+Krew once it knows it (`useKrewAddress`, from `krew` on a projekt and
+`krew_slug` on an item or a list row).
 
 Until 2026-10-30 it was the other way round: seeding an emergence made a
 Krew of its own, named after it (`Project#ensure_krew!`, still there for an

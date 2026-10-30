@@ -352,6 +352,7 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       start_project(alice, krew: hidden, title: 'Secret doof')
 
       expect(api(bob, :get, '/projects', krew_id: krew.id).pluck('title')).to contain_exactly('Mini Doof', 'First album')
+      expect(api(bob, :get, '/projects', krew_id: krew.id).pluck('krew_slug').uniq).to eq [krew.slug]
       expect(api(bob, :get, '/projects', krew_id: hidden.id)).to eq []
       expect(api(alice, :get, '/projects', krew_id: hidden.id).pluck('title')).to eq ['Secret doof']
     end

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import type {
   FtdAccount,
@@ -71,15 +71,56 @@ export const errorOf = (e: unknown): string | null => {
   return null;
 };
 
+// Projekts live inside Krews (Tal, 2026-10-30): a projekt's page is
+// /hub/krew/<krew>/p/<projekt>, an item's /hub/krew/<krew>/i/<item>. The
+// tail is what the old /hub/freethedream addresses had, so those forward by
+// swapping the front (useKrewAddress). The Krew comes from the record when
+// it says, else from the page's own address (every page inside a projekt
+// is under its Krew), else the old address, which forwards once it loads.
+const KREW_IN_PATH = /^\/hub\/krew\/([^/]+)\/[pi]\//;
+
+const homeOf = (krewSlug?: string | null) => {
+  const slug = krewSlug ?? KREW_IN_PATH.exec(window.location.pathname)?.[1];
+  return slug ? `/hub/krew/${slug}` : '/hub/freethedream';
+};
+
 // A project's page, by name (decisions.md, 2026-10-22). `rest` is a list
 // under it, like '/actualise'.
 export const projectPath = (
-  project: { id: string; slug?: string },
+  project: {
+    id: string;
+    slug?: string;
+    krew?: { slug: string } | null;
+    krew_slug?: string | null;
+  },
   rest = '',
-): string => `/hub/freethedream/p/${project.slug ?? project.id}${rest}`;
+): string =>
+  `${homeOf(project.krew?.slug ?? project.krew_slug)}/p/${project.slug ?? project.id}${rest}`;
 
-export const itemPath = (item: { id: string; slug?: string }): string =>
-  `/hub/freethedream/i/${item.slug ?? item.id}`;
+export const itemPath = (item: {
+  id: string;
+  slug?: string;
+  krew_slug?: string | null;
+}): string => `${homeOf(item.krew_slug)}/i/${item.slug ?? item.id}`;
+
+// An old /hub/freethedream/(p|i)/… address (a notification, a link
+// preview, a Konnected tile) moves under its Krew once the page knows it.
+export const useKrewAddress = (krewSlug?: string | null) => {
+  const history = useHistory();
+  const location = useLocation();
+  useEffect(() => {
+    if (!krewSlug || !location.pathname.startsWith('/hub/freethedream/')) {
+      return;
+    }
+    history.replace({
+      ...location,
+      pathname: location.pathname.replace(
+        '/hub/freethedream/',
+        `/hub/krew/${krewSlug}/`,
+      ),
+    });
+  }, [krewSlug, location, history]);
+};
 
 // Load something by key; `reload` fetches again, `set` replaces it with a
 // fresh copy an action returned.

@@ -34,13 +34,14 @@ import {
   Crumbs,
   formatAmount,
   formatNeed,
+  itemPath,
   kindMessages,
   Loading,
   People,
-  itemPath,
   Person,
   projectPath,
   Section,
+  useKrewAddress,
   useLoaded,
 } from './shared';
 import { Talk } from './talk';
@@ -188,6 +189,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   const cancelRemove = useCallback(() => {
     setConfirmRemove(false);
   }, []);
+  useKrewAddress(item.krew_slug);
   // The space badge goes back to the part the item lives in.
   const home = item.placements[0] ?? item.root;
   useSpaceBack({ href: projectPath(home), label: home.title });

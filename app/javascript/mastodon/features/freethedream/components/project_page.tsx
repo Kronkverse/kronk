@@ -38,7 +38,14 @@ import { ItemComposer } from './item_composer';
 import { KrewRow } from './krew_row';
 import { ProjectAside, ProjectEvent, Yours } from './overview';
 import { ProjectComposer } from './project_composer';
-import { itemPath, Loading, projectPath, Section, useLoaded } from './shared';
+import {
+  itemPath,
+  Loading,
+  projectPath,
+  Section,
+  useKrewAddress,
+  useLoaded,
+} from './shared';
 import { Talk } from './talk';
 import { Updates } from './updates';
 import {
@@ -265,9 +272,10 @@ const ProjectView: React.FC<{
     ...project.sections.filter((g) => !mineById.has(g.id)),
   ].map((g) => mineById.get(g.id) ?? g);
   const cover = project.cover?.url ?? project.event?.image_url;
+  useKrewAddress(project.krew?.slug);
   // The space badge goes one layer up: a gang's to the projekt, a
   // fractal's to its gang, and a projekt's to the Krew it lives in (Tal,
-  // 2026-10-30), not the list of every projekt.
+  // 2026-10-30).
   const parent = project.ancestors[project.ancestors.length - 1];
   const krew = project.krew;
   useSpaceBack(
