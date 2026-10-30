@@ -86,6 +86,9 @@ module Freethedream
         depends_on: project.depends_on.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         needed_by: project.needed_by.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         updates: updates(tree.subtree_ids(project.id)),
+        # In a Komponent you joined: on it, and on its fractals (where
+        # joining means the Komponent).
+        in_gang: tree.joined?(Freethedream::GangNudges.gang_of(project)&.id, @viewer&.id),
         membership: membership_state(project),
         members_count: Membership.member.where(project_id: top.id).count,
         members: project.top? ? Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
@@ -107,6 +110,7 @@ module Freethedream
           hand_over: owner && member,
           comment: member,
           link_event: member,
+          join_gang: member && project.gang?,
         },
       }
     end
@@ -243,6 +247,7 @@ module Freethedream
         done: section.done?,
         sections_count: tree.children(section.id).size,
         people_count: tree.people_in(section.id).size,
+        joined: tree.joined?(section.id, @viewer&.id),
         progress: tree.progress(section.id),
       }
     end
@@ -511,6 +516,12 @@ module Freethedream
         @by_parent = @parts.group_by(&:parent_id)
         @by_id = ([top] + @parts).index_by(&:id)
         @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account).to_a
+        @joined = GangMember.where(project_id: @parts.map(&:id)).pluck(:project_id, :account_id).group_by(&:first).transform_values { |rows| rows.map(&:last) }
+      end
+
+      # Whether `account_id` joined the Komponent `id`.
+      def joined?(id, account_id)
+        id.present? && account_id.present? && (@joined[id] || []).include?(account_id)
       end
 
       attr_reader :parts
@@ -524,10 +535,12 @@ module Freethedream
       end
 
       # Everyone with a hand in a project or section: whoever owns it or
-      # anything in it, has taken a job in it or is bringing something.
+      # anything in it, has taken a job in it or is bringing something, and
+      # whoever joined it.
       def people_in(id)
         ids = subtree_ids(id)
         people = Set.new(ids.map { |part| @by_id[part]&.owner_id })
+        ids.each { |part| people.merge(@joined[part] || []) }
         items_in(ids).each do |item|
           people << item.owner_id
           item.claims.each { |claim| people << claim.account_id }

@@ -42,6 +42,7 @@ module Freethedream
     has_many :dependent_links, class_name: 'Freethedream::Dependency', foreign_key: :depends_on_id, inverse_of: :depends_on, dependent: nil
     has_many :needed_by, through: :dependent_links, source: :project
     has_many :comments, class_name: 'Freethedream::Comment', as: :subject, dependent: :delete_all
+    has_many :gang_members, class_name: 'Freethedream::GangMember', dependent: nil
     has_many :activities, class_name: 'Freethedream::Activity', dependent: nil
 
     enum :joining, { open: 0, by_request: 1 }, suffix: :joining, validate: true

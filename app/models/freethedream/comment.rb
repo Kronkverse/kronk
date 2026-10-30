@@ -23,6 +23,8 @@ module Freethedream
     validate :quotes_from_the_same_emergence, on: :create
 
     scope :oldest_first, -> { order(:created_at, :id) }
+
+    after_create_commit { Freethedream::GangNudges.comment_made(self) }
     scope :threads, -> { where(parent_id: nil) }
 
     def resolved?

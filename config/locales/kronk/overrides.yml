@@ -204,7 +204,9 @@ en:
         mentioned: "%{who} mentioned you"
         replied: "%{who} replied to your post"
       freethedream:
-        mentioned: "%{who} tagged you in an emergence’s talk"
+        gang_talked: "%{who} said something in a Komponent you joined"
+        gang_updated: "%{who} added to a Komponent you joined"
+        mentioned: "%{who} tagged you in a projekt’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
       generic: "%{who} has something for you in %{korner}"
       huddle:
@@ -478,7 +480,9 @@ en-GB:
         mentioned: "%{who} mentioned you"
         replied: "%{who} replied to your post"
       freethedream:
-        mentioned: "%{who} tagged you in an emergence’s talk"
+        gang_talked: "%{who} said something in a Komponent you joined"
+        gang_updated: "%{who} added to a Komponent you joined"
+        mentioned: "%{who} tagged you in a projekt’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
       generic: "%{who} has something for you in %{korner}"
       huddle:

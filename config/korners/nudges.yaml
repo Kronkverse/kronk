@@ -218,6 +218,29 @@ listens:
     interaction: interactive
     cta_label: 'Have a look'
     cta_route: '/hub/freethedream/i/{item_id}'
+  # Something happened in a Komponent you joined (Freethedream::GangNudges):
+  # talk in it, or something added to it. Directed: you asked to hear. A
+  # burst collapses into one.
+  - event: freethedream.gang.talked
+    source_korner: freethedream
+    verb: gang_talked
+    directed: true
+    source_type: Freethedream::Project
+    source_id_key: project_id
+    interaction: interactive
+    cta_label: 'See the talk'
+    cta_route: '/hub/freethedream/p/{project_id}'
+    aggregation: { window: 10m }
+  - event: freethedream.gang.updated
+    source_korner: freethedream
+    verb: gang_updated
+    directed: true
+    source_type: Freethedream::Project
+    source_id_key: project_id
+    interaction: interactive
+    cta_label: 'Have a look'
+    cta_route: '/hub/freethedream/p/{project_id}'
+    aggregation: { window: 10m }
   - event: kuestions.question.answered
     source_korner: kuestions
     verb: answered
