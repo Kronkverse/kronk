@@ -55,11 +55,11 @@ export const workMessages = defineMessages({
 const hints = defineMessages({
   needed: {
     id: 'freethedream.work.needed.hint',
-    defaultMessage: 'What’s missing, across every gang',
+    defaultMessage: "What's missing, across every gang",
   },
   bring: {
     id: 'freethedream.work.bring.hint',
-    defaultMessage: 'Gear and supplies needed',
+    defaultMessage: 'Things, skills, time and money it needs',
   },
   actualise: {
     id: 'freethedream.work.actualise.hint',

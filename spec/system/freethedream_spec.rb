@@ -48,7 +48,7 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     krew = Fabricate(:krew, seeded_by: bob.account, name: 'Mayhem')
 
     visit '/hub/freethedream/composer'
-    fill_in placeholder: 'Mini Doof, Live Stage, First album…', with: 'Mini Doof'
+    fill_in placeholder: 'A doof, an album, an app, a co-op…', with: 'Mini Doof'
     expect(page).to have_button('Seed', disabled: true)
     select 'Mayhem', from: 'Krew'
     click_on 'Seed'
@@ -70,7 +70,7 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     find('.krew-detail__projekts .space-card', text: 'New projekt', wait: 20).click
 
     expect(page).to have_select('Krew', selected: 'Mayhem')
-    fill_in placeholder: 'Mini Doof, Live Stage, First album…', with: 'Mini Doof'
+    fill_in placeholder: 'A doof, an album, an app, a co-op…', with: 'Mini Doof'
     click_on 'Seed'
 
     expect(page).to have_current_path(%r{/hub/freethedream/p/})

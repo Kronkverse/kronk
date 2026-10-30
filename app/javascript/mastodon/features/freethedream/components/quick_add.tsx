@@ -27,12 +27,14 @@ import {
 const messages = defineMessages({
   need: {
     id: 'freethedream.quick.need',
-    defaultMessage: 'Add what’s needed: gas bottle, plates',
+    defaultMessage:
+      "Add what's needed: 30 plates, a lawyer's eye, 10 hours of testing",
   },
   howMany: { id: 'freethedream.quick.how_many', defaultMessage: 'How many' },
   job: {
     id: 'freethedream.quick.actualise',
-    defaultMessage: 'An idea to bring to life: a spit roast, a fire twirler',
+    defaultMessage:
+      'An idea to bring to life: a launch night, a handbook, a fire twirler',
   },
   add: { id: 'freethedream.quick.add', defaultMessage: 'Add' },
   added: { id: 'freethedream.quick.added', defaultMessage: 'Added {what}' },

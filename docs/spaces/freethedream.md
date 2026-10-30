@@ -21,6 +21,18 @@ organise the work from the bottom up: anyone in an emergence can coalesce a
 gang, say what needs bringing, offer what they have and bring an idea to
 life. Nobody approves from above.
 
+**Any kind of shared effort** (Tal, 2026-10-30). A projekt is not only an
+in-person event: it can be a gathering, a creative work, a tool being built
+(the Mainframe Krew with gangs for the app and for shadow) or an
+organisation taking shape (gangs for its constitution and its
+incorporation). Nothing in the mechanism assumes a date or a place, so the
+words don't either. The composer's examples mix those kinds, its date is
+**When (optional)** for a day it happens or is due, **What it needs** asks
+for things, skills, time, money or space (the item categories), and an
+event is an offer on the Overview (**Getting together for it?**), not a
+given. Write new copy the same way: no example or label that only fits a
+party.
+
 **The words** (Tal, 2026-10-15). The nucleus is the people creating
 something, not the thing itself, so the words name the people:
 
