@@ -82,6 +82,16 @@ fill calms as you zoom in).
   names, and names people have added, and flies there.
 - **From a profile**: "Born on" and "Living on <name> Country" each link to
   `/hub/map?country=<name>`, which turns the layer on and opens that Country.
+- **On everything with a place**: a Mate's pin, a Place (card and page), an
+  Event pin and a Trek say the Country they're on ("On Kaurna Country";
+  "Through Kaurna and Peramangk Country" for a Trek), each opening it here.
+  The server works it out from the point (`Kronk::FirstNationsCountries`,
+  from the same shapes): `country: { id, name }` on presence, places and
+  events, `countries: [...]` on treks (only with the route). A pin's Country
+  comes from its coarsened point, so it says no more than the pin. The shapes
+  are approximate, so near a border it can name the neighbour; a coastal town
+  just off the traced coast takes the nearest Country within about 15 km; out
+  at sea there is none, and a shape with no name yet says nothing.
 - **Names** are drawn in Kronk's own type as small markers, each shown only
   when it fits inside its Country at that zoom, and none until zoom 4 (at
   Australia-wide only Mardu fits, and a lone name read as if it were picked;

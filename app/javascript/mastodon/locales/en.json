@@ -2380,6 +2380,8 @@
   "map.country.remove_name": "Take {name} off the list",
   "map.country.show": "First Nations Country",
   "map.country.unnamed": "Not named yet",
+  "map.country_line.on": "On {name} Country",
+  "map.country_line.through": "Through {names} Country",
   "map.in_view.empty": "No mates in view. Zoom out.",
   "map.in_view.toggle": "{count, plural, one {# mate} other {# mates}} in view",
   "map.logger.activity": "Activity",

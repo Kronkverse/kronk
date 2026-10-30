@@ -18,6 +18,8 @@ import { LoadingState } from 'mastodon/components/loading_state';
 import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
+import { CountryLine } from './country_line';
+
 // A Place's page, /hub/map/places/:id (the `path:` on map.yaml's primary
 // resource, so every Konnection to a Place opens here). Built from the
 // kit: <KornerDetail> with the pin as its hero, the address as subtitle,
@@ -159,6 +161,7 @@ export const PlacePage: React.FC<{ id: string }> = ({ id }) => {
       }
       attached={{ korner: 'map', id: place.id, canManage: place.is_owner }}
     >
+      <CountryLine country={place.country} />
       {confirmDialog}
     </KornerDetail>
   );
