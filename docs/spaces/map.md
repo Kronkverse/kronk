@@ -78,6 +78,12 @@ fill calms as you zoom in).
 - **Tap a Country** for its card: "<name> Country", and, when the name is on
   the Country list (`first_nations_countries.ts`), its region, group and other
   spellings; other names written on the same shape; the boundaries note.
+- **Pin-drop**: when you place your pin and it lands on a named Country that
+  isn't already where your profile says you live, a card at the top asks
+  "You're on <name> Country. Add it as where you live?" **Add** saves it as
+  your profile's "Living on <name> Country"; **Not now** leaves it
+  (`country_prompt.tsx`). It uses the Country of your pin's coarsened point,
+  so near a border it can be the neighbour: you're asked, not told.
 - **Find a Country**: a search box under the button matches any of those
   names, and names people have added, and flies there.
 - **From a profile**: "Born on" and "Living on <name> Country" each link to
