@@ -1,4 +1,5 @@
 import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
+import type { ApiMapCountryJSON } from 'mastodon/api/map';
 
 // Map — Treks API client. Mirrors app/controllers/api/v1/map/treks_controller.rb.
 // A trek's `route` is the already privacy-trimmed slice (or null); `distance_m`
@@ -34,6 +35,8 @@ export interface ApiTrekJSON {
   trimmed_m: number;
   has_route: boolean;
   route: [number, number][] | null; // [lng, lat]
+  // The First Nations Countries the route passes through, in order.
+  countries?: ApiMapCountryJSON[];
   state: TrekState;
   status_id: string | null; // the linked timeline Status, when published
   // The published post's reach; comments mirror it. Null while a draft.

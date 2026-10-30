@@ -117,6 +117,8 @@ class Api::V1::Map::EventsController < Api::BaseController
       lat: coords[:lat],
       lng: coords[:lng],
       zoom: coords[:zoom],
+      # The First Nations Country it is on (Kronk::FirstNationsCountries).
+      country: Kronk::FirstNationsCountries.at(coords[:lat], coords[:lng]),
       host: {
         acct: event.account.acct,
         display_name: event.account.display_name.presence || event.account.username,

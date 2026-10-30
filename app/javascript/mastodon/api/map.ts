@@ -12,6 +12,14 @@ export type MapPrecision = 'hood' | 'city';
 // that scope.
 export type MapShareScope = 'friends';
 
+// The First Nations Country something is on, from the server
+// (Kronk::FirstNationsCountries): the map shape's id, and its name when it
+// has one yet.
+export interface ApiMapCountryJSON {
+  id: number;
+  name: string | null;
+}
+
 export interface ApiPresencePinJSON {
   account_id: string;
   name: string;
@@ -21,6 +29,8 @@ export interface ApiPresencePinJSON {
   lng: number;
   precision: MapPrecision;
   radius: number; // metres — the visible fuzz circle
+  // The First Nations Country the (coarsened) pin is on.
+  country?: ApiMapCountryJSON | null;
   label: string | null;
   // Short user-authored blurb ("Travelling China") shown on the pin
   // card. Distinct from `label`, which is the geocoded place name.
@@ -98,6 +108,7 @@ export interface ApiMapEventPinJSON {
   zoom: number | null;
   host: { acct: string; display_name: string };
   going_count: number;
+  country?: ApiMapCountryJSON | null;
 }
 
 // Your events: the ones you host, and the ones you're going to or
