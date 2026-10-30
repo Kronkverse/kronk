@@ -36,6 +36,20 @@ RSpec.describe 'Map Country', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.map-country__card', text: 'Mardu Country')
   end
 
+  it 'shows who lives on a Country, and leaving for their profile keeps the page up' do
+    visit '/@ana'
+    click_on 'Living on Mardu Country'
+
+    within('.map-country__card') do
+      expect(page).to have_text('Living here')
+      find('.map-country__person[href="/@ana"]').click
+    end
+
+    expect(page).to have_current_path('/@ana')
+    expect(page).to have_link('Born on Kaurna Country')
+    expect(page).to have_no_css('.error-boundary')
+  end
+
   it 'adds another name to a Country from its card' do
     visit '/@ana'
     click_on 'Living on Mardu Country'
