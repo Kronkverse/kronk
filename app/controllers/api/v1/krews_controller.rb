@@ -29,13 +29,14 @@ class Api::V1::KrewsController < Api::BaseController
     scope = case params[:scope]
             when 'mine'
               # Krews the viewer belongs to (member or seeder). Includes
-              # non-listed ones — private krews only surface here.
-              current_account.krews.reorder(last_activity_at: :desc)
+              # non-listed ones — private krews only surface here. An
+              # archived Krew drops out (its page still opens by link).
+              current_account.krews.active.reorder(last_activity_at: :desc)
             when 'all'
               # Listed + viewer's own, union'd. Useful for the Ж menu
               # "Krews" surface where users want both.
               listed = Krew.listed
-              mine   = current_account&.krews || Krew.none
+              mine   = current_account&.krews&.active || Krew.none
               Krew.where(id: listed.select(:id)).or(Krew.where(id: mine.select(:id))).reorder(last_activity_at: :desc)
             else
               Krew.listed.order(last_activity_at: :desc)
