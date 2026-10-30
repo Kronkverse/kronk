@@ -9,16 +9,17 @@ import {
 import { KornerShell } from 'mastodon/components/korner_shell';
 
 import { WachuneedBrands } from './brands_view';
+import { WachuneedHome } from './home_view';
 import { WachuneedRequests } from './requests_view';
-import { ShopRow } from './shop_row';
 import { WachuneedShops } from './shops_view';
 import { WachugotListings } from './wachugot_view';
 import { WachuneedListings } from './wachuneed_view';
 
-// /hub/wachuneed — Wachuneed landing. Six views, all rendered
+// /hub/wachuneed — Wachuneed landing. Seven views, all rendered
 // through the shared KornerShell:
 //
-//   /hub/wachuneed         → offered (live listings on offer)
+//   /hub/wachuneed         → home    (rows of Offered, Desired and Shops)
+//   /hub/wachuneed/offered → offered (live listings on offer)
 //   /hub/wachuneed/desired → desired (what people are looking for)
 //   /hub/wachuneed/shops   → shops   (every shop with something on offer)
 //   /hub/wachuneed/brands  → brands  (brands members back; ?show=proposed)
@@ -42,11 +43,10 @@ const OLD_SECTIONS: Record<string, string> = {
   '/hub/wachuneed/wachugot': '/hub/wachuneed/mine',
 };
 
+const renderHome = () => <WachuneedHome />;
+
 const renderOffered = () => (
-  <>
-    <ShopRow />
-    <WachuneedListings loader={apiGetWachuneedListings} scope='offered' />
-  </>
+  <WachuneedListings loader={apiGetWachuneedListings} scope='offered' />
 );
 
 const renderDesired = () => (
@@ -73,8 +73,9 @@ const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
       slug='wachuneed'
       label={intl.formatMessage(messages.title)}
       className='scrollable wachuneed'
-      defaultView='offered'
+      defaultView='home'
       views={{
+        home: renderHome,
         offered: renderOffered,
         desired: renderDesired,
         shops: renderShops,

@@ -45,14 +45,23 @@ the same way: "Message the poster".
 
 ## What you can do
 
-**Browse.** `/hub/wachuneed` has six sections (manifest `views`, rotator
+**Browse.** `/hub/wachuneed` has seven sections (manifest `views`, rotator
 header). The space is Wachuneed; the sections have plain names (Tal,
 2026-10-12; they were Wachuneed, Wachumissing and Wachugot, and the old
 addresses redirect):
 
-- **Offered** (default): everyone's `live` listings on offer
-  (`?kind=offer`), newest first, in the shared `SpaceGrid`
-  (`features/wachuneed/wachuneed_view.tsx`).
+- **All** (default, `/hub/wachuneed`; Tal, 2026-10-29, Kommons "Home
+  Page", https://kronk.info/hub/kommons/p/117522482475089755): one page
+  that scrolls down, with a row that scrolls sideways, the next tile
+  peeking in (`<SpaceGrid layout='row'>`), for each of **Offered**,
+  **Desired** and **Shops**, in that order (`home_view.tsx`). Each row
+  shows the first 12 (listings newest first, shops in the Shops order)
+  and has **See all**, which opens that section. A row with nothing in it
+  is left out; with nothing anywhere the page says "Nothing on offer yet"
+  and offers **List something**.
+- **Offered** (`/hub/wachuneed/offered`; the default until 2026-10-29):
+  everyone's `live` listings on offer (`?kind=offer`), newest first, in the
+  shared `SpaceGrid` (`features/wachuneed/wachuneed_view.tsx`).
 - **Desired** (`/hub/wachuneed/desired`): everyone's `live` wanted
   listings (`?kind=wanted`), with a **Post a wanted ad** button above the
   grid.
@@ -165,13 +174,12 @@ appearing in Offered and the feed exactly as before.
   shop with something on offer as a tile in the standard grid
   (`shop_card.tsx`, a `<SpaceCard>`): the shop's picture (the cover of its
   newest item when it has none, then the seller's avatar), its name, how
-  many listings, and the place as the chip. Offered opens with the first
-  four shops as the same cards under **Shops** (`shop_row.tsx`), with
-  **All shops** when there are more, then **Listings**. Mine opens the
-  same way with your own shop under **My shop** (Tal, 2026-10-13: cards
-  in place of the pills on Offered and of the See my shop / Edit shop
-  buttons on Mine); with no shop Mine shows just your listings. Order in
-  Shops and Offered: your Mates' shops first, then the
+  many listings, and the place as the chip. The landing's **Shops** row
+  shows the same cards (Offered opened with the first four until
+  2026-10-29). Mine opens with your own shop as the same card under **My
+  shop** (`shop_row.tsx`; Tal, 2026-10-13: a card in place of the See my
+  shop / Edit shop buttons); with no shop Mine shows just your listings.
+  Order in Shops and the landing: your Mates' shops first, then the
   oldest shop first, up to 60. Search and paging are not built.
 - **Who can see the shop** (`visibility`, the reach ladder, default
   everyone on Kronk; see Who can see it). Whoever can see it finds it in
