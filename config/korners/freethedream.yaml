@@ -28,12 +28,12 @@ about:
   why: "Big things happen when everyone brings a piece. Nobody approves from above: whoever joins can see what's needed and step up."
   how:
     - 'Start a projekt from one of your Krews (Konnect, then New projekt). Everyone in the Krew is in it, and joining the Krew joins you in.'
-    - 'Coalesce a gang for one part of it, like Sound, Design or Paperwork.'
+    - 'Add a Komponent for one part of it, like Sound, Design or Paperwork.'
     - "Add what needs bringing, and say how much of it you'll bring."
     - "Add an idea to Actualise and you're on it, or jump on board someone else's."
     - "List what you have in your Mycelium. Only you see it until you share something with a projekt, where it's on offer and meets what's needed."
     - "Talk it through in threads, and resolve each one once it's settled."
-purpose: 'To let people seed projekts and bring them to life from the bottom up: gangs of people, things to bring, ideas to actualise, and Mycelium: what each person has, ready to share.'
+purpose: 'To let people seed projekts and bring them to life from the bottom up: Komponents of people, things to bring, ideas to actualise, and Mycelium: what each person has, ready to share.'
 icon:
   material: spiral
 render_target: native
@@ -116,7 +116,7 @@ konnect:
   # What a Konnection with these spaces does beyond the link itself.
   effects:
     - with: kalendar
-      does: "An event Konnected to a projekt (or one of its gangs) is shared with the projekt's Krew, which joins its audience."
+      does: "An event Konnected to a projekt (or one of its Komponents) is shared with the projekt's Krew, which joins its audience."
     - with: krew
       does: "A projekt lives in one Krew and is Konnected to it when it is made; that link can't be taken off. Konnected to any other Krew it is only a link."
 
@@ -137,7 +137,7 @@ header:
   rotator: true
 
 launch:
-  blurb: 'Projekts — seed a projekt and bring it to life together: gangs, Thing Bringing, Actualise and On offer.'
+  blurb: 'Projekts — seed a projekt and bring it to life together: Komponents, Thing Bringing, Actualise and On offer.'
   cta: 'See the projekts'
 
 feature_flag: # not-implemented

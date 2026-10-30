@@ -25,7 +25,7 @@ const messages = defineMessages({
   title: { id: 'freethedream.activity.title', defaultMessage: 'Activity' },
   group_added: {
     id: 'freethedream.activity.group_added',
-    defaultMessage: '{what} gang coalesced',
+    defaultMessage: '{what} Komponent added',
   },
   fractal_added: {
     id: 'freethedream.activity.fractal_added',

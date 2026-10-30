@@ -52,25 +52,6 @@ export const workMessages = defineMessages({
   offers: { id: 'freethedream.offers.title', defaultMessage: 'On offer' },
 });
 
-const hints = defineMessages({
-  needed: {
-    id: 'freethedream.work.needed.hint',
-    defaultMessage: "What's missing, across every gang",
-  },
-  bring: {
-    id: 'freethedream.work.bring.hint',
-    defaultMessage: 'Things, skills, time and money it needs',
-  },
-  actualise: {
-    id: 'freethedream.work.actualise.hint',
-    defaultMessage: 'Bring an idea to life',
-  },
-  offers: {
-    id: 'freethedream.work.offers.hint',
-    defaultMessage: 'What people can bring',
-  },
-});
-
 const messages = defineMessages({
   getInvolved: {
     id: 'freethedream.work.title',
@@ -146,41 +127,6 @@ export const workCount = (project: FtdProject, list: WorkList) => {
   return (
     project.items.filter(fits).length +
     project.inside.reduce((n, g) => n + g.items.filter(fits).length, 0)
-  );
-};
-
-// The landing page's way into the work: one card per list, as tiles that
-// reflow (phone views never scroll sideways).
-export const WorkCards: React.FC<{ project: FtdProject }> = ({ project }) => {
-  const intl = useIntl();
-  return (
-    <section className='freethedream-section'>
-      <header className='freethedream-section__head'>
-        <h3 className='freethedream-section__title'>
-          {intl.formatMessage(messages.getInvolved)}
-        </h3>
-      </header>
-      <ul className='freethedream-work'>
-        {WORK_LISTS.map((list) => (
-          <li key={list}>
-            <Link
-              to={projectPath(project, `/${list}`)}
-              className='freethedream-work__card'
-            >
-              <span className='freethedream-work__title'>
-                {intl.formatMessage(workMessages[list])}
-                <span className='freethedream-work__count'>
-                  {workCount(project, list)}
-                </span>
-              </span>
-              <span className='freethedream-work__hint'>
-                {intl.formatMessage(hints[list])}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 };
 

@@ -107,9 +107,10 @@ module Kronk
     end
 
     # What `record` is called beside its title ("the Ember event"): its
-    # korner's `konnect.noun`, except a FreeTheDream gang, which is a gang.
+    # korner's `konnect.noun`, except a FreeTheDream gang, which people call
+    # a Komponent.
     def noun_for(slug, record)
-      return 'gang' if slug == 'freethedream' && record.respond_to?(:top?) && !record.top?
+      return 'Komponent' if slug == 'freethedream' && record.respond_to?(:top?) && !record.top?
 
       Kronk::KornerRegistry.find(slug)&.konnect&.dig('noun')
     end

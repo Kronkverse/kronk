@@ -62,8 +62,8 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Project.find_by(title: 'Mini Doof').krew).to eq krew
   end
 
-  # docs/spaces/freethedream.md, The Krew: Open the Krew goes to the Krew
-  # made with the emergence, makes no other, and that Krew leads back.
+  # docs/spaces/freethedream.md, The Krew: the space badge goes to the Krew
+  # made with the projekt, makes no other, and that Krew leads back.
   it "opens the emergence's own Krew, which leads back to it" do
     # The Krew page shows its people's avatars; a test account has none.
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
@@ -73,7 +73,9 @@ RSpec.describe 'Projekts', :js, :streaming do
     # An old address (a notification, a link preview) moves under its Krew.
     visit "/hub/freethedream/p/#{doof.slug}"
     expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
-    click_on 'Open the Krew'
+    # No Krew row of its own: it is part of the Krew.
+    expect(page).to have_no_css('.freethedream-dreamers')
+    find('.space-badge', text: krew.name).click
 
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
     expect(page).to have_css('.krew-detail__projekts .space-card', text: 'Mini Doof')
