@@ -1010,10 +1010,9 @@
   }
 }
 
-.booth-live-list__how {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+.booth-live-list__go {
+  display: flex;
+  justify-content: center;
 }
 
 .booth-live-strip {

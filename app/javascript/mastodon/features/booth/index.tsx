@@ -33,7 +33,12 @@ import { BoothGridCard } from './components/booth_grid_card';
 import { EditForm } from './components/edit_form';
 import { LiveComposer } from './components/live_composer';
 import type { LiveCreated } from './components/live_composer';
-import { LiveCard, LiveNowStrip, LiveView } from './components/live_view';
+import {
+  GoLiveButton,
+  LiveCard,
+  LiveNowStrip,
+  LiveView,
+} from './components/live_view';
 import { ShareForm } from './components/share_form';
 import { KINDS, kindMessage } from './kinds';
 import type { BoothCredit, BoothKind, BoothSet } from './types';
@@ -125,7 +130,6 @@ const messages = defineMessages({
     defaultMessage: 'No artists yet — publish a set to appear here.',
   },
   shared: { id: 'booth.shared', defaultMessage: 'Shared to your feed' },
-  goLive: { id: 'booth.live.go_live', defaultMessage: 'Go live' },
   mineSets: { id: 'booth.mine.sets', defaultMessage: 'Sets' },
   minePlays: { id: 'booth.mine.plays', defaultMessage: 'Plays' },
   mineLives: { id: 'booth.mine.lives', defaultMessage: 'Live sets coming' },
@@ -882,11 +886,7 @@ const MySetsView: React.FC = () => {
         ) : (
           <EmptyState
             title={intl.formatMessage(messages.mineLivesEmpty)}
-            action={
-              <Link to='/hub/booth/composer/live'>
-                {intl.formatMessage(messages.goLive)}
-              </Link>
-            }
+            action={<GoLiveButton />}
           />
         )}
       </section>

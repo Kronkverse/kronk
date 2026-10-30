@@ -86,6 +86,17 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
     expect(page).to have_no_css('.korner-detail__actions button', text: 'Go live')
   end
 
+  # docs/spaces/booth.md, Going live: Go live is a big button on the Live
+  # view, not a text link (Tal's proposal "'Go live' button").
+  it 'offers Go live as a button on the Live view' do
+    visit '/hub/booth/live'
+
+    expect(page).to have_content('Nothing live right now')
+    click_on 'Go live'
+
+    expect(page).to have_current_path('/hub/booth/composer/live')
+  end
+
   # docs/spaces/booth.md, Musik: View lays the sets out in rows, one per
   # artist or one per kind (Tal's proposal "Music arranging").
   it 'lays Musik out in rows by artist and by kind' do
