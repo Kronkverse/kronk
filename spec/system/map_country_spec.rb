@@ -12,7 +12,9 @@ RSpec.describe 'Map Country', :inline_jobs, :js, :streaming do
   let(:confirmed_at)        { Time.zone.now }
   let(:finished_onboarding) { true }
 
-  let(:ana) { Fabricate(:user, account: Fabricate(:account, username: 'ana', first_nations_country: 'Mardu', first_nations_country_born: 'Kaurna')).account }
+  # The account fabricator makes its own user; wrapping it in a second one
+  # gave Ana two users, and the user join listed her twice on the card.
+  let(:ana) { Fabricate(:account, username: 'ana', first_nations_country: 'Mardu', first_nations_country_born: 'Kaurna') }
 
   before do
     as_a_logged_in_user
