@@ -225,67 +225,6 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Get involved: one card per list of work, as tiles that reflow (two
-// across on a phone, more as it widens). Phone views scroll vertically
-// only, never sideways (Tal; docs/spaces/freethedream.md, The page).
-.freethedream-work {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr));
-  gap: 0.75rem;
-
-  > li {
-    display: flex;
-    min-inline-size: 0;
-  }
-
-  &__card {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    inline-size: 100%;
-    min-block-size: 7rem;
-    padding: 1rem;
-    background: var(--surface-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-large);
-    text-decoration: none;
-    transition: border-color var(--dur-fast) var(--ease-out);
-
-    &:hover,
-    &:focus-visible {
-      border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-    }
-
-    .freethedream &,
-    .freethedream &:hover {
-      color: var(--text-primary);
-    }
-  }
-
-  &__title {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px;
-    font-family: var(--font-display);
-    font-size: 18px;
-  }
-
-  &__count {
-    font-family: var(--font-body);
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
-  &__hint {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-}
-
 // Krew (an emergence) and Who's in it (a gang): everyone as tiles that
 // reflow into rows, never a row you scroll sideways.
 .freethedream-dreamers {

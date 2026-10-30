@@ -39,7 +39,7 @@ const messages = defineMessages({
   },
   newPart: {
     id: 'freethedream.compose.gang',
-    defaultMessage: 'Coalesce a gang',
+    defaultMessage: 'Add a Komponent',
   },
   editProject: {
     id: 'freethedream.compose.edit_project',
@@ -96,7 +96,7 @@ const messages = defineMessages({
   },
   groupsInside: {
     id: 'freethedream.compose.gangs_inside',
-    defaultMessage: 'Gangs to start with (optional)',
+    defaultMessage: 'Komponents to start with (optional)',
   },
   fractalsInside: {
     id: 'freethedream.compose.fractals_inside',
@@ -125,7 +125,7 @@ const messages = defineMessages({
   gearHint: {
     id: 'freethedream.compose.gear_boxes_hint',
     defaultMessage:
-      'Things, skills, time, money or space: one to a box, with how many beside it; Enter for the next. Tap + More welcome where more is welcome. Anything only one gang needs goes in that gang.',
+      'Things, skills, time, money or space: one to a box, with how many beside it; Enter for the next. Tap + More welcome where more is welcome. Anything only one Komponent needs goes in that Komponent.',
   },
   krew: { id: 'freethedream.compose.krew', defaultMessage: 'Krew' },
   krewHint: {
