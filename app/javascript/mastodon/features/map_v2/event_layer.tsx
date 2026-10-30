@@ -35,11 +35,30 @@ const SPIRAL_SVG =
 
 // Marker DOM — vanilla DOM (MapLibre owns positioning). Spiral glyph
 // in a purple square bulb; the huddle variant swaps to a videocam.
+// What's on (docs/spaces/map.md, Events): an Event happening now glows and
+// pulses, and one in the next week glows softly, so you can see at a glance
+// where things are on. An Event with no end counts as on for three hours.
+const SOON_MS = 7 * 24 * 60 * 60 * 1000;
+const OPEN_ENDED_MS = 3 * 60 * 60 * 1000;
+
+const whatsOn = (
+  pin: ApiMapEventPinJSON,
+  now = Date.now(),
+): 'now' | 'soon' | null => {
+  const start = Date.parse(pin.start_time);
+  const end = pin.end_time ? Date.parse(pin.end_time) : start + OPEN_ENDED_MS;
+  if (start <= now && now < end) return 'now';
+  if (start > now && start - now <= SOON_MS) return 'soon';
+  return null;
+};
+
 const buildEventMarker = (pin: ApiMapEventPinJSON): HTMLElement => {
   const el = document.createElement('div');
   el.className = 'map-event-pin';
   el.title = pin.title;
   if (pin.event_type === 'huddle') el.classList.add('map-event-pin--huddle');
+  const on = whatsOn(pin);
+  if (on) el.classList.add(`map-event-pin--${on}`);
   const bulb = document.createElement('div');
   bulb.className = 'map-event-pin__bulb';
   bulb.innerHTML = SPIRAL_SVG;
