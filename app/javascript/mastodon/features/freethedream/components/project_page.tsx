@@ -110,7 +110,7 @@ const messages = defineMessages({
   upForGrabs: {
     id: 'freethedream.up_for_grabs',
     defaultMessage:
-      'Nobody is running this now. Anyone in the emergence can take it over.',
+      'Nobody is running this now. Anyone in the projekt can take it over.',
   },
 });
 

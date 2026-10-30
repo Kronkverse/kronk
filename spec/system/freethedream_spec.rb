@@ -19,8 +19,8 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     visit '/hub/freethedream'
 
     within('.scope-title') do
-      expect(page).to have_css('h1.space-header__title', text: 'All emergences')
-      expect(page).to have_css('.space-header__tagline', text: 'Every emergence on Kronk')
+      expect(page).to have_css('h1.space-header__title', text: 'All projekts')
+      expect(page).to have_css('.space-header__tagline', text: 'Every projekt on Kronk')
     end
     # The Frame's pillar bar is a tablist too; only the korner's own
     # surface (the Stage) must carry none.
@@ -39,7 +39,7 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     find('.scope-title__nav--next').click
 
     expect(page).to have_current_path('/hub/freethedream')
-    expect(page).to have_css('.scope-title h1.space-header__title', text: 'All emergences')
+    expect(page).to have_css('.scope-title h1.space-header__title', text: 'All projekts')
   end
 
   # docs/spaces/freethedream.md, The Krew: an emergence lives in one of your
@@ -83,6 +83,6 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     visit '/hub/freethedream/mine'
 
     expect(page).to have_css('.scope-title h1.space-header__title', text: 'Mine')
-    expect(page).to have_css('.scope-title .space-header__tagline', text: "Emergences you're in")
+    expect(page).to have_css('.scope-title .space-header__tagline', text: "Projekts you're in")
   end
 end

@@ -42,7 +42,7 @@ const messages = defineMessages({
   getInvolved: {
     id: 'freethedream.get_involved_krew',
     defaultMessage:
-      "It's {krew}'s emergence. Join the Krew to get involved, then pick up anything here.",
+      "It's {krew}'s projekt. Join the Krew to get involved, then pick up anything here.",
   },
   requests: { id: 'freethedream.requests', defaultMessage: 'Asking to join' },
   accept: { id: 'freethedream.accept', defaultMessage: 'Accept' },
@@ -71,7 +71,7 @@ const messages = defineMessages({
   },
   onTheWhole: {
     id: 'freethedream.dash.on_the_whole',
-    defaultMessage: 'For the whole emergence',
+    defaultMessage: 'For the whole projekt',
   },
 });
 

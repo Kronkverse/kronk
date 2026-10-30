@@ -38,7 +38,7 @@ import { WorkPage } from './components/work_page';
 //                                 offer
 
 const messages = defineMessages({
-  title: { id: 'freethedream.title', defaultMessage: 'FreeTheDream' },
+  title: { id: 'freethedream.title', defaultMessage: 'Projekts' },
 });
 
 const COMPOSER_PATH = '/hub/freethedream/composer';

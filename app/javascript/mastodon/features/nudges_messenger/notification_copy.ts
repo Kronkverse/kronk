@@ -72,11 +72,11 @@ const sentences = defineMessages({
   },
   freethedreamInvited: {
     id: 'nudges.notification.freethedream.invited',
-    defaultMessage: '{who} invited you to have a look at an emergence',
+    defaultMessage: '{who} invited you to have a look at a projekt',
   },
   freethedreamMentioned: {
     id: 'nudges.notification.freethedream.mentioned',
-    defaultMessage: '{who} tagged you in an emergence’s talk',
+    defaultMessage: '{who} tagged you in a projekt’s talk',
   },
   kuestionsAnswered: {
     id: 'nudges.notification.kuestions.answered',

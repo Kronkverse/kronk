@@ -58,6 +58,13 @@ module Freethedream
     scope :top_level, -> { where(parent_id: nil) }
     scope :recent, -> { order(created_at: :desc) }
 
+    # What the Konnect picker offers when it searches: projekts, not the
+    # gangs and fractals inside them (Tal, 2026-10-30). A gang already
+    # Konnected still opens by its id.
+    def self.attachment_candidates
+      top_level
+    end
+
     def top?
       parent_id.nil?
     end

@@ -35,7 +35,7 @@ import { CategoryChips, errorOf, parseLine } from './shared';
 const messages = defineMessages({
   newProject: {
     id: 'freethedream.compose.seed',
-    defaultMessage: 'Seed an emergence',
+    defaultMessage: 'Seed a projekt',
   },
   newPart: {
     id: 'freethedream.compose.gang',
@@ -134,7 +134,7 @@ const messages = defineMessages({
   krewNone: {
     id: 'freethedream.compose.krew_none',
     defaultMessage:
-      'An emergence lives in a Krew. Start or join a Krew first, then start it from the Krew page.',
+      'A projekt lives in a Krew. Start or join a Krew first, then start it from the Krew page.',
   },
 });
 
