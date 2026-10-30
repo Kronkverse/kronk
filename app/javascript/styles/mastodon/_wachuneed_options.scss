@@ -198,3 +198,56 @@
     grid-template-columns: minmax(0, 1fr) auto;
   }
 }
+
+// Booking a listing on its page (booking_fields.tsx): the free times by
+// day, the from and the to, what they need; the whole width, above Book.
+.wachuneed-book {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+
+  &__times,
+  &__route,
+  &__end {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  &__day {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  &__day-name {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &__day-times {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__end-name {
+    color: var(--text-primary);
+  }
+
+  &__preview {
+    width: 100%;
+    max-width: 24rem;
+    height: 8rem;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+  }
+
+  .compose-field {
+    width: 100%;
+  }
+}

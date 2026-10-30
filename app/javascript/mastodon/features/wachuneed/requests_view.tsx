@@ -33,6 +33,10 @@ import { formatListingAmount } from './listing_options_chooser';
 // waits; then what you asked for, which you can take back while it waits.
 // One flow card each (<StandardCard>): where it stands, the listing, who
 // and how much, what was chosen and said, and the actions.
+//
+// A booking (docs/spaces/wachuneed.md, Booking) also shows when, the from
+// and the to, and what they need; once accepted, either of the two can
+// call it off.
 
 const messages = defineMessages({
   loading: {
@@ -87,6 +91,33 @@ const messages = defineMessages({
     defaultMessage: 'Taken back',
   },
   expired: { id: 'wachuneed.requests.state.expired', defaultMessage: 'Lapsed' },
+  cancelled: {
+    id: 'wachuneed.requests.state.cancelled',
+    defaultMessage: 'Called off',
+  },
+  cancelledByYou: {
+    id: 'wachuneed.requests.cancelled_by_you',
+    defaultMessage: 'You called it off.',
+  },
+  cancelledByThem: {
+    id: 'wachuneed.requests.cancelled_by_them',
+    defaultMessage: 'They called it off.',
+  },
+  cancel: { id: 'wachuneed.requests.cancel', defaultMessage: 'Call it off' },
+  cancelTitle: {
+    id: 'wachuneed.requests.cancel_title',
+    defaultMessage: 'Call this booking off?',
+  },
+  cancelMessage: {
+    id: 'wachuneed.requests.cancel_message',
+    defaultMessage:
+      'They will hear that you called it off, and the time opens again.',
+  },
+  routeFrom: {
+    id: 'wachuneed.requests.route_from',
+    defaultMessage: 'From: {place}',
+  },
+  routeTo: { id: 'wachuneed.requests.route_to', defaultMessage: 'To: {place}' },
 });
 
 const STATE_LABELS: Record<ApiRequestState, typeof messages.pending> = {
@@ -95,9 +126,14 @@ const STATE_LABELS: Record<ApiRequestState, typeof messages.pending> = {
   declined: messages.declined,
   withdrawn: messages.withdrawn,
   expired: messages.expired,
+  cancelled: messages.cancelled,
 };
 
-type Answer = 'accept' | 'decline' | 'withdraw';
+type Answer = 'accept' | 'decline' | 'withdraw' | 'cancel';
+
+// A pinned end of a booking: its name, or where it is.
+const placeName = (point: { lat: number; lng: number; name?: string }) =>
+  point.name ?? `${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}`;
 
 const RequestCard: React.FC<{
   request: ApiRequestJSON;
@@ -119,15 +155,46 @@ const RequestCard: React.FC<{
   const handleWithdraw = useCallback(() => {
     onAnswer(request, 'withdraw');
   }, [onAnswer, request]);
+  const handleCancel = useCallback(() => {
+    onAnswer(request, 'cancel');
+  }, [onAnswer, request]);
+
+  const when = request.starts_at
+    ? intl.formatDate(request.starts_at, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      }) +
+      (request.ends_at
+        ? `–${intl.formatTime(request.ends_at, { hour: 'numeric', minute: '2-digit' })}`
+        : '')
+    : null;
+  const { route } = request;
+  const cancelledBy =
+    request.state === 'cancelled'
+      ? request.cancelled_by_seller === (side === 'seller')
+        ? messages.cancelledByYou
+        : messages.cancelledByThem
+      : null;
 
   const chosen = [
     ...(choices.variant ?? []),
     ...(choices.options ?? []).map((o) => `${o.name}: ${o.choice}`),
   ];
+  const hasBody =
+    chosen.length > 0 ||
+    !!request.message ||
+    !!route.from ||
+    !!route.to ||
+    !!request.details ||
+    !!cancelledBy;
   const meta = [
     intl.formatMessage(side === 'seller' ? messages.from : messages.to, {
       name,
     }),
+    when,
     request.quantity > 1
       ? `${intl.formatMessage(messages.quantity, { count: request.quantity })} ${listing.title}`
       : null,
@@ -143,10 +210,26 @@ const RequestCard: React.FC<{
         <Link to={listingPath(listing)}>{listing.title}</Link>
       </CardTitle>
       <CardMeta>{meta.join(' · ')}</CardMeta>
-      {(chosen.length > 0 || request.message) && (
+      {hasBody && (
         <CardBody>
           {chosen.length > 0 && <p>{chosen.join(', ')}</p>}
+          {route.from && (
+            <p>
+              {intl.formatMessage(messages.routeFrom, {
+                place: placeName(route.from),
+              })}
+            </p>
+          )}
+          {route.to && (
+            <p>
+              {intl.formatMessage(messages.routeTo, {
+                place: placeName(route.to),
+              })}
+            </p>
+          )}
+          {request.details && <p>{request.details}</p>}
           {request.message && <p>{request.message}</p>}
+          {cancelledBy && <p>{intl.formatMessage(cancelledBy)}</p>}
         </CardBody>
       )}
       {request.state === 'pending' && (
@@ -172,6 +255,16 @@ const RequestCard: React.FC<{
               disabled={busy}
             />
           )}
+        </CardActions>
+      )}
+      {request.state === 'accepted' && request.starts_at && (
+        <CardActions>
+          <KornerPill
+            label={intl.formatMessage(messages.cancel)}
+            variant='destructive'
+            onClick={handleCancel}
+            disabled={busy}
+          />
         </CardActions>
       )}
     </StandardCard>
@@ -226,14 +319,21 @@ export const WachuneedRequests: React.FC = () => {
           });
       };
 
-      if (answer !== 'decline') {
+      if (answer !== 'decline' && answer !== 'cancel') {
         send();
         return;
       }
+      const cancelling = answer === 'cancel';
       void confirm({
-        title: intl.formatMessage(messages.declineTitle),
-        message: intl.formatMessage(messages.declineMessage),
-        confirmLabel: intl.formatMessage(messages.decline),
+        title: intl.formatMessage(
+          cancelling ? messages.cancelTitle : messages.declineTitle,
+        ),
+        message: intl.formatMessage(
+          cancelling ? messages.cancelMessage : messages.declineMessage,
+        ),
+        confirmLabel: intl.formatMessage(
+          cancelling ? messages.cancel : messages.decline,
+        ),
         destructive: true,
       }).then((ok) => {
         if (ok) send();
