@@ -2141,3 +2141,69 @@
     }
   }
 }
+
+// Pin-drop: "You're on <name> Country. Add it as where you live?" after you
+// place your pin (country_prompt.tsx). Top centre, clear of the pin card.
+.map-country-prompt {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 6;
+  box-sizing: border-box;
+  width: min(340px, calc(100% - 32px));
+  padding: 12px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  box-shadow: var(--elevation-floating);
+  transform: translateX(-50%);
+
+  &__text {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  &__error {
+    margin: 6px 0 0;
+    color: var(--warning-red);
+    font-size: 12px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  &__button {
+    padding: 6px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    &--primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--text-on-accent);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+}
