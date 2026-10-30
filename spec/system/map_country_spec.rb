@@ -20,6 +20,13 @@ RSpec.describe 'Map Country', :inline_jobs, :js, :streaming do
     ana.follow!(bob.account)
   end
 
+  it 'shows First Nations Country on the map without a switch' do
+    visit '/hub/map'
+
+    expect(page).to have_field('Find a Country')
+    expect(page).to have_no_button('First Nations Country')
+  end
+
   it 'opens the Country from a profile' do
     visit '/@ana'
     expect(page).to have_link('Born on Kaurna Country')

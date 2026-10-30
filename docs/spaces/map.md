@@ -61,16 +61,16 @@ report on login" (https://kronk.info/hub/kommons/p/117504037032494231).
 
 ### First Nations Country
 
-A **First Nations Country** button under the zoom buttons (Kommons, @mangobee,
-2026-10-23) draws the Countries of Aboriginal and Torres Strait Islander
-peoples over Australia, under the pins. Off until you turn it on; the choice is
-kept in your browser (`kronk.map.country_layer`). While it is on, a note under
-the button says the boundaries are approximate. It carries no on-map credit
-(@mangobee, 2026-10-26: take the credit line away).
+The map always shows the **First Nations Country** of Aboriginal and Torres
+Strait Islander peoples over Australia, under the pins (Kommons, @mangobee,
+2026-10-23; always on, with no switch, @mangobee, 2026-10-30; it was a button
+under the zoom buttons that turned it on). A note under "Find a Country" says
+the boundaries are approximate. It carries no on-map credit (@mangobee,
+2026-10-26: take the credit line away).
 
 The Countries are shapes you can tap (Kommons "Interactive Map Build",
 @mangobee, 2026-10-26, Option 2): `app/javascript/images/first-nations-countries.geojson`,
-fetched only once the layer is turned on, drawn as a MapLibre `geojson` source
+fetched when the map opens, drawn as a MapLibre `geojson` source
 with a fill in each Country's own colour, thin borders, and the tapped Country
 outlined. They are crisp at every zoom and stay on down to street level (the
 fill calms as you zoom in).
@@ -84,10 +84,14 @@ fill calms as you zoom in).
   your profile's "Living on <name> Country"; **Not now** leaves it
   (`country_prompt.tsx`). It uses the Country of your pin's coarsened point,
   so near a border it can be the neighbour: you're asked, not told.
+- **You're on <name> Country**: once zoomed in a little (zoom 5), a line at
+  the bottom of the map names the Country under its middle, changing as you
+  move; a tap opens its card. A shape with no name takes the first name
+  someone added to it.
 - **Find a Country**: a search box under the button matches any of those
   names, and names people have added, and flies there.
 - **From a profile**: "Born on" and "Living on <name> Country" each link to
-  `/hub/map?country=<name>`, which turns the layer on and opens that Country.
+  `/hub/map?country=<name>`, which opens that Country.
 - **On everything with a place**: a Mate's pin, a Place (card and page), an
   Event pin and a Trek say the Country they're on ("On Kaurna Country";
   "Through Kaurna and Peramangk Country" for a Trek), each opening it here.
