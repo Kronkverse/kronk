@@ -41,6 +41,25 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     expect(page).to have_css('.scope-title .space-header__tagline', text: 'What you have to share')
   end
 
+  # docs/spaces/freethedream.md, The Krew: Open the Krew goes to the Krew
+  # made with the emergence, makes no other, and that Krew leads back.
+  it "opens the emergence's own Krew, which leads back to it" do
+    # The Krew page shows its people's avatars; a test account has none.
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/freethedream/p/#{doof.slug}"
+    click_on 'Open the Krew'
+
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}")
+    expect(page).to have_css('.space-tile', text: 'Mini Doof')
+    expect(Krew.count).to eq 1
+
+    find('.space-tile', text: 'Mini Doof').click
+    expect(page).to have_current_path("/hub/freethedream/p/#{doof.slug}")
+  end
+
   it 'opens on the view its address names' do
     visit '/hub/freethedream/mine'
 
