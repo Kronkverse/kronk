@@ -433,6 +433,10 @@ namespace :api, format: false do
       # Places — exact spots with an address, Map's linkable record: a
       # location is a Konnection to one (docs/spaces/map.md, Places).
       resources :places, only: [:index, :show, :create, :update, :destroy]
+
+      # The open list of First Nations Country names: anyone adds, a steward
+      # takes one off (docs/spaces/map.md, First Nations Country).
+      resources :country_names, only: [:index, :create, :destroy]
     end
 
     namespace :klot do
