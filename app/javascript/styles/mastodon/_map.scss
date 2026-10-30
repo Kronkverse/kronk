@@ -587,8 +587,8 @@
 // a dropdown of avatar bubbles. Tap a bubble → re-centre the map on
 // that mate (handleSelectPin still clamps to ANON_ZOOM - 0.5, so the
 // user zooms OUT to see them — anonymisation is preserved).
-// First Nations Country — its switch sits under the zoom buttons, top right,
-// with the credit and disclaimer beneath it while the layer is on.
+// First Nations Country — always drawn; "Find a Country" sits under the zoom
+// buttons, top right, with the disclaimer or a Country's card beneath it.
 .map-country {
   position: absolute;
   top: 88px;
@@ -599,31 +599,6 @@
   align-items: flex-end;
   gap: 6px;
   max-width: min(260px, calc(100% - 32px));
-
-  &__toggle {
-    padding: 8px 14px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    box-shadow: var(--elevation-floating);
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--accent);
-      outline: none;
-    }
-
-    &--on {
-      border-color: var(--accent);
-      color: var(--accent-text);
-    }
-  }
 
   &__note {
     margin: 0;
@@ -2171,6 +2146,36 @@
       color: var(--accent-text);
       text-decoration: underline;
     }
+  }
+}
+
+// "You're on <name> Country": the Country under the middle of the map, at the
+// bottom centre once zoomed in; a tap opens its card.
+.map-country-here {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  z-index: 5;
+  max-width: calc(100% - 32px);
+  padding: 6px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transform: translateX(-50%);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--elevation-floating);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    outline: none;
   }
 }
 

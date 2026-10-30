@@ -17,6 +17,17 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-30 — First Nations Country is always on the map
+
+@mangobee: First Nations Country should be the full-time view of Australia on
+the map, not a feature you switch on.
+
+**Decision:** the Country shapes are always drawn on the map, with no switch,
+and the stored on/off choice (`kronk.map.country_layer`) is gone. "Find a
+Country", the boundaries note and tapping a Country stay. Zoomed in a little,
+a line at the bottom names the Country under the middle of the map. This
+supersedes the switch from 2026-10-23.
+
 ## 2026-10-30 — First Nations Country names are an open list
 
 @mangobee: Country names and sectors are still being found, so every name
