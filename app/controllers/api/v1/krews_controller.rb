@@ -41,7 +41,7 @@ class Api::V1::KrewsController < Api::BaseController
               Krew.listed.order(last_activity_at: :desc)
             end
 
-    scope = scope.limit(limit_param(DEFAULT_LIMIT))
+    scope = scope.includes(:freethedream_project).limit(limit_param(DEFAULT_LIMIT))
     scope = scope.where(Krew.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
     scope = scope.where(Krew.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
 

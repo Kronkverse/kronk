@@ -13,7 +13,7 @@ class REST::KrewSerializer < ActiveModel::Serializer
              # below); the attribute is always declared for a stable
              # response shape.
              :invite_token,
-             :korners, :requirements, :image_url
+             :korners, :requirements, :image_url, :emergence
 
   def id
     object.id.to_s
@@ -94,6 +94,14 @@ class REST::KrewSerializer < ActiveModel::Serializer
   # Order-independent; the frontend renders whatever's here.
   def korners
     object.krew_korners.pluck(:korner)
+  end
+
+  # The FreeTheDream emergence this is the Krew of
+  # (docs/spaces/freethedream.md, The Krew), so the Krew's page leads back
+  # to it. nil for any other Krew.
+  def emergence
+    project = object.freethedream_project
+    project && { id: project.id.to_s, slug: project.slug, title: project.title }
   end
 
   # Requirement rows for requirement_gated krews. Each entry carries
