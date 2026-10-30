@@ -307,7 +307,8 @@
     }
   }
 
-  // "On <name> Country", under the bio.
+  // "Born on <name> Country" and "Living on <name> Country", under the bio,
+  // one to a line.
   &__country {
     position: relative;
     max-width: 38rem;
@@ -317,6 +318,10 @@
     font-family: var(--font-body);
     font-size: 14px;
     line-height: 1.4;
+
+    p {
+      margin: 0;
+    }
 
     // It opens that Country on the Map.
     a {

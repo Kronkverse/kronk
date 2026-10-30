@@ -591,26 +591,46 @@ export const ProfileBlock: React.FC<Props> = ({
         (editable ? (
           <>
             <ProfileBioField />
-            <ProfileCountryField />
+            <ProfileCountryField field='first_nations_country_born' />
+            <ProfileCountryField field='first_nations_country' />
           </>
         ) : (
           <>
             <AccountBio accountId={accountId} className='profile-block__bio' />
-            {/* The First Nations Country they live on, under the bio and
-                seen wherever it is (docs/spaces/profile.md, Country); it opens
-                that Country on the Map. */}
-            {account.first_nations_country && (
-              <p className='profile-block__country'>
-                <Link
-                  to={`/hub/map?country=${encodeURIComponent(account.first_nations_country)}`}
-                >
-                  <FormattedMessage
-                    id='profile_block.country'
-                    defaultMessage='On {name} Country'
-                    values={{ name: account.first_nations_country }}
-                  />
-                </Link>
-              </p>
+            {/* Where they were born and where they live, each a First
+                Nations Country, under the bio and seen wherever it is
+                (docs/spaces/profile.md, Country); each opens that Country on
+                the Map. */}
+            {(!!account.first_nations_country_born ||
+              !!account.first_nations_country) && (
+              <div className='profile-block__country'>
+                {account.first_nations_country_born && (
+                  <p>
+                    <Link
+                      to={`/hub/map?country=${encodeURIComponent(account.first_nations_country_born)}`}
+                    >
+                      <FormattedMessage
+                        id='profile_block.country_born'
+                        defaultMessage='Born on {name} Country'
+                        values={{ name: account.first_nations_country_born }}
+                      />
+                    </Link>
+                  </p>
+                )}
+                {account.first_nations_country && (
+                  <p>
+                    <Link
+                      to={`/hub/map?country=${encodeURIComponent(account.first_nations_country)}`}
+                    >
+                      <FormattedMessage
+                        id='profile_block.country_living'
+                        defaultMessage='Living on {name} Country'
+                        values={{ name: account.first_nations_country }}
+                      />
+                    </Link>
+                  </p>
+                )}
+              </div>
             )}
           </>
         ))}
