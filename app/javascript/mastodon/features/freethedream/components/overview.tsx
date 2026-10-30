@@ -4,13 +4,12 @@ import { Link } from 'react-router-dom';
 
 import type { FtdProject } from 'mastodon/api_types/freethedream';
 
-import { EventCard, MakeEventPrompt } from './event_card';
 import { formatAmount, formatNeed, projectPath, Section } from './shared';
 
 // The parts of a project's page that are about the project as a whole and
 // about you in it. `Yours` leads it for someone in the project (talk they
 // haven't seen in its sections, the jobs they've taken, what they're
-// bringing), and `ProjectEvent` sits beside it. Who's in it, joining and
+// bringing), and Getting together (event_card.tsx) sits beside it. Who's in it, joining and
 // requests to join are its Krew's page (Tal, 2026-10-30).
 
 const messages = defineMessages({
@@ -151,15 +150,3 @@ const OnYouRow: React.FC<{
     </li>
   );
 };
-
-// A project's or gang's Kalendar event, or for its owner a way to make
-// one. The same event shows on the emergence's Krew (Kronk::EventLinks).
-export const ProjectEvent: React.FC<{
-  project: FtdProject;
-  refresh: () => void;
-}> = ({ project, refresh }) =>
-  project.event ? (
-    <EventCard event={project.event} onChange={refresh} />
-  ) : project.can.link_event ? (
-    <MakeEventPrompt projectId={project.id} />
-  ) : null;

@@ -261,24 +261,31 @@ getting involved, not for doing the work itself:
   clearer view of what needs work is still to be designed. The lists'
   own pages (`/p/:id/needed`, `/bring`, `/actualise`, `/offers`) stay.
   Done, Hand over and Remove are off the page too.
+- **Getting together** (Tal, 2026-10-30), beside the work: the Kalendar
+  events made for the projekt or any Komponent or fractal inside it that
+  haven't ended, soonest first, as rows of a date tile, the title, when
+  and where (a pin opens the Map), the Komponent it's for as a tag, how
+  many are going and an **I'm going** toggle (`event_card.tsx`,
+  `events` on the shape). A Komponent's page lists its own and its
+  fractals'. **Anyone in the projekt can make one** (`can.link_event`;
+  nobody leads a Komponent, so owner-only left a Komponent with nobody to
+  make one): a picker chooses the whole projekt or one Komponent, and
+  **Make an event** opens Kalendar's composer with that part Konnected, so
+  the event belongs to it and its Krew sees it (Kronk::EventLinks).
 - **Activity**: the latest eight things that happened, with who did them
   ("Isabelle is bringing 2 speakers", "Tomas coalesced the gang
   Ceremony"). It keeps itself up to date while the page is open and in
   view (every 20 seconds, from `GET /projects/:id/activity`), and new
   lines fade in.
-- **Beside it** (below it, on a phone): the **event card** (name into
-  Kalendar, map pin, who's going, your RSVP; until there is one, the owner
-  sees **Make the event**, which opens Kalendar's composer with
-  `?konnect=freethedream:<id>`, so the event is Konnected as it is made.
-  An event that already exists is linked with the page's Konnect; the
-  card's own "Or link one of your events" went on 2026-10-27), **Asking to
-  join** for anyone in, and **Join** (or Ask to join). Then Talk and the
-  owner's actions. To bring someone in, **Share** the emergence from the
+- **Beside it** (below it, on a phone): **Getting together** (above),
+  then Talk. An event that already exists is linked with the page's
+  Konnect (the old card's "Or link one of your events" went on
+  2026-10-27). To bring someone in, **Share** the emergence from the
   Ж menu; there is no Invite (Tal 2026-10-17: "no invite anywhere, only
   share"). The server's invite (`POST /projects/:id/invite` and its nudge)
-  went too (Tal 2026-10-19: "the share button is plenty"). The event card
-  is where the linked event shows, so the page's **Attached** block leaves
-  that event out (`<KornerDetail attached={{ exclude }}>`) rather than
+  went too (Tal 2026-10-19: "the share button is plenty"). Getting
+  together is where linked events show, so the page's **Attached** block
+  leaves them out (`<KornerDetail attached={{ exclude }}>`) rather than
   listing it twice.
 
 **A list's page** (`/p/:id/actualise` and the like) is that list in full:

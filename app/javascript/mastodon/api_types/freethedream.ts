@@ -63,6 +63,9 @@ export interface FtdEvent {
   my_rsvp: 'going' | 'interested' | 'not_going' | null;
   attachment_id: string;
   can_unlink: boolean;
+  // In a projekt's Getting together: the Komponent or fractal it's for,
+  // or null when it's for the page's own part.
+  for?: FtdRef | null;
 }
 
 export interface FtdProjectSummary {
@@ -228,6 +231,7 @@ export interface FtdProject {
   ancestors: FtdRef[];
   cover: FtdCover | null;
   event: FtdEvent | null;
+  events: FtdEvent[];
   ends_on: string | null;
   done: boolean;
   joining: FtdJoining;
