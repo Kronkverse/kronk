@@ -72,6 +72,7 @@ export const accountDefaultValues: AccountShape = {
   emojis: ImmutableList<CustomEmoji>(),
   fields: ImmutableList<AccountField>(),
   first_nations_country: null,
+  first_nations_country_born: null,
   group: false,
   header: '',
   header_static: '',

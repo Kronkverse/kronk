@@ -34,8 +34,10 @@ class Api::V1::Accounts::CredentialsController < Api::BaseController
       # Kronk-native Kommunity discover-list visibility. Enum value
       # (`everyone` / `orbit` / `nobody`) — see Account#kommunity_discoverability.
       :kommunity_discoverability,
-      # The First Nations Country you live on, shown under your bio.
+      # The First Nations Countries you live on and were born on, shown under
+      # your bio.
       :first_nations_country,
+      :first_nations_country_born,
       :hide_collections,
       :indexable,
       attribution_domains: [],

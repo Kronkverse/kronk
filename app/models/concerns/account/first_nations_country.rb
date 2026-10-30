@@ -1,24 +1,28 @@
 # frozen_string_literal: true
 
-# The First Nations Country someone says they live on, shown as "On <name>
-# Country" under their bio (docs/spaces/profile.md, Country). Kept as the
-# name alone: a trailing "Country" is dropped so it isn't said twice, and a
-# blank one clears it.
+# The First Nations Countries someone says they were born on and live on,
+# shown as "Born on <name> Country" and "Living on <name> Country" under their
+# bio (docs/spaces/profile.md, Country). Each is kept as the name alone: a
+# trailing "Country" is dropped so it isn't said twice, and a blank one clears
+# it. `first_nations_country` is where they live; it was the only one first.
 module Account::FirstNationsCountry
   extend ActiveSupport::Concern
 
   FIRST_NATIONS_COUNTRY_LIMIT = 60
+  FIRST_NATIONS_COUNTRY_FIELDS = %i(first_nations_country first_nations_country_born).freeze
 
   included do
-    before_validation :tidy_first_nations_country, if: -> { local? && will_save_change_to_first_nations_country? }
-    validates :first_nations_country, length: { maximum: FIRST_NATIONS_COUNTRY_LIMIT },
-                                      if: -> { local? && will_save_change_to_first_nations_country? }
+    FIRST_NATIONS_COUNTRY_FIELDS.each do |field|
+      before_validation -> { tidy_first_nations_country(field) }, if: -> { local? && will_save_change_to_attribute?(field) }
+      validates field, length: { maximum: FIRST_NATIONS_COUNTRY_LIMIT },
+                       if: -> { local? && will_save_change_to_attribute?(field) }
+    end
   end
 
   private
 
-  def tidy_first_nations_country
-    name = first_nations_country.to_s.squish.sub(/\s+country\z/i, '')
-    self.first_nations_country = name.presence
+  def tidy_first_nations_country(field)
+    name = self[field].to_s.squish.sub(/\s+country\z/i, '')
+    self[field] = name.presence
   end
 end
