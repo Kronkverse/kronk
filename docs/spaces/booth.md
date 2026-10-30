@@ -289,7 +289,9 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   live in the Booth soon…" before). The room page shows the start time
   in each reader's own time zone, so the post doesn't print one.
 - **Going live.** The Ж menu's **Upload or go live** opens the composer,
-  which switches between Upload a set and **Go live**
+  and so does the big filled **Go live** button at the top of the Live
+  view and in Mine's empty live sets (`<GoLiveButton>`). The composer
+  switches between Upload a set and **Go live**
   (`/hub/booth/composer/live`, `components/live_composer.tsx`). **Now**
   opens the room with the host's get-ready panel (input, screen-share
   audio, headphones, recording, room size); the set is only live once

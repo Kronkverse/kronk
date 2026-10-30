@@ -582,7 +582,6 @@
   "booth.live.go_note": "Nobody can listen in until you go live.",
   "booth.live.go_note_joined": "You’re in the room. Nobody can listen in until you go live.",
   "booth.live.host": "Hosted by {name}",
-  "booth.live.how_to": "To play live yourself, open the Ж menu, choose Upload or go live, then Go live.",
   "booth.live.join_failed": "Couldn’t get into the room just now. Try again.",
   "booth.live.later": "Later",
   "booth.live.leave": "Leave the set",
