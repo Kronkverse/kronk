@@ -149,6 +149,31 @@ RSpec.describe 'Huddle mini window', :js, :streaming do
       expect(page).to have_button('Huddle Up')
     end
 
+    # docs/spaces/huddle.md, A frame in a projekt: a Kuddle Konnected to a
+    # projekt is a call frame on its page, not a tile, and its call follows
+    # you back to the projekt.
+    it 'shows a Konnected Kuddle as a frame in the projekt, and its call comes back there' do
+      doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+      KornerAttachment.create!(source_slug: 'freethedream', source_id: doof.id, target_slug: 'huddle', target_id: kuddle.id, kind: 'link', created_by_account: bob.account)
+      projekt = "/hub/krew/#{doof.reload.krew.slug}/p/#{doof.slug}"
+
+      visit projekt
+      within('.kuddle-frame') do
+        expect(page).to have_link('Ember')
+        click_on 'Join the call'
+      end
+      expect(page).to have_css('.huddle-call .fake-call', visible: :visible)
+      expect(page).to have_no_css('.attachment-section .space-tile', text: 'Ember')
+
+      visit_in_app('/home')
+      within('.huddle-mini') { expect(page).to have_css('.huddle-mini__title', text: 'Ember') }
+
+      click_on 'Back to the Huddle'
+      expect(page).to have_current_path(projekt)
+      within('.kuddle-frame') { expect(page).to have_button('Unhuddle') }
+      expect(page.evaluate_script('window.__jitsiDisposed')).to be_nil
+    end
+
     it "ends the Main Huddle's call on joining a Kuddle: one call at a time" do
       visit '/huddle'
       click_on 'Huddle Up'
