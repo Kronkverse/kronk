@@ -107,7 +107,11 @@ map and matched to the Country list where they can be. Each shape carries
 `bbox` and `area`. It is a first pass for @mangobee to check: a few small
 coastal Countries (Tiwi, Cobourg, the tip of Cape York) and most of Tasmania
 are coarse or unnamed, and some names placed from the sea may be on the wrong
-shape. A shape with no name shows "Not named yet".
+shape. A shape with no name shows "Not named yet". The words printed on the
+source map (Simpson Desert, Nullarbor Plain) and a dotted line had been traced
+as blocky letter-shaped bits of the Countries beside them; they were taken
+off, leaving each Country one shape with no holes, and a name read as only
+"Mayi-" was cleared (@mangobee, 2026-10-30).
 
 **The open list of names.** Country names are still being found, so the list
 stays open (@mangobee, 2026-10-30): `map_country_names` (`MapCountryName`,
