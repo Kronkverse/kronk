@@ -36,6 +36,7 @@ import {
 } from 'mastodon/jitsi';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
+import { wantsKuddleJoin } from './kuddle_frame';
 import { RoomComposer } from './room_composer';
 import type { CreatedRoom } from './room_composer';
 import { RoomsList } from './rooms_list';
@@ -217,11 +218,19 @@ const Live: React.FC<{
     if (returnToSource('/hub/huddle')) return;
     history.replace('/hub/huddle');
   }, [history, returnToSource]);
+  // Made from a projekt (its Konnect's New Kuddle): back there, straight
+  // into the call in its frame (kuddle_frame.tsx). Otherwise into the
+  // Kuddle's own page.
   const handleRoomCreated = useCallback(
     (room: CreatedRoom) => {
+      const source = parseKonnectParam(history.location.search);
+      if (source?.slug === 'freethedream') {
+        wantsKuddleJoin(room.id);
+        if (returnToSource(`/hub/huddle/kuddle/${room.id}`)) return;
+      }
       history.push(`/hub/huddle/kuddle/${room.id}`);
     },
-    [history],
+    [history, returnToSource],
   );
   // The call area on this page: the call is drawn over it.
   const slotRef = useRef<HTMLDivElement>(null);

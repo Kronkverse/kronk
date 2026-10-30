@@ -261,6 +261,9 @@ getting involved, not for doing the work itself:
   clearer view of what needs work is still to be designed. The lists'
   own pages (`/p/:id/needed`, `/bring`, `/actualise`, `/offers`) stay.
   Done, Hand over and Remove are off the page too.
+- **A Kuddle Konnected here** is a call frame at the top of the work, not
+  a tile under Attached: join the call in the page, and it floats with you
+  when you leave (docs/spaces/huddle.md, A frame in a projekt).
 - **Joining a Komponent** (Tal, 2026-10-30: "the UX for joining should
   be simple and intuitive"): on a Komponent's page, anyone in the projekt
   has one pill at the top, **Join**, then **Joined** (which leaves), with a

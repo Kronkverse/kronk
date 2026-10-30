@@ -12,49 +12,33 @@
 // back, so the page draws no back chip of its own.
 //
 // The call follows you, as the Main Huddle's does (docs/spaces/huddle.md):
-// it lives on document.body (huddle_pip/jitsi_session.ts), so leaving the
-// page mid-call moves it into the floating mini window, and coming back
-// picks the same call up. Leaner than `features/live/index.tsx` otherwise:
-// no lobby and no auto-rejoin after a reload.
+// leaving the page mid-call moves it into the floating mini window, and
+// coming back picks the same call up. The call itself is
+// use_kuddle_call.ts, shared with the frame a Kuddle shows in a space it's
+// Konnected to (kuddle_frame.tsx). Leaner than `features/live/index.tsx`
+// otherwise: no lobby and no auto-rejoin after a reload.
 //
 // Below the call sit the Kuddle's recordings, for anyone who can see it, and
 // its "Attached" block (huddle takes and makes links like every korner with
 // records); its host manages it.
 
 import type { CSSProperties } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import { useHistory, useParams } from 'react-router-dom';
 
-import {
-  huddleExpanded,
-  huddleJoined,
-  huddleLeft,
-  huddleMinimized,
-} from 'mastodon/actions/huddle';
-import { apiRequestGet, apiRequestPost } from 'mastodon/api';
+import { apiRequestGet } from 'mastodon/api';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { CallControls } from 'mastodon/components/call_controls';
 import { CallRecordings } from 'mastodon/components/call_recordings';
 import { Stage } from 'mastodon/components/stage';
-import {
-  createJitsiContainer,
-  disposeJitsiSession,
-  getJitsiSession,
-  getJitsiSessionFor,
-  setJitsiSession,
-  setJitsiSlot,
-} from 'mastodon/features/huddle_pip/jitsi_session';
-import { me } from 'mastodon/initial_state';
-import type { Call } from 'mastodon/jitsi';
-import { createCall, getCallPass, loadJitsi } from 'mastodon/jitsi';
-import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { KuddleFollow } from './kuddle_follow';
 import type { KuddleFollowState } from './kuddle_follow';
+import { useKuddleCall } from './use_kuddle_call';
 
 interface HuddleRoomJSON extends KuddleFollowState {
   id: string;
@@ -119,22 +103,10 @@ const jitsiWrapStyle: CSSProperties = { flex: 1, minHeight: '400px' };
 
 export const LiveRoom: React.FC = () => {
   const intl = useIntl();
-  const dispatch = useAppDispatch();
   const { id } = useParams<{ id: string }>();
-  const placeKey = `kuddle:${id}`;
   const history = useHistory();
   const [room, setRoom] = useState<HuddleRoomJSON | null>(null);
   const [error, setError] = useState(false);
-  const joinedRef = useRef(false);
-  const [apiLoaded, setApiLoaded] = useState(false);
-  // The call area on this page: the call is drawn over it.
-  const slotRef = useRef<HTMLDivElement>(null);
-  const callRef = useRef<Call | null>(null);
-  const [call, setCall] = useState<Call | null>(null);
-  const [joinFailed, setJoinFailed] = useState(false);
-  const currentAccount = useAppSelector((state) =>
-    me ? state.accounts.get(me) : undefined,
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -154,141 +126,19 @@ export const LiveRoom: React.FC = () => {
     };
   }, [id]);
 
-  useEffect(() => {
-    let cancelled = false;
-    loadJitsi()
-      .then(() => {
-        if (!cancelled) setApiLoaded(true);
-        return undefined;
-      })
-      .catch(() => {
-        if (!cancelled) setJoinFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Coming back from the mini window picks this Kuddle's call up again.
-  // Leaving the page mid-call keeps it: it moves into the mini window.
-  const mountedRef = useRef(true);
-  useEffect(() => {
-    mountedRef.current = true;
-    const existing = getJitsiSessionFor(placeKey);
-    joinedRef.current = false;
-    callRef.current = null;
-    setCall(null);
-    if (existing) {
-      joinedRef.current = true;
-      callRef.current = existing.call;
-      setCall(existing.call);
-      dispatch(huddleExpanded());
-    }
-    return () => {
-      mountedRef.current = false;
-      const ours = getJitsiSessionFor(placeKey);
-      if (ours && ours.call === callRef.current) {
-        dispatch(
-          huddleMinimized({
-            participantCount: ours.call.api.getNumberOfParticipants(),
-          }),
-        );
-      }
-    };
-  }, [placeKey, dispatch]);
-
-  // The call ended away from this page (hung up from the mini window before
-  // coming back, say): nothing to show.
-  const huddleActive = useAppSelector((state) => state.huddle.active);
-  useEffect(() => {
-    if (huddleActive || !callRef.current) return;
-    if (getJitsiSession()?.call === callRef.current) return;
-    callRef.current = null;
-    setCall(null);
-  }, [huddleActive]);
-
-  // Show the call over this page's call area while you're in it. The area
-  // is drawn once the Room is in, which can be after the call (coming back
-  // from the mini window).
-  const roomShown = room !== null;
-  useEffect(() => {
-    if (!call || !roomShown) return undefined;
-    const el = slotRef.current;
-    setJitsiSlot(el);
-    return () => {
-      setJitsiSlot(null, el ?? undefined);
-    };
-  }, [call, roomShown]);
+  // Opening the Kuddle is the join; leaving goes back to the Huddle.
+  const goToHuddle = useCallback(() => {
+    history.push('/hub/huddle');
+  }, [history]);
+  const { call, leave, joinFailed, slotRef } = useKuddleCall(id, room, {
+    path: `/hub/huddle/kuddle/${id}`,
+    autoJoin: true,
+    onLeft: goToHuddle,
+  });
 
   const handleFollowChange = useCallback((state: KuddleFollowState) => {
     setRoom((current) => (current ? { ...current, ...state } : current));
   }, []);
-
-  // Unhuddle, here or (hanging up inside the call) in the mini window.
-  const handleLeave = useCallback(() => {
-    disposeJitsiSession(callRef.current ?? undefined);
-    callRef.current = null;
-    dispatch(huddleLeft());
-    if (!mountedRef.current) return;
-    setCall(null);
-    history.push('/hub/huddle');
-  }, [dispatch, history]);
-
-  // Opening the Room is the join: once the Room and the Jitsi script are
-  // both in, get a pass and embed the call. `joinedRef` keeps it to one
-  // embed per visit, whatever else about the Room changes meanwhile.
-  useEffect(() => {
-    if (!room || !apiLoaded || joinedRef.current) return;
-    joinedRef.current = true;
-
-    void getCallPass('kuddle', room.id)
-      .then((pass) => {
-        if (!mountedRef.current) return undefined;
-        const displayName =
-          currentAccount?.get('display_name') ??
-          currentAccount?.get('username') ??
-          'Kronker';
-        const container = createJitsiContainer();
-        const created = createCall({
-          parentNode: container,
-          pass,
-          displayName,
-          avatarUrl: currentAccount?.get('avatar'),
-          subject: room.name,
-        });
-        if (!created) {
-          container.remove();
-          setJoinFailed(true);
-          return undefined;
-        }
-        // Hanging up inside Jitsi leaves the Room, same as Unhuddle.
-        created.api.addListener('readyToClose', () => {
-          if (getJitsiSession()?.call === created) handleLeave();
-        });
-        callRef.current = created;
-        setCall(created);
-        // One call at a time: this ends a call already in the mini window.
-        setJitsiSession({
-          call: created,
-          container,
-          place: {
-            key: `kuddle:${room.id}`,
-            path: `/hub/huddle/kuddle/${room.id}`,
-            name: room.name,
-          },
-        });
-        dispatch(huddleJoined());
-        // Tell Kronk the Room is in use (keeps it listed first, and keeps
-        // the reaper away). Best effort: the call doesn't depend on it.
-        void apiRequestPost(`v1/huddle/rooms/${room.id}/join`).catch(() => {
-          /* best effort */
-        });
-        return undefined;
-      })
-      .catch(() => {
-        if (mountedRef.current) setJoinFailed(true);
-      });
-  }, [room, apiLoaded, currentAccount, handleLeave, dispatch]);
 
   if (error) {
     return (
@@ -324,7 +174,7 @@ export const LiveRoom: React.FC = () => {
           )}
           <CallControls
             call={call}
-            onLeave={handleLeave}
+            onLeave={leave}
             leaveLabel={intl.formatMessage(messages.leave)}
             inputPicker
           />
