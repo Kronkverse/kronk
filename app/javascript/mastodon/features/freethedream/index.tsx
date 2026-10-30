@@ -35,9 +35,6 @@ const messages = defineMessages({
   title: { id: 'freethedream.title', defaultMessage: 'Projekts' },
 });
 
-const HOMES = ['/hub/freethedream', '/hub/krew/:krew'];
-const at = (tail: string) => HOMES.map((home) => `${home}${tail}`);
-
 const toComposer = ({ location }: RouteComponentProps) => (
   <Redirect
     to={{ pathname: '/hub/krew/composer/projekt', search: location.search }}
@@ -76,13 +73,25 @@ const FreeTheDream: React.FC<{ multiColumn?: boolean }> = () => {
           to='/hub/freethedream/p/:id'
         />
         <Route path='/hub/freethedream/composer' exact render={toComposer} />
-        <Route path={at('/p/:id')} exact>
+        <Route
+          path={['/hub/freethedream/p/:id', '/hub/krew/:krew/p/:id']}
+          exact
+        >
           {detail(<ProjectPage />)}
         </Route>
-        <Route path={at('/p/:id/:list')} exact>
+        <Route
+          path={[
+            '/hub/freethedream/p/:id/:list',
+            '/hub/krew/:krew/p/:id/:list',
+          ]}
+          exact
+        >
           {detail(<WorkPage />)}
         </Route>
-        <Route path={at('/i/:id')} exact>
+        <Route
+          path={['/hub/freethedream/i/:id', '/hub/krew/:krew/i/:id']}
+          exact
+        >
           {detail(<ItemPage />)}
         </Route>
         <Redirect to='/hub/krew' />

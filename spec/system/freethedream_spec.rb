@@ -87,5 +87,4 @@ RSpec.describe 'Projekts', :js, :streaming do
     find('.space-badge').click
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
   end
-
 end
