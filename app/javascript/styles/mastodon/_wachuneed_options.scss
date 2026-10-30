@@ -181,7 +181,20 @@
     margin-block: 0.75rem;
   }
 
+  // One line even on a phone: day, from, to and remove (or a time and
+  // remove), the inputs sharing what is left.
   &__row {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: 0.4rem;
     align-items: center;
+
+    .compose-input {
+      min-width: 0;
+      padding-inline: 0.5rem;
+    }
+  }
+
+  &__row--slot {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }

@@ -315,7 +315,7 @@ export const ListingBookingEditor: React.FC<{
 
   const dayNames = useMemo(() => {
     const format = new Intl.DateTimeFormat(intl.locale, {
-      weekday: 'long',
+      weekday: 'short',
       timeZone: 'UTC',
     });
     return [0, 1, 2, 3, 4, 5, 6].map((day) =>
@@ -549,7 +549,10 @@ export const ListingBookingEditor: React.FC<{
               <FormattedMessage {...messages.slots} />
             </span>
             {state.slots.map((s) => (
-              <ComposeRow key={s.key} className='wachuneed-booking-edit__row'>
+              <ComposeRow
+                key={s.key}
+                className='wachuneed-booking-edit__row wachuneed-booking-edit__row--slot'
+              >
                 <ComposeInput
                   type='datetime-local'
                   value={s.at}

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
+import type { IntlShape } from 'react-intl';
 
 import type { ApiListingBookingJSON } from 'mastodon/api_types/wachuneed';
 
@@ -40,6 +41,16 @@ const messages = defineMessages({
 
 // 2026-11-01 was a Sunday: day 0, as the server counts them.
 const A_SUNDAY = Date.UTC(2026, 10, 1);
+
+// An HH:MM of the seller's hours, written the way this reader's clock is.
+const clock = (intl: IntlShape, time: string) => {
+  const [hour = 0, minute = 0] = time.split(':').map(Number);
+  return intl.formatTime(Date.UTC(2026, 10, 1, hour, minute), {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  });
+};
 
 export const ListingBookingSummary: React.FC<{
   booking: ApiListingBookingJSON;
@@ -91,7 +102,10 @@ export const ListingBookingSummary: React.FC<{
           </dt>
           <dd>
             {hours
-              .map((h) => `${dayNames[h.day]} ${h.from}–${h.to}`)
+              .map(
+                (h) =>
+                  `${dayNames[h.day]} ${clock(intl, h.from)}–${clock(intl, h.to)}`,
+              )
               .join('\n')}
           </dd>
         </>
