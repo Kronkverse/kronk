@@ -189,7 +189,8 @@ module Freethedream
       Claim.where(account_id: account.id, item_id: Item.where(root_id: top_id).select(:id)).delete_all
     end
 
-    # The emergence's Krew, made the first time it's asked for, with
+    # The emergence's Krew, made the first time it's asked for (an emergence
+    # from before Krews held them), Konnected to it like any other, with
     # everyone already in the emergence as its members and the owner as its
     # seeder. It takes the emergence's name and way in: open, or asking to
     # join (Krew "approval").
@@ -212,6 +213,7 @@ module Freethedream
         Membership.member.where(project_id: id).find_each do |membership|
           made.krew_memberships.create!(account_id: membership.account_id, role: membership.account_id == owner_id ? 'seeder' : 'member', source: 'direct')
         end
+        Kronk::AttachmentEffects.link!('freethedream', id, 'krew', made.id, owner) if owner
       end
       krew
     end
