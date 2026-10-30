@@ -151,12 +151,20 @@ hub_teaser:
 # plain names (Tal 2026-10-12, Kommons #117425252942751004: the old
 # Wachuneed / Wachumissing / Wachugot did not say what each held).
 #
-#   /hub/wachuneed         → offered (live listings on offer)
+#   /hub/wachuneed         → home    (a sideways row each of Offered,
+#                                       Desired and Shops; Tal 2026-10-29,
+#                                       Kommons "Home Page")
+#   /hub/wachuneed/offered → offered (live listings on offer)
 #   /hub/wachuneed/desired → desired (live wanted listings)
 #   /hub/wachuneed/shops   → shops   (every shop with something on offer)
 #   /hub/wachuneed/brands  → brands  (brands members back; Proposed ones too)
 #   /hub/wachuneed/mine    → mine    (the caller's own listings)
 views:
+  - {
+      key: home,
+      label: All,
+      tagline: 'Offered, Desired and Shops on one page.',
+    }
   - { key: offered, label: Offered, tagline: 'Things and services on offer.' }
   - { key: desired, label: Desired, tagline: 'What people are looking for.' }
   - { key: shops, label: Shops, tagline: 'Sellers with a page of their own.' }
