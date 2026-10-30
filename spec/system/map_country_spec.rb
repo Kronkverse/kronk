@@ -28,4 +28,17 @@ RSpec.describe 'Map Country', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path(%r{/hub/map\?country=Mardu\z})
     expect(page).to have_css('.map-country__card', text: 'Mardu Country')
   end
+
+  it 'adds another name to a Country from its card' do
+    visit '/@ana'
+    click_on 'Living on Mardu Country'
+
+    within('.map-country__card') do
+      fill_in 'Add another name', with: 'Martu'
+      click_on 'Add'
+      expect(page).to have_css('.map-country__added-name', text: 'Martu')
+    end
+
+    expect(MapCountryName.find_by(name: 'Martu')).to have_attributes(account: bob.account, shape_id: Integer)
+  end
 end

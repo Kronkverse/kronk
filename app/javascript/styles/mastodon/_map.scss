@@ -749,6 +749,103 @@
     line-height: 1.4;
   }
 
+  // Names people have added to this Country (the open list), as chips; a
+  // steward's carry an × to take one off.
+  &__added {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__added-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    color: var(--text-primary);
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  &__added-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-inline-end: -6px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .icon {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  &__add {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0 0;
+  }
+
+  &__add-input {
+    box-sizing: border-box;
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  &__add-button {
+    padding: 6px 12px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--accent-text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:disabled {
+      border-color: var(--border-default);
+      color: var(--text-muted);
+      cursor: default;
+    }
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      outline: none;
+    }
+  }
+
   &__card-note {
     margin: 10px 0 0;
     color: var(--text-muted);
