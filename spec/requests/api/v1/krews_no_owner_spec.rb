@@ -83,6 +83,19 @@ RSpec.describe 'API V1 Krews with no owner' do
       expect(response).to have_http_status(200)
       expect(krew.reload.archived?).to be true
     end
+
+    it "drops out of the member's own Krews once archived" do
+      krew.krew_memberships.where(account: seeder.account).destroy_all
+      delete "/api/v1/krews/#{krew.slug}", headers: headers_for(member)
+
+      %w(mine all).each do |scope|
+        get '/api/v1/krews', params: { scope: scope }, headers: headers_for(member)
+
+        expect(response.parsed_body.pluck('id')).to_not include(krew.id.to_s)
+      end
+      get "/api/v1/krews/#{krew.slug}", headers: headers_for(member)
+      expect(response).to have_http_status(200)
+    end
   end
 
   describe 'leaving' do
