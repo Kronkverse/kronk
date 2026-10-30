@@ -437,6 +437,8 @@ namespace :api, format: false do
       # The open list of First Nations Country names: anyone adds, a steward
       # takes one off (docs/spaces/map.md, First Nations Country).
       resources :country_names, only: [:index, :create, :destroy]
+      # The Mates born on or living on a Country, for its card.
+      get 'country_people', to: 'country_people#index'
     end
 
     namespace :klot do

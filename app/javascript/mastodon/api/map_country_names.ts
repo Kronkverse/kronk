@@ -28,3 +28,20 @@ export const apiAddCountryName = (name: string, shapeId: number) =>
 
 export const apiRemoveCountryName = (id: string) =>
   apiRequestDelete(`v1/map/country_names/${id}`);
+
+// The people on a Country: who says on their profile they were born on it or
+// live on it. Mirrors app/controllers/api/v1/map/country_people_controller.rb.
+export interface ApiMapCountryPersonJSON {
+  id: string;
+  acct: string;
+  name: string;
+  avatar: string;
+}
+
+export interface ApiMapCountryPeopleJSON {
+  born: ApiMapCountryPersonJSON[];
+  living: ApiMapCountryPersonJSON[];
+}
+
+export const apiGetCountryPeople = (names: string[]) =>
+  apiRequestGet<ApiMapCountryPeopleJSON>('v1/map/country_people', { names });

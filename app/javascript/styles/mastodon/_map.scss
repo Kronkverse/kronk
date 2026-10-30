@@ -724,6 +724,47 @@
     line-height: 1.4;
   }
 
+  // Who was born on or lives on this Country, as faces that open profiles.
+  &__people {
+    margin: 10px 0 0;
+  }
+
+  &__people-title {
+    margin: 0 0 4px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__people-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__person {
+    display: block;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+
   // Names people have added to this Country (the open list), as chips; a
   // steward's carry an × to take one off.
   &__added {
