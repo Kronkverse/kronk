@@ -45,9 +45,9 @@ const messages = defineMessages({
   },
   inPerson: {
     id: 'freethedream.event.in_person',
-    defaultMessage: 'Happening in person?',
+    defaultMessage: 'Getting together for it?',
   },
-  make: { id: 'freethedream.event.make', defaultMessage: 'Make the event' },
+  make: { id: 'freethedream.event.make', defaultMessage: 'Make an event' },
 });
 
 export const DATE: Intl.DateTimeFormatOptions = {

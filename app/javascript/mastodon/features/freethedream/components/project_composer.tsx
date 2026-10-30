@@ -47,11 +47,12 @@ const messages = defineMessages({
   },
   partSubtitle: {
     id: 'freethedream.compose.gang_subtitle',
-    defaultMessage: 'In {title}',
+    defaultMessage: 'A group for one part of {title}',
   },
   projectSubtitle: {
     id: 'freethedream.compose.project_subtitle',
-    defaultMessage: 'You run it. People who join can add to it.',
+    defaultMessage:
+      'A gathering, a creative work, a tool, an organisation: anything people bring to life together. You run it; people who join add to it.',
   },
   start: { id: 'freethedream.compose.seed_submit', defaultMessage: 'Seed' },
   add: { id: 'freethedream.compose.add', defaultMessage: 'Add' },
@@ -60,11 +61,11 @@ const messages = defineMessages({
   name: { id: 'freethedream.compose.name', defaultMessage: 'Name' },
   namePlaceholder: {
     id: 'freethedream.compose.name_placeholder',
-    defaultMessage: 'Mini Doof',
+    defaultMessage: 'A doof, an album, an app, a co-op…',
   },
   sectionPlaceholder: {
     id: 'freethedream.compose.gang_placeholder',
-    defaultMessage: 'Kitchen, Wash station, Sound',
+    defaultMessage: 'Sound, Design, Paperwork',
   },
   cover: { id: 'freethedream.compose.cover', defaultMessage: 'Cover photo' },
   coverAdd: {
@@ -87,7 +88,12 @@ const messages = defineMessages({
     id: 'freethedream.compose.about',
     defaultMessage: "What it's about",
   },
-  ends: { id: 'freethedream.compose.ends', defaultMessage: 'Date (optional)' },
+  ends: { id: 'freethedream.compose.ends', defaultMessage: 'When (optional)' },
+  endsHint: {
+    id: 'freethedream.compose.ends_hint',
+    defaultMessage:
+      "A day it happens or is due. Leave it empty if it's ongoing.",
+  },
   groupsInside: {
     id: 'freethedream.compose.gangs_inside',
     defaultMessage: 'Gangs to start with (optional)',
@@ -98,7 +104,7 @@ const messages = defineMessages({
   },
   fractalsPlaceholder: {
     id: 'freethedream.compose.fractals_placeholder',
-    defaultMessage: 'Cooking, Cleaning, Storage, Logistics',
+    defaultMessage: 'Research, Drafting, Testing, Logistics',
   },
   newFractal: {
     id: 'freethedream.compose.fractal',
@@ -106,7 +112,7 @@ const messages = defineMessages({
   },
   groupsPlaceholder: {
     id: 'freethedream.compose.groups_placeholder',
-    defaultMessage: 'Kitchen, Sound, Site, Welcome',
+    defaultMessage: 'Sound, Design, Paperwork, Welcome',
   },
   sectionsHint: {
     id: 'freethedream.compose.sections_hint',
@@ -114,12 +120,12 @@ const messages = defineMessages({
   },
   gear: {
     id: 'freethedream.compose.gear',
-    defaultMessage: 'What all of it needs (optional)',
+    defaultMessage: 'What it needs (optional)',
   },
   gearHint: {
     id: 'freethedream.compose.gear_boxes_hint',
     defaultMessage:
-      'One thing to a box, with how many beside it; Enter for the next. Tap + More welcome where more is welcome. Gear that only one part needs goes in that part.',
+      'Things, skills, time, money or space: one to a box, with how many beside it; Enter for the next. Tap + More welcome where more is welcome. Anything only one gang needs goes in that gang.',
   },
   krew: { id: 'freethedream.compose.krew', defaultMessage: 'Krew' },
   krewHint: {
@@ -473,7 +479,10 @@ export const ProjectComposer: React.FC<Props> = ({
         </ComposeSection>
       )}
       {top && (
-        <ComposeField label={intl.formatMessage(messages.ends)}>
+        <ComposeField
+          label={intl.formatMessage(messages.ends)}
+          hint={intl.formatMessage(messages.endsHint)}
+        >
           <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
         </ComposeField>
       )}

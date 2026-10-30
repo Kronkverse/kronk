@@ -85,7 +85,7 @@ const messages = defineMessages({
   },
   gearGathered: {
     id: 'freethedream.gear_gathered',
-    defaultMessage: '{gathered} of {total} gear gathered',
+    defaultMessage: '{gathered} of {total} needs met',
   },
   dependsOn: { id: 'freethedream.depends_on', defaultMessage: 'Depends on' },
   neededBy: { id: 'freethedream.needed_by', defaultMessage: 'Needed by' },
