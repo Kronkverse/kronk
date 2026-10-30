@@ -628,6 +628,18 @@ land on the right things.
 
 ## Upstream Mastodon
 
+## [4.5.20] - 2026-10-29
+
+### Security
+
+- Fix insufficient ActivityPub identifier verification ([GHSA-288h-6j8h-6x5j](https://github.com/mastodon/mastodon/security/advisories/GHSA-288h-6j8h-6x5j))
+- Updated dependencies, in particular to address security advisories in Ruby, NodeJS, and `sanitize`
+
+### Fixed
+
+- Fix inefficiency in some hashtag timeline queries (#41132 by @hugogameiro)
+- Fix error in `dev:populate_sample_data` task (#40995 and #41051 by @isidzukuri and @mjankowski)
+
 ## [4.5.19] - 2026-10-01
 
 ### Security
