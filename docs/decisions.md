@@ -17,6 +17,38 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-30 — The Android app is the website
+
+Tal asked for an Android app that keeps up with the site without a second
+codebase: "functionality is growing rapidly and it's going to be a huge load
+to carry both the main code AND the app for every update". The Mastodon-based
+app rebuilt Events and Huddle natively, crashed on 2.0's reach ladder and has
+been answered with "Kronk has moved to the web" since (`Kronk::LegacyAppGate`);
+the September native rewrite (kronk-app #66–70) had the same shape.
+
+**Decision:** the app is a Trusted Web Activity (`Kronkverse/kronk-app`,
+rebuilt from Bubblewrap): an APK that opens Kronk full-screen in the phone's
+browser engine. Every deploy is in the app at once, with no app work. Push,
+sharing in, camera and files are the site's own web features. Not iframes
+per korner, because the shell would then own navigation and every new korner
+would need app work; not a WebView shell, because web push doesn't work in one.
+
+- **Two apps.** `info.kronk.app` opens kronk.info and is signed with the
+  existing release key; `info.kronk.app.shadow` opens shadow.kronk.info with
+  its own key, for testing. Both keys are in `public/.well-known/assetlinks.json`,
+  which is what makes the app full-screen (without a match, the browser
+  shows its address bar).
+- **The site knows it's the app** from the launch URL
+  (`/?source=app&app=<versionCode>`, `utils/android_app.ts`). There it offers
+  the app's update instead of "add to home screen".
+- **The app has its own version**, year.month (`2026.11`, code 20261100),
+  not Kronk's: 3.0 is Kronk-native federation (Tal). The code stays above the
+  legacy app's 21401 so that app's updater, which reads
+  `kronk.info/version.json`, offers the new one and it installs over it.
+- **Android 7.0 (API 24) and up**, the TWA library's floor (Tal: fine).
+- On a phone whose default browser can't run a TWA, it opens as a browser
+  tab with the address bar showing, which keeps push.
+
 ## 2026-10-30 — Emergences live inside Krews
 
 Tal's proposals "More interconnectedness with krew space", "Access of a FTD
