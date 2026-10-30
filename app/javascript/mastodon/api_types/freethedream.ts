@@ -96,6 +96,7 @@ export interface FtdSectionRow {
   done: boolean;
   sections_count: number;
   people_count: number;
+  joined: boolean;
   progress: FtdProgress;
 }
 
@@ -246,6 +247,8 @@ export interface FtdProject {
   depends_on: FtdRef[];
   needed_by: FtdRef[];
   updates: FtdUpdate[];
+  // In a Komponent you joined (on a fractal: its Komponent).
+  in_gang: boolean;
   membership: FtdMembership;
   members_count: number;
   members: FtdAccount[];
@@ -273,6 +276,7 @@ export interface FtdProject {
     hand_over: boolean;
     comment: boolean;
     link_event: boolean;
+    join_gang: boolean;
   };
 }
 

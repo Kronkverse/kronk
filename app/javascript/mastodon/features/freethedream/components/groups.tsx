@@ -23,6 +23,7 @@ const messages = defineMessages({
     defaultMessage: '{count, plural, one {# person} other {# people}}',
   },
   unseen: { id: 'freethedream.dash.new_count', defaultMessage: '{count} new' },
+  joined: { id: 'freethedream.gang.joined', defaultMessage: 'Joined' },
 });
 
 export const GroupTiles: React.FC<{
@@ -44,6 +45,11 @@ export const GroupTiles: React.FC<{
                   {intl.formatMessage(messages.unseen, {
                     count: section.unseen,
                   })}
+                </span>
+              )}
+              {section.joined && (
+                <span className='freethedream-tag'>
+                  {intl.formatMessage(messages.joined)}
                 </span>
               )}
               {section.done && (

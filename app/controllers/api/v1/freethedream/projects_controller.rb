@@ -100,6 +100,22 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
+  # Join a Komponent, to hear about it (Freethedream::GangNudges). Only
+  # someone in the projekt, and only a Komponent: a fractal's news comes
+  # through its Komponent.
+  def join_gang
+    require_member!(@project.top)
+    raise Mastodon::NotPermittedError unless @project.gang?
+
+    Freethedream::GangMember.find_or_create_by!(project: @project, account: current_account)
+    render json: view.project(@project)
+  end
+
+  def leave_gang
+    Freethedream::GangMember.where(project: @project, account: current_account).delete_all
+    render json: view.project(@project)
+  end
+
   # You've looked at this project's or section's talk: nothing in it is new
   # to you any more.
   def seen
