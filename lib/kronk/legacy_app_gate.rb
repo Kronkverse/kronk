@@ -47,7 +47,11 @@ module Kronk
 
     GATED_PATH = '/api/'
 
-    MESSAGE = 'Kronk has moved to the web. Open kronk.info in your browser and add it to your home screen — everything is there, and the app is being replaced.'
+    # Read by people holding the old app, before and after the new one is
+    # released (kronk-app, a Trusted Web Activity under the same package and
+    # key, so it installs over this one). Its updater's notification can't open
+    # the installer on Android 12+, so name the way that works: Settings.
+    MESSAGE = 'Kronk has moved to the web, and the new Kronk app opens it. Open Settings in this app and install the update if it offers one. Otherwise open kronk.info in your browser.'
 
     def initialize(app)
       @app = app
