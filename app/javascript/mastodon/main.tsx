@@ -17,12 +17,16 @@ import {
 import ready from 'mastodon/ready';
 import { store } from 'mastodon/store';
 
+import { noteAndroidApp } from './utils/android_app';
 import { isProduction, isDevelopment } from './utils/environment';
 import { applyPersonalAppearance } from './utils/personal_appearance';
 import { applyThemeVariant } from './utils/theme_variant';
 
 function main() {
   perf.start('main()');
+
+  // Before the router leaves `/` and drops the query (utils/android_app).
+  noteAndroidApp();
 
   return ready(async () => {
     const mountNode = document.getElementById('mastodon');
