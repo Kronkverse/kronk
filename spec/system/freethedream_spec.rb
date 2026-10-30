@@ -2,10 +2,10 @@
 
 require 'rails_helper'
 
-# docs/spaces/freethedream.md (Page): the landing sits in <KornerShell>, so
-# the Frame draws its view switch from the manifest's `views:`, the
-# rotating title every other korner with views uses, not a row of pills.
-RSpec.describe 'FreeTheDream', :js, :streaming do
+# docs/spaces/freethedream.md: Projekts live inside Krews (Tal,
+# 2026-10-30). A projekt's pages sit under its Krew, and there is no list
+# of every projekt.
+RSpec.describe 'Projekts', :js, :streaming do
   include ProfileStories
 
   let(:email)               { 'test@example.com' }
@@ -15,31 +15,15 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
 
   before { as_a_logged_in_user }
 
-  it "switches views with the Frame's rotating title, and draws no tab row of its own" do
+  it 'sends the old list, its views and settings to your Krews' do
     visit '/hub/freethedream'
+    expect(page).to have_current_path('/hub/krew')
 
-    within('.scope-title') do
-      expect(page).to have_css('h1.space-header__title', text: 'All projekts')
-      expect(page).to have_css('.space-header__tagline', text: 'Every projekt on Kronk')
-    end
-    # The Frame's pillar bar is a tablist too; only the korner's own
-    # surface (the Stage) must carry none.
-    within('.kronk-stage') do
-      expect(page).to have_no_css('.space-view-picker')
-      expect(page).to have_no_css('[role="tablist"], [role="tab"]')
-    end
+    visit '/hub/freethedream/mine'
+    expect(page).to have_current_path('/hub/krew')
 
-    find('.scope-title__nav--next').click
-
-    expect(page).to have_current_path('/hub/freethedream/mine')
-    expect(page).to have_css('.scope-title h1.space-header__title', text: 'Mine')
-
-    # Mycelium is hidden for now (Tal, 2026-10-30), so Mine turns back to
-    # every emergence.
-    find('.scope-title__nav--next').click
-
-    expect(page).to have_current_path('/hub/freethedream')
-    expect(page).to have_css('.scope-title h1.space-header__title', text: 'All projekts')
+    visit '/hub/freethedream/settings'
+    expect(page).to have_current_path('/hub/krew')
   end
 
   # docs/spaces/freethedream.md, The Krew: an emergence lives in one of your
@@ -48,12 +32,13 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     krew = Fabricate(:krew, seeded_by: bob.account, name: 'Mayhem')
 
     visit '/hub/freethedream/composer'
+    expect(page).to have_current_path('/hub/krew/composer/projekt')
     fill_in placeholder: 'A doof, an album, an app, a co-op…', with: 'Mini Doof'
     expect(page).to have_button('Seed', disabled: true)
     select 'Mayhem', from: 'Krew'
     click_on 'Seed'
 
-    expect(page).to have_current_path(%r{/hub/freethedream/p/})
+    expect(page).to have_current_path(%r{\A/hub/krew/#{krew.slug}/p/})
     expect(Freethedream::Project.find_by(title: 'Mini Doof').krew).to eq krew
 
     visit "/hub/krew/#{krew.slug}"
@@ -73,7 +58,7 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     fill_in placeholder: 'A doof, an album, an app, a co-op…', with: 'Mini Doof'
     click_on 'Seed'
 
-    expect(page).to have_current_path(%r{/hub/freethedream/p/})
+    expect(page).to have_current_path(%r{\A/hub/krew/#{krew.slug}/p/})
     expect(Freethedream::Project.find_by(title: 'Mini Doof').krew).to eq krew
   end
 
@@ -85,7 +70,9 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
     krew = doof.reload.krew
 
+    # An old address (a notification, a link preview) moves under its Krew.
     visit "/hub/freethedream/p/#{doof.slug}"
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
     click_on 'Open the Krew'
 
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
@@ -93,7 +80,7 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     expect(Krew.count).to eq 1
 
     find('.krew-detail__projekts .space-card', text: 'Mini Doof').click
-    expect(page).to have_current_path("/hub/freethedream/p/#{doof.slug}")
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
 
     # Back from a projekt is its Krew, not the list of every projekt.
     expect(page).to have_css('.space-badge__name', text: krew.name)
@@ -101,10 +88,4 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
   end
 
-  it 'opens on the view its address names' do
-    visit '/hub/freethedream/mine'
-
-    expect(page).to have_css('.scope-title h1.space-header__title', text: 'Mine')
-    expect(page).to have_css('.scope-title .space-header__tagline', text: "Projekts you're in")
-  end
 end

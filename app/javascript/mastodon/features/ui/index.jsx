@@ -306,6 +306,8 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/hub/klot/settings' exact component={KlotSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/kommons/settings' exact component={KommonsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/kuestions/settings' exact component={KuestionsSettings} content={children} />}
+            {/* Projekts have no settings of their own: they live in Krews. */}
+            <Redirect from='/hub/freethedream/settings' to='/hub/krew' exact />
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             {/* Huddle is a korner surface at /hub/huddle; the legacy
                 /huddle path forwards to it. `/hub/huddle` renders the
@@ -394,6 +396,10 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/hub/krew/composer' exact component={Krews} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/new' exact component={Krews} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path={['/hub/krew/discover', '/hub/krew']} exact component={Krews} content={children} />}
+            {/* Projekts live inside Krews (docs/spaces/freethedream.md):
+                their composer, then their pages, before /hub/krew/:id. */}
+            {signedIn && <WrappedRoute path='/hub/krew/composer/projekt' exact component={Krews} componentParams={{ autoOpenProjekt: true }} content={children} />}
+            {signedIn && <WrappedRoute path={['/hub/krew/:krew/p/:id', '/hub/krew/:krew/i/:id']} component={FreeTheDream} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id/settings' exact component={KrewSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
             {/* Klot — cycle tracker (docs/spaces/klot.md). Requires signed-in
