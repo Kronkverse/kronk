@@ -17,6 +17,20 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-30 — First Nations Country names are an open list
+
+@mangobee: Country names and sectors are still being found, so every name
+people give should join the list, and the list should stay open; the matter is
+taken seriously.
+
+**Decision:** names live in `map_country_names` beside Kronk's own list. Every
+name typed on a profile (born on or living on) joins it at once, and anyone can
+add another name to a Country from its card on the map, which ties it to that
+shape. Each name records who added it. Only stewards (admins and moderators;
+@mangobee and Tal) take a name off, and a name taken off stays off rather than
+coming back when typed again. Kronk's own list and the names on the map's
+shapes are not editable from the app.
+
 ## 2026-10-29 — Tag only your Mates in photos and Moments
 
 Tal: photo and Moments tagging should be Mates only, like @mentions now
