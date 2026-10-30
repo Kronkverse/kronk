@@ -33,7 +33,7 @@ class Api::V1::Map::CountryNamesController < Api::BaseController
       # it is. One already given a Country keeps it.
       name.update!(shape_id: shape_id) if name.shape_id.nil?
     else
-      name = MapCountryName.new(name: params[:name].to_s.squish.sub(/\s+country\z/i, ''), shape_id: shape_id, account: current_account)
+      name = MapCountryName.new(name: typed_name, shape_id: shape_id, account: current_account)
       return render json: { error: name.errors.full_messages.first }, status: 422 unless name.save
     end
 
@@ -49,6 +49,12 @@ class Api::V1::Map::CountryNamesController < Api::BaseController
   end
 
   private
+
+  # The name as typed, without a trailing "Country" (as on a profile). Squished
+  # first, so the suffix is matched as plain text.
+  def typed_name
+    params[:name].to_s.first(MapCountryName::NAME_LIMIT * 2).squish.delete_suffix(' Country').delete_suffix(' country')
+  end
 
   # Stewards look after the list: admins and moderators, as for proposals.
   def steward?
