@@ -72,6 +72,7 @@ module Freethedream
         ancestors: project.ancestors.map { |a| { id: a.id.to_s, slug: a.slug, title: a.title } },
         cover: cover(project),
         event: event(project, owner),
+        events: events(project, tree, owner),
         ends_on: project.ends_on,
         done: project.done?,
         joining: top.joining_via_krew,
@@ -105,7 +106,7 @@ module Freethedream
           take_over: member && !owner && project.up_for_grabs?,
           hand_over: owner && member,
           comment: member,
-          link_event: owner && member,
+          link_event: member,
         },
       }
     end
@@ -183,6 +184,10 @@ module Freethedream
       event, link = visible_event_link(project)
       return nil if event.nil?
 
+      event_json(event, link, owner)
+    end
+
+    def event_json(event, link, owner)
       rsvp = event.rsvps.find_by(account_id: @viewer.id)
       {
         id: event.id.to_s,
@@ -200,6 +205,24 @@ module Freethedream
         attachment_id: link.id.to_s,
         can_unlink: owner || link.created_by_account_id == @viewer.id,
       }
+    end
+
+    # Getting together: the events linked to this part or any part inside
+    # it that haven't ended, soonest first, each saying which Komponent or
+    # fractal it's for (nil when it's for this page's own part).
+    def events(project, tree, owner)
+      ids = tree.subtree_ids(project.id)
+      parts = Project.where(id: ids).index_by(&:id)
+      now = Time.current
+      project.event_links(ids)
+             .uniq { |event, _link, _part| event.id }
+             .select { |event, _link, _part| (event.end_time || event.start_time) >= now && event.visible_to?(@viewer) }
+             .sort_by { |event, _link, _part| event.start_time }
+             .map do |event, link, part|
+               shown = event_json(event, link, owner)
+               holder = part == project.id ? nil : parts[part]
+               shown.merge(for: holder && { id: holder.id.to_s, slug: holder.slug, title: holder.title })
+             end
     end
 
     # The linked Kalendar event and its link, or nil when there's none or

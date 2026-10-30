@@ -122,20 +122,30 @@ module Freethedream
     # their own event to any project, so only an event made by someone in
     # the emergence counts; the newest such link wins.
     def event_link
-      # Made from either end: the event's Attach or the emergence's.
+      found = event_links([id]).first
+      found&.first(2)
+    end
+
+    # Every Kalendar event linked to one of `ids` (this projekt's parts),
+    # newest link first, as [event, link, part id]. Made from either end:
+    # the event's Attach or the projekt's. Only live events made by someone
+    # in the projekt count.
+    def event_links(ids)
+      ids = ids.map(&:to_i)
       links = KornerAttachment.where(kind: KornerAttachment::KIND_LINK)
-      links = links.where(source_slug: 'kalendar', target_slug: 'freethedream', target_id: id)
-                   .or(links.where(source_slug: 'freethedream', source_id: id, target_slug: 'kalendar'))
+      links = links.where(source_slug: 'kalendar', target_slug: 'freethedream', target_id: ids)
+                   .or(links.where(source_slug: 'freethedream', source_id: ids, target_slug: 'kalendar'))
                    .order(created_at: :desc).to_a
       event_id = ->(link) { Kronk::AttachmentEffects.ends(link, 'kalendar').first }
       events = Event.where(id: links.map(&event_id)).index_by(&:id)
       members = Membership.member.where(project_id: top_id).pluck(:account_id)
 
-      links.each do |link|
+      links.filter_map do |link|
         event = events[event_id.call(link)]
-        return [event, link] if event && !event.cancelled? && members.include?(event.account_id)
+        next unless event && !event.cancelled? && members.include?(event.account_id)
+
+        [event, link, link.source_slug == 'freethedream' ? link.source_id.to_i : link.target_id.to_i]
       end
-      nil
     end
 
     def member?(account)

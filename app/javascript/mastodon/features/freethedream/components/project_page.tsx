@@ -26,10 +26,10 @@ import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { act } from './act';
 import { Crew } from './crew';
-import { eventMapHref, eventWhen } from './event_card';
+import { eventMapHref, eventWhen, GettingTogether } from './event_card';
 import { GroupTiles } from './groups';
 import { ItemComposer } from './item_composer';
-import { ProjectEvent, Yours } from './overview';
+import { Yours } from './overview';
 import { ProjectComposer } from './project_composer';
 import {
   itemPath,
@@ -286,12 +286,10 @@ const ProjectView: React.FC<{
         korner: 'freethedream',
         id: project.id,
         canManage: project.can.edit,
-        // The event card beside the work already shows the linked event,
-        // and an emergence's Krew row its Krew.
+        // Getting together already lists the linked events, and a projekt
+        // lives in its Krew.
         exclude: [
-          ...(project.event
-            ? [{ slug: 'kalendar', id: project.event.id }]
-            : []),
+          ...project.events.map((e) => ({ slug: 'kalendar', id: e.id })),
           ...(project.top && project.krew
             ? [{ slug: 'krew', id: project.krew.id }]
             : []),
@@ -448,7 +446,7 @@ const ProjectView: React.FC<{
             )}
           </div>
           <aside className='freethedream-layout__aside'>
-            <ProjectEvent project={project} refresh={refresh} />
+            <GettingTogether project={project} refresh={refresh} />
             {!project.top && (
               <Updates
                 updates={project.updates}
