@@ -573,11 +573,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         </div>
 
         {activeItem && isStill(activeItem) && (
-          <div
-            className='moments-composer__films'
-            role='group'
-            aria-label={intl.formatMessage(messages.filmLooks)}
-          >
+          <FilmRow label={intl.formatMessage(messages.filmLooks)}>
             <FilmChip
               id={null}
               label={intl.formatMessage(messages.filmOriginal)}
@@ -596,7 +592,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
                 onSelect={setFilmActive}
               />
             ))}
-          </div>
+          </FilmRow>
         )}
 
         {items.length > 0 && (
@@ -727,6 +723,48 @@ const AddMenuItem: React.FC<{
     {label}
   </button>
 );
+
+// ── the film look row ──────────────────────────────────────────────
+// Scrolls sideways when the chips don't fit (a phone). `data-more` is true
+// while there are chips off the right edge, which fades that edge as a hint
+// that the row slides.
+const FilmRow: React.FC<{ label: string; children: React.ReactNode }> = ({
+  label,
+  children,
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState(false);
+
+  const measure = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    measure();
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+    };
+  }, [measure]);
+
+  return (
+    <div
+      ref={ref}
+      className='moments-composer__films'
+      role='group'
+      aria-label={label}
+      data-more={more}
+      onScroll={measure}
+    >
+      {children}
+    </div>
+  );
+};
 
 // ── one film look in the picker row ────────────────────────────────
 const FilmChip: React.FC<{

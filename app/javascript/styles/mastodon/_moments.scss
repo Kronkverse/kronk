@@ -1308,6 +1308,11 @@
   &::-webkit-scrollbar {
     display: none;
   }
+
+  // More chips off the right edge: fade it so the row reads as sliding.
+  &[data-more='true'] {
+    mask-image: linear-gradient(to right, black calc(100% - 40px), transparent);
+  }
 }
 
 .moments-composer__film {
