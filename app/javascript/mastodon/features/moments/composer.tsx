@@ -673,6 +673,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         editorTarget.kind === 'media' && (
           <MomentsTextEditor
             file={editorTarget.file}
+            film={editorTarget.film}
             initial={editorTarget.overlays}
             index={Math.max(0, stillIndexes.indexOf(editorIndex))}
             total={stillIndexes.length}
