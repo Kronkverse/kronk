@@ -224,7 +224,7 @@ const Live: React.FC<{
   const handleRoomCreated = useCallback(
     (room: CreatedRoom) => {
       const source = parseKonnectParam(history.location.search);
-      if (source?.slug === 'freethedream') {
+      if (source?.slug === 'freethedream' || source?.slug === 'krew') {
         wantsKuddleJoin(room.id);
         if (returnToSource(`/hub/huddle/kuddle/${room.id}`)) return;
       }

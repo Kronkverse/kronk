@@ -4,6 +4,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
 
+import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeleteAttachment } from 'mastodon/api/attachments';
 import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
@@ -12,12 +13,14 @@ import {
   apiFtdProject,
   apiFtdProjectAction,
   apiFtdRemoveDependency,
+  apiFtdRemoveProject,
   apiFtdSeen,
 } from 'mastodon/api/freethedream';
 import type {
   FtdProject,
   FtdQuotedItem,
 } from 'mastodon/api_types/freethedream';
+import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
@@ -61,6 +64,15 @@ import { WORK_LISTS, WorkBody, workCount, workMessages } from './work';
 
 const messages = defineMessages({
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
+  remove: { id: 'freethedream.remove', defaultMessage: 'Remove' },
+  removeTitle: {
+    id: 'freethedream.remove_project.title',
+    defaultMessage: 'Remove {title}?',
+  },
+  removeBody: {
+    id: 'freethedream.remove_project.body',
+    defaultMessage: 'It goes for everyone, with everything in it.',
+  },
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
   joinRoot: {
     id: 'freethedream.join_root',
@@ -182,6 +194,35 @@ const ProjectView: React.FC<{
     },
     openEdit,
     project.can.edit && composer === null,
+  );
+
+  // Remove, for a Komponent or fractal, on the Ж menu beside Edit (Tal,
+  // 2026-10-31). The server still refuses while others have things in it.
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const askRemove = useCallback(() => {
+    setConfirmRemove(true);
+  }, []);
+  const cancelRemove = useCallback(() => {
+    setConfirmRemove(false);
+  }, []);
+  const removeParent = project.ancestors[project.ancestors.length - 1];
+  const handleRemove = useCallback(() => {
+    setConfirmRemove(false);
+    void act(
+      apiFtdRemoveProject(project.id).then(() => {
+        if (removeParent) history.push(projectPath(removeParent));
+      }),
+    );
+  }, [project.id, removeParent, history]);
+  useRegisterPageAction(
+    {
+      key: 'remove',
+      label: intl.formatMessage(messages.remove),
+      icon: DeleteIcon,
+      iconId: 'delete',
+    },
+    askRemove,
+    !project.top && project.can.remove && composer === null,
   );
 
   // Joining a Komponent is how you hear about it (Tal, 2026-10-30: "the
@@ -576,6 +617,18 @@ const ProjectView: React.FC<{
           editing={project}
           onCancel={close}
           onSaved={handleSaved}
+        />
+      )}
+      {confirmRemove && (
+        <ConfirmDialog
+          title={intl.formatMessage(messages.removeTitle, {
+            title: project.title,
+          })}
+          message={intl.formatMessage(messages.removeBody)}
+          confirmLabel={intl.formatMessage(messages.remove)}
+          destructive
+          onConfirm={handleRemove}
+          onCancel={cancelRemove}
         />
       )}
       {composer === 'offer' && (
