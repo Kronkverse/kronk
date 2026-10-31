@@ -260,7 +260,9 @@ getting involved, not for doing the work itself:
   2026-10-30): it is part of its Krew, whose page has its people, and a
   clearer view of what needs work is still to be designed. The lists'
   own pages (`/p/:id/needed`, `/bring`, `/actualise`, `/offers`) stay.
-  Done, Hand over and Remove are off the page too.
+  Done, Hand over and Remove are off the page too. A Komponent or a
+  fractal can still be removed, by whoever made it, from the Ж menu beside
+  Edit (Tal, 2026-10-31).
 - **A Kuddle Konnected here** is a call frame at the top of the work, not
   a tile under Attached: join the call in the page, and it floats with you
   when you leave (docs/spaces/huddle.md, A frame in a projekt).
@@ -335,13 +337,14 @@ chip goes to its gang.
   all of Mini Doof**, what's placed on the emergence itself, which is
   where power, lighting and water go (what several or all of its gangs
   use); then each gang, under its name.
-- **Coalescing a gang** takes its name, what it's about, its **first
-  fractals** and **what all of it needs**, so a gang is set up in one
-  step. What it needs goes one thing to a box, like adding to Thing
-  Bringing (Tal, 2026-10-17): Enter goes to the next box, × takes one off,
-  and the amount shows beside its box ("2", or "20+" for `20+ plates`). A gang has no date. After adding, you stay where you
-  were, ready to coalesce the next one. **Seeding an emergence** takes its
-  first gangs and gear the same way; **adding a fractal**, its gear.
+- **Adding a Komponent** (or a fractal) takes its name and what it's
+  about, nothing more (Tal, 2026-10-31: "strip it back to those two and
+  build from there"); no fractals, needs or Konnect in its composer. A
+  Komponent has no date. After adding, you stay where you were, ready to
+  add the next one. **Seeding a projekt** takes its first Komponents and
+  what it needs: one thing to a box, like adding to Thing Bringing (Tal,
+  2026-10-17): Enter goes to the next box, × takes one off, and the amount
+  shows beside its box ("2", or "20+" for `20+ plates`).
 - **Talk** (below).
 
 Edit (including the cover) is on the Ж menu, owner only.

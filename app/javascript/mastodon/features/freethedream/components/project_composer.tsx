@@ -98,14 +98,6 @@ const messages = defineMessages({
     id: 'freethedream.compose.gangs_inside',
     defaultMessage: 'Komponents to start with (optional)',
   },
-  fractalsInside: {
-    id: 'freethedream.compose.fractals_inside',
-    defaultMessage: 'Fractals to start with (optional)',
-  },
-  fractalsPlaceholder: {
-    id: 'freethedream.compose.fractals_placeholder',
-    defaultMessage: 'Research, Drafting, Testing, Logistics',
-  },
   newFractal: {
     id: 'freethedream.compose.fractal',
     defaultMessage: 'Add a fractal',
@@ -193,6 +185,7 @@ export const ProjectComposer: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   const top = editing ? editing.top : !parent;
+  const newTop = top && !editing;
   // Adding inside an emergence makes a gang; inside a gang, a fractal.
   const fractal = parent?.level === 'gang';
   // What a new one will be Konnected to (decisions.md, 2026-10-23).
@@ -301,8 +294,6 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleKrew = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setKrewId(e.target.value);
   }, []);
-  const newTop = top && !editing;
-
   const handleSubmit = useCallback(() => {
     setBusy(true);
     setError(null);
@@ -322,11 +313,11 @@ export const ProjectComposer: React.FC<Props> = ({
       : apiFtdCreateProject(
           { ...params, parent_id: parent?.id },
           {
-            sections: (fractal ? '' : sections)
+            sections: (newTop ? sections : '')
               .split(/[\n,]/)
               .map((name) => name.trim())
               .filter(Boolean),
-            needs: gear
+            needs: (newTop ? gear : [])
               .map((line) => line.trim())
               .filter(Boolean)
               .map(parseLine)
@@ -357,7 +348,7 @@ export const ProjectComposer: React.FC<Props> = ({
     description,
     endsOn,
     cover,
-    fractal,
+    newTop,
     krewId,
     sections,
     gear,
@@ -401,7 +392,7 @@ export const ProjectComposer: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
-      konnect={editing ? null : konnect}
+      konnect={editing || parent ? null : konnect}
     >
       <ComposeTitle
         value={title}
@@ -486,29 +477,22 @@ export const ProjectComposer: React.FC<Props> = ({
           <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
         </ComposeField>
       )}
-      {!editing && (
+      {newTop && (
         <>
-          {/* An emergence starts with its gangs, a gang with its fractals;
-              a fractal holds nothing (Tal, 2026-10-15). */}
-          {!fractal && (
-            <ComposeField
-              label={intl.formatMessage(
-                top ? messages.groupsInside : messages.fractalsInside,
-              )}
-              hint={intl.formatMessage(messages.sectionsHint)}
-            >
-              <ComposeTextarea
-                rows={2}
-                value={sections}
-                onChange={handleSections}
-                placeholder={intl.formatMessage(
-                  top
-                    ? messages.groupsPlaceholder
-                    : messages.fractalsPlaceholder,
-                )}
-              />
-            </ComposeField>
-          )}
+          {/* A projekt starts with its Komponents and needs. Adding a
+              Komponent or a fractal is its name and what it's about
+              (Tal, 2026-10-31). */}
+          <ComposeField
+            label={intl.formatMessage(messages.groupsInside)}
+            hint={intl.formatMessage(messages.sectionsHint)}
+          >
+            <ComposeTextarea
+              rows={2}
+              value={sections}
+              onChange={handleSections}
+              placeholder={intl.formatMessage(messages.groupsPlaceholder)}
+            />
+          </ComposeField>
           <ComposeSection title={intl.formatMessage(messages.gear)}>
             <NeedBoxes lines={gear} onChange={setGear} />
             <CategoryChips value={gearCategory} onChange={setGearCategory} />

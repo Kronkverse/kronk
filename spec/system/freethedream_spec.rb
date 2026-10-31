@@ -89,4 +89,33 @@ RSpec.describe 'Projekts', :js, :streaming do
     find('.space-badge').click
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
   end
+
+  # docs/spaces/freethedream.md, Komponents (Tal, 2026-10-31): adding a
+  # Komponent is its name and what it is about, and whoever made it can
+  # remove it again from the menu.
+  it 'adds a Komponent with just a name, and removes it from the menu' do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    click_on '+ Add a Komponent'
+    within('.compose-shell') do
+      expect(page).to have_no_text('Fractals to start with')
+      expect(page).to have_no_text('What it needs')
+      expect(page).to have_no_css('.konnect-row')
+      fill_in placeholder: 'Sound, Design, Paperwork', with: 'Kitchen'
+      click_on 'Add'
+    end
+
+    find('.freethedream-group', text: 'Kitchen').click
+    expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
+    find('.kronk-menu__trigger').click
+    find('.kronk-menu__moon[title="Remove"]').click
+    within('.confirm-dialog__panel') { click_on 'Remove' }
+
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
+    expect(page).to have_no_css('.freethedream-group', text: 'Kitchen')
+    expect(Freethedream::Project.where(title: 'Kitchen')).to be_empty
+  end
 end

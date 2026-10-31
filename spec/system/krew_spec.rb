@@ -2,9 +2,10 @@
 
 require 'rails_helper'
 
-# docs/spaces/krew.md, The surfaces; decisions.md 2026-10-18: What's
-# happening sits above the spaces, the tiles open their space below the
-# grid, and the + moon follows it.
+# docs/spaces/krew.md, The surfaces; decisions.md 2026-10-18: the tiles
+# open their space below the grid, and the + moon follows it. Since Tal's
+# 2026-10-31 pass the spaces sit at the foot, under the chat, and there is
+# no What's happening.
 RSpec.describe 'Krew page', :js, :streaming do
   include ProfileStories
 
@@ -29,20 +30,17 @@ RSpec.describe 'Krew page', :js, :streaming do
     find('.kronk-menu__trigger').click
   end
 
-  it "shows What's happening above the spaces" do
-    album = Album.create!(owner: bob.account, krew: krew, title: 'Mayhem 2026', visibility: :self_only, contribution: :invited)
-    album.album_krews.create!(krew: krew, for_contribution: true)
-    2.times do
-      status = Fabricate(:status, account: bob.account, media_attachments: [Fabricate(:media_attachment, account: bob.account)])
-      AlbumPhoto.create!(album: album, contributor: bob.account, status: status)
-    end
+  it 'puts the spaces under the chat, with no What\'s happening' do
     visit "/hub/krew/#{krew.slug}"
 
-    within('.krew-detail__happening') do
-      expect(page).to have_css('.krew-detail__happening-line', text: 'added 2 photos to Mayhem 2026')
-      expect(page).to have_css('.krew-detail__happening-line', text: 'joined the Krew')
-    end
-    expect(page).to have_no_css('.space-tile', text: /What's happening/i)
+    expect(page).to have_css('.krew-detail__chat')
+    expect(page).to have_css('.attachment-section')
+    expect(page).to have_no_text("What's happening")
+    after_chat = page.evaluate_script(<<~JS)
+      !!(document.querySelector('.krew-detail__chat').compareDocumentPosition(
+        document.querySelector('.attachment-section')) & Node.DOCUMENT_POSITION_FOLLOWING)
+    JS
+    expect(after_chat).to be true
     expect(page).to have_no_css('.space-tile--open')
     expect(plus_moon).to eq 'Post to Growers'
   end
@@ -151,7 +149,6 @@ RSpec.describe 'Krew page', :js, :streaming do
     Nudges::Conversation.krew_for!(krew).messages.create!(author_account: sam, body: 'Seeds are in')
     visit "/hub/krew/#{krew.slug}"
 
-    expect(page).to have_css('.krew-detail__happening-line--chat', text: /unread/)
     expect(page).to have_no_css('.space-tile', text: 'Chat')
     within('.krew-detail__chat') do
       expect(page).to have_text('Seeds are in')
