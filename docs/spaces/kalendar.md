@@ -24,8 +24,9 @@ Three faces on a rotator header (manifest `views`), mounted by
   month so they read right in both hemispheres). They do not come from Inflow.
 - **Events** (`/hub/kalendar/events`): upcoming events in the shared space
   grid (`events_view.tsx`).
-- **Me** (`/hub/kalendar/me`): your Mates' birthdays in the next 90 days,
-  soonest first (`me_view.tsx`).
+- **Me** (`/hub/kalendar/me`): your accepted Wachuneed bookings, then your
+  Mates' birthdays, each in the next 90 days and soonest first
+  (`me_view.tsx`; see Bookings).
 
 `/hub/kalendar/list` and `/hub/kalendar/birthdays` (the old face names) still
 resolve. `/kalendar/*` 301s to `/hub/kalendar/*`.
@@ -102,7 +103,8 @@ also used it, were deleted.
 
 **API:** `/api/v1/events` (index with `filter=upcoming|past|mine|invited`,
 show, create, update, destroy, plus `rsvp`, `attendees`, `invite`,
-`my_invitees`), and `GET /api/v1/kalendar/birthdays`.
+`my_invitees`), `GET /api/v1/kalendar/birthdays` and `GET
+/api/v1/kalendar/bookings`.
 
 ## Birthdays
 
@@ -113,6 +115,20 @@ you see them (`Answer#visible_on_profile_to?`). It works out the next
 occurrence and returns the ones in the next 90 days. So the list is
 Mates-only and always current. You set your birthday by answering that
 profile Kuestion (see [`kuestions.md`](kuestions.md), Profile Kuestions).
+
+## Bookings
+
+A booking accepted in Wachuneed (Kommons "Goods & Services", Tal
+2026-10-29: "an accepted booking or job goes into both people's
+Kalendars"; [`wachuneed.md`](wachuneed.md), Booking) shows under **Me** for
+both of them: the listing's name, who it is with, the day and the time,
+leading to the listing. Like birthdays it isn't stored as an event:
+`Api::V1::Kalendar::BookingsController` reads the accepted requests with a
+time where you are the one who booked or the seller, from the start of
+today for 90 days, so a booking called off is gone at once. Nobody else
+ever sees it: it has no reach, feed card or RSVPs, which is why it isn't
+an `Event`. Not yet: a marker on the Spiral's day tiles (the day sheet
+would need to show bookings too).
 
 ## Links to other korners
 
