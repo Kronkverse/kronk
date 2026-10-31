@@ -149,7 +149,6 @@ RSpec.describe 'Krew page', :js, :streaming do
     Nudges::Conversation.krew_for!(krew).messages.create!(author_account: sam, body: 'Seeds are in')
     visit "/hub/krew/#{krew.slug}"
 
-    expect(page).to have_no_css('.space-tile', text: 'Chat')
     within('.krew-detail__chat') do
       expect(page).to have_text('Seeds are in')
       expect(page).to have_link('Open in Nudges')
@@ -157,6 +156,7 @@ RSpec.describe 'Krew page', :js, :streaming do
       click_button(class: 'nudges-composer__send')
       expect(page).to have_text('On my way')
     end
+    expect(page).to have_no_css('.space-tile', text: 'Chat')
   end
 
   it 'opens People from the faces, with the people asking to join' do

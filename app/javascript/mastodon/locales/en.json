@@ -1379,6 +1379,8 @@
   "freethedream.remove": "Remove",
   "freethedream.remove_item.body": "It goes from every part it shows in.",
   "freethedream.remove_item.title": "Remove {title}?",
+  "freethedream.remove_project.body": "It goes for everyone, with everything in it.",
+  "freethedream.remove_project.title": "Remove {title}?",
   "freethedream.shows_in": "Shows in",
   "freethedream.step_off": "Step off",
   "freethedream.still_needed": "Still needed",
