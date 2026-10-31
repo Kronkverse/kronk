@@ -108,7 +108,8 @@ RSpec.describe 'Projekts', :js, :streaming do
       click_on 'Add'
     end
 
-    find('.freethedream-group', text: 'Kitchen').click
+    expect(page).to have_no_css('.compose-shell')
+    within('.freethedream-groups') { click_link 'Kitchen' }
     expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
     find('.kronk-menu__trigger').click
     find('.kronk-menu__moon[title="Remove"]').click
