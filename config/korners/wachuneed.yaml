@@ -76,6 +76,7 @@ emits:
   - wachuneed.offer.made
   - wachuneed.offer.accepted
   - wachuneed.offer.declined # seller declines a buyer's offer; Nudges routes to buyer
+  - wachuneed.offer.cancelled # either side calls an accepted booking off; Nudges routes to the other
   - wachuneed.brand.listed # a proposed brand reached its backers; Nudges routes to the proposer
 
 listens: []

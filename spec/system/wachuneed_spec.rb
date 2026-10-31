@@ -366,6 +366,39 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       end
     end
 
+    it 'books a free time with what is asked, for the seller to see in Requests' do
+      ana   = Fabricate(:account, username: 'ana')
+      start = 2.days.from_now.utc.change(hour: 10)
+      listing = Listing.create!(account: ana, title: 'Reiki', category: 'service', state: 'live',
+                                booking: { parts: %w(time details), minutes: 60, time_zone: 'UTC',
+                                           slots: [start.iso8601], ask: 'Anything I should know?' })
+
+      visit "/hub/wachuneed/listings/#{listing.id}"
+
+      expect(page).to have_button('Book', disabled: true)
+      within('.wachuneed-book__day-times') { find('.korner-pill').click }
+      fill_in 'Anything I should know?', with: 'A sore shoulder'
+      click_on 'Book'
+
+      expect(page).to have_content('Booked. You will hear when they say yes.')
+      expect(ListingOffer.last).to have_attributes(starts_at: start, ends_at: start + 1.hour, details: 'A sore shoulder', state: 'pending')
+    end
+
+    it 'lets the one who booked call an accepted booking off' do
+      ana     = Fabricate(:account, username: 'ana')
+      listing = Listing.create!(account: ana, title: 'Reiki', category: 'service', state: 'live',
+                                booking: { parts: %w(time), minutes: 60 })
+      ListingOffer.ask(listing, offerer: bob.account, starts_at: 3.days.from_now.utc.change(hour: 9)).tap(&:save!).accept!
+
+      visit '/hub/wachuneed/requests'
+
+      click_on 'Call it off'
+      within('.confirm-dialog__panel') { click_on 'Call it off' }
+
+      expect(page).to have_content('You called it off.')
+      expect(ListingOffer.last.state).to eq 'cancelled'
+    end
+
     it 'turns booking off again with Ask for this' do
       listing = Listing.create!(account: bob.account, title: 'Reiki', category: 'service', state: 'live',
                                 booking: { template: 'appointment', parts: %w(time), minutes: 60, hours: [{ day: 1, from: '09:00', to: '17:00' }] })

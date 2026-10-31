@@ -247,6 +247,7 @@ en:
       wachuneed:
         brand_listed: "%{who} backed your brand, and it is in Brands now"
         offer_accepted: "%{who} accepted your request"
+        offer_cancelled: "%{who} called off a booking"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
     subjects:
@@ -523,6 +524,7 @@ en-GB:
       wachuneed:
         brand_listed: "%{who} backed your brand, and it is in Brands now"
         offer_accepted: "%{who} accepted your request"
+        offer_cancelled: "%{who} called off a booking"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
     subjects:

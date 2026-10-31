@@ -55,6 +55,7 @@ module Nudges
       'wachuneed.offered' => { korner: 'wachuneed', label: 'Someone makes an offer on your listing' },
       'wachuneed.offer_accepted' => { korner: 'wachuneed', label: 'Your offer is accepted' },
       'wachuneed.offer_declined' => { korner: 'wachuneed', label: 'Your offer is declined' },
+      'wachuneed.offer_cancelled' => { korner: 'wachuneed', label: 'A booking is called off' },
       'wachuneed.brand_listed' => { korner: 'wachuneed', label: 'A brand you proposed is in Brands' },
       'freethedream.mentioned' => { korner: 'freethedream', label: 'Someone tags you in a projekt’s talk' },
       'freethedream.gang_talked' => { korner: 'freethedream', label: 'Someone talks in a Komponent you joined' },

@@ -13,10 +13,10 @@
 class Api::V1::Wachuneed::ListingsController < Api::BaseController
   include KrewAudienceParams
 
-  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show, :times]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :close]
   before_action :require_user!
-  before_action :set_listing, only: [:show, :update, :close]
+  before_action :set_listing, only: [:show, :update, :close, :times]
 
   def index
     scope = Listing.includes(:account, :listing_photos).order(created_at: :desc)
@@ -125,6 +125,18 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   # (which shows `live` only) and its feed post is removed, but it stays on
   # the owner's Mine section and keeps its offers. There is no reopening;
   # list it again as a new one (docs/spaces/wachuneed.md, States).
+  # The free times of a booked listing (docs/spaces/wachuneed.md, Booking),
+  # from `from` (default now) for two weeks: `suggest` when the seller
+  # posted no hours or times and the person suggests one instead.
+  def times
+    times = Wachuneed::BookingTimes.new(@listing)
+    from  = (Time.zone.parse(params[:from].to_s) if params[:from].present?) || Time.current
+
+    render json: { suggest: times.suggested?, times: times.suggested? ? [] : times.free(from: from).map(&:iso8601) }
+  rescue ArgumentError
+    render json: { error: 'from is not a time' }, status: 422
+  end
+
   def close
     authorize_owner!
 
