@@ -399,6 +399,21 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(ListingOffer.last.state).to eq 'cancelled'
     end
 
+    it 'puts an accepted booking in Kalendar under Me, leading to the listing' do
+      ana     = Fabricate(:account, username: 'ana', display_name: 'Ana')
+      listing = Listing.create!(account: ana, title: 'Reiki', category: 'service', state: 'live',
+                                booking: { parts: %w(time), minutes: 60 })
+      ListingOffer.ask(listing, offerer: bob.account, starts_at: 3.days.from_now.utc.change(hour: 9)).tap(&:save!).accept!
+
+      visit '/hub/kalendar/me'
+
+      within('.kalendar-bookings') do
+        expect(page).to have_content('Reiki with Ana')
+        click_on 'Reiki'
+      end
+      expect(page).to have_current_path(%r{/hub/wachuneed/listings/})
+    end
+
     it 'turns booking off again with Ask for this' do
       listing = Listing.create!(account: bob.account, title: 'Reiki', category: 'service', state: 'live',
                                 booking: { template: 'appointment', parts: %w(time), minutes: 60, hours: [{ day: 1, from: '09:00', to: '17:00' }] })
