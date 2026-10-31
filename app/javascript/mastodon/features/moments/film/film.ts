@@ -246,6 +246,8 @@ const compile = (
 
 /** Preview size cap; the posted photo is capped at `POST_MAX_EDGE`. */
 export const PREVIEW_MAX_EDGE = 1280;
+/** Strip thumbnails are 52px; this stays sharp on a 3x screen. */
+export const THUMB_MAX_EDGE = 192;
 export const POST_MAX_EDGE = 4096;
 
 const decode = async (source: Blob, maxEdge: number): Promise<ImageBitmap> => {
@@ -334,10 +336,11 @@ const renderToCanvas = (
 export const renderFilmPreview = async (
   file: Blob,
   lookId: string,
+  maxEdge: number = PREVIEW_MAX_EDGE,
 ): Promise<HTMLCanvasElement> => {
   const look = getFilmLook(lookId);
   if (!look) throw new Error(`film: unknown look ${lookId}`);
-  const bitmap = await decode(file, PREVIEW_MAX_EDGE);
+  const bitmap = await decode(file, maxEdge);
   try {
     return renderToCanvas(bitmap, look);
   } finally {

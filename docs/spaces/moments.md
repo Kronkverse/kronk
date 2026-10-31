@@ -160,7 +160,8 @@ contact sheet. **The shader is a port of `transform()` in `lutgen.py`, so a
 change to a step in one is a change to the other**, and a new look is a new
 entry in the JSON (the shader reads it, no code change).
 
-- Preview: the hero shows a copy graded at up to 1280px on the long edge
+- Preview: the hero shows a copy graded at up to 1280px on the long edge, and
+  the strip thumbnails one at up to 192px
   (`film_preview.tsx`). Posting regrades the original at up to 4096px and
   uploads it as JPEG quality 92 named `<name>-<look>.jpg`.
 - EXIF rotation is applied when the photo is decoded, so the posted file

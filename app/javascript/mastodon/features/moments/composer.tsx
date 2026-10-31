@@ -46,7 +46,7 @@ import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 
-import { FILM_LOOKS, applyFilmToFile } from './film/film';
+import { FILM_LOOKS, THUMB_MAX_EDGE, applyFilmToFile } from './film/film';
 import { FilmPreview } from './film/film_preview';
 import { MomentsTagPeoplePanel } from './tag_people_panel';
 import type { TaggedAccountLite } from './tag_people_panel';
@@ -957,6 +957,14 @@ const Thumb: React.FC<{
             className='moments-composer__thumb-media'
             src={item.url}
             muted
+          />
+        ) : item.film ? (
+          <FilmPreview
+            className='moments-composer__thumb-media'
+            file={item.file}
+            fallbackUrl={item.url}
+            look={item.film}
+            maxEdge={THUMB_MAX_EDGE}
           />
         ) : (
           <img

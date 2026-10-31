@@ -11,14 +11,15 @@ export const FilmPreview: React.FC<{
   fallbackUrl: string;
   look: string;
   className?: string;
-}> = ({ file, fallbackUrl, look, className }) => {
+  maxEdge?: number;
+}> = ({ file, fallbackUrl, look, className, maxEdge }) => {
   const host = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setReady(false);
-    renderFilmPreview(file, look)
+    renderFilmPreview(file, look, maxEdge)
       .then((canvas) => {
         if (cancelled || !host.current) return;
         canvas.className = className ?? '';
@@ -31,7 +32,7 @@ export const FilmPreview: React.FC<{
     return () => {
       cancelled = true;
     };
-  }, [file, look, className]);
+  }, [file, look, className, maxEdge]);
 
   return (
     <>
