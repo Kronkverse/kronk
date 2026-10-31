@@ -2526,6 +2526,8 @@
   "moments.composer.caption_placeholder": "Say something about this Moment…",
   "moments.composer.edit_tags": "Edit tagged people",
   "moments.composer.edit_text": "Edit text",
+  "moments.composer.film_looks": "Film look",
+  "moments.composer.film_original": "Original",
   "moments.composer.next": "Next",
   "moments.composer.post": "Share",
   "moments.composer.post_multi": "Share {count}",

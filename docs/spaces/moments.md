@@ -142,8 +142,34 @@ the dimmed rings and tiles and the Moments unread badge. The badge count comes f
   Moment**, all sharing one caption, tier and krew.
 - On a still photo: a voice clip, text overlays ("Aa"), and tagging
   people.
+- On a still photo, a row under the hero picks a **film look**: Original,
+  banksia, saltbush, bluegum, wattle or ironbark. The look is baked into
+  the photo in the browser at post time (see below); the server only gets
+  the finished JPEG, so a posted look can't be changed or removed, like
+  text overlays.
 - Reach is the shared `ReachDropdown` limited to Mates and Orbit, with a
   single-select krew submenu.
+
+### Film looks
+
+`features/moments/film/`. The five looks are parameters in
+`film_family.json`; `film.ts` turns each into a WebGL fragment shader and
+draws the photo through it. `lutgen.py` (same folder) is the reference the
+looks were designed with: it renders the same maths to `.cube` LUTs and a
+contact sheet. **The shader is a port of `transform()` in `lutgen.py`, so a
+change to a step in one is a change to the other**, and a new look is a new
+entry in the JSON (the shader reads it, no code change).
+
+- Preview: the hero shows a copy graded at up to 1280px on the long edge, and
+  the strip thumbnails one at up to 192px, and the text editor (pen) shows it too
+  (`film_preview.tsx`). Posting regrades the original at up to 4096px and
+  uploads it as JPEG quality 92 named `<name>-<look>.jpg`.
+- EXIF rotation is applied when the photo is decoded, so the posted file
+  is upright. Posting a photo with a look drops its EXIF.
+- Videos and voice clips don't get looks.
+- If WebGL isn't available, or the photo is larger than the GPU's texture
+  limit, posting a photo with a look fails with the composer's error line
+  instead of posting it ungraded.
 
 ## Reactions
 
@@ -224,6 +250,10 @@ them you did, as on other story apps; nothing else about you is shared.
   people you follow (`public`) and from Mates (`mates`, `orbit`). It
   ignores krew audiences and Orbit beyond your Mates, so its count can
   differ from what the strip shows.
+- **Film looks on video.** Looks are stills only; video would need the
+  same shader run per frame (or server-side with the `.cube` files).
+- **Looks after posting.** The look is baked in, so there's no way to
+  swap it later; the original photo isn't kept.
 - **Video length.** Nothing caps a video Moment at 60 seconds; only voice
   clips are capped.
 - **Settings page.** `settings.moments` is a `soon` node with no settings.

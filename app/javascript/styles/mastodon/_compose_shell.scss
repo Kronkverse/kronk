@@ -42,8 +42,26 @@
   inset: 0;
   z-index: 10000;
   display: grid;
+
+  // One column the width of the screen, not `auto`: an auto track grows to
+  // the panel's widest unwrappable content, and the panel's `min(560px,
+  // 100%)` then resolves against that wider track, so a composer with a
+  // wide row (the Moments film looks) ran off the right edge of a phone.
+  grid-template-columns: minmax(0, 1fr);
+
+  // Same for the row, so the panel's `max-height` has a definite height to
+  // be a share of: it can't grow past the screen.
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
   padding: 1.5rem;
+
+  // Phone: a 16px gutter, kept clear of the notch and home bar.
+  @media (width <= 640px) {
+    padding: max(1rem, env(safe-area-inset-top))
+      max(1rem, env(safe-area-inset-right))
+      max(1rem, env(safe-area-inset-bottom))
+      max(1rem, env(safe-area-inset-left));
+  }
 }
 
 .compose-shell__backdrop {
@@ -62,6 +80,14 @@
   flex-direction: column;
   width: min(560px, 100%);
   max-height: min(90vh, 780px);
+
+  // `dvh` follows a phone's collapsing address bar; `vh` is the fallback.
+  max-height: min(90dvh, 780px);
+
+  @media (width <= 640px) {
+    max-height: 100%;
+  }
+
   border-radius: var(--radius-large, 16px);
   background: var(--surface-primary);
   border: 1px solid var(--border-subtle);
