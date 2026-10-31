@@ -1022,6 +1022,10 @@
 .moments-composer__stage {
   position: relative;
   aspect-ratio: 4 / 5;
+
+  // The photo may give up height to the rest of the composer, but never
+  // collapses; past this the body scrolls.
+  min-height: 12rem;
   border-radius: var(--radius-medium);
   overflow: hidden;
   background: var(--surface-primary);
@@ -1286,23 +1290,47 @@
 }
 
 // Film look picker: Original plus the five looks, under the hero.
+// The body is a height-limited flex column, and a scroll container's
+// automatic minimum height is 0, so without `flex: 0 0 auto` the row was
+// squashed and the labels clipped. The vertical padding leaves room for the
+// chips' borders and focus rings, which `overflow-x: auto` would clip.
 .moments-composer__films {
+  flex: 0 0 auto;
+  min-width: 0;
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  padding: 4px 2px;
   overflow-x: auto;
-  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 2px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .moments-composer__film {
   flex: 0 0 auto;
-  padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-round);
   background: var(--surface-elevated);
   color: var(--text-secondary);
   font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
   text-transform: capitalize;
+  scroll-snap-align: start;
   cursor: pointer;
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
 
   &:disabled {
     opacity: 0.5;
@@ -1310,13 +1338,17 @@
   }
 }
 
+// Selected: tinted fill, accent border and text, plus a second ring so it
+// reads apart from the others without a change in width.
 .moments-composer__film--active {
   border-color: var(--accent);
   color: var(--accent-text);
   background: color-mix(in oklab, var(--accent) 18%, var(--surface-elevated));
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .moments-composer__strip {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
