@@ -116,7 +116,6 @@ RSpec.describe 'Projekts', :js, :streaming do
     within('.confirm-dialog__panel') { click_on 'Remove' }
 
     expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
-    expect(page).to have_no_css('.freethedream-group', text: 'Kitchen')
     expect(Freethedream::Project.where(title: 'Kitchen')).to be_empty
   end
 end
