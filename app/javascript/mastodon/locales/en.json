@@ -1590,6 +1590,8 @@
   "kalendar.birthdays.loading": "Loading…",
   "kalendar.birthdays.today": "Today",
   "kalendar.birthdays.tomorrow": "Tomorrow",
+  "kalendar.bookings.booked_from": "with {name}",
+  "kalendar.bookings.heading": "Bookings",
   "kalendar.composer.audience.krews": "Only members of {krews} will see this event.",
   "kalendar.composer.audience.nobody": "Only you will see this event. Tick a Krew in the reach menu to make it theirs.",
   "kalendar.day_sheet.astronomy": "Sky",

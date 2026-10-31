@@ -295,6 +295,7 @@ namespace :api, format: false do
 
     namespace :kalendar do
       resources :birthdays, only: [:index]
+      resources :bookings, only: [:index]
     end
 
     # Invite a Mate to look at a page of any space.

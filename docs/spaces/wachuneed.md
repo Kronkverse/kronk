@@ -432,8 +432,9 @@ chooses how they are available (weekly hours, posted times, or both); an
 accepted booking goes into both people's Kalendars; bookings and jobs are
 built together.
 
-Built so far: the parts and the seller's availability, and booking against
-them, accepted or declined in Requests. Kalendar comes next (Open).
+Built: the parts and the seller's availability, booking against them,
+accepted or declined in Requests, and accepted bookings in both people's
+Kalendars.
 
 - **Parts** (`Listing::BOOKING_PARTS`), each something the person booking
   gives: **A time** (`time`), **From and to** (`route`, two places on the
@@ -479,6 +480,9 @@ them, accepted or declined in Requests. Kalendar comes next (Open).
 /api/v1/wachuneed/requests/:id/cancel`, which asks first): it becomes
   `cancelled`, its time opens again, and the other one is nudged
   (`wachuneed.offer.cancelled`).
+- **In Kalendar.** An accepted booking with a time shows under Kalendar's
+  **Me** for both of them, with the other person, until it is called off
+  ([`kalendar.md`](kalendar.md), Bookings).
 - **Stored** as JSON in `listings.booking`, cut to shape by
   `Listing#booking=` (unknown parts dropped, settings of a part left out
   dropped with it, bad hours and past times dropped); `{}` is a listing
@@ -621,9 +625,8 @@ returned to Wachuneed, slug and all, on 2026-09-07.
 
 - **Counter-offers.** A request is at the asked price; offering less
   (`listing_offers.amount_cents`) is not built.
-- **Booking, still to build** (see Booking): an accepted booking or job
-  going into both people's Kalendars, seen only by the two of them;
-  reminders before it starts (Nudges has no scheduled jobs yet); days off
+- **Booking, still to build** (see Booking): a marker for bookings on
+  Kalendar's Spiral; reminders before it starts (Nudges has no scheduled jobs yet); days off
   on top of the weekly hours; how far ahead and how much notice. Undecided:
   a class or workshop that many people book into (one item with seats, or
   a Kalendar event Konnected to it).
