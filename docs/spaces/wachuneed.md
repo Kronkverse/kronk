@@ -432,8 +432,8 @@ chooses how they are available (weekly hours, posted times, or both); an
 accepted booking goes into both people's Kalendars; bookings and jobs are
 built together.
 
-Built so far: the parts and the seller's availability, on the listing and
-its page. Booking against them, accepting, and Kalendar come next (Open).
+Built so far: the parts and the seller's availability, and booking against
+them, accepted or declined in Requests. Kalendar comes next (Open).
 
 - **Parts** (`Listing::BOOKING_PARTS`), each something the person booking
   gives: **A time** (`time`), **From and to** (`route`, two places on the
@@ -454,7 +454,31 @@ its page. Booking against them, accepting, and Kalendar come next (Open).
 - **On the listing page** (`listing_booking_summary.tsx`): how long it
   takes, the weekly hours (naming the seller's time zone when it isn't
   yours), the posted times in your own time, or "Suggest a time", and what
-  else it asks for. **Ask for this** is still how it is asked for.
+  else it asks for.
+- **Booking it** (`booking_fields.tsx`, above **Book**, which takes the
+  place of Ask for this): only the parts the listing has. **A time** is
+  the free times for two weeks grouped by day, in your own time, with
+  **Later times** for the next two (`GET
+/api/v1/wachuneed/listings/:id/times`, `Wachuneed::BookingTimes`: the
+  weekly hours cut into starts one booking-length apart, an hour when
+  there is no set length, plus the posted times, less any time a booking
+  waiting or accepted already holds); with no hours and no posted times
+  it is **When suits you**, any time ahead. **From and to** is two pins
+  dropped on the Map picker; only the seller sees them, and only on this
+  booking. **Their details** is a box under the seller's own question.
+  Book stays greyed until every part is given.
+- **A booking is a request** (`listing_offers`, see Requests) with
+  `starts_at`, `ends_at` (when there is a set length), `route` and
+  `details`. The server checks every part is there and the time is still
+  free (`ListingOffer#booking_given`). Unlike a plain request, one person
+  can have several bookings of a listing waiting, and accepting one
+  leaves the listing up for the next.
+- **In Requests** a booking shows when, the from and the to, and what was
+  asked; the seller accepts or declines as with any request. Once
+  accepted, either of the two can **Call it off** (`POST
+/api/v1/wachuneed/requests/:id/cancel`, which asks first): it becomes
+  `cancelled`, its time opens again, and the other one is nudged
+  (`wachuneed.offer.cancelled`).
 - **Stored** as JSON in `listings.booking`, cut to shape by
   `Listing#booking=` (unknown parts dropped, settings of a part left out
   dropped with it, bad hours and past times dropped); `{}` is a listing
@@ -574,10 +598,14 @@ a hit shows only to whoever can see the listing (`PolicyFilter`).
 - **`listing_offers`**: a request (see Requests). `quantity`, `choices`
   (`{ variant: [...], options: [{ name, choice, extra_cents }] }`),
   `total_cents` and `price_currency` as asked, an optional `message`, a state
-  (`pending | accepted | declined | withdrawn | expired`) and `responded_at`.
-  `amount_cents` is for a counter-offer, which nothing makes yet. `accept!`
-  reserves a one-off. The model publishes `wachuneed.offer.made`,
-  `.accepted` and `.declined` on the korner event bus.
+  (`pending | accepted | declined | withdrawn | expired | cancelled`) and
+  `responded_at`. A booking adds `starts_at`, `ends_at`, `route` (`{ from,
+to }`, each `{ lat, lng, name? }`), `details`, `cancelled_at` and
+  `cancelled_by_id`; a partial index on (`listing_id`, `starts_at`) over
+  waiting and accepted ones finds held times. `amount_cents` is for a
+  counter-offer, which nothing makes yet. `accept!` reserves a one-off
+  that isn't booked. The model publishes `wachuneed.offer.made`,
+  `.accepted`, `.declined` and `.cancelled` on the korner event bus.
 - **`wachuneed_brands`**: `account_id` (who proposed it), `name` (unique
   ignoring case), `url`, `why`, `category`, `media_attachment_id` (the
   picture, excluded from the unattached-media sweep), `listed_at` (when it
@@ -593,14 +621,12 @@ returned to Wachuneed, slug and all, on 2026-09-07.
 
 - **Counter-offers.** A request is at the asked price; offering less
   (`listing_offers.amount_cents`) is not built.
-- **Booking, still to build** (see Booking). Booking against the parts:
-  picking a free time (an hour cut from the weekly hours, or a posted
-  time, held while it waits so two people can't ask for the same one), a
-  from and a to on the Map, the details; the seller accepting or declining
-  in Requests; and an accepted booking or job going into both people's
-  Kalendars, seen only by the two of them. Undecided: a class or workshop
-  that many people book into (one item with seats, or a Kalendar event
-  Konnected to it).
+- **Booking, still to build** (see Booking): an accepted booking or job
+  going into both people's Kalendars, seen only by the two of them;
+  reminders before it starts (Nudges has no scheduled jobs yet); days off
+  on top of the weekly hours; how far ahead and how much notice. Undecided:
+  a class or workshop that many people book into (one item with seats, or
+  a Kalendar event Konnected to it).
 - **Other interaction modes.** The older design also had `buy_now`,
   `buy_or_bargain` (or nearest offer) and `contact_to_discuss`. None exist
   in code beyond Ask for this and Message the poster.

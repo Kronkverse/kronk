@@ -183,6 +183,17 @@ listens:
     source_type: Listing
     source_id_key: listing_id
     interaction: passive
+  # An accepted booking called off by the other of the two
+  # (docs/spaces/wachuneed.md, Booking).
+  - event: wachuneed.offer.cancelled
+    source_korner: wachuneed
+    verb: offer_cancelled
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'See requests'
+    cta_route: '/hub/wachuneed/requests'
   # A brand you proposed has the backers it needs and is in Brands now
   # (docs/spaces/wachuneed.md, Brands). Once per brand. Directed: the
   # backer who brought it there needn't be your Mate.
