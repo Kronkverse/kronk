@@ -174,6 +174,20 @@ RSpec.describe 'Huddle mini window', :js, :streaming do
       expect(page.evaluate_script('window.__jitsiDisposed')).to be_nil
     end
 
+    it 'shows a Kuddle Konnected to a Krew as a frame on the Krew page' do
+      krew = Krew.create!(slug: 'growers', name: 'Growers', access: 'open', seeded_by: bob.account, last_activity_at: Time.current)
+      krew.krew_memberships.create!(account: bob.account, role: 'seeder', source: 'direct')
+      KornerAttachment.create!(source_slug: 'krew', source_id: krew.id, target_slug: 'huddle', target_id: kuddle.id, kind: 'link', created_by_account: bob.account)
+
+      visit "/hub/krew/#{krew.slug}"
+      within('.kuddle-frame') do
+        expect(page).to have_link('Ember')
+        click_on 'Join the call'
+      end
+      expect(page).to have_css('.huddle-call .fake-call', visible: :visible)
+      expect(page).to have_no_css('.attachment-section .space-tile', text: 'Ember')
+    end
+
     it "ends the Main Huddle's call on joining a Kuddle: one call at a time" do
       visit '/huddle'
       click_on 'Huddle Up'

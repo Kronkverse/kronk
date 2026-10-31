@@ -123,7 +123,10 @@ export const useKrewAddress = (krewSlug?: string | null) => {
 };
 
 // Load something by key; `reload` fetches again, `set` replaces it with a
-// fresh copy an action returned.
+// fresh copy an action returned. What was loaded for another key is not
+// handed back while the new one loads: a projekt's page going on to one of
+// its Komponents would otherwise put the projekt's name back in the
+// address (useNamedLink) and never leave it.
 export function useLoaded<T>(
   key: string,
   load: () => Promise<T>,
@@ -133,16 +136,23 @@ export function useLoaded<T>(
   set: (next: T) => void;
   reload: () => void;
 } {
-  const [data, setData] = useState<T | null>(null);
+  const [loaded, setLoaded] = useState<{ key: string; value: T } | null>(null);
   const [failed, setFailed] = useState(false);
   const [tick, setTick] = useState(0);
+  const data = loaded?.key === key ? loaded.value : null;
+  const set = useCallback(
+    (next: T) => {
+      setLoaded({ key, value: next });
+    },
+    [key],
+  );
 
   useEffect(() => {
     let stale = false;
     setFailed(false);
     load()
       .then((result) => {
-        if (!stale) setData(result);
+        if (!stale) setLoaded({ key, value: result });
       })
       .catch(() => {
         if (!stale) setFailed(true);
@@ -158,7 +168,7 @@ export function useLoaded<T>(
     setTick((t) => t + 1);
   }, []);
 
-  return { data, failed, set: setData, reload };
+  return { data, failed, set, reload };
 }
 
 export const Loading: React.FC<{ failed?: boolean }> = ({ failed }) => {

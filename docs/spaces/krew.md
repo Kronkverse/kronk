@@ -185,17 +185,14 @@ All in `app/javascript/mastodon/features/krew/`.
   asking to join. Tapping them opens **People** below the grid (tapping
   again closes it): for members, the people asking to join with "Let them
   in" and "Decline", and "Invite people"; for everyone, the list of who is
-  in it. The rest is for members (decisions.md, 2026-10-18):
-  - **What's happening**: a few short lines, each a link. First how many
-    messages in the Krew chat you haven't read (when any), which takes you
-    down to the chat, then the last
-    three things done in the Krew, newest first: someone added photos to
-    one of its albums (one line per person, album and day: "Tomas added 37
-    photos to Mayhem 2026"), added an event for it, posted to it, or
-    joined. `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`) reads
-    them from the records themselves; nothing is stored for it, and only
-    what you could open is listed.
-  - **Projekts**: what the Krew is making, after What's happening, as a
+  in it. The rest is for members (decisions.md, 2026-10-18), in this
+  order since Tal's 2026-10-31 pass (What's happening went: it showed what
+  the chat shows; the spaces moved down to the foot):
+  - **Kuddles**: a Kuddle Konnected to the Krew is a call frame at the
+    top, as in a projekt (docs/spaces/huddle.md, A frame in a projekt),
+    not a tile among the spaces. One made from the Krew's Konnect brings
+    you back here, joining.
+  - **Projekts**: what the Krew is making, as a
     row of cards (`krew_projekts.tsx`, the kit's `SpaceGrid` row): each
     projekt's cover, title and how much of what it needs is sorted (no
     people count: everyone in the Krew is in it), opening the projekt. For members a last card, **New
@@ -206,17 +203,19 @@ All in `app/javascript/mastodon/features/krew/`.
     lists them, only to people who could open them (an invite-only Krew's
     to its members). Anyone else sees the section on a listed Krew, without
     New projekt, and nothing when there are none.
+  - **Chat**: the Krew's chat from Nudges, read and written on the page
+    (`krew_chat.tsx`, the messenger's `ConversationView` without its
+    header), with "Open in Nudges" beside the heading. It is marked read
+    once it has been on screen, not when the page opens. The chat is
+    found through `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`),
+    which also lists recent lines the page no longer shows.
   - **Spaces**: a tile for each attached space with a Krew part, which
     **opens it in place** below the grid, one at a time; tapping it again
     closes it. Nothing is open on arrival. **Albutts** shows the Krew's
     albums (`krew_albums.tsx`), **Kalendar** what is coming up for the
-    Krew and what's been (`krew_events.tsx`). Last, **Konnect**: a space
-    gets its tile once something is Konnected or made in it, or once it is
-    turned on in Settings.
-  - **Chat**: the Krew's chat from Nudges, read and written on the page
-    (`krew_chat.tsx`, the messenger's `ConversationView` without its
-    header), with "Open in Nudges" beside the heading. It is marked read
-    once it has been on screen, not when the page opens.
+    Krew and what's been (`krew_events.tsx`). Last, **Konnect** (a +): a
+    space gets its tile once something is Konnected or made in it, or once
+    it is turned on in Settings.
   - **Posts**: last on the page, the posts sent to the Krew, newest first,
     as the standard feed card in the standard timeline (`krew_posts.tsx`,
     `StatusListContainer` on the `krew:<id>` timeline,
@@ -293,7 +292,7 @@ two can't collide.
 - **People lists 40.** `GET :id/members` returns the first 40, so a bigger
   Krew's People list stops there with no way to see the rest.
 - **The page for someone outside the Krew** is its name, description,
-  faces and the way in. What's happening and the spaces are for members,
+  faces and the way in. The chat and the spaces are for members,
   even when a Krew album or post is shown to everyone.
 - **New Krew posts don't arrive live.** The Posts list picks up new posts
   when the page is opened again (`since_id`), not while it is open; there
