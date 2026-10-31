@@ -8,29 +8,21 @@ import {
   apiFtdUploadCover,
 } from 'mastodon/api/freethedream';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
-import type {
-  FtdCategory,
-  FtdCover,
-  FtdProject,
-} from 'mastodon/api_types/freethedream';
+import type { FtdCover, FtdProject } from 'mastodon/api_types/freethedream';
 import {
   ComposeBody,
   ComposeField,
   ComposeHint,
   ComposeInput,
   ComposeSection,
-  ComposeSelect,
-  ComposeTextarea,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { parseKonnectParam, useKonnect } from 'mastodon/hooks/useKonnect';
 
-import { NeedBoxes } from './need_boxes';
-import { CategoryChips, errorOf, parseLine } from './shared';
+import { errorOf } from './shared';
 
 const messages = defineMessages({
   newProject: {
@@ -59,9 +51,9 @@ const messages = defineMessages({
   save: { id: 'freethedream.compose.save', defaultMessage: 'Save' },
   saving: { id: 'freethedream.compose.saving', defaultMessage: 'Saving…' },
   name: { id: 'freethedream.compose.name', defaultMessage: 'Name' },
-  namePlaceholder: {
-    id: 'freethedream.compose.name_placeholder',
-    defaultMessage: 'A doof, an album, an app, a co-op…',
+  titlePlaceholder: {
+    id: 'freethedream.compose.title_placeholder',
+    defaultMessage: 'Title',
   },
   sectionPlaceholder: {
     id: 'freethedream.compose.gang_placeholder',
@@ -94,45 +86,16 @@ const messages = defineMessages({
     defaultMessage:
       "A day it happens or is due. Leave it empty if it's ongoing.",
   },
-  groupsInside: {
-    id: 'freethedream.compose.gangs_inside',
-    defaultMessage: 'Komponents to start with (optional)',
-  },
   newFractal: {
     id: 'freethedream.compose.fractal',
     defaultMessage: 'Add a fractal',
   },
-  groupsPlaceholder: {
-    id: 'freethedream.compose.groups_placeholder',
-    defaultMessage: 'Sound, Design, Paperwork, Welcome',
-  },
-  sectionsHint: {
-    id: 'freethedream.compose.sections_hint',
-    defaultMessage: 'Separate them with commas or put one on each line.',
-  },
-  gear: {
-    id: 'freethedream.compose.gear',
-    defaultMessage: 'What it needs (optional)',
-  },
-  gearHint: {
-    id: 'freethedream.compose.gear_boxes_hint',
-    defaultMessage:
-      'Things, skills, time, money or space: one to a box, with how many beside it; Enter for the next. Tap + More welcome where more is welcome. Anything only one Komponent needs goes in that Komponent.',
-  },
-  krew: { id: 'freethedream.compose.krew', defaultMessage: 'Krew' },
-  krewHint: {
-    id: 'freethedream.compose.krew_hint',
-    defaultMessage:
-      'It lives in this Krew: everyone in the Krew is in it, and who can see it follows the Krew.',
-  },
-  krewPick: {
-    id: 'freethedream.compose.krew_pick',
-    defaultMessage: 'Pick one of your Krews',
-  },
+  // Seeded from anywhere but a Krew page there is no Krew for it to live
+  // in (Tal, 2026-10-31: a projekt is only made from inside a Krew).
   krewNone: {
     id: 'freethedream.compose.krew_none',
     defaultMessage:
-      'A projekt lives in a Krew. Start or join a Krew first, then start it from the Krew page.',
+      'A projekt lives in a Krew. Seed it from the Krew page, from Konnect.',
   },
 });
 
@@ -142,8 +105,6 @@ interface ProjectDraftParams {
   title?: string;
   description?: string;
   endsOn?: string;
-  sections?: string;
-  gear?: string[];
   konnections?: KonnectTarget[];
 }
 
@@ -168,19 +129,11 @@ export const ProjectComposer: React.FC<Props> = ({
   const [endsOn, setEndsOn] = useState(editing?.ends_on ?? '');
   const [cover, setCover] = useState<FtdCover | null>(editing?.cover ?? null);
   const [uploading, setUploading] = useState(false);
-  // Which of your Krews a new emergence lives in. Started from a Krew's
-  // page (Konnect, New emergence) it is that Krew, and the Konnection is
-  // the server's to make, so it isn't made twice.
+  // The Krew a new projekt lives in: the one whose page it was seeded from
+  // (New projekt, or Konnect's New projekt), so there is nothing to pick.
+  // The Konnection is the server's to make, so it isn't made twice.
   const source = useMemo(() => parseKonnectParam(window.location.search), []);
-  const availableKrews = useAvailableKrews();
-  const [krewId, setKrewId] = useState(
-    source?.slug === 'krew' ? source.id : '',
-  );
-  const [sections, setSections] = useState('');
-  const [gear, setGear] = useState<string[]>([]);
-  // What kind of thing its needs are (Mycelium matches on it); "$400" is
-  // Money whatever is picked.
-  const [gearCategory, setGearCategory] = useState<FtdCategory>('things');
+  const krewId = source?.slug === 'krew' ? source.id : '';
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -204,8 +157,6 @@ export const ProjectComposer: React.FC<Props> = ({
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
       setEndsOn(p.endsOn ?? '');
-      setSections(p.sections ?? '');
-      setGear(p.gear ?? []);
       restoreKonnect(p.konnections);
       const media = d?.media_attachments[0];
       setCover(
@@ -232,8 +183,6 @@ export const ProjectComposer: React.FC<Props> = ({
         title,
         description,
         endsOn,
-        sections,
-        gear,
         konnections: konnect.saved,
       },
       mediaIds: top && cover ? [cover.id] : [],
@@ -241,8 +190,6 @@ export const ProjectComposer: React.FC<Props> = ({
     hasContent:
       title.trim() !== '' ||
       description.trim() !== '' ||
-      sections.trim() !== '' ||
-      gear.some((line) => line.trim() !== '') ||
       (top && cover !== null),
     apply: applyDraft,
     describe: (d) => d.params.title,
@@ -257,12 +204,6 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleDescription = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setDescription(e.target.value);
-    },
-    [],
-  );
-  const handleSections = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setSections(e.target.value);
     },
     [],
   );
@@ -291,9 +232,6 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleCoverRemove = useCallback(() => {
     setCover(null);
   }, []);
-  const handleKrew = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setKrewId(e.target.value);
-  }, []);
   const handleSubmit = useCallback(() => {
     setBusy(true);
     setError(null);
@@ -302,35 +240,16 @@ export const ProjectComposer: React.FC<Props> = ({
       description: description.trim(),
       ...(top
         ? {
-            ends_on: endsOn || null,
             cover_media_attachment_id: cover?.id ?? null,
-            ...(editing ? {} : { krew_id: krewId }),
+            ...(editing ? { ends_on: endsOn || null } : { krew_id: krewId }),
           }
         : {}),
     };
+    // Seeded bare (Tal, 2026-10-31): its Komponents and what it needs are
+    // added on its page.
     const request = editing
       ? apiFtdUpdateProject(editing.id, params)
-      : apiFtdCreateProject(
-          { ...params, parent_id: parent?.id },
-          {
-            sections: (newTop ? sections : '')
-              .split(/[\n,]/)
-              .map((name) => name.trim())
-              .filter(Boolean),
-            needs: (newTop ? gear : [])
-              .map((line) => line.trim())
-              .filter(Boolean)
-              .map(parseLine)
-              .filter((need) => need.title)
-              .map(({ title, quantity, unit, more }) => ({
-                title,
-                quantity,
-                unit,
-                more_welcome: more,
-                category: unit === '$' ? 'money' : gearCategory,
-              })),
-          },
-        );
+      : apiFtdCreateProject({ ...params, parent_id: parent?.id });
     request
       .then(async (project) => {
         if (!editing) {
@@ -348,11 +267,7 @@ export const ProjectComposer: React.FC<Props> = ({
     description,
     endsOn,
     cover,
-    newTop,
     krewId,
-    sections,
-    gear,
-    gearCategory,
     top,
     editing,
     parent,
@@ -399,30 +314,12 @@ export const ProjectComposer: React.FC<Props> = ({
         onChange={handleTitle}
         maxLength={120}
         placeholder={intl.formatMessage(
-          top ? messages.namePlaceholder : messages.sectionPlaceholder,
+          top ? messages.titlePlaceholder : messages.sectionPlaceholder,
         )}
         aria-label={intl.formatMessage(messages.name)}
       />
-      {newTop && (
-        <ComposeField
-          label={intl.formatMessage(messages.krew)}
-          hint={intl.formatMessage(
-            availableKrews.length > 0 ? messages.krewHint : messages.krewNone,
-          )}
-        >
-          {availableKrews.length > 0 && (
-            <ComposeSelect value={krewId} onChange={handleKrew}>
-              <option value='' disabled>
-                {intl.formatMessage(messages.krewPick)}
-              </option>
-              {availableKrews.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.name}
-                </option>
-              ))}
-            </ComposeSelect>
-          )}
-        </ComposeField>
+      {newTop && krewId === '' && (
+        <ComposeHint>{intl.formatMessage(messages.krewNone)}</ComposeHint>
       )}
       <ComposeBody
         value={description}
@@ -469,36 +366,15 @@ export const ProjectComposer: React.FC<Props> = ({
           </div>
         </ComposeSection>
       )}
-      {top && (
+      {/* A date is set later, from Edit: seeding is bare (Tal,
+          2026-10-31). */}
+      {top && editing && (
         <ComposeField
           label={intl.formatMessage(messages.ends)}
           hint={intl.formatMessage(messages.endsHint)}
         >
           <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
         </ComposeField>
-      )}
-      {newTop && (
-        <>
-          {/* A projekt starts with its Komponents and needs. Adding a
-              Komponent or a fractal is its name and what it's about
-              (Tal, 2026-10-31). */}
-          <ComposeField
-            label={intl.formatMessage(messages.groupsInside)}
-            hint={intl.formatMessage(messages.sectionsHint)}
-          >
-            <ComposeTextarea
-              rows={2}
-              value={sections}
-              onChange={handleSections}
-              placeholder={intl.formatMessage(messages.groupsPlaceholder)}
-            />
-          </ComposeField>
-          <ComposeSection title={intl.formatMessage(messages.gear)}>
-            <NeedBoxes lines={gear} onChange={setGear} />
-            <CategoryChips value={gearCategory} onChange={setGearCategory} />
-            <ComposeHint>{intl.formatMessage(messages.gearHint)}</ComposeHint>
-          </ComposeSection>
-        </>
       )}
       {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>

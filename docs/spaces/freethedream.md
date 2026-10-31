@@ -26,12 +26,11 @@ in-person event: it can be a gathering, a creative work, a tool being built
 (the Mainframe Krew with gangs for the app and for shadow) or an
 organisation taking shape (gangs for its constitution and its
 incorporation). Nothing in the mechanism assumes a date or a place, so the
-words don't either. The composer's examples mix those kinds, its date is
-**When (optional)** for a day it happens or is due, **What it needs** asks
-for things, skills, time, money or space (the item categories), and an
-event is an offer on the Overview (**Getting together for it?**), not a
-given. Write new copy the same way: no example or label that only fits a
-party.
+words don't either. A date is **When (optional)** in Edit, for a day it
+happens or is due, **What it needs** asks for things, skills, time, money
+or space (the item categories), and an event is an offer on the Overview
+(**Getting together for it?**), not a given. Write new copy the same way:
+no example or label that only fits a party.
 
 **The words** (Tal, 2026-10-15). The nucleus is the people creating
 something, not the thing itself, so the words name the people:
@@ -139,8 +138,9 @@ back goes to the Krew (a gang's to its projekt). There is no list of every
 projekt and no settings page: `/hub/freethedream`, its views and
 `/hub/freethedream/settings` go to your Krews. The composer is
 `/hub/krew/composer/projekt` (the manifest's `compose.route`), over the
-Krews page; the Krew page's New projekt and the Konnect picker's New
-projekt open it with `?konnect=<source>`, and Cancel goes back there. The
+Krews page; the Krew page's New projekt and the Konnect picker's **Seed a
+projekt** open it with `?konnect=krew:<id>`, which is the Krew it lives in,
+and Cancel goes back there. The
 korner itself stays, out of sight (`hub_visible: false`): its manifest is
 what Konnect, link previews and search read. Addresses the server makes
 (`path:` on the primary resource, notifications) are still
@@ -341,10 +341,12 @@ chip goes to its gang.
   about, nothing more (Tal, 2026-10-31: "strip it back to those two and
   build from there"); no fractals, needs or Konnect in its composer. A
   Komponent has no date. After adding, you stay where you were, ready to
-  add the next one. **Seeding a projekt** takes its first Komponents and
-  what it needs: one thing to a box, like adding to Thing Bringing (Tal,
-  2026-10-17): Enter goes to the next box, × takes one off, and the amount
-  shows beside its box ("2", or "20+" for `20+ plates`).
+  add the next one. **Seeding a projekt** is as bare (Tal, 2026-10-31): a
+  title (the box says only "Title"), what it's about and a cover. No Krew
+  to pick, because it is seeded from its Krew's page and lives there; no
+  date, Komponents or needs, which are added on its page (the date in
+  Edit). Opened from anywhere else, the composer says to seed it from the
+  Krew page and can't be sent.
 - **Talk** (below).
 
 Edit (including the cover) is on the Ж menu, owner only.
@@ -507,7 +509,8 @@ shadow.
   (`Kronk::NamedLink`; an old number still opens it). From my
   Mycelium on rows is `from_my_mycelium.tsx`; the category chips are
   `CategoryChips` in `shared.tsx`.
-  "Seed an emergence" is the Ж menu's compose route (`/composer`). Lists add
+  "Seed a projekt" is the manifest's compose route, opened from a Krew's
+  page (no Ж menu offers it). Lists add
   through `QuickAdd` (one line, read by `parseLine`); Bring is
   `BringControl`; Talk is `talk.tsx`. Adding a section, editing, offering
   something not on a list and handing over use `<ComposeShell>`.
