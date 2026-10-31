@@ -1281,6 +1281,41 @@
 }
 
 // filmstrip
+.moments-composer__film-canvas {
+  display: contents;
+}
+
+// Film look picker: Original plus the five looks, under the hero.
+.moments-composer__films {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.moments-composer__film {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-transform: capitalize;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.moments-composer__film--active {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  background: color-mix(in oklab, var(--accent) 18%, var(--surface-elevated));
+}
+
 .moments-composer__strip {
   display: flex;
   align-items: center;

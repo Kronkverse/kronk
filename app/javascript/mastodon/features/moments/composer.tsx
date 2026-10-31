@@ -46,6 +46,8 @@ import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 
+import { FILM_LOOKS, applyFilmToFile } from './film/film';
+import { FilmPreview } from './film/film_preview';
 import { MomentsTagPeoplePanel } from './tag_people_panel';
 import type { TaggedAccountLite } from './tag_people_panel';
 import { MomentsTextEditor } from './text_editor';
@@ -78,6 +80,9 @@ interface MediaItem {
   // the server as apiAddMediaTag calls after the media upload
   // succeeds — the mediaId only exists at submit time.
   taggedAccounts: TaggedAccountLite[];
+  // Film look baked into the photo at upload (`film/film.ts`); null =
+  // original. Stills only.
+  film: string | null;
 }
 interface VoiceItem {
   kind: 'voice';
@@ -153,6 +158,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           isVideo: file.type.startsWith('video/'),
           overlays: [],
           taggedAccounts: [],
+          film: null,
         };
       });
       setActive(items.length); // focus the first newly-added tile
@@ -277,6 +283,21 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     });
   }, []);
 
+  // ── film look ────────────────────────────────────────────────────
+  const setFilmActive = useCallback(
+    (film: string | null) => {
+      setItems((prev) => {
+        const next = [...prev];
+        const target = next[active];
+        if (target && isStill(target)) {
+          next[active] = { ...target, film };
+        }
+        return next;
+      });
+    },
+    [active],
+  );
+
   // ── tag-people picker ────────────────────────────────────────────
   const openTagPickerActive = useCallback(() => {
     setTagPickerIndex(active);
@@ -353,7 +374,11 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             krew_id: krewId,
           });
         } else {
-          const mediaId = await uploadFile(item.file);
+          const upload =
+            item.film && !item.isVideo
+              ? await applyFilmToFile(item.file, item.film)
+              : item.file;
+          const mediaId = await uploadFile(upload);
           // Post any tagged accounts against the freshly-uploaded
           // media BEFORE creating the Moment. Doing it after would
           // race with the Moment's `media_tag` notification pass in
@@ -547,6 +572,33 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           )}
         </div>
 
+        {activeItem && isStill(activeItem) && (
+          <div
+            className='moments-composer__films'
+            role='group'
+            aria-label={intl.formatMessage(messages.filmLooks)}
+          >
+            <FilmChip
+              id={null}
+              label={intl.formatMessage(messages.filmOriginal)}
+              selected={!activeItem.film}
+              disabled={posting}
+              onSelect={setFilmActive}
+            />
+            {FILM_LOOKS.map((look) => (
+              <FilmChip
+                key={look.id}
+                id={look.id}
+                label={look.id}
+                title={look.description}
+                selected={activeItem.film === look.id}
+                disabled={posting}
+                onSelect={setFilmActive}
+              />
+            ))}
+          </div>
+        )}
+
         {items.length > 0 && (
           <div className='moments-composer__strip'>
             {items.map((item, i) => (
@@ -675,6 +727,36 @@ const AddMenuItem: React.FC<{
   </button>
 );
 
+// ── one film look in the picker row ────────────────────────────────
+const FilmChip: React.FC<{
+  id: string | null;
+  label: string;
+  title?: string;
+  selected: boolean;
+  disabled: boolean;
+  onSelect: (id: string | null) => void;
+}> = ({ id, label, title, selected, disabled, onSelect }) => {
+  const handleClick = useCallback(() => {
+    onSelect(id);
+  }, [onSelect, id]);
+  return (
+    <button
+      type='button'
+      className={
+        selected
+          ? 'moments-composer__film moments-composer__film--active'
+          : 'moments-composer__film'
+      }
+      onClick={handleClick}
+      disabled={disabled}
+      aria-pressed={selected}
+      title={title}
+    >
+      {label}
+    </button>
+  );
+};
+
 // ── full-size hero of the active tile ──────────────────────────────
 const Hero: React.FC<{
   item: Item;
@@ -721,12 +803,21 @@ const Hero: React.FC<{
         />
       ) : (
         <>
-          <img
-            className='moments-composer__hero-media'
-            src={item.url}
-            alt=''
-            aria-hidden
-          />
+          {item.film ? (
+            <FilmPreview
+              className='moments-composer__hero-media'
+              file={item.file}
+              fallbackUrl={item.url}
+              look={item.film}
+            />
+          ) : (
+            <img
+              className='moments-composer__hero-media'
+              src={item.url}
+              alt=''
+              aria-hidden
+            />
+          )}
           <OverlayLayer overlays={item.overlays} />
         </>
       )}
@@ -904,6 +995,14 @@ const messages = defineMessages({
   editTags: {
     id: 'moments.composer.edit_tags',
     defaultMessage: 'Edit tagged people',
+  },
+  filmLooks: {
+    id: 'moments.composer.film_looks',
+    defaultMessage: 'Film look',
+  },
+  filmOriginal: {
+    id: 'moments.composer.film_original',
+    defaultMessage: 'Original',
   },
   remove: { id: 'moments.composer.remove', defaultMessage: 'Remove' },
   previous: { id: 'moments.composer.previous', defaultMessage: 'Previous' },

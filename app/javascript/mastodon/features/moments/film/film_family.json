@@ -1,0 +1,86 @@
+{
+  "base": {
+    "size": 33,
+    "contrast": 0.9,
+    "pivot": 0.42,
+    "black": 0.035,
+    "white": 0.965,
+    "saturation": 0.95,
+    "sat_shadow_rolloff": 0.35,
+    "sat_highlight_rolloff": 0.45,
+    "density": 0.12
+  },
+  "looks": [
+    {
+      "name": "banksia",
+      "description": "Warm colour negative. Soft contrast, lifted blacks, kind to skin, greens lean olive.",
+      "warmth": 0.04,
+      "contrast": 0.8,
+      "black": 0.05,
+      "saturation": 0.9,
+      "channel_pivot": [-0.01, 0, 0.015],
+      "shadow_tint": [0, 0.006, 0.01],
+      "highlight_tint": [0.015, 0.006, -0.012],
+      "hue_shifts": [
+        { "hue": 110, "width": 35, "shift": -10, "sat": 0.85 },
+        { "hue": 25, "width": 25, "shift": 3, "sat": 0.95 }
+      ]
+    },
+    {
+      "name": "saltbush",
+      "description": "Muted overcast negative. Faded, cool-green shadows, quiet greens and blues.",
+      "warmth": -0.01,
+      "tint": 0.01,
+      "contrast": 0.75,
+      "black": 0.06,
+      "white": 0.94,
+      "saturation": 0.75,
+      "shadow_tint": [-0.008, 0.01, 0.004],
+      "highlight_tint": [0.006, 0.006, -0.004],
+      "hue_shifts": [
+        { "hue": 110, "width": 35, "shift": 8, "sat": 0.7 },
+        { "hue": 210, "width": 30, "shift": -6, "sat": 0.8 }
+      ]
+    },
+    {
+      "name": "bluegum",
+      "description": "Slide film. Deep blacks, dense saturated colour, blues lean cyan.",
+      "warmth": -0.01,
+      "contrast": 1.25,
+      "black": 0.015,
+      "white": 0.985,
+      "saturation": 1.15,
+      "sat_shadow_rolloff": 0.2,
+      "sat_highlight_rolloff": 0.3,
+      "density": 0.22,
+      "shadow_tint": [-0.004, 0, 0.01],
+      "hue_shifts": [
+        { "hue": 220, "width": 30, "shift": -12, "sat": 1.1 },
+        { "hue": 120, "width": 35, "shift": 5, "sat": 1.05 },
+        { "hue": 0, "width": 20, "shift": 4, "sat": 1.1 }
+      ]
+    },
+    {
+      "name": "wattle",
+      "description": "Tungsten cinema crossover. Teal shadows, amber highlights.",
+      "warmth": 0.06,
+      "contrast": 1.05,
+      "channel_contrast": [1.05, 1, 0.95],
+      "channel_pivot": [-0.02, 0, 0.03],
+      "saturation": 0.9,
+      "shadow_tint": [-0.012, 0.004, 0.016],
+      "highlight_tint": [0.02, 0.008, -0.015],
+      "hue_shifts": [{ "hue": 220, "width": 30, "shift": -15, "sat": 0.9 }]
+    },
+    {
+      "name": "ironbark",
+      "description": "Black and white. Red-leaning channel mix (darker skies), firm contrast, faint warm tone.",
+      "mono": [0.45, 0.4, 0.15],
+      "contrast": 1.2,
+      "black": 0.03,
+      "white": 0.97,
+      "shadow_tint": [0.002, 0, -0.004],
+      "highlight_tint": [0.008, 0.004, -0.006]
+    }
+  ]
+}
