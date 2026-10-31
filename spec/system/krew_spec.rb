@@ -3,9 +3,9 @@
 require 'rails_helper'
 
 # docs/spaces/krew.md, The surfaces; decisions.md 2026-10-18: the tiles
-# open their space below the grid, and the + moon follows it. Since Tal's
-# 2026-10-31 pass the spaces sit at the foot, under the chat, and there is
-# no What's happening.
+# open their space below the grid, and the + moon follows it. Since
+# decisions.md, 2026-10-31 the spaces come first, the chat is a space the
+# Krew Konnects, and a section shows only once the Krew has that thing.
 RSpec.describe 'Krew page', :js, :streaming do
   include ProfileStories
 
@@ -17,7 +17,7 @@ RSpec.describe 'Krew page', :js, :streaming do
   let(:krew) do
     Krew.create!(slug: 'growers', name: 'Growers', access: 'open', seeded_by: bob.account, last_activity_at: Time.current).tap do |k|
       k.krew_memberships.create!(account: bob.account, role: 'seeder', source: 'direct')
-      %w(albutts kalendar map).each { |korner| k.krew_korners.create!(korner: korner) }
+      %w(albutts kalendar map nudges).each { |korner| k.krew_korners.create!(korner: korner) }
     end
   end
 
@@ -30,19 +30,30 @@ RSpec.describe 'Krew page', :js, :streaming do
     find('.kronk-menu__trigger').click
   end
 
-  it 'puts the spaces under the chat, with no What\'s happening' do
+  it 'puts the spaces first, then the chat' do
     visit "/hub/krew/#{krew.slug}"
 
     expect(page).to have_css('.krew-detail__chat')
     expect(page).to have_css('.attachment-section')
     expect(page).to have_no_text("What's happening")
-    after_chat = page.evaluate_script(<<~JS)
-      !!(document.querySelector('.krew-detail__chat').compareDocumentPosition(
-        document.querySelector('.attachment-section')) & Node.DOCUMENT_POSITION_FOLLOWING)
+    chat_after_spaces = page.evaluate_script(<<~JS)
+      !!(document.querySelector('.attachment-section').compareDocumentPosition(
+        document.querySelector('.krew-detail__chat')) & Node.DOCUMENT_POSITION_FOLLOWING)
     JS
-    expect(after_chat).to be true
+    expect(chat_after_spaces).to be true
     expect(page).to have_no_css('.space-tile--open')
     expect(plus_moon).to eq 'Post to Growers'
+  end
+
+  it 'shows a Krew with nothing Konnected as its header, Konnect and its posts' do
+    krew.krew_korners.destroy_all
+    visit "/hub/krew/#{krew.slug}"
+
+    expect(page).to have_css('.attachment-section .space-tile', text: /Konnect/i)
+    expect(page).to have_css('.attachment-section .space-tile', count: 1)
+    expect(page).to have_no_css('.krew-detail__chat')
+    expect(page).to have_no_css('.krew-detail__projekts')
+    expect(page).to have_no_css('.krew-detail__kuddles')
   end
 
   # decisions.md, 2026-10-25: Konnect is the one way in. A space's tile shows
@@ -156,7 +167,9 @@ RSpec.describe 'Krew page', :js, :streaming do
       click_button(class: 'nudges-composer__send')
       expect(page).to have_text('On my way')
     end
-    expect(page).to have_no_css('.space-tile', text: 'Chat')
+
+    within('.attachment-section') { click_on 'Chat' }
+    expect(page).to have_css('.krew-detail__chat')
   end
 
   it 'opens People from the faces, with the people asking to join' do
