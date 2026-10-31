@@ -21,7 +21,6 @@ import {
   apiAcceptKrewJoinRequest,
   apiDeclineKrewJoinRequest,
   apiInviteToKrew,
-  KREW_PAGE_SPACES,
 } from 'mastodon/api/krew';
 import type {
   ApiKrewActivityJSON,
@@ -50,12 +49,13 @@ import { KrewPosts } from './krew_posts';
 import { KrewProjekts } from './krew_projekts';
 import { KrewSpaceIcon } from './krew_space_icon';
 
-// Krew page (/hub/krew/:id): identity, the faces, then for members any
-// Kuddle Konnected here as a call frame, the projekts, the Krew's chat,
-// its spaces and its posts (docs/spaces/krew.md, The surfaces). Settings
-// lives on the floating space menu. What's happening went (Tal,
-// 2026-10-31: it showed what the chat shows), and the spaces moved down
-// to the foot, above the posts.
+// Krew page (/hub/krew/:id): identity and the faces, then the Krew's
+// spaces, its projekts, its chat, any Kuddle Konnected here as a call
+// frame, and its posts (docs/spaces/krew.md, The surfaces). Settings lives
+// on the floating space menu. A section shows only once the Krew has that
+// thing (Tal, 2026-10-31): a Krew with nothing Konnected is its header, the
+// Konnect tile and its posts. The tiles for the projekts, the chat and the
+// Kuddle scroll to their section.
 
 // The grid's tiles open their space below it, one at a time, and close
 // again on a second tap (decisions.md, 2026-10-18): its albums, its
@@ -132,6 +132,12 @@ const messages = defineMessages({
   accept: { id: 'krew.detail.request_accept', defaultMessage: 'Let them in' },
   decline: { id: 'krew.detail.request_decline', defaultMessage: 'Decline' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
+  projektsTile: { id: 'krew.detail.tile.projekts', defaultMessage: 'Projekts' },
+  chatTile: { id: 'krew.detail.tile.chat', defaultMessage: 'Chat' },
+  kuddles: {
+    id: 'krew.detail.kuddles',
+    defaultMessage: '{count, plural, one {Kuddle} other {Kuddles}}',
+  },
   konnect: { id: 'krew.detail.konnect', defaultMessage: 'Konnect' },
   editKrew: { id: 'krew.detail.edit', defaultMessage: 'Edit Krew' },
   changeImage: {
@@ -285,6 +291,38 @@ const OpenTile: React.FC<{
   );
 };
 
+// A tile for something with its own section further down the page (the
+// projekts, the chat, a Kuddle): tapping it scrolls there.
+const JumpTile: React.FC<{
+  slug: string;
+  target: string;
+  label: string;
+}> = ({ slug, target, label }) => {
+  const handle = useCallback(() => {
+    document
+      .getElementById(target)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [target]);
+  return (
+    <li>
+      <button type='button' className='space-tile' onClick={handle}>
+        <KrewSpaceIcon slug={slug} className='space-tile__glyph' />
+        <span className='space-tile__name'>{label}</span>
+      </button>
+    </li>
+  );
+};
+
+// Where each section is, for its tile.
+const SECTION_IDS = {
+  projekts: 'krew-projekts',
+  chat: 'krew-chat',
+  kuddles: 'krew-kuddles',
+} as const;
+
+// The spaces whose things open in place below the tiles.
+const PANEL_SPACES = ['albutts', 'kalendar'] as const;
+
 const SpaceTile: React.FC<{
   slug: 'albutts' | 'kalendar';
   open: boolean;
@@ -347,12 +385,16 @@ export const KrewDetail = () => {
   const isMember = Boolean(krew?.viewer_role);
   const requestCount = krew?.join_request_count ?? 0;
 
-  // What's happening, for members. `cancelled` drops a late answer for a
-  // Krew you've already left, so moving quickly between Krews can't show
-  // the previous one's. Non-fatal: the page works without it.
+  // The Krew's chat is a space it Konnects (decisions.md, 2026-10-31): a
+  // Krew without one has no chat on the page.
+  const chatOn = Boolean(krew?.korners.includes('nudges'));
+
+  // The chat, for members of a Krew that has one. `cancelled` drops a late
+  // answer for a Krew you've already left, so moving quickly between Krews
+  // can't show the previous one's. Non-fatal: the page works without it.
   useEffect(() => {
     setActivity(null);
-    if (!id || !isMember) return undefined;
+    if (!id || !isMember || !chatOn) return undefined;
     let cancelled = false;
     apiGetKrewActivity(id)
       .then((next) => {
@@ -364,7 +406,7 @@ export const KrewDetail = () => {
     return () => {
       cancelled = true;
     };
-  }, [id, isMember]);
+  }, [id, isMember, chatOn]);
   const handleChatRead = useCallback(() => {
     setActivity((prev) =>
       prev ? { ...prev, chat: { ...prev.chat, unread: 0 } } : prev,
@@ -497,7 +539,7 @@ export const KrewDetail = () => {
   const needsInvite = krew?.access === 'invite_only' && !hasInviteLink;
   const canJoinNow = Boolean(krew) && !asksToJoin && !needsInvite;
   const shownSpaces = krew
-    ? KREW_PAGE_SPACES.filter((slug) => krew.korners.includes(slug))
+    ? PANEL_SPACES.filter((slug) => krew.korners.includes(slug))
     : [];
   // A space that was removed while open closes.
   const openNow: OpenSpace =
@@ -537,18 +579,20 @@ export const KrewDetail = () => {
   // A member sees the Krew's albums and events in the Albutts and Kalendar
   // tiles, so the Konnected tiles beside them leave those two spaces out
   // and each album or event shows once (decisions.md, 2026-10-22).
-  // Its projekts have their own section above, so they aren't tiles too.
-  // A Kuddle Konnected here is a call frame at the top, as in a projekt
-  // (Tal, 2026-10-30: "konnecting a huddle should put a frame into the
-  // space"), so it isn't a tile as well.
+  // Its projekts have their own section below, so they aren't tiles too.
+  // A Kuddle Konnected here is a call frame in its own section, as in a
+  // projekt (Tal, 2026-10-30: "konnecting a huddle should put a frame into
+  // the space"), so it isn't a tile as well.
   const konnectedSkip = [
     ...(isMember ? shownSpaces : []),
     'freethedream',
     'huddle',
   ];
   const [kuddles, setKuddles] = useState<{ room: string; link: string }[]>([]);
+  const [projektCount, setProjektCount] = useState(0);
   useEffect(() => {
     setKuddles([]);
+    setProjektCount(0);
   }, [id]);
   const handleKonnections = useCallback((rows: ApiAttachmentJSON[]) => {
     const seen = new Set<string>();
@@ -571,6 +615,43 @@ export const KrewDetail = () => {
       setKuddles((current) => current.filter((k) => k.link !== link));
     });
   }, []);
+
+  // Tiles for what has its own section further down: tapping one scrolls
+  // there.
+  const jumpTiles = [
+    ...(projektCount > 0
+      ? [
+          <JumpTile
+            key='projekts'
+            slug='freethedream'
+            target={SECTION_IDS.projekts}
+            label={intl.formatMessage(messages.projektsTile)}
+          />,
+        ]
+      : []),
+    ...(chatOn
+      ? [
+          <JumpTile
+            key='chat'
+            slug='nudges'
+            target={SECTION_IDS.chat}
+            label={intl.formatMessage(messages.chatTile)}
+          />,
+        ]
+      : []),
+    ...(kuddles.length > 0
+      ? [
+          <JumpTile
+            key='kuddles'
+            slug='huddle'
+            target={SECTION_IDS.kuddles}
+            label={intl.formatMessage(messages.kuddles, {
+              count: kuddles.length,
+            })}
+          />,
+        ]
+      : []),
+  ];
 
   // The + moon makes something for the Krew in whichever space is open, with
   // the normal composer: a post, an album, an event.
@@ -768,23 +849,6 @@ export const KrewDetail = () => {
               </div>
             )}
 
-            {isMember &&
-              kuddles.map((k) => (
-                <KuddleFrame
-                  key={k.room}
-                  roomId={k.room}
-                  link={k.link}
-                  onDiskonnect={krew.archived ? undefined : handleDiskonnect}
-                />
-              ))}
-
-            {/* What the Krew is making, before its spaces: the projekts
-                live here rather than as Konnected tiles. */}
-            <KrewProjekts
-              krewId={krew.id}
-              canStart={isMember && !krew.archived}
-            />
-
             {openNow === 'people' && (
               <section className='krew-detail__section krew-detail__people'>
                 {isMember && requests.length > 0 && (
@@ -871,14 +935,8 @@ export const KrewDetail = () => {
               </section>
             )}
 
-            {isMember && activity && (
-              <KrewChat
-                conversationId={activity.chat.conversation_id}
-                onRead={handleChatRead}
-              />
-            )}
-
-            {/* One section of tiles: the Krew's spaces, then what it's
+            {/* The Krew's spaces first: a tile for each thing it has, each
+                opening in place or scrolling to its section, then what it's
                 Konnected to elsewhere, then Konnect. */}
             <AttachmentSection
               korner='krew'
@@ -890,15 +948,18 @@ export const KrewDetail = () => {
               excludeSlugs={konnectedSkip}
               leading={
                 isMember
-                  ? shownSpaces.map((slug) => (
-                      <li key={slug}>
-                        <SpaceTile
-                          slug={slug as 'albutts' | 'kalendar'}
-                          open={openNow === slug}
-                          onOpen={toggleSpace}
-                        />
-                      </li>
-                    ))
+                  ? [
+                      ...shownSpaces.map((slug) => (
+                        <li key={slug}>
+                          <SpaceTile
+                            slug={slug}
+                            open={openNow === slug}
+                            onOpen={toggleSpace}
+                          />
+                        </li>
+                      )),
+                      ...jumpTiles,
+                    ]
                   : undefined
               }
               renderKonnect={renderKonnect}
@@ -911,6 +972,43 @@ export const KrewDetail = () => {
 
             {isMember && openNow === 'albutts' && (
               <KrewAlbums krewId={krew.id} />
+            )}
+
+            {/* What the Krew is making. */}
+            <KrewProjekts
+              id={SECTION_IDS.projekts}
+              krewId={krew.id}
+              canStart={isMember && !krew.archived}
+              onCount={setProjektCount}
+            />
+
+            {isMember && chatOn && activity && (
+              <KrewChat
+                conversationId={activity.chat.conversation_id}
+                onRead={handleChatRead}
+              />
+            )}
+
+            {isMember && kuddles.length > 0 && (
+              <section
+                id={SECTION_IDS.kuddles}
+                className='krew-detail__section krew-detail__kuddles'
+              >
+                <h3 className='korner-section-heading'>
+                  {intl.formatMessage(messages.kuddles, {
+                    count: kuddles.length,
+                  })}
+                </h3>
+                {kuddles.map((k) => (
+                  <KuddleFrame
+                    key={k.room}
+                    roomId={k.room}
+                    link={k.link}
+                    showKind={false}
+                    onDiskonnect={krew.archived ? undefined : handleDiskonnect}
+                  />
+                ))}
+              </section>
             )}
 
             {/* The Krew's posts, last, so the page scrolls on into them. */}

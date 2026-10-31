@@ -66,7 +66,9 @@ export const KuddleFrame: React.FC<{
   // The Konnection, for whoever may undo it here.
   link?: string;
   onDiskonnect?: (link: string) => void;
-}> = ({ roomId, link, onDiskonnect }) => {
+  // Off where the page already heads the frame "Kuddle" (the Krew page).
+  showKind?: boolean;
+}> = ({ roomId, link, onDiskonnect, showKind = true }) => {
   const intl = useIntl();
   const { pathname } = useLocation();
   const [room, setRoom] = useState<KuddleJSON | null>(null);
@@ -108,9 +110,11 @@ export const KuddleFrame: React.FC<{
   return (
     <section className='kuddle-frame'>
       <header className='kuddle-frame__head'>
-        <span className='kuddle-frame__kind'>
-          {intl.formatMessage(messages.kind)}
-        </span>
+        {showKind && (
+          <span className='kuddle-frame__kind'>
+            {intl.formatMessage(messages.kind)}
+          </span>
+        )}
         <Link
           to={`/hub/huddle/kuddle/${room.id}`}
           className='kuddle-frame__name'
