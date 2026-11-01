@@ -45,14 +45,20 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(page).to have_css('.krew-detail__projekts .space-card', text: 'Mini Doof', wait: 20)
   end
 
-  # docs/spaces/krew.md, Projekts: the Krew page's New projekt starts one in
-  # that Krew.
+  # docs/spaces/krew.md, Projekts: a Krew with no projekts has no section,
+  # and its first is seeded from Konnect.
   it "starts a projekt from its Krew's page" do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
     krew = Fabricate(:krew, seeded_by: bob.account, name: 'Mayhem')
 
     visit "/hub/krew/#{krew.slug}"
-    find('.krew-detail__projekts .space-card', text: 'New projekt', wait: 20).click
+    expect(page).to have_css('.attachment-section')
+    expect(page).to have_no_css('.krew-detail__projekts')
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') do
+      click_on 'Projekts'
+      click_on 'Seed a projekt'
+    end
 
     expect(page).to have_select('Krew', selected: 'Mayhem')
     fill_in placeholder: 'A doof, an album, an app, a co-op…', with: 'Mini Doof'

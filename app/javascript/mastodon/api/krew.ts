@@ -28,12 +28,19 @@ export type KrewKornerSlug =
   | 'kommons'
   | 'map'
   | 'albutts'
-  | 'kuestions';
+  | 'kuestions'
+  | 'nudges';
 
 // The spaces that can show a Krew's own things on its page (decisions.md,
 // 2026-10-18). Only these are offered when gathering a Krew or adding a
 // space; the rest of KrewKorner::KORNERS join as each gets a Krew part.
-export const KREW_PAGE_SPACES: KrewKornerSlug[] = ['albutts', 'kalendar'];
+// `nudges` is the Krew's chat: a Krew has one once it is Konnected
+// (decisions.md, 2026-10-31).
+export const KREW_PAGE_SPACES: KrewKornerSlug[] = [
+  'albutts',
+  'kalendar',
+  'nudges',
+];
 
 export interface ApiKrewRequirementJSON {
   id: string;

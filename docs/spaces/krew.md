@@ -70,7 +70,8 @@ you made.
   back out of it. The audience only widens when the record's owner links
   it and is in the Krew; a link anyone else makes stays a link.
 - **One place on the page.** The Krew page has one section of tiles,
-  **Spaces**: its Albutts and Kalendar tiles, then whatever else it's
+  **Spaces**: its Albutts and Kalendar tiles, a tile for its projekts, its
+  chat and its Kuddle (each scrolls to its section), then whatever else it's
   Konnected to (an art piece, a proposal…), then **Konnect**, which opens
   the Konnect picker straight away. There is no separate Add a space:
   Konnecting or making an album or event turns that space on, and Krew
@@ -81,8 +82,9 @@ you made.
   with `?konnect=krew:<id>`, so what it makes is Konnected to the Krew; a
   new album or event is the Krew's own (decisions.md, 2026-10-23). Albums
   and events stay in their tiles and aren't repeated as Konnected tiles
-  (`excludeSlugs`). The Krew's projekts (FreeTheDream) aren't tiles here
-  either: they have their own **Projekts** section (see The surfaces). A
+  (`excludeSlugs`). The Krew's projekts (FreeTheDream) aren't Konnected
+  tiles here either: they have their own **Projekts** section (see The
+  surfaces), which the Projekts tile scrolls to. A
   projekt lives in one Krew, a Krew can hold several, and everyone in the
   Krew is in each (docs/spaces/freethedream.md, The Krew).
 
@@ -186,36 +188,43 @@ All in `app/javascript/mastodon/features/krew/`.
   again closes it): for members, the people asking to join with "Let them
   in" and "Decline", and "Invite people"; for everyone, the list of who is
   in it. The rest is for members (decisions.md, 2026-10-18), in this
-  order since Tal's 2026-10-31 pass (What's happening went: it showed what
-  the chat shows; the spaces moved down to the foot):
-  - **Kuddles**: a Kuddle Konnected to the Krew is a call frame at the
-    top, as in a projekt (docs/spaces/huddle.md, A frame in a projekt),
-    not a tile among the spaces. One made from the Krew's Konnect brings
-    you back here, joining.
+  order since Tal's second 2026-10-31 pass (decisions.md, 2026-10-31). Each
+  section shows only once the Krew has that thing, so a Krew with nothing
+  Konnected is its header, the Konnect tile and its posts:
+  - **Spaces**: first, a tile for each thing the Krew has. **Albutts** and
+    **Kalendar** open in place below the tiles, one at a time, and close on
+    a second tap: the Krew's albums (`krew_albums.tsx`), and what is coming
+    up for the Krew and what's been (`krew_events.tsx`). Nothing is open on
+    arrival. **Projekts**, **Chat** and **Kuddle** scroll down to their
+    section. Then what the Krew is Konnected to elsewhere (an art piece, a
+    proposal…), and last **Konnect** (a +). A space gets its tile once
+    something is Konnected or made in it, or once it is turned on in
+    Settings.
   - **Projekts**: what the Krew is making, as a
     row of cards (`krew_projekts.tsx`, the kit's `SpaceGrid` row): each
     projekt's cover, title and how much of what it needs is sorted (no
-    people count: everyone in the Krew is in it), opening the projekt. For members a last card, **New
-    projekt**, opens the projekt composer (`/hub/krew/composer/projekt`)
-    with this Krew picked (`?konnect=krew:<id>`). A projekt's pages are
-    under its Krew (`/hub/krew/<krew>/p/<projekt>`), so back from one comes
-    here (docs/spaces/freethedream.md, The Krew). `GET /api/v1/freethedream/projects?krew_id=`
-    lists them, only to people who could open them (an invite-only Krew's
-    to its members). Anyone else sees the section on a listed Krew, without
-    New projekt, and nothing when there are none.
-  - **Chat**: the Krew's chat from Nudges, read and written on the page
-    (`krew_chat.tsx`, the messenger's `ConversationView` without its
-    header), with "Open in Nudges" beside the heading. It is marked read
-    once it has been on screen, not when the page opens. The chat is
-    found through `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`),
-    which also lists recent lines the page no longer shows.
-  - **Spaces**: a tile for each attached space with a Krew part, which
-    **opens it in place** below the grid, one at a time; tapping it again
-    closes it. Nothing is open on arrival. **Albutts** shows the Krew's
-    albums (`krew_albums.tsx`), **Kalendar** what is coming up for the
-    Krew and what's been (`krew_events.tsx`). Last, **Konnect** (a +): a
-    space gets its tile once something is Konnected or made in it, or once
-    it is turned on in Settings.
+    people count: everyone in the Krew is in it), opening the projekt. For
+    members a last card, **New projekt**, opens the projekt composer
+    (`/hub/krew/composer/projekt`) with this Krew picked
+    (`?konnect=krew:<id>`). A Krew with no projekts has no section; its
+    first is seeded from Konnect (FreeTheDream, **New projekt**). A
+    projekt's pages are under its Krew (`/hub/krew/<krew>/p/<projekt>`), so
+    back from one comes here (docs/spaces/freethedream.md, The Krew).
+    `GET /api/v1/freethedream/projects?krew_id=` lists them, only to people
+    who could open them (an invite-only Krew's to its members). Anyone else
+    sees the section on a listed Krew that has projekts, without New
+    projekt.
+  - **Chat**: the Krew's chat from Nudges, when the Krew has one (see
+    **Chat** below), read and written on the page (`krew_chat.tsx`, the
+    messenger's `ConversationView` without its header), with "Open in
+    Nudges" beside the heading. It is marked read once it has been on
+    screen, not when the page opens. The chat is found through
+    `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`), which also
+    lists recent lines the page no longer shows.
+  - **Kuddle**: a Kuddle Konnected to the Krew is a call frame under its
+    own heading, as in a projekt (docs/spaces/huddle.md, A frame in a
+    projekt), not a tile among the spaces. One made from the Krew's Konnect
+    brings you back here, joining.
   - **Posts**: last on the page, the posts sent to the Krew, newest first,
     as the standard feed card in the standard timeline (`krew_posts.tsx`,
     `StatusListContainer` on the `krew:<id>` timeline,
@@ -243,16 +252,21 @@ All in `app/javascript/mastodon/features/krew/`.
   is Has requirements. Spaces are the Krew page's icon tiles, each with a ×
   to take it out, plus Add a space (a tray of the spaces it can turn on).
 
-**Chat.** Each Krew has one group conversation in Nudges
-(`Nudges::Conversation` kind `krew`, members only). The Krew page gets its
-id from `GET /api/v1/krews/:id/activity`; `GET /api/v1/krews/:id/chat`
-returns the same id.
+**Chat.** A Krew's chat is a space it Konnects (decisions.md, 2026-10-31):
+a `nudges` row in `krew_korners`, turned on and off in Settings, Spaces,
+like Albutts and Kalendar. Every Krew made before 2026-10-31 has one; a new
+Krew starts without. The chat is one group conversation in Nudges
+(`Nudges::Conversation` kind `krew`, members only). Without the row it is
+neither on the page nor listed in Nudges (`Nudges::Conversation.listable`),
+but it isn't deleted, so turning the chat back on brings its messages back.
+The Krew page gets its id from `GET /api/v1/krews/:id/activity`;
+`GET /api/v1/krews/:id/chat` returns the same id.
 
 **Attached spaces.** `KrewKorner` rows record which korners a Krew has turned
-on. The server allows `booth huddle kalendar kommons map albutts kuestions`
-(`KrewKorner::KORNERS`), but only the spaces that can show a Krew's own
-things are offered or get a tile: Albutts and Kalendar (`KREW_PAGE_SPACES`
-in `api/krew.ts`). A Krew that turned on another space keeps the row; it
+on. The server allows `booth huddle kalendar kommons map albutts kuestions
+nudges` (`KrewKorner::KORNERS`), but only the spaces that can show a Krew's
+own things are offered or get a tile: Albutts, Kalendar and Nudges, the
+chat (`KREW_PAGE_SPACES` in `api/krew.ts`). A Krew that turned on another space keeps the row; it
 shows only in Settings, where it can be removed, until that space gets a
 Krew part.
 
