@@ -48,11 +48,10 @@
   .kronk-frame {
     grid-template-columns: [nav-start stage-start] 1fr [nav-end stage-end];
 
-    // Row 1 collapses on mobile (TopBand hides at ≤629px; row-1's
-    // 4.25rem offset for the wordmark strip isn't needed when the
-    // strip isn't showing). `auto` sizes the row to its (empty)
-    // content, i.e. 0.
-    grid-template-rows: auto 1fr 3.5rem;
+    // Row 1 is the TopBand's height. On a phone the band is a slim
+    // 3.5rem strip (wordmark, search, Nudges; 2.2.0) — see the phone
+    // rules on .kronk-frame__top-band.
+    grid-template-rows: 3.5rem 1fr 3.5rem;
   }
 }
 
@@ -68,10 +67,16 @@
 // The TopBand is fixed, so anything scrolled "to the top" lands under it:
 // a post opened from a notification, a jump to a section, keyboard
 // navigation. Padding the page's scroll area by the band's height makes
-// every scrollIntoView stop below it instead. Phones have no TopBand.
+// every scrollIntoView stop below it instead. A phone's band is 3.5rem.
 @media (width >= 630px) {
   html:has(.kronk-frame__top-band) {
     scroll-padding-top: 4.25rem;
+  }
+}
+
+@media (width <= 629px) {
+  html:has(.kronk-frame__top-band) {
+    scroll-padding-top: 3.5rem;
   }
 }
 
@@ -139,7 +144,13 @@
   }
 
   @media (width <= 629px) {
-    display: none;
+    background: linear-gradient(
+      to bottom,
+      #000 0,
+      #000 2.75rem,
+      rgb(0 0 0 / 70%) 3.4rem,
+      transparent 4.25rem
+    );
   }
 
   // Signed-out visitors: no HubSwitcher renders inside the top-band
@@ -148,7 +159,7 @@
   // top-left with an empty stretch beside it — let it span the whole
   // grid and centre itself. `:has()` is the CSS-only swap; supported
   // in every browser Kronk targets.
-  &:not(:has(.hub-switcher--top)) .kronk-wordmark {
+  &:not(:has(.hub-switcher--top, .top-tools)) .kronk-wordmark {
     grid-column: 1 / -1;
     justify-self: center;
   }
@@ -202,9 +213,14 @@
   }
 
   @media (width <= 629px) {
-    // Switcher lives in the bottom tab-bar on mobile; no top chrome
-    // to back. Matches the classic body::before mobile hide behaviour.
-    display: none;
+    // The pillars are the bottom tab bar on a phone; the band is a slim
+    // strip with the wordmark, then search and Nudges (2.2.0). The Ж
+    // button is fixed at the top right, so the strip stops short of it.
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    height: calc(3.5rem + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0) 4rem 0 0.75rem;
   }
 }
 

@@ -12,8 +12,9 @@ import { Link, useHistory } from 'react-router-dom';
 // lives in `styles/kronk/_wordmark.scss` (base `.kronk-wordmark` +
 // `.kronk-wordmark--{chrome,hero,inline}` variants).
 //
-// Clicking any glyph navigates to `/kronk` — the Kronk org space
-// (spec §O) — as an ordinary in-app route.
+// Clicking any glyph goes Home (2.2.0, Tal 2026-11-01: Home is the
+// screen in the middle, and the pillars are the four sections). It went
+// to `/kronk`, the Kronk org space, which Join now carries as a tile.
 //
 // **It used to be a full page load.** `/kronk` was Rails-served until
 // #1882 (2026-09-14) made it a real SPA route, and this component kept
@@ -46,7 +47,7 @@ import { Link, useHistory } from 'react-router-dom';
 const GLYPHS = ['Ж', 'Я', 'Ѻ', 'Ɲ', '₭'] as const;
 const O_INDEX = 2;
 const TRIPLE_CLICK_WINDOW_MS = 400;
-const KRONK_HREF = '/kronk';
+const HOME_HREF = '/home';
 const EASTER_EGG_LOCATION = { pathname: '/kronk', search: '?ephemera=1' };
 
 type WordmarkSize = 'chrome' | 'hero' | 'inline';
@@ -89,7 +90,7 @@ export const KronkWordmark: React.FC<KronkWordmarkProps> = ({
       timerRef.current = null;
       clickCount.current = 0;
 
-      // Third click wins: stop the Link taking us to /kronk plain.
+      // Third click wins: stop the Link taking us Home.
       event.preventDefault();
       event.stopPropagation();
       // A location object, not a path string with a query — the router
@@ -101,9 +102,10 @@ export const KronkWordmark: React.FC<KronkWordmarkProps> = ({
 
   return (
     <Link
-      to={KRONK_HREF}
+      to={HOME_HREF}
       className={`kronk-wordmark kronk-wordmark--${size}`}
       aria-label='Kronk'
+      data-walkthrough-anchor={size === 'chrome' ? 'nav-home' : undefined}
     >
       {GLYPHS.map((glyph, index) => (
         <span

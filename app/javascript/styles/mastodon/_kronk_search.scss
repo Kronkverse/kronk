@@ -390,17 +390,14 @@
   }
 }
 
-// The search bar at the right end of the top band, on wide screens only
-// (features/ui/components/top_search.tsx). Below the rail's breakpoint the
-// band has no room and Search stays in the Ж menu.
+// The search bar at the right end of the top band, on every screen
+// (features/ui/components/top_search.tsx), beside Nudges in `.top-tools`.
+// It narrows to the room there is on a phone.
 .top-search {
   position: relative;
-  justify-self: end;
+  flex: 1 1 auto;
   width: min(15rem, 100%);
-
-  @media (width <= 889px) {
-    display: none;
-  }
+  min-width: 0;
 
   &__icon {
     position: absolute;

@@ -325,8 +325,16 @@ export function KlotSettings () {
   return import("../../klot/settings");
 }
 
-export function Hub () {
-  return import("../../hub").then(m => ({ default: m.Hub }));
+export function SectionShare () {
+  return import('../../sections/share');
+}
+
+export function SectionExplore () {
+  return import('../../sections/explore');
+}
+
+export function SectionJoin () {
+  return import('../../sections/join');
 }
 
 export function Kalendar () {
