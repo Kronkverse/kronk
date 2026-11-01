@@ -47,6 +47,7 @@ ignore_missing:
   # which i18n-tasks doesn't read (CLAUDE.md, CI gates).
   - 'albutts.*'
   - 'nudges.*'
+  - 'kronk_jitsi.*'
 
 ignore_unused:
   - 'activemodel.errors.*'

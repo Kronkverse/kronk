@@ -17,6 +17,8 @@ import { apiGetMapPlace, apiGetMapPlaces } from 'mastodon/api/map_places';
 import type { ApiMapPlaceJSON } from 'mastodon/api/map_places';
 import { Icon } from 'mastodon/components/icon';
 
+import { CountryLine } from './country_line';
+
 // Places layer — draws Map Places (exact spots with an address, Map's
 // linkable record) on the Mates map, beside the event layer. Tapping
 // one opens a card listing what's Konnected to it, both ways, with a
@@ -237,6 +239,7 @@ const PlacePreviewCard: React.FC<{
         {place.address && (
           <div className='map-place-card__address'>{place.address}</div>
         )}
+        <CountryLine country={place.country} />
         {konnected && (
           <div className='map-place-card__konnected'>
             <span className='map-place-card__label'>

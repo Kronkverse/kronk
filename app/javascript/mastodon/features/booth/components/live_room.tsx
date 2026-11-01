@@ -12,6 +12,7 @@ import {
   CallRecordingList,
   useCallRecordings,
 } from 'mastodon/components/call_recordings';
+import { ComposeCheck } from 'mastodon/components/compose_fields';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
@@ -170,6 +171,16 @@ const messages = defineMessages({
     id: 'booth.live.announced',
     defaultMessage: 'You’re live, and your feed has been told',
   },
+  recordSet: { id: 'booth.live.record_set', defaultMessage: 'Record this set' },
+  goNote: {
+    id: 'booth.live.go_note',
+    defaultMessage: 'Nobody can listen in until you go live.',
+  },
+  goNoteJoined: {
+    id: 'booth.live.go_note_joined',
+    defaultMessage:
+      'You’re in the room. Nobody can listen in until you go live.',
+  },
   readyTitle: {
     id: 'booth.live.ready_title',
     defaultMessage: 'Before you go live',
@@ -202,13 +213,24 @@ const messages = defineMessages({
   tipRecordServer: {
     id: 'booth.live.tip_record_server',
     defaultMessage:
-      'To keep the set, press Record under the room. Everyone sees it is being recorded, and the file comes to you afterwards to publish as a set.',
+      'The set is recorded from when you go live, unless you untick Record this set. Everyone sees it is being recorded, and the file comes to you afterwards to publish as a set.',
   },
   tipSize: {
     id: 'booth.live.tip_size',
     defaultMessage: 'A room plays best to up to about 35 people.',
   },
   host: { id: 'booth.live.host', defaultMessage: 'Hosted by {name}' },
+  // The controls under the room speak of a set, not a call.
+  controls: { id: 'booth.live.controls', defaultMessage: 'Set controls' },
+  leaveSet: { id: 'booth.live.leave', defaultMessage: 'Leave the set' },
+  stepOut: {
+    id: 'booth.live.step_out',
+    defaultMessage: 'Step out of the room. The set stays live',
+  },
+  recordingHint: {
+    id: 'booth.live.recording_hint',
+    defaultMessage: 'This set is being recorded',
+  },
 });
 
 interface Props {
@@ -243,6 +265,26 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
     ? live.account.display_name || live.account.username
     : '';
   const callState = useCallState(call);
+  // Record this set (on by default where the server records): going live
+  // starts the recording once the host is in the room, once. Stopping it
+  // later is theirs, and it doesn't start again on its own.
+  const [recordSet, setRecordSet] = useState(true);
+  const autoRecord = useRef(false);
+  const handleRecordSet = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setRecordSet(e.target.checked);
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!call || !callState?.inConference || !autoRecord.current) return;
+    if (callState.recording) {
+      autoRecord.current = false;
+    } else if (callState.canRecord && callState.moderator) {
+      autoRecord.current = false;
+      call.startRecording();
+    }
+  }, [call, callState]);
   // What the host last marked as playing, from the poll or the set itself.
   const [playing, setPlaying] = useState<{ text: string; at: number } | null>(
     null,
@@ -302,7 +344,7 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
   }, [recordingNow, isHost, call]);
 
   // The set's recording, once it's over, for its host to publish.
-  const [recordings, forgetRecording] = useCallRecordings(
+  const recordings = useCallRecordings(
     'booth_live',
     id,
     state === 'ended' && live?.is_owner === true,
@@ -440,12 +482,13 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
         dispatch(
           showAlert({ message: told ? messages.announced : messages.wentLive }),
         );
+        autoRecord.current = jitsiRecording && recordSet;
         joinRoom(true);
       } finally {
         setBusy(false);
       }
     })();
-  }, [live, announce, dispatch, joinRoom]);
+  }, [live, announce, dispatch, joinRoom, recordSet]);
 
   const handleRejoin = useCallback(() => {
     joinRoom(true);
@@ -567,14 +610,6 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
         actions={
           state !== 'ended' && (
             <KornerActionBar>
-              {owner && state === 'scheduled' && (
-                <KornerPill
-                  variant='primary'
-                  label={intl.formatMessage(messages.goLive)}
-                  onClick={handleGoLive}
-                  disabled={busy || !scriptReady}
-                />
-              )}
               {owner && state === 'live' && !joined && (
                 <KornerPill
                   variant='primary'
@@ -609,6 +644,35 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
           )
         }
       >
+        {/* Go live sits on its own at the top of the room, not in the
+            header's row of small actions, where a host in the room
+            missed it. */}
+        {owner && state === 'scheduled' && (
+          <section className='booth-live__go'>
+            <p className='booth-live__go-note'>
+              {intl.formatMessage(
+                joined ? messages.goNoteJoined : messages.goNote,
+              )}
+            </p>
+            {jitsiRecording && (
+              <ComposeCheck
+                className='booth-live__go-record'
+                label={intl.formatMessage(messages.recordSet)}
+                checked={recordSet}
+                onChange={handleRecordSet}
+                disabled={busy}
+              />
+            )}
+            <KornerPill
+              variant='primary'
+              className='booth-live__go-button'
+              label={intl.formatMessage(messages.goLive)}
+              onClick={handleGoLive}
+              disabled={busy || !scriptReady}
+            />
+          </section>
+        )}
+
         {state === 'ended' && owner && draftSetId && (
           <EmptyState
             title={intl.formatMessage(messages.setReady)}
@@ -673,10 +737,7 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
           )}
 
         {state === 'ended' && owner && (
-          <CallRecordingList
-            recordings={recordings}
-            onRemoved={forgetRecording}
-          />
+          <CallRecordingList recordings={recordings} />
         )}
 
         {state === 'ended' && !(owner && latestRecording) && (
@@ -755,6 +816,12 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
           <CallControls
             call={call}
             onLeave={leaveRoom}
+            leaveLabel={intl.formatMessage(
+              owner ? messages.stepOut : messages.leaveSet,
+            )}
+            leaveIcon='logout'
+            label={intl.formatMessage(messages.controls)}
+            recordingHint={intl.formatMessage(messages.recordingHint)}
             listenOnly={!owner}
             inputPicker={owner}
           />

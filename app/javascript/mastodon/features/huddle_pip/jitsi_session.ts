@@ -1,21 +1,33 @@
-// The Huddle call, outside any page, so moving around Kronk never ends it
-// (docs/spaces/huddle.md, The call follows you). Tomas's approach (#2118):
-// the Jitsi iframe lives in a container on document.body that no React
-// component owns. Built on (2026-10-19): the container always sits over a
-// "slot", the call area on the Huddle page or the video area of the floating
-// mini window, and is moved, never rebuilt, when the slot changes. So the
-// call keeps its video and mic as you go.
+// The Huddle call (the Main Huddle's or a Kuddle's), outside any page, so
+// moving around Kronk never ends it (docs/spaces/huddle.md, The call follows
+// you). Tomas's approach (#2118): the Jitsi iframe lives in a container on
+// document.body that no React component owns. Built on (2026-10-19): the
+// container always sits over a "slot", the call area on the call's page or
+// the video area of the floating mini window, and is moved, never rebuilt,
+// when the slot changes. So the call keeps its video and mic as you go.
 //
-// live/index.tsx and huddle_pip/index.tsx both import from here; this file
-// imports from neither, which keeps the module graph free of cycles. The
+// live/index.tsx (the Main Huddle), live/room.tsx (a Kuddle) and
+// huddle_pip/index.tsx all import from here; this file imports from none of
+// them, which keeps the module graph free of cycles. The
 // call itself, and the state Kronk's controls show, is mastodon/jitsi.ts's
 // Call, so the mini window picks up where the page left off.
 
 import type { Call } from 'mastodon/jitsi';
 
+// Which call it is: the Main Huddle (`huddle`) or one Kuddle
+// (`kuddle:<id>`). The mini window names it and goes back to its page, and a
+// page only picks up a call that is its own.
+export interface CallPlace {
+  key: string;
+  path: string;
+  // A Kuddle's name; the Main Huddle is just "Huddle".
+  name?: string;
+}
+
 interface Session {
   call: Call;
   container: HTMLDivElement;
+  place: CallPlace;
 }
 
 let session: Session | null = null;
@@ -30,6 +42,10 @@ export const Z_FLOATING = 1001;
 
 export const getJitsiSession = (): Session | null => session;
 
+// The call going on for this place, if that's the one going on.
+export const getJitsiSessionFor = (key: string): Session | null =>
+  session?.place.key === key ? session : null;
+
 // A container for a new call, on document.body, hidden until a slot claims it.
 export const createJitsiContainer = (): HTMLDivElement => {
   const container = document.createElement('div');
@@ -43,13 +59,21 @@ export const createJitsiContainer = (): HTMLDivElement => {
   return container;
 };
 
+// One call at a time: starting one (a Kuddle while the Main Huddle is in
+// the mini window, say) ends the one before.
 export const setJitsiSession = (next: Session): void => {
+  if (session && session.call !== next.call) {
+    session.call.dispose();
+    session.container.remove();
+  }
   session = next;
   place();
 };
 
-export const disposeJitsiSession = (): void => {
-  if (!session) return;
+// End the call. Given one, only if it's still the call going on, so a call
+// already replaced can't end the one that replaced it.
+export const disposeJitsiSession = (call?: Call): void => {
+  if (!session || (call && session.call !== call)) return;
   session.call.dispose();
   session.container.remove();
   session = null;

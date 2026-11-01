@@ -1,8 +1,11 @@
+import { useCallback } from 'react';
+
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import { EmptyState } from 'mastodon/components/empty_state';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
@@ -31,11 +34,6 @@ const messages = defineMessages({
       'Play a set live for members, or schedule one so people can plan to tune in.',
   },
   goLive: { id: 'booth.live.go_live', defaultMessage: 'Go live' },
-  howTo: {
-    id: 'booth.live.how_to',
-    defaultMessage:
-      'To play live yourself, open the Ж menu, choose Upload or go live, then Go live.',
-  },
   host: { id: 'booth.live.by', defaultMessage: 'by {name}' },
 });
 
@@ -103,6 +101,24 @@ export const LiveCard: React.FC<{
   );
 };
 
+// Go live, as a big filled button wherever the Booth offers it (Tal's
+// proposal "'Go live' button": a text link was easy to miss).
+export const GoLiveButton: React.FC = () => {
+  const intl = useIntl();
+  const history = useHistory();
+  const handleClick = useCallback(() => {
+    history.push('/hub/booth/composer/live');
+  }, [history]);
+  return (
+    <KornerPill
+      variant='primary'
+      className='booth-live__go-button'
+      label={intl.formatMessage(messages.goLive)}
+      onClick={handleClick}
+    />
+  );
+};
+
 export const LiveView: React.FC = () => {
   const intl = useIntl();
   const location = useLocation<LocationState | undefined>();
@@ -124,17 +140,16 @@ export const LiveView: React.FC = () => {
       <EmptyState
         title={intl.formatMessage(messages.empty)}
         body={intl.formatMessage(messages.emptyBody)}
-        action={
-          <Link to='/hub/booth/composer/live'>
-            {intl.formatMessage(messages.goLive)}
-          </Link>
-        }
+        action={<GoLiveButton />}
       />
     );
   }
 
   return (
     <div className='booth-live-list'>
+      <div className='booth-live-list__go'>
+        <GoLiveButton />
+      </div>
       {now.length > 0 && (
         <section>
           <h2 className='booth-set__section-title'>
@@ -159,9 +174,6 @@ export const LiveView: React.FC = () => {
           </ul>
         </section>
       )}
-      <p className='booth-live-list__how'>
-        {intl.formatMessage(messages.howTo)}
-      </p>
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { useCallback, useId, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { useCountryNames } from 'mastodon/hooks/useCountryNames';
 import { useSaveOwnProfile } from 'mastodon/hooks/useSaveOwnProfile';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
@@ -9,10 +10,11 @@ import { useAppSelector } from 'mastodon/store';
 import type { FirstNationsCountry } from './first_nations_countries';
 import { FIRST_NATIONS_COUNTRIES } from './first_nations_countries';
 
-// The First Nations Country you live on, under your bio while you design your
-// profile (docs/spaces/profile.md, Country). Type it, or pick a name from the
-// Country map as you type; it saves when you leave the field. Shown to others
-// as "On <name> Country".
+// The First Nations Country you live on, or the one you were born on, under
+// your bio while you design your profile (docs/spaces/profile.md, Country).
+// Type it, or pick a name from the Country list as you type; it saves when you
+// leave the field. Shown to others as "Living on <name> Country" and "Born on
+// <name> Country".
 //
 // The suggestions are Kronk's own list, not the browser's <datalist>: a
 // datalist is drawn by the system in the system font and can't be styled, so
@@ -24,6 +26,10 @@ const messages = defineMessages({
   label: {
     id: 'profile.country.label',
     defaultMessage: 'Whose Country do you live on?',
+  },
+  bornLabel: {
+    id: 'profile.country.born_label',
+    defaultMessage: 'Whose Country were you born on?',
   },
   placeholder: {
     id: 'profile.country.placeholder',
@@ -45,13 +51,17 @@ const fold = (text: string) =>
     .replace(/[\u0300-\u036f]/g, '');
 
 // Names (or their other spellings) that start with what's typed come first,
-// then ones that contain it.
-const suggestionsFor = (typed: string): FirstNationsCountry[] => {
+// then ones that contain it. Kronk's list comes with the open list's names:
+// every name someone has typed, or added on the map.
+const suggestionsFor = (
+  typed: string,
+  countries: readonly FirstNationsCountry[],
+): FirstNationsCountry[] => {
   const query = fold(typed.trim());
   if (!query) return [];
   const starts: FirstNationsCountry[] = [];
   const contains: FirstNationsCountry[] = [];
-  FIRST_NATIONS_COUNTRIES.forEach((country) => {
+  countries.forEach((country) => {
     const spellings = [country.name, ...(country.also ?? [])].map(fold);
     if (fold(country.name) === query) return;
     if (spellings.some((s) => s.startsWith(query))) starts.push(country);
@@ -60,31 +70,54 @@ const suggestionsFor = (typed: string): FirstNationsCountry[] => {
   return [...starts, ...contains].slice(0, SUGGESTION_LIMIT);
 };
 
+// Kronk's list, then the open list's names that aren't on it already.
+const withOpenList = (added: readonly { name: string }[]) => {
+  const known = new Set(
+    FIRST_NATIONS_COUNTRIES.flatMap((c) => [c.name, ...(c.also ?? [])]).map(
+      fold,
+    ),
+  );
+  const extra = added
+    .filter(({ name }) => !known.has(fold(name)))
+    .map(({ name }) => ({ name, region: '' }));
+  return [...FIRST_NATIONS_COUNTRIES, ...extra];
+};
+
 // "Noongar · WA", "Eora · NSW & ACT", "VIC".
 const whereOf = (country: FirstNationsCountry) =>
   [country.group, ...(country.also ?? []), country.region]
     .filter(Boolean)
     .join(' · ');
 
-export const ProfileCountryField: React.FC = () => {
+interface Props {
+  // Where you live (the first one there was), or where you were born.
+  field: 'first_nations_country' | 'first_nations_country_born';
+}
+
+export const ProfileCountryField: React.FC<Props> = ({ field }) => {
   const intl = useIntl();
   const listId = useId();
   const initial = useAppSelector((state) =>
-    me ? (state.accounts.get(me)?.first_nations_country ?? '') : '',
+    me ? (state.accounts.get(me)?.[field] ?? '') : '',
   );
   const [value, setValue] = useState(initial);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const { status, save } = useSaveOwnProfile();
 
-  const suggestions = useMemo(() => suggestionsFor(value), [value]);
+  const { names: added } = useCountryNames();
+  const countries = useMemo(() => withOpenList(added), [added]);
+  const suggestions = useMemo(
+    () => suggestionsFor(value, countries),
+    [value, countries],
+  );
   const showing = open && suggestions.length > 0;
 
   const commit = useCallback(
     (next: string) => {
-      if (next.trim() !== initial) save({ first_nations_country: next.trim() });
+      if (next.trim() !== initial) save({ [field]: next.trim() });
     },
-    [initial, save],
+    [field, initial, save],
   );
 
   const pick = useCallback(
@@ -146,7 +179,11 @@ export const ProfileCountryField: React.FC = () => {
   return (
     <div className='profile-block__country profile-block__country--editing'>
       <label className='profile-block__country-label'>
-        {intl.formatMessage(messages.label)}
+        {intl.formatMessage(
+          field === 'first_nations_country_born'
+            ? messages.bornLabel
+            : messages.label,
+        )}
         <input
           type='text'
           className='profile-block__country-input'

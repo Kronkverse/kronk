@@ -65,12 +65,13 @@ const saveOffset = (offset: Offset) => {
   }
 };
 
-// The Huddle while you're elsewhere in Kronk: the call itself, small and
-// floating, like a video player's picture-in-picture (Tal, 2026-10-19), not
-// a pill. The video is the same Jitsi call, moved over this window's video
-// area (jitsi_session.ts), so mic and camera carry on. Drag it by its top
-// bar; under the video are Kronk's call controls (components/
-// call_controls.tsx), with a way back to the Huddle.
+// The call (the Main Huddle's or a Kuddle's) while you're elsewhere in
+// Kronk: the call itself, small and floating, like a video player's
+// picture-in-picture (Tal, 2026-10-19), not a pill. The video is the same
+// Jitsi call, moved over this window's video area (jitsi_session.ts), so mic
+// and camera carry on. Drag it by its top bar; under the video are Kronk's
+// call controls (components/call_controls.tsx), with a way back to the
+// call's own page.
 export const HuddlePip: React.FC = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
@@ -84,8 +85,12 @@ export const HuddlePip: React.FC = () => {
   const [count, setCount] = useState(startCount);
   const windowRef = useRef<HTMLDivElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
-  const call = getJitsiSession()?.call ?? null;
+  const session = getJitsiSession();
+  const call = session?.call ?? null;
   const shown = active && minimized && call !== null;
+  // The Main Huddle is "Huddle"; a Kuddle goes by its name.
+  const title = session?.place.name ?? intl.formatMessage(messages.title);
+  const path = session?.place.path ?? '/hub/huddle';
 
   // Put the call over this window's video area while it's shown.
   useEffect(() => {
@@ -156,8 +161,8 @@ export const HuddlePip: React.FC = () => {
   );
 
   const handleExpand = useCallback(() => {
-    history.push('/huddle');
-  }, [history]);
+    history.push(path);
+  }, [history, path]);
   const handleLeave = useCallback(() => {
     disposeJitsiSession();
     dispatch(huddleLeft());
@@ -171,7 +176,7 @@ export const HuddlePip: React.FC = () => {
       className='huddle-mini'
       style={{ right: offset.right, bottom: offset.bottom }}
       role='region'
-      aria-label={intl.formatMessage(messages.title)}
+      aria-label={title}
     >
       <div
         className='huddle-mini__bar'
@@ -179,9 +184,7 @@ export const HuddlePip: React.FC = () => {
         title={intl.formatMessage(messages.drag)}
       >
         <span className='huddle-mini__dot' aria-hidden='true' />
-        <span className='huddle-mini__title'>
-          {intl.formatMessage(messages.title)}
-        </span>
+        <span className='huddle-mini__title'>{title}</span>
         {count > 0 && (
           <span className='huddle-mini__count'>
             {intl.formatMessage(messages.count, { count })}

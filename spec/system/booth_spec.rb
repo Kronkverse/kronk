@@ -72,6 +72,57 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
     expect(mine.reload.credits.map(&:label)).to eq ['Ash', 'Lena K']
   end
 
+  # docs/spaces/booth.md, The room: a host in the room missed Go live in the
+  # header's row of small actions, so it has its own panel at the top.
+  it 'gives the host of a planned set Go live on its own, not in the header' do
+    live = Fabricate(:booth_live, account: bob.account)
+
+    visit "/hub/booth/live/#{live.id}"
+
+    within('.booth-live__go') do
+      expect(page).to have_content('Nobody can listen in until you go live.')
+      expect(page).to have_button('Go live')
+    end
+    expect(page).to have_no_css('.korner-detail__actions button', text: 'Go live')
+  end
+
+  # docs/spaces/booth.md, Going live: Go live is a big button on the Live
+  # view, not a text link (Tal's proposal "'Go live' button").
+  it 'offers Go live as a button on the Live view' do
+    visit '/hub/booth/live'
+
+    expect(page).to have_content('Nothing live right now')
+    click_on 'Go live'
+
+    expect(page).to have_current_path('/hub/booth/composer/live')
+  end
+
+  # docs/spaces/booth.md, Musik: View lays the sets out in rows, one per
+  # artist or one per kind (Tal's proposal "Music arranging").
+  it 'lays Musik out in rows by artist and by kind' do
+    row = ->(title) { find('.booth-shelf__title', exact_text: title).ancestor('.booth-shelf') }
+    Fabricate(:booth_set, account: ash, title: 'Second wind', kind: 'live_recording', published: true,
+                          audio_attachment: Fabricate(:media_attachment, account: ash))
+
+    visit '/hub/booth'
+    click_on 'View: Grid'
+    click_on 'By artist'
+
+    within(row.call('Lena K')) do
+      expect(page).to have_css('.space-grid--row')
+      expect(page).to have_content('Dawn at the point')
+      expect(page).to have_no_content('Second wind')
+    end
+
+    click_on 'View: By artist'
+    click_on 'By kind'
+    within(row.call('Live recordings')) do
+      expect(page).to have_content('Second wind')
+      click_on 'See all'
+    end
+    expect(page).to have_button('Kind: Live recording')
+  end
+
   # docs/spaces/booth.md, Albums.
   describe 'albums' do
     it 'lists an album\'s tracks on its page, in order' do

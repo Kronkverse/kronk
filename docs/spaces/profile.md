@@ -105,25 +105,34 @@ and the bio read as a loose, unformatted block).
 
 ### Country
 
-Under the bio, **On <name> Country**: the First Nations Country someone says
-they live on (Kommons "Introduce First nation country display", @mangobee,
-2026-10-23). It shows wherever the bio does, to whoever can see the profile.
-While you design your profile it is a field under the bio, **Whose Country do
-you live on?**, that suggests Countries as you type from @mangobee's list
-(`components/first_nations_countries.ts`; 110 by state and territory, given on
-the Kommons proposal on 2026-10-23 and replacing the names first read off the
-Country map). Each suggestion shows its state or territory, and the people it
-belongs to (the Noongar groups) or its other name; typing that other name
-(Eora, Woiwurrung, Boonwurrung, Bininj, Yolngu) finds it too. Any other name
-can be typed. It saves when you leave the field, and
-a blank one clears it.
+Under the bio, two lines, each a First Nations Country: **Born on <name>
+Country** and **Living on <name> Country** (Kommons "Introduce First nation
+country display", @mangobee, 2026-10-23; born and living added 2026-10-30).
+Both are optional, and each shows on its own line wherever the bio does, to
+whoever can see the profile. Each opens that Country on the Map
+(`/hub/map?country=<name>`). The one Country there was at first is where you
+live, so anyone who had set it reads "Living on".
 
-It is a name and nothing else: `accounts.first_nations_country` (60
-characters, `Account::FirstNationsCountry`), sent through `update_credentials`
-and shown on the account (`REST::AccountSerializer`, local accounts, hidden
-when suspended). A trailing "Country" is dropped so it is never said twice.
-Nothing about where someone is goes with it; the Map's pin is separate (see
-`map.md`, First Nations Country, for the picture layer).
+While you design your profile they are two fields under the bio, **Whose
+Country were you born on?** and **Whose Country do you live on?**
+(`components/profile_country_field.tsx`). Each suggests Countries as you type
+from @mangobee's list (`components/first_nations_countries.ts`; 110 by state
+and territory, given on the Kommons proposal on 2026-10-23 and replacing the
+names first read off the Country map). Each suggestion shows its state or
+territory, and the people it belongs to (the Noongar groups) or its other
+name; typing that other name (Eora, Woiwurrung, Boonwurrung, Bininj, Yolngu)
+finds it too. The open list's names come with it (every name anyone has typed
+here or added on the map; `map.md`, First Nations Country). Any other name can
+be typed, and joins that list. Each saves when you leave the
+field, and a blank one clears it.
+
+Each is a name and nothing else: `accounts.first_nations_country` (where you
+live) and `accounts.first_nations_country_born` (60 characters each,
+`Account::FirstNationsCountry`), sent through `update_credentials` and shown
+on the account (`REST::AccountSerializer`, local accounts, hidden when
+suspended). A trailing "Country" is dropped so it is never said twice.
+Nothing about where someone is goes with them; the Map's pin is separate (see
+`map.md`, First Nations Country, for the Country layer).
 
 ### The profile board
 
@@ -285,7 +294,8 @@ Kommons "Post to a profile").
   beside Nudge and Rose. It opens the ordinary composer with "Posting on
   <name>'s profile" above it (`compose/components/profile_target_indicator.tsx`);
   the x there makes it an ordinary post again. The reach picker works as for
-  any post, except that it cannot be "Just me".
+  any post, except that its narrowest rung is **Only on <name>'s profile**
+  instead of Just me (below).
 - **What it is.** Still the author's post (`statuses.profile_account_id`
   names the profile). It travels as any post of theirs does, and wherever it
   shows it says **On <name>'s profile**.
@@ -293,6 +303,19 @@ Kommons "Post to a profile").
   (`AccountStatusesFilter#with_profile_posts`). Who sees it there follows
   the author: everyone for a public one, the author's Mates for a narrower
   one, and always the author and the owner.
+- **Only on <name>'s profile** (Tal, 2026-10-29; Kommons "Posting to mates
+  profile"). Stored as `self_only` with `profile_account_id`
+  (`Status#profile_only?`). It goes into **no** home feed (not the author's,
+  not the owner's, nobody's), stream or search, and cannot be boosted. On
+  the profile it is seen by **anyone who can see that profile**
+  (`Account#profile_visible_to?`; never signed out), and by the author; the
+  post page 404s for everyone else (`StatusPolicy#on_visible_profile?`).
+  Comments under it take its reach and follow it. It takes no Krews and no
+  added or removed people (the server drops them). The owner is still told,
+  and people it mentions are told only if they can see the profile. It shows
+  **Only on <name>'s profile, not in feeds** above it and a person, not the
+  Just me lock, by its time; "Who can see this?" says the same. "Just me"
+  itself still means only you.
 - **The owner is told** ("posted on your profile"), and can take any such
   post off from its menu, **Remove from my profile**
   (`DELETE /api/v1/statuses/:id/profile_post`). The post is not deleted; it

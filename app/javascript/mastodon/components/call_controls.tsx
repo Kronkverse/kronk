@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 
 import type { MessageDescriptor } from 'react-intl';
 import { defineMessages, useIntl } from 'react-intl';
@@ -10,6 +10,7 @@ import CallEndIcon from '@/material-icons/400-24px/call_end.svg?react';
 import CancelPresentationIcon from '@/material-icons/400-24px/cancel_presentation.svg?react';
 import DesktopMacIcon from '@/material-icons/400-24px/desktop_mac.svg?react';
 import FitScreenIcon from '@/material-icons/400-24px/fit_screen.svg?react';
+import LogoutIcon from '@/material-icons/400-24px/logout.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import MicOffIcon from '@/material-icons/400-24px/mic_off.svg?react';
 import MusicNoteIcon from '@/material-icons/400-24px/music_note.svg?react';
@@ -20,6 +21,7 @@ import VideocamIcon from '@/material-icons/400-24px/videocam.svg?react';
 import VideocamOffIcon from '@/material-icons/400-24px/videocam_off.svg?react';
 import WavingHandIcon from '@/material-icons/400-24px/waving_hand.svg?react';
 import { CallInputPanel } from 'mastodon/components/call_input_picker';
+import { recordingLength } from 'mastodon/components/call_recordings';
 import { IconButton } from 'mastodon/components/icon_button';
 import { useCallState } from 'mastodon/hooks/useCallState';
 import type { Call, CallState } from 'mastodon/jitsi';
@@ -39,6 +41,10 @@ import type { Call, CallState } from 'mastodon/jitsi';
 // input: which microphone or sound card the call uses, and its level
 // (components/call_input_picker.tsx). Huddle and Kuddles have the picker
 // too.
+//
+// The bar speaks of a call. A page that isn't one names its own leave,
+// toolbar and recording hint, and can trade the hang-up handset for a
+// door (`leaveIcon='logout'`): a Booth live set is a set, not a call.
 
 const messages = defineMessages({
   label: { id: 'calls.controls.label', defaultMessage: 'Call controls' },
@@ -94,6 +100,13 @@ interface Props {
   onLeave: () => void;
   // What Leave is called here ("Unhuddle" in the Huddle).
   leaveLabel?: string;
+  // The leave button's icon: the hang-up handset, or a door for a page
+  // that isn't a call (a Booth live set).
+  leaveIcon?: 'call_end' | 'logout';
+  // What the bar is called to a screen reader ("Call controls").
+  label?: string;
+  // The hint on "Recording" ("This call is being recorded").
+  recordingHint?: string;
   // A Booth listener: hand, view and leave, no mic, camera or screen.
   listenOnly?: boolean;
   // Sound input: pick the microphone or sound card, and see its level.
@@ -217,10 +230,34 @@ const CallButtons: React.FC<{
   );
 };
 
+// How long the recording has run, ticking each second (Tal's proposal
+// "Recordings"). Hidden from screen readers, which would read every tick;
+// "Recording" itself is the status.
+const RecordingClock: React.FC<{ since: number }> = ({ since }) => {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+
+  return (
+    <span className='call-controls__recording-time' aria-hidden='true'>
+      {recordingLength(Math.floor((now - since) / 1000)) ?? '0:00'}
+    </span>
+  );
+};
+
 export const CallControls: React.FC<Props> = ({
   call,
   onLeave,
   leaveLabel,
+  leaveIcon = 'call_end',
+  label,
+  recordingHint,
   listenOnly = false,
   inputPicker = false,
   compact = false,
@@ -249,17 +286,20 @@ export const CallControls: React.FC<Props> = ({
         <span
           className='call-controls__recording'
           role='status'
-          title={intl.formatMessage(messages.recordingHint)}
+          title={recordingHint ?? intl.formatMessage(messages.recordingHint)}
         >
           <span className='call-controls__recording-dot' aria-hidden='true' />
           {intl.formatMessage(messages.recording)}
+          {state.recordingSince !== null && (
+            <RecordingClock since={state.recordingSince} />
+          )}
         </span>
       )}
 
       <div
         className='call-controls__buttons'
         role='toolbar'
-        aria-label={intl.formatMessage(messages.label)}
+        aria-label={label ?? intl.formatMessage(messages.label)}
       >
         {call && state && (
           <CallButtons
@@ -273,8 +313,8 @@ export const CallControls: React.FC<Props> = ({
         <IconButton
           className='call-controls__button call-controls__button--leave'
           title={leave}
-          icon='call_end'
-          iconComponent={CallEndIcon}
+          icon={leaveIcon}
+          iconComponent={leaveIcon === 'logout' ? LogoutIcon : CallEndIcon}
           onClick={onLeave}
         />
       </div>

@@ -188,6 +188,10 @@
   }
 }
 
+.call-controls__recording-time {
+  font-variant-numeric: tabular-nums;
+}
+
 // A call's recordings, on the Kuddle page and the Main Huddle
 // (components/call_recordings.tsx).
 .call-recordings {

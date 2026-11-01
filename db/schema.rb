@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -169,6 +169,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
     t.string "featured_collection_url"
     t.jsonb "fields"
     t.string "first_nations_country"
+    t.string "first_nations_country_born"
     t.string "followers_url", default: "", null: false
     t.string "following_url", default: "", null: false
     t.string "header_content_type"
@@ -1256,7 +1257,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
     t.datetime "created_at", null: false
     t.text "description"
     t.datetime "ended_at"
-    t.bigint "host_account_id", null: false
+    t.bigint "host_account_id"
     t.string "icon", limit: 32
     t.datetime "last_active_at"
     t.datetime "retired_at"
@@ -1625,6 +1626,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
     t.index ["user_id"], name: "index_login_activities_on_user_id"
   end
 
+  create_table "map_country_names", force: :cascade do |t|
+    t.bigint "account_id"
+    t.datetime "created_at", null: false
+    t.string "folded", limit: 60, null: false
+    t.string "name", limit: 60, null: false
+    t.datetime "removed_at"
+    t.bigint "removed_by_account_id"
+    t.integer "shape_id"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_map_country_names_on_account_id"
+    t.index ["folded"], name: "index_map_country_names_on_folded", unique: true
+    t.index ["removed_by_account_id"], name: "index_map_country_names_on_removed_by_account_id"
+    t.index ["shape_id"], name: "index_map_country_names_on_shape_id"
+  end
+
   create_table "map_places", force: :cascade do |t|
     t.bigint "account_id"
     t.text "address"
@@ -1895,6 +1911,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
     t.bigint "source_id"
     t.string "source_korner_slug", null: false
     t.string "source_type"
+    t.integer "times", default: 1, null: false
     t.string "verb", null: false
     t.index ["actor_account_id"], name: "index_nudges_events_on_actor_account_id"
     t.index ["conversation_id", "created_at"], name: "index_nudges_events_on_convo_recency", order: { created_at: :desc }
@@ -2997,7 +3014,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
   add_foreign_key "huddle_follows", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
-  add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :cascade
+  add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :nullify, validate: false
   add_foreign_key "identities", "users", name: "fk_bea040f377", on_delete: :cascade
   add_foreign_key "instance_moderation_notes", "accounts", on_delete: :cascade
   add_foreign_key "invites", "users", on_delete: :cascade
@@ -3033,6 +3050,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_140200) do
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
+  add_foreign_key "map_country_names", "accounts", column: "removed_by_account_id", on_delete: :nullify
+  add_foreign_key "map_country_names", "accounts", on_delete: :nullify
   add_foreign_key "map_places", "accounts", on_delete: :nullify
   add_foreign_key "markers", "users", on_delete: :cascade
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify

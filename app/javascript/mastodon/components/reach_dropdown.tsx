@@ -7,6 +7,7 @@ import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import ExpandMoreIcon from '@/material-icons/400-24px/expand_more.svg?react';
 import LinkIcon from '@/material-icons/400-24px/link.svg?react';
+import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import type { MarkKind } from 'mastodon/components/scope_mark';
 import { ScopeMark } from 'mastodon/components/scope_mark';
@@ -38,6 +39,14 @@ export interface SameAsOption {
   title: string;
   audience: string;
   selected: boolean;
+}
+
+// The narrowest rung said another way. On a Mate's profile the composer's
+// `self_only` is "Only on <name>'s profile" (docs/spaces/profile.md, Posts
+// from Mates), drawn with a person, not the Just me mark.
+export interface SelfRung {
+  label: string;
+  hint: string;
 }
 
 export interface KrewOption {
@@ -141,7 +150,25 @@ interface Props {
   // "Same as <record>" rows over the tiers, and what choosing one does.
   sameAs?: readonly SameAsOption[];
   onSameAs?: (key: string) => void;
+  // Says the `self_only` rung another way (see SelfRung).
+  selfRung?: SelfRung;
 }
+
+const RungMark: React.FC<{
+  option: ReachValue;
+  selfRung?: SelfRung;
+  size: number;
+  className: string;
+}> = ({ option, selfRung, size, className }) =>
+  option === 'self_only' && selfRung ? (
+    <Icon id='person' icon={PersonIcon} className='reach-dropdown__at-mark' />
+  ) : (
+    <ScopeMark
+      kind={REACH_META[option].mark}
+      size={size}
+      className={className}
+    />
+  );
 
 const SameAsMenuItem: React.FC<{
   option: SameAsOption;
@@ -179,8 +206,9 @@ const ReachMenuItem: React.FC<{
   selected: boolean;
   label: string;
   hint: string;
+  selfRung?: SelfRung;
   onSelect: (value: ReachValue) => void;
-}> = ({ option, selected, label, hint, onSelect }) => {
+}> = ({ option, selected, label, hint, selfRung, onSelect }) => {
   const handleClick = useCallback(() => {
     onSelect(option);
   }, [onSelect, option]);
@@ -193,8 +221,9 @@ const ReachMenuItem: React.FC<{
       onClick={handleClick}
       className={`reach-dropdown__item${selected ? ' reach-dropdown__item--selected' : ''}`}
     >
-      <ScopeMark
-        kind={REACH_META[option].mark}
+      <RungMark
+        option={option}
+        selfRung={selfRung}
         size={24}
         className='reach-dropdown__item-mark'
       />
@@ -282,6 +311,7 @@ export const ReachDropdown: React.FC<Props> = ({
   peopleCount = 0,
   sameAs,
   onSameAs,
+  selfRung,
 }) => {
   const hideSet = new Set<ReachValue>(hide ?? []);
   const visibleOrder = ORDER.filter((o) => !hideSet.has(o));
@@ -291,7 +321,14 @@ export const ReachDropdown: React.FC<Props> = ({
   const [peopleOpen, setPeopleOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [placement, setPlacement] = useState('');
-  const current = REACH_META[value];
+  const rungLabel = (option: ReachValue) =>
+    option === 'self_only' && selfRung
+      ? selfRung.label
+      : intl.formatMessage(messages[REACH_META[option].labelId]);
+  const rungHint = (option: ReachValue) =>
+    option === 'self_only' && selfRung
+      ? selfRung.hint
+      : intl.formatMessage(messages[REACH_META[option].hintId]);
 
   const krewEnabled = krews !== undefined && onToggleKrew !== undefined;
   const peopleEnabled = peopleSlot !== undefined;
@@ -401,13 +438,14 @@ export const ReachDropdown: React.FC<Props> = ({
           </>
         ) : (
           <>
-            <ScopeMark
-              kind={current.mark}
+            <RungMark
+              option={value}
+              selfRung={selfRung}
               size={20}
               className='reach-dropdown__button-mark'
             />
             <span className='reach-dropdown__button-label'>
-              {intl.formatMessage(messages[current.labelId])}
+              {rungLabel(value)}
             </span>
           </>
         )}
@@ -442,8 +480,9 @@ export const ReachDropdown: React.FC<Props> = ({
               // While an audience follows another record, only its row is
               // ticked: the copied tier is what it follows, not a choice.
               selected={!leading && option === value}
-              label={intl.formatMessage(messages[REACH_META[option].labelId])}
-              hint={intl.formatMessage(messages[REACH_META[option].hintId])}
+              label={rungLabel(option)}
+              hint={rungHint(option)}
+              selfRung={selfRung}
               onSelect={handleSelect}
             />
           ))}

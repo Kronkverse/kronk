@@ -587,8 +587,8 @@
 // a dropdown of avatar bubbles. Tap a bubble → re-centre the map on
 // that mate (handleSelectPin still clamps to ANON_ZOOM - 0.5, so the
 // user zooms OUT to see them — anonymisation is preserved).
-// First Nations Country — its switch sits under the zoom buttons, top right,
-// with the credit and disclaimer beneath it while the layer is on.
+// First Nations Country — always drawn; "Find a Country" sits under the zoom
+// buttons, top right, with the disclaimer or a Country's card beneath it.
 .map-country {
   position: absolute;
   top: 88px;
@@ -599,31 +599,6 @@
   align-items: flex-end;
   gap: 6px;
   max-width: min(260px, calc(100% - 32px));
-
-  &__toggle {
-    padding: 8px 14px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    box-shadow: var(--elevation-floating);
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--accent);
-      outline: none;
-    }
-
-    &--on {
-      border-color: var(--accent);
-      color: var(--accent-text);
-    }
-  }
 
   &__note {
     margin: 0;
@@ -749,6 +724,144 @@
     line-height: 1.4;
   }
 
+  // Who was born on or lives on this Country, as faces that open profiles.
+  &__people {
+    margin: 10px 0 0;
+  }
+
+  &__people-title {
+    margin: 0 0 4px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__people-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__person {
+    display: block;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+
+  // Names people have added to this Country (the open list), as chips; a
+  // steward's carry an × to take one off.
+  &__added {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__added-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    color: var(--text-primary);
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  &__added-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-inline-end: -6px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .icon {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  &__add {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0 0;
+  }
+
+  &__add-input {
+    box-sizing: border-box;
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  &__add-button {
+    padding: 6px 12px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--accent-text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:disabled {
+      border-color: var(--border-default);
+      color: var(--text-muted);
+      cursor: default;
+    }
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      outline: none;
+    }
+  }
+
   &__card-note {
     margin: 10px 0 0;
     color: var(--text-muted);
@@ -768,6 +881,131 @@
       0 0 3px color-mix(in srgb, black 85%, transparent),
       0 0 6px color-mix(in srgb, black 60%, transparent);
     pointer-events: none;
+  }
+}
+
+// Near me (features/map_v2/near_me.tsx): a pill top-left that opens a list
+// of the closest Mates, Places and Events. Dropped below the in-view pill
+// when that is showing.
+.map-near-me {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, calc(100% - 32px));
+  pointer-events: none;
+
+  &--lower {
+    top: 64px;
+  }
+
+  &__toggle,
+  &__panel {
+    pointer-events: auto;
+  }
+
+  &__toggle {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      color: var(--accent-text);
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px;
+    max-height: min(420px, 60vh);
+    overflow-y: auto;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+  }
+
+  &__title {
+    margin: 4px 8px 2px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--radius-medium);
+    background: transparent;
+    color: var(--text-primary);
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in oklab, var(--accent) 18%, transparent);
+      outline: none;
+    }
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__km {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 11px;
   }
 }
 
@@ -1763,6 +2001,38 @@
   &--huddle &__bulb {
     background: var(--kronk-purple-bright);
   }
+
+  // What's on: in the next week a soft glow; happening now a glow that
+  // breathes (event_layer.tsx, whatsOn). Still with reduced motion.
+  &--soon &__bulb {
+    box-shadow: 0 0 10px 2px
+      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
+  }
+
+  &--now &__bulb {
+    box-shadow: 0 0 14px 4px
+      color-mix(in oklab, var(--kronk-purple-bright) 80%, transparent);
+    animation: map-event-on 2.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &--now &__bulb {
+      animation: none;
+    }
+  }
+}
+
+@keyframes map-event-on {
+  0%,
+  100% {
+    box-shadow: 0 0 8px 2px
+      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 18px 6px
+      color-mix(in oklab, var(--kronk-purple-bright) 90%, transparent);
+  }
 }
 
 // Event preview card — the tap-a-pin popup for event markers. Sits
@@ -2021,5 +2291,122 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+  }
+}
+
+// "On <name> Country" on a pin, Event, Place or Trek (country_line.tsx): a
+// quiet line that opens that Country on the map.
+.map-country-line {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent-text);
+      text-decoration: underline;
+    }
+  }
+}
+
+// "You're on <name> Country": the Country under the middle of the map, at the
+// bottom centre once zoomed in; a tap opens its card.
+.map-country-here {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  z-index: 5;
+  max-width: calc(100% - 32px);
+  padding: 6px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transform: translateX(-50%);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--elevation-floating);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    outline: none;
+  }
+}
+
+// Pin-drop: "You're on <name> Country. Add it as where you live?" after you
+// place your pin (country_prompt.tsx). Top centre, clear of the pin card.
+.map-country-prompt {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 6;
+  box-sizing: border-box;
+  width: min(340px, calc(100% - 32px));
+  padding: 12px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  box-shadow: var(--elevation-floating);
+  transform: translateX(-50%);
+
+  &__text {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  &__error {
+    margin: 6px 0 0;
+    color: var(--warning-red);
+    font-size: 12px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  &__button {
+    padding: 6px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    &--primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--text-on-accent);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
   }
 }

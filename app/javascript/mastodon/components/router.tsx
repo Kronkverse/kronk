@@ -9,7 +9,7 @@ import type {
   LocationDescriptorObject,
   Path,
 } from 'history';
-import { createBrowserHistory } from 'history';
+import { createBrowserHistory, parsePath } from 'history';
 
 import { layoutFromWindow } from 'mastodon/is_mobile';
 import { isDevelopment } from 'mastodon/utils/environment';
@@ -20,9 +20,6 @@ interface MastodonLocationState {
   // Where the Frame's back badge should return to, when that is not simply
   // the korner's landing page (components/auto_space_badge.tsx).
   backTo?: string;
-  // Set by the Ж menu's "Propose a change": the page the proposal composer
-  // was opened from, to go back to when it closes (features/kommons).
-  returnTo?: string;
 }
 
 export type LocationState = MastodonLocationState | null | undefined;
@@ -43,7 +40,13 @@ function normalizePath(
   path: HistoryPath,
   state?: LocationState,
 ): LocationDescriptorObject<LocationState> {
-  const location = typeof path === 'string' ? { pathname: path } : { ...path };
+  // A string path keeps its ?query and #hash apart from the pathname, as
+  // history's own push does: `{ pathname: '/hub/map?country=X' }` matches no
+  // route (a profile's Country link opened a broken page, 2026-10-30).
+  const location: LocationDescriptorObject<LocationState> =
+    typeof path === 'string'
+      ? { ...parsePath(path), state: undefined }
+      : { ...path };
 
   if (location.state === undefined && state !== undefined) {
     location.state = state;

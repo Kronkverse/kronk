@@ -36,14 +36,8 @@ RSpec.describe CallRecordingPolicy do
     end
   end
 
-  permissions :destroy? do
-    it 'lets whoever moderates the call remove it', :aggregate_failures do
-      expect(described_class).to permit(maker, recording_of('kuddle', kuddle.id))
-      expect(described_class).to permit(staff, recording_of('kuddle', kuddle.id))
-      expect(described_class).to_not permit(member, recording_of('kuddle', kuddle.id))
-      expect(described_class).to permit(staff, recording_of('huddle'))
-      expect(described_class).to_not permit(member, recording_of('huddle'))
-      expect(described_class).to permit(maker, recording_of('booth_live', live.id))
-    end
+  # Once recorded, kept: nobody deletes one (Tal, 2026-10-29).
+  it 'has no way to remove one' do
+    expect(described_class.new(staff, recording_of('huddle'))).to_not respond_to(:destroy?)
   end
 end

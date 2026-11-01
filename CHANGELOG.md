@@ -7,6 +7,52 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.7 "Rose"] - 2026-11-01
+
+- Rail fade over Hub tiles (#2412)
+- One error toast (#2411)
+- Proposal composer over the current page (#2415)
+- Go live stands out (#2416)
+- Booth live words (#2414)
+- FreeTheDream nav (#2413)
+- No Konnect in the proposal composer (#2417)
+- Live sets record themselves (#2420)
+- Composer options as kit pills (#2419)
+- Android app link keys (#2421)
+- Recording clock and pairs (#2426)
+- Actioned proposals as one notice (#2427)
+- Tag only your Mates (#2428)
+- One tag nudge per photo drop (#2429)
+- Only on a Mate's profile (#2424)
+- Call recordings are kept for good (#2425)
+- Rows may scroll sideways on a phone (#2422)
+- Musik rows (#2418)
+- Kuddles outlive their maker (#2430)
+- Tag only your Mates in photos and Moments (#2431)
+- Links with a query open the right page (#2432)
+- Born on and Living on Country (#2433)
+- Open list of Country names (#2434)
+- Country on pins, Places, Events and Treks (#2435)
+- Go live button (#2440)
+- Acknowledgement of Country on the flag screen (#2436)
+- Pin-drop adds your Country (#2438)
+- What's on: Event pins glow (#2439)
+- Clear the letters off the Country map (#2441)
+- Flag screen acknowledgement: body text, 4s (#2442)
+- Country always on the map (#2437)
+- Archived Krews out of your Krews (#2443)
+- Kuddle calls follow you (#2446)
+- Near me on the map (#2449)
+- People on a Country (#2448)
+- Mastodon 4.5.20 (#2447)
+- Map crash leaving a Country card (#2450)
+- Android app awareness (#2453)
+- Map Country spec fix (#2452)
+- Android app recognised before sign-in (#2459)
+- Old app update message (#2463)
+- Moments film looks (#2470)
+- rack 3.2.8 (#2473)
+
 ### [2.1.6 "Rose"] - 2026-10-29
 
 - Call passes typ (#2408)
@@ -627,6 +673,18 @@ land on the right things.
 - Nav-chrome layout wiring (components exist but not slotted yet)
 
 ## Upstream Mastodon
+
+## [4.5.20] - 2026-10-29
+
+### Security
+
+- Fix insufficient ActivityPub identifier verification ([GHSA-288h-6j8h-6x5j](https://github.com/mastodon/mastodon/security/advisories/GHSA-288h-6j8h-6x5j))
+- Updated dependencies, in particular to address security advisories in Ruby, NodeJS, and `sanitize`
+
+### Fixed
+
+- Fix inefficiency in some hashtag timeline queries (#41132 by @hugogameiro)
+- Fix error in `dev:populate_sample_data` task (#40995 and #41051 by @isidzukuri and @mjankowski)
 
 ## [4.5.19] - 2026-10-01
 

@@ -28,7 +28,9 @@ import {
   supportsWebGL,
 } from './basemap';
 import { CountryLayer } from './country_layer';
+import { CountryPrompt, useShouldOfferCountry } from './country_prompt';
 import { EventLayer } from './event_layer';
+import { NearMe } from './near_me';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
@@ -535,9 +537,17 @@ export const MatesView: React.FC = () => {
   }, [allPins, ready, anonymising, viewport]);
 
   // ── Place / remove me ─────────────────────────────────────────────
+  // Pin-drop: the Country your new pin is on, offered as where you live.
+  const [placedCountry, setPlacedCountry] = useState<string | null>(null);
+  const offerCountry = useShouldOfferCountry(placedCountry);
+  const dismissCountry = useCallback(() => {
+    setPlacedCountry(null);
+  }, []);
+
   const handlePlaced = useCallback(
     (pin: ApiPresencePinJSON) => {
       setSelfPin(pin);
+      setPlacedCountry(pin.country?.name ?? null);
       setPlaceOpen(false); // successful place → dismiss the panel
       // Fly to a zoom that STAYS below ANON_ZOOM — otherwise dropping
       // a pin would immediately hide it under the anonymisation gate.
@@ -665,6 +675,17 @@ export const MatesView: React.FC = () => {
           />
         )}
 
+        {/* Near me: flies to your pin and lists what's closest. Sits
+            under the in-view panel when that takes the corner. */}
+        <NearMe
+          map={mapRef.current}
+          selfPin={selfPin}
+          pins={pins}
+          lower={anonymising}
+          onSelectPin={handleSelectPin}
+          onOpenPlace={openPlacePanel}
+        />
+
         {/* Off-map compass overlay — a marker at the canvas edge per
             direction that has mates outside the viewport. Absolute-
             positioned inside the stage; pointer-events are only enabled
@@ -698,6 +719,10 @@ export const MatesView: React.FC = () => {
             the map — matches the Kommunity orb tap card. Sits above the
             attribution control (see .maplibregl-ctrl-bottom-left offset
             in _map.scss). */}
+        {placedCountry && offerCountry && (
+          <CountryPrompt name={placedCountry} onDone={dismissCountry} />
+        )}
+
         {selectedPin && (
           <PinCard
             pin={selectedPin}

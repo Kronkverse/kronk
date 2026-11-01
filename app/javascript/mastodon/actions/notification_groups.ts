@@ -85,7 +85,13 @@ function dispatchAssociatedRecords(
 }
 
 function selectNotificationGroupedTypes(state: RootState) {
-  const types: NotificationType[] = ['favourite', 'reblog'];
+  // Proposals a release actioned together arrive under one group key, so
+  // they show as one notice (docs/spaces/nudges.md, Grouped notices).
+  const types: NotificationType[] = [
+    'favourite',
+    'reblog',
+    'proposal_status_changed',
+  ];
 
   if (selectSettingsNotificationsGroupFollows(state)) types.push('follow');
 

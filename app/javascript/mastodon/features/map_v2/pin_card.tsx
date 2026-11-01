@@ -9,6 +9,8 @@ import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 
+import { CountryLine } from './country_line';
+
 // Map — pin card. Opens when someone taps a mate's pin (solo teardrop,
 // off-map compass mark, in-view row, or people-strip tile). Renders a
 // floating card with their face, name, "Here since <relative date>",
@@ -187,6 +189,7 @@ export const PinCard: React.FC<Props> = ({ pin, onClose, onNoteSaved }) => {
       </div>
 
       {pin.label && <div className='map-pin-card__place'>{pin.label}</div>}
+      <CountryLine country={pin.country} className='map-pin-card__country' />
 
       {/* Note block. Three states:
           1. Someone else's pin, note present → read-only line.

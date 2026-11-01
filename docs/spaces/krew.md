@@ -139,8 +139,10 @@ with Kronk's account-level block and report.
 Any member can edit the name, description, image and access, add or remove
 requirements and attached spaces, and see and rotate the invite link
 (decisions.md, 2026-10-17). Only someone who is a Krew's **only member** can
-archive it (`Krew#sole_member?`; `archived_at`, and archived Krews drop out of
-Discover). The slug is fixed at creation.
+archive it (`Krew#sole_member?`; `archived_at`). An archived Krew drops out of
+Discover, of its member's own Krews (`scope=mine` and `all`), of the composer
+Krew pickers and of Konnect search (`Krew.active`); its page still opens by
+link, marked archived. The slug is fixed at creation.
 
 The creator is still recorded as the seeder (`seeded_by_account_id`, plus a
 `seeder` membership row), but it no longer gives them anything extra.

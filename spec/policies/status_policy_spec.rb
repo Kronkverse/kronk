@@ -102,6 +102,36 @@ RSpec.describe StatusPolicy, type: :model do
         expect(subject).to_not permit(bob, status)
       end
 
+      # "Only on <name>'s profile" (docs/spaces/profile.md, Posts from Mates).
+      context "when self_only on a Mate's profile" do
+        let(:owner) { Fabricate(:account, username: 'ana') }
+
+        before do
+          status.visibility = :self_only
+          status.profile_account = owner
+        end
+
+        it 'grants access to anyone who can see that profile' do
+          expect(subject).to permit(owner, status)
+          expect(subject).to permit(bob, status)
+        end
+
+        it 'denies access to those who cannot see that profile, and to no one signed in' do
+          owner.update!(profile_visibility: :mates)
+
+          expect(subject).to_not permit(bob, status)
+          expect(subject).to permit(owner, status)
+          expect(subject).to_not permit(nil, status)
+        end
+
+        it 'lets a comment under it follow it' do
+          status.save!
+          comment = Fabricate(:status, account: owner, thread: status, visibility: :self_only)
+
+          expect(subject).to permit(bob, comment)
+        end
+      end
+
       it 'grants mates access to a mutual connection' do
         mate!(alice, bob)
         status.visibility = :mates
@@ -353,6 +383,13 @@ RSpec.describe StatusPolicy, type: :model do
 
   context 'with the permission of reblog?' do
     permissions :reblog? do
+      it 'denies access when self_only on a profile' do
+        status.visibility = :self_only
+        status.profile_account = Fabricate(:account)
+
+        expect(subject).to_not permit(bob, status)
+      end
+
       it 'denies access when private' do
         viewer = Fabricate(:account)
         status.visibility = :private

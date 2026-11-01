@@ -35,7 +35,28 @@ RSpec.describe 'kommons:proposals:action_shipped' do # rubocop:disable RSpec/Des
     expect(open_proposal.reload).to be_actioned
     expect(closed_proposal.reload).to be_closed
     expect(unlisted.reload).to be_open
-    expect(Kronk::ProposalStates).to have_received(:notify_proposer).with(open_proposal).once
+    expect(Kronk::ProposalStates).to have_received(:notify_proposer).with(open_proposal, group_key: start_with('proposal_status_changed-actioned-shipped-')).once
+  end
+
+  context 'when one proposer has several proposals in the run' do
+    let!(:second_proposal) { Fabricate(:proposal, created_by_account: alice, title: 'Dark map') }
+    let!(:bob_proposal) { Fabricate(:proposal, title: 'Quiet hours') }
+
+    before do
+      File.write(list.path, { '2.0.8' => [open_proposal.id.to_s], '2.0.9' => [second_proposal.id.to_s, bob_proposal.id.to_s] }.to_yaml)
+    end
+
+    it 'groups their notices into one' do
+      run_task
+
+      keys = Notification.where(account: alice, type: 'proposal_status_changed').pluck(:group_key)
+      expect(keys.size).to eq 2
+      expect(keys.uniq.size).to eq 1
+
+      groups = NotificationGroup.from_notifications(alice.notifications.to_a, grouped_types: %w(proposal_status_changed))
+      expect(groups.map(&:notifications_count).uniq).to eq [2]
+      expect(Notification.find_by(account: bob_proposal.created_by_account).group_key).to eq keys.first
+    end
   end
 
   it 'does nothing the second time' do

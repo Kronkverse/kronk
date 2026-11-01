@@ -56,6 +56,14 @@ module Status::Visibility
 
   alias sign? distributable?
 
+  # "Only on <name>'s profile" (docs/spaces/profile.md, Posts from Mates): a
+  # post written on a Mate's profile for that profile alone. Stored as
+  # `self_only` with `profile_account_id` set, so it reaches no feed, and
+  # StatusPolicy lets in whoever can see that profile.
+  def profile_only?
+    self_only_visibility? && profile_account_id.present?
+  end
+
   private
 
   def set_visibility

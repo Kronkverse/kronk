@@ -17,6 +17,230 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-30 — The Android app is the website
+
+Tal asked for an Android app that keeps up with the site without a second
+codebase: "functionality is growing rapidly and it's going to be a huge load
+to carry both the main code AND the app for every update". The Mastodon-based
+app rebuilt Events and Huddle natively, crashed on 2.0's reach ladder and has
+been answered with "Kronk has moved to the web" since (`Kronk::LegacyAppGate`);
+the September native rewrite (kronk-app #66–70) had the same shape.
+
+**Decision:** the app is a Trusted Web Activity (`Kronkverse/kronk-app`,
+rebuilt from Bubblewrap): an APK that opens Kronk full-screen in the phone's
+browser engine. Every deploy is in the app at once, with no app work. Push,
+sharing in, camera and files are the site's own web features. Not iframes
+per korner, because the shell would then own navigation and every new korner
+would need app work; not a WebView shell, because web push doesn't work in one.
+
+- **Two apps.** `info.kronk.app` opens kronk.info and is signed with the
+  existing release key; `info.kronk.app.shadow` opens shadow.kronk.info with
+  its own key, for testing. Both keys are in `public/.well-known/assetlinks.json`,
+  which is what makes the app full-screen (without a match, the browser
+  shows its address bar).
+- **The site knows it's the app** from the launch URL
+  (`/?source=app&app=<versionCode>`, `utils/android_app.ts`). There it offers
+  the app's update instead of "add to home screen".
+- **The app has its own version**, year.month (`2026.11`, code 20261100),
+  not Kronk's: 3.0 is Kronk-native federation (Tal). The code stays above the
+  legacy app's 21401 so that app's updater, which reads
+  `kronk.info/version.json`, offers the new one and it installs over it.
+- **Android 7.0 (API 24) and up**, the TWA library's floor (Tal: fine).
+- On a phone whose default browser can't run a TWA, it opens as a browser
+  tab with the address bar showing, which keeps push.
+
+## 2026-10-30 — Emergences live inside Krews
+
+Tal's proposals "More interconnectedness with krew space", "Access of a FTD
+space" and "Coalesce": FreeTheDream and Krew felt like a vague duplication.
+If you join a Krew you should be in its projects, and a project made for a
+Krew should be only as open as the Krew. Tal: one Krew can have several, and
+FreeTheDream can come off the Hub.
+
+**Decision:** an emergence lives in a Krew (`krew_id`, required for a new
+one), and a Krew holds any number. The Krew's people are each emergence's
+people; joining is the Krew's way in, and leaving is leaving the Krew. Who
+sees an emergence follows the Krew: anyone signed in when the Krew is
+listed, only its members when it's invite only. The Krew page shows them as
+Konnected tiles (the link is made with the emergence and can't be taken
+off), and New emergence is started there. FreeTheDream leaves the Hub and
+the rail (`hub_visible: false`, a new manifest field) but keeps its pages.
+Mycelium is hidden until it has a clearer home. An event linked to the Krew
+is the Krew's, no longer also its one emergence's.
+
+**Supersedes** 2026-10-15 (seeding an emergence makes its own Krew, named
+after it, joining set per emergence). docs/spaces/freethedream.md, The Krew.
+
+## 2026-10-30 — First Nations Country is always on the map
+
+@mangobee: First Nations Country should be the full-time view of Australia on
+the map, not a feature you switch on.
+
+**Decision:** the Country shapes are always drawn on the map, with no switch,
+and the stored on/off choice (`kronk.map.country_layer`) is gone. "Find a
+Country", the boundaries note and tapping a Country stay. Zoomed in a little,
+a line at the bottom names the Country under the middle of the map. This
+supersedes the switch from 2026-10-23.
+
+## 2026-10-30 — First Nations Country names are an open list
+
+@mangobee: Country names and sectors are still being found, so every name
+people give should join the list, and the list should stay open; the matter is
+taken seriously.
+
+**Decision:** names live in `map_country_names` beside Kronk's own list. Every
+name typed on a profile (born on or living on) joins it at once, and anyone can
+add another name to a Country from its card on the map, which ties it to that
+shape. Each name records who added it. Only stewards (admins and moderators;
+@mangobee and Tal) take a name off, and a name taken off stays off rather than
+coming back when typed again. Kronk's own list and the names on the map's
+shapes are not editable from the app.
+
+## 2026-10-29 — Tag only your Mates in photos and Moments
+
+Tal: photo and Moments tagging should be Mates only, like @mentions now
+are (the earlier entry today, "Tag only your Mates").
+
+**Decision:** every Tag people picker (a post's photo, tagging in a photo
+you can see, a Moment) suggests only your Mates, through the same Mates
+search as @mentions, and `POST /api/v1/media/:id/tags` refuses anyone but
+yourself or a Mate with a 422. Albutts tags with @names, so a caption or
+album description nudges only Mates who can open the album. Tags made
+before stay. Booth's artist credits are not tags and are unchanged.
+
+---
+
+## 2026-10-29 — Kuddles outlive their maker's account
+
+Tal, on purging an account also deleting the Kuddles it had started and
+their recordings: "Kuddles aren't owned by anyone, the live sets are".
+
+**Decision:** a Kuddle stays when the account that made it is purged.
+`huddle_sessions.host_account_id` is now nullable and its foreign key
+`ON DELETE SET NULL` (it was `CASCADE`), so the Kuddle and its recordings
+are kept with no maker. A Kuddle with no maker is looked after by anyone
+signed in (Konnecting it, taking off what others Konnected) and moderated
+by everyone in it, as the syntropic rule and Huddle's flat moderation
+(`docs/spaces/huddle.md`) ask. Live sets are owned: a purged host's live
+sets, and so their recordings, still go with the account.
+
+---
+
+## 2026-10-29 — Rows may scroll sideways on a phone; the page doesn't
+
+Tal, asked whether Wachuneed's Offered, Desired and Shops rows could scroll
+sideways: "the kommunity disover space has a horizontal scroll designed
+specifically for phones, and portals recent work just created a horizontal
+scroll. This should definitely be a thing on phones."
+
+**Decision:** a row of tiles inside a page may scroll sideways on a phone,
+with the next tile peeking in, as Kommunity Discover and Musik's rows do.
+Build it with the shared row (`<SpaceGrid layout='row'>`), not a hand-rolled
+one. The page itself still scrolls only up and down: Stage shapes keep
+`overflow-x: hidden`, wide content wraps, and there is no swiping between
+whole panes. This narrows the 2026-08-13 rule ("only vertical scroll"),
+which had been read as banning every sideways row. FreeTheDream keeps the
+grid it moved to on 2026-10-22; Tal chose that over bringing its rows back.
+
+---
+
+## 2026-10-29 — Recordings can't be deleted
+
+Kommons "Recordings" (Tal): "Also it appears anyone can delete? Maybe once
+recorded, they live forever?" Until now the Kuddle's maker, a live set's
+host and staff could delete a call's recording, file and all.
+
+**Decision (Tal):** once recorded, a recording is kept. Nobody deletes one
+through the app: the Delete button and `DELETE /api/v1/calls/recordings/:id`
+are gone (staff included), and a live set that has a recording can't be
+deleted, since that would take its recordings. There was no admin or
+`tootctl` path to keep. Supersedes "The Kuddle's maker, the host or staff
+can delete one, file and all" in 2026-10-27, "Kronk's own Jitsi".
+
+The proposal's other two asks (a running count beside "Recording", and a
+video and its sound file listed as one recording) landed in #2426.
+
+---
+
+## 2026-10-29 — Only on a Mate's profile
+
+Kommons "Posting to mates profile". Tal: "the 'me' option isn't so it's
+invisible, it's so it doesn't appear on feed. So posting to a Mate's timeline
+means it appears to you and your Mate, but not the general timeline, but if
+someone views the Mate's timeline, they'd see it."
+
+**Decision:** "Just me" keeps meaning only you, everywhere. On a Mate's
+profile the composer's narrowest rung is **Only on <name>'s profile** instead.
+It is stored as `self_only` with `profile_account_id` set (no new
+visibility): it enters no home feed, stream or search and cannot be boosted,
+and the profile shows it to anyone who can see that profile, and to the
+author. The owner is still nudged. Comments under it follow it. It carries no
+Krews or added people, since those would put it in feeds. Supersedes the
+rule (2026-10-12) that a post on a profile cannot be Just me.
+
+## 2026-10-29 — Tag only your Mates
+
+Tal: "users should only be able to tag their mates." Kronk holds to "No
+reach without consent": a mention reached anyone, since @-suggestions listed
+every member (Mates first) and a typed handle told whoever it named.
+
+**Decision:** every @-suggestion (the composer, comment boxes, album
+captions) lists your Mates only, searched on the server
+(`GET /api/v1/nudges/mates?q=`). The "mentioned you" nudge goes only to Mates
+of the author who can open the post (`Kronk::MentionNudges`), for new posts
+too: since #2386 a new post's mentions nudged no one at all. A non-Mate's
+handle typed by hand stays a mention link and still gets the engine's legacy
+`mention` notification, which shows only in the legacy archive and doesn't
+push. Taking it out means changing Mastodon's `ProcessMentionsService` and
+its specs, and is left open.
+
+## 2026-10-29 — Composer options are kit pills
+
+Kommons "Composers are too busy" (Tal, 2026-10-21, from Albutts): the drafts
+area at the top was too busy, and the options at the bottom were poorly
+designed. The drafts half was already done by "Drafts are quiet"
+(2026-10-22): one quiet line under the body, only when a draft came back.
+
+**Decision:** the options a composer offers are the kit's `<KornerPill>`s,
+the chosen one lit (`active`), as Booth's and Maps' composers already do;
+small actions inside a composer (Keep it mine, Retry) are `<KornerPill>`s
+too. The album composer's bespoke chips (who can add photos, who sees a Krew
+album) and ghost buttons moved over, and `<ComposeShell>`'s footer reads
+only tokens (`--accent`, `--dur-fast`, `--elevation-menu`). Nothing was
+removed: which options a composer should drop is still open.
+
+---
+
+## 2026-10-29 — No Konnect row in the proposal composer
+
+Kommons "'Konnect' Button" (Tal): "The proposal composer probably doesn't
+need a 'konnect' button." Writing a proposal is saying what should change;
+what it relates to is added after, on the proposal's page.
+
+**Decision:** the proposal composer passes `konnect={null}`, so it draws no
+Konnect row, and its drafts no longer keep Konnections. Proposals still take
+Konnections: the proposal page's Konnected section is unchanged, and a
+proposal made from a record's Konnect picker (New proposal) is still
+Konnected to that record. An exception to "One composer, one Konnect"
+(2026-10-23) and Korner Standard L14, for this composer only.
+
+## 2026-10-29 — The proposal composer opens over the page you are on
+
+Starting a proposal from anywhere (the Ж menu's Propose a change, the Hub's
+Propose a Korner tile, a space's settings) sent you to Kommons and opened the
+composer there; cancelling went back by navigating again (Kommons "Proposer
+Composer", Tal: "it just opens the composer for a proposal over the top of
+whatever page you're currently on").
+
+**Decision:** every way into the proposal composer from inside the app opens
+it over the current page, through the modal root (`useOpenProposer`, the
+`PROPOSER` modal), with the scope as a prop. The address doesn't change and
+Cancel or Back leaves you where you were. After opening one, inside Kommons
+you land on the proposal; elsewhere you stay and are told it's open, as
+before (2026-10-12). The `/hub/kommons/composer` route stays for links and
+the Konnect picker's New proposal; `state.returnTo`, which carried the way
+back, is gone. Detail: `docs/spaces/kommons.md`.
+
 ## 2026-10-27 — The composer title is a text box
 
 The title at the top of every composer (`<ComposeTitle>`) was drawn as a

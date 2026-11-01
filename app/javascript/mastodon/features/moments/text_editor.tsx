@@ -36,6 +36,7 @@ import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 
+import { FilmPreview } from './film/film_preview';
 import type { OverlayBacking, OverlayFont, TextOverlay } from './text_overlay';
 import {
   OVERLAY_COLORS,
@@ -107,6 +108,9 @@ interface Props {
   // The picked file's raw blob — the editor reads its pixels via
   // `URL.createObjectURL` to render the preview at true aspect.
   file: File;
+  // The film look picked for this photo, if any, so the editor shows
+  // the photo as it will post (`film/film.ts`).
+  film?: string | null;
   // Existing overlays for this photo (empty on first open). The
   // editor owns its own local draft and only commits back to the
   // parent when the user taps Done.
@@ -124,6 +128,7 @@ interface Props {
 
 export const MomentsTextEditor: React.FC<Props> = ({
   file,
+  film,
   initial,
   index,
   total,
@@ -313,15 +318,23 @@ export const MomentsTextEditor: React.FC<Props> = ({
         onClick={handleStageTap}
         onDoubleClick={handleStageDoubleTap}
       >
-        {previewUrl && (
-          <img
-            className='moments-text-editor__image'
-            src={previewUrl}
-            alt=''
-            aria-hidden
-            draggable={false}
-          />
-        )}
+        {previewUrl &&
+          (film ? (
+            <FilmPreview
+              className='moments-text-editor__image'
+              file={file}
+              fallbackUrl={previewUrl}
+              look={film}
+            />
+          ) : (
+            <img
+              className='moments-text-editor__image'
+              src={previewUrl}
+              alt=''
+              aria-hidden
+              draggable={false}
+            />
+          ))}
         <div className='moments-text-editor__overlays'>
           {overlays.map((o) =>
             editingText !== null && o.id === selectedId ? (

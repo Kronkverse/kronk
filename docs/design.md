@@ -564,6 +564,11 @@ containing block for `position: fixed` descendants.
   row stacks. The rule on `.kronk-frame` itself has to be a media query (an
   element can't query its own container); descendants use
   `@container frame (width <= 889px)`. Some band rules are still plain `@media`.
+  Anything that decides whether the right rail's track exists (the grid
+  tracks, the RightBand, the chrome's right fade, the Stage cell's column)
+  must use the same `@media` query: the container is the viewport minus the
+  page scrollbar, so mixing the two leaves a band of widths (890px to about
+  905px) where the rail and its fade show but the Stage runs underneath them.
 - **≤ 629px** also hides the top rail.
 
 Wider breakpoints are the korner's business.
@@ -671,7 +676,9 @@ The same card three ways (`variant`):
   `<ProfileCard>` in the Kommunity deck.
 - **`grid`**: media and title, at most one meta line. Two across on a phone,
   four from 720px (`<SpaceGrid>` / `<SpaceCard>` in `space_grid.tsx`). Used by
-  Albutts, Booth, Kalendar events and Wachuneed. `<SpaceGrid layout='masonry'>`
+  Albutts, Booth, Kalendar events and Wachuneed. `<SpaceGrid layout='row'>`
+  is one line of the same tiles scrolling sideways, for a shelf among
+  others down a page (the Booth's By artist / By kind). `<SpaceGrid layout='masonry'>`
   is the same cards with each image in its own shape, stacked down columns
   (two on a phone, three from 720px), for a collection whose images are the
   work itself and a square crop would cut it: an Art portfolio (@mangobee,
@@ -722,8 +729,12 @@ The **Membrane** is the platform nav in the TopBand on desktop
 
 - **Pillars:** five, in order: **Me** (`/me`), **Home** (`/home`), **AWAWB**
   (`/awawb`, an Aboriginal-flag glyph), **Hub** (`/hub`), **Nudges**
-  (`/nudges`). It is a `role="tablist"`; each pillar is a `role="tab"` with
-  `aria-selected`.
+  (`/nudges`). AWAWB is a still page: the flag between "Always was." and "Always
+  will be.", after Kronk's Acknowledgement of Country (in the body sans), which
+  fades in, holds and fades out first each time it opens (about 4 seconds; a tap
+  goes straight on; with reduced motion it changes over without fading). Kommons
+  "Update the flag screen", @mangobee, 2026-10-30. It is a `role="tablist"`;
+  each pillar is a `role="tab"` with `aria-selected`.
 - **Icons, not words.** Each pillar shows the icon from its manifest
   (`profile`, `feed`, `hub`, `nudges`); Me shows your avatar. The text label is
   visually hidden but still announced.
@@ -786,7 +797,7 @@ with `app/`, `config/` or `styles/`.
 | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | `<KronkFrame>`                                                                          | The grid every route mounts inside. See [Frame](#frame).                                                                | `components/kronk_frame.tsx`, `styles/mastodon/_kronk_frame.scss`, `_kronk_chrome.scss` |
 | `<Stage>`                                                                               | The rectangle every korner paints into. Owns scroll; hosts the header override.                                         | `components/stage.tsx`, `styles/mastodon/_kronk_stage.scss`                             |
-| `.stage-fill` / `.stage-column` / `.stage-grid`                                         | The three shared shapes for a Stage child. Vertical scroll only.                                                        | `styles/mastodon/_kronk_stage.scss`. decisions.md, 2026-08-13                           |
+| `.stage-fill` / `.stage-column` / `.stage-grid`                                         | The three shared shapes for a Stage child. The page scrolls vertically only; a row inside it may scroll sideways.       | `styles/mastodon/_kronk_stage.scss`. decisions.md, 2026-08-13 and 2026-10-29            |
 | `<KornerShell>`                                                                         | The wrapper a korner's root renders: owns `<Stage>` and URL-to-view routing from a `views` map. Use it for new korners. | `components/korner_shell.tsx`; template in `docs/korners/template/`                     |
 | `<SpaceHeaderRow>` + `<AutoSpaceBadge>` + `<AutoSpaceHeader>` + `<AutoSpaceViewPicker>` | The header row: back badge, title and tagline, view switch. Manifest-driven.                                            | `components/space_header_row.tsx`, `auto_space_*.tsx`, `space_badge.tsx`                |
 | `useSpaceHeaderOverride`                                                                | Put a route's own title in the header slot.                                                                             | `components/space_header_override.tsx`                                                  |
@@ -1050,12 +1061,13 @@ move.
 
 ### State indicators
 
-| Primitive                            | What it does                                                                                                        | Where                                                                |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<EmptyState>`                       | The "nothing here yet" pattern: muted title, optional body, optional CTA. No icon (the badge has it).               | `components/empty_state.tsx`, `styles/mastodon/_kronk_states.scss`   |
-| `<LoadingState>`                     | Mastodon's `<LoadingIndicator>` in Kronk layout, with an optional label, inline.                                    | `components/loading_state.tsx`, `styles/mastodon/_kronk_states.scss` |
-| `<SilentErrorBoundary>`              | Renders nothing in place of a child that throws, so one self-contained piece (a feed card) can't take down the app. | `components/silent_error_boundary.tsx`                               |
-| `<MapNeedsWebGL>`, `supportsWebGL()` | What a map shows without WebGL, and the check every MapLibre map makes first (docs/spaces/map.md, Without WebGL).   | `components/map_needs_webgl.tsx`, `features/map_v2/basemap.ts`       |
+| Primitive                            | What it does                                                                                                                                                                          | Where                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `<EmptyState>`                       | The "nothing here yet" pattern: muted title, optional body, optional CTA. No icon (the badge has it).                                                                                 | `components/empty_state.tsx`, `styles/mastodon/_kronk_states.scss`            |
+| `<LoadingState>`                     | Mastodon's `<LoadingIndicator>` in Kronk layout, with an optional label, inline.                                                                                                      | `components/loading_state.tsx`, `styles/mastodon/_kronk_states.scss`          |
+| `<SilentErrorBoundary>`              | Renders nothing in place of a child that throws, so one self-contained piece (a feed card) can't take down the app.                                                                   | `components/silent_error_boundary.tsx`                                        |
+| `<MapNeedsWebGL>`, `supportsWebGL()` | What a map shows without WebGL, and the check every MapLibre map makes first (docs/spaces/map.md, Without WebGL).                                                                     | `components/map_needs_webgl.tsx`, `features/map_v2/basemap.ts`                |
+| Alerts (toasts), `showAlertForError` | The toast stack. One error at a time: a new error replaces the one showing, an identical alert collapses into the one already up; 5xx with no body reads as words, not a status code. | `actions/alerts.ts`, `reducers/alerts.ts`, `components/alerts_controller.tsx` |
 
 ### Inter-korner communication
 

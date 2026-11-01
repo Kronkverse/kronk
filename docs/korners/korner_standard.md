@@ -350,7 +350,9 @@ adding_a_korner.md, Korner attachments). People find and use it the same way
 in every korner:
 
 - **Composing**: the Konnect row at the foot of the composer, above the
-  drafts line, for every korner that takes Konnections.
+  drafts line, for every korner that takes Konnections. One exception: the
+  Kommons proposal composer has no row; a proposal is Konnected from its
+  page (decisions.md, 2026-10-29).
 - **On a record's page**: the Konnected section, in the `attached` slot of
   `<KornerDetail>`: its Konnections both ways as space tiles, and, for
   whoever looks after the record, a Konnect tile at the end and Diskonnect on

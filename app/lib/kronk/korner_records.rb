@@ -39,14 +39,18 @@ module Kronk
       'Question' => ->(question, account) { question.created_by_account_id == account.id },
       # Anyone in the Krew, not only its seeder.
       'Krew' => ->(krew, account) { krew.member?(account) },
-      'HuddleSession' => ->(session, account) { session.host_account_id == account.id },
+      # Its maker; once a Kuddle's maker is purged, anyone signed in (a
+      # Kuddle isn't owned by anyone, decisions.md 2026-10-29).
+      'HuddleSession' => lambda { |session, account|
+        session.host_account_id == account.id || (session.room? && session.host_account_id.nil?)
+      },
     }.freeze
 
     # What a search may turn up, where that's narrower than what a link
     # opens: a hidden Krew opens for anyone with its link, but only its
     # members find it.
     FOUND_BY = {
-      'Krew' => ->(viewer) { Krew.where(id: Krew.listed.select(:id)).or(Krew.where(id: viewer.krews.select(:id))) },
+      'Krew' => ->(viewer) { Krew.where(id: Krew.listed.select(:id)).or(Krew.where(id: viewer.krews.active.select(:id))) },
       'HuddleSession' => ->(_viewer) { HuddleSession.not_retired.where.not(scope: 'krew') },
       'Question' => ->(_viewer) { Question.active },
       # A Place is seen through what its maker Konnected it to

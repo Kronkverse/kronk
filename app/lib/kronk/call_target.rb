@@ -2,7 +2,7 @@
 
 # One call Kronk runs on Jitsi: the Main Huddle, a Kuddle or a Booth live set
 # (docs/decisions.md, 2026-10-27, "Kronk's own Jitsi"). Who may join it, who
-# moderates it, who sees and removes its recordings, and its Jitsi room name,
+# moderates it, who sees its recordings, and its Jitsi room name,
 # in one place, for passes (Api::V1::Calls::TokensController) and recordings
 # (CallRecording, CallRecordingPolicy).
 #
@@ -10,8 +10,9 @@
 #     tuning out of Huddle quiets its feed and nudges, not the room).
 #     Moderated by staff. Recordings: every signed-in member.
 #   * Kuddle: open to everyone signed in while it isn't retired (a retired
-#     one isn't there). Moderated by its maker and staff. Recordings: whoever
-#     can see the Kuddle.
+#     one isn't there). Moderated by its maker and staff; once the maker's
+#     account is purged, by everyone in it. Recordings: whoever can see the
+#     Kuddle.
 #   * Booth live set: whoever its reach allows (BoothLive#visible_to?), while
 #     it is live; its host from when it's planned until it ends. Moderated by
 #     the host and staff. Its recording is the host's to publish as a set, so
@@ -108,16 +109,11 @@ module Kronk
       visible_to?(account)
     end
 
-    # Removing a recording: whoever moderates the call.
-    def recordings_manageable_by?(account)
-      recordings_visible_to?(account) && moderator?(account)
-    end
-
     private
 
     def host?(account)
       case kind
-      when 'kuddle' then record.host_account_id == account.id
+      when 'kuddle' then record.host_account_id.nil? || record.host_account_id == account.id
       when 'booth_live' then record.account_id == account.id
       else false
       end

@@ -91,9 +91,10 @@ namespace :api, format: false do
     namespace :calls do
       resource :token, only: [:create]
       resource :presence, only: [:show]
+      resource :branding, only: [:show]
       post 'recordings/start', to: 'recording_uploads#create', as: :recording_upload
       post 'recordings/:id/complete', to: 'recording_uploads#complete', as: :recording_upload_complete
-      resources :recordings, only: [:index, :destroy]
+      resources :recordings, only: [:index]
     end
     resource :token_balance, only: [:show]
 
@@ -432,6 +433,12 @@ namespace :api, format: false do
       # Places — exact spots with an address, Map's linkable record: a
       # location is a Konnection to one (docs/spaces/map.md, Places).
       resources :places, only: [:index, :show, :create, :update, :destroy]
+
+      # The open list of First Nations Country names: anyone adds, a steward
+      # takes one off (docs/spaces/map.md, First Nations Country).
+      resources :country_names, only: [:index, :create, :destroy]
+      # The Mates born on or living on a Country, for its card.
+      get 'country_people', to: 'country_people#index'
     end
 
     namespace :klot do

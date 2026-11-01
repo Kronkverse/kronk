@@ -2,20 +2,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import * as maplibregl from 'maplibre-gl';
 
 import countriesUrl from '@/images/first-nations-countries.geojson?url';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import { apiGetCountryPeople } from 'mastodon/api/map_country_names';
+import type {
+  ApiMapCountryPeopleJSON,
+  ApiMapCountryPersonJSON,
+} from 'mastodon/api/map_country_names';
 import { FIRST_NATIONS_COUNTRIES } from 'mastodon/components/first_nations_countries';
 import type { FirstNationsCountry } from 'mastodon/components/first_nations_countries';
 import { Icon } from 'mastodon/components/icon';
+import { useCountryNames } from 'mastodon/hooks/useCountryNames';
 
 // First Nations Country — the Countries of Aboriginal and Torres Strait
-// Islander peoples drawn over Australia, switched on and off from the Map
+// Islander peoples drawn over Australia, always, as part of the map
 // (Kommons "Introduce First nation country display", 2026-10-23; drawn as
-// shapes you can tap, Kommons "Interactive Map Build", 2026-10-26).
+// shapes you can tap, Kommons "Interactive Map Build", 2026-10-26; always on,
+// with no switch, @mangobee, 2026-10-30).
 //
 // The shapes are traced from @mangobee's own map, shown with their permission
 // for education: each Country's colour area was taken off the picture,
@@ -60,16 +67,10 @@ const FILL_OPACITY: maplibregl.ExpressionSpecification = [
   ['case', ['boolean', ['feature-state', 'picked'], false], 0.55, 0.3],
 ];
 
-const STORAGE_KEY = 'kronk.map.country_layer';
-
 const messages = defineMessages({
-  show: {
-    id: 'map.country.show',
-    defaultMessage: 'First Nations Country',
-  },
-  hide: {
-    id: 'map.country.hide',
-    defaultMessage: 'Hide First Nations Country',
+  here: {
+    id: 'map.country.here',
+    defaultMessage: "You're on {name} Country",
   },
   disclaimer: {
     id: 'map.country.disclaimer',
@@ -97,23 +98,69 @@ const messages = defineMessages({
     defaultMessage: 'Also known as {names}',
   },
   close: { id: 'map.country.close', defaultMessage: 'Close' },
+  addName: {
+    id: 'map.country.add_name',
+    defaultMessage: 'Add another name',
+  },
+  add: { id: 'map.country.add', defaultMessage: 'Add' },
+  addedBy: {
+    id: 'map.country.added_by',
+    defaultMessage: 'Added by @{acct}',
+  },
+  removeName: {
+    id: 'map.country.remove_name',
+    defaultMessage: 'Take {name} off the list',
+  },
+  addError: {
+    id: 'map.country.add_error',
+    defaultMessage: "Couldn't add that name. Try again.",
+  },
+  bornHere: { id: 'map.country.born_here', defaultMessage: 'Born here' },
+  livingHere: { id: 'map.country.living_here', defaultMessage: 'Living here' },
+  person: { id: 'map.country.person', defaultMessage: '{name} (@{acct})' },
 });
 
-const readStored = () => {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'on';
-  } catch {
-    return false;
-  }
+// A row of faces on the card: who was born on this Country, or lives on it,
+// by their profile (Kommons "map ideas", @mangobee, 2026-10-30). Each opens
+// the profile.
+const People: React.FC<{
+  title: string;
+  people: ApiMapCountryPersonJSON[];
+}> = ({ title, people }) => {
+  const intl = useIntl();
+  if (people.length === 0) return null;
+  return (
+    <div className='map-country__people'>
+      <h3 className='map-country__people-title'>{title}</h3>
+      <ul className='map-country__people-list'>
+        {people.map((p) => (
+          <li key={p.id}>
+            <Link
+              to={`/@${p.acct}`}
+              className='map-country__person'
+              title={intl.formatMessage(messages.person, {
+                name: p.name,
+                acct: p.acct,
+              })}
+            >
+              <img src={p.avatar} alt={p.name} />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 };
 
-const writeStored = (on: boolean) => {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off');
-  } catch {
-    // A private window: the choice lasts the visit.
-  }
-};
+// "You're on <name> Country" names the Country under the middle of the map
+// once it is zoomed in this far; further out the middle is a long way from
+// anywhere you'd be looking.
+const HERE_FROM_ZOOM = 5;
+
+// Whether the map is still drawn: once removed, it throws on any question
+// about its layers or sources.
+const hasStyle = (map: maplibregl.Map) =>
+  Boolean((map as { style?: unknown }).style);
 
 // Case, accents and ŋ don't matter when matching names.
 const fold = (s: string) =>
@@ -171,27 +218,68 @@ interface Props {
 export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
   const intl = useIntl();
   const location = useLocation();
-  const [on, setOn] = useState(readStored);
+  const [here, setHere] = useState<CountryProps | null>(null);
   const [countries, setCountries] = useState<CountryCollection | null>(null);
   const [picked, setPicked] = useState<CountryProps | null>(null);
   const [query, setQuery] = useState('');
   const labelsRef = useRef<Map<number, maplibregl.Marker>>(new Map());
+
+  // The open list: names people have added to a Country, by its shape.
+  const { names: openList, add, remove } = useCountryNames();
+  const [newName, setNewName] = useState('');
+  const [addFailed, setAddFailed] = useState(false);
+  const [people, setPeople] = useState<ApiMapCountryPeopleJSON | null>(null);
+  const addedByShape = useMemo(() => {
+    const byShape = new Map<number, typeof openList>();
+    openList.forEach((n) => {
+      if (n.shape_id === null) return;
+      byShape.set(n.shape_id, [...(byShape.get(n.shape_id) ?? []), n]);
+    });
+    return byShape;
+  }, [openList]);
+  const allNames = useCallback(
+    (props: CountryProps) => [
+      ...namesOf(props),
+      ...(addedByShape.get(props.id) ?? []).map((n) => n.name),
+    ],
+    [addedByShape],
+  );
+  // A shape's own name, or the first one someone added to it.
+  const nameOf = useCallback(
+    (props: CountryProps) =>
+      props.name || (addedByShape.get(props.id)?.[0]?.name ?? ''),
+    [addedByShape],
+  );
+
+  // Who was born on or lives on the picked Country, by any name it answers
+  // to.
+  const pickedNames = useMemo(
+    () => (picked ? allNames(picked) : []),
+    [picked, allNames],
+  );
+  useEffect(() => {
+    setPeople(null);
+    if (pickedNames.length === 0) return;
+    let cancelled = false;
+    void apiGetCountryPeople(pickedNames)
+      .then((data) => {
+        if (!cancelled) setPeople(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [pickedNames]);
 
   // A profile's "On <name> Country" links here with ?country=<name>.
   const requested = useMemo(
     () => new URLSearchParams(location.search).get('country'),
     [location.search],
   );
-  useEffect(() => {
-    if (requested) {
-      setOn(true);
-      writeStored(true);
-    }
-  }, [requested]);
 
-  // The shapes are only fetched once someone turns them on.
+  // The shapes, fetched once the map opens.
   useEffect(() => {
-    if (!on || countries) return;
+    if (countries) return;
     let cancelled = false;
     void fetch(countriesUrl)
       .then((r) => r.json() as Promise<CountryCollection>)
@@ -202,7 +290,7 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
     return () => {
       cancelled = true;
     };
-  }, [on, countries]);
+  }, [countries]);
 
   // ── Layers ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -251,18 +339,13 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
         beneath,
       );
     }
-
-    const visibility = on ? 'visible' : 'none';
-    [FILL_ID, LINE_ID, PICKED_ID].forEach((id) => {
-      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visibility);
-    });
-  }, [map, ready, countries, on]);
+  }, [map, ready, countries]);
 
   // ── Names ─────────────────────────────────────────────────────────
   // Drawn in Kronk's own type as small markers, shown only where a name fits
   // inside its Country at this zoom (the basemap carries no label glyphs).
   useEffect(() => {
-    if (!map || !ready || !countries || !on) return;
+    if (!map || !ready || !countries) return;
     const labels = labelsRef.current;
 
     const place = () => {
@@ -297,7 +380,34 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
       labels.forEach((m) => m.remove());
       labels.clear();
     };
-  }, [map, ready, countries, on]);
+  }, [map, ready, countries]);
+
+  // ── You're on ── the Country under the middle of the map ──────────
+  useEffect(() => {
+    if (!map || !ready || !countries) return;
+    const update = () => {
+      if (map.getZoom() < HERE_FROM_ZOOM || !map.getLayer(FILL_ID)) {
+        setHere(null);
+        return;
+      }
+      const [hit] = map.queryRenderedFeatures(map.project(map.getCenter()), {
+        layers: [FILL_ID],
+      });
+      const id = hit?.properties.id as number | undefined;
+      setHere(
+        countries.features.find((f) => f.properties.id === id)?.properties ??
+          null,
+      );
+    };
+    update();
+    map.on('moveend', update);
+    // The first frame may not be drawn yet when this runs.
+    void map.once('idle', update);
+    return () => {
+      map.off('moveend', update);
+      map.off('idle', update);
+    };
+  }, [map, ready, countries]);
 
   // ── Picking ───────────────────────────────────────────────────────
   const pick = useCallback(
@@ -332,6 +442,9 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
       );
     }
     return () => {
+      // Leaving the map with a card open (a face on it opens a profile)
+      // removes the map first, and a removed map has no style to ask.
+      if (!hasStyle(map)) return;
       if (previous !== undefined && map.getSource(SOURCE_ID)) {
         map.setFeatureState(
           { source: SOURCE_ID, id: previous },
@@ -342,7 +455,7 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
   }, [map, ready, countries, picked]);
 
   useEffect(() => {
-    if (!map || !ready || !countries || !on) return;
+    if (!map || !ready || !countries) return;
     const onClick = (e: maplibregl.MapMouseEvent) => {
       const [hit] = map.queryRenderedFeatures(e.point, { layers: [FILL_ID] });
       const id = hit?.properties.id as number | undefined;
@@ -365,17 +478,17 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
       map.off('mouseenter', FILL_ID, pointer);
       map.off('mouseleave', FILL_ID, plain);
     };
-  }, [map, ready, countries, on, pick]);
+  }, [map, ready, countries, pick]);
 
   // ?country=<name> flies there once the shapes are in.
   useEffect(() => {
     if (!requested || !countries || !ready) return;
     const wanted = fold(requested);
     const found = countries.features.find(({ properties }) =>
-      namesOf(properties).some((n) => fold(n) === wanted),
+      allNames(properties).some((n) => fold(n) === wanted),
     );
     if (found) pick(found.properties, true);
-  }, [requested, countries, ready, pick]);
+  }, [requested, countries, ready, pick, allNames]);
 
   // ── Find a Country ────────────────────────────────────────────────
   const matches = useMemo(() => {
@@ -383,7 +496,7 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
     if (!wanted || !countries) return [];
     return countries.features
       .map((f) => f.properties)
-      .filter((props) => namesOf(props).some((n) => fold(n).includes(wanted)))
+      .filter((props) => allNames(props).some((n) => fold(n).includes(wanted)))
       .sort(
         (a, b) =>
           Number(!fold(a.name).startsWith(wanted)) -
@@ -391,7 +504,7 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
           a.name.localeCompare(b.name),
       )
       .slice(0, 6);
-  }, [query, countries]);
+  }, [query, countries, allNames]);
 
   const handleQuery = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -407,36 +520,62 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
     [countries, pick],
   );
 
-  const toggle = useCallback(() => {
-    setOn((was) => {
-      writeStored(!was);
-      if (was) pick(null);
-      return !was;
-    });
-  }, [pick]);
-
   const close = useCallback(() => {
     pick(null);
   }, [pick]);
 
+  const openHere = useCallback(() => {
+    if (here) pick(here);
+  }, [here, pick]);
+
+  const handleNewName = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewName(e.target.value);
+      setAddFailed(false);
+    },
+    [],
+  );
+
+  const addName = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const name = newName.trim();
+      if (!picked || !name) return;
+      void add(name, picked.id)
+        .then(() => {
+          setNewName('');
+          return undefined;
+        })
+        .catch(() => {
+          setAddFailed(true);
+        });
+    },
+    [add, newName, picked],
+  );
+
+  const removeName = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      void remove(e.currentTarget.value).catch(() => undefined);
+    },
+    [remove],
+  );
+
   const entry = picked ? listEntry(picked.name) : undefined;
+  const addedNames = picked ? (addedByShape.get(picked.id) ?? []) : [];
   const otherNames = picked
     ? (picked.also ?? []).filter((n) => fold(n) !== fold(picked.name))
     : [];
 
-  return (
-    <div className='map-country'>
-      <button
-        type='button'
-        className={`map-country__toggle${on ? ' map-country__toggle--on' : ''}`}
-        aria-pressed={on}
-        onClick={toggle}
-        title={intl.formatMessage(on ? messages.hide : messages.show)}
-      >
-        {intl.formatMessage(messages.show)}
-      </button>
+  const hereName = here ? nameOf(here) : '';
 
-      {on && (
+  return (
+    <>
+      {hereName && here?.id !== picked?.id && (
+        <button type='button' className='map-country-here' onClick={openHere}>
+          {intl.formatMessage(messages.here, { name: hereName })}
+        </button>
+      )}
+      <div className='map-country'>
         <div className='map-country__find'>
           <input
             type='search'
@@ -462,55 +601,124 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
             </div>
           )}
         </div>
-      )}
 
-      {on && picked && (
-        <section className='map-country__card' aria-live='polite'>
-          <div className='map-country__card-head'>
-            <h2 className='map-country__card-title'>
-              {picked.name
-                ? intl.formatMessage(messages.country, { name: picked.name })
-                : intl.formatMessage(messages.unnamed)}
-            </h2>
-            <button
-              type='button'
-              className='map-country__close'
-              onClick={close}
-              aria-label={intl.formatMessage(messages.close)}
-            >
-              <Icon id='close' icon={CloseIcon} />
-            </button>
-          </div>
-          {entry && (
-            <p className='map-country__card-line'>
-              {[entry.group, entry.region].filter(Boolean).join(' · ')}
+        {picked && (
+          <section className='map-country__card' aria-live='polite'>
+            <div className='map-country__card-head'>
+              <h2 className='map-country__card-title'>
+                {nameOf(picked)
+                  ? intl.formatMessage(messages.country, {
+                      name: nameOf(picked),
+                    })
+                  : intl.formatMessage(messages.unnamed)}
+              </h2>
+              <button
+                type='button'
+                className='map-country__close'
+                onClick={close}
+                aria-label={intl.formatMessage(messages.close)}
+              >
+                <Icon id='close' icon={CloseIcon} />
+              </button>
+            </div>
+            {entry && (
+              <p className='map-country__card-line'>
+                {[entry.group, entry.region].filter(Boolean).join(' · ')}
+              </p>
+            )}
+            {entry?.also && entry.also.length > 0 && (
+              <p className='map-country__card-line'>
+                {intl.formatMessage(messages.alsoKnown, {
+                  names: entry.also.join(', '),
+                })}
+              </p>
+            )}
+            {otherNames.length > 0 && (
+              <p className='map-country__card-line'>
+                {intl.formatMessage(messages.alsoOnMap, {
+                  names: otherNames.join(', '),
+                })}
+              </p>
+            )}
+            {addedNames.length > 0 && (
+              <ul className='map-country__added'>
+                {addedNames.map((n) => (
+                  <li
+                    key={n.id}
+                    className='map-country__added-name'
+                    title={
+                      n.added_by
+                        ? intl.formatMessage(messages.addedBy, {
+                            acct: n.added_by.acct,
+                          })
+                        : undefined
+                    }
+                  >
+                    {n.name}
+                    {n.can_remove && (
+                      <button
+                        type='button'
+                        value={n.id}
+                        onClick={removeName}
+                        className='map-country__added-remove'
+                        aria-label={intl.formatMessage(messages.removeName, {
+                          name: n.name,
+                        })}
+                      >
+                        <Icon id='close' icon={CloseIcon} />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {people && (
+              <>
+                <People
+                  title={intl.formatMessage(messages.bornHere)}
+                  people={people.born}
+                />
+                <People
+                  title={intl.formatMessage(messages.livingHere)}
+                  people={people.living}
+                />
+              </>
+            )}
+            <form className='map-country__add' onSubmit={addName}>
+              <input
+                type='text'
+                value={newName}
+                onChange={handleNewName}
+                maxLength={60}
+                placeholder={intl.formatMessage(messages.addName)}
+                aria-label={intl.formatMessage(messages.addName)}
+                className='map-country__add-input'
+              />
+              <button
+                type='submit'
+                className='map-country__add-button'
+                disabled={!newName.trim()}
+              >
+                {intl.formatMessage(messages.add)}
+              </button>
+            </form>
+            {addFailed && (
+              <p className='map-country__card-line' role='alert'>
+                {intl.formatMessage(messages.addError)}
+              </p>
+            )}
+            <p className='map-country__card-note'>
+              {intl.formatMessage(messages.disclaimer)}
             </p>
-          )}
-          {entry?.also && entry.also.length > 0 && (
-            <p className='map-country__card-line'>
-              {intl.formatMessage(messages.alsoKnown, {
-                names: entry.also.join(', '),
-              })}
-            </p>
-          )}
-          {otherNames.length > 0 && (
-            <p className='map-country__card-line'>
-              {intl.formatMessage(messages.alsoOnMap, {
-                names: otherNames.join(', '),
-              })}
-            </p>
-          )}
-          <p className='map-country__card-note'>
+          </section>
+        )}
+
+        {!picked && (
+          <p className='map-country__note'>
             {intl.formatMessage(messages.disclaimer)}
           </p>
-        </section>
-      )}
-
-      {on && !picked && (
-        <p className='map-country__note'>
-          {intl.formatMessage(messages.disclaimer)}
-        </p>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 };

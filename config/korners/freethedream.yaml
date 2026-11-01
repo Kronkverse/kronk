@@ -127,6 +127,14 @@ views:
   - { key: mine, label: 'Mine', tagline: "Emergences you're in" }
   - { key: mycelium, label: 'Mycelium', tagline: 'What you have to share' }
 
+header:
+  # The title is the view switch (the standard rotator, docs/design.md
+  # Frame, SpaceNav): it turns through the three views, each with its
+  # own tagline. Until 2026-10-29 FreeTheDream showed a fixed title over
+  # a row of text pills instead, the one korner with taglined views
+  # that didn't rotate.
+  rotator: true
+
 launch:
   blurb: 'FreeTheDream — seed an emergence and bring it to life together: gangs, Thing Bringing, Actualise and On offer.'
   cta: 'See the emergences'

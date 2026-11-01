@@ -4,6 +4,7 @@ import {
   apiRequestPatch,
   apiRequestPost,
 } from 'mastodon/api';
+import type { ApiMapCountryJSON } from 'mastodon/api/map';
 
 // Map Places — exact spots with an address, Map's linkable record: a
 // location is a Konnection to a Place (docs/spaces/map.md, Places).
@@ -16,6 +17,7 @@ export interface ApiMapPlaceJSON {
   address: string | null;
   latitude: number;
   longitude: number;
+  country?: ApiMapCountryJSON | null;
   url: string; // the Place's page, /hub/map/places/<id>
   maker: { id: string; acct: string; display_name: string } | null;
   is_owner: boolean;

@@ -99,6 +99,14 @@ RSpec.describe 'API V1 Booth Sets' do
       expect(ids_for(sort: 'fewest', offset: 1)).to eq [short_mix.id.to_s]
     end
 
+    it 'takes a larger page for the Musik rows, up to its cap', :aggregate_failures do
+      expect(ids_for(limit: 1).size).to eq 1
+      expect(ids_for(limit: 5000).size).to eq 2
+
+      stub_const('Api::V1::BoothSetsController::MAX_LIMIT', 1)
+      expect(ids_for(limit: 5000).size).to eq 1
+    end
+
     it 'rejects a kind it does not know' do
       patch "/api/v1/booth_sets/#{my_draft.id}", headers: write_headers, params: { kind: 'symphony' }
 

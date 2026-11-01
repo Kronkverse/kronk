@@ -41,6 +41,17 @@ RSpec.describe 'Nudges Mates' do
       expect(response.parsed_body.pluck(:username)).to eq %w(zed)
     end
 
+    # Also every @-suggestion (decisions.md 2026-10-29), which asks for a few:
+    # the Mate whose name starts with what was typed comes first.
+    it 'puts names that start with the search first' do
+      mate('azedo')
+      mate('bea', 'Zed fan')
+
+      get '/api/v1/nudges/mates', headers: headers, params: { q: 'zed' }
+
+      expect(response.parsed_body.pluck(:username)).to eq %w(bea zed azedo)
+    end
+
     it 'treats a percent sign as a character, not a wildcard' do
       get '/api/v1/nudges/mates', headers: headers, params: { q: '%' }
 

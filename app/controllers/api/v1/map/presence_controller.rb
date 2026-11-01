@@ -147,6 +147,9 @@ class Api::V1::Map::PresenceController < Api::BaseController
       avatar: full_asset_url(account.avatar_static_url),
       lat: state.lat,
       lng: state.lng,
+      # The First Nations Country the pin is on, from the same coarsened point
+      # (Kronk::FirstNationsCountries), so it says no more than the pin does.
+      country: Kronk::FirstNationsCountries.at(state.lat, state.lng),
       precision: state.precision,
       radius: Kronk::GeoCoarsen.radius_for(state.precision),
       label: state.label,

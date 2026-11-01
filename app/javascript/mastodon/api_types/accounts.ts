@@ -24,8 +24,10 @@ export interface BaseApiAccountJSON {
   display_name: string;
   emojis: ApiCustomEmojiJSON[];
   fields: ApiAccountFieldJSON[];
-  // Kronk: the First Nations Country shown under the bio; local accounts only.
+  // Kronk: the First Nations Countries shown under the bio, where someone
+  // lives and where they were born; local accounts only.
   first_nations_country?: string | null;
+  first_nations_country_born?: string | null;
   followers_count: number;
   following_count: number;
   mates_count: number;

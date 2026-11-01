@@ -69,7 +69,14 @@ which opens the same form as the grid card's menu.
     to one **kind** (`kind`, see [Kinds](#kinds)) and to one of the most
     used genres (`genre`). **Sort** is the listener's choice of Newest
     (pages by `max_id`), Fewest listens or Longest (page by `offset`); the
-    Booth never ranks for anyone. How the Booth works (upload, get heard,
+    Booth never ranks for anyone. **View** (first on the row) picks the
+    layout: **Grid**, or rows that scroll sideways, **By artist** (one row
+    per artist, uploader or credited as in Artists, newest first) or **By
+    kind** (Mixes, Live recordings and so on). The rows are drawn from the
+    newest 200 sets (`limit`, at most 200); each has **See all**, the
+    artist's page or the grid on that kind. Sort, Kind and Genre apply to
+    the grid only; a search shows its matches in the grid. Picking a
+    View closes its panel. How the Booth works (upload, get heard,
     credit who played, go live, save) is in About this space, the Ж
     bubble's i, from the manifest's `about:`; the page carries no banner
     (decisions.md, 2026-10-26). The empty state links to the composer,
@@ -282,11 +289,14 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   live in the Booth soon…" before). The room page shows the start time
   in each reader's own time zone, so the post doesn't print one.
 - **Going live.** The Ж menu's **Upload or go live** opens the composer,
-  which switches between Upload a set and **Go live**
+  and so does the big filled **Go live** button at the top of the Live
+  view and in Mine's empty live sets (`<GoLiveButton>`). The composer
+  switches between Upload a set and **Go live**
   (`/hub/booth/composer/live`, `components/live_composer.tsx`). **Now**
   opens the room with the host's get-ready panel (input, screen-share
   audio, headphones, recording, room size); the set is only live once
-  they press **Go live** there. **Later** schedules it, and can tell the
+  they press **Go live** there, in its own panel at the top of the
+  room (not among the header's small actions). **Later** schedules it, and can tell the
   feed at once. Tell my feed is on by default with a reach picker.
 - **The room** (`/hub/booth/live/:id`, `components/live_room.tsx`, on
   `<KornerDetail>`). Everyone joins with a pass for the set
@@ -294,11 +304,12 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   The Jitsi server): whoever the set's reach allows, while it is live, and
   the host from when it's planned. The host's pass makes them the room's
   moderator. Jitsi's toolbar is hidden and Kronk's controls sit under the
-  room (`<CallControls>`). The host joins with Jitsi's pre-join screen (the
+  room (`<CallControls>`), in [a set's words](#the-words), not a call's. The host joins with Jitsi's pre-join screen (the
   one Jitsi screen kept, to pick their mixer or interface), camera off,
   and with [Music sound](#music-sound) on. Their controls are mic, camera,
-  share screen, Music sound, Sound input, hand, tile view, leave and
-  Record. Listeners tap **Listen in** (browsers only play sound after a
+  share screen, Music sound, Sound input, hand, tile view, leave ("Step
+  out of the room": the set stays live, and **Back into the room** brings
+  them back) and Record. Listeners tap **Listen in** (browsers only play sound after a
   tap) and join [to listen only](#music-sound), with raise hand, tile view
   and leave in their controls. The page polls the set every 20 seconds,
   so Listen in appears when the host goes live, and asks who's in the room
@@ -386,6 +397,59 @@ enableOpusDtx: false }`, and the older top-level `stereo` and
   audio interface's USB out into the laptop, Chrome, that device picked
   as the microphone (pre-join screen or Sound input), Music sound on, and
   headphones, so the room doesn't play back into the mic.
+
+### The words
+
+A live set is a set, not a meeting (Kommons proposal "Live Booth",
+117522383027218146, 2026-10-29). Jitsi talks of meetings and calls, so
+everything a member sees in the room is reworded, in three places.
+
+- **Kronk's controls.** `<CallControls>` takes the page's own words
+  (`leaveLabel`, `label`, `recordingHint`) and a door for leave in place of
+  the hang-up handset (`leaveIcon='logout'`). The Booth's: "Set controls",
+  "Leave the set" (a listener), "Step out of the room. The set stays live"
+  (the host), "This set is being recorded". The Huddle and Kuddles keep
+  "Call controls", "Unhuddle" and the handset.
+- **Jitsi's settings** (`liveSetConfig` in `mastodon/jitsi.ts`, live sets
+  only). The pre-join screen names the set (`callDisplayName`), not the
+  room's key ("Shadow Booth 3f9a…"), and has no "Join without audio" or
+  phone dial-in (`prejoinConfig.hideExtraJoinButtons`). Jitsi's "Other
+  participants may be recording this call" and "Record this meeting" are
+  off (`recordings.showPrejoinWarning`, `recordings.suggestRecording`):
+  the get-ready panel and Kronk's controls say it.
+- **Jitsi's own sentences** ("Join meeting", "You are the only one in the
+  meeting", "Rosa joined the meeting", "This meeting is being recorded")
+  live in Jitsi's page and no embed setting changes them. Jitsi's dynamic
+  branding does: Kronk serves them at `GET /api/v1/calls/branding`
+  (`Api::V1::Calls::BrandingsController`, open, copy only), and the Jitsi
+  server's `config.js` points at it with
+  `config.brandingDataUrl = 'https://<kronk>/api/v1/calls/branding'`.
+  Jitsi then asks with `?conferenceFqn=<room>` before every call; a live
+  set's room (`booth-` and 20 hex digits, after any prefix) gets
+  `{ labels: { en, enGB } }`, laid over Jitsi's English, and any other
+  room `{}`, Jitsi's defaults. The words are `kronk_jitsi.booth_live` in
+  `config/locales/kronk/overrides.yml`, keyed as Jitsi's `lang/main.json`:
+
+  | Jitsi key                                            | Jitsi says                                           | The Booth says                            |
+  | ---------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------- |
+  | `prejoin.joinMeeting` (title and button)             | Join meeting                                         | Into the booth                            |
+  | `prejoin.premeeting`                                 | Pre meeting                                          | Before the set                            |
+  | `prejoin.recordingWarning`                           | Other participants may be recording this call        | This set may be recorded                  |
+  | `lonelyMeetingExperience.youAreAlone`                | You are the only one in the meeting                  | Nobody's listening yet                    |
+  | `notify.connected*Member(s)`                         | {name} joined the meeting                            | {name} is listening                       |
+  | `notify.left*Member(s)`                              | {name} left the meeting                              | {name} left                               |
+  | `notify.suggestRecordingTitle`                       | Record this meeting                                  | Record this set                           |
+  | `recording.expandedOn`, `videoStatus.recording`      | The meeting is (currently) being recorded            | This set is being recorded                |
+  | `recording.pending`                                  | Preparing to record the meeting…                     | Getting ready to record the set…          |
+  | `dialog.sessTerminatedReason`                        | The meeting has been terminated                      | The set has ended                         |
+  | `dialog.kickTitle`, `kickSystemTitle`                | … kicked you out of the meeting                      | … took you out of the set                 |
+  | `participantsPane.headings.participantsList`         | Meeting participants ({count})                       | In the room ({count})                     |
+  | `startupoverlay.genericTitle`                        | The meeting needs to use your microphone and camera. | The set needs your microphone and camera. |
+  | `toolbar.hangup`, `leaveConference`, `endConference` | Leave meeting, End meeting for all                   | Leave the set, End the set for everyone   |
+
+  Until the server has `brandingDataUrl`, Jitsi's own sentences stay as
+  they are; everything else above works without it. "Tune in" isn't used:
+  it means tuning in to a space.
 
 ### The crowd on screen
 
@@ -479,7 +543,12 @@ For the script on the Jitsi server's page that draws them in the call:
 
 With Kronk's Jitsi server set up for it (`JITSI_JWT_SECRET`,
 `JITSI_RECORDING_SECRET` and S3 storage; `docs/spaces/huddle.md`,
-Recordings), the host can press **Record** under the room. Everyone in it
+Recordings), going live records the set: **Record this set**, ticked by
+default in the Go live panel, starts the recording once the host is in
+the room (past the pre-join screen), once (Cassidy's proposal "Live set
+record and download", 2026-10-29). Untick it to play unrecorded. The
+host can still press **Record** or **Stop recording** under the room, and
+a recording they stop doesn't start again on its own. Everyone in it
 sees "Recording" while it runs, and the get-ready panel says so
 beforehand. When the recording stops, the server's finalize script
 uploads it to private objects in Kronk's storage, as a video and as an
@@ -511,9 +580,10 @@ audio file (`media`, paired; `docs/spaces/huddle.md` has the contract).
   video**. While the audio is being made into the set it says so; a
   recording with no audio file (an older finalize script) still offers
   **Download the recording** and **Upload the recording**. The recordings
-  themselves are listed under it, video and sound only, to play, download
-  or delete. Deleting a recording, or the live set, deletes its file; the
-  set keeps its own copy of the audio.
+  themselves are listed under it, to play or download (a video and its
+  sound file as one recording, with Download sound). Nobody can delete a recording,
+  and a live set that has one can't be deleted either (Tal, 2026-10-29;
+  `docs/spaces/huddle.md`, Recordings).
 - Without recording set up, the get-ready panel still says Kronk doesn't
   record the room, and the host records on their own set-up as before.
 

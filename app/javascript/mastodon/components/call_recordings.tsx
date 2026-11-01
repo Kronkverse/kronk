@@ -2,18 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { apiRequestDelete, apiRequestGet } from 'mastodon/api';
+import { apiRequestGet } from 'mastodon/api';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
-import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import type { CallKind } from 'mastodon/jitsi';
 
 // A call's recordings (docs/spaces/huddle.md, Recordings): the one thing a
 // call leaves behind. GET /api/v1/calls/recordings lists the ready ones the
-// viewer may see, each with short-lived signed URLs to play and to save;
-// whoever moderates the call can delete one. Says nothing when there are
-// none, so a call that was never recorded looks as it always did.
+// viewer may see, each with short-lived signed URLs to play and to save.
+// Nobody deletes one: once recorded, it is kept (docs/decisions.md,
+// 2026-10-29). Says nothing when there are none, so a call that was never
+// recorded looks as it always did.
 
 const messages = defineMessages({
   heading: { id: 'calls.recordings.heading', defaultMessage: 'Recordings' },
@@ -24,22 +24,17 @@ const messages = defineMessages({
   },
   hide: { id: 'calls.recordings.hide', defaultMessage: 'Hide' },
   download: { id: 'calls.recordings.download', defaultMessage: 'Download' },
+  downloadSound: {
+    id: 'calls.recordings.download_sound',
+    defaultMessage: 'Download sound',
+  },
+  downloadSoundLabel: {
+    id: 'calls.recordings.download_sound_label',
+    defaultMessage: 'Download the sound of the recording from {date}',
+  },
   downloadLabel: {
     id: 'calls.recordings.download_label',
     defaultMessage: 'Download the recording from {date}',
-  },
-  remove: { id: 'calls.recordings.delete', defaultMessage: 'Delete' },
-  removeLabel: {
-    id: 'calls.recordings.delete_label',
-    defaultMessage: 'Delete the recording from {date}',
-  },
-  removeTitle: {
-    id: 'calls.recordings.delete_title',
-    defaultMessage: 'Delete this recording?',
-  },
-  removeBody: {
-    id: 'calls.recordings.delete_body',
-    defaultMessage: 'It goes for everyone, and can’t be brought back.',
   },
   length: { id: 'calls.recordings.length', defaultMessage: '{length} long' },
   audio: { id: 'calls.recordings.audio', defaultMessage: 'Sound only' },
@@ -60,7 +55,6 @@ export interface CallRecording {
   content_type: string;
   url: string;
   download_url: string;
-  can_delete: boolean;
 }
 
 // The ready recordings of one call, refetched when it changes. Empty while
@@ -70,7 +64,7 @@ export const useCallRecordings = (
   kind: CallKind,
   id?: string,
   enabled = true,
-): [CallRecording[], (removed: string) => void] => {
+): CallRecording[] => {
   const [recordings, setRecordings] = useState<CallRecording[]>([]);
 
   useEffect(() => {
@@ -92,11 +86,7 @@ export const useCallRecordings = (
     };
   }, [kind, id, enabled]);
 
-  const forget = useCallback((removed: string) => {
-    setRecordings((current) => current.filter((r) => r.id !== removed));
-  }, []);
-
-  return [recordings, forget];
+  return recordings;
 };
 
 // 3725 → "1:02:05", 754 → "12:34".
@@ -109,12 +99,40 @@ export const recordingLength = (seconds: number | null): string | null => {
   return `${h > 0 ? `${h}:` : ''}${mm}:${String(s).padStart(2, '0')}`;
 };
 
+// One recording as people see it: the video, with its sound file when
+// Kronk kept both (`pair_id`), or a file on its own.
+interface RecordingEntry {
+  recording: CallRecording;
+  sound: CallRecording | null;
+}
+
+const recordingEntries = (recordings: CallRecording[]): RecordingEntry[] => {
+  const byId = new Map(recordings.map((r) => [r.id, r]));
+  const shown = new Set<string>();
+  const entries: RecordingEntry[] = [];
+  for (const r of recordings) {
+    if (shown.has(r.id)) continue;
+    shown.add(r.id);
+    const other = r.pair_id ? byId.get(r.pair_id) : undefined;
+    if (other && !shown.has(other.id) && other.media !== r.media) {
+      shown.add(other.id);
+      entries.push(
+        r.media === 'audio'
+          ? { recording: other, sound: r }
+          : { recording: r, sound: other },
+      );
+    } else {
+      entries.push({ recording: r, sound: null });
+    }
+  }
+  return entries;
+};
+
 const RecordingItem: React.FC<{
   recording: CallRecording;
-  onRemoved: (id: string) => void;
-}> = ({ recording, onRemoved }) => {
+  sound: CallRecording | null;
+}> = ({ recording, sound }) => {
   const intl = useIntl();
-  const [confirmDialog, confirm] = useConfirmDialog();
   const [playing, setPlaying] = useState(false);
   const date = intl.formatDate(recording.created_at, {
     weekday: 'short',
@@ -134,33 +152,19 @@ const RecordingItem: React.FC<{
     // A signed URL that answers "save as", so the page stays put.
     window.location.assign(recording.download_url);
   }, [recording.download_url]);
-
-  const handleRemove = useCallback(() => {
-    void (async () => {
-      const ok = await confirm({
-        title: intl.formatMessage(messages.removeTitle),
-        message: intl.formatMessage(messages.removeBody),
-        confirmLabel: intl.formatMessage(messages.remove),
-        destructive: true,
-      });
-      if (!ok) return;
-      try {
-        await apiRequestDelete(`v1/calls/recordings/${recording.id}`);
-        onRemoved(recording.id);
-      } catch {
-        // Still there; the row stays.
-      }
-    })();
-  }, [confirm, intl, recording.id, onRemoved]);
+  const handleDownloadSound = useCallback(() => {
+    if (sound) window.location.assign(sound.download_url);
+  }, [sound]);
 
   return (
     <li className='call-recordings__item'>
       <KornerMeta
         items={[
           date,
-          intl.formatMessage(
-            recording.media === 'audio' ? messages.audio : messages.video,
-          ),
+          !sound &&
+            intl.formatMessage(
+              recording.media === 'audio' ? messages.audio : messages.video,
+            ),
           length && intl.formatMessage(messages.length, { length }),
         ]}
       />
@@ -202,25 +206,24 @@ const RecordingItem: React.FC<{
           ariaLabel={intl.formatMessage(messages.downloadLabel, { date })}
           onClick={handleDownload}
         />
-        {recording.can_delete && (
+        {sound && (
           <KornerPill
-            variant='destructive'
-            label={intl.formatMessage(messages.remove)}
-            ariaLabel={intl.formatMessage(messages.removeLabel, { date })}
-            onClick={handleRemove}
+            label={intl.formatMessage(messages.downloadSound)}
+            ariaLabel={intl.formatMessage(messages.downloadSoundLabel, {
+              date,
+            })}
+            onClick={handleDownloadSound}
           />
         )}
       </KornerActionBar>
-      {confirmDialog}
     </li>
   );
 };
 
-// A list of recordings, with Play, Download and (for whoever may) Delete.
+// A list of recordings, one entry each, with Play and Download.
 export const CallRecordingList: React.FC<{
   recordings: CallRecording[];
-  onRemoved: (id: string) => void;
-}> = ({ recordings, onRemoved }) => {
+}> = ({ recordings }) => {
   const intl = useIntl();
 
   if (recordings.length === 0) return null;
@@ -231,11 +234,11 @@ export const CallRecordingList: React.FC<{
         {intl.formatMessage(messages.heading)}
       </h3>
       <ul className='call-recordings__list'>
-        {recordings.map((recording) => (
+        {recordingEntries(recordings).map(({ recording, sound }) => (
           <RecordingItem
             key={recording.id}
             recording={recording}
-            onRemoved={onRemoved}
+            sound={sound}
           />
         ))}
       </ul>
@@ -248,7 +251,7 @@ export const CallRecordings: React.FC<{ kind: CallKind; id?: string }> = ({
   kind,
   id,
 }) => {
-  const [recordings, forget] = useCallRecordings(kind, id);
+  const recordings = useCallRecordings(kind, id);
 
-  return <CallRecordingList recordings={recordings} onRemoved={forget} />;
+  return <CallRecordingList recordings={recordings} />;
 };

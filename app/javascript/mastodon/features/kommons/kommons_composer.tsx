@@ -22,20 +22,18 @@ import {
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
-import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useAppDispatch } from 'mastodon/store';
 
-// Kommons — open a proposal. The shared `<ComposeShell>` overlay at
-// `/hub/kommons/composer` (legacy `/hub/kommons/propose` still
-// resolves to the same overlay). Was the full-page `ProposePage`
-// mounted inside a `<Stage>` until 2026-08-12.
-//
-// Scope query params (?space=<slug> or ?node=<id>) come from the
-// picker at `/hub/kommons/pick` — the Ж bubble opens the picker
-// first, which then routes here with the chosen scope. Unscoped
-// proposals (no ?space / ?node) land unattached to any node.
+// Kommons — open a proposal, in the shared `<ComposeShell>` overlay.
+// Every way in from the app opens it over the page you are on
+// (`useOpenProposer`, the PROPOSER modal; Kommons "Proposer Composer",
+// 2026-10-29), with its scope as a prop. The route
+// `/hub/kommons/composer` (legacy `/hub/kommons/propose`) still opens it
+// over Kommons, for links and the Konnect picker's New proposal, and
+// reads the scope from `?space=<slug>`, `?node=<id>` or `?kind=`.
+// Unscoped proposals land unattached to any node.
 
 const messages = defineMessages({
   titleLabel: { id: 'propose.title_label', defaultMessage: 'Title' },
@@ -99,7 +97,6 @@ interface ProposalDraftParams {
   kornerGlyph?: string;
   kornerIcon?: string;
   kornerPurpose?: string;
-  konnections?: KonnectTarget[];
 }
 
 // A draft hangs off the space or page it proposes a change to. Node ids
@@ -110,7 +107,18 @@ const draftContext = (space: string, nodeId: string): string | null => {
   return null;
 };
 
+// What a proposal is about, when the composer is opened over a page rather
+// than at its own route: the same three things the route's query carries.
+export interface ProposalScope {
+  space?: string;
+  node?: string;
+  kind?: 'new_korner';
+}
+
 interface Props {
+  // Given when opened over the current page (`useOpenProposer`); without
+  // it the scope comes from the route's `?space=`, `?node=` and `?kind=`.
+  scope?: ProposalScope;
   onCancel: () => void;
   // Fires after a successful create — parent decides where to navigate
   // (the Kommons directory sends the caller to the fresh proposal's
@@ -124,7 +132,11 @@ interface Props {
 // proposal to that space, anchoring it to the space's index node so it
 // lands on the Space page and the Kommons tree. Without a space it's an
 // unscoped proposal.
-export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
+export const KommonsComposer: React.FC<Props> = ({
+  scope,
+  onCancel,
+  onCreated,
+}) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const location = useLocation();
@@ -135,8 +147,8 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     () => new URLSearchParams(location.search),
     [location.search],
   );
-  const space = params.get('space') ?? '';
-  const nodeId = params.get('node') ?? '';
+  const space = scope ? (scope.space ?? '') : (params.get('space') ?? '');
+  const nodeId = scope ? (scope.node ?? '') : (params.get('node') ?? '');
   const korner = useKorner(space);
   // The real registered nodes, so we anchor to one that actually exists.
   const [nodeIds, setNodeIds] = useState<Set<string>>(() => new Set());
@@ -207,7 +219,9 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // with a query string on it — not a space anyone could visit — and the
   // Directory now carries one node per space (2026-09-10). What kind of
   // proposal this is was never a fact about which page it is about.
-  const isNewKorner = params.get('kind') === 'new_korner';
+  const isNewKorner = scope
+    ? scope.kind === 'new_korner'
+    : params.get('kind') === 'new_korner';
 
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -229,10 +243,11 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [kornerGlyph, setKornerGlyph] = useState('');
   const [kornerIcon, setKornerIcon] = useState('');
   const [kornerPurpose, setKornerPurpose] = useState('');
-  // What the new proposal will be Konnected to (decisions.md, 2026-10-23).
-  // Both kinds of proposal make a Proposal, so both Konnect.
+  // No Konnect row here (Kommons "'Konnect' Button", 2026-10-29): a
+  // proposal is Konnected from its own page. Opened from a record's Konnect
+  // picker (New proposal, `?konnect=`), the new proposal is still Konnected
+  // to that record, which is what the person asked for.
   const konnect = useKonnect('kommons');
-  const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go, here and on the
@@ -249,11 +264,10 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       setKornerGlyph(p.kornerGlyph ?? '');
       setKornerIcon(p.kornerIcon ?? '');
       setKornerPurpose(p.kornerPurpose ?? '');
-      restoreKonnect(p.konnections);
       setDocs([]);
       setError(null);
     },
-    [restoreKonnect],
+    [],
   );
 
   const draft = useDraft<ProposalDraftParams>({
@@ -270,9 +284,8 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             kornerGlyph,
             kornerIcon,
             kornerPurpose,
-            konnections: konnect.saved,
           }
-        : { title, body, steps, konnections: konnect.saved },
+        : { title, body, steps },
     },
     hasContent:
       (isNewKorner
@@ -517,7 +530,7 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
-      konnect={konnect}
+      konnect={null}
     >
       {isNewKorner ? (
         // Korner Composer fields — manifest-shape hints captured as

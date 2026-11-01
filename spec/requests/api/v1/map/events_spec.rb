@@ -43,6 +43,13 @@ RSpec.describe 'Map event pins' do
     expect(pin_titles_for(author)).to contain_exactly('Open picnic', 'Just me')
   end
 
+  it 'keeps an event on the map while it is on, and drops it once it is over', :aggregate_failures do
+    Event.find_by!(title: 'Open picnic').update_columns(start_time: 1.hour.ago, end_time: 1.hour.from_now)
+    Event.find_by!(title: 'Just me').update_columns(start_time: 5.hours.ago, end_time: nil)
+
+    expect(pin_titles_for(author)).to contain_exactly('Open picnic')
+  end
+
   it "doesn't show an event you only may see" do
     expect(pin_titles_for(stranger)).to be_empty
   end

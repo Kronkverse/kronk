@@ -58,16 +58,26 @@ Other routes (all in `features/ui/index.jsx`, signed-in only):
 - `/hub/kommons/pick`: the target picker (the Lattice in `pick` mode). This
   is the manifest `compose.route`, so the Ж menu's "Open a Proposal" lands here.
 - `/hub/kommons/composer` (and the older `/hub/kommons/propose`): the
-  composer overlay. It takes `?node=<id>`, `?space=<slug>` or
-  `?kind=new_korner`. Steps you add become tasks; staged files upload as
-  attachments.
-  Opened by "Propose a change" in the Ж menu from another space, it goes
-  back to that page when it closes, whether the proposal was opened or
-  cancelled (2026-10-12); the link carries the page as `state.returnTo`.
+  composer overlay over Kommons, for links and the Konnect picker's New
+  proposal. It takes `?node=<id>`, `?space=<slug>` or `?kind=new_korner`.
+  Steps you add become tasks; staged files upload as attachments. It has
+  no Konnect row: a proposal is Konnected from its page (2026-10-29).
 - `/hub/kommons/settings`: per-user settings (below).
 - Redirects: `/governance` and `/governance/*` → `/hub/kommons` (Rails,
   301); `/hub/kommons/tree` → `/hub/kommons/lattice` (Rails);
   `/hub/kommons/lattice` and `/hub/kommons/skeleton` → `/hub/kommons` (SPA).
+
+**The composer opens over the page you are on** (2026-10-29). Every way to
+start a proposal inside the app (the Ж menu's Propose a change, and its +
+on a space or node page; the Hub's Propose a Korner tile; Propose a change
+in a space's settings; a node page's button; the page picker) calls
+`useOpenProposer(scope)` (`features/kommons/use_open_proposer.ts`), which
+opens the `PROPOSER` modal (`proposer_modal.tsx`): the same
+`<KommonsComposer>` in `<ComposeShell>`, with the scope (`space`, `node`,
+`kind`) as a prop. The address doesn't change, Back or Cancel closes it,
+and you are where you were. Once the proposal is open, inside Kommons you
+land on it; anywhere else you stay put and are told it is open
+(2026-10-12).
 
 **Settings** (manifest `settings:`): `preferred_proposal_types` filters the
 board lists by size (small/medium/large; not applied on node or Space pages),
@@ -240,7 +250,9 @@ The workflow for building a proposal:
    lines, and any other proposal link in the body, into
    `config/shipped_proposals.yaml`, and the production deploy runs
    `kommons:proposals:action_shipped`, which actions every listed proposal
-   still open or claimed. The proposer is asked to close it. A proposal whose
+   still open or claimed. The proposer is asked to close it; several of
+   theirs in one run come as one notice ("3 of your proposals were
+   actioned", `docs/spaces/nudges.md`, Grouped notices). A proposal whose
    PR carried no line is marked by hand: **Mark actioned** for the claimant,
    or `tootctl kommons action <id>`.
 5. **The proposer closes it,** which returns backers' stakes and pays the

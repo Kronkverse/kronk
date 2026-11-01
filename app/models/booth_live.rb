@@ -23,7 +23,9 @@ class BoothLive < ApplicationRecord
   belongs_to :status, optional: true, inverse_of: :booth_live
   has_many :reminders, class_name: 'BoothLiveReminder', inverse_of: :booth_live, dependent: :delete_all
   # Its recording, made on the Jitsi server, for the host to publish as a set
-  # (docs/spaces/booth.md, Recording a live set). Destroying deletes the file.
+  # (docs/spaces/booth.md, Recording a live set). Destroying deletes the file,
+  # so the app doesn't delete a set once it has one (BoothLivesController;
+  # recordings are kept, docs/decisions.md 2026-10-29).
   has_many :call_recordings, dependent: :destroy
   # Shoutouts, reactions, requests and the host's Now playing, while it's
   # live (docs/spaces/booth.md, The crowd on screen).

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { throttle } from 'lodash';
 
 import api from 'mastodon/api';
+import { apiSearchMatesToMention } from 'mastodon/api/accounts';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
 import { apiGetStatusAudience } from 'mastodon/api/statuses';
 import { browserHistory } from 'mastodon/components/router';
@@ -653,17 +654,10 @@ const fetchComposeSuggestionsAccounts = throttle((dispatch, getState, token) => 
 
   fetchComposeSuggestionsAccountsController = new AbortController();
 
-  api().get('/api/v1/accounts/search', {
-    signal: fetchComposeSuggestionsAccountsController.signal,
-
-    params: {
-      q: token.slice(1),
-      resolve: false,
-      limit: 4,
-    },
-  }).then(response => {
-    dispatch(importFetchedAccounts(response.data));
-    dispatch(readyComposeSuggestionsAccounts(token, response.data));
+  // Your Mates only (apiSearchMatesToMention says why).
+  apiSearchMatesToMention(token.slice(1), 4, fetchComposeSuggestionsAccountsController.signal).then(accounts => {
+    dispatch(importFetchedAccounts(accounts));
+    dispatch(readyComposeSuggestionsAccounts(token, accounts));
   }).catch(error => {
     if (!axios.isCancel(error)) {
       dispatch(showAlertForError(error));

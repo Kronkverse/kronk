@@ -1,10 +1,10 @@
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
 
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
+import { ProposeButton } from 'mastodon/features/kommons/propose_button';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
@@ -72,18 +72,12 @@ const KuestionsSettings: React.FC<{ multiColumn?: boolean }> = () => {
           heading={<FormattedMessage {...messages.proposeSection} />}
           hint={<FormattedMessage {...messages.proposeHint} />}
         >
-          <Link
-            to={{
-              pathname: '/hub/kommons/composer',
-              search: '?space=kuestions',
-            }}
-            className='korner-settings__propose-cta'
-          >
+          <ProposeButton space='kuestions'>
             <FormattedMessage
               {...messages.proposeCTA}
               values={{ name: 'Kuestions' }}
             />
-          </Link>
+          </ProposeButton>
         </SettingsSection>
 
         <AllSettingsFooter />

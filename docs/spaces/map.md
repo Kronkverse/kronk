@@ -22,6 +22,10 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
   pins, a people strip (a face per pin, your own slot last; tap to
   centre), your upcoming Kalendar events (hosting, going or interested) as
   markers, and Places.
+  **Near me** (top left, `near_me.tsx`) flies to your pin and lists the
+  five closest Mates, Places (within 50 km) and your Events, each with
+  about how far it is from your pin; a row opens that pin, Place or Event.
+  Without a pin it opens "Put me on the map".
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
   after your Mates' (Kommons "Treks list of Mates before Mine",
@@ -61,16 +65,16 @@ report on login" (https://kronk.info/hub/kommons/p/117504037032494231).
 
 ### First Nations Country
 
-A **First Nations Country** button under the zoom buttons (Kommons, @mangobee,
-2026-10-23) draws the Countries of Aboriginal and Torres Strait Islander
-peoples over Australia, under the pins. Off until you turn it on; the choice is
-kept in your browser (`kronk.map.country_layer`). While it is on, a note under
-the button says the boundaries are approximate. It carries no on-map credit
-(@mangobee, 2026-10-26: take the credit line away).
+The map always shows the **First Nations Country** of Aboriginal and Torres
+Strait Islander peoples over Australia, under the pins (Kommons, @mangobee,
+2026-10-23; always on, with no switch, @mangobee, 2026-10-30; it was a button
+under the zoom buttons that turned it on). A note under "Find a Country" says
+the boundaries are approximate. It carries no on-map credit (@mangobee,
+2026-10-26: take the credit line away).
 
 The Countries are shapes you can tap (Kommons "Interactive Map Build",
 @mangobee, 2026-10-26, Option 2): `app/javascript/images/first-nations-countries.geojson`,
-fetched only once the layer is turned on, drawn as a MapLibre `geojson` source
+fetched when the map opens, drawn as a MapLibre `geojson` source
 with a fill in each Country's own colour, thin borders, and the tapped Country
 outlined. They are crisp at every zoom and stay on down to street level (the
 fill calms as you zoom in).
@@ -78,10 +82,35 @@ fill calms as you zoom in).
 - **Tap a Country** for its card: "<name> Country", and, when the name is on
   the Country list (`first_nations_countries.ts`), its region, group and other
   spellings; other names written on the same shape; the boundaries note.
+- **Pin-drop**: when you place your pin and it lands on a named Country that
+  isn't already where your profile says you live, a card at the top asks
+  "You're on <name> Country. Add it as where you live?" **Add** saves it as
+  your profile's "Living on <name> Country"; **Not now** leaves it
+  (`country_prompt.tsx`). It uses the Country of your pin's coarsened point,
+  so near a border it can be the neighbour: you're asked, not told.
+- **You're on <name> Country**: once zoomed in a little (zoom 5), a line at
+  the bottom of the map names the Country under its middle, changing as you
+  move; a tap opens its card. A shape with no name takes the first name
+  someone added to it.
 - **Find a Country**: a search box under the button matches any of those
-  names and flies there.
-- **From a profile**: "On <name> Country" links to `/hub/map?country=<name>`,
-  which turns the layer on and opens that Country.
+  names, and names people have added, and flies there.
+- **From a profile**: "Born on" and "Living on <name> Country" each link to
+  `/hub/map?country=<name>`, which opens that Country.
+- **People on a Country**: the card shows faces under "Born here" and
+  "Living here", the people whose profile says so by any name the Country
+  answers to (`GET /api/v1/map/country_people?names[]=…`, matched as the map
+  matches names). Each face opens the profile; it shows no more than the
+  profiles do.
+- **On everything with a place**: a Mate's pin, a Place (card and page), an
+  Event pin and a Trek say the Country they're on ("On Kaurna Country";
+  "Through Kaurna and Peramangk Country" for a Trek), each opening it here.
+  The server works it out from the point (`Kronk::FirstNationsCountries`,
+  from the same shapes): `country: { id, name }` on presence, places and
+  events, `countries: [...]` on treks (only with the route). A pin's Country
+  comes from its coarsened point, so it says no more than the pin. The shapes
+  are approximate, so near a border it can name the neighbour; a coastal town
+  just off the traced coast takes the nearest Country within about 15 km; out
+  at sea there is none, and a shape with no name yet says nothing.
 - **Names** are drawn in Kronk's own type as small markers, each shown only
   when it fits inside its Country at that zoom, and none until zoom 4 (at
   Australia-wide only Mardu fits, and a lone name read as if it were picked;
@@ -97,7 +126,29 @@ map and matched to the Country list where they can be. Each shape carries
 `bbox` and `area`. It is a first pass for @mangobee to check: a few small
 coastal Countries (Tiwi, Cobourg, the tip of Cape York) and most of Tasmania
 are coarse or unnamed, and some names placed from the sea may be on the wrong
-shape. A shape with no name shows "Not named yet".
+shape. A shape with no name shows "Not named yet". The words printed on the
+source map (Simpson Desert, Nullarbor Plain) and a dotted line had been traced
+as blocky letter-shaped bits of the Countries beside them; they were taken
+off, leaving each Country one shape with no holes, and a name read as only
+"Mayi-" was cleared (@mangobee, 2026-10-30).
+
+**The open list of names.** Country names are still being found, so the list
+stays open (@mangobee, 2026-10-30): `map_country_names` (`MapCountryName`,
+`/api/v1/map/country_names`).
+
+- Every name typed on a profile, born on or living on, joins it as soon as it
+  is saved.
+- On a Country's card anyone can **Add another name**, which ties that name to
+  the shape. The card shows the added names as chips, each saying who added
+  it; the search and `?country=<name>` find a Country by them, and the profile
+  fields suggest them.
+- Only a steward (admin or moderator; @mangobee and Tal) takes a name off,
+  with the × on its chip. A name taken off stays off: typing it again doesn't
+  bring it back.
+
+Names match whatever their case, accents, ŋ, spacing or punctuation, so
+"Yolngu" and "Yolŋu" are one name. Adding a name already on the list (typed on
+a profile, say) gives it the Country; one already given a Country keeps it.
 
 ## Presence
 
@@ -289,12 +340,18 @@ OpenStreetMap `location_url`, or no `location_url` and a Konnected Place
 `?event=<slug>` too, so that one event gets its pin even when you haven't
 answered it, if you may see it.
 
+**What's on.** An event stays on the map while it is happening (started and
+not yet ended; one with no end time counts as on for three hours), and its pin
+shows when: happening now, it glows and slowly breathes; starting within the
+next week, it glows softly; later ones are plain (`whatsOn` in
+`event_layer.tsx`; still, without the breathing, with reduced motion).
+
 ## API
 
 All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
 create, destroy), `presence/self`, `geocode`, `treks` (index, show,
 create, destroy, publish, unpublish), `events`, `places` (index, show,
-create, update, destroy).
+create, update, destroy), `country_names` (index, create, destroy).
 
 ## Open
 

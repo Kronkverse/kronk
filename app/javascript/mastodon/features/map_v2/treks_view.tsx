@@ -37,6 +37,7 @@ import {
   ensurePmtilesProtocol,
   supportsWebGL,
 } from './basemap';
+import { CountriesLine } from './country_line';
 
 // Map — Treks lens. Lists the caller's own treks and their Mates' published
 // treks (Mates-gated server-side), with a detail view drawing the privacy-
@@ -259,6 +260,11 @@ const TrekDetail: React.FC<{
           />
         </p>
       )}
+
+      <CountriesLine
+        countries={trek.countries}
+        className='trek-detail__country'
+      />
 
       <dl className='trek-detail__stats'>
         <div>
