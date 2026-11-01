@@ -26,23 +26,22 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(page).to have_current_path('/hub/krew')
   end
 
-  # docs/spaces/freethedream.md, The Krew: an emergence lives in one of your
-  # Krews, and the Krew page shows it.
-  it 'starts an emergence in one of your Krews, and the Krew page shows it' do
-    krew = Fabricate(:krew, seeded_by: bob.account, name: 'Mayhem')
-
+  # docs/spaces/freethedream.md, The Krew (Tal, 2026-10-31): a projekt is
+  # seeded from its Krew's page, so the composer has no Krew to pick, and
+  # seeding is bare: a title, what it's about and a cover.
+  it 'seeds a projekt only from a Krew, with just a title' do
     visit '/hub/freethedream/composer'
     expect(page).to have_current_path('/hub/krew/composer/projekt')
-    fill_in placeholder: 'A doof, an album, an app, a co-op…', with: 'Mini Doof'
-    expect(page).to have_button('Seed', disabled: true)
-    select 'Mayhem', from: 'Krew'
-    click_on 'Seed'
 
-    expect(page).to have_current_path(%r{\A/hub/krew/#{krew.slug}/p/})
-    expect(Freethedream::Project.find_by(title: 'Mini Doof').krew).to eq krew
-
-    visit "/hub/krew/#{krew.slug}"
-    expect(page).to have_css('.krew-detail__projekts .space-card', text: 'Mini Doof', wait: 20)
+    within('.compose-shell') do
+      fill_in placeholder: 'Title', with: 'Mini Doof'
+      expect(page).to have_text('Seed it from the Krew page')
+      expect(page).to have_no_select('Krew')
+      expect(page).to have_no_text('When (optional)')
+      expect(page).to have_no_text('Komponents to start with')
+      expect(page).to have_no_text('What it needs')
+      expect(page).to have_button('Seed', disabled: true)
+    end
   end
 
   # docs/spaces/krew.md, Projekts: a Krew with no projekts has no section,
@@ -60,8 +59,8 @@ RSpec.describe 'Projekts', :js, :streaming do
       click_on 'Seed a projekt'
     end
 
-    expect(page).to have_select('Krew', selected: 'Mayhem')
-    fill_in placeholder: 'A doof, an album, an app, a co-op…', with: 'Mini Doof'
+    expect(page).to have_no_select('Krew')
+    fill_in placeholder: 'Title', with: 'Mini Doof'
     click_on 'Seed'
 
     expect(page).to have_current_path(%r{\A/hub/krew/#{krew.slug}/p/})
