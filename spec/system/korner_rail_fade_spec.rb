@@ -26,18 +26,18 @@ RSpec.describe 'Korner rail fade', :inline_jobs, :js, :streaming do
     JS
   end
 
-  it 'keeps the Hub clear of the rail on a wide screen' do
+  it 'keeps Explore clear of the rail on a wide screen' do
     page.current_window.resize_to(1400, 900)
-    visit '/hub'
+    visit '/explore'
 
     expect(page).to have_css('.kronk-frame__right-band .korner-sidebar')
     expect(page).to have_css('.kronk-stage')
     expect(stage_overlap).to be <= 0
   end
 
-  it 'keeps the Hub clear of the rail just above the breakpoint, with a page scrollbar' do
+  it 'keeps Explore clear of the rail just above the breakpoint, with a page scrollbar' do
     page.current_window.resize_to(900, 900)
-    visit '/hub'
+    visit '/explore'
     expect(page).to have_css('.kronk-stage')
 
     # A classic page scrollbar makes the Frame narrower than the viewport.

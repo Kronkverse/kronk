@@ -112,18 +112,18 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_no_css('.compose-shell .konnect-row')
   end
 
-  it 'proposes a new korner from the Hub without leaving it' do
-    visit '/hub'
+  it 'proposes a new korner from Explore without leaving it' do
+    visit '/explore'
 
-    find('.hub-page__tile--propose .hub-page__tile-link').click
+    click_on 'Propose a new korner'
 
     expect(page).to have_css('.compose-shell', text: 'Propose a new Korner')
-    expect(page).to have_current_path('/hub')
+    expect(page).to have_current_path('/explore')
 
     find('.compose-shell__close').click
 
     expect(page).to have_no_css('.compose-shell')
-    expect(page).to have_current_path('/hub')
+    expect(page).to have_current_path('/explore')
   end
 
   it 'claims an open proposal from its tile, and joins one somebody else has claimed' do

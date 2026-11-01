@@ -9,7 +9,8 @@ import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 // The search bar at the top right of a wide screen (Tal 2026-10-12, Kommons
 // "Search option"). It is the way into the search page, not a second search:
 // Enter goes to /hub/search with the words, and with the space you were in,
-// so that space's results come first there. Phones keep Search in the Ж menu.
+// so that space's results come first there. It is on every screen, phones
+// included, beside Nudges (2.2.0, 2026-11-01).
 
 const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)/;
 
