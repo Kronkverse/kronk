@@ -9,7 +9,8 @@
   width: 100%;
   max-width: 56rem;
   margin-inline: auto;
-  padding-block: 0.5rem 2rem;
+  padding: 0.5rem 1rem 2rem;
+  box-sizing: border-box;
 
   &__section {
     display: flex;
@@ -45,6 +46,12 @@
   justify-self: end;
   gap: 0.5rem;
   min-width: 0;
+
+  // The wordmark is hidden below 890px, so on a phone or tablet search
+  // takes the width of the band, Nudges at its end.
+  @media (width <= 889px) {
+    justify-self: stretch;
+  }
 }
 
 .top-nudges {

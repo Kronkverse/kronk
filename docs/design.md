@@ -775,8 +775,8 @@ built:
 
 The phone tab-bar (`HubSwitcher variant="bottom"`) has the same five pillars as
 icon tabs, with no wire. The top band stays on a phone as a slim 3.5rem
-strip: the wordmark, then search and Nudges, stopping short of the Ж button
-at the top right.
+strip: search across it and Nudges at its end (the wordmark is hidden below
+890px, as before).
 
 **Swipe between the screens.** On YOU, Share, Home, Explore and Join, a
 quick sideways swipe moves to the screen beside it (a finger moving right

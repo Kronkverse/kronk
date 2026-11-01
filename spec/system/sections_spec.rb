@@ -46,7 +46,7 @@ RSpec.describe 'Four sections', :js, :streaming do
     within('.section-page--share') do
       expect(page).to have_css('.space-card', text: 'Post')
       expect(page).to have_css('.space-card', text: 'Share a Moment')
-      expect(page).to have_text('What you’ve shared')
+      expect(page).to have_css('h2', text: /what you’ve shared/i)
     end
 
     find('.space-card', text: 'Post a piece').click
@@ -59,7 +59,7 @@ RSpec.describe 'Four sections', :js, :streaming do
     within('.section-page--explore') do
       expect(page).to have_css('.space-card', text: 'Art')
       expect(page).to have_css('.space-card', text: 'Wachuneed')
-      expect(page).to have_text('Also on Kronk')
+      expect(page).to have_css('h2', text: /also on kronk/i)
       expect(page).to have_css('.space-card', text: 'Klot')
     end
 
