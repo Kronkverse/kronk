@@ -12,8 +12,10 @@ RSpec.describe 'Share page', :js, :streaming do
 
   before { as_a_logged_in_user }
 
+  # A share intent (`?text=`) opens Mastodon's share page; a bare /share
+  # is Kronk's Share section since 2.2.0 (docs/decisions.md, 2026-11-01).
   it 'allows posting a new status' do
-    visit share_path
+    visit share_path(text: 'Shared from elsewhere')
 
     expect(page)
       .to have_css('.modal-layout')
