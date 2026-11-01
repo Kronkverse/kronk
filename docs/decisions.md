@@ -17,6 +17,36 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-31 — A Krew's chat is a space it Konnects
+
+Every Krew used to come with a group chat in Nudges, whether it wanted one or
+not. Tal (2026-10-31): "Maybe we include Nudges into that? So if a krew
+doesn't need a chat, they dont have to add it", and "a krew with nothing
+konnected just shows the top section".
+
+**Decision:** the chat is a space a Krew turns on, like its albums or events:
+a `nudges` row in `krew_korners` (`KrewKorner::KORNERS`).
+
+- **Krews made before today keep their chat**, shown as already Konnected
+  (migration `KonnectExistingKrewChats` adds the row to every Krew). Krews
+  made from today start without one.
+- **Without the row** the Krew page has no Chat section or tile, and Nudges
+  doesn't list the conversation (`Nudges::Conversation.listable`), so it
+  counts toward no badge. The conversation itself is not deleted: taking the
+  chat off and putting it back brings the messages back. Members still join
+  it as they join the Krew, so it is ready if the chat is turned on.
+- **Turning it on and off** is Krew settings, Spaces (Add a space, and the
+  tile's ×), the same as Albutts and Kalendar. It is not offered in the
+  Konnect picker yet: that needs a change to the shared picker.
+- **The Krew page shows only what the Krew has.** The order is Spaces,
+  Projekts, Chat, Kuddle, Posts. Projekts, Chat and Kuddle each show once
+  the Krew has one, and each has a tile under Spaces that scrolls to it. A
+  Krew with nothing is its header, the Konnect tile and its posts. This
+  supersedes the 2026-10-31 order (chat above the spaces) in
+  `docs/spaces/krew.md`.
+
+---
+
 ## 2026-10-30 — The Android app is the website
 
 Tal asked for an Android app that keeps up with the site without a second

@@ -54,14 +54,17 @@ module Nudges
     scope :active, -> { where('expires_at IS NULL OR expires_at > ?', Time.current) }
     scope :mate,   -> { where(kind: MATE) }
     scope :krew,   -> { where(kind: KREW) }
-    # What the chat list shows: every Krew chat, and a Mate chat once it has
-    # a message in it. An empty Mate chat is not listed — one is created the
-    # moment you pick a Mate to write to, and should not linger if you never
-    # write.
+    # What the chat list shows: the chat of every Krew that has one Konnected
+    # (a `nudges` KrewKorner, docs/spaces/krew.md, Chat), and a Mate chat
+    # once it has a message in it. An empty Mate chat is not listed — one is
+    # created the moment you pick a Mate to write to, and should not linger
+    # if you never write.
     scope :listable, lambda {
-      where(<<~SQL.squish, krew: KREW)
-        nudges_conversations.kind = :krew
-        OR EXISTS (SELECT 1 FROM nudges_conversation_messages m WHERE m.conversation_id = nudges_conversations.id)
+      where(<<~SQL.squish, krew: KREW, mate: MATE)
+        (nudges_conversations.kind = :krew
+          AND EXISTS (SELECT 1 FROM krew_korners kk WHERE kk.krew_id = nudges_conversations.krew_id AND kk.korner = 'nudges'))
+        OR (nudges_conversations.kind = :mate
+          AND EXISTS (SELECT 1 FROM nudges_conversation_messages m WHERE m.conversation_id = nudges_conversations.id))
       SQL
     }
 

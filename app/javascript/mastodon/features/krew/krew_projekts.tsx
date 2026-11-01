@@ -8,19 +8,16 @@ import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { projectPath } from 'mastodon/features/freethedream/components/shared';
 import { konnectSearch } from 'mastodon/hooks/useKonnect';
 
-// A Krew's projekts, near the top of its page (docs/spaces/krew.md,
-// Projekts): a row of their cards, each opening the projekt, and for a
-// member a last card that starts a new one in this Krew. Who sees them
-// follows the Krew (Freethedream::Project#visible_to?), so the server
-// lists only what the viewer could open.
+// A Krew's projekts, under its spaces (docs/spaces/krew.md, Projekts): a
+// row of their cards, each opening the projekt, and for a member a last
+// card that starts a new one in this Krew. Who sees them follows the Krew
+// (Freethedream::Project#visible_to?), so the server lists only what the
+// viewer could open. A Krew with none has no section (Tal, 2026-10-31: a
+// Krew shows only what it has); the first one is seeded from Konnect.
+// `onCount` tells the page how many, for its Projekts tile.
 
 const messages = defineMessages({
   title: { id: 'krew.projekts.title', defaultMessage: 'Projekts' },
-  empty: {
-    id: 'krew.projekts.empty',
-    defaultMessage:
-      'Nothing on the go yet. Start a projekt and everyone in the Krew is in it.',
-  },
   newProjekt: { id: 'krew.projekts.new', defaultMessage: 'New projekt' },
   sorted: {
     id: 'krew.projekts.sorted',
@@ -32,7 +29,9 @@ const messages = defineMessages({
 export const KrewProjekts: React.FC<{
   krewId: string;
   canStart: boolean;
-}> = ({ krewId, canStart }) => {
+  id?: string;
+  onCount?: (count: number) => void;
+}> = ({ krewId, canStart, id, onCount }) => {
   const intl = useIntl();
   const [projekts, setProjekts] = useState<FtdProjectSummary[] | null>(null);
 
@@ -45,20 +44,18 @@ export const KrewProjekts: React.FC<{
       });
   }, [krewId]);
 
-  if (!projekts) return null;
-  if (projekts.length === 0 && !canStart) return null;
+  const count = projekts?.length;
+  useEffect(() => {
+    if (count !== undefined) onCount?.(count);
+  }, [count, onCount]);
+
+  if (!projekts || projekts.length === 0) return null;
 
   return (
-    <section className='krew-detail__section krew-detail__projekts'>
+    <section id={id} className='krew-detail__section krew-detail__projekts'>
       <h3 className='korner-section-heading'>
         {intl.formatMessage(messages.title)}
       </h3>
-
-      {projekts.length === 0 && (
-        <p className='krew-detail__section-hint'>
-          {intl.formatMessage(messages.empty)}
-        </p>
-      )}
 
       <SpaceGrid layout='row'>
         {projekts.map((p) => (

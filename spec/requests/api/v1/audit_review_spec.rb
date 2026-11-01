@@ -50,6 +50,7 @@ RSpec.describe 'Audit review fixes' do
     it 'lists the request without what is being said' do
       krew = Krew.create!(slug: 'growers', name: 'Growers', access: 'open')
       krew.krew_memberships.create!(account: alice.account, role: 'seeder', source: 'direct')
+      krew.krew_korners.create!(korner: 'nudges')
       conversation = Nudges::Conversation.invite_to_krew!(krew, bob.account, alice.account)
       conversation.messages.create!(author_account_id: alice.account.id, body: 'the secret plan')
 
