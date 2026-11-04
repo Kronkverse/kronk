@@ -17,44 +17,6 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
-## 2026-11-01 — Four sections: YOU, Share, Join, Explore (2.2.0, phase 1)
-
-Tal (2026-11-01) boiled Kronk down to four sections, directions relative to
-the person: **YOU** (who I am), **Share** (what goes out from me), **Join**
-(people coming together: "Join is about collaboration, multiples coming
-together") and **Explore** ("what individuals are sharing with community").
-Home stays as the timeline of everything. The full picture, korner by korner,
-is Tal's 2.2.0 write-up; it is being built in four phases, and this is the
-first: the navigation.
-
-**Decision:**
-
-- **The pillars are YOU · Share · AWAWB · Explore · Join**, on the desktop
-  Membrane and the phone tab bar. Home and the Hub leave the pillars.
-- **Home is the screen in the middle.** The screens sit side by side in the
-  order YOU, Share, Home, Explore, Join, and a sideways swipe on a phone moves
-  between them; the app still opens on Home, and the wordmark goes there (it
-  went to `/kronk`, which Join now carries as a tile). The centre button still
-  opens AWAWB.
-- **Nudges moves to the top bar, beside search**, on every screen, phones
-  included (phones used to have no top bar and searched from the Ж menu).
-- **The Hub retires.** `/hub` redirects to `/explore`, and a korner's space
-  badge backs out to its section instead of the Hub. `/hub/<slug>` routes are
-  unchanged.
-- **Share** (`/share`) is the ways to share (each korner's manifest
-  `compose:`) over a timeline of what you've shared. **Explore** (`/explore`)
-  is the Moments strip over collections, plus every korner no section names
-  yet, so nothing the Hub reached is lost. **Join** (`/join`) is your Krews,
-  Krews you could join, then when and where (Kalendar, Map), then the other
-  ways people get together.
-
-**Supersedes** the Membrane's five pillars (Me · Home · AWAWB · Hub · Nudges)
-in `docs/design.md`, and the Hub grid in `docs/spaces/hub.md`. Phases 2 to 4
-(YOU's own page, collections from tags, dissolving korners one by one) come
-later and will each add their own entry.
-
----
-
 ## 2026-10-31 — A Krew's chat is a space it Konnects
 
 Every Krew used to come with a group chat in Nudges, whether it wanted one or

@@ -17,7 +17,6 @@
   /followed_tags
   /getting-started
   /home
-  /join
   /keyboard-shortcuts
   /links/(*any)
   /lists/(*any)

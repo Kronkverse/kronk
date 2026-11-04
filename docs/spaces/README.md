@@ -5,15 +5,12 @@ works today, and what is still open.
 
 A **space** is any top-level surface of Kronk. A **korner** is one kind of
 space: pluggable, declared by a manifest in `config/korners/`, shown as a
-card in a section (Explore or Join), and something you can tune in or out of. Feed, Profile,
+tile on the Hub, and something you can tune in or out of. Feed, Profile,
 Nudges, Hub and Settings are **core** spaces: they also carry a manifest
-(`core: true`), but they are not section cards and cannot be tuned out of.
+(`core: true`), but they are not Hub tiles and cannot be tuned out of.
 
-The top-level switcher (`hub_switcher.tsx`) shows **YOU · Share · Always
-was, always will be (`/awawb`) · Explore · Join**, Kronk's four sections
-around the flag (decisions.md, 2026-11-01). Home is the screen in the middle,
-Nudges sits in the top bar beside search, and the Hub page has retired into
-Explore.
+The top-level switcher (`hub_switcher.tsx`) shows **Me · Home · Always
+was, always will be (`/awawb`) · Hub · Nudges**.
 
 Architecture decisions, with dates and what they supersede, live in
 [`../decisions.md`](../decisions.md). **When sources disagree: code > repo
