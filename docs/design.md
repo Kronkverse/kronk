@@ -723,41 +723,35 @@ The **Membrane** is the platform nav in the TopBand on desktop
 ### Anatomy
 
 ```
-   [YOU]   [Share]   [AWAWB]   [Explore]   [Join]        [Search] [Nudges•]
-  ──────────────────────────────────────────────  ← the wire
+   [Me]   [Home]   [AWAWB]   [Hub]   [Nudges•]
+  ─────────────────────────────────────────────  ← the wire
 ```
 
-- **Pillars:** five, in order (2.2.0, decisions.md 2026-11-01): **YOU**
-  (`/me`), **Share** (`/share`), **AWAWB** (`/awawb`, an Aboriginal-flag
-  glyph), **Explore** (`/explore`), **Join** (`/join`): Kronk's four sections
-  around the flag. Home and Hub are not pillars: Home is the screen in the
-  middle (the wordmark goes there, and on a phone a sideways swipe moves
-  YOU, Share, Home, Explore, Join), and the Hub retired into Explore. AWAWB
-  is a still page: the flag between "Always was." and "Always
+- **Pillars:** five, in order: **Me** (`/me`), **Home** (`/home`), **AWAWB**
+  (`/awawb`, an Aboriginal-flag glyph), **Hub** (`/hub`), **Nudges**
+  (`/nudges`). AWAWB is a still page: the flag between "Always was." and "Always
   will be.", after Kronk's Acknowledgement of Country (in the body sans), which
   fades in, holds and fades out first each time it opens (about 4 seconds; a tap
   goes straight on; with reduced motion it changes over without fading). Kommons
   "Update the flag screen", @mangobee, 2026-10-30. It is a `role="tablist"`;
   each pillar is a `role="tab"` with `aria-selected`.
-- **Icons, not words.** Each pillar shows an icon: YOU your avatar (the
-  `profile` glyph until it loads), Share a +, Explore the `hub` manifest's
-  glyph, Join the `krew` manifest's. The text label is
+- **Icons, not words.** Each pillar shows the icon from its manifest
+  (`profile`, `feed`, `hub`, `nudges`); Me shows your avatar. The text label is
   visually hidden but still announced.
 - **Selection** is the active pillar itself: a tinted tile (`--kronk-purple-accent`
   mixed at 28%, inset ring). It's the same treatment as the active korner in the
   sidebar, so both navs speak one language. Resting pillars are `--text-muted`,
   hovered ones `--text-secondary`. Focus is a 3px `--kronk-purple-bright`
   outline.
-- **Nudges** is not a pillar: it sits in the top bar beside search, on
-  every screen (`top_nudges.tsx`, in `.top-tools` with `TopSearch`), with
-  the unread count badge.
+- **Nudges** carries the unread count badge.
 - **The wire** is a hairline in `--border-subtle` along the bottom.
 
-### The wire no longer carries arrivals
+### The wire carries arrivals
 
-Until 2026-11-01 a glint travelled along the wire towards the Nudges pillar
-when the unread count went up. Nudges left the pillars for the top bar, so
-the glint went with it; the badge still updates the moment a Nudge arrives.
+When the unread Nudges count goes up, a glint travels along the wire towards
+Nudges (`.is-arriving`, about 0.9s). It fires only on a real increase, never on
+a timer. With `prefers-reduced-motion`, the glint is off; the badge still
+updates.
 
 ### What changed from the original design
 
@@ -774,17 +768,7 @@ built:
 ### Phones
 
 The phone tab-bar (`HubSwitcher variant="bottom"`) has the same five pillars as
-icon tabs, with no wire. The top band stays on a phone as a slim 3.5rem
-strip: search across it and Nudges at its end (the wordmark is hidden below
-890px, as before).
-
-**Swipe between the screens.** On YOU, Share, Home, Explore and Join, a
-quick sideways swipe moves to the screen beside it (a finger moving right
-brings the one on the left): `features/sections/section_swipe.tsx`. It
-never starts on something that takes sideways gestures itself: a row that
-scrolls sideways, a map, a canvas or video, a slider, a text field, a
-modal, or anything marked `data-no-swipe`. There is no animation, so
-nothing to turn off for reduced motion.
+icon tabs. It has no wire and no arrival glint.
 
 **Text fields are at least 16px on a touch screen.** iOS Safari zooms the page
 into a field under 16px when it takes focus, and stays zoomed. One rule in

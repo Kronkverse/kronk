@@ -1,11 +1,6 @@
 import { useLocation } from 'react-router-dom';
 
 import type { LocationState } from 'mastodon/components/router';
-import {
-  SECTION_NAME,
-  SECTION_PATH,
-  sectionOf,
-} from 'mastodon/features/sections/sections';
 import { useAppSelector } from 'mastodon/store';
 
 import { useSpaceBackTarget } from './space_back';
@@ -19,10 +14,8 @@ import { SpaceBadge } from './space_badge';
 //
 // Back-target follows the URL hierarchy:
 //
-//   * `/hub/<slug>`             → its section (Explore, Join, YOU or
-//                                  Home; features/sections/sections.ts),
-//                                  since the Hub retired (2026-11-01)
-//   * `/hub/<slug>/<view-key>`  → the same (a rotator/picker face is
+//   * `/hub/<slug>`             → `/hub` (label: "Hub")
+//   * `/hub/<slug>/<view-key>`  → `/hub` (a rotator/picker face is
 //                                  still the space landing; the ring
 //                                  cycles, it doesn't descend)
 //   * `/hub/<slug>/<anything-else>` and deeper → `/hub/<slug>`
@@ -89,14 +82,13 @@ export const AutoSpaceBadge: React.FC = () => {
   const ownParent =
     !atSpaceRoot && parent?.href.startsWith(`/hub/${slug}`) ? parent : null;
 
-  const section = sectionOf(slug);
   const backTo = atSpaceRoot
-    ? SECTION_PATH[section]
+    ? '/hub'
     : withinSpace && cameFrom
       ? cameFrom
       : (ownParent?.href ?? `/hub/${slug}`);
   const name = atSpaceRoot
-    ? SECTION_NAME[section]
+    ? 'Hub'
     : withinSpace && cameFrom
       ? korner.name
       : (ownParent?.label ?? korner.name);

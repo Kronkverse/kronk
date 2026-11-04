@@ -4,9 +4,7 @@ import RoseIcon from '@/material-icons/400-24px/rose.svg?react';
 
 // Kronk 2.0 first-run walkthrough. Copy locked with Tal 2026-09-11 via
 // the mock at talitamoss.info/files/uploads/kronk_walkthrough_mock.html.
-// Welcome-step copy + rose emblem revised 2026-09-15. The nav steps follow
-// the four sections since 2.2.0 (2026-11-01): Home (the wordmark), YOU,
-// Share, Explore, Join, then Nudges in the top bar; the Hub step went.
+// Welcome-step copy + rose emblem revised 2026-09-15.
 //
 // Each step names:
 //   - `route`   — the runner navigates here (history.push) before
@@ -59,42 +57,28 @@ export const INTRO_STEPS: WalkthroughStep[] = [
     route: '/home',
     anchor: 'nav-home',
     title: 'Your feed, your home',
-    body: 'Everyone and everything on Kronk you follow, feeds through your timeline. Control what you want to see, and see nothing more. The Kronk wordmark always brings you back here.',
+    body: 'Everyone and everything on Kronk you follow, feeds through your timeline. Control what you want to see, and see nothing more.',
   },
   {
     id: 'intro/profile',
     route: '/me',
-    anchor: 'nav-you',
-    title: 'YOU',
+    anchor: 'nav-me',
+    title: 'You and your Kronk',
     body: 'Choose how your world sees you, control who gets access to your life, and customise your experience with Kronk.',
   },
   {
-    id: 'intro/share',
-    route: '/share',
-    anchor: 'nav-share',
-    title: 'Share',
-    body: 'Everything you put out into Kronk starts here: posts, Moments, art, music, listings, events. What you have shared sits underneath.',
-  },
-  {
-    id: 'intro/explore',
-    route: '/explore',
-    anchor: 'nav-explore',
-    title: 'Explore',
-    body: 'See what people across Kronk are sharing, gathered into collections. Search at the top finds anything else.',
-  },
-  {
-    id: 'intro/join',
-    route: '/join',
-    anchor: 'nav-join',
-    title: 'Join',
-    body: 'Where people come together: your Krews, Krews you could join, and what is happening when and where.',
+    id: 'intro/hub',
+    route: '/hub',
+    anchor: 'nav-hub',
+    title: 'Hub',
+    body: "Explore the korners of Kronk, follow the ones you're interested in and suggest new ones if you don't find what you're looking for.",
   },
   {
     id: 'intro/nudges',
     route: '/nudges',
     anchor: 'nav-nudges',
     title: 'Nudges',
-    body: 'Nudges is the home of communications, up beside search. Notifications from across Kronk land here, while you can also message your mates and share content.',
+    body: 'Nudges is the home of communications. Notifications from across Kronk land here, while you can also message your mates and share content.',
   },
   {
     id: 'intro/zh',

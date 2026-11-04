@@ -293,10 +293,6 @@ Rails.application.routes.draw do
   get '/backups/:id/download', to: 'backups#download', as: :download_backup, format: false
 
   resource :authorize_interaction, only: [:show]
-  # /share is Kronk's Share section (2.2.0) unless it carries a share
-  # intent (`?text=`, `?url=`, `?title=` from another site's share button
-  # or the PWA share target), which still opens Mastodon's share page.
-  get '/share', to: 'home#index', constraints: ->(req) { req.query_parameters.slice('text', 'url', 'title').empty? }
   resource :share, only: [:show]
 
   draw(:admin)

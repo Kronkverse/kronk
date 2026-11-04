@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-# docs/design.md, the search bar at the top of every screen.
+# docs/design.md, the search bar at the top of a wide screen.
 RSpec.describe 'Top search bar', :inline_jobs, :js, :streaming do
   include ProfileStories
 
@@ -26,17 +26,14 @@ RSpec.describe 'Top search bar', :inline_jobs, :js, :streaming do
     expect(page).to have_no_css('.top-search')
   end
 
-  it 'is there on a phone too, beside Nudges' do
-    page.current_window.resize_to(400, 800)
+  it 'is not there on a narrow screen, where Search is in the Ж menu' do
+    page.current_window.resize_to(800, 900)
     visit '/hub/wachuneed'
 
-    within('.kronk-frame__top-band .top-tools') do
-      expect(page).to have_css('.top-search__input', visible: :visible)
-      expect(page).to have_link('Nudges')
-    end
-    find('.top-search__input').fill_in with: 'bike'
-    find('.top-search__input').send_keys(:enter)
+    find('.kronk-menu__trigger').click
+    expect(page).to have_no_css('.top-search', visible: :visible)
+    click_on 'Search'
 
-    expect(page).to have_current_path('/hub/search?q=bike&in=wachuneed')
+    expect(page).to have_current_path('/hub/search?in=wachuneed')
   end
 end

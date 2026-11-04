@@ -1,56 +1,63 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { NavLink, useLocation } from 'react-router-dom';
 
 import AboriginalFlagIcon from '@/material-icons/400-24px/aboriginal_flag.svg?react';
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
+import { useNudgesBadgeSeed } from 'mastodon/features/nudges_messenger/use_nudges_badge_seed';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { me } from 'mastodon/initial_state';
+import {
+  selectNudgesAlertCount,
+  selectUnreadNudgesCount,
+} from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
 
-// The platform nav: Kronk's four sections with the AWAWB flag in the
-// centre (2.2.0, Tal 2026-11-01; docs/decisions.md):
+// Four-way switcher between Kronk's primary personal surfaces —
+// Me / Home / Hub / Nudges (in that order). Ships as its own component
+// so the layout can slot it into either the top chrome (desktop, the
+// Membrane) or the bottom tab-bar (mobile, icon+label) without
+// duplication.
 //
-//   YOU      → /me      (your avatar)
-//   Share    → /share   (what goes out from you)
-//   AWAWB    → /awawb   (Always was, always will be)
-//   Explore  → /explore (what individuals share with the community)
-//   Join     → /join    (people coming together)
+//   Me      → /me    (radial hub — see features/me_hub)
+//   Home    → /home
+//   Hub     → /hub
+//   Nudges  → /nudges (activity; carries the unread badge)
 //
-// Home is the screen in the middle of the five (the wordmark and a swipe
-// lead there), and Nudges sits in the top bar beside search
-// (top_nudges.tsx), so neither is a pillar any more; nor is the Hub,
-// which Explore replaces. One component for the desktop Membrane (top)
-// and the phone tab bar (bottom).
+// Top variant renders the Membrane: icon pillars + a hairline wire.
 //
-// Selection is shown by the ACTIVE PILLAR ITSELF, a tinted tile, the
-// same method the korner sidebar uses (Tal 2026-08-13). Icons come from
-// each pillar's manifest via `kornerIcon` where it has one. Text labels
-// stay as visually-hidden text, so the announced names are YOU / Share /
-// Always was, always will be / Explore / Join. Spec: docs/design.md
-// (Membrane navigation).
+// Selection is shown by the ACTIVE PILLAR ITSELF — a tinted tile with a
+// filled glyph, the same method the korner sidebar uses (Tal 2026-08-13),
+// so one language covers both navigation surfaces. The gliding pool of
+// light that used to mark it is gone; the wire remains only as the channel
+// for the nudge-arrival glint. Icons are read from
+// each pillar's corresponding manifest via `kornerIcon` — editing
+// `icon.material` in profile.yaml / feed.yaml / hub.yaml / nudges.yaml
+// updates the top nav in place. Text labels stay on the pillars as
+// visually-hidden sr-only text so the aria/announced names still
+// carry `Me / Home / Hub / Nudges`. Spec: docs/aesthetic — Membrane
+// Navigation (docs/design.md).
 
 interface HubSwitcherProps {
   variant?: 'top' | 'bottom';
   currentAccountUsername?: string;
 }
 
-type PillarKey = 'you' | 'share' | 'awawb' | 'explore' | 'join';
+type PillarKey = 'me' | 'home' | 'awawb' | 'hub' | 'nudges';
 
 const messages = defineMessages({
-  you: { id: 'hub_switcher.you', defaultMessage: 'YOU' },
-  share: { id: 'hub_switcher.share', defaultMessage: 'Share' },
+  me: { id: 'hub_switcher.me', defaultMessage: 'Me' },
+  home: { id: 'hub_switcher.home', defaultMessage: 'Home' },
   awawb: {
     id: 'hub_switcher.awawb',
     defaultMessage: 'Always was, always will be',
   },
-  explore: { id: 'hub_switcher.explore', defaultMessage: 'Explore' },
-  join: { id: 'hub_switcher.join', defaultMessage: 'Join' },
+  hub: { id: 'hub_switcher.hub', defaultMessage: 'Hub' },
+  nudges: { id: 'hub_switcher.nudges', defaultMessage: 'Nudges' },
   aria: { id: 'hub_switcher.aria', defaultMessage: 'Primary surfaces' },
 });
 
@@ -75,17 +82,32 @@ export const HubSwitcher = ({
 }: HubSwitcherProps) => {
   const intl = useIntl();
   const location = useLocation();
+  const unreadNudges = useAppSelector(selectUnreadNudgesCount);
+  // Everything waiting behind the pillar, as one number: unread chats,
+  // unseen notifications and unread korner/system notices.
+  const alertCount = useAppSelector(selectNudgesAlertCount);
+  // Seed `state.nudges.unread` on boot + keep it live from the
+  // account-level stream. Without this the pillar badge stayed at
+  // zero until the user opened /nudges (only the messenger seeded
+  // it) — defeating the badge's purpose.
+  useNudgesBadgeSeed();
 
-  // YOU goes to /me (the page of self actions, features/me_hub) and stays
-  // lit on your public profile too.
-  const youPath = currentAccountUsername ? '/me' : '/getting-started';
+  // 2026-08-05: "Me" pillar retargeted from `/@{username}` (public
+  // profile) to `/me` (radial hub of self actions — see
+  // features/me_hub). The pillar stays highlighted on either surface
+  // via `isActive` so the user knows they're still under Me even
+  // when they navigate through to the public profile from the hub.
+  const meHubPath = currentAccountUsername ? '/me' : '/getting-started';
 
   const profileManifest = useKorner('profile');
+  const feedManifest = useKorner('feed');
   const hubManifest = useKorner('hub');
-  const krewManifest = useKorner('krew');
+  const nudgesManifest = useKorner('nudges');
 
-  // YOU shows your avatar in place of the profile glyph: you're looking
-  // at your own face. Falls back to the glyph before the avatar loads.
+  // Me pillar renders the viewer's avatar in place of the profile
+  // korner glyph — you're looking at *your* face, not an abstract
+  // account chip. Falls back to the profile-korner icon when the
+  // avatar hasn't landed in state yet (initial paint, signed-out).
   const myAvatar = useAppSelector((state) =>
     me ? (state.accounts.get(me)?.avatar_static ?? null) : null,
   );
@@ -93,24 +115,25 @@ export const HubSwitcher = ({
   const pillars: PillarConfig[] = useMemo(
     () => [
       {
-        key: 'you',
-        to: youPath,
-        label: messages.you,
+        key: 'me',
+        to: meHubPath,
+        label: messages.me,
         Icon: kornerIcon('profile', profileManifest),
         iconId: 'profile',
         isActive: (p) => p === '/me' || p.startsWith('/@'),
       },
       {
-        key: 'share',
-        to: '/share',
-        label: messages.share,
-        Icon: AddIcon,
-        iconId: 'share',
-        isActive: (p) => p === '/share',
+        key: 'home',
+        to: '/home',
+        label: messages.home,
+        Icon: kornerIcon('feed', feedManifest),
+        iconId: 'feed',
+        isActive: (p) => p === '/home' || p.startsWith('/home/'),
       },
       {
-        // The centre pillar: the Aboriginal flag and one line of still
-        // text, the visual centre of the row.
+        // Middle pillar: /awawb — Aboriginal-flag glyph, one line of
+        // still text. Sits between Home and Hub so it's the visual
+        // centre of the top Membrane row.
         key: 'awawb',
         to: '/awawb',
         label: messages.awawb,
@@ -119,23 +142,23 @@ export const HubSwitcher = ({
         isActive: (p) => p === '/awawb',
       },
       {
-        key: 'explore',
-        to: '/explore',
-        label: messages.explore,
+        key: 'hub',
+        to: '/hub',
+        label: messages.hub,
         Icon: kornerIcon('hub', hubManifest),
-        iconId: 'explore',
-        isActive: (p) => p === '/explore',
+        iconId: 'hub',
+        isActive: (p) => p === '/hub' || p.startsWith('/hub/'),
       },
       {
-        key: 'join',
-        to: '/join',
-        label: messages.join,
-        Icon: kornerIcon('krew', krewManifest),
-        iconId: 'join',
-        isActive: (p) => p === '/join',
+        key: 'nudges',
+        to: '/nudges',
+        label: messages.nudges,
+        Icon: kornerIcon('nudges', nudgesManifest),
+        iconId: 'nudges',
+        isActive: (p) => p === '/nudges' || p.startsWith('/nudges/'),
       },
     ],
-    [youPath, profileManifest, hubManifest, krewManifest],
+    [meHubPath, profileManifest, feedManifest, hubManifest, nudgesManifest],
   );
 
   const activeKey =
@@ -152,6 +175,8 @@ export const HubSwitcher = ({
     <MembraneTop
       pillars={pillars}
       activeKey={activeKey}
+      unreadNudges={unreadNudges}
+      alertCount={alertCount}
       ariaLabel={ariaLabel}
       formatLabel={formatLabel}
       myAvatar={myAvatar}
@@ -159,6 +184,7 @@ export const HubSwitcher = ({
   ) : (
     <BottomTabBar
       pillars={pillars}
+      alertCount={alertCount}
       ariaLabel={ariaLabel}
       formatLabel={formatLabel}
       myAvatar={myAvatar}
@@ -166,11 +192,25 @@ export const HubSwitcher = ({
   );
 };
 
+// The number on the Nudges pillar. A count, so you know how much is waiting;
+// it was a waving hand until 2026-10-12.
+const NudgesCount: React.FC<{ count: number }> = ({ count }) => (
+  <span
+    className='hub-switcher__badge'
+    role='status'
+    aria-label={`${count} new`}
+  >
+    {count > 99 ? '99+' : count}
+  </span>
+);
+
 // ── Top: Membrane treatment ─────────────────────────────────────────
 
 interface MembraneTopProps {
   pillars: PillarConfig[];
   activeKey: PillarKey | null;
+  unreadNudges: number;
+  alertCount: number;
   ariaLabel: string;
   formatLabel: (m: (typeof messages)[keyof typeof messages]) => string;
   myAvatar: string | null;
@@ -179,15 +219,42 @@ interface MembraneTopProps {
 const MembraneTop = ({
   pillars,
   activeKey,
+  unreadNudges,
+  alertCount,
   ariaLabel,
   formatLabel,
   myAvatar,
 }: MembraneTopProps) => {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [arriving, setArriving] = useState(false);
+
+  // Arrival signal — glint travels along the wire toward Nudges when a
+  // Nudge arrives. Fires on genuine increase in unreadNudges only.
+  const prevUnread = useRef(unreadNudges);
+  useEffect(() => {
+    if (unreadNudges > prevUnread.current) {
+      setArriving(true);
+      const t = window.setTimeout(() => {
+        setArriving(false);
+      }, 900);
+      prevUnread.current = unreadNudges;
+      return () => {
+        window.clearTimeout(t);
+      };
+    }
+    prevUnread.current = unreadNudges;
+    return undefined;
+  }, [unreadNudges]);
+
   return (
-    <nav className='hub-switcher hub-switcher--top' aria-label={ariaLabel}>
+    <nav
+      className={`hub-switcher hub-switcher--top${arriving ? ' is-arriving' : ''}`}
+      aria-label={ariaLabel}
+    >
       <div
         className='hub-switcher__row'
         role='tablist'
+        ref={rowRef}
         data-walkthrough-anchor='nav-bar'
       >
         {pillars.map((pillar) => {
@@ -205,7 +272,7 @@ const MembraneTop = ({
               activeClassName='hub-switcher__pillar--active'
               data-walkthrough-anchor={`nav-${pillar.key}`}
             >
-              {pillar.key === 'you' && myAvatar ? (
+              {pillar.key === 'me' && myAvatar ? (
                 <img
                   src={myAvatar}
                   alt=''
@@ -219,19 +286,23 @@ const MembraneTop = ({
                 />
               )}
               {/* Label remains in the DOM as sr-only text so screen
-                  readers still announce each pillar even though the
-                  visible pillar carries the icon (or avatar, for YOU)
-                  only. */}
+                  readers still announce Me / Home / AWAWB / Hub /
+                  Nudges even though the visible pillar carries the
+                  icon (or avatar, for Me) only. */}
               <span className='hub-switcher__label hub-switcher__label--sr'>
                 {label}
               </span>
+              {pillar.key === 'nudges' && alertCount > 0 && (
+                <NudgesCount count={alertCount} />
+              )}
             </NavLink>
           );
         })}
       </div>
-      {/* The wire: a hairline under the row. It used to carry the glint
-          of an arriving Nudge toward the Nudges pillar; Nudges moved to
-          the top bar (2026-11-01), so it is only the line now. */}
+      {/* The wire stays, but no longer marks selection — that is the pillar
+          tile's job now (Tal 2026-08-13). It remains because it is the channel
+          for the nudge-arrival glint (`.is-arriving`), which travels its length
+          toward the Nudges pillar. */}
       <div className='hub-switcher__wire' aria-hidden />
     </nav>
   );
@@ -241,6 +312,7 @@ const MembraneTop = ({
 
 interface BottomTabBarProps {
   pillars: PillarConfig[];
+  alertCount: number;
   ariaLabel: string;
   formatLabel: (m: (typeof messages)[keyof typeof messages]) => string;
   myAvatar: string | null;
@@ -248,6 +320,7 @@ interface BottomTabBarProps {
 
 const BottomTabBar = ({
   pillars,
+  alertCount,
   ariaLabel,
   formatLabel,
   myAvatar,
@@ -268,7 +341,7 @@ const BottomTabBar = ({
           data-walkthrough-anchor={`nav-${pillar.key}`}
         >
           <span className='hub-switcher__icon' aria-hidden>
-            {pillar.key === 'you' && myAvatar ? (
+            {pillar.key === 'me' && myAvatar ? (
               <img
                 src={myAvatar}
                 alt=''
@@ -284,6 +357,9 @@ const BottomTabBar = ({
           <span className='hub-switcher__label hub-switcher__label--sr'>
             {formatLabel(pillar.label)}
           </span>
+          {pillar.key === 'nudges' && alertCount > 0 && (
+            <NudgesCount count={alertCount} />
+          )}
         </NavLink>
       );
     })}

@@ -24,15 +24,12 @@ import { NudgeArrivalToast } from 'mastodon/components/nudge_arrival_toast';
 import { BoothMiniPlayer } from 'mastodon/features/booth/components/booth_mini_player';
 import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
-import { SectionSwipe } from 'mastodon/features/sections/section_swipe';
-
 import { HubSwitcher } from './components/hub_switcher';
 import { KornerSidebar } from './components/korner_sidebar';
 import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkKosmos } from 'mastodon/features/kosmos/kronk_kosmos';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
-import { TopNudges } from './components/top_nudges';
 import { TopSearch } from './components/top_search';
 import { WalkthroughRunner } from 'mastodon/components/walkthrough/runner';
 import { PageActionProvider } from './components/page_action_context';
@@ -86,9 +83,7 @@ import {
   LiveRoom,
   EventDetail,
   Kalendar,
-  SectionShare,
-  SectionExplore,
-  SectionJoin,
+  Hub,
   Booth,
   Wachuneed,
   WachuneedBrand,
@@ -285,13 +280,6 @@ class SwitchingColumnsArea extends PureComponent {
                 route. The `/api/v1/directory` endpoint stays intact
                 for federation-facing external consumers. */}
             <Redirect from='/directory' to='/hub/kommunity/discover' />
-            {/* The four sections (2.2.0, Tal 2026-11-01). Explore takes the
-                bare /explore; Mastodon's own trends pages keep their
-                sub-routes (/explore/tags, /explore/links), and a signed-out
-                visitor still gets them at /explore. */}
-            {signedIn && <WrappedRoute path='/share' exact component={SectionShare} content={children} />}
-            {signedIn && <WrappedRoute path='/explore' exact component={SectionExplore} content={children} />}
-            {signedIn && <WrappedRoute path='/join' exact component={SectionJoin} content={children} />}
             <WrappedRoute path='/explore' component={Explore} content={children} />
             {/* /me — signed-in radial hub of self actions (Profile
                 / Timeline / Mates / Switch / Invite / Sign out).
@@ -421,8 +409,7 @@ class SwitchingColumnsArea extends PureComponent {
                 Reads the same Mates data the Kosmos background layer uses;
                 bundled synthesised edges until the Mates endpoint lands. */}
             <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />
-            {/* The Hub retired with 2.2.0: Explore holds what it did. */}
-            <Redirect from='/hub' to='/explore' exact />
+            <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             {/* The welcome page is gone (Tal 2026-10-21): the app opens on the feed. */}
             <Redirect from='/welcome' to='/home' exact />
@@ -962,19 +949,14 @@ class UI extends PureComponent {
           <KronkFrame>
             <KronkFrame.TopBand>
               <KronkWordmark />
-              {/* The pillars (YOU / Share / AWAWB / Explore / Join) are
-                  for signed-in people, and so are search and Nudges.
-                  Signed out, the band holds the wordmark alone and the
-                  top-band SCSS centres it (`:has()`). On a phone the
-                  pillars are the bottom tab bar; search and Nudges stay
-                  up here on every screen (2.2.0, Tal 2026-11-01). */}
+              {/* HubSwitcher pillars (Me / Home / Hub / Nudges) are
+                  useless for a signed-out visitor — Me/Nudges are
+                  auth-only, Home/Hub bounce to /about or the login
+                  page. Hide the whole thing when signed out. The
+                  top-band SCSS uses `:has(.hub-switcher)` to recentre
+                  the wordmark when the switcher isn't rendered. */}
               {this.props.identity.signedIn && layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
-              {this.props.identity.signedIn && (
-                <div className='top-tools'>
-                  <TopSearch />
-                  <TopNudges />
-                </div>
-              )}
+              {this.props.identity.signedIn && layout !== 'mobile' && <TopSearch />}
             </KronkFrame.TopBand>
             {/* Frame-provided per-space nav lives inline via
                 <SpaceHeaderRow> inside Stage now (see
@@ -988,7 +970,6 @@ class UI extends PureComponent {
             </KronkFrame.RightBand>
             <KronkFrame.BottomBand>
               {layout === 'mobile' && <HubSwitcher variant='bottom' currentAccountUsername={this.props.username} />}
-              {layout === 'mobile' && this.props.identity.signedIn && <SectionSwipe />}
             </KronkFrame.BottomBand>
             <KronkFrame.Stage>
               <SwitchingColumnsArea identity={this.props.identity} location={location} singleColumn={layout === 'mobile' || layout === 'single-column'} forceOnboarding={firstLaunch && newAccount}>

@@ -205,12 +205,29 @@ body.admin {
 }
 
 // ── Hub switcher — the Membrane nav ────────────────────────────────
-// Spec: docs/design.md. A row of pillars (YOU / Share / AWAWB /
-// Explore / Join) with a 1px wire along the bottom edge and a pool of
+// Spec: docs/design.md. A row of flat text pillars (Me / Home /
+// Hub / Nudges) with a 1px wire along the bottom edge and a pool of
 // purple light that glides under the active pillar. The wire is
 // decorative reinforcement; text colour carries active state so the
 // state remains legible without motion (see prefers-reduced-motion).
 .hub-switcher {
+  &__badge {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.35rem;
+    min-width: 1.05rem;
+    height: 1.05rem;
+    padding: 0 0.28rem;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-bright);
+    color: var(--semantic-text-on-accent);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.05rem;
+    text-align: center;
+    pointer-events: none;
+  }
+
   &--top {
     // Un-fixed in alpha.179 — flow child of .kronk-frame__top-band's
     // grid centre column (auto). Wraps to intrinsic width so it looks
@@ -295,8 +312,8 @@ body.admin {
 
   // Visually-hidden label — keeps the pillar accessible without
   // showing the text (icons carry the visual identity per §KRONK
-  // aesthetic). Screen readers still announce each pillar via the
-  // sr-only text + aria-label.
+  // aesthetic). Screen readers still announce "Me / Home / Hub /
+  // Nudges" via the sr-only text + aria-label.
   &__label--sr {
     position: absolute;
     width: 1px;
@@ -320,6 +337,30 @@ body.admin {
       var(--border-subtle) calc(100% - 8px),
       transparent 100%
     );
+  }
+
+  // Arrival signal — a bright glint travels the length of the wire
+  // toward the Nudges pillar (rightmost). Fires only when the parent
+  // acquires `is-arriving` on a genuine unread increase.
+  &.is-arriving &__wire::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 2px;
+    width: 60px;
+    border-radius: var(--radius-small);
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--kronk-purple-bright) 50%,
+      transparent
+    );
+    box-shadow:
+      0 0 8px 1px var(--kronk-purple-bright),
+      0 0 18px 3px
+        color-mix(in oklab, var(--kronk-purple-bright) 60%, transparent);
+    pointer-events: none;
+    animation: hub-switcher-arrival 900ms var(--ease-out);
   }
 
   // ── Bottom: mobile tab-bar (no Membrane, existing treatment) ─────
@@ -371,6 +412,33 @@ body.admin {
       font-size: 0.72rem;
       line-height: 1;
     }
+  }
+}
+
+@keyframes hub-switcher-arrival {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    left: calc(100% - 60px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-switcher.is-arriving .hub-switcher__wire::after {
+    animation: none;
+    display: none;
   }
 }
 
