@@ -52,8 +52,9 @@ export const noteAndroidApp = (): void => {
 export const inAndroidApp = (): boolean =>
   read(sessionStorage, IN_APP_KEY) === '1';
 
-// The released app, served from kronk.info's disk (not a Rails route).
-export const ANDROID_APP_URL = '/kronk.apk';
+// The released app, served from kronk.info's disk by nginx, not by Rails, so
+// it is absolute: shadow has no copy.
+export const ANDROID_APP_URL = 'https://kronk.info/kronk.apk';
 
 // An Android phone in an ordinary browser, where the app is worth offering.
 // Inside the app there is nothing to offer.
