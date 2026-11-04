@@ -71,6 +71,10 @@ would need app work; not a WebView shell, because web push doesn't work in one.
 - **The site knows it's the app** from the launch URL
   (`/?source=app&app=<versionCode>`, `utils/android_app.ts`). There it offers
   the app's update instead of "add to home screen".
+- **Android browsers are offered the app** (from 2026.11's release,
+  2026-11-04): the install banner says "Get the Kronk app" and downloads
+  `/kronk.apk`, and the footer's "Get the app" goes there too. iOS keeps the
+  Home Screen banner, as there is no iOS app.
 - **The app has its own version**, year.month (`2026.11`, code 20261100),
   not Kronk's: 3.0 is Kronk-native federation (Tal). The code stays above the
   legacy app's 21401 so that app's updater, which reads

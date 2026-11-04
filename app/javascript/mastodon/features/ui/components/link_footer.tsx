@@ -8,6 +8,11 @@ import {
   source_url,
   statusPageUrl,
 } from 'mastodon/initial_state';
+import {
+  ANDROID_APP_URL,
+  inAndroidApp,
+  offerAndroidApp,
+} from 'mastodon/utils/android_app';
 
 const DividingCircle: React.FC = () => <span aria-hidden>{' · '}</span>;
 
@@ -61,10 +66,19 @@ export const LinkFooter: React.FC<{
         <a href='/about'>
           <FormattedMessage id='footer.about' defaultMessage='About' />
         </a>
-        <DividingCircle />
-        <a href='/about'>
-          <FormattedMessage id='footer.get_app' defaultMessage='Get the app' />
-        </a>
+        {/* Android browsers download the app; inside it there is nothing
+            to get. */}
+        {!inAndroidApp() && (
+          <>
+            <DividingCircle />
+            <a href={offerAndroidApp() ? ANDROID_APP_URL : '/about'}>
+              <FormattedMessage
+                id='footer.get_app'
+                defaultMessage='Get the app'
+              />
+            </a>
+          </>
+        )}
         <DividingCircle />
         <Link to='/keyboard-shortcuts'>
           <FormattedMessage
