@@ -52,6 +52,14 @@ export const noteAndroidApp = (): void => {
 export const inAndroidApp = (): boolean =>
   read(sessionStorage, IN_APP_KEY) === '1';
 
+// The released app, served from kronk.info's disk (not a Rails route).
+export const ANDROID_APP_URL = '/kronk.apk';
+
+// An Android phone in an ordinary browser, where the app is worth offering.
+// Inside the app there is nothing to offer.
+export const offerAndroidApp = (): boolean =>
+  navigator.userAgent.includes('Android') && !inAndroidApp();
+
 export const androidAppBuild = (): number | null => {
   const build = read(localStorage, BUILD_KEY);
   return build ? parseInt(build, 10) : null;
