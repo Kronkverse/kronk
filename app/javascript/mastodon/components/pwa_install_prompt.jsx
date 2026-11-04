@@ -4,15 +4,18 @@ import { IconButton } from './icon_button';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import SmartphoneIcon from '@/material-icons/400-24px/smartphone.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
-import { androidAppBuild, inAndroidApp } from '../utils/android_app';
+import {
+  ANDROID_APP_URL,
+  androidAppBuild,
+  inAndroidApp,
+} from '../utils/android_app';
 
 import { Icon } from './icon';
 import { KornerPill } from './korner_pill';
 
-// Android used to be offered the old Kronk APK, which the server now answers
-// with "Kronk has moved to the web" (lib/kronk/legacy_app_gate.rb). Until a
-// replacement app ships, both platforms are offered the web app on the
-// home screen instead.
+// An Android browser is offered the Kronk app (kronk-app, a Trusted Web
+// Activity: Kronk full-screen, with push); iOS has no app, so it is offered
+// the web app on the Home Screen.
 //
 // Inside the Android app (utils/android_app) there is nothing to install, so
 // this offers the app's own update instead: `/version.json` names the
@@ -22,6 +25,7 @@ import { KornerPill } from './korner_pill';
 const messages = defineMessages({
   dismiss: { id: 'pwa.dismiss', defaultMessage: 'Dismiss' },
   appUpdate: { id: 'pwa.app_update', defaultMessage: 'Get it' },
+  getApp: { id: 'pwa.get_app', defaultMessage: 'Get it' },
 });
 
 const ANDROID_STORAGE_KEY = 'apk_install_dismissed';
@@ -113,6 +117,10 @@ class PwaInstallPrompt extends PureComponent {
     window.location.href = this.state.update.apkUrl;
   };
 
+  handleGetApp = () => {
+    window.location.href = ANDROID_APP_URL;
+  };
+
   handleDismiss = () => {
     const { platform } = this.state;
     if (platform === 'app-update') {
@@ -176,39 +184,61 @@ class PwaInstallPrompt extends PureComponent {
       );
     }
 
-    const isIos = platform === 'ios';
+    if (platform === 'android') {
+      return (
+        <div className='pwa-install-prompt pwa-install-prompt--android'>
+          <div className='pwa-install-prompt__icon'>
+            <Icon id='install' icon={SmartphoneIcon} />
+          </div>
+          <div className='pwa-install-prompt__message'>
+            <strong>
+              <FormattedMessage
+                id='pwa.get_app_title'
+                defaultMessage='Get the Kronk app'
+              />
+            </strong>
+            <span>
+              <FormattedMessage
+                id='pwa.get_app_message'
+                defaultMessage='Kronk full screen on your phone, with notifications.'
+              />
+            </span>
+          </div>
+          <div className='pwa-install-prompt__actions'>
+            <KornerPill
+              variant='primary'
+              label={this.props.intl.formatMessage(messages.getApp)}
+              onClick={this.handleGetApp}
+            />
+            <IconButton
+              icon='close'
+              iconComponent={CloseIcon}
+              onClick={this.handleDismiss}
+              title={this.props.intl.formatMessage(messages.dismiss)}
+              className='pwa-install-prompt__close'
+            />
+          </div>
+        </div>
+      );
+    }
 
     return (
-      <div className={`pwa-install-prompt pwa-install-prompt--${platform}`}>
+      <div className='pwa-install-prompt pwa-install-prompt--ios'>
         <div className='pwa-install-prompt__icon'>
-          <Icon id='install' icon={isIos ? ShareIcon : SmartphoneIcon} />
+          <Icon id='install' icon={ShareIcon} />
         </div>
         <div className='pwa-install-prompt__message'>
           <strong>
-            {isIos ? (
-              <FormattedMessage
-                id='pwa.install_title_ios'
-                defaultMessage='Add Kronk to your Home Screen'
-              />
-            ) : (
-              <FormattedMessage
-                id='pwa.install_title_android'
-                defaultMessage='Add Kronk to your home screen'
-              />
-            )}
+            <FormattedMessage
+              id='pwa.install_title_ios'
+              defaultMessage='Add Kronk to your Home Screen'
+            />
           </strong>
           <span>
-            {isIos ? (
-              <FormattedMessage
-                id='pwa.install_message_ios'
-                defaultMessage='In Safari, tap Share, then “Add to Home Screen”.'
-              />
-            ) : (
-              <FormattedMessage
-                id='pwa.install_message_android_web'
-                defaultMessage='In Chrome, open the menu, then “Add to Home screen”.'
-              />
-            )}
+            <FormattedMessage
+              id='pwa.install_message_ios'
+              defaultMessage='In Safari, tap Share, then “Add to Home Screen”.'
+            />
           </span>
         </div>
         <div className='pwa-install-prompt__actions'>
