@@ -39,6 +39,20 @@ RSpec.describe 'Nudges conversations' do
       expect(response.parsed_body.first[:unread_count]).to eq(0)
     end
 
+    # A Krew's chat is a space it Konnects (docs/spaces/krew.md, Chat).
+    it 'lists a Krew chat only while the Krew has its chat Konnected' do
+      krew = Krew.create!(slug: 'growers', name: 'Growers', access: 'open')
+      krew.krew_memberships.create!(account: me, role: 'seeder', source: 'direct')
+      conversation = Nudges::Conversation.krew_for!(krew)
+
+      get '/api/v1/nudges/conversations', headers: headers
+      expect(response.parsed_body).to be_empty
+
+      krew.krew_korners.create!(korner: 'nudges')
+      get '/api/v1/nudges/conversations', headers: headers
+      expect(response.parsed_body.pluck(:id)).to eq([conversation.id.to_s])
+    end
+
     # The messages association is ordered oldest first; an added
     # `order(id: :desc)` appended to it instead of replacing it.
     it 'previews the newest message, not the oldest' do

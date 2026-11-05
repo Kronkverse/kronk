@@ -4,7 +4,14 @@
 # buyer's lists of requests: what was asked, by whom, of which listing.
 class REST::WachuneedRequestSerializer < ActiveModel::Serializer
   attributes :id, :state, :quantity, :choices, :total_cents, :price_currency,
-             :message, :created_at, :responded_at, :listing
+             :message, :created_at, :responded_at, :listing,
+             :starts_at, :ends_at, :route, :details, :cancelled_at, :cancelled_by_seller
+
+  # Who called an accepted booking off: the seller, or the person who
+  # booked.
+  def cancelled_by_seller
+    object.cancelled_by_id.present? && object.cancelled_by_id == object.listing.account_id
+  end
 
   belongs_to :offerer, key: :buyer, serializer: REST::AccountSerializer
 

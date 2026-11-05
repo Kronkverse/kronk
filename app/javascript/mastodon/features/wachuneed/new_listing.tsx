@@ -35,6 +35,13 @@ import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useSameAs } from 'mastodon/hooks/useSameAs';
 
 import {
+  EMPTY_BOOKING,
+  ListingBookingEditor,
+  bookingStateFrom,
+  bookingStateToPayload,
+} from './listing_booking_editor';
+import type { BookingState } from './listing_booking_editor';
+import {
   ListingOptionsEditor,
   optionRowsFrom,
   optionRowsToPayload,
@@ -59,11 +66,9 @@ import type { VariantState } from './listing_variants_editor';
 // Kept intentionally simple in this pass: title + description +
 // category picker + optional price + photos (where it is: Konnect → Map,
 // a Place; decisions.md 2026-10-23, "Location fields become Konnect →
-// Map"). The
-// 5 interaction modes (buy_now, buy_or_bargain, book_service,
-// contact_to_discuss, workshop_join) are a follow-up — this composer
-// only produces a listing in the `live` state so it lands in the
-// browse view immediately.
+// Map"), and how people book it (listing_booking_editor.tsx). This
+// composer only produces a listing in the `live` state so it lands in
+// the browse view immediately.
 
 type Category = 'creation' | 'goods' | 'service';
 
@@ -271,6 +276,8 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [sectionId, setSectionId] = useState('');
   // What a buyer can choose (docs/spaces/wachuneed.md, Options).
   const [optionRows, setOptionRows] = useState<OptionRow[]>([]);
+  // How it is booked, if it is (docs/spaces/wachuneed.md, Booking).
+  const [booking, setBooking] = useState<BookingState>(EMPTY_BOOKING);
 
   const [variantState, setVariantState] =
     useState<VariantState>(EMPTY_VARIANTS);
@@ -332,6 +339,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         setVisibility(listing.visibility ?? 'public');
         setKrewIds(listing.krews?.map((k) => k.id) ?? []);
         setOptionRows(optionRowsFrom(listing.options));
+        setBooking(bookingStateFrom(listing.booking));
         loadPhotos(listing.photos ?? []);
         setLoadingListing(false);
       })
@@ -511,6 +519,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         // A wanted ad has nothing to choose.
         options: kind === 'offer' ? optionRowsToPayload(optionRows) : [],
         variants: kind === 'offer' ? variantStateToPayload(variantState) : {},
+        booking: kind === 'offer' ? bookingStateToPayload(booking) : {},
         ongoing: kind === 'offer' && ongoing,
         availability,
         announced,
@@ -564,6 +573,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       showSections,
       sectionId,
       optionRows,
+      booking,
       variantState,
       ongoing,
       availability,
@@ -753,6 +763,10 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
               rows={optionRows}
               onChange={setOptionRows}
             />
+          )}
+
+          {kind === 'offer' && (
+            <ListingBookingEditor state={booking} onChange={setBooking} />
           )}
 
           <ListingPhotoField state={photoState} showsChoices={showsChoices} />

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
@@ -134,6 +134,10 @@ interface AttachmentSectionProps {
   // page that shows it: fetch the record again so its audience label is
   // current. Left out, only the tiles here update.
   onAudienceChange?: () => void;
+  // Every Konnection this record has, both ways, whenever they change: for
+  // a page that shows some of them in its own way (a projekt's Kuddle as
+  // a call frame) and needs to know as soon as one is made.
+  onKonnections?: (rows: ApiAttachmentJSON[]) => void;
   // Under the grid, inside the section (the Krew page's tray). A function
   // gets the one that opens the picker.
   children?: React.ReactNode | ((openPicker: () => void) => React.ReactNode);
@@ -155,6 +159,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   leading,
   renderKonnect,
   onAudienceChange,
+  onKonnections,
   children,
   className,
 }) => {
@@ -163,6 +168,9 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   const { attached, attachedFrom, loading, removeLink, refresh } =
     useAttachments(korner, recordId);
   const [confirmDialog, confirmThen] = useConfirmThen();
+  useEffect(() => {
+    onKonnections?.([...attached, ...attachedFrom]);
+  }, [attached, attachedFrom, onKonnections]);
   // A Same as change or a Diskonnect that failed.
   const [linkError, setLinkError] = useState<string | null>(null);
   const targets = useAttachTargets(korner);

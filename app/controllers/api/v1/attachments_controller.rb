@@ -131,7 +131,7 @@ class Api::V1::AttachmentsController < Api::BaseController
     # Someone who can neither remove it nor see it learns nothing of it.
     return render json: { error: 'attachment not found' }, status: 404 unless policy.destroy? || policy.show?
     return render json: { error: 'not authorised to remove this attachment' }, status: 403 unless policy.destroy?
-    return render json: { error: "a Krew's own album stays linked to it" }, status: 422 unless Kronk::AttachmentEffects.removable?(@attachment)
+    return render json: { error: "a Krew's own album or projekt stays linked to it" }, status: 422 unless Kronk::AttachmentEffects.removable?(@attachment)
 
     @attachment.destroy
     Kronk::AttachmentEffects.unlinked(@attachment)

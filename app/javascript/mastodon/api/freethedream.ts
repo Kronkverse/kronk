@@ -12,7 +12,6 @@ import type {
   FtdItem,
   FtdItemKind,
   FtdItemRow,
-  FtdJoining,
   FtdMyceliumItem,
   FtdProject,
   FtdProjectSummary,
@@ -28,8 +27,8 @@ export interface FtdProjectParams {
   title?: string;
   description?: string;
   ends_on?: string | null;
-  joining?: FtdJoining;
   cover_media_attachment_id?: string | null;
+  krew_id?: string;
   done?: boolean;
   parent_id?: string;
 }
@@ -53,8 +52,11 @@ export interface FtdMyceliumParams {
   quantity?: number;
 }
 
-export const apiFtdProjects = (scope: 'all' | 'mine') =>
-  apiRequestGet<FtdProjectSummary[]>(`${base}/projects`, { scope });
+export const apiFtdProjects = (scope: 'all' | 'mine', krewId?: string) =>
+  apiRequestGet<FtdProjectSummary[]>(`${base}/projects`, {
+    scope,
+    krew_id: krewId,
+  });
 
 export const apiFtdProject = (id: string) =>
   apiRequestGet<FtdProject>(`${base}/projects/${id}`);
@@ -87,7 +89,12 @@ export const apiFtdUpdateProject = (id: string, project: FtdProjectParams) =>
 export const apiFtdRemoveProject = (id: string) =>
   apiRequestDelete(`${base}/projects/${id}`);
 
-export type FtdProjectAction = 'join' | 'leave' | 'take_over';
+export type FtdProjectAction =
+  | 'join'
+  | 'leave'
+  | 'join_gang'
+  | 'leave_gang'
+  | 'take_over';
 
 export const apiFtdProjectAction = (id: string, action: FtdProjectAction) =>
   apiRequestPost<FtdProject>(`${base}/projects/${id}/${action}`);

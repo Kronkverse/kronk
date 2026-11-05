@@ -8,7 +8,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
   let(:alice) { Fabricate(:user) }
   let(:bob)   { Fabricate(:user) }
   let(:cara)  { Fabricate(:user) }
-  let!(:doof) { api(alice, :post, '/freethedream/projects', project: { title: 'Mini Doof' }) }
+  let!(:doof) { api(alice, :post, '/freethedream/projects', project: { title: 'Mini Doof', krew_id: Fabricate(:krew, seeded_by: alice.account).id }) }
 
   def headers_for(user)
     token = Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses')
@@ -42,6 +42,75 @@ RSpec.describe 'API V1 FreeTheDream overview' do
     it 'ignores an event linked by someone outside the project' do
       link(cara, event_by(cara, 'Not ours'))
       expect(api(alice, :get, "/freethedream/projects/#{doof['id']}")['event']).to be_nil
+    end
+
+    # docs/spaces/freethedream.md, Getting together: anyone in the projekt
+    # can make one, for it or for one Komponent, and the projekt lists its
+    # Komponents' events too, soonest first, until they're over.
+    it "gets people together: anyone's event, for a Komponent, on the projekt too", :aggregate_failures do
+      api(bob, :post, "/freethedream/projects/#{doof['id']}/join")
+      sound = api(bob, :post, '/freethedream/projects', project: { title: 'Sound', parent_id: doof['id'] })
+      expect(api(bob, :get, "/freethedream/projects/#{sound['id']}")['can']).to include('link_event' => true)
+
+      jam = event_by(bob, 'Sound jam')
+      jam.update!(start_time: 3.days.from_now, end_time: 3.days.from_now + 2.hours)
+      api(bob, :post, '/attachments', source_slug: 'kalendar', source_id: jam.id, target_slug: 'freethedream', target_id: sound['id'].to_i, kind: 'link')
+      link(bob, event_by(bob, 'Mini Doof weekend'))
+      over = event_by(bob, 'Last year')
+      over.update!(start_time: 2.days.ago, end_time: 1.day.ago)
+      link(bob, over)
+
+      events = api(bob, :get, "/freethedream/projects/#{doof['id']}")['events']
+      expect(events.pluck('title')).to eq ['Sound jam', 'Mini Doof weekend']
+      expect(events.first['for']).to include('id' => sound['id'], 'title' => 'Sound')
+      expect(events.last['for']).to be_nil
+
+      on_sound = api(bob, :get, "/freethedream/projects/#{sound['id']}")['events']
+      expect(on_sound.pluck('title')).to eq ['Sound jam']
+      expect(on_sound.first['for']).to be_nil
+    end
+  end
+
+  # docs/spaces/freethedream.md, Joining a Komponent.
+  describe 'joining a Komponent' do
+    let(:sound) do
+      api(bob, :post, "/freethedream/projects/#{doof['id']}/join")
+      api(bob, :post, '/freethedream/projects', project: { title: 'Sound', parent_id: doof['id'] })
+    end
+    let(:heard) { [] }
+
+    before do
+      allow(Kronk::KornerEvents).to receive(:publish).and_wrap_original do |original, name, **payload|
+        heard << [name, payload[:recipient_account_id]] if name.start_with?('freethedream.gang.')
+        original.call(name, **payload)
+      end
+    end
+
+    it 'is one tap for someone in the projekt, and shows on the Komponent and its tile', :aggregate_failures do
+      expect(api(alice, :get, "/freethedream/projects/#{sound['id']}")).to include('in_gang' => false, 'can' => include('join_gang' => true))
+
+      expect(api(alice, :post, "/freethedream/projects/#{sound['id']}/join_gang")['in_gang']).to be true
+      expect(api(alice, :get, "/freethedream/projects/#{doof['id']}")['sections'].first).to include('title' => 'Sound', 'joined' => true)
+
+      expect(api(alice, :post, "/freethedream/projects/#{sound['id']}/leave_gang")['in_gang']).to be false
+    end
+
+    it "is only for someone in the projekt, and only a Komponent's", :aggregate_failures do
+      api(cara, :post, "/freethedream/projects/#{sound['id']}/join_gang")
+      expect(response).to have_http_status(403)
+      expect(api(alice, :get, "/freethedream/projects/#{doof['id']}")['can']).to include('join_gang' => false)
+      api(alice, :post, "/freethedream/projects/#{doof['id']}/join_gang")
+      expect(response).to have_http_status(403)
+    end
+
+    it 'tells who joined when people talk in it or add to it, not the one who did', :aggregate_failures do
+      api(alice, :post, "/freethedream/projects/#{sound['id']}/join_gang")
+      api(bob, :post, "/freethedream/projects/#{sound['id']}/join_gang")
+
+      api(bob, :post, '/freethedream/comments', subject_type: 'project', subject_id: sound['id'], body: 'Who has a PA?')
+      api(bob, :post, '/freethedream/items', item: { project_id: sound['id'], kind: 'need', title: 'PA system', quantity: 1 })
+
+      expect(heard).to contain_exactly(['freethedream.gang.talked', alice.account.id], ['freethedream.gang.updated', alice.account.id])
     end
   end
 

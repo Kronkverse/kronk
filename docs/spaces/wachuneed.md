@@ -45,14 +45,23 @@ the same way: "Message the poster".
 
 ## What you can do
 
-**Browse.** `/hub/wachuneed` has six sections (manifest `views`, rotator
+**Browse.** `/hub/wachuneed` has seven sections (manifest `views`, rotator
 header). The space is Wachuneed; the sections have plain names (Tal,
 2026-10-12; they were Wachuneed, Wachumissing and Wachugot, and the old
 addresses redirect):
 
-- **Offered** (default): everyone's `live` listings on offer
-  (`?kind=offer`), newest first, in the shared `SpaceGrid`
-  (`features/wachuneed/wachuneed_view.tsx`).
+- **All** (default, `/hub/wachuneed`; Tal, 2026-10-29, Kommons "Home
+  Page", https://kronk.info/hub/kommons/p/117522482475089755): one page
+  that scrolls down, with a row that scrolls sideways, the next tile
+  peeking in (`<SpaceGrid layout='row'>`), for each of **Offered**,
+  **Desired** and **Shops**, in that order (`home_view.tsx`). Each row
+  shows the first 12 (listings newest first, shops in the Shops order)
+  and has **See all**, which opens that section. A row with nothing in it
+  is left out; with nothing anywhere the page says "Nothing on offer yet"
+  and offers **List something**.
+- **Offered** (`/hub/wachuneed/offered`; the default until 2026-10-29):
+  everyone's `live` listings on offer (`?kind=offer`), newest first, in the
+  shared `SpaceGrid` (`features/wachuneed/wachuneed_view.tsx`).
 - **Desired** (`/hub/wachuneed/desired`): everyone's `live` wanted
   listings (`?kind=wanted`), with a **Post a wanted ad** button above the
   grid.
@@ -126,8 +135,9 @@ order) and `photo_url`, the cover. There is no delete endpoint.
 
 ## Shops
 
-A shop is one seller's live offers on a page of their own, under sections
-they name (Tal, 2026-10-12; Kommons "Market Layout"). It is a view of
+A shop is one seller's live offers on a page of their own, in Kollections
+they name (Tal, 2026-10-12; Kommons "Market Layout"; named Kollections
+2026-10-29). It is a view of
 listings the seller already has, not a second thing to fill: a listing keeps
 appearing in Offered and the feed exactly as before.
 
@@ -135,13 +145,20 @@ appearing in Offered and the feed exactly as before.
   the Ж menu is **Open a shop** (Kommons "Open a shop button", 2026-10-21:
   it was a button on Mine, out of place beside Shops)
   (`/hub/wachuneed/my-shop`, `features/wachuneed/shop_edit.tsx`): a name, an
-  optional line and picture (your avatar until you add one), your sections
-  in the order you want (up to `ListingShop::MAX_SECTIONS`), and two
+  optional line and picture (your avatar until you add one), your
+  Kollections in the order you want (up to `ListingShop::MAX_SECTIONS`), and two
   settings. One shop per account. **Close shop** removes the page and its
-  sections and leaves every listing up.
-- **Sections** are the seller's own words. The listing form shows **Section
-  of your shop** once you have sections; a listing sits in one or in none.
-  Removing a section drops its listings back to "Everything else".
+  Kollections and leaves every listing up.
+- **Kollections** (Tal, 2026-10-29; Kommons "Kollections",
+  https://kronk.info/hub/kommons/p/117522474156930637) are lines of what
+  the seller makes, in their own words: a line of tinctures, a line of
+  creams. Underneath they are the shop's sections
+  (`listing_shop_sections`; called Sections until then). The seller names,
+  orders and removes them in **Shop details**. A listing sits in one or in
+  none: the listing form and the shop item composer still ask **Section of
+  your shop**, and the shop page's **Arrange Kollections** changes it in
+  place. Removing a Kollection drops its listings back to "Everything
+  else".
 - **The shop page** is `/hub/wachuneed/shop/<username>`
   (`shop_page.tsx`), the shop front. It is the standard detail page
   (`<KornerDetail>`; rebuilt on it 2026-10-13 after Tal found the first
@@ -151,10 +168,21 @@ appearing in Offered and the feed exactly as before.
   subtitle: the shop's name and line. Facts line (`<KornerMeta>`): the
   seller, the place, how many listings. One action: **Message the seller**
   (same rule as on a listing, `can_message`). Then what the shop says of
-  itself (about, how to pay, pickup and postage), its sections as pills
-  that jump down the page when there is more than one, and each section
-  that has something in it over a `<SpaceGrid>`, ending with "Everything
-  else". Wanted ads are not part of a shop. The owner changes the shop from
+  itself (about, how to pay, pickup and postage), its Kollections as pills
+  that jump down the page when there is more than one, and each Kollection
+  that has something in it as a row that scrolls sideways, the next tile
+  peeking in (`<SpaceGrid layout='row'>`), ending with "Everything else". A
+  shop with no Kollections shows its items in the ordinary grid. Wanted ads
+  are not part of a shop.
+- **The owner on their own shop page** sees every Kollection, empty ones
+  too, each row ending in an **Add an item** tile (it opens the shop item
+  composer; the new item lands in no Kollection until placed), **Add a
+  Kollection** under the last row (Shop details, with a new one ready to
+  name: `/hub/wachuneed/my-shop?kollection=new`), and **Arrange
+  Kollections** in the action bar, which lists each row's items with a
+  choice of Kollection beside them. A change saves at once, as the listing's
+  own edit (`PATCH /api/v1/wachuneed/listings/:id` with
+  `listing_shop_section_id`). The owner changes the shop from
   **Edit** on the Ж menu, and **+** there is **Add an item**: in your own
   shop and in the builder it opens the shop item composer, where everywhere
   else in Wachuneed it is **New listing** (the page registers a page action
@@ -165,13 +193,12 @@ appearing in Offered and the feed exactly as before.
   shop with something on offer as a tile in the standard grid
   (`shop_card.tsx`, a `<SpaceCard>`): the shop's picture (the cover of its
   newest item when it has none, then the seller's avatar), its name, how
-  many listings, and the place as the chip. Offered opens with the first
-  four shops as the same cards under **Shops** (`shop_row.tsx`), with
-  **All shops** when there are more, then **Listings**. Mine opens the
-  same way with your own shop under **My shop** (Tal, 2026-10-13: cards
-  in place of the pills on Offered and of the See my shop / Edit shop
-  buttons on Mine); with no shop Mine shows just your listings. Order in
-  Shops and Offered: your Mates' shops first, then the
+  many listings, and the place as the chip. The landing's **Shops** row
+  shows the same cards (Offered opened with the first four until
+  2026-10-29). Mine opens with your own shop as the same card under **My
+  shop** (`shop_row.tsx`; Tal, 2026-10-13: a card in place of the See my
+  shop / Edit shop buttons); with no shop Mine shows just your listings.
+  Order in Shops and the landing: your Mates' shops first, then the
   oldest shop first, up to 60. Search and paging are not built.
 - **Who can see the shop** (`visibility`, the reach ladder, default
   everyone on Kronk; see Who can see it). Whoever can see it finds it in
@@ -393,6 +420,77 @@ Not built: a counter-offer (`amount_cents` is there for it), a message with
 the request (the API takes one; the page doesn't ask), requests lapsing,
 and counted stock going down on accept.
 
+## Booking
+
+Kommons "Goods & Services" (Tal, 2026-10-29,
+https://kronk.info/hub/kommons/p/117522445809187696): "Message the user" is
+a cop out for a service; a member should see when a naturopath can take
+them, or book a ride at a time, from one place to another. Tal's answers
+(on #2423, which held the first design): a listing is **built from parts**,
+with templates as editable presets rather than one fixed mode; the seller
+chooses how they are available (weekly hours, posted times, or both); an
+accepted booking goes into both people's Kalendars; bookings and jobs are
+built together.
+
+Built: the parts and the seller's availability, booking against them,
+accepted or declined in Requests, and accepted bookings in both people's
+Kalendars.
+
+- **Parts** (`Listing::BOOKING_PARTS`), each something the person booking
+  gives: **A time** (`time`), **From and to** (`route`, two places on the
+  Map, for a trip or a job) and **Their details** (`details`, what they
+  need in their own words, asked with the seller's own line).
+- **Templates** (`listing_booking_editor.tsx`, **How people book it** in the
+  listing form, on offer only): **Ask for this** (no parts: today's
+  request), **Appointment** (a time, an hour long, weekdays nine to five),
+  **Job** (a time, from and to, and "What needs doing?") and **Open
+  request** (a time and their details). A template only fills the parts
+  in; the seller ticks parts on or off and changes anything. Which template
+  it started from is kept as a label.
+- **When the seller is free** (with A time): **How long** one booking takes
+  (or no set length), **Weekly hours** (a day, from and to, in the seller's
+  own time zone, kept with them) and **Times you post** (each a start,
+  kept only while it is ahead). Either, both, or neither: with neither,
+  people suggest a time.
+- **On the listing page** (`listing_booking_summary.tsx`): how long it
+  takes, the weekly hours (naming the seller's time zone when it isn't
+  yours), the posted times in your own time, or "Suggest a time", and what
+  else it asks for.
+- **Booking it** (`booking_fields.tsx`, above **Book**, which takes the
+  place of Ask for this): only the parts the listing has. **A time** is
+  the free times for two weeks grouped by day, in your own time, with
+  **Later times** for the next two (`GET
+/api/v1/wachuneed/listings/:id/times`, `Wachuneed::BookingTimes`: the
+  weekly hours cut into starts one booking-length apart, an hour when
+  there is no set length, plus the posted times, less any time a booking
+  waiting or accepted already holds); with no hours and no posted times
+  it is **When suits you**, any time ahead. **From and to** is two pins
+  dropped on the Map picker; only the seller sees them, and only on this
+  booking. **Their details** is a box under the seller's own question.
+  Book stays greyed until every part is given.
+- **A booking is a request** (`listing_offers`, see Requests) with
+  `starts_at`, `ends_at` (when there is a set length), `route` and
+  `details`. The server checks every part is there and the time is still
+  free (`ListingOffer#booking_given`). Unlike a plain request, one person
+  can have several bookings of a listing waiting, and accepting one
+  leaves the listing up for the next.
+- **In Requests** a booking shows when, the from and the to, and what was
+  asked; the seller accepts or declines as with any request. Once
+  accepted, either of the two can **Call it off** (`POST
+/api/v1/wachuneed/requests/:id/cancel`, which asks first): it becomes
+  `cancelled`, its time opens again, and the other one is nudged
+  (`wachuneed.offer.cancelled`).
+- **In Kalendar.** An accepted booking with a time shows under Kalendar's
+  **Me** for both of them, with the other person, until it is called off
+  ([`kalendar.md`](kalendar.md), Bookings).
+- **Stored** as JSON in `listings.booking`, cut to shape by
+  `Listing#booking=` (unknown parts dropped, settings of a part left out
+  dropped with it, bad hours and past times dropped); `{}` is a listing
+  that is not booked. Sent on create; on an edit it replaces the whole
+  thing when present and is left alone when absent. Served on the detail
+  response only. A wanted ad has none. The shop item composer doesn't ask;
+  the listing form can set it on a shop item.
+
 ## Brands
 
 Brands whose mission members have looked into and respect (Tal,
@@ -490,7 +588,8 @@ a hit shows only to whoever can see the listing (`PolicyFilter`).
   media belong to no post, so `Vacuum::MediaAttachmentsVacuum` excludes them
   from its sweep of unattached uploads.
 - **`listings`** also carries `ongoing`, `availability`, `announced`,
-  `variants` and `options` (see The shop builder, Options), and
+  `variants`, `options` and `booking` (see The shop builder, Options,
+  Booking), and
   `visibility` (integer enum `public 0 | mates 1 | orbit 3 | self_only 4`,
   as ArtPiece; see Who can see it). `enquiries` is ignored, to be
   dropped.
@@ -503,10 +602,14 @@ a hit shows only to whoever can see the listing (`PolicyFilter`).
 - **`listing_offers`**: a request (see Requests). `quantity`, `choices`
   (`{ variant: [...], options: [{ name, choice, extra_cents }] }`),
   `total_cents` and `price_currency` as asked, an optional `message`, a state
-  (`pending | accepted | declined | withdrawn | expired`) and `responded_at`.
-  `amount_cents` is for a counter-offer, which nothing makes yet. `accept!`
-  reserves a one-off. The model publishes `wachuneed.offer.made`,
-  `.accepted` and `.declined` on the korner event bus.
+  (`pending | accepted | declined | withdrawn | expired | cancelled`) and
+  `responded_at`. A booking adds `starts_at`, `ends_at`, `route` (`{ from,
+to }`, each `{ lat, lng, name? }`), `details`, `cancelled_at` and
+  `cancelled_by_id`; a partial index on (`listing_id`, `starts_at`) over
+  waiting and accepted ones finds held times. `amount_cents` is for a
+  counter-offer, which nothing makes yet. `accept!` reserves a one-off
+  that isn't booked. The model publishes `wachuneed.offer.made`,
+  `.accepted`, `.declined` and `.cancelled` on the korner event bus.
 - **`wachuneed_brands`**: `account_id` (who proposed it), `name` (unique
   ignoring case), `url`, `why`, `category`, `media_attachment_id` (the
   picture, excluded from the unattached-media sweep), `listed_at` (when it
@@ -522,12 +625,14 @@ returned to Wachuneed, slug and all, on 2026-09-07.
 
 - **Counter-offers.** A request is at the asked price; offering less
   (`listing_offers.amount_cents`) is not built.
-- **Interaction modes.** The design lets the seller pick per listing:
-  `buy_now`, `buy_or_bargain` (or nearest offer), `book_service`,
-  `contact_to_discuss`, `workshop_join`. None exist in code. Undecided: whether
-  a listing can switch mode, and how deep `book_service` and `workshop_join`
-  tie into Kalendar (is a paid workshop one primitive with two views, or two
-  that reference each other?).
+- **Booking, still to build** (see Booking): a marker for bookings on
+  Kalendar's Spiral; reminders before it starts (Nudges has no scheduled jobs yet); days off
+  on top of the weekly hours; how far ahead and how much notice. Undecided:
+  a class or workshop that many people book into (one item with seats, or
+  a Kalendar event Konnected to it).
+- **Other interaction modes.** The older design also had `buy_now`,
+  `buy_or_bargain` (or nearest offer) and `contact_to_discuss`. None exist
+  in code beyond Ask for this and Message the poster.
 - **Managing your listings.** Editing and taking down (closing) are built
   (above); there is still no way to reserve or delete a listing from the
   app, and no draft flow. The `auto_close_after_days` setting (default 90)

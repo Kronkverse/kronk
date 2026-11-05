@@ -1,7 +1,17 @@
 # FreeTheDream (`freethedream`)
 
-**Manifest:** `config/korners/freethedream.yaml` · **Mount:** `/hub/freethedream` ·
-`enforced: true` (native; live on the Hub since 2026-10-13, no feed card yet)
+**Manifest:** `config/korners/freethedream.yaml` · **Mount:** under its Krew, `/hub/krew/<krew>/p/<projekt>` ·
+`enforced: true` (native; live since 2026-10-13, no feed card yet) ·
+`hub_visible: false` (off the Hub and the rail since 2026-10-30: emergences
+live inside Krews and are reached from a Krew's page)
+
+**Called Projekts on screen** since 2026-10-30 (Tal): the space is
+**Projekts** and one of its records a **projekt** (`konnect.noun`), in
+the manifest and every string. FreeTheDream, emergence and `Project` stay
+the names in code, routes and the database, and in this doc. The Konnect
+picker offers projekts only, not their gangs and fractals
+(`Freethedream::Project.attachment_candidates`); a gang already Konnected
+still opens by its id.
 
 ## Purpose
 
@@ -10,6 +20,17 @@ together.** People **seed emergences**, and the people who join them
 organise the work from the bottom up: anyone in an emergence can coalesce a
 gang, say what needs bringing, offer what they have and bring an idea to
 life. Nobody approves from above.
+
+**Any kind of shared effort** (Tal, 2026-10-30). A projekt is not only an
+in-person event: it can be a gathering, a creative work, a tool being built
+(the Mainframe Krew with gangs for the app and for shadow) or an
+organisation taking shape (gangs for its constitution and its
+incorporation). Nothing in the mechanism assumes a date or a place, so the
+words don't either. A date is **When (optional)** in Edit, for a day it
+happens or is due, **What it needs** asks for things, skills, time, money
+or space (the item categories), and an event is an offer on the Overview
+(**Getting together for it?**), not a given. Write new copy the same way:
+no example or label that only fits a party.
 
 **The words** (Tal, 2026-10-15). The nucleus is the people creating
 something, not the thing itself, so the words name the people:
@@ -23,7 +44,7 @@ something, not the thing itself, so the words name the people:
 | **Actualise** (bring an idea to life)  | Jobs, Ideas              | `Item` kind `job`, `Claim`          |
 | **actualiser**; you **jump on board**  | claim a slot             | `Claim`                             |
 | **On offer**                           |                          | `Item` kind `offer`                 |
-| **Krew** (the emergence's people)      | Dreamers                 | the `Krew` it was made with         |
+| **Krew** (the emergence's people)      | Dreamers                 | the `Krew` it lives in (`krew_id`)  |
 
 It is built on a syntropic framework: collaboration is contributor-driven,
 and **Mycelium** (Syntropic World's synergistic audit, Tal 2026-10-19) is
@@ -98,23 +119,65 @@ five for one person
 
 ### The Krew
 
-Everyone in an emergence is in **its Krew** (Tal, 2026-10-15). The Krew is
-made when the emergence is seeded (`Project#ensure_krew!`; emergences seeded
-before then got theirs in `20261015130200_make_freethedream_krews`), named
-after it, seeded by its owner, and **open** or **Ask to join** to match the
-emergence. It's a real Krew: its page, its chat in Nudges, posting to it.
+**An emergence lives in a Krew, and a Krew can hold several** (Tal,
+2026-10-30, the proposals "More interconnectedness with krew space" and
+"Access of a FTD space"). The Krew is the home: its page shows its
+emergences in their own Projekts section, whose **New projekt** card (or
+**Konnect → New projekt**) opens the composer with `?konnect=krew:<id>`
+(docs/spaces/krew.md, The surfaces). The composer asks which of your
+Krews it lives in (`krew_id`, required for a new emergence; only an active
+Krew you're in), and the server Konnects the two
+(`Project#join_krew_members!`, `Kronk::AttachmentEffects.link!`). That link
+can't be taken off (`Kronk::ProjektLinks`), as a Krew album's can't.
 
-**The two hold the same people, both ways** (Tal: two-way). Joining the
-emergence puts you in the Krew and leaving takes you out
-(`Freethedream::Membership`); joining the Krew, from its page, an invite or
-its link, joins the emergence, and leaving the Krew leaves it
-(`KrewMembership`). Each side checks before it acts, so they don't loop.
-Leaving either takes you off what you were actualising and takes out what you
-shared from your Mycelium. Removing the emergence archives its Krew. The
-landing page's **Krew** row links to the Krew's page.
+**A projekt lives inside its Krew, not in a space of its own** (Tal,
+2026-10-30). Its pages are under the Krew: `/hub/krew/<krew>/p/<projekt>`
+(a gang's and a fractal's too, `…/p/<projekt>/<list>` for a list of its
+work) and `/hub/krew/<krew>/i/<item>`, so they wear the Krew's badge and
+back goes to the Krew (a gang's to its projekt). There is no list of every
+projekt and no settings page: `/hub/freethedream`, its views and
+`/hub/freethedream/settings` go to your Krews. The composer is
+`/hub/krew/composer/projekt` (the manifest's `compose.route`), over the
+Krews page; the Krew page's New projekt and the Konnect picker's **Seed a
+projekt** open it with `?konnect=krew:<id>`, which is the Krew it lives in,
+and Cancel goes back there. The
+korner itself stays, out of sight (`hub_visible: false`): its manifest is
+what Konnect, link previews and search read. Addresses the server makes
+(`path:` on the primary resource, notifications) are still
+`/hub/freethedream/p/<id>` and `/i/<id>`; the page moves them under the
+Krew once it knows it (`useKrewAddress`, from `krew` on a projekt and
+`krew_slug` on an item or a list row).
 
-**One list of requests** (Tal, 2026-10-19: err syntropic). Asking to join a
-by-request emergence is a request to its Krew (`Project#ask_to_join!`),
+Until 2026-10-30 it was the other way round: seeding an emergence made a
+Krew of its own, named after it (`Project#ensure_krew!`, still there for an
+emergence that somehow has none). Those Krews stay, each holding the
+emergence it was made with, and `20261030180000_konnect_projekts_to_their_krews`
+Konnected each pair so their Krew pages show them.
+
+**The Krew's people are the emergence's people.** Everyone in the Krew is
+in each of its emergences: a new emergence starts with all of them, and
+joining the Krew, from its page, an invite or its link, joins every
+emergence in it (`KrewMembership#join_emergence`). Joining from an
+emergence's page joins the Krew (`Freethedream::Membership#join_krew`).
+Leaving is the Krew's: an emergence page has no Leave, and leaving the
+Krew leaves every emergence in it, taking you off what you were
+actualising and out of what you shared from your Mycelium. Removing an
+emergence leaves its Krew as it is. The landing page's **Krew** row links
+to the Krew's page (**Open the Krew**), and the Krew's page leads back
+through the emergence's tile in its Spaces (Tal's proposal "'Open the
+Krew' Button", 2026-10-30).
+
+**Who sees it follows the Krew** (Tal, 2026-10-30). An emergence in a
+listed Krew (open, Ask to join, or with requirements) can be looked at by
+anyone signed in, and only its people act in it; one in an invite-only Krew
+is as if it weren't there to anyone outside (`Project#visible_to?`; 404 on
+its page, its items and Join, and left out of All emergences). The way in
+is the Krew's too (`Project#joining_via_krew`, the `joining` field): **Join
+{Krew}** for an open Krew, **Ask to join {Krew}** for an Ask-to-join one,
+and **Open the Krew** for the rest, which are joined from the Krew's page.
+
+**One list of requests** (Tal, 2026-10-19: err syntropic). Asking to join an
+emergence in an Ask-to-join Krew is a request to that Krew (`Project#ask_to_join!`),
 whether asked on the emergence's page or the Krew's, and everyone in hears.
 Anyone in can let them in or say not now, from either page; the
 emergence's **Asking to join** panel is the Krew's list. Requests made on
@@ -187,42 +250,59 @@ getting involved, not for doing the work itself:
   **New talk**, the gangs with talk from other people they haven't
   looked at, with a count (opening a gang clears its count); and **On
   you**, what they're actualising and what they're bringing.
-- **Gangs** as tiles, each with how many people have a hand in it and its
-  progress ("3 of 8 sorted"). **Nobody leads a gang**, so no owner shows on
-  a tile or a gang's page (the owner still exists in the data, for who may
-  edit it). The gangs you have a hand in come first, tagged with any new
-  talk. Members get **+ Coalesce a gang**.
-- **Get involved**: a card for each of **Still needed**, **Thing Bringing**
-  ("Gear and supplies needed"), **Actualise** ("Bring an idea to life")
-  and **On offer**, each with a count, as tiles that reflow (two across on
-  a phone). Phone views scroll vertically only, never sideways (Tal's
-  standing rule; `docs/decisions.md`, 2026-10-22). Each opens its own page,
-  `/p/:id/needed`, `/bring`, `/actualise`, `/offers` (the old `/gear`,
-  `/jobs` and `/ideas` redirect).
-- **Krew**: everyone in the emergence as larger cards that reflow into
-  rows, **whoever did something in it most recently first**, each with
-  what they're on (actualising 2, bringing 3 things) and when they were
-  last active, and **Open the Krew** to its page. Doing something is an
-  update (adding, bringing, jumping on board, marking done), a comment, or
-  joining. Looking at a page is not counted: that would be watching people.
+- **Komponents** as tiles (a Komponent is a gang in the code: Tal,
+  2026-10-30), each with how many people have a hand in it and its
+  progress ("3 of 8 sorted"). **Nobody leads a Komponent**, so no owner
+  shows on a tile or a Komponent's page (the owner still exists in the
+  data, for who may edit it). The ones you have a hand in come first,
+  tagged with any new talk. Members get **+ Add a Komponent**.
+- No lists of work, Krew row or joining on a projekt's own page (Tal,
+  2026-10-30): it is part of its Krew, whose page has its people, and a
+  clearer view of what needs work is still to be designed. The lists'
+  own pages (`/p/:id/needed`, `/bring`, `/actualise`, `/offers`) stay.
+  Done, Hand over and Remove are off the page too. A Komponent or a
+  fractal can still be removed, by whoever made it, from the Ж menu beside
+  Edit (Tal, 2026-10-31).
+- **A Kuddle Konnected here** is a call frame at the top of the work, not
+  a tile under Attached: join the call in the page, and it floats with you
+  when you leave (docs/spaces/huddle.md, A frame in a projekt).
+- **Joining a Komponent** (Tal, 2026-10-30: "the UX for joining should
+  be simple and intuitive"): on a Komponent's page, anyone in the projekt
+  has one pill at the top, **Join**, then **Joined** (which leaves), with a
+  line saying what it does. Joined people are in its people and its tile
+  says Joined. Joining is how you hear about it: a Nudge when someone says
+  something in its talk, a fractal's or a thing's on its lists
+  (`freethedream.gang.talked`), or adds to it, brings something or takes
+  a job on (`freethedream.gang.updated`; Activity lines). Not the person
+  who did it, only people still in the projekt, and a burst collapses
+  into one (10 minutes). A fractal is heard about through its Komponent
+  (`freethedream_gang_members`, `Freethedream::GangNudges`,
+  `POST /projects/:id/join_gang` and `leave_gang`).
+- **Getting together** (Tal, 2026-10-30), beside the work: the Kalendar
+  events made for the projekt or any Komponent or fractal inside it that
+  haven't ended, soonest first, as rows of a date tile, the title, when
+  and where (a pin opens the Map), the Komponent it's for as a tag, how
+  many are going and an **I'm going** toggle (`event_card.tsx`,
+  `events` on the shape). A Komponent's page lists its own and its
+  fractals'. **Anyone in the projekt can make one** (`can.link_event`;
+  nobody leads a Komponent, so owner-only left a Komponent with nobody to
+  make one): a picker chooses the whole projekt or one Komponent, and
+  **Make an event** opens Kalendar's composer with that part Konnected, so
+  the event belongs to it and its Krew sees it (Kronk::EventLinks).
 - **Activity**: the latest eight things that happened, with who did them
   ("Isabelle is bringing 2 speakers", "Tomas coalesced the gang
   Ceremony"). It keeps itself up to date while the page is open and in
   view (every 20 seconds, from `GET /projects/:id/activity`), and new
   lines fade in.
-- **Beside it** (below it, on a phone): the **event card** (name into
-  Kalendar, map pin, who's going, your RSVP; until there is one, the owner
-  sees **Make the event**, which opens Kalendar's composer with
-  `?konnect=freethedream:<id>`, so the event is Konnected as it is made.
-  An event that already exists is linked with the page's Konnect; the
-  card's own "Or link one of your events" went on 2026-10-27), **Asking to
-  join** for anyone in, and **Join** (or Ask to join). Then Talk and the
-  owner's actions. To bring someone in, **Share** the emergence from the
+- **Beside it** (below it, on a phone): **Getting together** (above),
+  then Talk. An event that already exists is linked with the page's
+  Konnect (the old card's "Or link one of your events" went on
+  2026-10-27). To bring someone in, **Share** the emergence from the
   Ж menu; there is no Invite (Tal 2026-10-17: "no invite anywhere, only
   share"). The server's invite (`POST /projects/:id/invite` and its nudge)
-  went too (Tal 2026-10-19: "the share button is plenty"). The event card
-  is where the linked event shows, so the page's **Attached** block leaves
-  that event out (`<KornerDetail attached={{ exclude }}>`) rather than
+  went too (Tal 2026-10-19: "the share button is plenty"). Getting
+  together is where linked events show, so the page's **Attached** block
+  leaves them out (`<KornerDetail attached={{ exclude }}>`) rather than
   listing it twice.
 
 **A list's page** (`/p/:id/actualise` and the like) is that list in full:
@@ -257,13 +337,16 @@ chip goes to its gang.
   all of Mini Doof**, what's placed on the emergence itself, which is
   where power, lighting and water go (what several or all of its gangs
   use); then each gang, under its name.
-- **Coalescing a gang** takes its name, what it's about, its **first
-  fractals** and **what all of it needs**, so a gang is set up in one
-  step. What it needs goes one thing to a box, like adding to Thing
-  Bringing (Tal, 2026-10-17): Enter goes to the next box, × takes one off,
-  and the amount shows beside its box ("2", or "20+" for `20+ plates`). A gang has no date. After adding, you stay where you
-  were, ready to coalesce the next one. **Seeding an emergence** takes its
-  first gangs and gear the same way; **adding a fractal**, its gear.
+- **Adding a Komponent** (or a fractal) takes its name and what it's
+  about, nothing more (Tal, 2026-10-31: "strip it back to those two and
+  build from there"); no fractals, needs or Konnect in its composer. A
+  Komponent has no date. After adding, you stay where you were, ready to
+  add the next one. **Seeding a projekt** is as bare (Tal, 2026-10-31): a
+  title (the box says only "Title"), what it's about and a cover. No Krew
+  to pick, because it is seeded from its Krew's page and lives there; no
+  date, Komponents or needs, which are added on its page (the date in
+  Edit). Opened from anywhere else, the composer says to seed it from the
+  Krew page and can't be sent.
 - **Talk** (below).
 
 Edit (including the cover) is on the Ж menu, owner only.
@@ -272,9 +355,9 @@ Edit (including the cover) is on the Ж menu, owner only.
 the cover (an emergence's) as its hero, the centred purple title, a `<KornerMeta>` line and
 `<KornerPill>` actions. On a wide Stage (frame ≥ 1000px) an emergence page
 widens to 72rem: what's yours and the gangs (a grid of tiles) across the
-top, then a main column (on an emergence: Get involved, Krew, Activity; on
-a gang: its lists) and a side column (event, joining, Talk, the owner's
-actions; on a gang, Activity and Talk). On a phone it is one column, main
+top, then a main column (on a projekt: Activity; on a Komponent: its
+lists) and a side column (event and Talk; on a Komponent, Activity and
+Talk). On a phone it is one column, main
 first. The emergence list is the kit's `<SpaceGrid>` of `<SpaceCard>` tiles:
 the cover (or the event's image), the title, one meta line (people, end
 date, Done) and a Joined or Asked tag; what it's about and its progress
@@ -312,18 +395,23 @@ only what's still being worked out.
 
 ### Who can do what
 
-- **Joining.** The seeder chooses per emergence: open to anyone, or by
-  request. Joining or leaving its Krew does the same (see The Krew).
+- **Joining.** It's the Krew's way in: open, Ask to join, or through the
+  Krew's page (see The Krew). An emergence no longer has its own choice.
 - **Inside an emergence, anyone who has joined** coalesces gangs and adds
   to Thing Bringing, Actualise and On offer. Whoever adds something
   **owns** it. Nobody has a veto over anyone else's piece, the seeder
   included.
 - **Ownership moves.** An owner can hand something to another member. If an
   owner leaves, what they made stays, and anyone in the emergence can take
-  it over. The owner of an emergence is asked before they leave it, since
-  leaving makes it up for grabs.
+  it over.
 
 ### Mycelium
+
+**Hidden for now** (Tal, 2026-10-30): with FreeTheDream off the Hub there
+is no clear home for it, so its view (`/hub/freethedream/mycelium` goes to
+every emergence) and **From my Mycelium** (`MYCELIUM_SHOWN` in
+`from_my_mycelium.tsx`) are off. Nothing is deleted; the API and what
+people listed are untouched. What follows is how it works when shown.
 
 Decided by Tal, 2026-10-19 (`docs/decisions.md`). Mycelium is the
 synergistic audit, named for the network under a forest that moves what
@@ -421,7 +509,8 @@ shadow.
   (`Kronk::NamedLink`; an old number still opens it). From my
   Mycelium on rows is `from_my_mycelium.tsx`; the category chips are
   `CategoryChips` in `shared.tsx`.
-  "Seed an emergence" is the Ж menu's compose route (`/composer`). Lists add
+  "Seed a projekt" is the manifest's compose route, opened from a Krew's
+  page (no Ж menu offers it). Lists add
   through `QuickAdd` (one line, read by `parseLine`); Bring is
   `BringControl`; Talk is `talk.tsx`. Adding a section, editing, offering
   something not on a list and handing over use `<ComposeShell>`.
@@ -471,7 +560,7 @@ shadow.
   (latest update or comment anywhere in the project, else joining) and
   come newest first; `GET /projects/:id/activity` returns the updates
   alone for the page to poll. List pages at `/p/:id/:list` (`work_page.tsx`,
-  lists in `work.tsx`); the Krew row in `krew_row.tsx`. Specs:
+  lists in `work.tsx`). Specs:
   `overview_spec.rb`, "who's in it" and "the activity".
 - **Emergences** (2026-10-15, `20261015130000`–`20261015130200`): the
   words above; `krew_id` on projects (`Project#ensure_krew!`,

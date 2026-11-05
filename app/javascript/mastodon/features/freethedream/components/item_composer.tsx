@@ -51,19 +51,20 @@ const messages = defineMessages({
   what: { id: 'freethedream.compose.what', defaultMessage: 'What' },
   ideaPlaceholder: {
     id: 'freethedream.compose.idea_placeholder',
-    defaultMessage: 'A fire twirler at sunset',
+    defaultMessage: 'A launch night, a shared roadmap',
   },
   needPlaceholder: {
     id: 'freethedream.compose.need_placeholder',
-    defaultMessage: 'Generator, PA system, $400 for permits',
+    defaultMessage: "A PA system, a lawyer's eye, 10 hours of design, $400",
   },
   jobPlaceholder: {
     id: 'freethedream.compose.actualise_placeholder',
-    defaultMessage: 'A spit roast, a fire twirler at sunset',
+    defaultMessage:
+      "A fire twirler at sunset, a members' handbook, a dark mode",
   },
   offerPlaceholder: {
     id: 'freethedream.compose.offer_placeholder',
-    defaultMessage: 'My generator',
+    defaultMessage: 'My generator, a few hours of design',
   },
   details: {
     id: 'freethedream.compose.details',
@@ -90,7 +91,7 @@ const messages = defineMessages({
   unit: { id: 'freethedream.compose.unit', defaultMessage: 'Unit (optional)' },
   unitPlaceholder: {
     id: 'freethedream.compose.unit_placeholder',
-    defaultMessage: 'kg, bags, $',
+    defaultMessage: 'kg, hours, $',
   },
   howMuch: {
     id: 'freethedream.compose.how_much',

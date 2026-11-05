@@ -66,17 +66,21 @@ const sentences = defineMessages({
     id: 'nudges.notification.wachuneed.offer_declined',
     defaultMessage: '{who} declined your request',
   },
+  wachuneedOfferCancelled: {
+    id: 'nudges.notification.wachuneed.offer_cancelled',
+    defaultMessage: '{who} called off a booking',
+  },
   wachuneedBrandListed: {
     id: 'nudges.notification.wachuneed.brand_listed',
     defaultMessage: '{who} backed your brand, and it is in Brands now',
   },
   freethedreamInvited: {
     id: 'nudges.notification.freethedream.invited',
-    defaultMessage: '{who} invited you to have a look at an emergence',
+    defaultMessage: '{who} invited you to have a look at a projekt',
   },
   freethedreamMentioned: {
     id: 'nudges.notification.freethedream.mentioned',
-    defaultMessage: '{who} tagged you in an emergence’s talk',
+    defaultMessage: '{who} tagged you in a projekt’s talk',
   },
   kuestionsAnswered: {
     id: 'nudges.notification.kuestions.answered',
@@ -155,6 +159,14 @@ const sentences = defineMessages({
     id: 'nudges.notification.huddle.kuddle_gathering',
     defaultMessage: 'People are in a Kuddle you follow',
   },
+  freethedreamGangTalked: {
+    id: 'nudges.notification.freethedream.gang_talked',
+    defaultMessage: '{who} said something in a Komponent you joined',
+  },
+  freethedreamGangUpdated: {
+    id: 'nudges.notification.freethedream.gang_updated',
+    defaultMessage: '{who} added to a Komponent you joined',
+  },
   freethedreamMyceliumMatched: {
     id: 'nudges.notification.freethedream.mycelium_matched',
     defaultMessage: '{who} needs something you shared from your Mycelium',
@@ -206,11 +218,14 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,
+  'wachuneed.offer_cancelled': sentences.wachuneedOfferCancelled,
   'wachuneed.brand_listed': sentences.wachuneedBrandListed,
   // No longer sent (the invite went, 2026-10-19); kept so old nudges read.
   'freethedream.invited': sentences.freethedreamInvited,
   'freethedream.mentioned': sentences.freethedreamMentioned,
   'freethedream.mycelium_matched': sentences.freethedreamMyceliumMatched,
+  'freethedream.gang_talked': sentences.freethedreamGangTalked,
+  'freethedream.gang_updated': sentences.freethedreamGangUpdated,
   'kuestions.answered': sentences.kuestionsAnswered,
   'kuestions.frothed': sentences.kuestionsFrothed,
   'booth.frothed': sentences.boothFrothed,

@@ -43,10 +43,11 @@ module Freethedream
         image_url: image_url(project),
         ends_on: project.ends_on,
         done: project.done?,
-        joining: project.joining,
+        joining: project.joining_via_krew,
         members_count: Membership.member.where(project_id: project.top_id).count,
         progress: tree.progress(project.id),
         membership: membership_state(project),
+        krew_slug: project.top.krew&.slug,
       }
     end
 
@@ -71,9 +72,10 @@ module Freethedream
         ancestors: project.ancestors.map { |a| { id: a.id.to_s, slug: a.slug, title: a.title } },
         cover: cover(project),
         event: event(project, owner),
+        events: events(project, tree, owner),
         ends_on: project.ends_on,
         done: project.done?,
-        joining: top.joining,
+        joining: top.joining_via_krew,
         up_for_grabs: project.up_for_grabs?,
         source_idea: project.source_idea && { id: project.source_idea_id.to_s, title: project.source_idea.title },
         progress: tree.progress(project.id),
@@ -84,6 +86,9 @@ module Freethedream
         depends_on: project.depends_on.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         needed_by: project.needed_by.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         updates: updates(tree.subtree_ids(project.id)),
+        # In a Komponent you joined: on it, and on its fractals (where
+        # joining means the Komponent).
+        in_gang: tree.joined?(Freethedream::GangNudges.gang_of(project)&.id, @viewer&.id),
         membership: membership_state(project),
         members_count: Membership.member.where(project_id: top.id).count,
         members: project.top? ? Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
@@ -91,7 +96,7 @@ module Freethedream
         level: level(project),
         crew: project.top? ? [] : crew(project, tree),
         gear: gear(project, tree),
-        krew: top.krew && { id: top.krew.id.to_s, slug: top.krew.slug, name: top.krew.name },
+        krew: top.krew && { id: top.krew.id.to_s, slug: top.krew.slug, name: top.krew.name, access: top.krew.access },
         mine: project.top? && member ? mine(top, tree) : nil,
         requests: project.top? && member ? top.join_requests.map { |request| account(request.account) } : [],
         all_parts: member ? tree.options : [],
@@ -104,7 +109,8 @@ module Freethedream
           take_over: member && !owner && project.up_for_grabs?,
           hand_over: owner && member,
           comment: member,
-          link_event: owner && member,
+          link_event: member,
+          join_gang: member && project.gang?,
         },
       }
     end
@@ -182,6 +188,10 @@ module Freethedream
       event, link = visible_event_link(project)
       return nil if event.nil?
 
+      event_json(event, link, owner)
+    end
+
+    def event_json(event, link, owner)
       rsvp = event.rsvps.find_by(account_id: @viewer.id)
       {
         id: event.id.to_s,
@@ -199,6 +209,24 @@ module Freethedream
         attachment_id: link.id.to_s,
         can_unlink: owner || link.created_by_account_id == @viewer.id,
       }
+    end
+
+    # Getting together: the events linked to this part or any part inside
+    # it that haven't ended, soonest first, each saying which Komponent or
+    # fractal it's for (nil when it's for this page's own part).
+    def events(project, tree, owner)
+      ids = tree.subtree_ids(project.id)
+      parts = Project.where(id: ids).index_by(&:id)
+      now = Time.current
+      project.event_links(ids)
+             .uniq { |event, _link, _part| event.id }
+             .select { |event, _link, _part| (event.end_time || event.start_time) >= now && event.visible_to?(@viewer) }
+             .sort_by { |event, _link, _part| event.start_time }
+             .map do |event, link, part|
+               shown = event_json(event, link, owner)
+               holder = part == project.id ? nil : parts[part]
+               shown.merge(for: holder && { id: holder.id.to_s, slug: holder.slug, title: holder.title })
+             end
     end
 
     # The linked Kalendar event and its link, or nil when there's none or
@@ -219,6 +247,7 @@ module Freethedream
         done: section.done?,
         sections_count: tree.children(section.id).size,
         people_count: tree.people_in(section.id).size,
+        joined: tree.joined?(section.id, @viewer&.id),
         progress: tree.progress(section.id),
       }
     end
@@ -360,6 +389,7 @@ module Freethedream
       item_row(item).merge(
         body: item.body,
         root: { id: root.id.to_s, slug: root.slug, title: root.title },
+        krew_slug: root.krew&.slug,
         up_for_grabs: item.up_for_grabs?,
         placements: item.projects.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         offers: item.need_kind? ? item.offers.includes(:owner, :need).order(:created_at).map { |o| item_row(o) } : [],
@@ -486,6 +516,12 @@ module Freethedream
         @by_parent = @parts.group_by(&:parent_id)
         @by_id = ([top] + @parts).index_by(&:id)
         @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account).to_a
+        @joined = GangMember.where(project_id: @parts.map(&:id)).pluck(:project_id, :account_id).group_by(&:first).transform_values { |rows| rows.map(&:last) }
+      end
+
+      # Whether `account_id` joined the Komponent `id`.
+      def joined?(id, account_id)
+        id.present? && account_id.present? && (@joined[id] || []).include?(account_id)
       end
 
       attr_reader :parts
@@ -499,10 +535,12 @@ module Freethedream
       end
 
       # Everyone with a hand in a project or section: whoever owns it or
-      # anything in it, has taken a job in it or is bringing something.
+      # anything in it, has taken a job in it or is bringing something, and
+      # whoever joined it.
       def people_in(id)
         ids = subtree_ids(id)
         people = Set.new(ids.map { |part| @by_id[part]&.owner_id })
+        ids.each { |part| people.merge(@joined[part] || []) }
         items_in(ids).each do |item|
           people << item.owner_id
           item.claims.each { |claim| people << claim.account_id }

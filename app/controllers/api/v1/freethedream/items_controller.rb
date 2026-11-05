@@ -7,6 +7,7 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
   before_action :set_item, except: [:create]
 
   def show
+    require_visible!(@item.root)
     render json: view.item(@item)
   end
 

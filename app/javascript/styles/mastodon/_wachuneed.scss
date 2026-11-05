@@ -569,3 +569,36 @@
     object-fit: contain;
   }
 }
+
+// The landing (home_view.tsx): a sideways row each of Offered, Desired and
+// Shops, each under the korner section heading with See all beside it.
+.wachuneed-home {
+  &__row + &__row {
+    margin-top: 1.25rem;
+  }
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0 0 0.5rem;
+
+    .korner-section-heading {
+      margin: 0;
+    }
+  }
+
+  &__all {
+    flex: 0 0 auto;
+    color: var(--accent-text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+}

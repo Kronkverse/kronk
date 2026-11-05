@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -8,37 +8,30 @@ import {
   apiFtdUploadCover,
 } from 'mastodon/api/freethedream';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
-import type {
-  FtdCategory,
-  FtdCover,
-  FtdJoining,
-  FtdProject,
-} from 'mastodon/api_types/freethedream';
+import type { FtdCover, FtdProject } from 'mastodon/api_types/freethedream';
 import {
   ComposeBody,
   ComposeField,
   ComposeHint,
   ComposeInput,
   ComposeSection,
-  ComposeTextarea,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
-import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { parseKonnectParam, useKonnect } from 'mastodon/hooks/useKonnect';
 
-import { NeedBoxes } from './need_boxes';
-import { CategoryChips, errorOf, parseLine } from './shared';
+import { errorOf } from './shared';
 
 const messages = defineMessages({
   newProject: {
     id: 'freethedream.compose.seed',
-    defaultMessage: 'Seed an emergence',
+    defaultMessage: 'Seed a projekt',
   },
   newPart: {
     id: 'freethedream.compose.gang',
-    defaultMessage: 'Coalesce a gang',
+    defaultMessage: 'Add a Komponent',
   },
   editProject: {
     id: 'freethedream.compose.edit_project',
@@ -46,24 +39,25 @@ const messages = defineMessages({
   },
   partSubtitle: {
     id: 'freethedream.compose.gang_subtitle',
-    defaultMessage: 'In {title}',
+    defaultMessage: 'A group for one part of {title}',
   },
   projectSubtitle: {
     id: 'freethedream.compose.project_subtitle',
-    defaultMessage: 'You run it. People who join can add to it.',
+    defaultMessage:
+      'A gathering, a creative work, a tool, an organisation: anything people bring to life together. You run it; people who join add to it.',
   },
   start: { id: 'freethedream.compose.seed_submit', defaultMessage: 'Seed' },
   add: { id: 'freethedream.compose.add', defaultMessage: 'Add' },
   save: { id: 'freethedream.compose.save', defaultMessage: 'Save' },
   saving: { id: 'freethedream.compose.saving', defaultMessage: 'Saving…' },
   name: { id: 'freethedream.compose.name', defaultMessage: 'Name' },
-  namePlaceholder: {
-    id: 'freethedream.compose.name_placeholder',
-    defaultMessage: 'Mini Doof',
+  titlePlaceholder: {
+    id: 'freethedream.compose.title_placeholder',
+    defaultMessage: 'Title',
   },
   sectionPlaceholder: {
     id: 'freethedream.compose.gang_placeholder',
-    defaultMessage: 'Kitchen, Wash station, Sound',
+    defaultMessage: 'Sound, Design, Paperwork',
   },
   cover: { id: 'freethedream.compose.cover', defaultMessage: 'Cover photo' },
   coverAdd: {
@@ -86,56 +80,22 @@ const messages = defineMessages({
     id: 'freethedream.compose.about',
     defaultMessage: "What it's about",
   },
-  ends: { id: 'freethedream.compose.ends', defaultMessage: 'Date (optional)' },
-  groupsInside: {
-    id: 'freethedream.compose.gangs_inside',
-    defaultMessage: 'Gangs to start with (optional)',
-  },
-  fractalsInside: {
-    id: 'freethedream.compose.fractals_inside',
-    defaultMessage: 'Fractals to start with (optional)',
-  },
-  fractalsPlaceholder: {
-    id: 'freethedream.compose.fractals_placeholder',
-    defaultMessage: 'Cooking, Cleaning, Storage, Logistics',
+  ends: { id: 'freethedream.compose.ends', defaultMessage: 'When (optional)' },
+  endsHint: {
+    id: 'freethedream.compose.ends_hint',
+    defaultMessage:
+      "A day it happens or is due. Leave it empty if it's ongoing.",
   },
   newFractal: {
     id: 'freethedream.compose.fractal',
     defaultMessage: 'Add a fractal',
   },
-  groupsPlaceholder: {
-    id: 'freethedream.compose.groups_placeholder',
-    defaultMessage: 'Kitchen, Sound, Site, Welcome',
-  },
-  sectionsHint: {
-    id: 'freethedream.compose.sections_hint',
-    defaultMessage: 'Separate them with commas or put one on each line.',
-  },
-  gear: {
-    id: 'freethedream.compose.gear',
-    defaultMessage: 'What all of it needs (optional)',
-  },
-  gearHint: {
-    id: 'freethedream.compose.gear_boxes_hint',
+  // Seeded from anywhere but a Krew page there is no Krew for it to live
+  // in (Tal, 2026-10-31: a projekt is only made from inside a Krew).
+  krewNone: {
+    id: 'freethedream.compose.krew_none',
     defaultMessage:
-      'One thing to a box, with how many beside it; Enter for the next. Tap + More welcome where more is welcome. Gear that only one part needs goes in that part.',
-  },
-  joining: {
-    id: 'freethedream.compose.joining',
-    defaultMessage: 'Who can join',
-  },
-  open: { id: 'freethedream.joining.open', defaultMessage: 'Anyone' },
-  openHint: {
-    id: 'freethedream.joining.open_hint',
-    defaultMessage: 'They join with one tap.',
-  },
-  byRequest: {
-    id: 'freethedream.joining.by_request',
-    defaultMessage: 'By request',
-  },
-  byRequestHint: {
-    id: 'freethedream.joining.by_request_hint',
-    defaultMessage: 'They ask, and you accept.',
+      'A projekt lives in a Krew. Seed it from the Krew page, from Konnect.',
   },
 });
 
@@ -145,9 +105,6 @@ interface ProjectDraftParams {
   title?: string;
   description?: string;
   endsOn?: string;
-  joining?: FtdJoining;
-  sections?: string;
-  gear?: string[];
   konnections?: KonnectTarget[];
 }
 
@@ -172,22 +129,22 @@ export const ProjectComposer: React.FC<Props> = ({
   const [endsOn, setEndsOn] = useState(editing?.ends_on ?? '');
   const [cover, setCover] = useState<FtdCover | null>(editing?.cover ?? null);
   const [uploading, setUploading] = useState(false);
-  const [joining, setJoining] = useState<FtdJoining>(
-    editing?.joining ?? 'open',
-  );
-  const [sections, setSections] = useState('');
-  const [gear, setGear] = useState<string[]>([]);
-  // What kind of thing its needs are (Mycelium matches on it); "$400" is
-  // Money whatever is picked.
-  const [gearCategory, setGearCategory] = useState<FtdCategory>('things');
+  // The Krew a new projekt lives in: the one whose page it was seeded from
+  // (New projekt, or Konnect's New projekt), so there is nothing to pick.
+  // The Konnection is the server's to make, so it isn't made twice.
+  const source = useMemo(() => parseKonnectParam(window.location.search), []);
+  const krewId = source?.slug === 'krew' ? source.id : '';
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const top = editing ? editing.top : !parent;
+  const newTop = top && !editing;
   // Adding inside an emergence makes a gang; inside a gang, a fractal.
   const fractal = parent?.level === 'gang';
   // What a new one will be Konnected to (decisions.md, 2026-10-23).
-  const konnect = useKonnect('freethedream');
+  const konnect = useKonnect('freethedream', {
+    sourceHandled: source?.slug === 'krew',
+  });
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
@@ -200,9 +157,6 @@ export const ProjectComposer: React.FC<Props> = ({
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
       setEndsOn(p.endsOn ?? '');
-      setJoining(p.joining ?? 'open');
-      setSections(p.sections ?? '');
-      setGear(p.gear ?? []);
       restoreKonnect(p.konnections);
       const media = d?.media_attachments[0];
       setCover(
@@ -229,9 +183,6 @@ export const ProjectComposer: React.FC<Props> = ({
         title,
         description,
         endsOn,
-        joining,
-        sections,
-        gear,
         konnections: konnect.saved,
       },
       mediaIds: top && cover ? [cover.id] : [],
@@ -239,8 +190,6 @@ export const ProjectComposer: React.FC<Props> = ({
     hasContent:
       title.trim() !== '' ||
       description.trim() !== '' ||
-      sections.trim() !== '' ||
-      gear.some((line) => line.trim() !== '') ||
       (top && cover !== null),
     apply: applyDraft,
     describe: (d) => d.params.title,
@@ -255,12 +204,6 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleDescription = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setDescription(e.target.value);
-    },
-    [],
-  );
-  const handleSections = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setSections(e.target.value);
     },
     [],
   );
@@ -289,13 +232,6 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleCoverRemove = useCallback(() => {
     setCover(null);
   }, []);
-  const handleJoining = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setJoining(e.target.value === 'by_request' ? 'by_request' : 'open');
-    },
-    [],
-  );
-
   const handleSubmit = useCallback(() => {
     setBusy(true);
     setError(null);
@@ -304,35 +240,16 @@ export const ProjectComposer: React.FC<Props> = ({
       description: description.trim(),
       ...(top
         ? {
-            ends_on: endsOn || null,
-            joining,
             cover_media_attachment_id: cover?.id ?? null,
+            ...(editing ? { ends_on: endsOn || null } : { krew_id: krewId }),
           }
         : {}),
     };
+    // Seeded bare (Tal, 2026-10-31): its Komponents and what it needs are
+    // added on its page.
     const request = editing
       ? apiFtdUpdateProject(editing.id, params)
-      : apiFtdCreateProject(
-          { ...params, parent_id: parent?.id },
-          {
-            sections: (fractal ? '' : sections)
-              .split(/[\n,]/)
-              .map((name) => name.trim())
-              .filter(Boolean),
-            needs: gear
-              .map((line) => line.trim())
-              .filter(Boolean)
-              .map(parseLine)
-              .filter((need) => need.title)
-              .map(({ title, quantity, unit, more }) => ({
-                title,
-                quantity,
-                unit,
-                more_welcome: more,
-                category: unit === '$' ? 'money' : gearCategory,
-              })),
-          },
-        );
+      : apiFtdCreateProject({ ...params, parent_id: parent?.id });
     request
       .then(async (project) => {
         if (!editing) {
@@ -350,11 +267,7 @@ export const ProjectComposer: React.FC<Props> = ({
     description,
     endsOn,
     cover,
-    fractal,
-    joining,
-    sections,
-    gear,
-    gearCategory,
+    krewId,
     top,
     editing,
     parent,
@@ -388,21 +301,26 @@ export const ProjectComposer: React.FC<Props> = ({
       )}
       submittingLabel={intl.formatMessage(messages.saving)}
       submitting={busy}
-      canSubmit={title.trim().length > 0 && !uploading}
+      canSubmit={
+        title.trim().length > 0 && !uploading && (!newTop || krewId !== '')
+      }
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
-      konnect={editing ? null : konnect}
+      konnect={editing || parent ? null : konnect}
     >
       <ComposeTitle
         value={title}
         onChange={handleTitle}
         maxLength={120}
         placeholder={intl.formatMessage(
-          top ? messages.namePlaceholder : messages.sectionPlaceholder,
+          top ? messages.titlePlaceholder : messages.sectionPlaceholder,
         )}
         aria-label={intl.formatMessage(messages.name)}
       />
+      {newTop && krewId === '' && (
+        <ComposeHint>{intl.formatMessage(messages.krewNone)}</ComposeHint>
+      )}
       <ComposeBody
         value={description}
         onChange={handleDescription}
@@ -448,70 +366,15 @@ export const ProjectComposer: React.FC<Props> = ({
           </div>
         </ComposeSection>
       )}
-      {top && (
-        <ComposeField label={intl.formatMessage(messages.ends)}>
+      {/* A date is set later, from Edit: seeding is bare (Tal,
+          2026-10-31). */}
+      {top && editing && (
+        <ComposeField
+          label={intl.formatMessage(messages.ends)}
+          hint={intl.formatMessage(messages.endsHint)}
+        >
           <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
         </ComposeField>
-      )}
-      {!editing && (
-        <>
-          {/* An emergence starts with its gangs, a gang with its fractals;
-              a fractal holds nothing (Tal, 2026-10-15). */}
-          {!fractal && (
-            <ComposeField
-              label={intl.formatMessage(
-                top ? messages.groupsInside : messages.fractalsInside,
-              )}
-              hint={intl.formatMessage(messages.sectionsHint)}
-            >
-              <ComposeTextarea
-                rows={2}
-                value={sections}
-                onChange={handleSections}
-                placeholder={intl.formatMessage(
-                  top
-                    ? messages.groupsPlaceholder
-                    : messages.fractalsPlaceholder,
-                )}
-              />
-            </ComposeField>
-          )}
-          <ComposeSection title={intl.formatMessage(messages.gear)}>
-            <NeedBoxes lines={gear} onChange={setGear} />
-            <CategoryChips value={gearCategory} onChange={setGearCategory} />
-            <ComposeHint>{intl.formatMessage(messages.gearHint)}</ComposeHint>
-          </ComposeSection>
-        </>
-      )}
-      {top && (
-        <ComposeSection title={intl.formatMessage(messages.joining)}>
-          <label className='freethedream-form__choice'>
-            <input
-              type='radio'
-              name='joining'
-              value='open'
-              checked={joining === 'open'}
-              onChange={handleJoining}
-            />
-            <span>
-              <strong>{intl.formatMessage(messages.open)}</strong>{' '}
-              {intl.formatMessage(messages.openHint)}
-            </span>
-          </label>
-          <label className='freethedream-form__choice'>
-            <input
-              type='radio'
-              name='joining'
-              value='by_request'
-              checked={joining === 'by_request'}
-              onChange={handleJoining}
-            />
-            <span>
-              <strong>{intl.formatMessage(messages.byRequest)}</strong>{' '}
-              {intl.formatMessage(messages.byRequestHint)}
-            </span>
-          </label>
-        </ComposeSection>
       )}
       {error && <ComposeHint error>{error}</ComposeHint>}
     </ComposeShell>

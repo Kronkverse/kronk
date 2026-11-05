@@ -36,6 +36,27 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_checked_field("Something I'm looking for")
   end
 
+  # Kommons "Home Page" (117522482475089755).
+  it 'opens on a row each of Offered, Desired and Shops, each with See all' do
+    ana = Fabricate(:account, username: 'ana')
+    Listing.create!(account: ana, title: 'Clay mug', category: 'creation', state: 'live')
+    Listing.create!(account: ana, title: 'A ladder', category: 'goods', kind: 'wanted', state: 'live')
+
+    visit '/hub/wachuneed'
+
+    within('section[aria-label="Offered"]') { expect(page).to have_css('.space-grid--row .space-card', text: 'Clay mug') }
+    within('section[aria-label="Desired"]') do
+      expect(page).to have_css('.space-grid--row .space-card', text: 'A ladder')
+      expect(page).to have_no_content('Clay mug')
+    end
+    # No shop yet, so no Shops row.
+    expect(page).to have_no_css('section[aria-label="Shops"]')
+
+    within('section[aria-label="Offered"]') { click_on 'See all' }
+    expect(page).to have_current_path('/hub/wachuneed/offered')
+    expect(page).to have_css('.space-grid .space-card', text: 'Clay mug')
+  end
+
   it 'takes the old section addresses to the new ones' do
     visit '/hub/wachuneed/wachugot'
 
@@ -45,14 +66,14 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
   # docs/spaces/wachuneed.md, Shops.
   describe 'shops' do
-    it 'opens a shop from the Ж menu on Shops, with a section, and lands on its page' do
+    it 'opens a shop from the Ж menu on Shops, with a Kollection, and lands on its page' do
       visit '/hub/wachuneed/shops'
 
       find('.kronk-menu__trigger').click
       find('.kronk-menu__moon[title="Open a shop"]').click
       fill_in 'Shop name', with: 'Bob Aromas'
-      click_on 'Add a section'
-      fill_in 'Section name', with: 'Skin Care'
+      click_on 'Add a Kollection'
+      fill_in 'Kollection name', with: 'Skin Care'
       click_on 'Open shop'
 
       expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
@@ -68,12 +89,12 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         Listing.create!(account: bob.account, title: 'Loose candle', category: 'goods', state: 'live')
       end
 
-      it 'shows the shop across the top of Offered and its listings under their sections' do
+      it 'shows the shop in the Shops row of the landing and its listings under their sections' do
         visit '/hub/wachuneed'
 
         # A card, as in Shops, not a pill.
-        within('.wachuneed-shops') do
-          expect(page).to have_css('.space-card', text: '2 listings')
+        within('section[aria-label="Shops"]') do
+          expect(page).to have_css('.space-grid--row .space-card', text: '2 listings')
           click_on 'Bob Aromas'
         end
 
@@ -105,10 +126,45 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
         expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
         find('.kronk-menu__trigger').click
-        click_on 'Add an item'
+        find('.kronk-menu__moon[title="Add an item"]').click
 
         expect(page).to have_css('.compose-shell')
         within('.compose-shell') { expect(page).to have_field('What is it called?') }
+      end
+
+      # Kommons "Kollections" (117522474156930637).
+      it 'shows each Kollection as a row, and lets the owner move an item into one and add a Kollection' do
+        visit "/hub/wachuneed/shop/#{bob.account.username}"
+
+        expect(page).to have_css('.wachuneed-shop__section .space-grid--row', count: 2)
+        within('.wachuneed-shop__section', text: 'Everything else') { expect(page).to have_content('Loose candle') }
+        # The owner's tile at the end of each row.
+        within('.wachuneed-shop__section', text: 'Skin Care') { expect(page).to have_link('Add an item') }
+
+        click_on 'Arrange Kollections'
+        find('select[aria-label="Kollection for Loose candle"]').select('Skin Care')
+
+        within('.wachuneed-shop__section', text: 'Skin Care') { expect(page).to have_content('Loose candle') }
+        expect(Listing.find_by(title: 'Loose candle').listing_shop_section.name).to eq 'Skin Care'
+
+        click_on 'Add a Kollection'
+        expect(page).to have_current_path('/hub/wachuneed/my-shop?kollection=new')
+        expect(page).to have_field('Kollection name', count: 2)
+      end
+
+      it 'shows a visitor only the Kollections with something in them, with no owner controls' do
+        ana  = Fabricate(:account, username: 'ana')
+        shop = ListingShop.create!(account: ana, name: 'Ana Oils')
+        oils = shop.sections.create!(name: 'Oils', position: 0)
+        shop.sections.create!(name: 'Tinctures', position: 1)
+        Listing.create!(account: ana, title: 'Rose oil', category: 'goods', state: 'live', listing_shop_section: oils)
+
+        visit '/hub/wachuneed/shop/ana'
+
+        expect(page).to have_css('.wachuneed-shop__section-name', text: 'Oils')
+        expect(page).to have_no_css('.wachuneed-shop__section-name', text: 'Tinctures')
+        expect(page).to have_no_link('Add an item')
+        expect(page).to have_no_button('Arrange Kollections')
       end
 
       it 'leads from the Wachuneed shelf on the profile to the shop, not from under the profile header' do
@@ -276,6 +332,99 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         find('.wachuneed-options__choice', text: '1 hour').click
         expect(page).to have_css('.wachuneed-options__total', text: 'Total A$90.00')
       end
+    end
+  end
+
+  # docs/spaces/wachuneed.md, Booking (Kommons "Goods & Services").
+  describe 'booking' do
+    it 'builds a listing from a template, changes its parts, and shows them on its page' do
+      visit '/hub/wachuneed/new'
+
+      fill_in 'A short name — what is it?', with: 'Garden help'
+      choose 'Offerings'
+      click_on 'Job'
+      # A job starts as a time, a from and a to, and what to ask; this one
+      # needs no from and to, takes two hours, and posts one time.
+      uncheck 'From and to'
+      select '2 hours', from: 'How long'
+      fill_in 'What to ask them', with: 'How big is the garden?'
+      click_on 'Add a time'
+      find('input[aria-label="A time you post"]').fill_in with: 1.week.from_now.strftime('%Y-%m-%dT10:00')
+      click_on 'Publish listing'
+
+      expect(page).to have_current_path('/hub/wachuneed/mine')
+      listing = Listing.last
+      expect(listing.booking).to include('parts' => %w(time details), 'template' => 'job', 'minutes' => 120, 'ask' => 'How big is the garden?')
+      expect(listing.booking['slots'].size).to eq 1
+
+      visit "/hub/wachuneed/listings/#{listing.id}"
+
+      within('.wachuneed-booking-summary') do
+        expect(page).to have_content('2 hours').or have_content('120 minutes')
+        expect(page).to have_content('How big is the garden?')
+        expect(page).to have_no_content('A from and a to')
+      end
+    end
+
+    it 'books a free time with what is asked, for the seller to see in Requests' do
+      ana   = Fabricate(:account, username: 'ana')
+      start = 2.days.from_now.utc.change(hour: 10)
+      listing = Listing.create!(account: ana, title: 'Reiki', category: 'service', state: 'live',
+                                booking: { parts: %w(time details), minutes: 60, time_zone: 'UTC',
+                                           slots: [start.iso8601], ask: 'Anything I should know?' })
+
+      visit "/hub/wachuneed/listings/#{listing.id}"
+
+      expect(page).to have_button('Book', disabled: true)
+      within('.wachuneed-book__day-times') { find('.korner-pill').click }
+      fill_in 'Anything I should know?', with: 'A sore shoulder'
+      click_on 'Book'
+
+      expect(page).to have_content('Booked. You will hear when they say yes.')
+      expect(ListingOffer.last).to have_attributes(starts_at: start, ends_at: start + 1.hour, details: 'A sore shoulder', state: 'pending')
+    end
+
+    it 'lets the one who booked call an accepted booking off' do
+      ana     = Fabricate(:account, username: 'ana')
+      listing = Listing.create!(account: ana, title: 'Reiki', category: 'service', state: 'live',
+                                booking: { parts: %w(time), minutes: 60 })
+      ListingOffer.ask(listing, offerer: bob.account, starts_at: 3.days.from_now.utc.change(hour: 9)).tap(&:save!).accept!
+
+      visit '/hub/wachuneed/requests'
+
+      click_on 'Call it off'
+      within('.confirm-dialog__panel') { click_on 'Call it off' }
+
+      expect(page).to have_content('You called it off.')
+      expect(ListingOffer.last.state).to eq 'cancelled'
+    end
+
+    it 'puts an accepted booking in Kalendar under Me, leading to the listing' do
+      ana     = Fabricate(:account, username: 'ana', display_name: 'Ana')
+      listing = Listing.create!(account: ana, title: 'Reiki', category: 'service', state: 'live',
+                                booking: { parts: %w(time), minutes: 60 })
+      ListingOffer.ask(listing, offerer: bob.account, starts_at: 3.days.from_now.utc.change(hour: 9)).tap(&:save!).accept!
+
+      visit '/hub/kalendar/me'
+
+      within('.kalendar-bookings') do
+        expect(page).to have_content('Reiki with Ana')
+        click_on 'Reiki'
+      end
+      expect(page).to have_current_path(%r{/hub/wachuneed/listings/})
+    end
+
+    it 'turns booking off again with Ask for this' do
+      listing = Listing.create!(account: bob.account, title: 'Reiki', category: 'service', state: 'live',
+                                booking: { template: 'appointment', parts: %w(time), minutes: 60, hours: [{ day: 1, from: '09:00', to: '17:00' }] })
+
+      visit "/hub/wachuneed/listings/#{listing.slug}/edit"
+      expect(page).to have_field('How long', with: '60')
+      click_on 'Ask for this'
+      click_on 'Save changes'
+
+      expect(page).to have_no_current_path(%r{/edit\z})
+      expect(listing.reload.booking).to eq({})
     end
   end
 

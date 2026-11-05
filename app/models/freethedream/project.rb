@@ -5,7 +5,9 @@
 # mechanism"). Gangs sit under the emergence and fractals under a gang
 # (Kitchen → Cooking, Cleaning, Storage); nothing goes deeper. Membership lives
 # on the root and covers every gang in it, and the root's Krew holds the
-# same people (see #ensure_krew!).
+# same people. An emergence (a projekt) lives in a Krew, which can hold
+# several, and is Konnected to it, so the Krew page shows it
+# (docs/spaces/freethedream.md, "The Krew").
 #
 # Whoever made a project or part owns it. Nobody else can change or remove
 # it, but if its owner leaves (or their account goes) anyone in the project
@@ -29,7 +31,7 @@ module Freethedream
     belongs_to :owner, class_name: 'Account', optional: true
     belongs_to :source_idea, class_name: 'Freethedream::Item', optional: true
     belongs_to :cover, class_name: 'MediaAttachment', foreign_key: :cover_media_attachment_id, optional: true, inverse_of: false
-    belongs_to :krew, optional: true, inverse_of: :freethedream_project
+    belongs_to :krew, optional: true, inverse_of: :freethedream_projects
 
     has_many :children, class_name: 'Freethedream::Project', foreign_key: :parent_id, inverse_of: :parent, dependent: nil
     has_many :memberships, class_name: 'Freethedream::Membership', dependent: nil
@@ -40,6 +42,7 @@ module Freethedream
     has_many :dependent_links, class_name: 'Freethedream::Dependency', foreign_key: :depends_on_id, inverse_of: :depends_on, dependent: nil
     has_many :needed_by, through: :dependent_links, source: :project
     has_many :comments, class_name: 'Freethedream::Comment', as: :subject, dependent: :delete_all
+    has_many :gang_members, class_name: 'Freethedream::GangMember', dependent: nil
     has_many :activities, class_name: 'Freethedream::Activity', dependent: nil
 
     enum :joining, { open: 0, by_request: 1 }, suffix: :joining, validate: true
@@ -51,10 +54,17 @@ module Freethedream
 
     before_validation :set_root, on: :create
     after_create :join_owner!, if: :top?
-    after_update :sync_krew, if: -> { krew_id.present? && (saved_change_to_title? || saved_change_to_joining?) }
+    after_create :join_krew_members!, if: -> { top? && krew_id.present? }
 
     scope :top_level, -> { where(parent_id: nil) }
     scope :recent, -> { order(created_at: :desc) }
+
+    # What the Konnect picker offers when it searches: projekts, not the
+    # gangs and fractals inside them (Tal, 2026-10-30). A gang already
+    # Konnected still opens by its id.
+    def self.attachment_candidates
+      top_level
+    end
 
     def top?
       parent_id.nil?
@@ -85,8 +95,26 @@ module Freethedream
     # Any signed-in person can open a project and see what it's about; only
     # members take part. KornerAttachmentPolicy reads this, so a Kalendar
     # event linked to a project shows on both sides.
+    #
+    # Who sees a projekt follows its Krew (Tal, 2026-10-30): anyone signed
+    # in when the Krew is listed (open, asking to join, or with
+    # requirements), only its members when it's invite only.
     def visible_to?(account)
-      account.present?
+      return false if account.nil?
+
+      krew = top.krew
+      krew.nil? || krew.listed? || krew.member?(account)
+    end
+
+    # How someone outside gets in: the Krew's way in. `open` joins with a
+    # tap, `by_request` asks the Krew, and `krew` means through the Krew
+    # page (an invite, or its requirements).
+    def joining_via_krew
+      case top.krew&.access
+      when nil, 'open' then 'open'
+      when 'approval' then 'by_request'
+      else 'krew'
+      end
     end
 
     # The Kalendar event an in-person project or gang happens at, and the
@@ -95,20 +123,30 @@ module Freethedream
     # their own event to any project, so only an event made by someone in
     # the emergence counts; the newest such link wins.
     def event_link
-      # Made from either end: the event's Attach or the emergence's.
+      found = event_links([id]).first
+      found&.first(2)
+    end
+
+    # Every Kalendar event linked to one of `ids` (this projekt's parts),
+    # newest link first, as [event, link, part id]. Made from either end:
+    # the event's Attach or the projekt's. Only live events made by someone
+    # in the projekt count.
+    def event_links(ids)
+      ids = ids.map(&:to_i)
       links = KornerAttachment.where(kind: KornerAttachment::KIND_LINK)
-      links = links.where(source_slug: 'kalendar', target_slug: 'freethedream', target_id: id)
-                   .or(links.where(source_slug: 'freethedream', source_id: id, target_slug: 'kalendar'))
+      links = links.where(source_slug: 'kalendar', target_slug: 'freethedream', target_id: ids)
+                   .or(links.where(source_slug: 'freethedream', source_id: ids, target_slug: 'kalendar'))
                    .order(created_at: :desc).to_a
       event_id = ->(link) { Kronk::AttachmentEffects.ends(link, 'kalendar').first }
       events = Event.where(id: links.map(&event_id)).index_by(&:id)
       members = Membership.member.where(project_id: top_id).pluck(:account_id)
 
-      links.each do |link|
+      links.filter_map do |link|
         event = events[event_id.call(link)]
-        return [event, link] if event && !event.cancelled? && members.include?(event.account_id)
+        next unless event && !event.cancelled? && members.include?(event.account_id)
+
+        [event, link, link.source_slug == 'freethedream' ? link.source_id.to_i : link.target_id.to_i]
       end
-      nil
     end
 
     def member?(account)
@@ -169,7 +207,8 @@ module Freethedream
       Claim.where(account_id: account.id, item_id: Item.where(root_id: top_id).select(:id)).delete_all
     end
 
-    # The emergence's Krew, made the first time it's asked for, with
+    # The emergence's Krew, made the first time it's asked for (an emergence
+    # from before Krews held them), Konnected to it like any other, with
     # everyone already in the emergence as its members and the owner as its
     # seeder. It takes the emergence's name and way in: open, or asking to
     # join (Krew "approval").
@@ -192,6 +231,7 @@ module Freethedream
         Membership.member.where(project_id: id).find_each do |membership|
           made.krew_memberships.create!(account_id: membership.account_id, role: membership.account_id == owner_id ? 'seeder' : 'member', source: 'direct')
         end
+        Kronk::AttachmentEffects.link!('freethedream', id, 'krew', made.id, owner) if owner
       end
       krew
     end
@@ -244,7 +284,6 @@ module Freethedream
       gone -= Placement.where(item_id: gone).where.not(project_id: subtree_ids).pluck(:item_id) unless top?
 
       transaction do
-        krew&.update!(archived_at: Time.current) if top?
         Comment.where(subject_type: Item.name, subject_id: gone).delete_all
         Comment.where(subject_type: Project.name, subject_id: subtree_ids).delete_all
         Item.where(id: gone).delete_all
@@ -269,6 +308,15 @@ module Freethedream
       memberships.create!(account_id: owner_id, state: :member) if owner_id
     end
 
+    # A new projekt has everyone in its Krew, and is Konnected to it so the
+    # Krew page shows it.
+    def join_krew_members!
+      krew.krew_memberships.where.not(account_id: owner_id).pluck(:account_id).each do |account_id|
+        memberships.find_or_create_by!(account_id: account_id) { |m| m.state = :member }
+      end
+      Kronk::AttachmentEffects.link!('freethedream', id, 'krew', krew_id, owner || krew.seeded_by)
+    end
+
     def parent_is_fixed
       errors.add(:parent_id, :invalid) if parent_id_changed?
     end
@@ -290,13 +338,6 @@ module Freethedream
       base = "emergence-#{base}".delete_suffix('-') unless base.match?(/\A[a-z]/)
       slug = "#{base}-#{id}"
       Krew.exists?(slug: slug) ? "#{slug}-#{SecureRandom.hex(3)}" : slug
-    end
-
-    def sync_krew
-      access = krew_access
-      changes = { name: title, access: access }
-      changes[:invite_token] = SecureRandom.urlsafe_base64(Krew::INVITE_TOKEN_BYTES) if access != 'open' && krew.invite_token.blank?
-      krew.update!(changes)
     end
   end
 end

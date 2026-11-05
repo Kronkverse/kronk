@@ -178,6 +178,9 @@ export interface ApiKornerJSON {
   // AutoSpaceBadge can resolve their identity; consumers that render
   // the Hub grid filter `core === true` out.
   core?: boolean;
+  // False keeps a live space off the Hub grid and the rail
+  // (`hub_visible: false` in its manifest; FreeTheDream since 2026-10-30).
+  hub_visible?: boolean;
   // Populated by /api/v1/korners for the current viewer. Anonymous
   // callers get `true`. Toggle via POST/DELETE /api/v1/korners/:slug/tune_out.
   tuned_in?: boolean;

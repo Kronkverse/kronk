@@ -6,9 +6,12 @@ import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import { apiGetKrews, apiJoinKrew } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
+import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { Stage } from 'mastodon/components/stage';
+import { ProjectComposer } from 'mastodon/features/freethedream/components/project_composer';
+import { projectPath } from 'mastodon/features/freethedream/components/shared';
 import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 
 import { KrewAccessMark } from './krew_access_mark';
@@ -194,9 +197,17 @@ interface KrewsProps {
   // manifest's `compose.route`. Same pattern as Albutts +
   // Moments — Krews stays mounted as the composer's background.
   autoOpenComposer?: boolean;
+  // `/hub/krew/composer/projekt`: seed a projekt in one of your Krews
+  // (docs/spaces/freethedream.md, The Krew), over the Krews page. A Krew
+  // page's New projekt and the Konnect picker's open it with
+  // `?konnect=<source>`, and Cancel goes back there.
+  autoOpenProjekt?: boolean;
 }
 
-export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
+export const Krews: React.FC<KrewsProps> = ({
+  autoOpenComposer,
+  autoOpenProjekt,
+}) => {
   const intl = useIntl();
   const history = useHistory();
   // The lens is the SpaceNav view — derived from the URL so the shared
@@ -280,6 +291,17 @@ export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
     if (autoOpenComposer) history.replace('/hub/krew');
   }, [autoOpenComposer, history, returnToSource]);
 
+  const closeProjekt = useCallback(() => {
+    if (returnToSource('/hub/krew')) return;
+    history.replace('/hub/krew');
+  }, [history, returnToSource]);
+  const handleProjektSaved = useCallback(
+    (project: FtdProject) => {
+      history.replace(projectPath(project));
+    },
+    [history],
+  );
+
   const handleCreated = useCallback(
     (created: ApiKrewJSON) => {
       setComposerOpen(false);
@@ -343,6 +365,9 @@ export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
 
       {composerOpen && (
         <KrewComposer onCancel={closeComposer} onCreated={handleCreated} />
+      )}
+      {autoOpenProjekt && (
+        <ProjectComposer onCancel={closeProjekt} onSaved={handleProjektSaved} />
       )}
     </Stage>
   );
