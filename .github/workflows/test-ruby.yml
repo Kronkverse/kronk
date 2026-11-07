@@ -43,7 +43,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: true
@@ -103,7 +103,7 @@ jobs:
     # a release gate, not a merge gate (CLAUDE.md, "CI gates"). It still runs on
     # every PR, so red is visible before you enqueue.
     if: ${{ github.event_name != 'merge_group' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     needs:
       - build
@@ -218,7 +218,7 @@ jobs:
     # Runs on PRs, pushes, nightly and manual runs — everywhere except the
     # merge group, so it reports before merge without slowing the queue.
     if: ${{ github.event_name != 'merge_group' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     needs:
       - build
@@ -309,7 +309,7 @@ jobs:
     # Runs on PRs, pushes, nightly and manual runs — everywhere except the
     # merge group, so it reports before merge without slowing the queue.
     if: ${{ github.event_name != 'merge_group' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     needs:
       - build
@@ -421,7 +421,7 @@ jobs:
     # fast `build` job could gate merges, and without this guard that change
     # would have newly started running this matrix on every single merge.
     if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     needs:
       - build
