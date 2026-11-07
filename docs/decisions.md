@@ -17,6 +17,36 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-31 — A Krew's chat is a space it Konnects
+
+Every Krew used to come with a group chat in Nudges, whether it wanted one or
+not. Tal (2026-10-31): "Maybe we include Nudges into that? So if a krew
+doesn't need a chat, they dont have to add it", and "a krew with nothing
+konnected just shows the top section".
+
+**Decision:** the chat is a space a Krew turns on, like its albums or events:
+a `nudges` row in `krew_korners` (`KrewKorner::KORNERS`).
+
+- **Krews made before today keep their chat**, shown as already Konnected
+  (migration `KonnectExistingKrewChats` adds the row to every Krew). Krews
+  made from today start without one.
+- **Without the row** the Krew page has no Chat section or tile, and Nudges
+  doesn't list the conversation (`Nudges::Conversation.listable`), so it
+  counts toward no badge. The conversation itself is not deleted: taking the
+  chat off and putting it back brings the messages back. Members still join
+  it as they join the Krew, so it is ready if the chat is turned on.
+- **Turning it on and off** is Krew settings, Spaces (Add a space, and the
+  tile's ×), the same as Albutts and Kalendar. It is not offered in the
+  Konnect picker yet: that needs a change to the shared picker.
+- **The Krew page shows only what the Krew has.** The order is Spaces,
+  Projekts, Chat, Kuddle, Posts. Projekts, Chat and Kuddle each show once
+  the Krew has one, and each has a tile under Spaces that scrolls to it. A
+  Krew with nothing is its header, the Konnect tile and its posts. This
+  supersedes the 2026-10-31 order (chat above the spaces) in
+  `docs/spaces/krew.md`.
+
+---
+
 ## 2026-10-30 — The Android app is the website
 
 Tal asked for an Android app that keeps up with the site without a second
@@ -41,6 +71,10 @@ would need app work; not a WebView shell, because web push doesn't work in one.
 - **The site knows it's the app** from the launch URL
   (`/?source=app&app=<versionCode>`, `utils/android_app.ts`). There it offers
   the app's update instead of "add to home screen".
+- **Android browsers are offered the app** (from 2026.11's release,
+  2026-11-04): the install banner says "Get the Kronk app" and downloads
+  `/kronk.apk`, and the footer's "Get the app" goes there too. iOS keeps the
+  Home Screen banner, as there is no iOS app.
 - **The app has its own version**, year.month (`2026.11`, code 20261100),
   not Kronk's: 3.0 is Kronk-native federation (Tal). The code stays above the
   legacy app's 21401 so that app's updater, which reads
@@ -208,6 +242,30 @@ too. The album composer's bespoke chips (who can add photos, who sees a Krew
 album) and ghost buttons moved over, and `<ComposeShell>`'s footer reads
 only tokens (`--accent`, `--dur-fast`, `--elevation-menu`). Nothing was
 removed: which options a composer should drop is still open.
+
+---
+
+## 2026-10-29 — Shop sections become Kollections, shown as rows
+
+Kommons "Kollections" (Tal, https://kronk.info/hub/kommons/p/117522474156930637):
+a shop should group its products into Kollections (a line of tinctures, a
+line of creams), each a row of item cards that scrolls sideways, one under
+another.
+
+**Decision:** Kollections are the shop sections that already existed
+(`listing_shop_sections`: named, ordered, removable, a listing in one or in
+none), renamed for members. No new table: building a second grouping
+beside sections would give a shop two ways to say the same thing. The shop
+page draws each Kollection as a `<SpaceGrid layout='row'>` (the shared row,
+under the 2026-10-29 phone rule that a row of tiles may scroll sideways
+while the page scrolls only down), with "Everything else" last; a shop with
+no Kollections keeps the grid. The owner fills them from the shop page
+(Arrange Kollections, Add an item at the end of each row, Add a Kollection)
+as well as from Shop details. Code and the API keep `section`.
+
+Not yet: a new item made from a row's Add an item tile does not land in
+that row's Kollection by itself; the shop item composer would need to take
+the Kollection, and that composer is being reworked for Goods & Services.
 
 ---
 

@@ -82,7 +82,16 @@ const useMine = () => {
   return mine;
 };
 
+// Mycelium is hidden for now (Tal, 2026-10-30): the Hub view is gone, and
+// so is this. Flip it back to bring both back with the view.
+const MYCELIUM_SHOWN = false as boolean;
+
 export const FromMyMycelium: React.FC<{
+  item: FtdItemRow;
+  onDone: () => void;
+}> = (props) => (MYCELIUM_SHOWN ? <FromMyMyceliumPanel {...props} /> : null);
+
+const FromMyMyceliumPanel: React.FC<{
   item: FtdItemRow;
   onDone: () => void;
 }> = ({ item, onDone }) => {

@@ -68,14 +68,20 @@ RSpec.describe 'Huddle', :inline_jobs, :js, :streaming do
       end
     end
 
-    it 'Konnects the new Kuddle to that Krew' do
+    # Since 2026-10-31 a Kuddle made for a Krew is a call frame on the Krew's
+    # page, so making one goes back there and joins the call in the frame.
+    it 'Konnects the new Kuddle to that Krew, and goes back to the Krew' do
+      # The frame joins the call; the headless browser refuses Jitsi's
+      # wake lock.
+      ignore_js_error(/Wake Lock permission request denied/)
       visit "/hub/huddle/composer?krew=#{krew.id}"
 
       expect(page).to have_css('.konnect-row .space-tile', text: 'Growers')
       fill_in 'Kuddle name', with: 'Seed swap'
       click_on 'Create'
 
-      expect(page).to have_current_path(%r{\A/hub/huddle/kuddle/\d+\z})
+      expect(page).to have_current_path('/hub/krew/growers')
+      expect(page).to have_css('.kuddle-frame', text: 'Seed swap')
       room = HuddleSession.rooms.find_by!(title: 'Seed swap')
       expect(Kronk::AttachmentEffects.between('huddle', room.id, 'krew', krew.id)).to exist
     end

@@ -2,10 +2,10 @@
 
 require 'rails_helper'
 
-# docs/spaces/freethedream.md (Page): the landing sits in <KornerShell>, so
-# the Frame draws its view switch from the manifest's `views:`, the
-# rotating title every other korner with views uses, not a row of pills.
-RSpec.describe 'FreeTheDream', :js, :streaming do
+# docs/spaces/freethedream.md: Projekts live inside Krews (Tal,
+# 2026-10-30). A projekt's pages sit under its Krew, and there is no list
+# of every projekt.
+RSpec.describe 'Projekts', :js, :streaming do
   include ProfileStories
 
   let(:email)               { 'test@example.com' }
@@ -15,36 +15,112 @@ RSpec.describe 'FreeTheDream', :js, :streaming do
 
   before { as_a_logged_in_user }
 
-  it "switches views with the Frame's rotating title, and draws no tab row of its own" do
+  it 'sends the old list, its views and settings to your Krews' do
     visit '/hub/freethedream'
+    expect(page).to have_current_path('/hub/krew')
 
-    within('.scope-title') do
-      expect(page).to have_css('h1.space-header__title', text: 'All emergences')
-      expect(page).to have_css('.space-header__tagline', text: 'Every emergence on Kronk')
-    end
-    # The Frame's pillar bar is a tablist too; only the korner's own
-    # surface (the Stage) must carry none.
-    within('.kronk-stage') do
-      expect(page).to have_no_css('.space-view-picker')
-      expect(page).to have_no_css('[role="tablist"], [role="tab"]')
-    end
+    visit '/hub/freethedream/mine'
+    expect(page).to have_current_path('/hub/krew')
 
-    find('.scope-title__nav--next').click
-
-    expect(page).to have_current_path('/hub/freethedream/mine')
-    expect(page).to have_css('.scope-title h1.space-header__title', text: 'Mine')
-
-    find('.scope-title__nav--next').click
-
-    expect(page).to have_current_path('/hub/freethedream/mycelium')
-    expect(page).to have_css('.scope-title h1.space-header__title', text: 'Mycelium')
-    expect(page).to have_css('.scope-title .space-header__tagline', text: 'What you have to share')
+    visit '/hub/freethedream/settings'
+    expect(page).to have_current_path('/hub/krew')
   end
 
-  it 'opens on the view its address names' do
-    visit '/hub/freethedream/mine'
+  # docs/spaces/freethedream.md, The Krew (Tal, 2026-10-31): a projekt is
+  # seeded from its Krew's page, so the composer has no Krew to pick, and
+  # seeding is bare: a title, what it's about and a cover.
+  it 'seeds a projekt only from a Krew, with just a title' do
+    visit '/hub/freethedream/composer'
+    expect(page).to have_current_path('/hub/krew/composer/projekt')
 
-    expect(page).to have_css('.scope-title h1.space-header__title', text: 'Mine')
-    expect(page).to have_css('.scope-title .space-header__tagline', text: "Emergences you're in")
+    within('.compose-shell') do
+      fill_in placeholder: 'Title', with: 'Mini Doof'
+      expect(page).to have_text('Seed it from the Krew page')
+      expect(page).to have_no_select('Krew')
+      expect(page).to have_no_text('When (optional)')
+      expect(page).to have_no_text('Komponents to start with')
+      expect(page).to have_no_text('What it needs')
+      expect(page).to have_button('Seed', disabled: true)
+    end
+  end
+
+  # docs/spaces/krew.md, Projekts: a Krew with no projekts has no section,
+  # and its first is seeded from Konnect.
+  it "starts a projekt from its Krew's page" do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    krew = Fabricate(:krew, seeded_by: bob.account, name: 'Mayhem')
+
+    visit "/hub/krew/#{krew.slug}"
+    expect(page).to have_css('.attachment-section')
+    expect(page).to have_no_css('.krew-detail__projekts')
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') do
+      click_on 'Projekts'
+      click_on 'Seed a projekt'
+    end
+
+    expect(page).to have_no_select('Krew')
+    fill_in placeholder: 'Title', with: 'Mini Doof'
+    click_on 'Seed'
+
+    expect(page).to have_current_path(%r{\A/hub/krew/#{krew.slug}/p/})
+    expect(Freethedream::Project.find_by(title: 'Mini Doof').krew).to eq krew
+  end
+
+  # docs/spaces/freethedream.md, The Krew: the space badge goes to the Krew
+  # made with the projekt, makes no other, and that Krew leads back.
+  it "opens the emergence's own Krew, which leads back to it" do
+    # The Krew page shows its people's avatars; a test account has none.
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    # An old address (a notification, a link preview) moves under its Krew.
+    visit "/hub/freethedream/p/#{doof.slug}"
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
+    # No Krew row of its own: it is part of the Krew.
+    expect(page).to have_no_css('.freethedream-dreamers')
+    find('.space-badge', text: krew.name).click
+
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}")
+    expect(page).to have_css('.krew-detail__projekts .space-card', text: 'Mini Doof')
+    expect(Krew.count).to eq 1
+
+    find('.krew-detail__projekts .space-card', text: 'Mini Doof').click
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
+
+    # Back from a projekt is its Krew, not the list of every projekt.
+    expect(page).to have_css('.space-badge__name', text: krew.name)
+    find('.space-badge').click
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}")
+  end
+
+  # docs/spaces/freethedream.md, Komponents (Tal, 2026-10-31): adding a
+  # Komponent is its name and what it is about, and whoever made it can
+  # remove it again from the menu.
+  it 'adds a Komponent with just a name, and removes it from the menu' do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    click_on '+ Add a Komponent'
+    within('.compose-shell') do
+      expect(page).to have_no_text('Fractals to start with')
+      expect(page).to have_no_text('What it needs')
+      expect(page).to have_no_css('.konnect-row')
+      fill_in placeholder: 'Sound, Design, Paperwork', with: 'Kitchen'
+      click_on 'Add'
+    end
+
+    expect(page).to have_no_css('.compose-shell')
+    within('.freethedream-groups') { click_link 'Kitchen' }
+    expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
+    find('.kronk-menu__trigger').click
+    find('.kronk-menu__moon[title="Remove"]').click
+    within('.confirm-dialog__panel') { click_on 'Remove' }
+
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
+    expect(Freethedream::Project.where(title: 'Kitchen')).to be_empty
   end
 end

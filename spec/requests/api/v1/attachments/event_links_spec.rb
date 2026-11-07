@@ -2,9 +2,10 @@
 
 require 'rails_helper'
 
-# An emergence and its Krew are one group, so an event linked to either is
-# linked to both, and unlinking from either takes it off both
-# (Kronk::EventLinks, decisions.md 2026-10-22).
+# An event linked to an emergence (a projekt) is shared with its Krew, and
+# unlinking from either takes it off both (Kronk::EventLinks, decisions.md
+# 2026-10-22). A Krew holds several projekts since 2026-10-30, so an event
+# linked to the Krew stays the Krew's and isn't any one projekt's.
 RSpec.describe 'Event links to an emergence and its Krew' do
   let(:user)    { Fabricate(:user) }
   let(:token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
@@ -37,11 +38,11 @@ RSpec.describe 'Event links to an emergence and its Krew' do
     expect(krew.krew_korners.pluck(:korner)).to include('kalendar')
   end
 
-  it 'puts an event linked from the Krew on its emergence too' do
+  it 'keeps an event linked from the Krew on the Krew alone' do
     post "/api/v1/events/#{event.id}/krews", headers: headers, params: { krew_id: krew.id }
 
     expect(response).to have_http_status(200)
-    expect(project.reload.event_link&.first).to eq(event)
+    expect(project.reload.event_link).to be_nil
     expect(krew_event_ids).to include(event.id.to_s)
   end
 
@@ -69,14 +70,14 @@ RSpec.describe 'Event links to an emergence and its Krew' do
     expect(krew_event_ids).to include(event.id.to_s)
   end
 
-  it 'puts an event attached from the Krew on the Krew and its emergence' do
+  it 'puts an event attached from the Krew on the Krew only' do
     post '/api/v1/attachments', headers: headers, params: {
       source_slug: 'krew', source_id: krew.id, target_slug: 'kalendar', target_id: event.id, kind: 'link'
     }
 
     expect(response).to have_http_status(200)
     expect(krew_event_ids).to include(event.id.to_s)
-    expect(project.reload.event_link&.first).to eq(event)
+    expect(project.reload.event_link).to be_nil
   end
 
   it 'shows an event attached from the emergence on the emergence and its Krew' do
@@ -153,7 +154,6 @@ RSpec.describe 'Event links to an emergence and its Krew' do
 
       expect(response).to have_http_status(200)
       expect(Kronk::AttachmentEffects.between('kalendar', event.id, 'krew', krew.id)).to exist
-      expect(project.reload.event_link&.first).to eq(event)
       expect(krew_event_ids).to include(event.id.to_s)
     end
   end

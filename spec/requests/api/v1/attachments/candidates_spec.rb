@@ -71,6 +71,20 @@ RSpec.describe 'Attachments::Candidates' do
       expect(response.parsed_body.pluck('noun')).to eq ['Krew']
     end
 
+    it 'offers projekts, not the gangs inside them, though a gang still opens by id' do
+      project = Freethedream::Project.create!(owner: user.account, title: 'Community Garden')
+      gang = Freethedream::Project.create!(owner: user.account, title: 'Raised beds', parent: project, root: project)
+
+      get '/api/v1/attachments/candidates?korner=freethedream', headers: headers
+
+      expect(response.parsed_body.pluck('title')).to eq ['Community Garden']
+      expect(response.parsed_body.pluck('noun')).to eq ['projekt']
+
+      get "/api/v1/attachments/candidates?korner=freethedream&id=#{gang.id}", headers: headers
+
+      expect(response.parsed_body.pluck('title')).to eq ['Raised beds']
+    end
+
     it 'looks an event up by id, not the newest one the viewer can see' do
       first = Event.create!(account: user.account, title: 'Dawn swim', start_time: 3.days.from_now, end_time: 3.days.from_now + 1.hour)
       Event.create!(account: user.account, title: 'Dusk swim', start_time: 4.days.from_now, end_time: 4.days.from_now + 1.hour)

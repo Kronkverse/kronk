@@ -1566,6 +1566,17 @@ $ev-interested-color: #b8945f;
   }
 }
 
+// Your accepted bookings above the birthdays (me_view.tsx): the same rows,
+// with who it is with after the listing's name.
+.kalendar-bookings {
+  padding-block-end: 0;
+
+  &__with {
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+}
+
 // Phone view: the body lays out [date-badge] [content] [map] in a row, and the
 // map thumbnail's fixed 200px width crushed the content column so hard that the
 // event title (white-space: nowrap + ellipsis) collapsed to a couple of

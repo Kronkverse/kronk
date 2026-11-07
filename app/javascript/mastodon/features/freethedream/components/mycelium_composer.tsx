@@ -33,7 +33,7 @@ const messages = defineMessages({
   edit: { id: 'freethedream.mycelium.edit', defaultMessage: 'Edit' },
   subtitle: {
     id: 'freethedream.mycelium.private',
-    defaultMessage: 'Only you see this until you share it with an emergence.',
+    defaultMessage: 'Only you see this until you share it with a projekt.',
   },
   save: { id: 'freethedream.compose.save', defaultMessage: 'Save' },
   saving: { id: 'freethedream.compose.saving', defaultMessage: 'Saving…' },

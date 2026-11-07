@@ -7,6 +7,31 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.8 "Rose"] - 2026-11-05
+
+- Emergence on its Krew's page (#2444)
+- Emergences live inside Krews (#2445)
+- Projekts name (#2451)
+- Projekts on the Krew page (#2454)
+- Projekts for any shared effort (#2455)
+- Projekt back to its Krew (#2456)
+- Projekts inside Krews (#2457)
+- Projekt page tidy (#2458)
+- Getting together (#2460)
+- Join a Komponent (#2462)
+- Wachuneed home rows (#2461)
+- Kuddle frame (#2464)
+- Shop Kollections (#2465)
+- Komponent nudges listed (#2466)
+- Wachuneed booking parts (#2467)
+- Wachuneed bookings (#2468)
+- Bookings in Kalendar (#2469)
+- Krew and Komponent strip-back (#2471)
+- Krew page shows what it has (#2474)
+- Seed a projekt, bare (#2475)
+- Android app banner (#2478)
+- Notification icons (#2480)
+
 ### [2.1.7 "Rose"] - 2026-11-01
 
 - Rail fade over Hub tiles (#2412)

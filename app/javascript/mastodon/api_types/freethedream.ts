@@ -9,7 +9,9 @@ export type FtdCategory =
   | 'connections';
 
 export type FtdItemKind = 'idea' | 'need' | 'job' | 'offer';
-export type FtdJoining = 'open' | 'by_request';
+// How someone outside joins: its Krew's way in (Project#joining_via_krew).
+// `krew` means through the Krew's own page (an invite or requirements).
+export type FtdJoining = 'open' | 'by_request' | 'krew';
 export type FtdMembership = 'none' | 'member' | 'requested';
 
 export interface FtdAccount {
@@ -61,6 +63,9 @@ export interface FtdEvent {
   my_rsvp: 'going' | 'interested' | 'not_going' | null;
   attachment_id: string;
   can_unlink: boolean;
+  // In a projekt's Getting together: the Komponent or fractal it's for,
+  // or null when it's for the page's own part.
+  for?: FtdRef | null;
 }
 
 export interface FtdProjectSummary {
@@ -79,6 +84,8 @@ export interface FtdProjectSummary {
   members_count: number;
   progress: FtdProgress;
   membership: FtdMembership;
+  // The Krew it lives in, for its address (/hub/krew/<krew>/p/<projekt>).
+  krew_slug: string | null;
 }
 
 export interface FtdSectionRow {
@@ -89,6 +96,7 @@ export interface FtdSectionRow {
   done: boolean;
   sections_count: number;
   people_count: number;
+  joined: boolean;
   progress: FtdProgress;
 }
 
@@ -224,6 +232,7 @@ export interface FtdProject {
   ancestors: FtdRef[];
   cover: FtdCover | null;
   event: FtdEvent | null;
+  events: FtdEvent[];
   ends_on: string | null;
   done: boolean;
   joining: FtdJoining;
@@ -238,12 +247,14 @@ export interface FtdProject {
   depends_on: FtdRef[];
   needed_by: FtdRef[];
   updates: FtdUpdate[];
+  // In a Komponent you joined (on a fractal: its Komponent).
+  in_gang: boolean;
   membership: FtdMembership;
   members_count: number;
   members: FtdAccount[];
   people: FtdPersonRow[];
   // The Krew made with the emergence: everyone in it is in the Krew.
-  krew: { id: string; slug: string; name: string } | null;
+  krew: { id: string; slug: string; name: string; access: string } | null;
   // emergence → gang → fractal (Kitchen → Cooking); nothing goes deeper.
   level: 'emergence' | 'gang' | 'fractal';
   // A gang's or fractal's people and what each is on there.
@@ -265,10 +276,13 @@ export interface FtdProject {
     hand_over: boolean;
     comment: boolean;
     link_event: boolean;
+    join_gang: boolean;
   };
 }
 
 export interface FtdItem extends FtdItemRow {
+  // Its projekt's Krew, for its address (/hub/krew/<krew>/i/<item>).
+  krew_slug: string | null;
   body: string;
   root: FtdRef;
   up_for_grabs: boolean;

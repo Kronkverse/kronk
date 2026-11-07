@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1128,6 +1128,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
     t.index ["kind", "key"], name: "index_freethedream_documents_on_kind_and_key", unique: true
   end
 
+  create_table "freethedream_gang_members", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_gang_members_on_account_id"
+    t.index ["project_id", "account_id"], name: "index_freethedream_gang_members_on_project_id_and_account_id", unique: true
+  end
+
   create_table "freethedream_items", force: :cascade do |t|
     t.text "body", default: "", null: false
     t.integer "category"
@@ -1202,7 +1211,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["cover_media_attachment_id"], name: "index_freethedream_projects_on_cover_media_attachment_id"
-    t.index ["krew_id"], name: "index_freethedream_projects_on_krew_id", unique: true
+    t.index ["krew_id"], name: "index_freethedream_projects_on_krew_id"
     t.index ["owner_id"], name: "index_freethedream_projects_on_owner_id"
     t.index ["parent_id"], name: "index_freethedream_projects_on_parent_id"
     t.index ["root_id"], name: "index_freethedream_projects_on_root_id"
@@ -1511,18 +1520,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
 
   create_table "listing_offers", force: :cascade do |t|
     t.integer "amount_cents"
+    t.datetime "cancelled_at"
+    t.bigint "cancelled_by_id"
     t.jsonb "choices", default: {}, null: false
     t.datetime "created_at", null: false
+    t.text "details"
+    t.datetime "ends_at"
     t.bigint "listing_id", null: false
     t.text "message"
     t.bigint "offerer_id", null: false
     t.string "price_currency", limit: 3
     t.integer "quantity", default: 1, null: false
     t.datetime "responded_at"
+    t.jsonb "route", default: {}, null: false
+    t.datetime "starts_at"
     t.string "state", default: "pending", null: false
     t.integer "total_cents"
     t.datetime "updated_at", null: false
     t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
+    t.index ["listing_id", "starts_at"], name: "index_listing_offers_on_listing_id_and_starts_at", where: "((starts_at IS NOT NULL) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[])))"
     t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"
     t.index ["listing_id"], name: "index_listing_offers_on_listing_id"
     t.index ["offerer_id"], name: "index_listing_offers_on_offerer_id"
@@ -1572,6 +1588,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
     t.bigint "account_id", null: false
     t.boolean "announced", default: true, null: false
     t.string "availability", default: "available", null: false
+    t.jsonb "booking", default: {}, null: false
     t.string "category", null: false
     t.datetime "closed_at"
     t.datetime "created_at", null: false
@@ -2991,6 +3008,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_170000) do
   add_foreign_key "freethedream_comments", "freethedream_items", column: "quoted_item_id", on_delete: :nullify
   add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "depends_on_id", on_delete: :cascade
   add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_gang_members", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_gang_members", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_items", "accounts", column: "owner_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_items", column: "need_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_items", column: "source_idea_id", on_delete: :nullify

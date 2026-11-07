@@ -111,6 +111,8 @@ namespace :api, format: false do
           get :activity
           post :join
           post :leave
+          post :join_gang
+          post :leave_gang
           post :seen
           post :take_over
           post :hand_over
@@ -293,6 +295,7 @@ namespace :api, format: false do
 
     namespace :kalendar do
       resources :birthdays, only: [:index]
+      resources :bookings, only: [:index]
     end
 
     # Invite a Mate to look at a page of any space.
@@ -300,6 +303,7 @@ namespace :api, format: false do
     namespace :wachuneed do
       resources :listings, only: [:index, :show, :create, :update] do
         post :close, on: :member
+        get :times, on: :member
         resources :requests, only: [:create]
       end
       resources :requests, only: [:index] do
@@ -307,6 +311,7 @@ namespace :api, format: false do
           post :accept
           post :decline
           post :withdraw
+          post :cancel
         end
       end
       resources :shops, only: [:index, :show] do

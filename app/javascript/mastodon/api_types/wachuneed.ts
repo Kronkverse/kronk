@@ -42,6 +42,33 @@ export interface ApiListingOptionJSON {
   choices: { label: string; extra_cents: number }[];
 }
 
+// How a listing is booked (docs/spaces/wachuneed.md, Booking): the parts
+// the seller kept, each something the person booking gives. `time`: when,
+// from the seller's weekly `hours`, the `slots` they post (UTC), or with
+// neither a time the person suggests. `route`: a from and a to on the Map.
+// `details`: what they need, asked with `ask`. An empty object is a
+// listing had by asking for it.
+export type ListingBookingPart = 'time' | 'route' | 'details';
+export type ListingBookingTemplate = 'appointment' | 'job' | 'request';
+
+// One stretch of the seller's week: `day` 0 (Sunday) to 6, `from` and `to`
+// as HH:MM in their `time_zone`.
+export interface ApiListingHoursJSON {
+  day: number;
+  from: string;
+  to: string;
+}
+
+export interface ApiListingBookingJSON {
+  parts?: ListingBookingPart[];
+  template?: ListingBookingTemplate;
+  minutes?: number;
+  hours?: ApiListingHoursJSON[];
+  slots?: string[];
+  time_zone?: string;
+  ask?: string;
+}
+
 export interface ApiListingJSON {
   id: string;
   slug?: string;
@@ -70,6 +97,8 @@ export interface ApiListingJSON {
   can_message?: boolean;
   // Detail endpoint only: what a buyer can choose.
   options?: ApiListingOptionJSON[];
+  // Detail endpoint only: how it is booked, if it is.
+  booking?: ApiListingBookingJSON;
   // An item that keeps selling rather than a one-off, and whether there is
   // one to be had.
   ongoing?: boolean;

@@ -9,7 +9,20 @@ export type ApiRequestState =
   | 'accepted'
   | 'declined'
   | 'withdrawn'
-  | 'expired';
+  | 'expired'
+  | 'cancelled';
+
+// One end of a booking's from and to: a point on the Map, maybe named.
+export interface ApiRoutePointJSON {
+  lat: number;
+  lng: number;
+  name?: string;
+}
+
+export interface ApiRouteJSON {
+  from?: ApiRoutePointJSON;
+  to?: ApiRoutePointJSON;
+}
 
 interface ApiRequestAccountJSON {
   id: string;
@@ -32,6 +45,15 @@ export interface ApiRequestJSON {
   message: string | null;
   created_at: string;
   responded_at: string | null;
+  // A booking (docs/spaces/wachuneed.md, Booking): when, a from and a to
+  // (seen only by the two of them), what they need; and, once called
+  // off, when and by which side.
+  starts_at: string | null;
+  ends_at: string | null;
+  route: ApiRouteJSON;
+  details: string | null;
+  cancelled_at: string | null;
+  cancelled_by_seller: boolean;
   buyer: ApiRequestAccountJSON;
   listing: {
     id: string;
@@ -48,6 +70,9 @@ export interface AskParams {
   options?: { name: string; choice: string }[];
   quantity: number;
   message?: string;
+  starts_at?: string;
+  route?: ApiRouteJSON;
+  details?: string;
 }
 
 export const apiAskForListing = (listingId: string, params: AskParams) =>
@@ -62,5 +87,13 @@ export const apiGetRequests = (as: 'seller' | 'buyer') =>
 
 export const apiAnswerRequest = (
   id: string,
-  answer: 'accept' | 'decline' | 'withdraw',
+  answer: 'accept' | 'decline' | 'withdraw' | 'cancel',
 ) => apiRequestPost<ApiRequestJSON>(`v1/wachuneed/requests/${id}/${answer}`);
+
+// A booked listing's free times for two weeks from `from`; `suggest` when
+// the seller posted none and the person suggests a time instead.
+export const apiGetListingTimes = (listingId: string, from?: string) =>
+  apiRequestGet<{ suggest: boolean; times: string[] }>(
+    `v1/wachuneed/listings/${listingId}/times`,
+    from ? { from } : undefined,
+  );

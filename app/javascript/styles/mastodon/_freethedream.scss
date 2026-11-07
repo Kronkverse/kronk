@@ -225,67 +225,6 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Get involved: one card per list of work, as tiles that reflow (two
-// across on a phone, more as it widens). Phone views scroll vertically
-// only, never sideways (Tal; docs/spaces/freethedream.md, The page).
-.freethedream-work {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr));
-  gap: 0.75rem;
-
-  > li {
-    display: flex;
-    min-inline-size: 0;
-  }
-
-  &__card {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    inline-size: 100%;
-    min-block-size: 7rem;
-    padding: 1rem;
-    background: var(--surface-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-large);
-    text-decoration: none;
-    transition: border-color var(--dur-fast) var(--ease-out);
-
-    &:hover,
-    &:focus-visible {
-      border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-    }
-
-    .freethedream &,
-    .freethedream &:hover {
-      color: var(--text-primary);
-    }
-  }
-
-  &__title {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px;
-    font-family: var(--font-display);
-    font-size: 18px;
-  }
-
-  &__count {
-    font-family: var(--font-body);
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
-  &__hint {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-}
-
 // Krew (an emergence) and Who's in it (a gang): everyone as tiles that
 // reflow into rows, never a row you scroll sideways.
 .freethedream-dreamers {
@@ -510,65 +449,117 @@ $freethedream-wide: 1000px;
 }
 
 // The project's Kalendar event on its Overview.
-.freethedream-event {
+// Join on a Komponent's page: the pill and a line saying what it does.
+.freethedream-join-gang {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 12px;
+
+  .freethedream__quiet {
+    margin: 0;
+    font-size: 13px;
+  }
+}
+
+// Getting together (event_card.tsx): one row per event, a date tile, what
+// and when, and the Going toggle.
+.freethedream-together {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 1rem;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-large);
 
-  &--empty {
-    border-style: dashed;
-    background: transparent;
+  &__event {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+    padding: 12px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-large);
+  }
+
+  &__date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    inline-size: 48px;
+    block-size: 52px;
+    border-radius: var(--radius-medium, 10px);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent-text);
+    text-decoration: none;
+    line-height: 1.1;
+  }
+
+  &__month {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__day {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
   }
 
   &__body {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-  }
-
-  &__kind {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--accent-text);
+    gap: 3px;
+    min-inline-size: 0;
   }
 
   &__title {
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
     text-decoration: none;
+    overflow-wrap: anywhere;
   }
 
   .freethedream &__title {
     color: var(--text-primary);
   }
 
-  &__map {
-    display: block;
+  &__meta {
+    font-size: 13px;
+    color: var(--text-secondary);
   }
 
   &__foot {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    gap: 4px 10px;
+    margin-block-start: 2px;
 
     .freethedream__quiet {
       margin: 0;
+      font-size: 13px;
     }
   }
 
-  &__rsvp {
-    display: inline-flex;
-    gap: 6px;
+  &__make {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-block-start: 12px;
+
+    .freethedream__input--inline {
+      flex: 1 1 12rem;
+      min-inline-size: 0;
+    }
   }
 }
 
@@ -1416,65 +1407,6 @@ $freethedream-wide: 1000px;
     color: var(--text-muted);
     font-size: 13px;
     white-space: nowrap;
-  }
-}
-
-// One thing to a box, for what a new gang or fractal needs: the box, its
-// amount, More welcome, and ×.
-.freethedream-boxes {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  &__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 8px;
-  }
-
-  &__input.freethedream__input {
-    flex: 1 1 12rem;
-    inline-size: auto;
-    min-inline-size: 0;
-  }
-
-  &__count.freethedream__input {
-    flex: 0 0 auto;
-    inline-size: 6.5em;
-    min-inline-size: 0;
-  }
-
-  &__amount {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    white-space: nowrap;
-  }
-
-  &__remove {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 28px;
-    block-size: 28px;
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-round);
-    background: transparent;
-    color: var(--text-muted);
-    font: inherit;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-
-    &:hover {
-      background: var(--border-subtle);
-      color: var(--text-primary);
-    }
   }
 }
 

@@ -21,6 +21,7 @@ import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { me } from 'mastodon/initial_state';
 
 import { AskForListing } from './ask_for_listing';
+import { ListingBookingSummary } from './listing_booking_summary';
 import {
   ListingOptionsChooser,
   chosenExtraCents,
@@ -373,6 +374,10 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
 
       {listing.description ? (
         <p className='wachuneed-detail__description'>{listing.description}</p>
+      ) : null}
+
+      {listing.kind !== 'wanted' && listing.booking ? (
+        <ListingBookingSummary booking={listing.booking} />
       ) : null}
 
       {listing.kind !== 'wanted' && variants ? (

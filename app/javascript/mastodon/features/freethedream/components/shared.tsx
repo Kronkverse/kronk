@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import type {
   FtdAccount,
@@ -71,18 +71,62 @@ export const errorOf = (e: unknown): string | null => {
   return null;
 };
 
+// Projekts live inside Krews (Tal, 2026-10-30): a projekt's page is
+// /hub/krew/<krew>/p/<projekt>, an item's /hub/krew/<krew>/i/<item>. The
+// tail is what the old /hub/freethedream addresses had, so those forward by
+// swapping the front (useKrewAddress). The Krew comes from the record when
+// it says, else from the page's own address (every page inside a projekt
+// is under its Krew), else the old address, which forwards once it loads.
+const KREW_IN_PATH = /^\/hub\/krew\/([^/]+)\/[pi]\//;
+
+const homeOf = (krewSlug?: string | null) => {
+  const slug = krewSlug ?? KREW_IN_PATH.exec(window.location.pathname)?.[1];
+  return slug ? `/hub/krew/${slug}` : '/hub/freethedream';
+};
+
 // A project's page, by name (decisions.md, 2026-10-22). `rest` is a list
 // under it, like '/actualise'.
 export const projectPath = (
-  project: { id: string; slug?: string },
+  project: {
+    id: string;
+    slug?: string;
+    krew?: { slug: string } | null;
+    krew_slug?: string | null;
+  },
   rest = '',
-): string => `/hub/freethedream/p/${project.slug ?? project.id}${rest}`;
+): string =>
+  `${homeOf(project.krew?.slug ?? project.krew_slug)}/p/${project.slug ?? project.id}${rest}`;
 
-export const itemPath = (item: { id: string; slug?: string }): string =>
-  `/hub/freethedream/i/${item.slug ?? item.id}`;
+export const itemPath = (item: {
+  id: string;
+  slug?: string;
+  krew_slug?: string | null;
+}): string => `${homeOf(item.krew_slug)}/i/${item.slug ?? item.id}`;
+
+// An old /hub/freethedream/(p|i)/… address (a notification, a link
+// preview, a Konnected tile) moves under its Krew once the page knows it.
+export const useKrewAddress = (krewSlug?: string | null) => {
+  const history = useHistory();
+  const location = useLocation();
+  useEffect(() => {
+    if (!krewSlug || !location.pathname.startsWith('/hub/freethedream/')) {
+      return;
+    }
+    history.replace({
+      ...location,
+      pathname: location.pathname.replace(
+        '/hub/freethedream/',
+        `/hub/krew/${krewSlug}/`,
+      ),
+    });
+  }, [krewSlug, location, history]);
+};
 
 // Load something by key; `reload` fetches again, `set` replaces it with a
-// fresh copy an action returned.
+// fresh copy an action returned. What was loaded for another key is not
+// handed back while the new one loads: a projekt's page going on to one of
+// its Komponents would otherwise put the projekt's name back in the
+// address (useNamedLink) and never leave it.
 export function useLoaded<T>(
   key: string,
   load: () => Promise<T>,
@@ -92,16 +136,23 @@ export function useLoaded<T>(
   set: (next: T) => void;
   reload: () => void;
 } {
-  const [data, setData] = useState<T | null>(null);
+  const [loaded, setLoaded] = useState<{ key: string; value: T } | null>(null);
   const [failed, setFailed] = useState(false);
   const [tick, setTick] = useState(0);
+  const data = loaded?.key === key ? loaded.value : null;
+  const set = useCallback(
+    (next: T) => {
+      setLoaded({ key, value: next });
+    },
+    [key],
+  );
 
   useEffect(() => {
     let stale = false;
     setFailed(false);
     load()
       .then((result) => {
-        if (!stale) setData(result);
+        if (!stale) setLoaded({ key, value: result });
       })
       .catch(() => {
         if (!stale) setFailed(true);
@@ -117,7 +168,7 @@ export function useLoaded<T>(
     setTick((t) => t + 1);
   }, []);
 
-  return { data, failed, set: setData, reload };
+  return { data, failed, set, reload };
 }
 
 export const Loading: React.FC<{ failed?: boolean }> = ({ failed }) => {

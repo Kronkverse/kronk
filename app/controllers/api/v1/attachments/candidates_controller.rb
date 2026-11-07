@@ -49,7 +49,7 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
     scope = if params[:id].present?
               klass.where(id: params[:id].to_s)
             else
-              apply_when(apply_query(klass.all, klass, params[:q].to_s), klass)
+              apply_when(apply_query(candidates(klass), klass, params[:q].to_s), klass)
             end
     records = Kronk::KornerRecords.findable(klass, scope, current_account, limit: limit)
 
@@ -60,6 +60,12 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
 
   def accepts_links?(slug)
     Array(Kronk::KornerRegistry.find(slug)&.accepts).any? { |entry| entry.is_a?(Hash) && entry['kind'].to_s == KornerAttachment::KIND_LINK }
+  end
+
+  # A model with its own `attachment_candidates` (Projekts: no gangs)
+  # narrows what a search offers; a lookup by id still finds the rest.
+  def candidates(klass)
+    klass.respond_to?(:attachment_candidates) ? klass.attachment_candidates : klass.all
   end
 
   # Events offer what's coming (from today on) unless `past=1` asks for the

@@ -28,6 +28,8 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attribute :shop, if: :detail?
   # The seller's options, for the listing page and the edit form.
   attribute :options, if: :detail?
+  # How it is booked, if it is (Listing::BOOKING_PARTS), for the same two.
+  attribute :booking, if: :detail?
   # What it comes in, for the listing page and the edit form; whether it
   # was posted to the feed; and what the seller's shop says of every item.
   attribute :variants, if: :detail?
