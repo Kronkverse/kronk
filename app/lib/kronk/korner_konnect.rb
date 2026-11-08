@@ -9,8 +9,10 @@
 #     make: true            # the Konnect picker offers "New …" here
 #     route: /hub/x/new     # optional: where "New …" goes, if not compose.route
 #     label: 'New thing'    # optional: what it says, if not compose.label
-#     space: true           # picked in a Krew's Konnect, turns the space on
-#                           # for the Krew (KrewKorner) instead of linking
+#     kind: work            # group, happening, work, exchange or talk
+#     to:                   # the Konnect grid (Kronk::KonnectGrid): per
+#       krew: space         # korner, `space` (turns a section on there) or
+#       kalendar: link      # `link` (ties one record)
 #     effects:              # what a Konnection with a space does beyond the link
 #       - with: krew
 #         does: "The Krew joins the event's audience."
@@ -30,7 +32,7 @@ module Kronk
   module KornerKonnect
     module_function
 
-    KEYS = %w(noun make route label effects space).freeze
+    KEYS = %w(noun make route label effects kind to).freeze
     EFFECT_KEYS = %w(with does).freeze
 
     def issues(manifests)
@@ -49,7 +51,7 @@ module Kronk
       issues.concat(noun_issues(manifest, raw))
       issues.concat(override_issues(manifest, raw))
       issues.concat(make_issues(manifest, raw))
-      issues.concat(space_issues(manifest, raw))
+      issues.concat(grid_issues(manifest, raw, by_slug))
       issues.concat(effects_issues(manifest, raw, by_slug))
       issues
     end
@@ -80,15 +82,35 @@ module Kronk
       issues
     end
 
-    # `space: true` turns the space on for a Krew, so it has to be one a Krew
-    # can have (KrewKorner::KORNERS).
-    def space_issues(manifest, raw)
-      return [] unless raw.key?('space')
-      return ["#{manifest.slug}: `konnect.space` must be true or false"] unless [true, false].include?(raw['space'])
-      return [] unless raw['space']
-      return [] if KrewKorner::KORNERS.include?(manifest.slug)
+    # The Konnect grid (Kronk::KonnectGrid): a korner that takes links says
+    # what kind it is and where it Konnects (`to: {}` for nowhere of its
+    # own; others may still list it). Each `to:` names a korner that takes
+    # links, not itself, as `space` or `link`.
+    def grid_issues(manifest, raw, by_slug)
+      slug = manifest.slug
+      issues = []
+      kind = raw['kind']
+      if raw.key?('kind')
+        issues << "#{slug}: `konnect.kind` must be one of #{Kronk::KonnectGrid::KINDS.join(', ')}" unless Kronk::KonnectGrid::KINDS.include?(kind)
+      elsif takes_links?(manifest)
+        issues << "#{slug}: takes links but has no `konnect.kind` (#{Kronk::KonnectGrid::KINDS.join(', ')}): it has no row in the Konnect grid"
+      end
+      return issues + ["#{slug}: takes links but has no `konnect.to` (where it Konnects; `{}` for nowhere)"] if !raw.key?('to') && takes_links?(manifest)
+      return issues unless raw.key?('to')
+      return issues + ["#{slug}: `konnect.to` must be a mapping of korner to `space` or `link`"] unless raw['to'].is_a?(Hash)
 
-      ["#{manifest.slug}: `konnect.space: true` but a Krew can't have it (not in KrewKorner::KORNERS)"]
+      raw['to'].each do |other, mode|
+        where = "#{slug}: `konnect.to.#{other}`"
+        issues << "#{where} must be `space` or `link`" unless Kronk::KonnectGrid::MODES.include?(mode.to_s)
+        if other.to_s == slug
+          issues << "#{where}: a korner doesn't Konnect to itself"
+        elsif !by_slug.key?(other.to_s)
+          issues << "#{where} names a korner with no manifest"
+        elsif !takes_links?(by_slug[other.to_s])
+          issues << "#{where} names a korner that takes no links"
+        end
+      end
+      issues
     end
 
     def override_issues(manifest, raw)

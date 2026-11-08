@@ -908,8 +908,9 @@ Nudges keep a per-device draft per conversation instead
 
 #### Konnect
 
-Any creation Konnects to any other (decisions.md, 2026-10-23), and every
-composer that makes a record offers it: `konnect` is a required prop of
+A record Konnects where the Konnect grid allows (decisions.md,
+2026-11-08; docs/korners/adding_a_korner.md §2.6), and every composer that
+makes a record offers it: `konnect` is a required prop of
 `<ComposeShell>`, so a composer can't leave it out by forgetting. `useKonnect(korner)` (`hooks/useKonnect.ts`) holds what
 the new record will be Konnected to: the record it was opened from
 (`?konnect=<slug>:<id>`, which the Konnect picker's **New …** sends) and any

@@ -328,6 +328,10 @@ const SECTION_IDS = {
 // The spaces whose things open in place below the tiles.
 const PANEL_SPACES = ['albutts', 'kalendar'] as const;
 
+// Spaces Konnect turns on when picked rather than linking one record (the
+// grid says `space`; Albutts and Kalendar turn on by linking instead).
+const TURN_ON_SPACES = ['kuestions'] as const;
+
 const SpaceTile: React.FC<{
   slug: 'albutts' | 'kalendar';
   open: boolean;
@@ -561,7 +565,7 @@ export const KrewDetail = () => {
   }, []);
 
   // A space that is a Krew's own rather than a record (Kuestions; manifest
-  // `konnect.space`) is turned on when it is picked in Konnect.
+  // grid `space`, TURN_ON_SPACES) is turned on when it is picked in Konnect.
   const spaceKrewId = krew?.id;
   const turnOnSpace = useCallback(
     async (slug: string) => {
@@ -1008,6 +1012,7 @@ export const KrewDetail = () => {
               renderKonnect={renderKonnect}
               onKonnections={handleKonnections}
               onTurnOnSpace={turnOnSpace}
+              turnOnSlugs={TURN_ON_SPACES}
             />
 
             {isMember && openNow === 'kalendar' && (

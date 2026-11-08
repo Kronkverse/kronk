@@ -35,7 +35,7 @@ RSpec.describe 'Attachments' do
       ],
       accepts: [],
       resources: [],
-      konnect: nil
+      konnect: { 'to' => { 'targetkorner' => 'link' } }
     )
     tgt_manifest = instance_double(
       Kronk::KornerRegistry::Manifest,

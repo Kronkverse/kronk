@@ -692,11 +692,41 @@ RSpec.describe Mastodon::CLI::Korners do
     # decisions.md, 2026-10-26: four records called Ember read the same
     # unless each says what it is.
     it 'fails a korner that takes links without a noun for its records' do
-      takes_links = Kronk::KornerRegistry::Manifest.new(slug: 'c', konnect: { 'make' => false }, accepts: [{ 'from' => '*', 'kind' => 'link' }])
-      named = Kronk::KornerRegistry::Manifest.new(slug: 'd', konnect: { 'noun' => 'thing' }, accepts: [{ 'from' => '*', 'kind' => 'link' }])
+      takes_links = Kronk::KornerRegistry::Manifest.new(slug: 'c', konnect: { 'make' => false, 'kind' => 'work', 'to' => {} }, accepts: [{ 'from' => '*', 'kind' => 'link' }])
+      named = Kronk::KornerRegistry::Manifest.new(slug: 'd', konnect: { 'noun' => 'thing', 'kind' => 'work', 'to' => {} }, accepts: [{ 'from' => '*', 'kind' => 'link' }])
 
       expect(issues_for(takes_links, named, manifest('a', konnect: { 'effects' => [effect('b')] }), manifest('b')))
         .to contain_exactly(a_string_matching(/c: takes links but has no `konnect.noun`/))
+    end
+
+    # The Konnect grid (Kronk::KonnectGrid, decisions.md 2026-11-08).
+    describe 'the grid' do
+      def taker(slug, konnect)
+        Kronk::KornerRegistry::Manifest.new(slug: slug, konnect: { 'noun' => 'thing' }.merge(konnect), accepts: [{ 'from' => '*', 'kind' => 'link' }])
+      end
+
+      def grid_issues(*manifests)
+        issues_for(*manifests, manifest('a', konnect: { 'effects' => [effect('b')] }), manifest('b'))
+      end
+
+      it 'passes a korner with a kind and where it Konnects' do
+        expect(grid_issues(taker('c', 'kind' => 'work', 'to' => { 'd' => 'space' }), taker('d', 'kind' => 'group', 'to' => {}))).to be_empty
+      end
+
+      it 'fails a korner that takes links with no row in the grid' do
+        issues = grid_issues(taker('c', {}))
+        expect(issues).to include(a_string_matching(/c: takes links but has no `konnect.kind`/), a_string_matching(/c: takes links but has no `konnect.to`/))
+      end
+
+      it 'fails an unknown kind, an unknown mode, itself and a korner with no manifest' do
+        issues = grid_issues(taker('c', 'kind' => 'thing', 'to' => { 'c' => 'link', 'd' => 'maybe', 'nowhere' => 'link' }), taker('d', 'kind' => 'group', 'to' => {}))
+        expect(issues).to include(
+          a_string_matching(/c: `konnect.kind` must be one of/),
+          a_string_matching(/c: `konnect.to.c`: a korner doesn.t Konnect to itself/),
+          a_string_matching(/c: `konnect.to.d` must be `space` or `link`/),
+          a_string_matching(/c: `konnect.to.nowhere` names a korner with no manifest/)
+        )
+      end
     end
 
     it 'fails a noun that is not a word' do

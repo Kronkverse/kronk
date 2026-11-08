@@ -52,8 +52,9 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 //
 // There, "New …" can't open another composer (the person is mid-compose).
 //
-// A space that is a Krew's own rather than records to link (manifest
-// `konnect.space`, Kuestions) is turned on when it is picked, given
+// A space that is this record's own rather than records to link (the
+// Konnect grid says `space` here, and the page lists it in `turnOnSlugs`:
+// a Krew's Kuestions) is turned on when it is picked, given
 // `onTurnOnSpace` (the Krew page), and the picker closes (decisions.md,
 // 2026-11-08). Anywhere else it offers its records as usual.
 //
@@ -136,8 +137,11 @@ interface AttachmentPickerProps {
   onPick?: (target: KonnectTarget) => void;
   // Records already chosen or Konnected, left out of the results.
   exclude?: Pick<KonnectTarget, 'slug' | 'id'>[];
-  // Turn a `konnect.space` space on for this record instead of linking.
+  // Turn a grid `space` on for this record instead of linking.
   onTurnOnSpace?: (slug: string) => Promise<void>;
+  // The spaces this page turns on when picked (the rest link, which turns
+  // theirs on as a side effect: an album, an event).
+  turnOnSlugs?: readonly string[];
 }
 
 export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
@@ -148,6 +152,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   onPick,
   exclude,
   onTurnOnSpace,
+  turnOnSlugs,
 }) => {
   const intl = useIntl();
   const { addLink } = useAttachments(sourceSlug, onPick ? null : sourceId);
@@ -211,8 +216,10 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   const turningOn =
     !onPick &&
     onTurnOnSpace !== undefined &&
-    targetManifest?.konnect?.space === true;
-  const turnOnSlug = turningOn ? target?.slug : undefined;
+    target !== undefined &&
+    turnOnSlugs?.includes(target.slug) === true &&
+    targetManifest?.konnect?.to?.[sourceSlug] === 'space';
+  const turnOnSlug = turningOn ? target.slug : undefined;
   useEffect(() => {
     if (!turnOnSlug || !onTurnOnSpace) return undefined;
     let cancelled = false;
