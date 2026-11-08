@@ -15,6 +15,11 @@ class StatusPolicy < ApplicationPolicy
     # would otherwise still let the blocked person in.
     return false if !owned? && author_blocking?
 
+    # A repost (a quote post) is seen only by people who could already see
+    # the post it quotes (docs/decisions.md, 2026-11-08). Public originals
+    # cost nothing here.
+    return false if !owned? && quoted_hidden?
+
     # A Moment's backing Status is exactly as visible as the Moment: its
     # reach + krew while active, then the author alone once the 24h window
     # closes (Moment#visible_to?). Every single-status path (show, context,
@@ -72,6 +77,14 @@ class StatusPolicy < ApplicationPolicy
   end
 
   private
+
+  def quoted_hidden?
+    quoted = record.quote&.quoted_status
+    return false if quoted.nil? || !quoted.local? || quoted.distributable?
+    return false if quoted.account_id == current_account&.id
+
+    !StatusPolicy.new(current_account, quoted).show?
+  end
 
   # The reach-tier half of show? — the audience implied by the status's
   # `visibility` alone, ignoring any additive krew targeting.
