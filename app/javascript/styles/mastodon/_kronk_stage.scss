@@ -39,6 +39,14 @@
   height: 100%;
   min-height: 0;
 
+  // A gutter on the left at desktop widths, to balance the korner rail on
+  // the right: without it every space started 16 to 24px from the edge of
+  // the screen (Kommons, Page edges, 2026-11-08). Phones keep each space's
+  // own even padding.
+  @media (width >= 890px) {
+    padding-inline-start: 1.5rem;
+  }
+
   // Lift above the right-band fade strip (z-24) so its soft inner edge
   // never dims Stage content; matches the top chrome (z-25).
   z-index: 25;
