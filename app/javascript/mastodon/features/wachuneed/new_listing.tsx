@@ -43,7 +43,7 @@ import {
   variantStateFrom,
   variantValues,
 } from './listing_variants_editor';
-import { offeringMessages , isOffering } from './offering';
+import { offeringMessages, isOffering } from './offering';
 import { OfferingChooser } from './offering_chooser';
 import { OfferingComposer } from './offering_composer';
 
