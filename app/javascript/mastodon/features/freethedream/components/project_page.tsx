@@ -9,10 +9,8 @@ import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeleteAttachment } from 'mastodon/api/attachments';
 import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
 import {
-  apiFtdAddDependency,
   apiFtdProject,
   apiFtdProjectAction,
-  apiFtdRemoveDependency,
   apiFtdRemoveProject,
   apiFtdSeen,
 } from 'mastodon/api/freethedream';
@@ -35,7 +33,6 @@ import { act } from './act';
 import { Crew } from './crew';
 import { eventMapHref, eventWhen, GettingTogether } from './event_card';
 import { GroupTiles } from './groups';
-import { ItemComposer } from './item_composer';
 import { Yours } from './overview';
 import { ProjectComposer } from './project_composer';
 import {
@@ -48,7 +45,6 @@ import {
 } from './shared';
 import { Talk } from './talk';
 import { Updates } from './updates';
-import { WORK_LISTS, WorkBody, workCount, workMessages } from './work';
 
 // A projekt, a Komponent (a gang in the code) or a fractal, on one page.
 // A projekt's page is what's yours, its Komponents and a live Activity,
@@ -57,11 +53,12 @@ import { WORK_LISTS, WorkBody, workCount, workMessages } from './work';
 // over and Remove are off the page (Tal, 2026-10-30).
 //
 // A gang's page is its overview at a lower level (Tal, 2026-10-15): who's
-// in it first (and what each is bringing or actualising), how much gear is
-// gathered, its fractals (Kitchen → Cooking, Cleaning, Storage,
-// Logistics) as tiles, then Thing Bringing, Actualise and On offer in
-// full, each grouped by fractal, with one tap to bring or jump on board.
-// A fractal's page is the same without fractals of its own.
+// in it first, then its fractals (Kitchen → Cooking, Cleaning, Storage,
+// Logistics) as a row of cards, its Kuestions, Getting together, Activity
+// and Talk. Thing Bringing, Actualise, On offer and Depends on are off the
+// page, to come back as they're needed, and so is the "needs met" count
+// (Tal, 2026-11-08). A fractal's page is the same without fractals of its
+// own.
 
 const messages = defineMessages({
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
@@ -109,17 +106,6 @@ const messages = defineMessages({
     id: 'freethedream.add_fractal',
     defaultMessage: '+ Add a fractal',
   },
-  gearGathered: {
-    id: 'freethedream.gear_gathered',
-    defaultMessage: '{gathered} of {total} needs met',
-  },
-  dependsOn: { id: 'freethedream.depends_on', defaultMessage: 'Depends on' },
-  neededBy: { id: 'freethedream.needed_by', defaultMessage: 'Needed by' },
-  addDependency: {
-    id: 'freethedream.add_dependency',
-    defaultMessage: 'Add something this depends on',
-  },
-  unlink: { id: 'freethedream.unlink', defaultMessage: 'Unlink' },
   upForGrabs: {
     id: 'freethedream.up_for_grabs',
     defaultMessage:
@@ -127,7 +113,7 @@ const messages = defineMessages({
   },
 });
 
-type Composer = 'section' | 'edit' | 'offer' | null;
+type Composer = 'section' | 'edit' | null;
 
 // One route for both views, so switching tabs keeps the loaded project.
 export const ProjectPage: React.FC = () => {
@@ -174,9 +160,6 @@ const ProjectView: React.FC<{
   }, []);
   const openEdit = useCallback(() => {
     setComposer('edit');
-  }, []);
-  const openOffer = useCallback(() => {
-    setComposer('offer');
   }, []);
 
   // Opening a project or section is looking at its talk: nothing in it is
@@ -259,30 +242,8 @@ const ProjectView: React.FC<{
     },
     [project.id, onChange, refresh],
   );
-  const handleItemSaved = useCallback(() => {
-    setComposer(null);
-    refresh();
-  }, [refresh]);
 
-  const handleDependency = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const target = e.target.value;
-      if (target)
-        void act(apiFtdAddDependency(project.id, target).then(onChange));
-    },
-    [project.id, onChange],
-  );
-  const handleUnlink = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      const target = e.currentTarget.dataset.id;
-      if (target)
-        void act(apiFtdRemoveDependency(project.id, target).then(onChange));
-    },
-    [project.id, onChange],
-  );
   const member = project.membership === 'member';
-  const linked = new Set([project.id, ...project.depends_on.map((d) => d.id)]);
-  const dependencyOptions = project.all_parts.filter((p) => !linked.has(p.id));
 
   // The gangs you have a hand in come first, tagged with any talk you
   // haven't seen in them.
@@ -404,11 +365,7 @@ const ProjectView: React.FC<{
                 )),
               project.done && intl.formatMessage(messages.done),
             ]
-          : [
-              project.gear.total > 0 &&
-                intl.formatMessage(messages.gearGathered, project.gear),
-              project.done && intl.formatMessage(messages.done),
-            ]
+          : [project.done && intl.formatMessage(messages.done)]
       }
     />
   );
@@ -488,6 +445,7 @@ const ProjectView: React.FC<{
             )}
           >
             <GroupTiles
+              row
               sections={groups}
               addLabel={intl.formatMessage(
                 project.top ? messages.addGroup : messages.addFractal,
@@ -514,87 +472,12 @@ const ProjectView: React.FC<{
               canAsk={isMember}
               frame={frameKuestions}
             />
-            {project.top ? (
+            {project.top && (
               <Updates
                 updates={project.updates}
                 hereId={project.id}
                 rootId={project.root.id}
               />
-            ) : (
-              // Every list in full, grouped by fractal. Still needed isn't
-              // here: each row already says whether anyone is on it.
-              WORK_LISTS.filter(
-                (list) =>
-                  list !== 'needed' &&
-                  (workCount(project, list) > 0 || project.can.add),
-              ).map((list) => (
-                <Section
-                  key={list}
-                  title={intl.formatMessage(workMessages[list])}
-                >
-                  <WorkBody
-                    project={project}
-                    list={list}
-                    refresh={refresh}
-                    onOffer={openOffer}
-                  />
-                </Section>
-              ))
-            )}
-
-            {(project.depends_on.length > 0 ||
-              project.needed_by.length > 0 ||
-              (member && !project.top && dependencyOptions.length > 0)) && (
-              <Section title={intl.formatMessage(messages.dependsOn)}>
-                {project.depends_on.length > 0 && (
-                  <ul className='freethedream-links'>
-                    {project.depends_on.map((d) => (
-                      <li key={d.id}>
-                        <Link to={projectPath(d)}>{d.title}</Link>
-                        {project.can.edit && (
-                          <button
-                            type='button'
-                            className='freethedream__link'
-                            data-id={d.id}
-                            onClick={handleUnlink}
-                          >
-                            {intl.formatMessage(messages.unlink)}
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {member && !project.top && dependencyOptions.length > 0 && (
-                  <select
-                    className='freethedream__input freethedream__input--inline'
-                    value=''
-                    onChange={handleDependency}
-                    aria-label={intl.formatMessage(messages.addDependency)}
-                  >
-                    <option value=''>
-                      {intl.formatMessage(messages.addDependency)}
-                    </option>
-                    {dependencyOptions.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {'  '.repeat(p.depth)}
-                        {p.title}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {project.needed_by.length > 0 && (
-                  <p className='freethedream__quiet'>
-                    {intl.formatMessage(messages.neededBy)}{' '}
-                    {project.needed_by.map((d, i) => (
-                      <span key={d.id}>
-                        {i > 0 && ', '}
-                        <Link to={projectPath(d)}>{d.title}</Link>
-                      </span>
-                    ))}
-                  </p>
-                )}
-              </Section>
             )}
           </div>
           <aside className='freethedream-layout__aside'>
@@ -644,14 +527,6 @@ const ProjectView: React.FC<{
           destructive
           onConfirm={handleRemove}
           onCancel={cancelRemove}
-        />
-      )}
-      {composer === 'offer' && (
-        <ItemComposer
-          kind='offer'
-          project={project}
-          onCancel={close}
-          onSaved={handleItemSaved}
         />
       )}
     </KornerDetail>

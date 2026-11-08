@@ -6,7 +6,9 @@ import type { FtdSectionRow } from 'mastodon/api_types/freethedream';
 
 import { Progress, projectPath } from './shared';
 
-// Gangs (or a gang's fractals) as tiles: how many people have a hand in
+// Gangs (or a gang's fractals) as cards, in one row that scrolls sideways
+// with the next card peeking in (`row`, Tal 2026-11-08: "Komponents should
+// be in swipable cards rather than grid view"): how many people have a hand in
 // each, how many fractals it has, how far along it is, and a count of talk
 // you haven't seen in your own. Nobody leads a
 // gang (Tal, 2026-10-15), so no owner shows. Members get the tile to
@@ -30,11 +32,18 @@ export const GroupTiles: React.FC<{
   sections: (FtdSectionRow & { unseen?: number })[];
   addLabel?: string;
   onAdd?: () => void;
-}> = ({ sections, addLabel, onAdd }) => {
+  row?: boolean;
+}> = ({ sections, addLabel, onAdd, row = false }) => {
   const intl = useIntl();
 
   return (
-    <ul className='freethedream-groups'>
+    <ul
+      className={
+        row
+          ? 'freethedream-groups freethedream-groups--row'
+          : 'freethedream-groups'
+      }
+    >
       {sections.map((section) => (
         <li key={section.id}>
           <Link to={projectPath(section)} className='freethedream-group'>

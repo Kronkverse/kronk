@@ -54,6 +54,7 @@ module Freethedream
 
     before_validation :set_root, on: :create
     after_create :join_owner!, if: :top?
+    after_create :join_gang_owner!, if: :gang?
     after_create :join_krew_members!, if: -> { top? && krew_id.present? }
 
     scope :top_level, -> { where(parent_id: nil) }
@@ -318,6 +319,13 @@ module Freethedream
 
     def join_owner!
       memberships.create!(account_id: owner_id, state: :member) if owner_id
+    end
+
+    # Whoever makes a Komponent is in it, and hears about it like anyone who
+    # joined (Kommons "Join Button", 2026-11-08: "I created the komponent and
+    # i'm in it and i'm still seeing the 'join' button").
+    def join_gang_owner!
+      gang_members.find_or_create_by!(account_id: owner_id) if owner_id
     end
 
     # A new projekt has everyone in its Krew, and is Konnected to it so the

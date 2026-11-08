@@ -363,6 +363,30 @@ $freethedream-wide: 1000px;
   }
 }
 
+// A + beside a section's title, for making something there.
+.freethedream-section__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+
+  .icon {
+    inline-size: 20px;
+    block-size: 20px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--kronk-purple-bright);
+    color: var(--kronk-purple-bright);
+  }
+}
+
 // Working groups: a grid of tiles, more columns as the Stage widens.
 .freethedream-groups {
   list-style: none;
@@ -374,6 +398,27 @@ $freethedream-wide: 1000px;
 
   > li {
     display: flex;
+  }
+}
+
+// Komponents (and fractals) as one row that scrolls sideways, the next card
+// peeking in, the same measure as the shared row (`.space-grid--row`).
+.freethedream-groups--row {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 0.75rem) / 2.25);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.5rem;
+
+  @media (width >= 720px) {
+    grid-auto-columns: calc((100% - 3rem) / 4.25);
+  }
+
+  > li {
+    scroll-snap-align: start;
+    min-inline-size: 0;
   }
 }
 
@@ -546,19 +591,6 @@ $freethedream-wide: 1000px;
     .freethedream__quiet {
       margin: 0;
       font-size: 13px;
-    }
-  }
-
-  &__make {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-block-start: 12px;
-
-    .freethedream__input--inline {
-      flex: 1 1 12rem;
-      min-inline-size: 0;
     }
   }
 }

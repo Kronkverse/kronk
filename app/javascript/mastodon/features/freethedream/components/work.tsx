@@ -4,7 +4,6 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import { apiFtdItemAction } from 'mastodon/api/freethedream';
 import type {
   FtdItemKind,
@@ -12,7 +11,6 @@ import type {
   FtdProject,
   FtdStillNeeded,
 } from 'mastodon/api_types/freethedream';
-import { Icon } from 'mastodon/components/icon';
 
 import { act } from './act';
 import { BringControl, isCounted } from './bring';
@@ -75,23 +73,11 @@ const messages = defineMessages({
     id: 'freethedream.work.nothing_yet',
     defaultMessage: 'Nothing here yet.',
   },
-  nobodyBringing: {
-    id: 'freethedream.bring.nobody',
-    defaultMessage: 'Nobody bringing yet',
-  },
-  nobodyOn: {
-    id: 'freethedream.actualise.nobody',
-    defaultMessage: 'Nobody on it yet',
-  },
   coming: {
     id: 'freethedream.bring.coming',
     defaultMessage: '{amount} coming',
   },
   sorted: { id: 'freethedream.bring.sorted', defaultMessage: 'Sorted' },
-  talkAbout: {
-    id: 'freethedream.bring.talk_about',
-    defaultMessage: 'Talk about {title}',
-  },
 });
 
 // As many as it asks for are coming. That's "sorted", not "done": for
@@ -274,12 +260,7 @@ const Contributors: React.FC<{ need: FtdItemRow }> = ({ need }) => {
   const intl = useIntl();
   const counted = isCounted(need);
   const people = (need.contributors ?? []).filter((c) => c.account);
-  if (people.length === 0)
-    return (
-      <span className='freethedream-row__meta'>
-        {intl.formatMessage(messages.nobodyBringing)}
-      </span>
-    );
+  if (people.length === 0) return null;
   return (
     <span className='freethedream-row__meta'>
       {counted &&
@@ -296,26 +277,6 @@ const Contributors: React.FC<{ need: FtdItemRow }> = ({ need }) => {
   );
 };
 
-// Talk about a thing on the list: a thread in the talk of the gang (or
-// fractal) it's in, quoting it (Tal, 2026-10-18).
-const TalkAbout: React.FC<{ item: FtdItemRow; talkIn: string }> = ({
-  item,
-  talkIn,
-}) => {
-  const intl = useIntl();
-  const label = intl.formatMessage(messages.talkAbout, { title: item.title });
-  return (
-    <Link
-      to={`/hub/freethedream/p/${talkIn}?quote=${item.id}`}
-      className='freethedream-row__talk'
-      title={label}
-      aria-label={label}
-    >
-      <Icon id='chat_bubble' icon={ChatBubbleIcon} />
-    </Link>
-  );
-};
-
 // Something to bring: what (and how many), who's bringing it, and your
 // Bring. Once it's sorted it sinks to the bottom and says so.
 const NeedRow: React.FC<{
@@ -323,7 +284,7 @@ const NeedRow: React.FC<{
   member: boolean;
   talkIn: string;
   onChange: () => void;
-}> = ({ need, member, talkIn, onChange }) => {
+}> = ({ need, member, onChange }) => {
   const intl = useIntl();
   const sorted = isSorted(need);
   return (
@@ -352,7 +313,6 @@ const NeedRow: React.FC<{
       </Link>
       {member && (
         <span className='freethedream-row__side'>
-          <TalkAbout item={need} talkIn={talkIn} />
           <FromMyMycelium item={need} onDone={onChange} />
           <BringControl need={need} onChange={onChange} />
         </span>
@@ -397,7 +357,6 @@ const JobRow: React.FC<{
   onClaim: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onChange: () => void;
 }> = ({ job, member, onClaim, onChange }) => {
-  const intl = useIntl();
   const names = (job.claimers ?? [])
     .map((a) => a?.display_name)
     .filter(Boolean);
@@ -405,11 +364,9 @@ const JobRow: React.FC<{
     <li className='freethedream-row freethedream-row--item'>
       <Link to={itemPath(job)} className='freethedream-row__main'>
         <span className='freethedream-row__title'>{job.title}</span>
-        <span className='freethedream-row__meta'>
-          {names.length > 0
-            ? names.join(', ')
-            : intl.formatMessage(messages.nobodyOn)}
-        </span>
+        {names.length > 0 && (
+          <span className='freethedream-row__meta'>{names.join(', ')}</span>
+        )}
       </Link>
       {member && (
         <ClaimButton item={job} onClaim={onClaim} onChange={onChange} />
@@ -444,7 +401,7 @@ const NeededRow: React.FC<{
   talkIn: string;
   onClaim: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onChange: () => void;
-}> = ({ item, member, talkIn, onClaim, onChange }) => {
+}> = ({ item, member, onClaim, onChange }) => {
   const intl = useIntl();
   const job = item.kind === 'job';
   return (
@@ -459,14 +416,16 @@ const NeededRow: React.FC<{
           )}
         </span>
         <span className='freethedream-row__meta'>
-          {item.section && `${item.section.title} · `}
-          {job
-            ? intl.formatMessage(messages.nobodyOn)
-            : (item.covered ?? 0) > 0
-              ? intl.formatMessage(messages.coming, {
-                  amount: formatAmount(item.covered ?? 0, item.unit),
-                })
-              : intl.formatMessage(messages.nobodyBringing)}
+          {[
+            item.section?.title,
+            !job &&
+              (item.covered ?? 0) > 0 &&
+              intl.formatMessage(messages.coming, {
+                amount: formatAmount(item.covered ?? 0, item.unit),
+              }),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </span>
       </Link>
       {member &&
@@ -474,7 +433,6 @@ const NeededRow: React.FC<{
           <ClaimButton item={item} onClaim={onClaim} onChange={onChange} />
         ) : (
           <span className='freethedream-row__side'>
-            <TalkAbout item={item} talkIn={talkIn} />
             <FromMyMycelium item={item} onDone={onChange} />
             <BringControl need={item} onChange={onChange} />
           </span>
