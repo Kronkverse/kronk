@@ -120,15 +120,20 @@ export default function api(withAuthorization = true) {
     awake.delete(config);
   };
 
-  instance.interceptors.request.use((config) => {
-    if (
-      config.method?.toLowerCase() === 'post' &&
-      config.url?.startsWith('/api/v2/media')
-    ) {
+  // `synchronous` + `runWhen`: an ordinary async request interceptor makes
+  // axios send every request a tick later, which is enough to change page
+  // timing. This one runs only for uploads, in step.
+  const isUpload = (config: { method?: string; url?: string }) =>
+    config.method?.toLowerCase() === 'post' &&
+    !!config.url?.startsWith('/api/v2/media');
+  instance.interceptors.request.use(
+    (config) => {
       awake.set(config, holdScreenAwake());
-    }
-    return config;
-  });
+      return config;
+    },
+    null,
+    { synchronous: true, runWhen: isUpload },
+  );
 
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
