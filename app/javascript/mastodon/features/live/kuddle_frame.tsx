@@ -15,6 +15,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { apiRequestGet } from 'mastodon/api';
 import { CallControls } from 'mastodon/components/call_controls';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 
 import { useKuddleCall } from './use_kuddle_call';
 
@@ -156,7 +157,9 @@ export const KuddleFrame: React.FC<{
       ) : (
         <div className='kuddle-frame__idle'>
           {room.description && (
-            <p className='kuddle-frame__about'>{room.description}</p>
+            <p className='kuddle-frame__about'>
+              <LinkifiedText text={room.description} />
+            </p>
           )}
           <KornerPill
             variant='primary'

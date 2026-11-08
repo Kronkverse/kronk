@@ -35,6 +35,7 @@ import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { Stage } from 'mastodon/components/stage';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
@@ -840,7 +841,9 @@ export const KrewDetail = () => {
             </header>
 
             {krew.description && (
-              <p className='krew-detail__description'>{krew.description}</p>
+              <p className='krew-detail__description'>
+                <LinkifiedText text={krew.description} />
+              </p>
             )}
 
             <Faces

@@ -11,10 +11,11 @@ import type { ApiChronicleJSON } from 'mastodon/api_types/kronikles';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
+import StatusReplies from 'mastodon/components/status_replies';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
-import { useAppDispatch } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { ChapterNav } from './chapter_nav';
 import { ChronicleComposer } from './chronicle_composer';
@@ -96,6 +97,9 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
   useEffect(() => {
     if (statusId) dispatch(fetchStatus(statusId, { alsoFetchContext: false }));
   }, [dispatch, statusId]);
+  const status = useAppSelector((state) =>
+    statusId ? state.statuses.get(statusId) : undefined,
+  );
 
   // Edit lives in the Ж menu (docs/design.md): the author gets an Edit
   // Kronikle moon, opening the create composer in edit mode. Delete
@@ -165,16 +169,25 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
       </div>
 
       {/* The same reactions bar as every other space (StatusEngagement on
-          the Kronikle's Status): Reply, Froth, Nudge. Edit stays in the Ж
-          menu; the replies are a later step (Kommons "Better formatting for
-          posted work"). */}
-      {statusId && (
-        <StatusEngagement
-          statusId={statusId}
-          showThread={false}
-          className='kronikles-reader__engagement'
-          hideEdit
-        />
+          the Kronikle's Status): Reply, Froth, Nudge, with Edit in the Ж
+          menu. Under it the comments, with the same comment box and replies
+          as a post in the feed (Kommons "Comment on Kronikles", 2026-11-08). */}
+      {statusId && status && (
+        <>
+          <StatusEngagement
+            statusId={statusId}
+            showThread={false}
+            className='kronikles-reader__engagement'
+            hideEdit
+          />
+          <StatusReplies
+            statusId={statusId}
+            statusAcct={chronicle.owner.acct}
+            statusVisibility={status.get('visibility') as string}
+            repliesCount={status.get('replies_count') as number}
+            all
+          />
+        </>
       )}
 
       <ChapterNav chronicle={chronicle} placement='foot' />

@@ -16,6 +16,7 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
@@ -322,7 +323,9 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
         ) : null
       }
       title={shop.name}
-      subtitle={shop.description}
+      subtitle={
+        shop.description ? <LinkifiedText text={shop.description} /> : null
+      }
       meta={
         <KornerMeta
           className='wachuneed-shop__facts'
@@ -363,7 +366,9 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
       }
     >
       {shop.about ? (
-        <p className='wachuneed-shop__about'>{shop.about}</p>
+        <p className='wachuneed-shop__about'>
+          <LinkifiedText text={shop.about} />
+        </p>
       ) : null}
 
       {(shop.payment ?? shop.handover) ? (
