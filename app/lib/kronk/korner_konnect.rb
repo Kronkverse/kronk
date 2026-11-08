@@ -9,6 +9,8 @@
 #     make: true            # the Konnect picker offers "New …" here
 #     route: /hub/x/new     # optional: where "New …" goes, if not compose.route
 #     label: 'New thing'    # optional: what it says, if not compose.label
+#     space: true           # picked in a Krew's Konnect, turns the space on
+#                           # for the Krew (KrewKorner) instead of linking
 #     effects:              # what a Konnection with a space does beyond the link
 #       - with: krew
 #         does: "The Krew joins the event's audience."
@@ -28,7 +30,7 @@ module Kronk
   module KornerKonnect
     module_function
 
-    KEYS = %w(noun make route label effects).freeze
+    KEYS = %w(noun make route label effects space).freeze
     EFFECT_KEYS = %w(with does).freeze
 
     def issues(manifests)
@@ -47,6 +49,7 @@ module Kronk
       issues.concat(noun_issues(manifest, raw))
       issues.concat(override_issues(manifest, raw))
       issues.concat(make_issues(manifest, raw))
+      issues.concat(space_issues(manifest, raw))
       issues.concat(effects_issues(manifest, raw, by_slug))
       issues
     end
@@ -75,6 +78,17 @@ module Kronk
       issues << "#{manifest.slug}: `konnect.make: true` needs a `konnect.label` or a `compose.label` for \"New …\" to say" if make_label(manifest, raw).blank?
       issues << "#{manifest.slug}: `konnect.make: true` but it takes no links (`no_attachments:`)" if manifest.no_attachments.present?
       issues
+    end
+
+    # `space: true` turns the space on for a Krew, so it has to be one a Krew
+    # can have (KrewKorner::KORNERS).
+    def space_issues(manifest, raw)
+      return [] unless raw.key?('space')
+      return ["#{manifest.slug}: `konnect.space` must be true or false"] unless [true, false].include?(raw['space'])
+      return [] unless raw['space']
+      return [] if KrewKorner::KORNERS.include?(manifest.slug)
+
+      ["#{manifest.slug}: `konnect.space: true` but a Krew can't have it (not in KrewKorner::KORNERS)"]
     end
 
     def override_issues(manifest, raw)

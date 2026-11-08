@@ -2,8 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
-
 import {
   apiGetKuestion,
   apiListHomeKuestions,
@@ -18,9 +16,9 @@ import {
   CardTitle,
   StandardCard,
 } from 'mastodon/components/standard_card';
-import { konnectSearch } from 'mastodon/hooks/useKonnect';
 
 import { AnswerSheet } from './answer_sheet';
+import { HomeKuestionComposer } from './home_kuestion_composer';
 import { RevealSheet } from './reveal_sheet';
 
 // The Kuestions asked in a Krew or a projekt, on its page (Tal's proposal
@@ -30,9 +28,12 @@ import { RevealSheet } from './reveal_sheet';
 // Krew's members, or whoever can see the projekt, get them from the server
 // (docs/spaces/kuestions.md, Kuestions in a Krew).
 //
-// Nothing shows until there's one: a Krew with none asks its first from
-// Konnect, like anything else it makes. `frame` puts the row in the page's
-// own section, under its own heading.
+// It shows once the Krew has turned Kuestions on (Konnect → Kuestions, or
+// Krew settings, Spaces; a projekt follows its Krew), Ask first when there
+// are none yet. Ask opens a small composer of its own over the page
+// (home_kuestion_composer.tsx), not the Kuestions composer with its deck and
+// profile choices (Tal, 2026-11-08). `frame` puts the row in the page's own
+// section, under its own heading.
 
 const messages = defineMessages({
   answer: { id: 'kuestions.home.answer', defaultMessage: 'Answer it' },
@@ -64,7 +65,7 @@ export const HomeKuestions: React.FC<Props> = ({
   frame,
 }) => {
   const intl = useIntl();
-  const history = useHistory();
+  const [asking, setAsking] = useState(false);
   const [list, setList] = useState<ApiKuestionJSON[] | null>(null);
   const [answering, setAnswering] = useState<ApiKuestionJSON | null>(null);
   const [revealing, setRevealing] = useState<ApiKuestionJSON | null>(null);
@@ -130,16 +131,18 @@ export const HomeKuestions: React.FC<Props> = ({
   }, []);
 
   const handleAsk = useCallback(() => {
-    history.push({
-      pathname: '/hub/kuestions/composer',
-      search: konnectSearch(
-        homeKind === 'krew' ? 'krew' : 'freethedream',
-        homeId,
-      ),
-    });
-  }, [history, homeKind, homeId]);
+    setAsking(true);
+  }, []);
+  const handleCancelAsk = useCallback(() => {
+    setAsking(false);
+  }, []);
+  const handleAsked = useCallback(() => {
+    setAsking(false);
+    load();
+  }, [load]);
 
-  if (!list || list.length === 0) return null;
+  // With none yet, a member still gets the Ask card.
+  if (!list || (list.length === 0 && !canAsk)) return null;
 
   return (
     <>
@@ -197,6 +200,13 @@ export const HomeKuestions: React.FC<Props> = ({
       )}
       {revealing && (
         <RevealSheet kuestion={revealing} onNext={handleCloseReveal} />
+      )}
+      {asking && (
+        <HomeKuestionComposer
+          home={home}
+          onCancel={handleCancelAsk}
+          onAsked={handleAsked}
+        />
       )}
     </>
   );

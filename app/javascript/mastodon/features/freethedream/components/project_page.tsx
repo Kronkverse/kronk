@@ -465,13 +465,16 @@ const ProjectView: React.FC<{
                 onDiskonnect={project.can.edit ? handleDiskonnect : undefined}
               />
             ))}
-            {/* Its own Kuestions: whoever can see the projekt answers them,
-                its members ask them. */}
-            <HomeKuestions
-              home={{ kind: 'projekt', id: project.id }}
-              canAsk={isMember}
-              frame={frameKuestions}
-            />
+            {/* Its own Kuestions, once its Krew has turned Kuestions on:
+                whoever can see the projekt answers them, its members ask
+                them. */}
+            {project.krew?.kuestions && (
+              <HomeKuestions
+                home={{ kind: 'projekt', id: project.id }}
+                canAsk={isMember}
+                frame={frameKuestions}
+              />
+            )}
             {project.top && (
               <Updates
                 updates={project.updates}
