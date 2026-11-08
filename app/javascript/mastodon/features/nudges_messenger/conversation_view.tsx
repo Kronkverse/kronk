@@ -87,7 +87,7 @@ const prependOptimistic = (
     conversation: {
       ...detail.conversation,
       last_activity_at: now,
-      preview: body || '📷 media',
+      preview: body || 'Photo or video',
       latest_kind: 'message',
     },
     stream: [{ kind: 'message', ...optimistic }, ...detail.stream],
@@ -112,7 +112,8 @@ const replaceOptimistic = (
     conversation: {
       ...detail.conversation,
       last_activity_at: message.created_at,
-      preview: message.body ?? (message.media.length > 0 ? '📷 media' : ''),
+      preview:
+        message.body ?? (message.media.length > 0 ? 'Photo or video' : ''),
       latest_kind: 'message',
     },
     stream: echoed
@@ -297,7 +298,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           last_activity_at: msg.created_at,
           preview:
             msg.body ??
-            (msg.media.length > 0 ? '📷 media' : current.conversation.preview),
+            (msg.media.length > 0
+              ? 'Photo or video'
+              : current.conversation.preview),
           latest_kind: 'message',
         },
       });

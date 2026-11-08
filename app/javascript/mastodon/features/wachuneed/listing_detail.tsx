@@ -40,7 +40,7 @@ import type { ChosenVariant } from './listing_variant_chooser';
 // wachuneed space, i can't open an offering').
 //
 // Kept intentionally simple for now — the fetch, the four pieces of
-// content (title, category chip, photos, description), poster line,
+// content (title, photos, description), poster line,
 // and a "Message the poster" affordance that routes to Nudges. Making
 // an offer (POST /api/v1/wachuneed/listings/:id/offers, model
 // ListingOffer) needs its own composer; noted as follow-up.
@@ -113,12 +113,6 @@ const messages = defineMessages({
   },
   wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
   budget: { id: 'wachuneed.detail.budget', defaultMessage: 'Budget' },
-});
-
-const CATEGORY_LABELS = defineMessages({
-  creation: { id: 'wachuneed.category.art', defaultMessage: 'Art' },
-  goods: { id: 'wachuneed.category.stuff', defaultMessage: 'Stuff' },
-  service: { id: 'wachuneed.category.offerings', defaultMessage: 'Offerings' },
 });
 
 const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
@@ -298,13 +292,6 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
     );
   }
 
-  const categoryLabel =
-    listing.category in CATEGORY_LABELS
-      ? intl.formatMessage(
-          CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS],
-        )
-      : null;
-
   // The poster edits from the Ж menu; everyone else gets "Message the
   // poster" here.
   const isOwner = !!me && listing.account?.id === me;
@@ -340,13 +327,6 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
           {listing.kind === 'wanted' ? (
             <span className='wachuneed-detail__chip wachuneed-detail__chip--wanted'>
               {intl.formatMessage(messages.wanted)}
-            </span>
-          ) : null}
-          {categoryLabel ? (
-            <span
-              className={`wachuneed-detail__chip wachuneed-detail__chip--${listing.category}`}
-            >
-              {categoryLabel}
             </span>
           ) : null}
           {listing.price_display ? (

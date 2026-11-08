@@ -4,8 +4,10 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
 import { EmptyState } from 'mastodon/components/empty_state';
+import { Icon } from 'mastodon/components/icon';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Kalendar — the Events face (was "List" until 2026-09-08). Fetches
 // upcoming events (`GET /api/v1/events?filter=upcoming`) and lays them out
@@ -45,14 +47,6 @@ const whenLabel = (iso: string): string => {
   });
 };
 
-// A glyph per event type, so a tile with no image still says what kind of
-// thing it is rather than showing an empty square.
-const PLACEHOLDER: Record<string, string> = {
-  huddle: '🎧',
-  gathering: '🔥',
-  workshop: '🛠',
-};
-
 // The Event shape shipped by `/api/v1/events` — the subset the list needs
 // (REST::EventSerializer has the rest).
 interface Event {
@@ -80,6 +74,7 @@ interface Event {
 
 export const KalendarEventsView: React.FC = () => {
   const intl = useIntl();
+  const kalendarGlyph = useKornerIcon('kalendar');
   const [events, setEvents] = useState<Event[] | null>(null);
 
   useEffect(() => {
@@ -132,7 +127,7 @@ export const KalendarEventsView: React.FC = () => {
                 key={event.id}
                 to={`/hub/kalendar/${event.slug ?? event.id}`}
                 image={event.image_url}
-                placeholder={PLACEHOLDER[event.event_type] ?? '📅'}
+                placeholder={<Icon id='korner-kalendar' icon={kalendarGlyph} />}
                 title={event.title}
                 meta={whenLabel(event.start_time)}
                 tag={live ? intl.formatMessage(messages.live) : null}

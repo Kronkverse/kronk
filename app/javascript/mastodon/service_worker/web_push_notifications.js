@@ -149,11 +149,11 @@ export const handlePush = (event) => {
         if (msg && msg.body) {
           options.body = msg.body;
         } else if (msg && msg.voice_url) {
-          options.body = '🎤 Voice message';
+          options.body = 'Voice message';
         } else if (msg && msg.media_url) {
-          options.body = '🖼️ Image';
+          options.body = 'Photo';
         } else {
-          options.body = '👋';
+          options.body = 'Nudged you';
         }
       } else if (notification.status) {
         options.data.url = `/@${notification.status.account.acct}/${notification.status.id}`;

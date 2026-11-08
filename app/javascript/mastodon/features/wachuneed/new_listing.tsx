@@ -172,22 +172,6 @@ const messages = defineMessages({
     defaultMessage:
       'Detail — materials, size, timing, anything a buyer needs to know.',
   },
-  labelCategory: {
-    id: 'wachuneed.new.field.category',
-    defaultMessage: 'Category',
-  },
-  categoryArt: {
-    id: 'wachuneed.new.category.art',
-    defaultMessage: 'Art — things you make',
-  },
-  categoryStuff: {
-    id: 'wachuneed.new.category.stuff',
-    defaultMessage: 'Stuff — things you have',
-  },
-  categoryOfferings: {
-    id: 'wachuneed.new.category.offerings',
-    defaultMessage: 'Offerings — services you provide',
-  },
   labelPrice: {
     id: 'wachuneed.new.field.price',
     defaultMessage: 'Price (in AUD)',
@@ -252,15 +236,6 @@ const KIND_OPTIONS: { key: Kind; label: typeof messages.kindOffer }[] = [
   { key: 'wanted', label: messages.kindWanted },
 ];
 
-const CATEGORY_OPTIONS: {
-  key: Category;
-  label: typeof messages.categoryArt;
-}[] = [
-  { key: 'creation', label: messages.categoryArt },
-  { key: 'goods', label: messages.categoryStuff },
-  { key: 'service', label: messages.categoryOfferings },
-];
-
 const isCategory = (value: string): value is Category =>
   value === 'creation' || value === 'goods' || value === 'service';
 
@@ -307,7 +282,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
   const [kind, setKind] = useState<Kind>(initialKind);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<Category>('creation');
+  const [category, setCategory] = useState<Category>('goods');
   const [price, setPrice] = useState('');
   // Your shop's sections, if you have a shop with any; and the one this
   // listing sits in ('' for none).
@@ -450,7 +425,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
       setKind(p.kind ?? initialKind);
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
-      setCategory(p.category ?? 'creation');
+      setCategory(p.category ?? 'goods');
       setPrice(p.price ?? '');
       setSectionId(p.sectionId ?? '');
       setOngoing(p.ongoing ?? false);
@@ -529,12 +504,6 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
     React.ChangeEventHandler<HTMLTextAreaElement>
   >((e) => {
     setDescription(e.currentTarget.value);
-  }, []);
-  const handleCategoryChange = useCallback<
-    React.ChangeEventHandler<HTMLSelectElement>
-  >((e) => {
-    const value = e.currentTarget.value;
-    if (isCategory(value)) setCategory(value);
   }, []);
   const handlePriceChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
@@ -772,18 +741,6 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
           />
 
           <ComposeRow>
-            <ComposeField
-              label={<FormattedMessage {...messages.labelCategory} />}
-            >
-              <ComposeSelect value={category} onChange={handleCategoryChange}>
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <option key={opt.key} value={opt.key}>
-                    {intl.formatMessage(opt.label)}
-                  </option>
-                ))}
-              </ComposeSelect>
-            </ComposeField>
-
             {showSections && (
               <ComposeField
                 label={<FormattedMessage {...messages.labelSection} />}
@@ -870,11 +827,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
           )}
 
           {kind === 'offer' && (
-            <ListingOptionsEditor
-              category={category}
-              rows={optionRows}
-              onChange={setOptionRows}
-            />
+            <ListingOptionsEditor rows={optionRows} onChange={setOptionRows} />
           )}
 
           {kind === 'offer' && (
