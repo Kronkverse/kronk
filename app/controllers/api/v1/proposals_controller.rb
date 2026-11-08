@@ -2,9 +2,9 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close, :withdraw]
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close, :update]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close, :withdraw, :update]
   before_action :require_creator_or_steward!, only: [:update]
 
   def index
@@ -211,6 +211,17 @@ class Api::V1::ProposalsController < Api::BaseController
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   rescue Kronk::ProposalStates::NotTheProposer
     render json: { error: 'Only the proposer can close this proposal.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
+  rescue Kronk::ProposalStates::InvalidTransition => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  # The proposer taking back a proposal they no longer want (docs/spaces/
+  # kommons.md, Withdraw). Ends annulled; backers are refunded.
+  def withdraw
+    Kronk::ProposalStates.withdraw!(@proposal, by: current_account)
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::ProposalStates::NotTheProposer
+    render json: { error: 'Only the proposer can withdraw this proposal.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
   rescue Kronk::ProposalStates::InvalidTransition => e
     render json: { error: e.message }, status: :unprocessable_entity
   end

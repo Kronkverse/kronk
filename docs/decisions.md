@@ -17,6 +17,19 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — Proposers can withdraw their own proposals
+
+Tal's proposal "Delete Proposals": "I can't delete a proposal that I no
+longer want." Only the shell could annul one.
+
+**Decision:** the proposer can **withdraw** it from the Ж menu. It ends
+annulled rather than deleted: backers get their ₭ back, the record and its
+thread stay, and it leaves the board as annulled ones already do. Allowed
+while open, or claimed by the proposer with nobody joined; once someone
+else has claimed or joined it, it is their work in progress, so the
+proposer asks them to unclaim first. Actioned and later are unchanged:
+the proposer closes. See docs/spaces/kommons.md, Withdraw.
+
 ## 2026-10-31 — A Krew's chat is a space it Konnects
 
 Every Krew used to come with a group chat in Nudges, whether it wanted one or
