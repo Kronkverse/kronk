@@ -77,13 +77,16 @@ interface ComposeShellProps {
   label: string;
   // Optional supporting line under the label. e.g. "Gone in 24
   // hours." for Moments, "3 photos ready to upload" for Albutts.
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   // The primary CTA label. Body controls what it says mid-flight
   // (e.g. "Sharing…") via `submitting` + `submittingLabel`.
   submitLabel: string;
   submittingLabel?: string;
   submitting?: boolean;
   canSubmit?: boolean;
+  // A step that only picks where to go next (Wachuneed's What are you
+  // offering?) has no submit; Cancel is its way out.
+  hideSubmit?: boolean;
   onSubmit: () => void;
   onCancel: () => void;
   // Optional composer-picker chips rendered at the top of the shell
@@ -112,6 +115,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
   submittingLabel,
   submitting = false,
   canSubmit = true,
+  hideSubmit = false,
   onSubmit,
   onCancel,
   switcher,
@@ -222,14 +226,16 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
           >
             <FormattedMessage {...messages.cancel} />
           </button>
-          <button
-            type='button'
-            className='compose-shell__submit'
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-          >
-            {primaryText}
-          </button>
+          {!hideSubmit && (
+            <button
+              type='button'
+              className='compose-shell__submit'
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting}
+            >
+              {primaryText}
+            </button>
+          )}
         </footer>
       </div>
 

@@ -22,6 +22,9 @@ import { EmptyState } from 'mastodon/components/empty_state';
 import { Icon } from 'mastodon/components/icon';
 import { LoadingState } from 'mastodon/components/loading_state';
 
+import { isOffering } from './offering';
+import { OfferingChooser } from './offering_chooser';
+import { OfferingComposer } from './offering_composer';
 import { ShopItemComposer } from './shop_item_composer';
 
 // The Items part of the shop builder (docs/spaces/wachuneed.md, The shop
@@ -113,12 +116,39 @@ export const ShopItems: React.FC<{
   const { search } = useLocation();
   const [items, setItems] = useState<ApiListingJSON[] | null>(null);
 
-  const composing = useMemo<{ editId?: string } | null>(() => {
+  // Which composer is open is in the address: `?item=new` asks What are
+  // you offering? first, `&offering=` picks the composer (Tal, 2026-11-09),
+  // `?item=<id>` changes one in the composer for what it offers.
+  const composing = useMemo<{
+    editId?: string;
+    offering: string | null;
+  } | null>(() => {
     const query = new URLSearchParams(search);
     const item = query.get('item');
     if (!item) return null;
-    return item === 'new' ? {} : { editId: item };
+    return item === 'new'
+      ? { offering: query.get('offering') }
+      : { editId: item, offering: null };
   }, [search]);
+  const pickOffering = useCallback(
+    (offering: string) => {
+      history.replace({
+        pathname: BUILDER,
+        search: `?item=new&offering=${offering}`,
+      });
+    },
+    [history],
+  );
+  const backToChooser = useCallback(() => {
+    history.replace({ pathname: BUILDER, search: '?item=new' });
+  }, [history]);
+  const handleOfferingSaved = useCallback(() => {
+    void apiGetWachugotListings().then((data) => {
+      setItems(shopItems(data));
+      return undefined;
+    });
+    history.replace(BUILDER);
+  }, [history]);
 
   const closeComposer = useCallback(() => {
     history.replace(BUILDER);
@@ -130,7 +160,9 @@ export const ShopItems: React.FC<{
         return undefined;
       });
       history.replace(
-        again ? { pathname: BUILDER, search: '?item=new' } : BUILDER,
+        again
+          ? { pathname: BUILDER, search: '?item=new&offering=product' }
+          : BUILDER,
       );
     },
     [history],
@@ -219,7 +251,21 @@ export const ShopItems: React.FC<{
 
   // Keyed by the item, so the form starts again for another one; a run of
   // new items shares one, which keeps the section between them.
-  const composer = composing && (
+  const editing = composing?.editId
+    ? items.find((item) => item.id === composing.editId)
+    : undefined;
+  const offering = composing?.editId
+    ? isOffering(editing?.offering)
+      ? editing.offering
+      : 'product'
+    : composing?.offering;
+  const composer = !composing ? null : !isOffering(offering) ? (
+    <OfferingChooser
+      label={intl.formatMessage(messages.add)}
+      onPick={pickOffering}
+      onCancel={closeComposer}
+    />
+  ) : offering === 'product' ? (
     <ShopItemComposer
       key={composing.editId ?? 'new'}
       sections={sections}
@@ -227,6 +273,19 @@ export const ShopItems: React.FC<{
       editId={composing.editId}
       onCancel={closeComposer}
       onSaved={handleSaved}
+      onChangeOffering={composing.editId ? undefined : backToChooser}
+    />
+  ) : (
+    <OfferingComposer
+      key={composing.editId ?? `new-${offering}`}
+      offering={offering}
+      inShop
+      sections={sections}
+      shopVisibility={shopVisibility}
+      editId={composing.editId}
+      onChangeOffering={backToChooser}
+      onCancel={closeComposer}
+      onSaved={handleOfferingSaved}
     />
   );
 

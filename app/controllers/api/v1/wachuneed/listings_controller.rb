@@ -129,7 +129,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   # from `from` (default now) for two weeks: `suggest` when the seller
   # posted no hours or times and the person suggests one instead.
   def times
-    times = Wachuneed::BookingTimes.new(@listing)
+    minutes = @listing.booking_minutes_for(params[:variant])
+    times = Wachuneed::BookingTimes.new(@listing, minutes: minutes)
     from  = (Time.zone.parse(params[:from].to_s) if params[:from].present?) || Time.current
 
     render json: { suggest: times.suggested?, times: times.suggested? ? [] : times.free(from: from).map(&:iso8601) }
@@ -182,7 +183,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
   def listing_params
     params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state, :kind,
-                  :listing_shop_section_id, :ongoing, :availability, :announced, :visibility)
+                  :listing_shop_section_id, :ongoing, :availability, :announced, :visibility, :offering)
   end
 
   # Accept a homogeneous array of media_attachment_ids under either

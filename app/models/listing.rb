@@ -45,6 +45,9 @@ class Listing < ApplicationRecord
   # something someone is looking for (the Desired section). Price on a
   # wanted listing reads as a budget.
   KINDS      = %w(offer wanted).freeze
+  # What it offers, chosen first in the composer (docs/spaces/wachuneed.md,
+  # What are you offering?). Null is a product, as every older listing is.
+  OFFERINGS  = %w(product appointment service trip tickets).freeze
 
   # Options (docs/spaces/wachuneed.md, Options): up to MAX_OPTIONS named
   # groups, each of up to MAX_OPTION_CHOICES choices that may add to the
@@ -74,6 +77,12 @@ class Listing < ApplicationRecord
   # words. The templates are only where the composer starts; what is stored
   # is the parts the seller kept.
   BOOKING_PARTS     = %w(time route details).freeze
+  # Where an appointment happens; `either` lets the person booking choose
+  # (the composer adds a Where choice for it).
+  BOOKING_WHERES    = %w(online in_person either).freeze
+  # An appointment can come in lengths, each a kind (a Length variation)
+  # with its own price; `lengths` says how long each one books.
+  MAX_BOOKING_LENGTHS = 10
   BOOKING_TEMPLATES = %w(appointment job request).freeze
   BOOKING_MINUTES   = (5..1440)
   MAX_BOOKING_HOURS = 21
@@ -95,6 +104,7 @@ class Listing < ApplicationRecord
   validates :category, inclusion: { in: CATEGORIES }
   validates :state,    inclusion: { in: STATES }
   validates :kind,     inclusion: { in: KINDS }
+  validates :offering, inclusion: { in: OFFERINGS }, allow_nil: true
   validates :availability, inclusion: { in: AVAILABILITIES }
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
@@ -240,7 +250,32 @@ class Listing < ApplicationRecord
     booking.merge!(clean_booking_time(value)) if parts.include?('time')
     ask = value['ask'].to_s.strip.first(120)
     booking['ask'] = ask if parts.include?('details') && ask.present?
+    where = value['where'].to_s
+    booking['where'] = where if BOOKING_WHERES.include?(where)
+    booking.merge!(clean_booking_lengths(value)) if parts.include?('time')
     booking
+  end
+
+  def self.clean_booking_lengths(value)
+    lengths = plain(value['lengths'])
+    return {} unless lengths.is_a?(Hash)
+
+    kept = lengths.filter_map do |name, minutes|
+      name = name.to_s.strip.first(60)
+      minutes = minutes.to_i
+      [name, minutes] if name.present? && BOOKING_MINUTES.cover?(minutes)
+    end.first(MAX_BOOKING_LENGTHS).to_h
+    kept.empty? ? {} : { 'lengths' => kept }
+  end
+
+  # How long a booking of these choices takes, in minutes: the chosen
+  # length's, when the listing comes in lengths, else its one length (nil
+  # when it has no set length).
+  def booking_minutes_for(values)
+    lengths = booking['lengths'] || {}
+    chosen = Array(values).map(&:to_s).filter_map { |value| lengths[value] }.first
+    minutes = chosen || booking['minutes']
+    minutes.presence&.to_i
   end
 
   # When the seller is free: weekly hours (a day, from, to, in their time
