@@ -93,6 +93,68 @@ export const downloadMedia = async ({
   }, 60_000);
 };
 
+// Several files at once, each as its own file (Kommons "Photo
+// Downloading", 2026-11-04: no zip). Fetched one after another, then:
+// - on a phone that can share files, one share sheet with all of them
+//   (Save N images);
+// - otherwise one download each, a moment apart so the browser keeps them
+//   all (it may ask once whether the site can download several files).
+// A file that can't be fetched is skipped; the count saved comes back.
+interface MediaFile {
+  url: string;
+  id: string;
+}
+
+export const downloadMediaFiles = async (
+  items: MediaFile[],
+): Promise<number> => {
+  const files: File[] = [];
+  for (const item of items) {
+    try {
+      const response = await fetch(item.url, {
+        mode: 'cors',
+        credentials: 'omit',
+      });
+      if (!response.ok) continue;
+      const blob = await response.blob();
+      files.push(
+        new File([blob], `kronk-${item.id}${extensionOf(item.url)}`, {
+          type: blob.type,
+        }),
+      );
+    } catch {
+      // Skip it; the rest still come down.
+    }
+  }
+  if (files.length === 0) return 0;
+
+  if (
+    prefersShare() &&
+    typeof navigator.canShare === 'function' &&
+    navigator.canShare({ files })
+  ) {
+    try {
+      await navigator.share({ files });
+      return files.length;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return 0;
+      }
+      // The tap's permission ran out while fetching: download instead.
+    }
+  }
+
+  for (const [i, file] of files.entries()) {
+    if (i > 0) await new Promise((resolve) => setTimeout(resolve, 400));
+    const objectUrl = URL.createObjectURL(file);
+    clickLink(objectUrl, file.name);
+    setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+    }, 60_000);
+  }
+  return files.length;
+};
+
 interface DownloadClick {
   button: number;
   ctrlKey: boolean;

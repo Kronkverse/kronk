@@ -232,13 +232,19 @@ for credit.
   album. They are buttons on the page and not Ж moons: the Ж menu is for
   making and editing. Select
   mode puts a tick on each photo and a bar at the bottom (select all,
-  download, done). Either way the server builds a zip of the originals
-  (`Albutts::AlbumArchive`, `GET /api/v1/albutts/albums/:id/download`, with
-  `photo_ids` for a selection) named `001-<who added it>.jpg` in album order.
-  The browser opens that address as a plain link, so it is reached with the
-  web session and no access token. One download is capped at 1 GB
-  (`MAX_BYTES`); the page adds up the sizes first and says to download in
-  parts. A photo whose file cannot be read is left out of the zip.
+  download, done). Either way **each photo saves as its own file**, with no
+  zip (Kommons "Photo Downloading", 2026-11-08): the page fetches the
+  originals from the media host one after another
+  (`downloadMediaFiles` in `utils/download_media.ts`), then on a phone opens
+  one share sheet with all of them (Save N images), and on a computer saves
+  each as its own download, a moment apart (the browser may ask once whether
+  the site can download several files). Nothing navigates, so you stay where
+  you are in the album. A photo that can't be fetched is skipped; if none
+  can be, the page says so. One go is capped at 1 GB, since the photos are
+  held in the page until saved; the page adds up the sizes first and says to
+  download in parts. The server's zip (`Albutts::AlbumArchive`,
+  `GET /api/v1/albutts/albums/:id/download`) still answers, but the page no
+  longer uses it.
   One photo saves from the lightbox's download button without leaving the
   page (`utils/download_media.ts`, shared with the post viewer): it fetches
   the original from the media host, then opens the share sheet on a phone
