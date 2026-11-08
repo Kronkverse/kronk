@@ -214,13 +214,14 @@ All in `app/javascript/mastodon/features/krew/`.
     who could open them (an invite-only Krew's to its members). Anyone else
     sees the section on a listed Krew that has projekts, without New
     projekt.
-  - **Kuestions**: the Kuestions asked in the Krew, for its members only
-    (docs/spaces/kuestions.md, Kuestions in a Krew): a row of cards, each
-    the question with whether you've answered it and how many have, and
-    for members of an active Krew a last card, **Ask**, opening the
-    composer for this Krew. Tapping a card answers it in place, or shows
-    what everyone said. A Krew with none has no section; its first is asked
-    from Konnect (Kuestions, **New Kuestion**).
+  - **Kuestions**: once the Krew has turned Kuestions on (Konnect →
+    Kuestions, or Settings, Spaces), the Kuestions asked in the Krew, for its
+    members only (docs/spaces/kuestions.md, Kuestions in a Krew): a row of
+    cards, each the question with whether you've answered it and how many
+    have, and for members of an active Krew a last card, **Ask**, opening a
+    small composer for this Krew over the page. Tapping a card answers it in
+    place, or shows what everyone said. With Kuestions off there is no
+    section and no tile.
   - **Chat**: the Krew's chat from Nudges, when the Krew has one (see
     **Chat** below), read and written on the page (`krew_chat.tsx`, the
     messenger's `ConversationView` without its header), with "Open in
@@ -272,8 +273,11 @@ The Krew page gets its id from `GET /api/v1/krews/:id/activity`;
 **Attached spaces.** `KrewKorner` rows record which korners a Krew has turned
 on. The server allows `booth huddle kalendar kommons map albutts kuestions
 nudges` (`KrewKorner::KORNERS`), but only the spaces that can show a Krew's
-own things are offered or get a tile: Albutts, Kalendar and Nudges, the
-chat (`KREW_PAGE_SPACES` in `api/krew.ts`). A Krew that turned on another space keeps the row; it
+own things are offered or get a tile: Albutts, Kalendar, Nudges (the
+chat) and Kuestions (`KREW_PAGE_SPACES` in `api/krew.ts`). Kuestions is
+also turned on from Konnect: its manifest says `konnect.space: true`, so
+picking it in a Krew's Konnect turns the space on rather than offering
+Kuestions to link. A Krew that turned on another space keeps the row; it
 shows only in Settings, where it can be removed, until that space gets a
 Krew part.
 

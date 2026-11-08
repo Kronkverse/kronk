@@ -130,6 +130,11 @@ konnect:
   # `compose.route` with `?konnect=<source slug>:<source id>`, and the
   # composer Konnects what it makes to that source.
   make: true
+  # On a Krew's page, picking Kuestions in Konnect turns Kuestions on for
+  # the Krew (a krew_korners row) instead of linking one Kuestion: the Krew
+  # page gets a Kuestions section with Ask, and its projekts follow it
+  # (decisions.md, 2026-11-08).
+  space: true
 
 compose:
   label: 'Ask a Kuestion'

@@ -138,6 +138,9 @@ interface AttachmentSectionProps {
   // a page that shows some of them in its own way (a projekt's Kuddle as
   // a call frame) and needs to know as soon as one is made.
   onKonnections?: (rows: ApiAttachmentJSON[]) => void;
+  // A space that is this record's own (manifest `konnect.space`) picked in
+  // Konnect: the page turns it on (a Krew's Kuestions).
+  onTurnOnSpace?: (slug: string) => Promise<void>;
   // Under the grid, inside the section (the Krew page's tray). A function
   // gets the one that opens the picker.
   children?: React.ReactNode | ((openPicker: () => void) => React.ReactNode);
@@ -160,6 +163,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   renderKonnect,
   onAudienceChange,
   onKonnections,
+  onTurnOnSpace,
   children,
   className,
 }) => {
@@ -416,6 +420,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
           sourceId={recordId}
           onClose={closePicker}
           onAttached={refresh}
+          onTurnOnSpace={onTurnOnSpace}
           exclude={linked}
         />
       )}

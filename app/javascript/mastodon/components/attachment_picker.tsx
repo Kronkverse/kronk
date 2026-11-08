@@ -52,6 +52,11 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 //
 // There, "New …" can't open another composer (the person is mid-compose).
 //
+// A space that is a Krew's own rather than records to link (manifest
+// `konnect.space`, Kuestions) is turned on when it is picked, given
+// `onTurnOnSpace` (the Krew page), and the picker closes (decisions.md,
+// 2026-11-08). Anywhere else it offers its records as usual.
+//
 // One space works the same everywhere: Map. Where a thing is is a
 // Konnection to a Place (decisions.md, 2026-10-23, "Location fields become
 // Konnect → Map"), so picking Map opens the map right here (<KonnectMap>),
@@ -115,6 +120,10 @@ const messages = defineMessages({
     id: 'attachment_picker.konnect_error_bare',
     defaultMessage: "Couldn't Konnect it.",
   },
+  turningOn: {
+    id: 'attachment_picker.turning_on',
+    defaultMessage: 'Adding {korner} to this Krew…',
+  },
 });
 
 interface AttachmentPickerProps {
@@ -127,6 +136,8 @@ interface AttachmentPickerProps {
   onPick?: (target: KonnectTarget) => void;
   // Records already chosen or Konnected, left out of the results.
   exclude?: Pick<KonnectTarget, 'slug' | 'id'>[];
+  // Turn a `konnect.space` space on for this record instead of linking.
+  onTurnOnSpace?: (slug: string) => Promise<void>;
 }
 
 export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
@@ -136,6 +147,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   onAttached,
   onPick,
   exclude,
+  onTurnOnSpace,
 }) => {
   const intl = useIntl();
   const { addLink } = useAttachments(sourceSlug, onPick ? null : sourceId);
@@ -194,6 +206,37 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   const [attaching, setAttaching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Picked a space that is turned on, not searched.
+  const turningOn =
+    !onPick &&
+    onTurnOnSpace !== undefined &&
+    targetManifest?.konnect?.space === true;
+  const turnOnSlug = turningOn ? target?.slug : undefined;
+  useEffect(() => {
+    if (!turnOnSlug || !onTurnOnSpace) return undefined;
+    let cancelled = false;
+    setAttaching(true);
+    onTurnOnSpace(turnOnSlug)
+      .then(() => {
+        if (cancelled) return undefined;
+        onClose();
+        return undefined;
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        const message = errorText(e);
+        setError(
+          message
+            ? intl.formatMessage(messages.attachError, { message })
+            : intl.formatMessage(messages.attachErrorBare),
+        );
+        setAttaching(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [turnOnSlug, onTurnOnSpace, onClose, intl]);
 
   // Focus the search input once there's a space to search.
   useEffect(() => {
@@ -417,7 +460,14 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
               </>
             )}
 
-            {mapping ? (
+            {turningOn && target ? (
+              <p className='attachment-picker__status'>
+                {error ??
+                  intl.formatMessage(messages.turningOn, {
+                    korner: targetManifest.name,
+                  })}
+              </p>
+            ) : mapping ? (
               <KonnectMap
                 onPicked={handleMapPick}
                 onCancel={closeMap}

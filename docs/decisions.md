@@ -17,6 +17,40 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — Kuestions is a Krew space, with its own Ask
+
+Tal, trying the entry below on shadow: "Hitting the konnect 'Kuestions' just
+konnected one specific kuestion rather than opening a section in the krew page
+with the ability to ask specific kuestions. And the kuestion i asked appears
+to be visible to all users. What i want is to konnect kuestions, then be able
+to ask specific kuestions for the krew. It probably will need its own
+composer."
+
+What happened: Konnect → Kuestions offered existing Kuestions to link, as it
+does from anywhere, and linking one made a tile for a public Kuestion. The
+one Tal asked was made by the pre-#2484 composer still cached in the browser
+(shadow had deployed minutes before): public, with a feed post, then linked
+to the Krew.
+
+**Decision:** Kuestions is a space a Krew turns on, like its chat (2026-10-31):
+a `kuestions` row in `krew_korners`.
+
+- **Konnect → Kuestions on a Krew turns it on**, and the picker closes. A
+  manifest says so with `konnect.space: true` (checked by `korners doctor`:
+  only spaces in `KrewKorner::KORNERS`); the picker turns it on through the
+  page's `onTurnOnSpace`. Elsewhere the picker offers Kuestions to link as
+  before. Krew settings, Spaces, offers it too.
+- **On, the Krew page has a Kuestions section and tile**, with Ask even
+  before there are any. Off, neither; the Kuestions are kept.
+- **Ask opens a small composer of its own** over the page: the question, how
+  it's answered, and who sees it. Nothing else from the Kuestions composer.
+- **A projekt follows its Krew:** its section shows when its Krew has
+  Kuestions on. Projekts have no spaces of their own to turn on.
+- **Kuestions linked to a Krew before this** stay public tiles.
+- The rest of the entry below (homes, who sees them, no Deck, no feed post)
+  stands; its "the first is asked from Konnect (New Kuestion)" is replaced
+  by the above.
+
 ## 2026-11-08 — Posts: no … menu; Repost is back
 
 Tal: "this little ... button needs some refinement, it feels like a relic of
