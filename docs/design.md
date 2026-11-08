@@ -605,6 +605,12 @@ doctor checks for it (Standard L11).
 5. **The title and tagline belong to the Frame.** `<AutoSpaceHeader>` renders
    the `<h1>` and tagline. A korner must not emit its own `<h1>` or repeat the
    tagline. Other lede copy is content and is fine.
+6. **Pop-ups keep their gutter** (Tal: "a hard rule for pop up boxes").
+   Nothing inside a pop-up, sheet or dialog touches its edge: content sits
+   inside the pop-up's padding, and a full-width field counts its own padding
+   inside its width. Pop-ups render outside the Stage, so the Stage's
+   border-box rule doesn't reach them; `_kronk_stage.scss` gives every pop-up
+   root's fields the same, and a new kind of pop-up is added to that list.
 
 ### Related files
 
