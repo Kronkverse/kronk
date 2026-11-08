@@ -3,8 +3,9 @@
 require 'rails_helper'
 
 # decisions.md, 2026-11-08 (the Konnect grid): a Krew turns on its works as
-# spaces (Gallery, Films, Music, Stories), each with New and Add existing;
-# a projekt's albums are a section with the same two.
+# spaces (Gallery, Films, Music, Stories), each ending in New, whose
+# composer also offers Add existing (Tal, 2026-11-08); a projekt's albums
+# are a section with the same.
 RSpec.describe 'Krew spaces: albums and works', :js, :streaming do
   include ProfileStories
 
@@ -21,7 +22,7 @@ RSpec.describe 'Krew spaces: albums and works', :js, :streaming do
 
   before { as_a_logged_in_user }
 
-  it 'turns on a Gallery from Konnect, then adds an existing piece to it', :aggregate_failures do
+  it 'turns on a Gallery from Konnect, then adds an existing piece from New', :aggregate_failures do
     ArtPiece.create!(owner: bob.account, title: 'Blue study')
 
     visit "/hub/krew/#{krew.slug}"
@@ -32,11 +33,14 @@ RSpec.describe 'Krew spaces: albums and works', :js, :streaming do
     within('.attachment-section') { click_on 'Gallery' }
     within('.space-shelf') do
       expect(page).to have_css('h3', text: /gallery/i)
-      expect(page).to have_button('New')
-      click_on 'Add existing'
+      expect(page).to have_no_button('Add existing')
+      click_on 'New'
     end
+    within('.compose-shell__existing') { click_on 'Add existing' }
     within('.attachment-picker') { click_on 'Blue study' }
 
+    expect(page).to have_no_css('.compose-shell')
+    visit "/hub/krew/#{krew.slug}"
     within('.space-shelf') { expect(page).to have_link('Blue study') }
     expect(krew.krew_korners.pluck(:korner)).to include('art')
   end
@@ -52,15 +56,14 @@ RSpec.describe 'Krew spaces: albums and works', :js, :streaming do
     expect(page).to have_css('.konnect-row .space-tile', text: 'Painters')
   end
 
-  it 'gives the Krew albums New and Add existing' do
+  it "offers Add existing in the Krew albums' New composer" do
     krew.krew_korners.create!(korner: 'albutts')
 
     visit "/hub/krew/#{krew.slug}"
     within('.attachment-section') { click_on 'Albutts' }
-    within('.krew-detail__albums') do
-      expect(page).to have_button('New')
-      expect(page).to have_button('Add existing')
-    end
+    within('.krew-detail__albums') { click_on 'New' }
+
+    expect(page).to have_css('.compose-shell__existing', text: 'Add existing')
   end
 
   it "shows a projekt's albums once one is Konnected" do
@@ -77,7 +80,7 @@ RSpec.describe 'Krew spaces: albums and works', :js, :streaming do
     within('.space-shelf') do
       expect(page).to have_css('h3', text: /albums/i)
       expect(page).to have_link('Set up day')
-      expect(page).to have_button('Add existing')
+      expect(page).to have_button('New')
     end
   end
 end

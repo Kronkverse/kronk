@@ -30,13 +30,21 @@ create a new event or konnect an event so it appears as a card in the
 kalendar section."
 
 - Every space a Krew has on is its own section, always shown to members: a
-  row of cards ending in **New** and **Add existing**
-  (`components/space_shelf.tsx`). Its tile scrolls there.
+  row of cards ending in **New** (`components/space_shelf.tsx`; Add
+  existing is in its composer, below). Its tile scrolls there.
 - Picking Albutts or Kalendar in the Krew's Konnect turns the space on and
   goes to its section, as Kuestions and the works already did. Picking one
   no longer links one record from the picker; Add existing does that.
 - The + moon on a Krew page is always Post to the Krew; the sections' New
   makes albums and events.
+
+Later the same day (Tal, on shadow): "on creating 'New' event (or other),
+the composer that opens can contain the 'Add existing' rather than having
+two cards", and "how can we arrange the order the spaces appear in?
+Perhaps the 'edit' page can have an arranging list?" So a section ends in
+**New** alone, and any composer opened for a record (`?konnect=`) offers
+**Add existing** under its header; and a Krew's members set the order of
+its sections in Settings (`section_order`).
 
 Supersedes 2026-10-18 "the tiles open their space below the grid, one at a
 time" and the Albutts/Kalendar exception in the Konnect grid entry below
