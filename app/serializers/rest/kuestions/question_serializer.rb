@@ -11,6 +11,7 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
 
   attribute :answered?, key: :has_answered
   attribute :asked_by_me
+  attribute :home, if: -> { object.homed? }
   attribute :label, if: -> { object.seeded? }
   attribute :group, if: -> { object.seeded? }
   attribute :my_answer, if: :with_my_answer?
@@ -37,6 +38,16 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
 
   def asked_by_me
     viewer.present? && object.created_by_account_id == viewer.id
+  end
+
+  # Where it was asked, if not for everyone: its Krew or projekt.
+  def home
+    if object.krew_id.present?
+      { kind: 'krew', id: object.krew_id.to_s, name: object.krew.name, slug: object.krew.slug }
+    else
+      project = object.freethedream_project
+      { kind: 'projekt', id: project.id.to_s, name: project.title }
+    end
   end
 
   # A Kronk-written Kuestion's short name and Profile-view heading.

@@ -99,6 +99,18 @@ module Freethedream
     # Who sees a projekt follows its Krew (Tal, 2026-10-30): anyone signed
     # in when the Krew is listed (open, asking to join, or with
     # requirements), only its members when it's invite only.
+    # Every projekt `account` can see (visible_to?, as a relation): its top
+    # has no Krew, a listed one, or one they're in.
+    def self.visible_to(account)
+      return none if account.nil?
+
+      tops = unscoped.where(parent_id: nil)
+      tops = tops.where(krew_id: nil)
+                 .or(tops.where(krew_id: Krew.where.not(access: 'invite_only').select(:id)))
+                 .or(tops.where(krew_id: account.krews.select(:id)))
+      unscoped.where(id: tops.select(:id)).or(unscoped.where(root_id: tops.select(:id)))
+    end
+
     def visible_to?(account)
       return false if account.nil?
 

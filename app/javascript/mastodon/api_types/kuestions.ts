@@ -83,6 +83,13 @@ export interface ApiKuestionJSON extends ApiKuestionBaseJSON {
   my_answer?: { body: string; choice_index: number | null } | null;
   // Answered list only: answers from others since the viewer last opened it.
   new_answers_count?: number;
+  // Where it was asked, if in a Krew or a projekt rather than for everyone.
+  home?: {
+    kind: 'krew' | 'projekt';
+    id: string;
+    name: string;
+    slug?: string;
+  };
   // Only present on the detail (`show`) endpoint, and only when the
   // gate is open (viewer has answered or Question is unlocked).
   answers?: ApiKuestionAnswerJSON[];

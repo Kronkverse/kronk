@@ -94,6 +94,28 @@ can change your mind, but the trail is public. The model side is built:
 a change, and the reveal sheet shows that history. There is no edit
 endpoint yet (see Open).
 
+### Kuestions in a Krew
+
+A Kuestion asked in a Krew or a projekt is its own, not the community's
+(Tal's proposal "Kuestions", decisions.md 2026-11-08). It keeps its home in
+`questions.krew_id` or `questions.freethedream_project_id`.
+
+- **Who sees it:** a Krew's members, or whoever can see the projekt
+  (`Question#visible_to?`, `Question.reachable_by`). For anyone else it
+  doesn't exist: show, answer, skip and seen 404, and no list or Konnect
+  search returns it. The answer gate applies as usual.
+- **Where it shows:** on its Krew's or projekt's page
+  (`features/questions/home_kuestions.tsx`), a row of cards with Ask last,
+  from `GET /api/v2/kuestions?krew_id=` or `?project_id=`. Not in the Deck,
+  and it makes no feed post. It is on your Answered list once you've
+  answered or asked it, while you can see it.
+- **Asking:** the composer opened with `?konnect=krew:<id>` or
+  `freethedream:<id>` asks it there (`krew_id` or `project_id` on create):
+  no choice of deck or profiles, the community formats, and a line saying
+  where it is asked. A Krew's members ask in it while it is active; a
+  projekt's members ask in it. Done, it goes back to that page.
+- **It goes with its home:** deleting the Krew or projekt deletes it.
+
 ### Lifetime
 
 Kuestions never close. There is no result moment, timer or age-out; the
