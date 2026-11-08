@@ -56,23 +56,41 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
     expect(Question.find_by(title: 'Which weekend for the harvest?')).to have_attributes(krew_id: krew.id, status_id: nil)
   end
 
-  it 'lists its Kuestions and answers one in place', :aggregate_failures do
+  # Tal, 2026-11-09: the standard pop-up, every member sees the answers
+  # whether they've answered or not, no Konnect, Next steps through the row.
+  it 'opens one in the standard pop-up, with the answers already there', :aggregate_failures do
     turn_on_kuestions
-    Question.create!(title: 'Who brings the generator?', created_by_account: asker, krew: krew, locked: true)
+    question = Question.create!(title: 'Who brings the generator?', created_by_account: asker, krew: krew, locked: true)
+    Question.create!(title: 'Which weekend?', created_by_account: asker, krew: krew, locked: true)
+    Answer.create!(question: question, account: asker, body: 'Not me')
 
     visit "/hub/krew/#{krew.slug}"
+    within('.krew-detail__kuestions') { find('.home-kuestions__card', text: 'Who brings the generator?').click }
 
-    within('.krew-detail__kuestions') do
-      expect(page).to have_css('.home-kuestions__card', text: 'Who brings the generator?')
-      find('.home-kuestions__card', text: 'Who brings the generator?').click
+    within('.compose-shell') do
+      expect(page).to have_css('.home-kuestion-dialog__q', text: 'Who brings the generator?')
+      expect(page).to have_text('Not me')
+      expect(page).to have_no_css('.attachment-section')
+      fill_in 'Your answer', with: 'I will'
+      click_on 'Answer'
+      expect(page).to have_text('I will')
+      click_on 'Next kuestion'
+      expect(page).to have_css('.home-kuestion-dialog__q', text: 'Which weekend?')
+    end
+  end
+
+  it 'lets the asker answer their own Kuestion' do
+    turn_on_kuestions
+    Question.create!(title: 'Who brings the generator?', created_by_account: bob.account, krew: krew, locked: true)
+
+    visit "/hub/krew/#{krew.slug}"
+    within('.krew-detail__kuestions') { find('.home-kuestions__card', text: 'Who brings the generator?').click }
+    within('.compose-shell') do
+      fill_in 'Your answer', with: 'Me, probably'
+      click_on 'Answer'
     end
 
-    find('.kuestions-sheet__text').fill_in(with: 'I will')
-    click_on 'Answer & unlock'
-    expect(page).to have_text('I will')
-    click_on 'Next kuestion'
-
-    within('.krew-detail__kuestions') { expect(page).to have_css('.home-kuestions__card', text: 'Answered') }
+    expect(page).to have_css('.kuestions-reveal__row--mine', text: 'Me, probably')
   end
 
   it 'shows no section while Kuestions is off, even with Kuestions in it' do
@@ -91,7 +109,7 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
 
     visit "/hub/krew/#{krew.slug}"
     within('.krew-detail__kuestions') { find('.home-kuestions__card', text: 'Who brings the generator?').click }
-    click_on 'Delete Kuestion'
+    within('.compose-shell') { click_on 'Delete Kuestion' }
     within('.confirm-dialog__panel') { click_on 'Delete' }
 
     within('.krew-detail__kuestions') { expect(page).to have_no_css('.home-kuestions__card', text: 'Who brings the generator?') }

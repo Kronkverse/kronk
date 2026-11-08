@@ -183,7 +183,7 @@ interface ChoiceGridProps {
   onPick: (idx: number) => void;
 }
 
-const ChoiceGrid: React.FC<ChoiceGridProps> = ({
+export const ChoiceGrid: React.FC<ChoiceGridProps> = ({
   options,
   layout,
   disabled,
