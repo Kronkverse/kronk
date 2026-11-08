@@ -133,6 +133,12 @@ class Question < ApplicationRecord
     kind == 'community'
   end
 
+  # Only its asker, and only a community Kuestion: a profile Kuestion's
+  # answers are on other people's profiles, and Kronk's own have no asker.
+  def deletable_by?(account)
+    account.present? && community? && created_by_account_id == account.id
+  end
+
   def profile?
     kind == 'profile'
   end
