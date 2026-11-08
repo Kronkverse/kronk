@@ -256,6 +256,10 @@ getting involved, not for doing the work itself:
   shows on a tile or a Komponent's page (the owner still exists in the
   data, for who may edit it). The ones you have a hand in come first,
   tagged with any new talk. Members get **+ Add a Komponent**.
+- **Kuestions**: the Kuestions asked in the projekt, as a row of cards
+  with **Ask** last for its members (docs/spaces/kuestions.md, Kuestions in
+  a Krew). Whoever can see the projekt answers them. Shown once it has one;
+  its first is asked from Konnect (New Kuestion).
 - No lists of work, Krew row or joining on a projekt's own page (Tal,
   2026-10-30): it is part of its Krew, whose page has its people, and a
   clearer view of what needs work is still to be designed. The lists'

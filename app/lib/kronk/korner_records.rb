@@ -21,8 +21,6 @@ module Kronk
       'Proposal' => ->(_proposal, _viewer) { true },
       # A Krew's page opens for anyone with its link.
       'Krew' => ->(krew, viewer) { krew.archived_at.nil? || krew.member?(viewer) },
-      # Questions are open to everyone answering them.
-      'Question' => ->(_question, _viewer) { true },
       # Main and Rooms are open; a Krew's huddle is its members' (and has no
       # link to its Krew here, so it stays private).
       'HuddleSession' => ->(session, _viewer) { !session.krew? },
@@ -52,7 +50,7 @@ module Kronk
     FOUND_BY = {
       'Krew' => ->(viewer) { Krew.where(id: Krew.listed.select(:id)).or(Krew.where(id: viewer.krews.active.select(:id))) },
       'HuddleSession' => ->(_viewer) { HuddleSession.not_retired.where.not(scope: 'krew') },
-      'Question' => ->(_viewer) { Question.active },
+      'Question' => ->(viewer) { Question.active.reachable_by(viewer) },
       # A Place is seen through what its maker Konnected it to
       # (MapPlace#visible_to?); only ones the viewer made or with such a
       # Konnection can pass that check.

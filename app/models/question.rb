@@ -15,6 +15,12 @@
 # stay out of the Deck and make no feed post. A profile Kuestion with a
 # `seed_key` is Kronk-written (Kuestions::ProfileSeeds) and has no author.
 # Profile Kuestions also take the longtext, list, link and date formats.
+#
+# A home (2026-11-08): a community Kuestion asked in a Krew (`krew_id`) or
+# a projekt (`freethedream_project_id`) belongs there. Only the Krew's
+# members, or whoever can see the projekt, see and answer it; it stays out
+# of the Deck and makes no feed post, and shows on its Krew's or projekt's
+# page instead (docs/spaces/kuestions.md, Kuestions in a Krew).
 class Question < ApplicationRecord
   include Kronk::AttachmentSource
 
@@ -29,6 +35,8 @@ class Question < ApplicationRecord
 
   belongs_to :created_by_account, class_name: 'Account', optional: true
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :question
+  belongs_to :krew, optional: true
+  belongs_to :freethedream_project, class_name: 'Freethedream::Project', optional: true
   has_many   :answers, dependent: :destroy
   has_many   :question_skips, dependent: :destroy
 
@@ -38,6 +46,7 @@ class Question < ApplicationRecord
   validates :kind, inclusion: { in: KINDS }
   validates :created_by_account, presence: true, unless: :seeded?
   validate  :mc_options_shape
+  validate  :one_home
 
   before_validation :normalize_mc_options, on: :create
 
@@ -46,6 +55,8 @@ class Question < ApplicationRecord
   scope :locked_only, -> { where(locked: true) }
   scope :community, -> { where(kind: 'community') }
   scope :profile,   -> { where(kind: 'profile') }
+  # Everyone's: asked for the whole community, not in a Krew or projekt.
+  scope :for_everyone, -> { where(krew_id: nil, freethedream_project_id: nil) }
 
   # Deck: active Kuestions minus (a) any the account has already
   # answered, (b) any they've skipped. Newest first. The asker's own
@@ -53,14 +64,58 @@ class Question < ApplicationRecord
   # caller either answers or skips them, so the asker can weigh in on
   # their own kuestion (their answer counts toward the aggregate).
   scope :deck_for, lambda { |account|
-    return active.community.order(id: :desc) if account.nil?
+    return active.community.for_everyone.order(id: :desc) if account.nil?
 
     active
       .community
+      .for_everyone
       .where.not(id: Answer.where(account_id: account.id).select(:question_id))
       .where.not(id: QuestionSkip.where(account_id: account.id).select(:question_id))
       .order(id: :desc)
   }
+
+  # The Kuestions `account` may see: everyone's, those of the Krews they're
+  # in, and those of the projekts they can see.
+  def self.reachable_by(account)
+    return where(id: unscoped.for_everyone.select(:id)) if account.nil?
+
+    homes = unscoped.for_everyone
+                    .or(unscoped.where(krew_id: account.krews.select(:id)))
+                    .or(unscoped.where(freethedream_project_id: Freethedream::Project.visible_to(account).select(:id)))
+    where(id: homes.select(:id))
+  end
+
+  # The Kuestion, if `account` may see it; otherwise as if it didn't exist.
+  def self.find_for!(id, account)
+    question = find(id)
+    raise ActiveRecord::RecordNotFound unless question.visible_to?(account)
+
+    question
+  end
+
+  def homed?
+    krew_id.present? || freethedream_project_id.present?
+  end
+
+  def visible_to?(account)
+    return true unless homed?
+    return false if account.nil?
+    return krew.member?(account) if krew_id.present?
+
+    freethedream_project.visible_to?(account)
+  end
+
+  # Who may ask a Kuestion in a home: a Krew's members while it's active,
+  # a projekt's members.
+  def self.askable_in?(home, account)
+    return false if account.nil?
+
+    case home
+    when Krew then home.archived_at.nil? && home.member?(account)
+    when Freethedream::Project then home.member?(account)
+    else false
+    end
+  end
 
   def archived?
     archived_at.present?
@@ -105,6 +160,13 @@ class Question < ApplicationRecord
       # Only choice kuestions carry options.
       self.mc_options = []
     end
+  end
+
+  def one_home
+    return unless homed?
+
+    errors.add(:base, 'a Kuestion has one home') if krew_id.present? && freethedream_project_id.present?
+    errors.add(:kind, 'only community Kuestions are asked in a Krew or projekt') unless community?
   end
 
   def mc_options_shape

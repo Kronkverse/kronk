@@ -35,6 +35,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
+import { HomeKuestions } from 'mastodon/features/questions/home_kuestions';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -134,6 +135,7 @@ const messages = defineMessages({
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
   projektsTile: { id: 'krew.detail.tile.projekts', defaultMessage: 'Projekts' },
   chatTile: { id: 'krew.detail.tile.chat', defaultMessage: 'Chat' },
+  kuestions: { id: 'krew.detail.kuestions', defaultMessage: 'Kuestions' },
   kuddles: {
     id: 'krew.detail.kuddles',
     defaultMessage: '{count, plural, one {Kuddle} other {Kuddles}}',
@@ -316,6 +318,7 @@ const JumpTile: React.FC<{
 // Where each section is, for its tile.
 const SECTION_IDS = {
   projekts: 'krew-projekts',
+  kuestions: 'krew-kuestions',
   chat: 'krew-chat',
   kuddles: 'krew-kuddles',
 } as const;
@@ -590,9 +593,11 @@ export const KrewDetail = () => {
   ];
   const [kuddles, setKuddles] = useState<{ room: string; link: string }[]>([]);
   const [projektCount, setProjektCount] = useState(0);
+  const [kuestionCount, setKuestionCount] = useState(0);
   useEffect(() => {
     setKuddles([]);
     setProjektCount(0);
+    setKuestionCount(0);
   }, [id]);
   const handleKonnections = useCallback((rows: ApiAttachmentJSON[]) => {
     const seen = new Set<string>();
@@ -616,6 +621,21 @@ export const KrewDetail = () => {
     });
   }, []);
 
+  const frameKuestions = useCallback(
+    (row: React.ReactNode) => (
+      <section
+        id={SECTION_IDS.kuestions}
+        className='krew-detail__section krew-detail__kuestions'
+      >
+        <h3 className='korner-section-heading'>
+          {intl.formatMessage(messages.kuestions)}
+        </h3>
+        {row}
+      </section>
+    ),
+    [intl],
+  );
+
   // Tiles for what has its own section further down: tapping one scrolls
   // there.
   const jumpTiles = [
@@ -626,6 +646,16 @@ export const KrewDetail = () => {
             slug='freethedream'
             target={SECTION_IDS.projekts}
             label={intl.formatMessage(messages.projektsTile)}
+          />,
+        ]
+      : []),
+    ...(isMember && kuestionCount > 0
+      ? [
+          <JumpTile
+            key='kuestions'
+            slug='kuestions'
+            target={SECTION_IDS.kuestions}
+            label={intl.formatMessage(messages.kuestions)}
           />,
         ]
       : []),
@@ -981,6 +1011,16 @@ export const KrewDetail = () => {
               canStart={isMember && !krew.archived}
               onCount={setProjektCount}
             />
+
+            {/* Its own Kuestions, for its members only. */}
+            {isMember && (
+              <HomeKuestions
+                home={{ kind: 'krew', id: krew.id }}
+                canAsk={!krew.archived}
+                onCount={setKuestionCount}
+                frame={frameKuestions}
+              />
+            )}
 
             {isMember && chatOn && activity && (
               <KrewChat

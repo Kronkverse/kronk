@@ -1,6 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
+
+import { useLocation } from 'react-router-dom';
 
 import { apiCreateKuestion } from 'mastodon/api/kuestions';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
@@ -21,7 +23,7 @@ import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
-import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { parseKonnectParam, useKonnect } from 'mastodon/hooks/useKonnect';
 
 // Ask a Kuestion (/hub/kuestions/composer) — the standard
 // `<ComposeShell>` overlay mounted on top of the current Kuestions
@@ -40,6 +42,12 @@ import { useKonnect } from 'mastodon/hooks/useKonnect';
 // Where it goes: the deck (a community Kuestion, answered to unlock) or
 // profiles (people answer it for their profile and pin it there; it's
 // never posted and has its own typed formats).
+//
+// Opened from a Krew or a projekt (`?konnect=krew:<id>` or
+// `freethedream:<id>`), it is asked there instead: a community Kuestion that
+// is that Krew's or projekt's own, not the deck's (docs/spaces/kuestions.md,
+// Kuestions in a Krew). There is no choice of where it goes, and the source
+// isn't Konnected as well, since that is where it lives.
 
 const messages = defineMessages({
   label: {
@@ -74,6 +82,19 @@ const messages = defineMessages({
   kindProfileBody: {
     id: 'kuestions.ask.kind_profile_body',
     defaultMessage: 'People answer it and pin it to their profile',
+  },
+  inKrew: {
+    id: 'kuestions.ask.in_krew',
+    defaultMessage: 'Asked in {name}. Only its members see it.',
+  },
+  inProjekt: {
+    id: 'kuestions.ask.in_projekt',
+    defaultMessage: 'Asked in {name}. Whoever can see it can answer.',
+  },
+  thisKrew: { id: 'kuestions.ask.this_krew', defaultMessage: 'this Krew' },
+  thisProjekt: {
+    id: 'kuestions.ask.this_projekt',
+    defaultMessage: 'this projekt',
   },
   fmtLongtext: {
     id: 'kuestions.ask.fmt_longtext',
@@ -196,8 +217,24 @@ export const KuestionComposer: React.FC<Props> = ({
   const [mcOptions, setMcOptions] = useState<string[]>(['', '']);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Where it's asked, if opened from a Krew or a projekt.
+  const { search } = useLocation();
+  const home = useMemo(() => {
+    const opened = parseKonnectParam(search);
+    if (opened?.slug === 'krew')
+      return { kind: 'krew' as const, id: opened.id };
+    if (opened?.slug === 'freethedream')
+      return { kind: 'projekt' as const, id: opened.id };
+    return null;
+  }, [search]);
   // What the new Kuestion will be Konnected to (decisions.md, 2026-10-23).
-  const konnect = useKonnect('kuestions');
+  // Its home is where it lives, so that isn't Konnected as well.
+  const konnect = useKonnect('kuestions', { sourceHandled: home !== null });
+  const homeName =
+    konnect.source?.title ??
+    intl.formatMessage(
+      home?.kind === 'krew' ? messages.thisKrew : messages.thisProjekt,
+    );
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
@@ -292,7 +329,9 @@ export const KuestionComposer: React.FC<Props> = ({
           title: trimmed,
           answer_format: format,
           mc_options: format === 'mc' ? mcFilled : undefined,
-          kind,
+          kind: home ? 'community' : kind,
+          krew_id: home?.kind === 'krew' ? home.id : undefined,
+          project_id: home?.kind === 'projekt' ? home.id : undefined,
         });
         finishDraft();
         await commitKonnect('kuestions', created.id);
@@ -309,6 +348,7 @@ export const KuestionComposer: React.FC<Props> = ({
     format,
     mcFilled,
     kind,
+    home,
     finishDraft,
     commitKonnect,
     onCreated,
@@ -367,25 +407,34 @@ export const KuestionComposer: React.FC<Props> = ({
             />
           </div>
 
-          <ComposeSection title={intl.formatMessage(messages.kindLabel)}>
-            <div className='kuestions-composer__fmt-grid kuestions-composer__fmt-grid--two'>
-              <FmtOption
-                active={kind === 'community'}
-                title={intl.formatMessage(messages.kindDeck)}
-                body={intl.formatMessage(messages.kindDeckBody)}
-                onSelect={setKindDeck}
-              />
-              <FmtOption
-                active={kind === 'profile'}
-                title={intl.formatMessage(messages.kindProfile)}
-                body={intl.formatMessage(messages.kindProfileBody)}
-                onSelect={setKindProfile}
-              />
-            </div>
-          </ComposeSection>
+          {home ? (
+            <ComposeHint>
+              {intl.formatMessage(
+                home.kind === 'krew' ? messages.inKrew : messages.inProjekt,
+                { name: homeName },
+              )}
+            </ComposeHint>
+          ) : (
+            <ComposeSection title={intl.formatMessage(messages.kindLabel)}>
+              <div className='kuestions-composer__fmt-grid kuestions-composer__fmt-grid--two'>
+                <FmtOption
+                  active={kind === 'community'}
+                  title={intl.formatMessage(messages.kindDeck)}
+                  body={intl.formatMessage(messages.kindDeckBody)}
+                  onSelect={setKindDeck}
+                />
+                <FmtOption
+                  active={kind === 'profile'}
+                  title={intl.formatMessage(messages.kindProfile)}
+                  body={intl.formatMessage(messages.kindProfileBody)}
+                  onSelect={setKindProfile}
+                />
+              </div>
+            </ComposeSection>
+          )}
 
           <ComposeSection title={intl.formatMessage(messages.fmtLabel)}>
-            {kind === 'profile' ? (
+            {kind === 'profile' && !home ? (
               <div className='kuestions-composer__fmt-grid'>
                 {PROFILE_FORMATS.map((f) => (
                   <ProfileFmtOption
@@ -420,7 +469,7 @@ export const KuestionComposer: React.FC<Props> = ({
             )}
           </ComposeSection>
 
-          {kind === 'community' && format === 'mc' && (
+          {(kind === 'community' || home) && format === 'mc' && (
             <McEditor options={mcOptions} onChange={setMcOptions} />
           )}
 
