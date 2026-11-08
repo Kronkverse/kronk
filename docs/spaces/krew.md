@@ -220,7 +220,8 @@ All in `app/javascript/mastodon/features/krew/`.
     existing** (Tal, 2026-11-08): **Albums**
     (`krew_albums.tsx`: albums whose audience includes the Krew, so an
     album shared to it from its composer shows too), **Events**
-    (`krew_events.tsx`: what is coming up for the Krew, then what's been),
+    (`krew_events.tsx`: what is coming up for the Krew, soonest first; past events stay in
+    Kalendar, Tal 2026-11-09),
     and the works (Gallery, Films, Music, Stories). A card with no picture
     shows its space's glyph. Add existing on Events
     Konnects one of your events, which shares it into the Krew

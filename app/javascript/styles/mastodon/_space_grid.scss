@@ -130,10 +130,17 @@
     gap: 0.3rem 0.5rem;
   }
 
+  // Wraps to a second line rather than running off the card's edge
+  // (Tal, 2026-11-09: text cut off by the card borders), then clamps.
   &__meta-text {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     color: var(--text-secondary);
-    white-space: nowrap;
     font-size: 0.8125rem;
+    overflow-wrap: anywhere;
   }
 
   &__tag {
