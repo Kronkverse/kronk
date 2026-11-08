@@ -17,6 +17,31 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — A Krew's spaces are sections of cards
+
+Tal, trying the Konnect grid on shadow: Konnecting an album and an event to
+a Krew showed nothing on the page. Both had worked (the events were shared
+into the Krew), but a member's page hid Konnected albums and events from
+the tiles (2026-10-22) and listed them only inside the Albutts or Kalendar
+tile once it was opened. Tal: "when a space is konnected, it should have its
+own section in the krew page, and in it, a similar layout of horizontal
+cards. In kalendar case, connecting kalendar opens the space and can either
+create a new event or konnect an event so it appears as a card in the
+kalendar section."
+
+- Every space a Krew has on is its own section, always shown to members: a
+  row of cards ending in **New** and **Add existing**
+  (`components/space_shelf.tsx`). Its tile scrolls there.
+- Picking Albutts or Kalendar in the Krew's Konnect turns the space on and
+  goes to its section, as Kuestions and the works already did. Picking one
+  no longer links one record from the picker; Add existing does that.
+- The + moon on a Krew page is always Post to the Krew; the sections' New
+  makes albums and events.
+
+Supersedes 2026-10-18 "the tiles open their space below the grid, one at a
+time" and the Albutts/Kalendar exception in the Konnect grid entry below
+("Albutts and Kalendar still turn on by linking").
+
 ## 2026-11-08 — The Konnect grid: Spaces and Links
 
 Tal, after Krew Kuestions Konnected one public Kuestion: "some of the

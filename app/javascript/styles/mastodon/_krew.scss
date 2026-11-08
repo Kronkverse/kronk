@@ -1222,10 +1222,37 @@ $krew-column-width: 720px;
   font-weight: 600;
 }
 
-// A space's New and Add existing (components/space_shelf.tsx).
-.space-shelf__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+// A space's section (components/space_shelf.tsx): a row of standard cards,
+// with New and Add existing as the last two, faced like Kuestions' Ask.
+.space-shelf {
+  &__action {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    font: inherit;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  &__face {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      160deg,
+      var(--semantic-surface-elevated) 0%,
+      var(--semantic-surface-primary) 100%
+    );
+  }
+
+  &__glyph {
+    display: flex;
+    color: var(--kronk-purple-bright);
+
+    .icon {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
 }
