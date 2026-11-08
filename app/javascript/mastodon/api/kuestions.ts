@@ -102,6 +102,10 @@ export const apiUpdateMyKuestionAnswer = (
   apiRequestPatch<ApiProfileKuestionJSON>(`v2/kuestions/${id}/answer`, params);
 
 // Profile Kuestions only — a community answer can't be taken back.
+// The asker deletes their own Kuestion, with its answers and feed post.
+export const apiDeleteKuestion = (id: string) =>
+  apiRequestDelete<Record<string, never>>(`v2/kuestions/${id}`);
+
 export const apiRemoveMyKuestionAnswer = (id: string) =>
   apiRequestDelete<Record<string, never>>(`v2/kuestions/${id}/answer`);
 

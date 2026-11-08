@@ -13,11 +13,12 @@
 #                                  # (?krew_id= / ?project_id=: a home's)
 #   GET   /api/v2/kuestions/:id    # one Kuestion + gated answers
 #   POST  /api/v2/kuestions        # ask a new Kuestion
+#   DELETE /api/v2/kuestions/:id   # the asker deletes their own
 #
 # Answer POST + skip POST/DELETE live under the nested controllers.
 class Api::V2::KuestionsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :destroy]
   before_action :require_user!
   before_action :set_question, only: [:show]
 
@@ -82,6 +83,19 @@ class Api::V2::KuestionsController < Api::BaseController
     else
       render json: { error: question.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
+  end
+
+  # Whoever asked a Kuestion can delete it (Tal, 2026-11-08). Its answers go
+  # with it (dependent), and so do its Konnections (Kronk::AttachmentSource)
+  # and its post in the feed.
+  def destroy
+    question = Question.find_for!(params[:id], current_account)
+    raise Mastodon::NotPermittedError unless question.deletable_by?(current_account)
+
+    status = question.status
+    question.destroy!
+    RemoveStatusService.new.call(status) if status
+    render_empty
   end
 
   private

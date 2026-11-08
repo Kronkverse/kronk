@@ -130,6 +130,15 @@ export const HomeKuestions: React.FC<Props> = ({
     setRevealing(null);
   }, []);
 
+  const handleDeleted = useCallback(
+    (deletedId: string) => {
+      setRevealing(null);
+      setList((prev) => prev?.filter((k) => k.id !== deletedId) ?? prev);
+      load();
+    },
+    [load],
+  );
+
   const handleAsk = useCallback(() => {
     setAsking(true);
   }, []);
@@ -199,7 +208,11 @@ export const HomeKuestions: React.FC<Props> = ({
         />
       )}
       {revealing && (
-        <RevealSheet kuestion={revealing} onNext={handleCloseReveal} />
+        <RevealSheet
+          kuestion={revealing}
+          onNext={handleCloseReveal}
+          onDeleted={handleDeleted}
+        />
       )}
       {asking && (
         <HomeKuestionComposer

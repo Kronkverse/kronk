@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import { apiDeleteKuestion } from 'mastodon/api/kuestions';
 import type {
   ApiKuestionAnswerJSON,
   ApiKuestionAggregateEntry,
@@ -10,6 +11,7 @@ import type {
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
+import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { SheetFrame } from './sheet_frame';
@@ -29,6 +31,23 @@ const messages = defineMessages({
     id: 'kuestions.reveal.view_history',
     defaultMessage: 'view history',
   },
+  delete: { id: 'kuestions.reveal.delete', defaultMessage: 'Delete Kuestion' },
+  deleteTitle: {
+    id: 'kuestions.reveal.delete_title',
+    defaultMessage: 'Delete this Kuestion?',
+  },
+  deleteBody: {
+    id: 'kuestions.reveal.delete_body',
+    defaultMessage: 'Its answers go with it, and its post leaves the feed.',
+  },
+  deleteConfirm: {
+    id: 'kuestions.reveal.delete_confirm',
+    defaultMessage: 'Delete',
+  },
+  deleteFailed: {
+    id: 'kuestions.reveal.delete_failed',
+    defaultMessage: "Couldn't delete it. Try again?",
+  },
 });
 
 // After a successful answer, the reveal sheet opens: text-format
@@ -37,6 +56,9 @@ const messages = defineMessages({
 interface RevealSheetProps {
   kuestion: ApiKuestionJSON;
   onNext: () => void;
+  // Given, the asker gets Delete Kuestion (Tal, 2026-11-08); called once
+  // it is gone, to close the sheet and drop it from the list.
+  onDeleted?: (id: string) => void;
 }
 
 const PAGE = 4;
@@ -44,9 +66,34 @@ const PAGE = 4;
 export const RevealSheet: React.FC<RevealSheetProps> = ({
   kuestion,
   onNext,
+  onDeleted,
 }) => {
   const intl = useIntl();
   const askerName = kuestion.asker.display_name || kuestion.asker.username;
+  const [confirmDialog, confirm] = useConfirmDialog();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
+  const kuestionId = kuestion.id;
+  const handleDelete = useCallback(() => {
+    void (async () => {
+      const ok = await confirm({
+        title: intl.formatMessage(messages.deleteTitle),
+        message: intl.formatMessage(messages.deleteBody),
+        confirmLabel: intl.formatMessage(messages.deleteConfirm),
+        destructive: true,
+      });
+      if (!ok) return;
+      setDeleting(true);
+      setDeleteError(false);
+      try {
+        await apiDeleteKuestion(kuestionId);
+        onDeleted?.(kuestionId);
+      } catch {
+        setDeleteError(true);
+        setDeleting(false);
+      }
+    })();
+  }, [confirm, intl, kuestionId, onDeleted]);
 
   return (
     <SheetFrame onClose={onNext} closeLabel={intl.formatMessage(messages.next)}>
@@ -102,6 +149,25 @@ export const RevealSheet: React.FC<RevealSheetProps> = ({
           {intl.formatMessage(messages.next)}
         </button>
       </div>
+
+      {kuestion.asked_by_me && onDeleted && (
+        <div className='kuestions-reveal__delete'>
+          <button
+            type='button'
+            className='link-button'
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {intl.formatMessage(messages.delete)}
+          </button>
+          {deleteError && (
+            <p className='kuestions-reveal__delete-error' role='alert'>
+              {intl.formatMessage(messages.deleteFailed)}
+            </p>
+          )}
+        </div>
+      )}
+      {confirmDialog}
     </SheetFrame>
   );
 };
