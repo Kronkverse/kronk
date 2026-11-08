@@ -1269,7 +1269,6 @@ export const OfferingComposer: React.FC<Props> = ({
                   <ul className='wachuneed-rows__list'>
                     {dates.map((row, index) => (
                       <DateEditor
-                         
                         key={index}
                         index={index}
                         row={row}
@@ -1298,7 +1297,6 @@ export const OfferingComposer: React.FC<Props> = ({
                     <ul className='wachuneed-rows__list'>
                       {ticketTypes.map((row, index) => (
                         <RowEditor
-                           
                           key={index}
                           index={index}
                           row={row}

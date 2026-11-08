@@ -794,7 +794,11 @@
 
   &--on {
     border-color: var(--signal);
-    background: color-mix(in oklab, var(--signal) 12%, var(--surface-card-inset));
+    background: color-mix(
+      in oklab,
+      var(--signal) 12%,
+      var(--surface-card-inset)
+    );
   }
 
   &__when {
