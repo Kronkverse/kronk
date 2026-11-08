@@ -467,7 +467,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
               </>
             )}
 
-            {turningOn && target ? (
+            {turningOn ? (
               <p className='attachment-picker__status'>
                 {error ??
                   intl.formatMessage(messages.turningOn, {
