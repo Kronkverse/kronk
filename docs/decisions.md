@@ -17,6 +17,26 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — The listing composer is photos, name, description, price
+
+Tal, on the listing composer after it moved onto the shared overlay (#2493):
+"way too busy. The standard composer should be just posting simple items.
+Shop section, availability, variations, options, how people book it are not
+necessary for the standard sales composer. Also remove all the examples in
+the text boxes ... lets reduce the standard composer to photo, name,
+description and price. can remove the 'konnect' option also."
+
+**Decision:** Wachuneed's listing composer asks for photos, name,
+description and price (a budget for a wanted ad), with who can see it in the
+header, and nothing else: no switcher (offering or wanted comes from where it
+was opened), no Konnect row, no example text in any field. The richer
+settings (section, availability, variations, options, booking) are for the
+shop item composer; until it takes options and booking, nothing new sets
+them. Editing a listing sends only the fields this composer owns, so a
+listing that already has them keeps them. See docs/spaces/wachuneed.md.
+
+---
+
 ## 2026-11-08 — A projekt's pages, pared back
 
 Six of Tal's proposals from the same evening ("Tidy up", "Pills",
