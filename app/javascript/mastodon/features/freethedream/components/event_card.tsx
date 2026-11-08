@@ -10,6 +10,13 @@ import { apiDeleteAttachment } from 'mastodon/api/attachments';
 import { apiFtdRsvp } from 'mastodon/api/freethedream';
 import type { FtdEvent, FtdProject } from 'mastodon/api_types/freethedream';
 import { Icon } from 'mastodon/components/icon';
+import {
+  CardActions,
+  CardMedia,
+  CardMeta,
+  CardTitle,
+  StandardCard,
+} from 'mastodon/components/standard_card';
 import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 import { konnectSearch } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -17,8 +24,10 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { projectPath, Section } from './shared';
 
 // Getting together (Tal, 2026-10-30): the Kalendar events made for a
-// projekt or for one of its Komponents, soonest first, each a date tile
-// with its time, place and who's going, and one tap to say you're going.
+// projekt or for one of its Komponents, soonest first, each the standard
+// card (Tal, 2026-11-09: "event card on projekt should be standard"): its
+// picture, or its date when it has none, then what, when and where, and
+// who's going with one tap to say you're going.
 // On a projekt's page the Komponents' events show too, tagged with the
 // Komponent. Anyone in the projekt can make one with the + by the title:
 // for the whole projekt on its page, for a Komponent on the Komponent's
@@ -160,26 +169,36 @@ const EventRow: React.FC<{
   }, [event.attachment_id, onChange]);
 
   return (
-    <li className='freethedream-together__event'>
-      <Link
-        to={href}
-        className='freethedream-together__date'
-        tabIndex={-1}
-        aria-hidden
-      >
-        <span className='freethedream-together__month'>
-          {intl.formatDate(start, { month: 'short' })}
-        </span>
-        <span className='freethedream-together__day'>
-          {intl.formatDate(start, { day: 'numeric' })}
-        </span>
-      </Link>
-
-      <div className='freethedream-together__body'>
-        <Link to={href} className='freethedream-together__title'>
-          {event.title}
-        </Link>
-        <span className='freethedream-together__meta'>
+    <li className='freethedream-together__cell'>
+      <StandardCard variant='flow' className='freethedream-together__event'>
+        <CardMedia
+          className={
+            event.image_url
+              ? 'freethedream-together__picture'
+              : 'freethedream-together__date'
+          }
+        >
+          <Link to={href} tabIndex={-1} aria-hidden>
+            {event.image_url ? (
+              <img src={event.image_url} alt='' />
+            ) : (
+              <>
+                <span className='freethedream-together__day'>
+                  {intl.formatDate(start, { day: 'numeric' })}
+                </span>
+                <span className='freethedream-together__month'>
+                  {intl.formatDate(start, { month: 'short' })}
+                </span>
+              </>
+            )}
+          </Link>
+        </CardMedia>
+        <CardTitle>
+          <Link to={href} className='freethedream-together__title'>
+            {event.title}
+          </Link>
+        </CardTitle>
+        <CardMeta>
           {when.date}, {when.time}
           {event.location_name && (
             <>
@@ -191,8 +210,8 @@ const EventRow: React.FC<{
               )}
             </>
           )}
-        </span>
-        <span className='freethedream-together__foot'>
+        </CardMeta>
+        <CardActions className='freethedream-together__foot'>
           {event.for && (
             <Link
               to={projectPath(event.for)}
@@ -215,24 +234,23 @@ const EventRow: React.FC<{
               {intl.formatMessage(messages.unlink)}
             </button>
           )}
-        </span>
-      </div>
-
-      {event.rsvp_enabled && (
-        <button
-          type='button'
-          className={
-            going
-              ? 'freethedream__button freethedream__button--small'
-              : 'freethedream__button freethedream__button--small freethedream__button--quiet'
-          }
-          aria-pressed={going}
-          disabled={busy}
-          onClick={handleGoing}
-        >
-          {intl.formatMessage(going ? messages.going : messages.imGoing)}
-        </button>
-      )}
+          {event.rsvp_enabled && (
+            <button
+              type='button'
+              className={
+                going
+                  ? 'freethedream__button freethedream__button--small'
+                  : 'freethedream__button freethedream__button--small freethedream__button--quiet'
+              }
+              aria-pressed={going}
+              disabled={busy}
+              onClick={handleGoing}
+            >
+              {intl.formatMessage(going ? messages.going : messages.imGoing)}
+            </button>
+          )}
+        </CardActions>
+      </StandardCard>
     </li>
   );
 };
