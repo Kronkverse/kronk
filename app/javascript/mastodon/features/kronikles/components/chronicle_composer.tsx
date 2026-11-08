@@ -119,6 +119,8 @@ const KINDS: readonly ChronicleKind[] = [
   'poetry',
   'letter',
   'journal',
+  'constitution',
+  'legal',
   'other',
 ];
 
@@ -131,6 +133,11 @@ const kindMessages = defineMessages({
   poetry: { id: 'kronikles.kind.poetry', defaultMessage: 'Poetry' },
   letter: { id: 'kronikles.kind.letter', defaultMessage: 'Letter' },
   journal: { id: 'kronikles.kind.journal', defaultMessage: 'Journal' },
+  constitution: {
+    id: 'kronikles.kind.constitution',
+    defaultMessage: 'Constitution',
+  },
+  legal: { id: 'kronikles.kind.legal', defaultMessage: 'Legal document' },
   other: { id: 'kronikles.kind.other', defaultMessage: 'Other' },
 });
 
