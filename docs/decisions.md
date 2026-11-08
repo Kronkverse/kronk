@@ -17,6 +17,45 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — The Konnect grid: Spaces and Links
+
+Tal, after Krew Kuestions Konnected one public Kuestion: "some of the
+konnect spaces work well, others are clunky ... we went for the 'connects
+to everywhere' approach, but in hindsight there's a number of things that
+probably don't need the functions. I wonder how we can pick and choose what
+needs what?" Worked through with Tal in "Konnect: what joins to what"
+(https://claude.ai/artifact/6azzLf2ozga8hjifpQpffH).
+
+**Decision:** Konnect does two jobs. A **Space** turns a section on for a
+Krew or projekt, with its own New and Add existing; a **Link** ties one
+record to a Krew, a projekt, an event or a Place. Everything Konnects to
+one of those four; works don't Konnect to works, nor groups to groups,
+except a Booth set to the Art on its cover. Each manifest holds its row
+(`konnect.kind`, `konnect.to`), the picker offers only those pairs, and the
+attachments API refuses the rest. Links made before, and links Kronk makes
+itself (Krew audiences, Places), stay. This supersedes 2026-10-23, "Any
+creation Konnects to any other", and generalises #2499's `konnect.space`.
+
+| Konnect this                  | Krew                                   | Projekt | Event | Place |
+| ----------------------------- | -------------------------------------- | ------- | ----- | ----- |
+| Projekts                      | Space                                  |         | Link  |       |
+| Kalendar                      | Space                                  | Space   |       | Link  |
+| Huddle                        | Space                                  | Space   | Link  |       |
+| Kuestions                     | Space                                  | Space   |       |       |
+| Albutts                       | Space                                  | Space   | Link  |       |
+| Art, Cinema, Booth, Kronikles | Space (Gallery, Films, Music, Stories) | Link    | Link  |       |
+| Wachuneed                     | Link                                   | Link    |       |       |
+| Karporn                       |                                        |         | Link  | Link  |
+| Kommons                       |                                        |         |       |       |
+
+Tal's other calls: a space's section has New and Add existing; the Albutts
+korner lists every album you can see, Krew ones included; Komponents stay
+at projekt level except calls; projekt event invitations pick any mix of a
+Komponent, the projekt, chosen Mates or open; Moments show on an event's
+page while live. Still to build: the works' Krew sections and Albutts as a
+projekt space (next), Moments on events, the Booth cover-Art link, Komponent
+calls, mixed invitations. The Krew chat stays turned on from Krew settings.
+
 ## 2026-11-08 — Kuestions is a Krew space, with its own Ask
 
 Tal, trying the entry below on shadow: "Hitting the konnect 'Kuestions' just

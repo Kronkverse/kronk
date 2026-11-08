@@ -828,12 +828,21 @@ Krew beside it, as `AlbumKrew` does.
 
 #### 2.6 The manifest's Konnections: `konnect:`
 
-Any creation on Kronk can be Konnected to any other (decisions.md,
-2026-10-23). `attaches:` / `accepts:` say a korner may; the optional
-`konnect:` block is the readable list of how its Konnections work:
+A korner Konnects only where the **Konnect grid** says (decisions.md,
+2026-11-08, which replaced "any creation Konnects to any other"):
+everything Konnects to a Krew, a projekt (`freethedream`), an event
+(`kalendar`) or a Place (`map`). `attaches:` / `accepts:` say a korner takes
+links at all; the `konnect:` block says where and how:
 
 ```yaml
 konnect:
+  # Its kind, and where it Konnects: per korner, `space` (turns a section
+  # on there, with New and Add existing) or `link` (ties one record).
+  kind: happening
+  to:
+    krew: space
+    freethedream: space
+    map: link
   # What one of its records is called beside its title ("the Ember event").
   noun: event
   # Konnect can make a new one of these from anywhere: the picker's
@@ -845,6 +854,31 @@ konnect:
     - with: krew
       does: "The Krew joins the event's audience and the Krew page lists it under Kalendar; …"
 ```
+
+- **`kind`** and **`to`** are the korner's row in the Konnect grid. A
+  pair is offered (the picker, `hooks/useAttachTargets.ts`) and accepted
+  (`POST /api/v1/attachments`, `Kronk::KonnectGrid`) when either side's
+  `to:` names the other; anything else is refused with "… don't Konnect".
+  Links Kronk makes itself (a Krew audience from a composer, an event's
+  Place) and links made before the grid are untouched. **Where does a new
+  korner Konnect?** Start from its kind's row and argue only for what
+  differs, in its PR:
+
+  | kind      | typical row                                                                   | examples                                    |
+  | --------- | ----------------------------------------------------------------------------- | ------------------------------------------- |
+  | group     | others Konnect to it (`to: {}`)                                               | Krew                                        |
+  | happening | `space` on Krew and projekt, `link` to a Place                                | Kalendar, Huddle                            |
+  | work      | `link` to Krew, projekt and event (a `space` on a Krew once it has a section) | Art, Cinema, Booth, Kronikles, Albutts      |
+  | exchange  | `link` to Krew and projekt                                                    | Wachuneed                                   |
+  | talk      | `space` on Krew and projekt                                                   | Kuestions; Kommons Konnects nowhere for now |
+
+  `space` on a Krew means the Krew page has a section for it. A space that
+  is turned on when picked rather than by linking one record is listed in
+  the page's `TURN_ON_SPACES` (`krew_detail.tsx`: Kuestions); Albutts and
+  Kalendar turn on when a record is linked. Works don't Konnect to works,
+  nor groups to groups, except a Booth set to the Art on its cover.
+  `korners doctor` fails a korner that takes links with no `kind:` or
+  `to:`.
 
 - **`noun`** is what one of its records is called. Wherever Kronk names
   a record (Konnected cards and tiles, the Konnect row, Same as, pop-ups and
@@ -875,7 +909,8 @@ konnect:
 
 `korners doctor` (`Kronk::KornerKonnect`, also run against the real
 manifests by `spec/lib/mastodon/cli/korners_spec.rb`) fails a block that
-isn't that shape, `make: true` with no route (`konnect.route` or
+isn't that shape, a korner that takes links with no grid row (`kind:`,
+`to:` naming korners that take links, as `space` or `link`), `make: true` with no route (`konnect.route` or
 `compose.route`) or label, or on a korner with
 `no_attachments:`, an `effects` entry whose pair has no handler, and a
 handler whose pair neither korner lists, so the manifests stay the true

@@ -60,7 +60,12 @@ RSpec.describe ActivityPub::Activity::QuoteRequest do
       end
     end
 
+    # Kronk: anyone who can see a local post can quote it, so an unquotable
+    # one is one the sender can't see: its author blocks them (decisions.md,
+    # 2026-11-08).
     context 'when trying to quote an unquotable local status' do
+      before { recipient.block!(sender) }
+
       it 'sends a Reject activity' do
         expect { subject.perform }
           .to enqueue_sidekiq_job(ActivityPub::DeliveryWorker)
@@ -72,6 +77,8 @@ RSpec.describe ActivityPub::Activity::QuoteRequest do
     end
 
     context 'when trying to quote an unquotable local status with an inlined instrument' do
+      before { recipient.block!(sender) }
+
       let(:instrument) { status_json.without('@context') }
 
       it 'sends a Reject activity' do

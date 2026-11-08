@@ -61,6 +61,11 @@ class Api::V1::AttachmentsController < Api::BaseController
     # The unique index holds one direction; this holds both, so the same
     # two records aren't Konnected twice.
     return render json: { error: 'Already Konnected' }, status: 422 if already_konnected?
+    # The Konnect grid (Kronk::KonnectGrid, decisions.md 2026-11-08): what
+    # a person Konnects keeps to the pairs it allows. Links Kronk makes
+    # itself (a Krew audience, an event's Place) and links from before
+    # the grid are untouched.
+    return render json: { error: "#{@attachment.source_slug} and #{@attachment.target_slug} don't Konnect" }, status: 422 unless in_grid?
 
     follow = follow_requested?
     if follow
@@ -139,6 +144,12 @@ class Api::V1::AttachmentsController < Api::BaseController
   end
 
   private
+
+  def in_grid?
+    return true unless @attachment.kind == KornerAttachment::KIND_LINK
+
+    Kronk::KonnectGrid.allowed?(@attachment.source_slug, @attachment.target_slug)
+  end
 
   def set_attachment
     @attachment = KornerAttachment.find_by(id: params[:id])

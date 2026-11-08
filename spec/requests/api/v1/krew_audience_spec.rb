@@ -60,6 +60,9 @@ RSpec.describe 'Krew audiences on films, kars, kronikles, art and listings' do
         post '/api/v1/attachments', headers: headers_for(author), params: {
           source_slug: slug, source_id: plain.id, target_slug: 'kalendar', target_id: event.id, kind: 'link', metadata: { audience: 'same' }
         }
+        # The Konnect grid (decisions.md, 2026-11-08) leaves listings off events.
+        next expect(response).to have_http_status(422) unless Kronk::KonnectGrid.allowed?(slug, 'kalendar')
+
         expect(response).to have_http_status(200)
         expect(Kronk::Audience.read(plain.reload)).to eq(tier: 'self_only', krew_ids: [growers.id])
         expect(plain.visible_to?(member.account)).to be(true)
@@ -73,6 +76,10 @@ RSpec.describe 'Krew audiences on films, kars, kronikles, art and listings' do
         expect(Kronk::AttachmentEffects.between(slug, record.id, 'krew', growers.id).exists?).to be(true)
 
         post '/api/v1/attachments', headers: headers_for(author), params: { source_slug: slug, source_id: record.id, target_slug: 'krew', target_id: weavers.id, kind: 'link' }
+        # A kar is for a Krew from its composer; the grid leaves kars off
+        # Krews in Konnect (decisions.md, 2026-11-08).
+        next expect(response).to have_http_status(422) unless Kronk::KonnectGrid.allowed?(slug, 'krew')
+
         expect(record.reload.krew_ids).to contain_exactly(growers.id, weavers.id)
 
         delete "/api/v1/attachments/#{response.parsed_body['id']}", headers: headers_for(author)
