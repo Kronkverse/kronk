@@ -34,36 +34,52 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
     expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted')
     within('.compose-shell') do
-      expect(page).to have_css('.korner-pill--active', text: "Something I'm looking for")
+      expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
     end
   end
 
-  # Kommons "Market Composer": the listing composer is the standard overlay.
+  # The listing composer is photos, name, description and price, nothing
+  # else (decisions.md, 2026-11-08, "Simple listing composer").
   it 'posts a wanted ad from the composer overlay' do
     visit '/hub/wachuneed/new?kind=wanted'
 
     within('.compose-shell') do
-      expect(page).to have_css('.compose-shell__label', text: 'New listing')
-      fill_in 'A short name — what is it?', with: 'A ladder'
+      expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
+      find('input[aria-label="Title"]').fill_in with: 'A ladder'
+      find('textarea[aria-label="Description"]').fill_in with: 'Six rungs is plenty'
       fill_in 'Budget (in AUD)', with: '40'
-      expect(page).to have_no_field('How long')
       click_on 'Publish listing'
     end
 
     expect(page).to have_current_path('/hub/wachuneed/mine')
-    expect(Listing.last).to have_attributes(title: 'A ladder', kind: 'wanted', price_cents: 4000, booking: {})
+    expect(Listing.last).to have_attributes(title: 'A ladder', description: 'Six rungs is plenty', kind: 'wanted', price_cents: 4000, booking: {})
   end
 
-  it 'switches a new listing between offering and looking for, and closes back to Wachuneed' do
+  it 'posts an offering with just a name and price, and asks for nothing else' do
     visit '/hub/wachuneed/new'
 
     within('.compose-shell') do
-      expect(page).to have_css('.korner-pill--active', text: "Something I'm offering")
-      expect(page).to have_field('Price (in AUD)')
-      click_on "Something I'm looking for"
-      expect(page).to have_field('Budget (in AUD)')
-      click_on 'Cancel'
+      expect(page).to have_css('.compose-shell__label', text: 'New listing')
+      expect(page).to have_no_css('.korner-pill')
+      expect(page).to have_no_css('.konnect-row')
+      expect(page).to have_no_css('input[placeholder], textarea[placeholder]')
+      ['Availability', 'How long', 'Section of your shop'].each { |label| expect(page).to have_no_field(label) }
+      expect(page).to have_no_content('Variations')
+      expect(page).to have_no_content('Options')
+
+      find('input[aria-label="Title"]').fill_in with: 'Clay mug'
+      fill_in 'Price (in AUD)', with: '25'
+      click_on 'Publish listing'
     end
+
+    expect(page).to have_current_path('/hub/wachuneed/mine')
+    expect(Listing.last).to have_attributes(title: 'Clay mug', kind: 'offer', category: 'goods', price_cents: 2500, availability: 'available')
+  end
+
+  it 'closes a new listing back to Wachuneed' do
+    visit '/hub/wachuneed/new'
+
+    within('.compose-shell') { click_on 'Cancel' }
 
     expect(page).to have_no_css('.compose-shell')
     expect(page).to have_current_path('/hub/wachuneed')
@@ -211,18 +227,20 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
       end
 
-      it 'leads from a listing to the shop, and lets the owner place a listing in a section' do
-        listing = Listing.find_by(title: 'Loose candle')
+      it 'leads from a listing to the shop, and an edit keeps the listing in its section' do
+        listing = Listing.find_by(title: 'Balm')
         visit "/hub/wachuneed/listings/#{listing.id}"
 
         expect(page).to have_link('See everything from Bob Aromas')
 
         visit "/hub/wachuneed/listings/#{listing.id}/edit"
-        select 'Skin Care', from: 'Section of your shop'
+        find('input[aria-label="Title"]').fill_in with: 'Lip balm'
+        expect(page).to have_no_field('Section of your shop')
         click_on 'Save changes'
 
-        expect(page).to have_current_path("/hub/wachuneed/listings/#{listing.slug}")
-        expect(listing.reload.listing_shop_section.name).to eq 'Skin Care'
+        expect(page).to have_no_current_path(%r{/edit\z})
+        expect(listing.reload).to have_attributes(title: 'Lip balm')
+        expect(listing.listing_shop_section.name).to eq 'Skin Care'
       end
     end
   end
@@ -337,22 +355,6 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
   # docs/spaces/wachuneed.md, Options.
   describe 'options' do
-    it 'lets a seller add an option from the suggestions, with what a choice adds' do
-      visit '/hub/wachuneed/new'
-
-      fill_in 'A short name — what is it?', with: 'Massage'
-      fill_in 'Price (in AUD)', with: '50'
-      click_on 'Length'
-      # "30 minutes" and "1 hour" arrive filled in; the hour costs more.
-      all('input[aria-label="Adds (AUD)"]').last.fill_in with: '40'
-      click_on 'Publish listing'
-
-      expect(page).to have_current_path('/hub/wachuneed/mine')
-      expect(Listing.last.options).to eq [
-        { 'name' => 'Length', 'choices' => [{ 'label' => '30 minutes', 'extra_cents' => 0 }, { 'label' => '1 hour', 'extra_cents' => 4000 }] },
-      ]
-    end
-
     it 'lets a buyer choose, and adds it up' do
       seller  = Fabricate(:account, username: 'ana')
       listing = Listing.create!(account: seller, title: 'Massage', category: 'service', state: 'live', price_cents: 5000, price_currency: 'AUD',
@@ -369,24 +371,10 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
   # docs/spaces/wachuneed.md, Booking (Kommons "Goods & Services").
   describe 'booking' do
-    it 'builds a listing from a template, changes its parts, and shows them on its page' do
-      visit '/hub/wachuneed/new'
-
-      fill_in 'A short name — what is it?', with: 'Garden help'
-      click_on 'Job'
-      # A job starts as a time, a from and a to, and what to ask; this one
-      # needs no from and to, takes two hours, and posts one time.
-      uncheck 'From and to'
-      select '2 hours', from: 'How long'
-      fill_in 'What to ask them', with: 'How big is the garden?'
-      click_on 'Add a time'
-      find('input[aria-label="A time you post"]').fill_in with: 1.week.from_now.strftime('%Y-%m-%dT10:00')
-      click_on 'Publish listing'
-
-      expect(page).to have_current_path('/hub/wachuneed/mine')
-      listing = Listing.last
-      expect(listing.booking).to include('parts' => %w(time details), 'template' => 'job', 'minutes' => 120, 'ask' => 'How big is the garden?')
-      expect(listing.booking['slots'].size).to eq 1
+    it 'shows how a listing is booked on its page' do
+      listing = Listing.create!(account: bob.account, title: 'Garden help', category: 'service', state: 'live',
+                                booking: { template: 'job', parts: %w(time details), minutes: 120, ask: 'How big is the garden?',
+                                           slots: [1.week.from_now.change(hour: 10).iso8601] })
 
       visit "/hub/wachuneed/listings/#{listing.id}"
 
@@ -445,17 +433,18 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(page).to have_current_path(%r{/hub/wachuneed/listings/})
     end
 
-    it 'turns booking off again with Ask for this' do
-      listing = Listing.create!(account: bob.account, title: 'Reiki', category: 'service', state: 'live',
-                                booking: { template: 'appointment', parts: %w(time), minutes: 60, hours: [{ day: 1, from: '09:00', to: '17:00' }] })
+    it 'keeps how a listing is booked when it is edited' do
+      booking = { 'template' => 'appointment', 'parts' => %w(time), 'minutes' => 60, 'hours' => [{ 'day' => 1, 'from' => '09:00', 'to' => '17:00' }] }
+      listing = Listing.create!(account: bob.account, title: 'Reiki', category: 'service', state: 'live', booking: booking)
 
       visit "/hub/wachuneed/listings/#{listing.slug}/edit"
-      expect(page).to have_field('How long', with: '60')
-      click_on 'Ask for this'
+      find('input[aria-label="Title"]').fill_in with: 'Reiki, an hour'
+      expect(page).to have_no_field('How long')
       click_on 'Save changes'
 
       expect(page).to have_no_current_path(%r{/edit\z})
-      expect(listing.reload.booking).to eq({})
+      expect(listing.reload).to have_attributes(title: 'Reiki, an hour')
+      expect(listing.booking).to include(booking)
     end
   end
 
