@@ -55,6 +55,15 @@ you made.
 - The Krew page lists its albums (`GET /api/v1/albutts/albums?krew_id=`)
   when Albutts is one of its spaces, and its events, coming up and
   **Earlier** (`GET /api/v1/events?krew_id=&filter=past`), when Kalendar is.
+- **Its works are spaces too** (the Konnect grid, decisions.md
+  2026-11-08): a Krew turns on a **Gallery** (Art), **Films** (Cinema),
+  **Music** (Booth) or **Stories** (Kronikles), from Konnect (picking the
+  korner turns it on, `TURN_ON_SPACES` in `krew_detail.tsx`) or Krew
+  settings (`KrewKorner::KORNERS`, `KREW_PAGE_SPACES`). Each is a tile
+  under Spaces that opens its section in place (`components/space_shelf.tsx`):
+  what of that korner is Konnected to the Krew, then **New** (the korner's
+  composer with `?konnect=krew:<id>`) and **Add existing** (the Konnect
+  picker kept to that korner). The Albums section has the same two.
 - **An emergence's Krew shares its events** (`Kronk::EventLinks`). Linking
   an event to the Krew links it to the Krew's FreeTheDream emergence too,
   and an event attached to the emergence (or one of its gangs) by its maker

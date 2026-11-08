@@ -24,6 +24,7 @@ import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useSpaceBack } from 'mastodon/components/space_back';
+import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
 import { HomeKuestions } from 'mastodon/features/questions/home_kuestions';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
@@ -61,6 +62,7 @@ import { Updates } from './updates';
 // own.
 
 const messages = defineMessages({
+  albums: { id: 'freethedream.albums.title', defaultMessage: 'Albums' },
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
   remove: { id: 'freethedream.remove', defaultMessage: 'Remove' },
   removeTitle: {
@@ -377,7 +379,9 @@ const ProjectView: React.FC<{
         korner: 'freethedream',
         id: project.id,
         canManage: project.can.edit,
-        excludeSlugs: ['huddle'],
+        // Albums show in their own section (a Space, decisions.md
+        // 2026-11-08), not as tiles.
+        excludeSlugs: ['huddle', 'albutts'],
         onKonnections: handleKonnections,
         // Getting together already lists the linked events, and a projekt
         // lives in its Krew.
@@ -475,6 +479,16 @@ const ProjectView: React.FC<{
                 frame={frameKuestions}
               />
             )}
+            {/* Its albums, a Space with New and Add existing (decisions.md,
+                2026-11-08): shown once one is Konnected, from Konnect. */}
+            <SpaceShelf
+              homeSlug='freethedream'
+              homeId={project.id}
+              korner='albutts'
+              title={intl.formatMessage(messages.albums)}
+              canAdd={project.can.edit}
+              hideWhenEmpty
+            />
             {project.top && (
               <Updates
                 updates={project.updates}
