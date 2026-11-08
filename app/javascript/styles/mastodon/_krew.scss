@@ -1227,7 +1227,6 @@ $krew-column-width: 720px;
 .space-shelf {
   &__action {
     width: 100%;
-    padding: 0;
     border: 0;
     font: inherit;
     color: inherit;
@@ -1239,16 +1238,12 @@ $krew-column-width: 720px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(
-      160deg,
-      var(--semantic-surface-elevated) 0%,
-      var(--semantic-surface-primary) 100%
-    );
+    background: var(--surface-card-inset);
   }
 
   &__glyph {
     display: flex;
-    color: var(--kronk-purple-bright);
+    color: var(--accent-text);
 
     .icon {
       width: 2.5rem;

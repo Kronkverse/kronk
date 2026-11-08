@@ -96,7 +96,8 @@ theme.
 | `--accent-text`                                         | accent mixed toward text    | Accent as text: links, meta, labels   |
 | `--text-on-accent`                                      | `#ffffff`                   | Text on the accent                    |
 | `--surface-primary`                                     | `#191b22`                   | Page background                       |
-| `--surface-elevated`                                    | `#292938`                   | Cards, menus, raised panels           |
+| `--surface-elevated`                                    | `#292938`                   | Menus, raised panels                  |
+| `--surface-card` / `--surface-card-inset`               | `#1b1b1f` / `#25252b`       | Cards; the well a picture sits in     |
 | `--surface-stage`                                       | `transparent`               | The page panel inside the Stage       |
 | `--border-default`                                      | `#47368b`                   | Borders on interactive surfaces       |
 | `--border-subtle`                                       | `#2a2740`                   | Hairlines, the Membrane wire          |
@@ -680,6 +681,19 @@ no specificity, so any korner rule beats them. Arrangement rules are not, since
 what a grid tile draws is a decision.
 
 **Prose** (`body`) is two lines, `0.875rem`, secondary colour, everywhere.
+
+### The look: the Quiet card
+
+Tal picked it on 2026-11-08 from five designs ("the purple is all wrong, and
+i don't love the layout"). A card is a warm neutral (`--surface-card`), not
+purple-grey, with no border. The picture sits inset in its own rounded well
+(`--surface-card-inset`). A thing with no picture shows its space's glyph in
+that well. The title is the display serif at regular weight, left-aligned
+over a secondary-colour meta line. **Colour on a card is a signal only:**
+the badge (the korner's glyph and name, small caps, `--accent-text`), a
+glyph, or progress. The feed card's badge is the same label across its top,
+no longer a solid accent bar. Hover lifts the card and lightens it slightly
+instead of drawing an accent border.
 
 ### Three arrangements
 
