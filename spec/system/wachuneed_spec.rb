@@ -33,7 +33,40 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     click_on 'Post a wanted ad'
 
     expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted')
-    expect(page).to have_checked_field("Something I'm looking for")
+    within('.compose-shell') do
+      expect(page).to have_css('.korner-pill--active', text: "Something I'm looking for")
+    end
+  end
+
+  # Kommons "Market Composer": the listing composer is the standard overlay.
+  it 'posts a wanted ad from the composer overlay' do
+    visit '/hub/wachuneed/new?kind=wanted'
+
+    within('.compose-shell') do
+      expect(page).to have_css('.compose-shell__label', text: 'New listing')
+      fill_in 'A short name — what is it?', with: 'A ladder'
+      fill_in 'Budget (in AUD)', with: '40'
+      expect(page).to have_no_field('How long')
+      click_on 'Publish listing'
+    end
+
+    expect(page).to have_current_path('/hub/wachuneed/mine')
+    expect(Listing.last).to have_attributes(title: 'A ladder', kind: 'wanted', price_cents: 4000, booking: {})
+  end
+
+  it 'switches a new listing between offering and looking for, and closes back to Wachuneed' do
+    visit '/hub/wachuneed/new'
+
+    within('.compose-shell') do
+      expect(page).to have_css('.korner-pill--active', text: "Something I'm offering")
+      expect(page).to have_field('Price (in AUD)')
+      click_on "Something I'm looking for"
+      expect(page).to have_field('Budget (in AUD)')
+      click_on 'Cancel'
+    end
+
+    expect(page).to have_no_css('.compose-shell')
+    expect(page).to have_current_path('/hub/wachuneed')
   end
 
   # Kommons "Home Page" (117522482475089755).
@@ -188,7 +221,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         select 'Skin Care', from: 'Section of your shop'
         click_on 'Save changes'
 
-        expect(page).to have_current_path("/hub/wachuneed/listings/#{listing.id}")
+        expect(page).to have_current_path("/hub/wachuneed/listings/#{listing.slug}")
         expect(listing.reload.listing_shop_section.name).to eq 'Skin Care'
       end
     end
@@ -308,7 +341,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       visit '/hub/wachuneed/new'
 
       fill_in 'A short name — what is it?', with: 'Massage'
-      choose 'Offerings'
+      select 'Offerings — services you provide', from: 'Category'
       fill_in 'Price (in AUD)', with: '50'
       click_on 'Length'
       # "30 minutes" and "1 hour" arrive filled in; the hour costs more.
@@ -341,7 +374,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       visit '/hub/wachuneed/new'
 
       fill_in 'A short name — what is it?', with: 'Garden help'
-      choose 'Offerings'
+      select 'Offerings — services you provide', from: 'Category'
       click_on 'Job'
       # A job starts as a time, a from and a to, and what to ask; this one
       # needs no from and to, takes two hours, and posts one time.
@@ -454,7 +487,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       visit "/hub/wachuneed/listings/#{listing.id}/edit"
 
       click_on 'Take down listing'
-      click_on 'Take it down'
+      within('.confirm-dialog__panel') { click_on 'Take it down' }
 
       expect(page).to have_current_path('/hub/wachuneed/mine')
       expect(listing.reload).to have_attributes(state: 'closed', status_id: nil)

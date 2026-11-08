@@ -112,51 +112,6 @@
     min-height: 5.5rem;
   }
 
-  &__compose-radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  &__compose-radio {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.65rem 0.85rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: color-mix(in oklab, var(--surface-elevated) 40%, transparent);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition:
-      background var(--dur-fast) var(--ease-out),
-      border-color var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
-
-    input[type='radio'] {
-      accent-color: var(--kronk-purple-bright);
-    }
-
-    &:hover {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 10%,
-        var(--surface-elevated)
-      );
-      color: var(--text-primary);
-    }
-
-    &--active {
-      border-color: var(--kronk-purple-bright);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 14%,
-        var(--surface-elevated)
-      );
-      color: var(--text-primary);
-    }
-  }
-
   // Photo picker: preview thumb + choose-a-file affordance + remove.
   // Kept simple — one image, one attachment id. Ordering + multiple
   // images are follow-ups.

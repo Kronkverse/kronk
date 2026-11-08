@@ -77,11 +77,17 @@ An empty section says what belongs there and carries the one button that
 fixes it: **List something**, or **Post a wanted ad** in Desired.
 
 **List something.** The Ж-menu "New listing" action opens `/hub/wachuneed/new`
-(`features/wachuneed/new_listing.tsx`): first whether you're offering
-something or looking for something (`?kind=wanted` opens on the second), then
-title, description, category, optional price (a budget, when wanted) in AUD,
-up to ten photos (`Listing::MAX_PHOTOS`), and
-**Who can see this?**, the reach control (see Who can see it). There is no
+(`ListingComposer` in `features/wachuneed/new_listing.tsx`). It is the
+standard composer overlay (`<ComposeShell>`, over Wachuneed's home), like
+every other composer (Kommons "Market Composer", 2026-11-08; until then it
+was a page of its own). Its switcher says whether you're offering something
+or looking for something (`?kind=wanted` opens on the second; Cancel goes back
+to Desired from there, to Wachuneed's home otherwise), and the reach control
+in its header is who can see it (see Who can see it). Then up to ten photos
+(`Listing::MAX_PHOTOS`), title, description, category, optional price (a
+budget, when wanted) in AUD, and for something on offer its availability,
+variations, options and booking. A new listing keeps a draft as you write
+(`useDraft`, kind `listing`; docs/design.md, Drafts). There is no
 location field: where it is, is a Konnection to a Map Place from the Konnect
 row (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). A
 listing's `location` reads its own old free text first (older listings, the
@@ -105,7 +111,9 @@ clears the phone tab bar and the Ж menu.
 
 **Edit your own.** The poster edits from the Ж menu's **Edit listing** moon
 (there is no inline Edit on the listing; others see "Message the poster").
-It opens `/hub/wachuneed/listings/:id/edit`, the composer prefilled.
+It opens `/hub/wachuneed/listings/:id/edit`, the composer prefilled over
+the listing's page, without the switcher (a listing keeps its kind) or a
+draft. **Take down listing** at its foot asks first (`useConfirmDialog`).
 Saving keeps the listing's state; the photos are only sent if you added,
 removed or reordered them. A title change also updates the feed card's companion Status
 text.
@@ -246,8 +254,8 @@ Each is its own. An item's reach decides who sees it wherever it shows
 who can message about it. The shop's decides who sees the shop page and can
 message the seller from it, and is where a new item in the shop builder
 starts; the item can then be set wider or narrower. A shop page lists only
-the items the visitor can see. The listing form asks **Who can see this?**;
-the shop item composer has the control in its header; shop details ask
+the items the visitor can see. The listing composer and the shop item
+composer have the control in their header; shop details ask
 **Who can see your shop?**
 
 `Listing#messageable_by?` is `visible_to?` for anyone but the seller, never
