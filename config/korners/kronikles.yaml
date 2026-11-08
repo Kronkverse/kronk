@@ -109,7 +109,7 @@ konnect:
   # other; anything else is refused.
   kind: work
   to:
-    krew: link
+    krew: space
     freethedream: link
     kalendar: link
   # What one of its records is called wherever Kronk names it beside

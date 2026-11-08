@@ -142,6 +142,8 @@ interface AttachmentPickerProps {
   // The spaces this page turns on when picked (the rest link, which turns
   // theirs on as a side effect: an album, an event).
   turnOnSlugs?: readonly string[];
+  // Keep to one korner: a space's Add existing (components/space_shelf).
+  onlySlug?: string;
 }
 
 export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
@@ -153,11 +155,17 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   exclude,
   onTurnOnSpace,
   turnOnSlugs,
+  onlySlug,
 }) => {
   const intl = useIntl();
   const { addLink } = useAttachments(sourceSlug, onPick ? null : sourceId);
   // The korners this record can attach to, wildcards included.
-  const targetSlugs = useAttachTargets(sourceSlug);
+  const allTargets = useAttachTargets(sourceSlug);
+  const targetSlugs = useMemo(
+    () =>
+      onlySlug ? allTargets.filter((t) => t.slug === onlySlug) : allTargets,
+    [allTargets, onlySlug],
+  );
 
   // With several spaces to choose from, nothing is picked until the person
   // picks one: defaulting to the first (Huddle) sent people searching the

@@ -29,7 +29,10 @@ export type KrewKornerSlug =
   | 'map'
   | 'albutts'
   | 'kuestions'
-  | 'nudges';
+  | 'nudges'
+  | 'art'
+  | 'cinema'
+  | 'kronikles';
 
 // The spaces that can show a Krew's own things on its page (decisions.md,
 // 2026-10-18). Only these are offered when gathering a Krew or adding a
@@ -42,6 +45,12 @@ export const KREW_PAGE_SPACES: KrewKornerSlug[] = [
   'kalendar',
   'nudges',
   'kuestions',
+  // The works, as a Krew's Gallery, Films, Music and Stories (the Konnect
+  // grid, decisions.md 2026-11-08).
+  'art',
+  'cinema',
+  'booth',
+  'kronikles',
 ];
 
 const KREW_KORNER_SLUGS: readonly string[] = [
@@ -53,6 +62,9 @@ const KREW_KORNER_SLUGS: readonly string[] = [
   'albutts',
   'kuestions',
   'nudges',
+  'art',
+  'cinema',
+  'kronikles',
 ];
 
 export const isKrewKornerSlug = (slug: string): slug is KrewKornerSlug =>
