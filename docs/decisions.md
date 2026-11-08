@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — The Quiet card
+
+Tal: "I've been wanting to redesign the standard kronk cards for a while, the
+purple is all wrong, and i don't love the layout." From five directions
+(Quiet, Poster, Stub, Paper, Hairline) laid beside today's card, Tal picked
+**Quiet**.
+
+- Cards are a warm neutral (`--surface-card`), borderless, with the picture
+  inset in a rounded well (`--surface-card-inset`).
+- Colour is a signal, not a fill: the korner label, a glyph, progress, in
+  `--accent-text`. The feed card loses its solid accent bar for the same
+  label.
+- Grid tiles are left-aligned under the picture, superseding the centred
+  title and meta of 2026-10-30.
+- A thing with no picture shows its space's glyph in the well.
+
+The accent itself (CTAs, active states) is unchanged; this is the card.
+
 ## 2026-11-08 — A Krew's spaces are sections of cards
 
 Tal, trying the Konnect grid on shadow: Konnecting an album and an event to
