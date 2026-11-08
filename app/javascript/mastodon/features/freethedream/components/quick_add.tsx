@@ -6,7 +6,6 @@ import { apiFtdCreateItem } from 'mastodon/api/freethedream';
 import type { FtdCategory, FtdItemKind } from 'mastodon/api_types/freethedream';
 
 import {
-  CategoryChips,
   MoreWelcome,
   errorOf,
   formatNeed,
@@ -20,21 +19,17 @@ import {
 // another without a form each time. What goes into Actualise is taken as
 // written (no amount), and whoever adds it is on it. The How many box sits
 // beside the line so it's plain a need can have a number (Tal, 2026-10-19);
-// when it's filled it wins over a number typed into the line. Under it,
-// which of the six it is (CategoryChips), which Mycelium matches on; it
-// stays picked for the next line, and "$400" is Money whatever is picked.
+// when it's filled it wins over a number typed into the line.
 
 const messages = defineMessages({
   need: {
     id: 'freethedream.quick.need',
-    defaultMessage:
-      "Add what's needed: 30 plates, a lawyer's eye, 10 hours of testing",
+    defaultMessage: "Add what's needed",
   },
   howMany: { id: 'freethedream.quick.how_many', defaultMessage: 'How many' },
   job: {
     id: 'freethedream.quick.actualise',
-    defaultMessage:
-      'An idea to bring to life: a launch night, a handbook, a fire twirler',
+    defaultMessage: 'Add an idea to bring to life',
   },
   add: { id: 'freethedream.quick.add', defaultMessage: 'Add' },
   added: { id: 'freethedream.quick.added', defaultMessage: 'Added {what}' },
@@ -55,9 +50,9 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
   const [text, setText] = useState('');
   const [count, setCount] = useState('');
   const [more, setMore] = useState(false);
-  const [category, setCategory] = useState<FtdCategory>(
-    kind === 'need' ? 'things' : 'skills',
-  );
+  // No category pills under the box any more (Tal, 2026-11-08): a need is
+  // Things and an idea is Skills, which the Mycelium still matches on.
+  const category: FtdCategory = kind === 'need' ? 'things' : 'skills';
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -176,7 +171,6 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
       >
         {intl.formatMessage(messages.add)}
       </button>
-      <CategoryChips value={category} onChange={setCategory} />
       {hint && <span className='freethedream-quick__hint'>{hint}</span>}
       {note && !hint && (
         <span className='freethedream-quick__hint' role='status'>

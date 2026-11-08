@@ -95,6 +95,12 @@ RSpec.describe 'API V1 FreeTheDream overview' do
       expect(api(alice, :post, "/freethedream/projects/#{sound['id']}/leave_gang")['in_gang']).to be false
     end
 
+    it 'puts whoever made it in it, so they see Joined rather than Join', :aggregate_failures do
+      expect(sound).to include('in_gang' => true)
+      expect(api(bob, :get, "/freethedream/projects/#{doof['id']}")['sections'].first).to include('title' => 'Sound', 'joined' => true)
+      expect(api(alice, :get, "/freethedream/projects/#{sound['id']}")['in_gang']).to be false
+    end
+
     it "is only for someone in the projekt, and only a Komponent's", :aggregate_failures do
       api(cara, :post, "/freethedream/projects/#{sound['id']}/join_gang")
       expect(response).to have_http_status(403)
