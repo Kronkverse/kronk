@@ -14,6 +14,7 @@ import type {
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { KornerShell } from 'mastodon/components/korner_shell';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { ListingPhotos } from 'mastodon/components/listing_photos';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { writeComposerDraft } from 'mastodon/hooks/useComposerDraft';
@@ -353,7 +354,9 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
       ) : null}
 
       {listing.description ? (
-        <p className='wachuneed-detail__description'>{listing.description}</p>
+        <p className='wachuneed-detail__description'>
+          <LinkifiedText text={listing.description} />
+        </p>
       ) : null}
 
       {listing.kind !== 'wanted' && listing.booking ? (
