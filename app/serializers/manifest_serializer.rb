@@ -88,19 +88,20 @@ class ManifestSerializer < ActiveModel::Serializer
     }
   end
 
+  # Long-press the home-screen icon. Kronk's places, not Mastodon's.
   def shortcuts
     [
       {
-        name: 'Compose new post',
+        name: 'New post',
         url: '/publish',
       },
       {
-        name: 'Notifications',
-        url: '/notifications',
+        name: 'Nudges',
+        url: '/nudges',
       },
       {
-        name: 'Explore',
-        url: '/explore',
+        name: 'Hub',
+        url: '/hub',
       },
     ]
   end
