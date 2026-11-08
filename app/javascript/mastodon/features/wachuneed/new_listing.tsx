@@ -13,7 +13,10 @@ import {
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import { apiGetMyWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
-import type { ListingVisibility } from 'mastodon/api_types/wachuneed';
+import type {
+  ListingVisibility,
+  ListingOffering,
+} from 'mastodon/api_types/wachuneed';
 import {
   ComposeBody,
   ComposeField,
@@ -40,6 +43,9 @@ import {
   variantStateFrom,
   variantValues,
 } from './listing_variants_editor';
+import { offeringMessages , isOffering } from './offering';
+import { OfferingChooser } from './offering_chooser';
+import { OfferingComposer } from './offering_composer';
 
 // The listing composer (docs/spaces/wachuneed.md, Listing): a new listing,
 // on offer or wanted (Desired), or one of yours to change. It is the
@@ -148,6 +154,9 @@ interface ListingComposerProps {
   onCancel: () => void;
   // Saved: where to go next (the listing, or your listings).
   onDone: (path: string) => void;
+  // Offering something other than a thing to buy (a new offer only): back
+  // to What are you offering? (Tal, 2026-11-09).
+  onChangeOffering?: () => void;
 }
 
 export const ListingComposer: React.FC<ListingComposerProps> = ({
@@ -155,6 +164,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
   initialKind,
   onCancel,
   onDone,
+  onChangeOffering,
 }) => {
   const intl = useIntl();
   const editing = !!editId;
@@ -458,6 +468,17 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             ? messages.titleWanted
             : messages.title,
       )}
+      subtitle={
+        onChangeOffering ? (
+          <button
+            type='button'
+            className='wachuneed-offering-change'
+            onClick={onChangeOffering}
+          >
+            {intl.formatMessage(offeringMessages.change)}
+          </button>
+        ) : undefined
+      }
       submitLabel={intl.formatMessage(
         editing ? messages.save : messages.submit,
       )}
@@ -557,16 +578,45 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
 // The routes: the composer over what it belongs to, Wachuneed's home for a
 // new listing and the listing's own page when changing one.
 const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
+  const intl = useIntl();
   const history = useHistory();
   const { id } = useParams<{ id?: string }>();
   // The listing it opened on. The page underneath swaps a number in the
   // address for the listing name (useNamedLink), which must not reload
   // the composer over what is being typed.
   const [editId] = useState(id);
-  const { search } = useLocation();
+  const { search, pathname } = useLocation();
   const returnToSource = useKonnectReturn();
-  const initialKind: Kind =
-    new URLSearchParams(search).get('kind') === 'wanted' ? 'wanted' : 'offer';
+  const query = new URLSearchParams(search);
+  const initialKind: Kind = query.get('kind') === 'wanted' ? 'wanted' : 'offer';
+  // What it offers (docs/spaces/wachuneed.md, What are you offering?): a
+  // new one says so in the address (`?offering=`, or `choose` for the
+  // picker), defaulting to a thing to buy; one being changed says it
+  // itself.
+  const asked = query.get('offering');
+  const [editOffering, setEditOffering] = useState<ListingOffering | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!editId) return;
+    void apiGetWachuneedListing(editId)
+      .then((listing) => {
+        setEditOffering(
+          isOffering(listing.offering) ? listing.offering : 'product',
+        );
+        return undefined;
+      })
+      .catch(() => {
+        setEditOffering('product');
+      });
+  }, [editId]);
+  const offering: ListingOffering | 'choose' | null = editId
+    ? editOffering
+    : asked === 'choose'
+      ? 'choose'
+      : isOffering(asked)
+        ? asked
+        : 'product';
 
   const handleCancel = useCallback(() => {
     if (editId) {
@@ -587,15 +637,74 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     [history],
   );
 
+  // Picking what it offers swaps the composer in place, keeping anything
+  // else in the address (`?konnect=`).
+  const goOffering = useCallback(
+    (next: ListingOffering | 'choose') => {
+      const params = new URLSearchParams(search);
+      if (next === 'product') params.delete('offering');
+      else params.set('offering', next);
+      history.replace({ pathname, search: `?${params.toString()}` });
+    },
+    [history, pathname, search],
+  );
+  const handleChoose = useCallback(() => {
+    goOffering('choose');
+  }, [goOffering]);
+  const handleSaved = useCallback(
+    (savedId: string | null) => {
+      history.push(
+        savedId ? `/hub/wachuneed/listings/${savedId}` : '/hub/wachuneed/mine',
+      );
+    },
+    [history],
+  );
+
+  const page = editId ? <ListingDetail /> : <Wachuneed />;
+  if (offering === null) return page;
+
+  if (offering === 'choose') {
+    return (
+      <>
+        {page}
+        <OfferingChooser
+          label={intl.formatMessage(offeringMessages.question)}
+          onPick={goOffering}
+          onCancel={handleCancel}
+        />
+      </>
+    );
+  }
+
+  if (offering !== 'product' && initialKind === 'offer') {
+    return (
+      <>
+        {page}
+        <OfferingComposer
+          key={editId ?? `new-${offering}`}
+          offering={offering}
+          inShop={false}
+          editId={editId}
+          onChangeOffering={handleChoose}
+          onCancel={handleCancel}
+          onSaved={handleSaved}
+        />
+      </>
+    );
+  }
+
   return (
     <>
-      {editId ? <ListingDetail /> : <Wachuneed />}
+      {page}
       <ListingComposer
         key={editId ?? `new-${initialKind}`}
         editId={editId}
         initialKind={initialKind}
         onCancel={handleCancel}
         onDone={handleDone}
+        onChangeOffering={
+          !editId && initialKind === 'offer' ? handleChoose : undefined
+        }
       />
     </>
   );

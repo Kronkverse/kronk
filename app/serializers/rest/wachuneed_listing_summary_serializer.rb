@@ -5,7 +5,7 @@
 # wachuneed API; this ships only what the feed card renders. Mirrors
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
-  attributes :id, :slug, :title, :description, :category, :subcategory,
+  attributes :id, :slug, :title, :description, :category, :subcategory, :offering,
              :price_display, :location, :state, :photo_url, :photos, :kind,
              :shop_section_id, :shop_position, :ongoing, :availability
 
