@@ -1493,9 +1493,10 @@
 // A Krew's or projekt's Kuestions (home_kuestions.tsx): standard row cards
 // whose face is the question itself, and an Ask card last.
 .home-kuestions {
+  // The Quiet card like every other tile: the question sits in the inset
+  // well where a picture would, in the display serif.
   &__card {
     width: 100%;
-    padding: 0;
     border: 0;
     font: inherit;
     color: inherit;
@@ -1508,11 +1509,7 @@
     align-items: center;
     justify-content: center;
     padding: 0.75rem;
-    background: linear-gradient(
-      160deg,
-      var(--semantic-surface-elevated) 0%,
-      var(--semantic-surface-primary) 100%
-    );
+    background: var(--surface-card-inset);
   }
 
   &__title {
@@ -1521,15 +1518,16 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 5;
     color: var(--text-primary);
-    font-size: 0.95rem;
-    font-weight: 600;
-    line-height: 1.3;
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.25;
     text-align: center;
     overflow-wrap: anywhere;
   }
 
   &__plus {
-    color: var(--kronk-purple-bright);
+    color: var(--signal);
     font-size: 2.5rem;
     font-weight: 300;
     line-height: 1;
