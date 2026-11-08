@@ -410,9 +410,6 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     new Date(event.start_time) <= new Date() &&
     (!event.end_time || new Date(event.end_time) > new Date());
 
-  const isPublic =
-    event.visibility === 'public' || event.visibility === 'unlisted';
-
   const renderInviteAction = (account: SearchAccount) => {
     const rsvpStatus = rsvpMap.get(account.id);
 
@@ -634,7 +631,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
               />
             </button>
           )}
-          {isPublic && (
+          {event.is_owner && (
             <button
               type='button'
               className={`event-detail__action-square${showInvite ? ' event-detail__action-square--active' : ''}`}
