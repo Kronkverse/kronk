@@ -35,7 +35,7 @@ about:
     - "Talk it through in threads, and resolve each one once it's settled."
 purpose: 'To let people seed projekts and bring them to life from the bottom up: Komponents of people, things to bring, ideas to actualise, and Mycelium: what each person has, ready to share.'
 icon:
-  material: spiral
+  material: mediation
 render_target: native
 version: 0.1.0
 
