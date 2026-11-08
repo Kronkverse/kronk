@@ -172,7 +172,7 @@ export const RevealSheet: React.FC<RevealSheetProps> = ({
   );
 };
 
-const TextReveal: React.FC<{ answers: ApiKuestionAnswerJSON[] }> = ({
+export const TextReveal: React.FC<{ answers: ApiKuestionAnswerJSON[] }> = ({
   answers,
 }) => {
   const intl = useIntl();
@@ -263,9 +263,9 @@ const AnswerRow: React.FC<{ answer: ApiKuestionAnswerJSON }> = ({ answer }) => {
   );
 };
 
-const ChoiceReveal: React.FC<{ aggregate: ApiKuestionAggregateEntry[] }> = ({
-  aggregate,
-}) => {
+export const ChoiceReveal: React.FC<{
+  aggregate: ApiKuestionAggregateEntry[];
+}> = ({ aggregate }) => {
   const total = aggregate.reduce((sum, o) => sum + o.count, 0) || 1;
 
   return (

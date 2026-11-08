@@ -1533,3 +1533,36 @@
     line-height: 1;
   }
 }
+
+// A Krew or projekt Kuestion in the standard pop-up (home_kuestion_dialog.tsx).
+.home-kuestion-dialog {
+  &__q {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
+    line-height: 1.25;
+    color: var(--text-primary);
+  }
+
+  &__answers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__heading {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__none {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+}

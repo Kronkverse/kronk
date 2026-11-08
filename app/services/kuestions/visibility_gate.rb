@@ -18,6 +18,11 @@
 #
 # Profile Kuestions are the exception: they are never locked, and each
 # answer is listed only where its author's profile would show it.
+#
+# A Kuestion asked in a Krew or a projekt (a home) is open too: whoever
+# can see it sees every answer, answered or not (Tal, 2026-11-09: "all
+# people in the krew should be able to see answers, whether they've
+# answered it themselves or not").
 module Kuestions
   module VisibilityGate
     module_function
@@ -35,6 +40,7 @@ module Kuestions
 
     def can_view_answers?(question, viewer)
       return false if question.nil?
+      return question.visible_to?(viewer) if question.homed?
       return true unless question.locked?
       return true if asker?(question, viewer)
 
@@ -42,7 +48,9 @@ module Kuestions
     end
 
     def gated_answers(question, viewer)
-      if viewer.nil?
+      if question.homed?
+        question.visible_to?(viewer) ? question.answers : question.answers.none
+      elsif viewer.nil?
         question.locked? ? question.answers.none : question.answers
       elsif question.locked? && !question.answered_by?(viewer) && !asker?(question, viewer)
         question.answers.where(account_id: viewer.id)
