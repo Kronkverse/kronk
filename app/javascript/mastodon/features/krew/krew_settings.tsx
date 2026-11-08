@@ -19,6 +19,7 @@ import {
   apiSetKrewImage,
   apiAddRequirement,
   apiRemoveRequirement,
+  KREW_SECTION_ORDER,
 } from 'mastodon/api/krew';
 import type {
   ApiKrewJSON,
@@ -27,6 +28,8 @@ import type {
   KrewRequirementInput,
 } from 'mastodon/api/krew';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
+import { ArrangeList } from 'mastodon/components/arrange_list';
+import type { ArrangeItem } from 'mastodon/components/arrange_list';
 import { EventSearch } from 'mastodon/components/event_search';
 import type { PickedEvent } from 'mastodon/components/event_search';
 import { Icon } from 'mastodon/components/icon';
@@ -35,7 +38,7 @@ import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
-import { useKorner } from 'mastodon/hooks/useKorner';
+import { useAllKorners, useKorner } from 'mastodon/hooks/useKorner';
 
 import { requirementSummary } from './krew_access_mark';
 import { KrewPhotoField } from './krew_photo_field';
@@ -90,6 +93,16 @@ const messages = defineMessages({
     defaultMessage: 'Take {space} out of this Krew',
   },
   addSpace: { id: 'krew.settings.add_space', defaultMessage: 'Add a space' },
+  arrange: { id: 'krew.settings.arrange', defaultMessage: 'Page order' },
+  arrangeHint: {
+    id: 'krew.settings.arrange_hint',
+    defaultMessage: 'The order these run down the Krew page.',
+  },
+  projekts: {
+    id: 'krew.settings.section_projekts',
+    defaultMessage: 'Projekts',
+  },
+  kuddles: { id: 'krew.settings.section_kuddles', defaultMessage: 'Kuddles' },
   moreSpacesSoon: {
     id: 'krew.detail.more_spaces_soon',
     defaultMessage: 'More spaces join Krews as each is built for it.',
@@ -280,6 +293,52 @@ const ACCESS_CHOICES: {
 // added from this UI.
 type SettableReqKind = 'located_in' | 'attending_event';
 
+// The order of the Krew page's sections (Tal, 2026-11-08): the spaces the
+// Krew has on that have a section, plus its projekts and Kuddles. Each move
+// saves straight away.
+const ArrangeSections: React.FC<{
+  krew: ApiKrewJSON;
+  disabled: boolean;
+  onSave: (order: string[]) => void;
+}> = ({ krew, disabled, onSave }) => {
+  const intl = useIntl();
+  const korners = useAllKorners();
+  const keys = KREW_SECTION_ORDER.filter(
+    (key) =>
+      key === 'projekts' ||
+      key === 'kuddles' ||
+      krew.korners.includes(key as KrewKornerSlug),
+  );
+  const rank = (key: string) => {
+    const at = krew.section_order.indexOf(key);
+    return at === -1 ? KREW_SECTION_ORDER.length + keys.indexOf(key) : at;
+  };
+  const items: ArrangeItem[] = [...keys]
+    .sort((x, y) => rank(x) - rank(y))
+    .map((key) => ({
+      key,
+      label:
+        key === 'projekts'
+          ? intl.formatMessage(messages.projekts)
+          : key === 'kuddles'
+            ? intl.formatMessage(messages.kuddles)
+            : (korners.find((k) => k.slug === key)?.name ?? key),
+      icon: (
+        <KrewSpaceIcon
+          slug={
+            key === 'projekts'
+              ? 'freethedream'
+              : key === 'kuddles'
+                ? 'huddle'
+                : key
+          }
+        />
+      ),
+    }));
+
+  return <ArrangeList items={items} onChange={onSave} disabled={disabled} />;
+};
+
 export const KrewSettings = () => {
   const intl = useIntl();
   const [confirmDialog, confirmThen] = useConfirmThen();
@@ -354,6 +413,22 @@ export const KrewSettings = () => {
         });
     },
     [id, refetch],
+  );
+
+  const handleArrange = useCallback(
+    (order: string[]) => {
+      if (!id) return;
+      setBusy(true);
+      apiUpdateKrew(id, { section_order: order })
+        .then(setKrew)
+        .catch((e: unknown) => {
+          setError(e instanceof Error ? e.message : String(e));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [id],
   );
 
   const handleRegenerate = useCallback(() => {
@@ -883,6 +958,19 @@ export const KrewSettings = () => {
                     ))}
                   </div>
                 )}
+              </SettingsSection>
+            )}
+
+            {isMember && !krew.archived && (
+              <SettingsSection
+                heading={<FormattedMessage {...messages.arrange} />}
+                hint={<FormattedMessage {...messages.arrangeHint} />}
+              >
+                <ArrangeSections
+                  krew={krew}
+                  disabled={busy}
+                  onSave={handleArrange}
+                />
               </SettingsSection>
             )}
 

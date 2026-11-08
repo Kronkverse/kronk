@@ -104,3 +104,41 @@
     line-height: 1.35;
   }
 }
+
+// ── ArrangeList ─────────────────────────────────────────────────
+// A list put in order with Move up / Move down on each row
+// (components/arrange_list.tsx): a Krew's page sections.
+.arrange-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem 0.375rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium, 8px);
+    background: var(--surface-elevated);
+  }
+
+  &__icon {
+    display: inline-flex;
+    color: var(--text-secondary);
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-primary);
+  }
+}

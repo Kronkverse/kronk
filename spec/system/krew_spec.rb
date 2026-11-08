@@ -121,13 +121,13 @@ RSpec.describe 'Krew page', :js, :streaming do
     end
   end
 
-  it 'shows each space it has as a section of cards, ending in New and Add existing', :aggregate_failures do
+  it 'shows each space it has as a section of cards, ending in New', :aggregate_failures do
     visit "/hub/krew/#{krew.slug}"
 
     %w(.krew-detail__albums .krew-detail__events).each do |section|
       within(section) do
         expect(page).to have_css('.space-grid--row .space-shelf__action', text: 'New')
-        expect(page).to have_css('.space-grid--row .space-shelf__action', text: 'Add existing')
+        expect(page).to have_no_css('.space-shelf__action', text: 'Add existing')
       end
     end
     expect(plus_moon).to eq 'Post to Growers'

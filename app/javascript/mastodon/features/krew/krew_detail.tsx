@@ -322,6 +322,23 @@ const PANEL_SPACES: readonly PanelSpace[] = [
   'kronikles',
 ];
 
+// Put the page's sections in the order the Krew's members arranged
+// (`section_order`, saved from Settings); the rest follow in their usual
+// order. Each entry is [key, section], the section false when not shown.
+export const arrangeSections = (
+  order: readonly string[] | undefined,
+  sections: [string, React.ReactNode][],
+): React.ReactNode[] => {
+  const rank = (key: string) => {
+    const at = order?.indexOf(key) ?? -1;
+    return at === -1 ? Number.MAX_SAFE_INTEGER : at;
+  };
+  return sections
+    .map((entry, index) => ({ entry, index }))
+    .sort((x, y) => rank(x.entry[0]) - rank(y.entry[0]) || x.index - y.index)
+    .map(({ entry }) => entry[1]);
+};
+
 // Spaces Konnect turns on when picked rather than linking one record (the
 // grid says `space`). Its section then has New and Add existing (Tal,
 // 2026-11-08: "connecting kalendar opens the space and can either create a
@@ -583,8 +600,14 @@ export const KrewDetail = () => {
   const asksToJoin = krew?.access === 'approval' && !hasInviteLink;
   const needsInvite = krew?.access === 'invite_only' && !hasInviteLink;
   const canJoinNow = Boolean(krew) && !asksToJoin && !needsInvite;
+  // In the order the members arranged, so the tiles at the top match the
+  // sections below them.
   const shownSpaces = krew
-    ? PANEL_SPACES.filter((slug) => krew.korners.includes(slug))
+    ? PANEL_SPACES.filter((slug) => krew.korners.includes(slug)).sort(
+        (x, y) =>
+          (krew.section_order.indexOf(x) + 1 || PANEL_SPACES.length + 1) -
+          (krew.section_order.indexOf(y) + 1 || PANEL_SPACES.length + 1),
+      )
     : [];
   const togglePeople = useCallback(() => {
     setPeopleOpen((now) => !now);
@@ -1034,79 +1057,96 @@ export const KrewDetail = () => {
               turnOnSlugs={TURN_ON_SPACES}
             />
 
-            {/* Each space it has on, as its own section of cards. */}
-            {isMember &&
-              shownSpaces.map((slug) =>
-                slug === 'kalendar' ? (
-                  <KrewEvents
-                    key={slug}
-                    krewId={krew.id}
-                    id={spaceSectionId(slug)}
-                    canAdd={!krew.archived}
-                  />
-                ) : slug === 'albutts' ? (
-                  <KrewAlbums
-                    key={slug}
-                    krewId={krew.id}
-                    id={spaceSectionId(slug)}
-                    canAdd={!krew.archived}
-                  />
-                ) : (
-                  <WorkSection
-                    key={slug}
-                    slug={slug}
-                    krewId={krew.id}
-                    canAdd={!krew.archived}
+            {/* Each space it has on as its own section of cards, then its
+                projekts, Kuestions, chat and Kuddles, in the order its
+                members arranged in Settings. */}
+            {arrangeSections(krew.section_order, [
+              ...(isMember
+                ? shownSpaces.map((slug): [string, React.ReactNode] => [
+                    slug,
+                    slug === 'kalendar' ? (
+                      <KrewEvents
+                        key={slug}
+                        krewId={krew.id}
+                        id={spaceSectionId(slug)}
+                        canAdd={!krew.archived}
+                      />
+                    ) : slug === 'albutts' ? (
+                      <KrewAlbums
+                        key={slug}
+                        krewId={krew.id}
+                        id={spaceSectionId(slug)}
+                        canAdd={!krew.archived}
+                      />
+                    ) : (
+                      <WorkSection
+                        key={slug}
+                        slug={slug}
+                        krewId={krew.id}
+                        canAdd={!krew.archived}
+                      />
+                    ),
+                  ])
+                : []),
+              [
+                'projekts',
+                <KrewProjekts
+                  key='projekts'
+                  id={SECTION_IDS.projekts}
+                  krewId={krew.id}
+                  canStart={isMember && !krew.archived}
+                  onCount={setProjektCount}
+                />,
+              ],
+              [
+                'kuestions',
+                isMember && kuestionsOn && (
+                  <HomeKuestions
+                    key='kuestions'
+                    home={{ kind: 'krew', id: krew.id }}
+                    canAsk={!krew.archived}
+                    frame={frameKuestions}
                   />
                 ),
-              )}
-
-            {/* What the Krew is making. */}
-            <KrewProjekts
-              id={SECTION_IDS.projekts}
-              krewId={krew.id}
-              canStart={isMember && !krew.archived}
-              onCount={setProjektCount}
-            />
-
-            {/* Its own Kuestions, for its members only, once it has turned
-                Kuestions on. */}
-            {isMember && kuestionsOn && (
-              <HomeKuestions
-                home={{ kind: 'krew', id: krew.id }}
-                canAsk={!krew.archived}
-                frame={frameKuestions}
-              />
-            )}
-
-            {isMember && chatOn && activity && (
-              <KrewChat
-                conversationId={activity.chat.conversation_id}
-                onRead={handleChatRead}
-              />
-            )}
-
-            {isMember && kuddles.length > 0 && (
-              <section
-                id={SECTION_IDS.kuddles}
-                className='krew-detail__section krew-detail__kuddles'
-              >
-                <h3 className='korner-section-heading'>
-                  {intl.formatMessage(messages.kuddles, {
-                    count: kuddles.length,
-                  })}
-                </h3>
-                {kuddles.map((k) => (
-                  <KuddleFrame
-                    key={k.room}
-                    roomId={k.room}
-                    link={k.link}
-                    showKind={false}
-                    onDiskonnect={krew.archived ? undefined : handleDiskonnect}
+              ],
+              [
+                'nudges',
+                isMember && chatOn && activity && (
+                  <KrewChat
+                    key='nudges'
+                    conversationId={activity.chat.conversation_id}
+                    onRead={handleChatRead}
                   />
-                ))}
-              </section>
-            )}
+                ),
+              ],
+              [
+                'kuddles',
+                isMember && kuddles.length > 0 && (
+                  <section
+                    key='kuddles'
+                    id={SECTION_IDS.kuddles}
+                    className='krew-detail__section krew-detail__kuddles'
+                  >
+                    <h3 className='korner-section-heading'>
+                      {intl.formatMessage(messages.kuddles, {
+                        count: kuddles.length,
+                      })}
+                    </h3>
+                    {kuddles.map((k) => (
+                      <KuddleFrame
+                        key={k.room}
+                        roomId={k.room}
+                        link={k.link}
+                        showKind={false}
+                        onDiskonnect={
+                          krew.archived ? undefined : handleDiskonnect
+                        }
+                      />
+                    ))}
+                  </section>
+                ),
+              ],
+            ])}
 
             {/* The Krew's posts, last, so the page scrolls on into them. */}
             {isMember && <KrewPosts krewId={krew.id} />}

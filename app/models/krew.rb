@@ -58,6 +58,14 @@ class Krew < ApplicationRecord
   validates :slug, presence: true, uniqueness: true, format: { with: SLUG_PATTERN }
   validates :name, presence: true
   validates :access, inclusion: { in: ACCESS_LEVELS }
+
+  # The sections a Krew's page can arrange: each space that has one, plus
+  # its projekts and Kuddles. Settings saves their order (`section_order`);
+  # anything unknown or repeated is dropped, and a section left out keeps
+  # its default place after the arranged ones.
+  SECTION_KEYS = (KrewKorner::KORNERS + %w(projekts kuddles)).freeze
+
+  before_validation :tidy_section_order
   validates :governance_framework, inclusion: { in: GOVERNANCE_FRAMEWORKS }
   validate  :threshold_present_when_required
 
@@ -166,5 +174,9 @@ class Krew < ApplicationRecord
     return unless governance_framework == 'threshold' && governance_threshold.to_i < 1
 
     errors.add(:governance_threshold, 'must be >= 1 for threshold governance')
+  end
+
+  def tidy_section_order
+    self.section_order = Array(section_order).map(&:to_s).select { |key| SECTION_KEYS.include?(key) }.uniq
   end
 end

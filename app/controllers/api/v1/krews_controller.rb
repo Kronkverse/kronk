@@ -258,7 +258,7 @@ class Api::V1::KrewsController < Api::BaseController
   end
 
   def update_params
-    params.permit(:name, :description, :access, :discoverable, :governance_framework, :governance_threshold, :image)
+    params.permit(:name, :description, :access, :discoverable, :governance_framework, :governance_threshold, :image, section_order: [])
   end
 
   # Invite people on create — the chat-request flow. Each selected account
