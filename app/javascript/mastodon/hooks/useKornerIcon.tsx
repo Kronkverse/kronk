@@ -23,6 +23,7 @@ import KarpornIcon from '@/material-icons/400-24px/karporn.svg?react';
 import KroniklesIcon from '@/material-icons/400-24px/kronikles.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
 import KuestionIcon from '@/material-icons/400-24px/kuestion.svg?react';
+import MediationIcon from '@/material-icons/400-24px/mediation.svg?react';
 import MenuBookIcon from '@/material-icons/400-24px/menu_book.svg?react';
 import MovieIcon from '@/material-icons/400-24px/movie.svg?react';
 import NotListedLocationIcon from '@/material-icons/400-24px/not_listed_location.svg?react';
@@ -81,6 +82,7 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   kronikles: KroniklesIcon,
   kronk_coin: KronkCoinIcon,
   kuestion: KuestionIcon,
+  mediation: MediationIcon,
   menu_book: MenuBookIcon,
   movie: MovieIcon,
   not_listed_location: NotListedLocationIcon,
