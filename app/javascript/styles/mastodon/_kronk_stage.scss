@@ -83,6 +83,26 @@
   box-sizing: border-box;
 }
 
+// Pop-ups render outside the Stage (portals), so the rule above never
+// reached them, and a full-width field's padding pushed it past the
+// pop-up's own padding to its edge (the invite message, 2026-11-08; Tal:
+// "this should be a hard rule for pop up boxes"). In every pop-up a
+// field's padding counts inside its width and it is never wider than the
+// pop-up. docs/design.md, Frame, Rules 6.
+:is(
+    .modal-root,
+    .compose-shell,
+    .confirm-dialog,
+    .share-sheet,
+    .space-info,
+    .kuestions-sheet-wrap,
+    .attachment-picker
+  )
+  :is(input:not([type='checkbox'], [type='radio']), textarea, select) {
+  box-sizing: border-box;
+  max-inline-size: 100%;
+}
+
 // Classic Mastodon `body.layout-single-column { overflow-y: scroll }`
 // forces an always-on vertical scrollbar even when content fits —
 // the body's role is scrolling the timeline. Stage owns its own
