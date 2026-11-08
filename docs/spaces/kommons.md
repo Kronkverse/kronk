@@ -187,7 +187,7 @@ Who can do what:
 open ──anyone claims──> claimed ──claimant──> actioned ──proposer──> closed   refund + payout
  │  <──claimant unclaims──┘ │
  │                         │
- └──dev──> annulled <──dev─┘                                            refund, no payout
+ └──dev or proposer──> annulled <──dev─┘                                            refund, no payout
 ```
 
 `open` can also go straight to actioned from the back end (the shell, or a
@@ -219,7 +219,15 @@ How each transition happens:
   proposal** under their tile, so a batch can be closed without opening each
   one. It closes on the tap with no outcome notes; the proposal page has the
   form with notes.
-- **Annul:** `tootctl kommons annul <id>` only. There is no in-app annul.
+- **Withdraw:** the proposer, in the app, with **Withdraw proposal** in the
+  Ж menu and a confirm (`POST /api/v1/proposals/:id/withdraw`,
+  `Kronk::ProposalStates.withdraw!`). It ends **annulled**: backers are
+  refunded, the author is paid nothing, and it leaves the board. Only while
+  nobody else is on it: open, or claimed by the proposer with nobody joined.
+  Someone else's claim is their work in progress, so the proposer asks them
+  to unclaim first (Kommons "Delete Proposals", 2026-11-08).
+- **Annul:** `tootctl kommons annul <id>`, for anything else that has to
+  come off the board.
 
 **There is no actioned → annulled edge.** Once actioned, the only way out is
 the proposer closing it. A problem found afterwards is a new proposal.

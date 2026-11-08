@@ -154,6 +154,12 @@ module Kronk
     # open/claimed -> annulled. The release valve: without it, a backed
     # proposal that never ships would lock its backers' tokens forever. Stakes
     # return; the author is paid nothing.
+    def someone_else_on?(proposal)
+      return false unless proposal.claimed?
+
+      proposal.claimed_by_account_id != proposal.created_by_account_id || proposal.joins.exists?
+    end
+
     def annul!(proposal)
       proposal.with_lock do
         require_state!(proposal, Proposal::ACTIVE_STATES, 'annul')
@@ -162,6 +168,27 @@ module Kronk
       end
 
       notify_proposer(proposal)
+      announce_status_change(proposal, 'annulled')
+      proposal
+    end
+
+    # The proposer taking back a proposal they no longer want. It ends as
+    # annulled, like the shell's annul: backers are refunded, the author is
+    # paid nothing, and it leaves the board. Only while nobody else is on it:
+    # open, or claimed by the proposer themselves with nobody joined. Someone
+    # else's claim is their work in progress, so the proposer asks them to
+    # unclaim first.
+    def withdraw!(proposal, by:)
+      raise NotTheProposer, 'only the proposer can withdraw a proposal' unless by.id == proposal.created_by_account_id
+
+      proposal.with_lock do
+        require_state!(proposal, Proposal::ACTIVE_STATES, 'withdraw')
+        raise InvalidTransition, 'someone is working on this proposal; ask them to unclaim it first' if someone_else_on?(proposal)
+
+        proposal.update!(status: :annulled)
+        Kronk::Tokens.refund_all!(proposal)
+      end
+
       announce_status_change(proposal, 'annulled')
       proposal
     end
