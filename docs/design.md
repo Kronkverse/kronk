@@ -324,6 +324,10 @@ no Invite.
   a Booth card's menu) keeps its own Edit, because the Ж menu can't know which
   item in the list you mean. A reactions bar shown inside an item's own view
   passes `hideEdit` to `<StatusEngagement>`.
+- **A post's action bar is Reply · Froth · Nudge · Repost** (Edit where
+  Nudge is, on your own posts). There is no … menu (2026-11-08): deleting a
+  post, pinning it and who can see it live inside Edit, at the top of the
+  composer (`features/compose/components/edit_indicator.jsx`).
 - **The moons always open on screen.** The Ж can sit anywhere along either
   side and a page can add moons, so the fan isn't fixed per corner:
   `layoutMoons` (`kronk_menu_layout.ts`) measures where the Ж is when the
