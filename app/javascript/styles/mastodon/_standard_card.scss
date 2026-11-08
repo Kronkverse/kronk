@@ -6,7 +6,7 @@
 // The look is the Quiet card (Tal, 2026-11-08, picked from five designs):
 // a warm neutral card with no border, the picture inset in its own well,
 // a serif title, and colour only as a signal (the korner label, a glyph,
-// progress) in --accent-text. docs/design.md, Card standard.
+// progress) in --signal, the purple of the space tiles. docs/design.md, Card standard.
 // See components/standard_card.tsx for the API + why the width-cap
 // trick works.
 .standard-card {
@@ -85,7 +85,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: var(--accent-text);
+    color: var(--signal);
     font-size: 0.6875rem;
     font-weight: 600;
     letter-spacing: 0.06em;

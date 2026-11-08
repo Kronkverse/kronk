@@ -97,6 +97,7 @@ theme.
 | `--text-on-accent`                                      | `#ffffff`                   | Text on the accent                    |
 | `--surface-primary`                                     | `#191b22`                   | Page background                       |
 | `--surface-elevated`                                    | `#292938`                   | Menus, raised panels                  |
+| `--signal`                                              | `--kronk-purple-bright`     | A space's glyph and label, everywhere |
 | `--surface-card` / `--surface-card-inset`               | `#1b1b1f` / `#25252b`       | Cards; the well a picture sits in     |
 | `--surface-stage`                                       | `transparent`               | The page panel inside the Stage       |
 | `--border-default`                                      | `#47368b`                   | Borders on interactive surfaces       |
@@ -690,8 +691,8 @@ purple-grey, with no border. The picture sits inset in its own rounded well
 (`--surface-card-inset`). A thing with no picture shows its space's glyph in
 that well. The title is the display serif at regular weight, left-aligned
 over a secondary-colour meta line. **Colour on a card is a signal only:**
-the badge (the korner's glyph and name, small caps, `--accent-text`), a
-glyph, or progress. The feed card's badge is the same label across its top,
+the badge (the korner's glyph and name, small caps, `--signal`, the same
+purple as the space tiles and the Konnect picker), a glyph, or progress. The feed card's badge is the same label across its top,
 no longer a solid accent bar. Hover lifts the card and lightens it slightly
 instead of drawing an accent border.
 

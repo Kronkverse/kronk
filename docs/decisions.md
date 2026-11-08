@@ -27,7 +27,8 @@ purple is all wrong, and i don't love the layout." From five directions
 - Cards are a warm neutral (`--surface-card`), borderless, with the picture
   inset in a rounded well (`--surface-card-inset`).
 - Colour is a signal, not a fill: the korner label, a glyph, progress, in
-  `--accent-text`. The feed card loses its solid accent bar for the same
+  `--signal`, the same purple as the space tiles and the Konnect picker
+  (Tal, the same day). The feed card loses its solid accent bar for the same
   label.
 - Grid tiles are left-aligned under the picture, superseding the centred
   title and meta of 2026-10-30.
