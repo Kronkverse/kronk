@@ -57,6 +57,13 @@ semantic:
       dark: 'color-mix(in oklab, var(--accent) 50%, var(--text-primary))',
       light: 'color-mix(in oklab, var(--accent) 85%, var(--text-primary))',
     }
+  # A space's mark: its glyph and label wherever it says "this is from
+  # Kalendar" (space tiles, the Konnect picker, card labels and no-picture
+  # glyphs). One colour so a tile and a card agree (Tal, 2026-11-08: "the
+  # purple on the cards is different to the purple of the spaces konnect
+  # options").
+  signal:
+    { dark: 'var(--kronk-purple-bright)', light: 'var(--kronk-purple-bright)' }
   text-on-accent: { dark: '#ffffff', light: '#ffffff' } # white on the purple accent; theme-invariant (accent is purple in both themes)
   surface-primary: { dark: '#191b22', light: '#ffffff' }
   surface-elevated: { dark: '#292938', light: '#f5f4f9' }
