@@ -55,8 +55,8 @@ import { Updates } from './updates';
 //
 // A gang's page is its overview at a lower level (Tal, 2026-10-15): who's
 // in it first, then its fractals (Kitchen → Cooking, Cleaning, Storage,
-// Logistics) as a row of cards, its Kuestions, Getting together, Activity
-// and Talk. Thing Bringing, Actualise, On offer and Depends on are off the
+// Logistics) as a row of cards, Getting together, Activity and Talk.
+// Kuestions are the projekt's, not a Komponent's (Tal, 2026-11-08). Thing Bringing, Actualise, On offer and Depends on are off the
 // page, to come back as they're needed, and so is the "needs met" count
 // (Tal, 2026-11-08). A fractal's page is the same without fractals of its
 // own.
@@ -471,8 +471,9 @@ const ProjectView: React.FC<{
             ))}
             {/* Its own Kuestions, once its Krew has turned Kuestions on:
                 whoever can see the projekt answers them, its members ask
-                them. */}
-            {project.krew?.kuestions && (
+                them. The projekt itself only, not its Komponents (Tal,
+                2026-11-08). */}
+            {project.top && project.krew?.kuestions && (
               <HomeKuestions
                 home={{ kind: 'projekt', id: project.id }}
                 canAsk={isMember}
