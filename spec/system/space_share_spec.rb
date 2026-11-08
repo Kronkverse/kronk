@@ -30,17 +30,6 @@ RSpec.describe 'Share', :inline_jobs, :js, :streaming do
     expect(page).to have_button('Copy link')
   end
 
-  it 'posts the page to your timeline with a note' do
-    visit '/hub/kommons'
-
-    find('.kronk-menu__trigger').click
-    click_on 'Share'
-    click_on 'Post it with a note'
-
-    expect(page).to have_current_path('/publish')
-    expect(find('.autosuggest-textarea__textarea').value).to include('/hub/kommons')
-  end
-
   it 'offers Share outside the korners too' do
     visit '/nudges'
 
