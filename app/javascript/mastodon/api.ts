@@ -9,6 +9,7 @@ import LinkHeader from 'http-link-header';
 
 import { getAccessToken } from './initial_state';
 import ready from './ready';
+import { holdScreenAwake } from './utils/wake_lock';
 
 export const getLinks = (response: AxiosResponse) => {
   const value = response.headers.link as string | undefined;
@@ -110,8 +111,33 @@ export default function api(withAuthorization = true) {
     ],
   });
 
+  // Every composer uploads media through here, so this is the one place to
+  // keep the phone's screen on until an upload is sent (utils/wake_lock).
+  const awake = new WeakMap<object, () => void>();
+  const letSleep = (config: object | undefined) => {
+    if (!config) return;
+    awake.get(config)?.();
+    awake.delete(config);
+  };
+
+  // `synchronous` + `runWhen`: an ordinary async request interceptor makes
+  // axios send every request a tick later, which is enough to change page
+  // timing. This one runs only for uploads, in step.
+  const isUpload = (config: { method?: string; url?: string }) =>
+    config.method?.toLowerCase() === 'post' &&
+    !!config.url?.startsWith('/api/v2/media');
+  instance.interceptors.request.use(
+    (config) => {
+      awake.set(config, holdScreenAwake());
+      return config;
+    },
+    null,
+    { synchronous: true, runWhen: isUpload },
+  );
+
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
+      letSleep(response.config);
       if (response.headers.deprecation) {
         console.warn(
           `Deprecated request: ${response.config.method} ${response.config.url}`,
@@ -120,6 +146,7 @@ export default function api(withAuthorization = true) {
       return response;
     },
     (error: AxiosError) => {
+      letSleep(error.config);
       return Promise.reject(error);
     },
   );
