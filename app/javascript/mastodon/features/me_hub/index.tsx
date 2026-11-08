@@ -28,6 +28,12 @@
 //   * Timeline  → /@{username}/posts    (their own posts stream,
 //                                        matching the Timeline pillar
 //                                        on the shelved profile)
+//   * Admin     → /admin/dashboard, or /admin/reports for moderators
+//                                       (only for those whose role
+//                                        allows it; Kommons "Admin
+//                                        Functionality", 2026-11-08:
+//                                        nothing else linked there
+//                                        once the old nav went)
 //
 // Center avatar opens a lightweight avatar-preview overlay (own
 // component, no Redux modal) — the intent being "see your face at
@@ -45,6 +51,7 @@ import {
 
 import { Helmet } from 'react-helmet';
 
+import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import HistoryIcon from '@/material-icons/400-24px/history.svg?react';
 import KeyIcon from '@/material-icons/400-24px/key.svg?react';
@@ -65,7 +72,9 @@ import {
 import type { KronkWheelSpoke } from 'mastodon/components/kronk_wheel';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { useKosmosPresence } from 'mastodon/features/kosmos/use_presence';
+import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
+import { canManageReports, canViewAdminDashboard } from 'mastodon/permissions';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
@@ -90,6 +99,7 @@ const messages = defineMessages({
   signOut: { id: 'me_hub.sign_out', defaultMessage: 'Sign out' },
   settings: { id: 'me_hub.settings', defaultMessage: 'Settings' },
   kronk: { id: 'me_hub.kronk', defaultMessage: 'Kronk' },
+  admin: { id: 'me_hub.admin', defaultMessage: 'Admin' },
   changePhoto: {
     id: 'me_hub.avatar_preview.change_photo',
     defaultMessage: 'Change photo',
@@ -176,6 +186,15 @@ export const MeHub: React.FC<MeHubProps> = () => {
   // (opposite pair) so the two most global affordances balance
   // the ring. Angle distribution + rendering live in
   // `<KronkWheel>` (see `components/kronk_wheel.tsx`).
+  // Admins and moderators get an Admin spoke into Mastodon's admin pages
+  // (Rails-served): the dashboard for admins, reports for moderators.
+  const { permissions } = useIdentity();
+  const adminHref = canViewAdminDashboard(permissions)
+    ? '/admin/dashboard'
+    : canManageReports(permissions)
+      ? '/admin/reports'
+      : null;
+
   const spokes = useMemo<KronkWheelSpoke[]>(
     () => [
       {
@@ -227,8 +246,26 @@ export const MeHub: React.FC<MeHubProps> = () => {
         icon: HistoryIcon,
         to: timelinePath,
       },
+      ...(adminHref
+        ? [
+            {
+              key: 'admin',
+              label: intl.formatMessage(messages.admin),
+              icon: GavelIcon,
+              href: adminHref,
+            },
+          ]
+        : []),
     ],
-    [intl, profilePath, matesPath, timelinePath, openInvite, openSwitcher],
+    [
+      intl,
+      profilePath,
+      matesPath,
+      timelinePath,
+      openInvite,
+      openSwitcher,
+      adminHref,
+    ],
   );
 
   const title = intl.formatMessage(messages.title);
