@@ -508,9 +508,12 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Getting together (event_card.tsx): one row per event, a date tile, what
-// and when, and the Going toggle.
 .freethedream-together {
+  // Getting together (event_card.tsx): one standard card per event
+  // (<StandardCard variant='flow'>, the Quiet card), soonest first. What is
+  // left here is what an event card has and a card in general does not:
+  // the date in the picture's place when there is no picture, and the
+  // Going row.
   list-style: none;
   margin: 0;
   padding: 0;
@@ -518,79 +521,75 @@ $freethedream-wide: 1000px;
   flex-direction: column;
   gap: 10px;
 
+  // The Quiet card's inset, as on a grid tile: the picture (or date) in
+  // its own rounded well, the words lined up under it.
   &__event {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 12px;
-    padding: 12px;
-    background: var(--surface-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-large);
+    padding: 8px 8px 12px;
+    gap: 4px;
+
+    .standard-card__media {
+      border-radius: var(--radius-medium);
+      margin-block-end: 6px;
+    }
+
+    .standard-card__title,
+    .standard-card__meta,
+    .standard-card__actions {
+      padding-inline: 6px;
+      padding-block: 0;
+    }
   }
 
-  &__date {
+  &__picture {
+    aspect-ratio: 16 / 9;
+
+    a {
+      display: block;
+      block-size: 100%;
+    }
+  }
+
+  &__date a {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    align-items: baseline;
     justify-content: center;
-    inline-size: 48px;
-    block-size: 52px;
-    border-radius: var(--radius-medium, 10px);
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    color: var(--accent-text);
+    gap: 8px;
+    padding-block: 14px;
+    color: var(--signal);
     text-decoration: none;
-    line-height: 1.1;
+  }
+
+  &__day {
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1;
   }
 
   &__month {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
-  &__day {
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 700;
-  }
-
-  &__body {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-inline-size: 0;
-  }
-
+  .freethedream &__title,
   &__title {
-    font-family: var(--font-display);
-    font-size: 16px;
-    font-weight: 600;
     color: var(--text-primary);
     text-decoration: none;
-    overflow-wrap: anywhere;
-  }
-
-  .freethedream &__title {
-    color: var(--text-primary);
-  }
-
-  &__meta {
-    font-size: 13px;
-    color: var(--text-secondary);
   }
 
   &__foot {
-    display: flex;
     flex-wrap: wrap;
-    align-items: center;
     gap: 4px 10px;
-    margin-block-start: 2px;
+    padding-block-start: 8px;
 
     .freethedream__quiet {
       margin: 0;
       font-size: 13px;
+    }
+
+    .freethedream__button {
+      margin-inline-start: auto;
     }
   }
 }
