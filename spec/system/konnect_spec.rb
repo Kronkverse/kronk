@@ -15,11 +15,14 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
   let(:finished_onboarding) { true }
 
   let(:album) { Album.create!(owner: bob.account, title: 'Studio days', visibility: :public) }
+  let(:workshop) { Event.create!(account: bob.account, title: 'Studio days', start_time: 2.days.from_now, end_time: 2.days.from_now + 2.hours) }
 
   before { as_a_logged_in_user }
 
-  it 'Konnects a new art piece to an album picked in the Konnect row' do
-    album
+  # The Konnect grid (decisions.md, 2026-11-08): a work Konnects to the
+  # event it came out of, not to another work.
+  it 'Konnects a new art piece to an event picked in the Konnect row' do
+    workshop
     visit '/hub/art/composer'
 
     within('.compose-shell') do
@@ -27,7 +30,8 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
       within('.konnect-row') { click_on 'Konnect' }
     end
     within('.attachment-picker') do
-      click_on 'Albutts'
+      expect(page).to have_no_button('Albutts')
+      click_on 'Kalendar'
       click_on 'Studio days'
     end
 
@@ -38,7 +42,7 @@ RSpec.describe 'Konnecting from a composer', :js, :streaming do
 
     expect(page).to have_no_css('.compose-shell')
     piece = ArtPiece.find_by!(title: 'Blue study')
-    expect(KornerAttachment.where(source_slug: 'art', source_id: piece.id, target_slug: 'albutts', target_id: album.id, kind: 'link')).to exist
+    expect(KornerAttachment.where(source_slug: 'art', source_id: piece.id, target_slug: 'kalendar', target_id: workshop.id, kind: 'link')).to exist
   end
 
   # decisions.md, 2026-10-23, "Location fields become Konnect → Map": no
