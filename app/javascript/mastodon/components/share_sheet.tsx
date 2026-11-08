@@ -6,10 +6,8 @@ import { useHistory } from 'react-router-dom';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import ContentCopyIcon from '@/material-icons/400-24px/content_copy.svg?react';
-import EditNoteIcon from '@/material-icons/400-24px/edit_note.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { showAlert } from 'mastodon/actions/alerts';
-import { focusCompose } from 'mastodon/actions/compose';
 import api from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Icon } from 'mastodon/components/icon';
@@ -25,10 +23,6 @@ import { useAppDispatch } from 'mastodon/store';
 //   2. Copy link — clipboard + toast confirmation.
 //   3. Share… — native OS share sheet on capable browsers (mobile +
 //      Safari desktop). Hidden when `navigator.share` isn't available.
-//   4. Post it — the post composer opens with the link in it, ready for
-//      a note, so the page goes to your timeline (Kommons "Add share
-//      function to proposals", 2026-11-08). Keeps anything already in
-//      the composer.
 //
 // The sheet is a self-contained modal (backdrop + panel), not the
 // Mastodon `openModal` system, so any component can drop it in
@@ -40,7 +34,6 @@ const DEBOUNCE_MS = 220;
 const messages = defineMessages({
   title: { id: 'share_sheet.title', defaultMessage: 'Share' },
   copyLink: { id: 'share_sheet.copy_link', defaultMessage: 'Copy link' },
-  post: { id: 'share_sheet.post', defaultMessage: 'Post it with a note' },
   share: { id: 'share_sheet.share', defaultMessage: 'Share…' },
   close: { id: 'share_sheet.close', defaultMessage: 'Close' },
   sendPrompt: {
@@ -180,14 +173,6 @@ export const ShareSheet: React.FC<Props> = ({
     dispatch(showAlert({ message: messages.copied }));
   }, [dispatch, url]);
 
-  const handlePost = useCallback(() => {
-    dispatch(focusCompose(`${url}\n\n`));
-    // focusCompose only navigates when no composer is mounted; the post
-    // composer page is where the note gets written either way.
-    history.push('/publish');
-    onClose();
-  }, [dispatch, url, history, onClose]);
-
   const handleNativeShare = useCallback(() => {
     if (typeof navigator.share !== 'function') return;
     void navigator.share({ title, url });
@@ -227,15 +212,6 @@ export const ShareSheet: React.FC<Props> = ({
               aria-label={intl.formatMessage(messages.copyLink)}
             >
               <Icon id='content_copy' icon={ContentCopyIcon} />
-            </button>
-            <button
-              type='button'
-              className='share-sheet__action'
-              onClick={handlePost}
-              title={intl.formatMessage(messages.post)}
-              aria-label={intl.formatMessage(messages.post)}
-            >
-              <Icon id='edit_note' icon={EditNoteIcon} />
             </button>
             {canNativeShare && (
               <button
