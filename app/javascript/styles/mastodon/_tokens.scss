@@ -15,6 +15,8 @@
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #191b22;
   --semantic-surface-elevated: #292938;
+  --semantic-surface-card: #1b1b1f;
+  --semantic-surface-card-inset: #25252b;
   --semantic-surface-stage: transparent;
   --semantic-border-default: #47368b;
   --semantic-border-subtle: #2a2740;
@@ -37,6 +39,8 @@
   --text-on-accent: var(--semantic-text-on-accent);
   --surface-primary: var(--semantic-surface-primary);
   --surface-elevated: var(--semantic-surface-elevated);
+  --surface-card: var(--semantic-surface-card);
+  --surface-card-inset: var(--semantic-surface-card-inset);
   --surface-stage: var(--semantic-surface-stage);
   --border-default: var(--semantic-border-default);
   --border-subtle: var(--semantic-border-subtle);
@@ -106,6 +110,8 @@
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #ffffff;
   --semantic-surface-elevated: #f5f4f9;
+  --semantic-surface-card: #ffffff;
+  --semantic-surface-card-inset: #f0eff3;
   --semantic-surface-stage: color-mix(in oklab, var(--semantic-surface-primary) 94%, var(--accent));
   --semantic-border-default: #ddd9e8;
   --semantic-border-subtle: #e8e5f0;
