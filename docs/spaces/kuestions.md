@@ -94,6 +94,41 @@ can change your mind, but the trail is public. The model side is built:
 a change, and the reveal sheet shows that history. There is no edit
 endpoint yet (see Open).
 
+### Kuestions in a Krew
+
+A Kuestion asked in a Krew or a projekt is its own, not the community's
+(Tal's proposal "Kuestions", decisions.md 2026-11-08). It keeps its home in
+`questions.krew_id` or `questions.freethedream_project_id`.
+
+- **Who sees it:** a Krew's members, or whoever can see the projekt
+  (`Question#visible_to?`, `Question.reachable_by`). For anyone else it
+  doesn't exist: show, answer, skip and seen 404, and no list or Konnect
+  search returns it. The answer gate applies as usual.
+- **Kuestions is a space a Krew turns on** (decisions.md, 2026-11-08, "Kuestions
+  is a Krew space"): a `kuestions` row in `krew_korners`. On the Krew page,
+  Konnect → Kuestions turns it on (manifest `konnect.space: true`; the
+  picker calls the page's `onTurnOnSpace` instead of listing Kuestions to
+  link); Krew settings, Spaces, adds and removes it. Off, the Krew page has
+  no Kuestions section or tile; the Kuestions themselves are kept. A
+  projekt's section follows its Krew (`krew.kuestions` in the projekt's
+  API).
+- **Where it shows:** with the space on, on its Krew's or projekt's page
+  (`features/questions/home_kuestions.tsx`), a row of cards with Ask last
+  (Ask alone when there are none yet), from `GET /api/v2/kuestions?krew_id=`
+  or `?project_id=`. Not in the Deck, and it makes no feed post. It is on
+  your Answered list once you've answered or asked it, while you can see it.
+- **Asking:** Ask opens a small composer of its own over the page
+  (`home_kuestion_composer.tsx`): the question, how it's answered (words,
+  choices, yes or no) and a line saying who sees it. No deck or profile
+  choice, no drafts, no Konnect row. It sends `krew_id` or `project_id` with
+  the create. A Krew's members ask in it while it is active; a projekt's
+  members ask in it. The Kuestions composer still asks in a home when opened
+  with `?konnect=krew:<id>` or `freethedream:<id>`, but nothing opens it
+  that way any more.
+- **Kuestions Konnected before 2026-11-08** one at a time to a Krew are
+  ordinary public Kuestions with a link, and stay tiles under Spaces.
+- **It goes with its home:** deleting the Krew or projekt deletes it.
+
 ### Lifetime
 
 Kuestions never close. There is no result moment, timer or age-out; the

@@ -12,178 +12,72 @@ import {
 } from 'mastodon/api/wachuneed';
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import { apiGetMyWachuneedShop } from 'mastodon/api/wachuneed_shops';
-import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
-import type {
-  ListingAvailability,
-  ListingVisibility,
-} from 'mastodon/api_types/wachuneed';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import type { ListingVisibility } from 'mastodon/api_types/wachuneed';
 import {
   ComposeBody,
-  ComposeCheck,
   ComposeField,
   ComposeHint,
   ComposeInput,
-  ComposeSection,
-  ComposeSelect,
+  ComposeRow,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
-import { KonnectRow } from 'mastodon/components/konnect_row';
+import { ComposeShell } from 'mastodon/components/compose_shell';
+import { LoadingState } from 'mastodon/components/loading_state';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
-import { Stage } from 'mastodon/components/stage';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
+import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
+import { useDraft } from 'mastodon/hooks/useDraft';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
+import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { useSameAs } from 'mastodon/hooks/useSameAs';
 
-import {
-  EMPTY_BOOKING,
-  ListingBookingEditor,
-  bookingStateFrom,
-  bookingStateToPayload,
-} from './listing_booking_editor';
-import type { BookingState } from './listing_booking_editor';
-import {
-  ListingOptionsEditor,
-  optionRowsFrom,
-  optionRowsToPayload,
-} from './listing_options_editor';
-import type { OptionRow } from './listing_options_editor';
+import Wachuneed from './index';
+import ListingDetail from './listing_detail';
 import { ListingPhotoField, useListingPhotos } from './listing_photo_field';
 import {
-  EMPTY_VARIANTS,
-  ListingVariantsEditor,
   hasVariants,
   variantStateFrom,
-  variantStateToPayload,
   variantValues,
 } from './listing_variants_editor';
-import type { VariantState } from './listing_variants_editor';
 
-// /hub/wachuneed/new — the composer for a new listing, on offer or
-// wanted (Desired); `?kind=wanted` opens on wanted.
-// /hub/wachuneed/listings/:id/edit — the same form, prefilled, for the
-// listing's owner (the server refuses anyone else).
+// The listing composer (docs/spaces/wachuneed.md, Listing): a new listing,
+// on offer or wanted (Desired), or one of yours to change. It is the
+// standard composer overlay (`<ComposeShell>`, decisions.md 2026-08-12).
 //
-// Kept intentionally simple in this pass: title + description +
-// category picker + optional price + photos (where it is: Konnect → Map,
-// a Place; decisions.md 2026-10-23, "Location fields become Konnect →
-// Map"), and how people book it (listing_booking_editor.tsx). This
-// composer only produces a listing in the `live` state so it lands in
-// the browse view immediately.
-
-type Category = 'creation' | 'goods' | 'service';
+//   /hub/wachuneed/new                → a new listing over Wachuneed's home;
+//                                       `?kind=wanted` makes a wanted ad
+//   /hub/wachuneed/listings/:id/edit  → the same composer, prefilled, over
+//                                       the listing's page (the server
+//                                       refuses anyone but its poster)
+//
+// It asks for photos, name, description and price (a budget, when wanted),
+// and nothing else (Tal, 2026-11-08: "keep things basic and simple"). Who
+// can see it is the reach control in the header. Shop sections,
+// availability, variations, options and booking are not asked here: a
+// listing that already has them keeps them when edited, because the edit
+// sends only the fields this composer owns.
 
 type Kind = 'offer' | 'wanted';
 
 const messages = defineMessages({
   title: { id: 'wachuneed.new.title', defaultMessage: 'New listing' },
-  intro: {
-    id: 'wachuneed.new.intro',
-    defaultMessage:
-      'Share something you make, something you have, or something you offer. Kronkers can find it in the browse view and message you to arrange the exchange.',
-  },
-  introWanted: {
-    id: 'wachuneed.new.intro_wanted',
-    defaultMessage:
-      "Say what you're looking for. It shows in Desired, and anyone who has it can message you.",
-  },
-  ongoing: {
-    id: 'wachuneed.new.ongoing',
-    defaultMessage: 'I keep selling this (not a one-off)',
-  },
-  announce: {
-    id: 'wachuneed.new.announce',
-    defaultMessage: 'Announce it in the feed',
-  },
-  announceHint: {
-    id: 'wachuneed.new.announce_hint',
-    defaultMessage:
-      'Shop items are added quietly. Tick this to post a card to the feed.',
-  },
-  labelAvailability: {
-    id: 'wachuneed.new.field.availability',
-    defaultMessage: 'Availability',
-  },
-  available: {
-    id: 'wachuneed.availability.available',
-    defaultMessage: 'Available',
-  },
-  soldOut: {
-    id: 'wachuneed.availability.sold_out',
-    defaultMessage: 'Sold out',
-  },
-  madeToOrder: {
-    id: 'wachuneed.availability.made_to_order',
-    defaultMessage: 'Made to order',
-  },
-  priceFromKinds: {
-    id: 'wachuneed.new.price_from_kinds',
-    defaultMessage: 'Each kind has its own price, set under Variations.',
-  },
-  labelSection: {
-    id: 'wachuneed.new.field.section',
-    defaultMessage: 'Section of your shop',
-  },
-  sectionNone: {
-    id: 'wachuneed.new.section.none',
-    defaultMessage: 'No section',
-  },
-  labelKind: {
-    id: 'wachuneed.new.field.kind',
-    defaultMessage: 'What are you posting?',
-  },
-  kindOffer: {
-    id: 'wachuneed.new.kind.offer',
-    defaultMessage: "Something I'm offering",
-  },
-  kindWanted: {
-    id: 'wachuneed.new.kind.wanted',
-    defaultMessage: "Something I'm looking for",
+  titleWanted: {
+    id: 'wachuneed.new.title_wanted',
+    defaultMessage: 'Wanted ad',
   },
   labelBudget: {
     id: 'wachuneed.new.field.budget',
     defaultMessage: 'Budget (in AUD)',
   },
-  placeholderBudget: {
-    id: 'wachuneed.new.field.budget_placeholder',
-    defaultMessage: 'Optional — what you could pay',
-  },
   labelTitle: { id: 'wachuneed.new.field.title', defaultMessage: 'Title' },
-  placeholderTitle: {
-    id: 'wachuneed.new.field.title_placeholder',
-    defaultMessage: 'A short name — what is it?',
-  },
   labelDescription: {
     id: 'wachuneed.new.field.description',
     defaultMessage: 'Description',
   },
-  placeholderDescription: {
-    id: 'wachuneed.new.field.description_placeholder',
-    defaultMessage:
-      'Detail — materials, size, timing, anything a buyer needs to know.',
-  },
-  labelCategory: {
-    id: 'wachuneed.new.field.category',
-    defaultMessage: 'Category',
-  },
-  categoryArt: {
-    id: 'wachuneed.new.category.art',
-    defaultMessage: 'Art — things you make',
-  },
-  categoryStuff: {
-    id: 'wachuneed.new.category.stuff',
-    defaultMessage: 'Stuff — things you have',
-  },
-  categoryOfferings: {
-    id: 'wachuneed.new.category.offerings',
-    defaultMessage: 'Offerings — services you provide',
-  },
   labelPrice: {
     id: 'wachuneed.new.field.price',
     defaultMessage: 'Price (in AUD)',
-  },
-  placeholderPrice: {
-    id: 'wachuneed.new.field.price_placeholder',
-    defaultMessage: 'Leave blank if free or by arrangement',
   },
   submit: { id: 'wachuneed.new.submit', defaultMessage: 'Publish listing' },
   submitting: {
@@ -193,14 +87,6 @@ const messages = defineMessages({
   errorGeneric: {
     id: 'wachuneed.new.error',
     defaultMessage: "Couldn't publish the listing. Try again?",
-  },
-  labelVisibility: {
-    id: 'wachuneed.new.field.visibility',
-    defaultMessage: 'Who can see this?',
-  },
-  hintVisibility: {
-    id: 'wachuneed.new.field.visibility_hint',
-    defaultMessage: 'Whoever can see it can message you about it.',
   },
   editTitle: { id: 'wachuneed.edit.title', defaultMessage: 'Edit listing' },
   editLoading: {
@@ -215,6 +101,10 @@ const messages = defineMessages({
   takeDown: {
     id: 'wachuneed.edit.take_down',
     defaultMessage: 'Take down listing',
+  },
+  takeDownTitle: {
+    id: 'wachuneed.edit.take_down_title',
+    defaultMessage: 'Take {name} down?',
   },
   takeDownAsk: {
     id: 'wachuneed.edit.take_down_ask',
@@ -240,66 +130,57 @@ const messages = defineMessages({
   },
 });
 
-const KIND_OPTIONS: { key: Kind; label: typeof messages.kindOffer }[] = [
-  { key: 'offer', label: messages.kindOffer },
-  { key: 'wanted', label: messages.kindWanted },
-];
+// What a listing draft keeps (docs/design.md, Drafts): the four fields and
+// who can see it. The photos go as upload ids alongside.
+interface ListingDraftParams {
+  title?: string;
+  description?: string;
+  price?: string;
+  visibility?: ListingVisibility;
+  krewIds?: string[];
+}
 
-const CATEGORY_OPTIONS: {
-  key: Category;
-  label: typeof messages.categoryArt;
-}[] = [
-  { key: 'creation', label: messages.categoryArt },
-  { key: 'goods', label: messages.categoryStuff },
-  { key: 'service', label: messages.categoryOfferings },
-];
+interface ListingComposerProps {
+  // The listing being changed. Absent for a new one.
+  editId?: string;
+  // Where a new one opens: `?kind=wanted` from Desired.
+  initialKind: Kind;
+  onCancel: () => void;
+  // Saved: where to go next (the listing, or your listings).
+  onDone: (path: string) => void;
+}
 
-const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
+export const ListingComposer: React.FC<ListingComposerProps> = ({
+  editId,
+  initialKind,
+  onCancel,
+  onDone,
+}) => {
   const intl = useIntl();
-  const history = useHistory();
-  const { id: editId } = useParams<{ id?: string }>();
-  const { search } = useLocation();
   const editing = !!editId;
+  const [confirmDialog, confirm] = useConfirmDialog();
 
-  // `/hub/wachuneed/new?kind=wanted` opens straight on "looking for".
-  const [kind, setKind] = useState<Kind>(() =>
-    new URLSearchParams(search).get('kind') === 'wanted' ? 'wanted' : 'offer',
-  );
-
+  // Fixed by where it was opened from; an edited listing keeps its own.
+  const [kind, setKind] = useState<Kind>(initialKind);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<Category>('creation');
   const [price, setPrice] = useState('');
-  // Your shop's sections, if you have a shop with any; and the one this
-  // listing sits in ('' for none).
-  const [shopSections, setShopSections] = useState<ApiShopSectionJSON[]>([]);
-  const [sectionId, setSectionId] = useState('');
-  // What a buyer can choose (docs/spaces/wachuneed.md, Options).
-  const [optionRows, setOptionRows] = useState<OptionRow[]>([]);
-  // How it is booked, if it is (docs/spaces/wachuneed.md, Booking).
-  const [booking, setBooking] = useState<BookingState>(EMPTY_BOOKING);
-
-  const [variantState, setVariantState] =
-    useState<VariantState>(EMPTY_VARIANTS);
-  const [ongoing, setOngoing] = useState(false);
-  const [announced, setAnnounced] = useState(true);
-  // Whether it had already been posted when loaded: that cannot be undone.
-  const [wasAnnounced, setWasAnnounced] = useState(false);
-  const [availability, setAvailability] =
-    useState<ListingAvailability>('available');
+  // Edit only: the choices a listing that comes in kinds already has. It
+  // has a price per kind, so there is no single price to edit, and its
+  // photos keep the choice each one shows.
+  const [kindChoices, setKindChoices] = useState<string[]>([]);
   // Who can see it, and so who can message you about it
   // (docs/spaces/wachuneed.md, Who can see it). A new listing starts on
   // your shop's, else everyone on Kronk.
   const [visibility, setVisibility] = useState<ListingVisibility>('public');
+  const shopVisibility = useRef<ListingVisibility>('public');
   // Picked by hand: the shop's answering late doesn't overwrite it.
   const visibilityPicked = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Edit only: the listing's state as loaded (a closed one has nothing left
-  // to take down), and the two-step take-down.
+  // to take down).
   const [loadedState, setLoadedState] = useState<string | null>(null);
-  const [askTakeDown, setAskTakeDown] = useState(false);
-  const [takingDown, setTakingDown] = useState(false);
   const photoState = useListingPhotos();
   const { load: loadPhotos } = photoState;
   const [loadingListing, setLoadingListing] = useState(editing);
@@ -314,32 +195,19 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     apiGetWachuneedListing(editId)
       .then((listing) => {
         if (cancelled) return;
+        const variants = variantStateFrom(listing.variants);
         setTitle(listing.title);
-        setVariantState(variantStateFrom(listing.variants));
-        setOngoing(!!listing.ongoing);
-        setAvailability(listing.availability ?? 'available');
+        setKindChoices(hasVariants(variants) ? variantValues(variants) : []);
         setLoadedState(listing.state);
-        setAnnounced(listing.announced !== false);
-        setWasAnnounced(listing.announced !== false);
         setKind(listing.kind === 'wanted' ? 'wanted' : 'offer');
         setDescription(listing.description ?? '');
-        if (
-          listing.category === 'creation' ||
-          listing.category === 'goods' ||
-          listing.category === 'service'
-        ) {
-          setCategory(listing.category);
-        }
         setPrice(
           typeof listing.price_cents === 'number'
             ? (listing.price_cents / 100).toFixed(2)
             : '',
         );
-        setSectionId(listing.shop_section_id ?? '');
         setVisibility(listing.visibility ?? 'public');
         setKrewIds(listing.krews?.map((k) => k.id) ?? []);
-        setOptionRows(optionRowsFrom(listing.options));
-        setBooking(bookingStateFrom(listing.booking));
         loadPhotos(listing.photos ?? []);
         setLoadingListing(false);
       })
@@ -354,101 +222,28 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   }, [editId, loadPhotos]);
 
   useEffect(() => {
+    if (editId) return;
     let cancelled = false;
     apiGetMyWachuneedShop()
       .then((shop) => {
         if (cancelled) return undefined;
-        setShopSections(shop?.sections ?? []);
         // A new listing starts from who can see your shop.
-        if (!editId && shop && !visibilityPicked.current)
-          setVisibility(shop.visibility);
+        if (shop) shopVisibility.current = shop.visibility;
+        if (shop && !visibilityPicked.current) setVisibility(shop.visibility);
         return undefined;
       })
       .catch(() => {
-        // No section to choose; the listing saves without one.
+        // No shop: everyone on Kronk.
       });
     return () => {
       cancelled = true;
     };
   }, [editId]);
 
-  const handleSectionChange = useCallback<
-    React.ChangeEventHandler<HTMLSelectElement>
-  >((e) => {
-    setSectionId(e.currentTarget.value);
-  }, []);
-
-  // Only something on offer goes in a shop.
-  const showSections = kind === 'offer' && shopSections.length > 0;
-
-  const handleOngoing = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => {
-      setOngoing(e.currentTarget.checked);
-    },
-    [],
-  );
-  const handleAnnounced = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setAnnounced(e.currentTarget.checked);
-  }, []);
-  const handleAvailability = useCallback<
-    React.ChangeEventHandler<HTMLSelectElement>
-  >((e) => {
-    setAvailability(e.currentTarget.value as ListingAvailability);
-  }, []);
-  const comesInKinds = kind === 'offer' && hasVariants(variantState);
-  const showsChoices = useMemo(
-    () => (comesInKinds ? variantValues(variantState) : []),
-    [comesInKinds, variantState],
-  );
-  const photoUploading = photoState.uploading;
-
-  const handleTakeDownAsk = useCallback(() => {
-    setAskTakeDown(true);
-  }, []);
-  const handleTakeDownCancel = useCallback(() => {
-    setAskTakeDown(false);
-  }, []);
-  const takeDownError = intl.formatMessage(messages.takeDownError);
-  const handleTakeDown = useCallback(() => {
-    if (!editId) return;
-    setTakingDown(true);
-    setError(null);
-    apiCloseWachuneedListing(editId)
-      .then(() => {
-        // Your shelf, where it now shows as closed.
-        history.push('/hub/wachuneed/mine');
-        return undefined;
-      })
-      .catch(() => {
-        setError(takeDownError);
-        setTakingDown(false);
-      });
-  }, [editId, history, takeDownError]);
-
-  const canSubmit = useMemo(
-    () => title.trim().length > 0 && !submitting && !photoUploading,
-    [title, submitting, photoUploading],
-  );
-
-  const handleTitleChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setTitle(e.currentTarget.value);
-  }, []);
-
-  const handleDescriptionChange = useCallback<
-    React.ChangeEventHandler<HTMLTextAreaElement>
-  >((e) => {
-    setDescription(e.currentTarget.value);
-  }, []);
-
-  const handleKindChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setKind(e.currentTarget.value as Kind);
-  }, []);
+  const comesInKinds = kindChoices.length > 0;
+  // The photo field shows no per-kind choice here; an edited listing's
+  // photos keep theirs.
+  const noChoices = useMemo<string[]>(() => [], []);
 
   const handleVisibility = useCallback((value: ListingVisibility) => {
     setVisibility(value);
@@ -467,8 +262,9 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [],
   );
-  // What a new listing will be Konnected to (decisions.md, 2026-10-23),
-  // and whose audience it may follow ("Same as", 2026-10-25).
+  // No Konnect row (Tal, 2026-11-08). Opened from a record
+  // (`?konnect=`), the new listing is still Konnected to it, and may
+  // follow its audience ("Same as", decisions.md 2026-10-25).
   const { konnect, reach } = useSameAs(useKonnect('wachuneed'), {
     enabled: !editing,
     apply: applyAudience,
@@ -477,173 +273,234 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   });
   const commitKonnect = konnect.commit;
 
-  const handleCategoryChange = useCallback<
+  // Drafts: a new listing is kept as you write it, here and on the server,
+  // and comes back when the composer opens again. Editing one keeps none.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<ListingDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setDescription(p.description ?? '');
+      setPrice(p.price ?? '');
+      setVisibility(p.visibility ?? shopVisibility.current);
+      visibilityPicked.current = !!p.visibility;
+      setKrewIds(p.krewIds ?? []);
+      loadPhotos(
+        (d?.media_attachments ?? []).map((m) => ({
+          id: m.id,
+          url: m.preview_url || m.url,
+          variant_value: null,
+        })),
+      );
+      setError(null);
+    },
+    [loadPhotos],
+  );
+
+  const draft = useDraft<ListingDraftParams>({
+    korner: 'wachuneed',
+    // A wanted ad and a listing on offer keep separate drafts.
+    kind: initialKind === 'wanted' ? 'wanted_listing' : 'listing',
+    context: null,
+    snapshot: {
+      params: { title, description, price, visibility, krewIds },
+      mediaIds: photoState.ids,
+    },
+    hasContent:
+      title.trim() !== '' ||
+      description.trim() !== '' ||
+      price.trim() !== '' ||
+      photoState.ids.length > 0,
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    active: !editing,
+    paused: submitting,
+  });
+  const finishDraft = draft.finish;
+
+  const handleTitleChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
-    setCategory(e.currentTarget.value as Category);
+    setTitle(e.currentTarget.value);
   }, []);
-
+  const handleDescriptionChange = useCallback<
+    React.ChangeEventHandler<HTMLTextAreaElement>
+  >((e) => {
+    setDescription(e.currentTarget.value);
+  }, []);
   const handlePriceChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
     setPrice(e.currentTarget.value);
   }, []);
 
-  const handleSubmit = useCallback<React.FormEventHandler<HTMLFormElement>>(
-    (e) => {
-      e.preventDefault();
-      if (!canSubmit) return;
+  const canSubmit =
+    !loadingListing &&
+    !loadError &&
+    title.trim().length > 0 &&
+    !photoState.uploading;
+
+  const errorPublish = intl.formatMessage(
+    editId ? messages.saveError : messages.errorGeneric,
+  );
+  const handleSubmit = useCallback(() => {
+    setSubmitting(true);
+    setError(null);
+
+    const parsedPrice = price.trim();
+    const priceCents = parsedPrice
+      ? Math.round(parseFloat(parsedPrice) * 100)
+      : null;
+    const priceFields =
+      priceCents !== null && Number.isFinite(priceCents)
+        ? { price_cents: priceCents, price_currency: 'AUD' }
+        : { price_cents: null };
+
+    void (async () => {
+      try {
+        if (editId) {
+          // Only what this composer shows. Everything else the listing has
+          // (sections, availability, variations, options, booking, its
+          // state, whether it is in the feed) is left as it is: the server
+          // changes only the keys it is sent.
+          await apiUpdateWachuneedListing(editId, {
+            title: title.trim(),
+            description: description.trim(),
+            ...(comesInKinds ? {} : priceFields),
+            visibility,
+            krew_ids: krewIds,
+            ...(photoState.touched
+              ? {
+                  media_attachment_ids: photoState.ids,
+                  photo_variants: photoState.showsPayload(kindChoices),
+                }
+              : {}),
+          });
+          onDone(`/hub/wachuneed/listings/${editId}`);
+          return;
+        }
+
+        const payload: CreateListingParams = {
+          title: title.trim(),
+          description: description.trim() || undefined,
+          // Nothing asks for a category (decisions.md, 2026-11-08).
+          category: 'goods',
+          kind,
+          state: 'live',
+          ...priceFields,
+          ...(photoState.ids.length > 0
+            ? { media_attachment_ids: photoState.ids }
+            : {}),
+          visibility,
+          krew_ids: krewIds,
+        };
+        const listing = await apiCreateWachuneedListing(payload);
+        finishDraft();
+        await commitKonnect('wachuneed', listing.id);
+        // Land where it now shows: your listings.
+        onDone('/hub/wachuneed/mine');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : errorPublish);
+        setSubmitting(false);
+      }
+    })();
+  }, [
+    editId,
+    photoState,
+    title,
+    description,
+    kind,
+    price,
+    comesInKinds,
+    kindChoices,
+    visibility,
+    krewIds,
+    finishDraft,
+    commitKonnect,
+    onDone,
+    errorPublish,
+  ]);
+
+  const takeDownError = intl.formatMessage(messages.takeDownError);
+  const handleTakeDown = useCallback(() => {
+    if (!editId) return;
+    void (async () => {
+      const ok = await confirm({
+        title: intl.formatMessage(messages.takeDownTitle, {
+          name: title.trim(),
+        }),
+        message: intl.formatMessage(messages.takeDownAsk),
+        confirmLabel: intl.formatMessage(messages.takeDownConfirm),
+        cancelLabel: intl.formatMessage(messages.takeDownCancel),
+        destructive: true,
+      });
+      if (!ok) return;
+
       setSubmitting(true);
       setError(null);
-
-      const parsedPrice = price.trim();
-      const priceCents = parsedPrice
-        ? Math.round(parseFloat(parsedPrice) * 100)
-        : null;
-
-      const photoIds = photoState.ids;
-
-      const payload: CreateListingParams = {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        category,
-        kind,
-        state: 'live',
-        ...(priceCents !== null && Number.isFinite(priceCents)
-          ? { price_cents: priceCents, price_currency: 'AUD' }
-          : { price_cents: null }),
-        ...(photoIds.length > 0 ? { media_attachment_ids: photoIds } : {}),
-        ...(shopSections.length > 0
-          ? { listing_shop_section_id: showSections ? sectionId || null : null }
-          : {}),
-        // A wanted ad has nothing to choose.
-        options: kind === 'offer' ? optionRowsToPayload(optionRows) : [],
-        variants: kind === 'offer' ? variantStateToPayload(variantState) : {},
-        booking: kind === 'offer' ? bookingStateToPayload(booking) : {},
-        ongoing: kind === 'offer' && ongoing,
-        availability,
-        announced,
-        visibility,
-        krew_ids: krewIds,
-        photo_variants: photoState.showsPayload(showsChoices),
-      };
-
-      void (async () => {
-        try {
-          if (editId) {
-            // Keep the listing's state; send the photos only if they changed.
-            const edit: Partial<CreateListingParams> = { ...payload };
-            delete edit.state;
-            delete edit.media_attachment_ids;
-            await apiUpdateWachuneedListing(editId, {
-              ...edit,
-              ...(photoState.touched
-                ? { media_attachment_ids: photoState.ids }
-                : {}),
-            });
-            history.push(`/hub/wachuneed/listings/${editId}`);
-            return;
-          }
-          const listing = await apiCreateWachuneedListing(payload);
-          await commitKonnect('wachuneed', listing.id);
-          // Land where it now shows: your listings.
-          history.push('/hub/wachuneed/mine');
-        } catch (err: unknown) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : intl.formatMessage(
-                  editId ? messages.saveError : messages.errorGeneric,
-                ),
-          );
-          setSubmitting(false);
-        }
-      })();
-    },
-    [
-      editId,
-      photoState,
-      canSubmit,
-      title,
-      description,
-      category,
-      kind,
-      price,
-      shopSections,
-      showSections,
-      sectionId,
-      optionRows,
-      booking,
-      variantState,
-      ongoing,
-      availability,
-      announced,
-      visibility,
-      krewIds,
-      showsChoices,
-      history,
-      intl,
-      commitKonnect,
-    ],
-  );
-
-  if (editing && (loadingListing || loadError)) {
-    return (
-      <Stage label={intl.formatMessage(messages.editTitle)}>
-        <div className='scrollable wachuneed wachuneed--compose'>
-          <p className='wachuneed__status'>
-            {intl.formatMessage(
-              loadError ? messages.editLoadError : messages.editLoading,
-            )}
-          </p>
-        </div>
-      </Stage>
-    );
-  }
+      try {
+        await apiCloseWachuneedListing(editId);
+        // Your shelf, where it now shows as closed.
+        onDone('/hub/wachuneed/mine');
+      } catch {
+        setError(takeDownError);
+        setSubmitting(false);
+      }
+    })();
+  }, [confirm, editId, intl, onDone, takeDownError, title]);
 
   return (
-    <Stage
-      label={intl.formatMessage(editing ? messages.editTitle : messages.title)}
+    <ComposeShell
+      korner='wachuneed'
+      label={intl.formatMessage(
+        editing
+          ? messages.editTitle
+          : kind === 'wanted'
+            ? messages.titleWanted
+            : messages.title,
+      )}
+      submitLabel={intl.formatMessage(
+        editing ? messages.save : messages.submit,
+      )}
+      submittingLabel={intl.formatMessage(
+        editing ? messages.saving : messages.submitting,
+      )}
+      submitting={submitting}
+      canSubmit={canSubmit}
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+      draft={editing ? undefined : draft}
+      konnect={null}
+      headerAction={
+        <ReachDropdown
+          value={visibility}
+          onChange={reach.onChange}
+          disabled={submitting || loadingListing}
+          krews={availableKrews}
+          selectedKrewIds={krewIds}
+          onToggleKrew={reach.onToggleKrew}
+          sameAs={reach.sameAs}
+          onSameAs={reach.onSameAs}
+        />
+      }
     >
-      <div className='scrollable wachuneed wachuneed--compose'>
-        {/* Hand-rolled "← Cancel" back link removed 2026-09-03 —
-            Frame's SpaceBadge carries the back-to-korner nav.
-            Bespoke back links are banned platform-wide; see
-            docs/design.md (Aesthetic system) § Navigation. */}
+      {confirmDialog}
 
-        {!editing && (
-          <p className='wachuneed__compose-intro'>
-            <FormattedMessage
-              {...(kind === 'wanted' ? messages.introWanted : messages.intro)}
-            />
-          </p>
-        )}
+      {loadingListing && (
+        <LoadingState label={intl.formatMessage(messages.editLoading)} />
+      )}
+      {loadError && (
+        <ComposeHint error>
+          <FormattedMessage {...messages.editLoadError} />
+        </ComposeHint>
+      )}
 
-        <form className='wachuneed__compose-form' onSubmit={handleSubmit}>
-          <ComposeSection title={<FormattedMessage {...messages.labelKind} />}>
-            <div className='wachuneed__compose-radio-group'>
-              {KIND_OPTIONS.map((opt) => (
-                <label
-                  key={opt.key}
-                  className={`wachuneed__compose-radio ${kind === opt.key ? 'wachuneed__compose-radio--active' : ''}`}
-                >
-                  <input
-                    type='radio'
-                    name='kind'
-                    value={opt.key}
-                    checked={kind === opt.key}
-                    onChange={handleKindChange}
-                  />
-                  <span>{intl.formatMessage(opt.label)}</span>
-                </label>
-              ))}
-            </div>
-          </ComposeSection>
+      {!loadingListing && !loadError && (
+        <>
+          <ListingPhotoField state={photoState} showsChoices={noChoices} />
 
           <ComposeTitle
             value={title}
             onChange={handleTitleChange}
-            placeholder={intl.formatMessage(messages.placeholderTitle)}
             aria-label={intl.formatMessage(messages.labelTitle)}
             required
             maxLength={200}
@@ -652,214 +509,93 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
           <ComposeBody
             value={description}
             onChange={handleDescriptionChange}
-            placeholder={intl.formatMessage(messages.placeholderDescription)}
             aria-label={intl.formatMessage(messages.labelDescription)}
           />
 
-          <ComposeSection
-            title={<FormattedMessage {...messages.labelCategory} />}
-          >
-            <div className='wachuneed__compose-radio-group'>
-              {CATEGORY_OPTIONS.map((opt) => (
-                <label
-                  key={opt.key}
-                  className={`wachuneed__compose-radio ${category === opt.key ? 'wachuneed__compose-radio--active' : ''}`}
-                >
-                  <input
-                    type='radio'
-                    name='category'
-                    value={opt.key}
-                    checked={category === opt.key}
-                    onChange={handleCategoryChange}
+          {!comesInKinds && (
+            <ComposeRow>
+              <ComposeField
+                label={
+                  <FormattedMessage
+                    {...(kind === 'wanted'
+                      ? messages.labelBudget
+                      : messages.labelPrice)}
                   />
-                  <span>{intl.formatMessage(opt.label)}</span>
-                </label>
-              ))}
-            </div>
-          </ComposeSection>
-
-          {showSections && (
-            <ComposeField
-              label={<FormattedMessage {...messages.labelSection} />}
-            >
-              <ComposeSelect value={sectionId} onChange={handleSectionChange}>
-                <option value=''>
-                  {intl.formatMessage(messages.sectionNone)}
-                </option>
-                {shopSections.map((section) => (
-                  <option key={section.id} value={section.id}>
-                    {section.name}
-                  </option>
-                ))}
-              </ComposeSelect>
-            </ComposeField>
-          )}
-
-          {kind === 'offer' && (
-            <ComposeCheck
-              label={<FormattedMessage {...messages.ongoing} />}
-              checked={ongoing}
-              onChange={handleOngoing}
-            />
-          )}
-
-          {kind === 'offer' && (
-            <ListingVariantsEditor
-              state={variantState}
-              onChange={setVariantState}
-            />
-          )}
-
-          {comesInKinds ? (
-            <ComposeHint>
-              <FormattedMessage {...messages.priceFromKinds} />
-            </ComposeHint>
-          ) : (
-            <ComposeField
-              label={
-                <FormattedMessage
-                  {...(kind === 'wanted'
-                    ? messages.labelBudget
-                    : messages.labelPrice)}
+                }
+              >
+                <ComposeInput
+                  type='number'
+                  min={0}
+                  step={0.01}
+                  value={price}
+                  onChange={handlePriceChange}
                 />
-              }
-            >
-              <ComposeInput
-                type='number'
-                min={0}
-                step={0.01}
-                value={price}
-                onChange={handlePriceChange}
-                placeholder={intl.formatMessage(
-                  kind === 'wanted'
-                    ? messages.placeholderBudget
-                    : messages.placeholderPrice,
-                )}
-              />
-            </ComposeField>
+              </ComposeField>
+            </ComposeRow>
           )}
-
-          {kind === 'offer' && !comesInKinds && (
-            <ComposeField
-              label={<FormattedMessage {...messages.labelAvailability} />}
-            >
-              <ComposeSelect value={availability} onChange={handleAvailability}>
-                <option value='available'>
-                  {intl.formatMessage(messages.available)}
-                </option>
-                <option value='sold_out'>
-                  {intl.formatMessage(messages.soldOut)}
-                </option>
-                <option value='made_to_order'>
-                  {intl.formatMessage(messages.madeToOrder)}
-                </option>
-              </ComposeSelect>
-            </ComposeField>
-          )}
-
-          {kind === 'offer' && (
-            <ListingOptionsEditor
-              category={category}
-              rows={optionRows}
-              onChange={setOptionRows}
-            />
-          )}
-
-          {kind === 'offer' && (
-            <ListingBookingEditor state={booking} onChange={setBooking} />
-          )}
-
-          <ListingPhotoField state={photoState} showsChoices={showsChoices} />
-
-          <ComposeSection
-            title={<FormattedMessage {...messages.labelVisibility} />}
-          >
-            <ReachDropdown
-              value={visibility}
-              onChange={reach.onChange}
-              disabled={submitting}
-              krews={availableKrews}
-              selectedKrewIds={krewIds}
-              onToggleKrew={reach.onToggleKrew}
-              sameAs={reach.sameAs}
-              onSameAs={reach.onSameAs}
-            />
-            <ComposeHint>
-              <FormattedMessage {...messages.hintVisibility} />
-            </ComposeHint>
-          </ComposeSection>
-
-          {/* Only where there is a choice to make: a shop item not yet in
-              the feed. An ordinary listing is always posted. */}
-          {editing && kind === 'offer' && !wasAnnounced && (
-            <ComposeCheck
-              label={<FormattedMessage {...messages.announce} />}
-              hint={<FormattedMessage {...messages.announceHint} />}
-              checked={announced}
-              onChange={handleAnnounced}
-            />
-          )}
-
-          {!editing && <KonnectRow konnect={konnect} disabled={submitting} />}
 
           {error && <ComposeHint error>{error}</ComposeHint>}
 
-          <button
-            type='submit'
-            className='wachuneed__compose-submit'
-            disabled={!canSubmit}
-          >
-            {intl.formatMessage(
-              editing
-                ? submitting
-                  ? messages.saving
-                  : messages.save
-                : submitting
-                  ? messages.submitting
-                  : messages.submit,
-            )}
-          </button>
-
           {editing && loadedState !== null && loadedState !== 'closed' && (
-            <div className='wachuneed__compose-takedown'>
-              {askTakeDown ? (
-                <>
-                  <ComposeHint>
-                    <FormattedMessage {...messages.takeDownAsk} />
-                  </ComposeHint>
-                  <div className='wachuneed__compose-takedown-actions'>
-                    <button
-                      type='button'
-                      className='wachuneed__compose-takedown-btn wachuneed__compose-takedown-btn--confirm'
-                      onClick={handleTakeDown}
-                      disabled={takingDown}
-                    >
-                      <FormattedMessage {...messages.takeDownConfirm} />
-                    </button>
-                    <button
-                      type='button'
-                      className='wachuneed__compose-takedown-btn'
-                      onClick={handleTakeDownCancel}
-                      disabled={takingDown}
-                    >
-                      <FormattedMessage {...messages.takeDownCancel} />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <button
-                  type='button'
-                  className='wachuneed__compose-takedown-btn'
-                  onClick={handleTakeDownAsk}
-                >
-                  <FormattedMessage {...messages.takeDown} />
-                </button>
-              )}
-            </div>
+            <button
+              type='button'
+              className='compose-shell__delete'
+              onClick={handleTakeDown}
+              disabled={submitting}
+            >
+              <FormattedMessage {...messages.takeDown} />
+            </button>
           )}
-        </form>
-      </div>
-    </Stage>
+        </>
+      )}
+    </ComposeShell>
+  );
+};
+
+// The routes: the composer over what it belongs to, Wachuneed's home for a
+// new listing and the listing's own page when changing one.
+const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
+  const history = useHistory();
+  const { id } = useParams<{ id?: string }>();
+  // The listing it opened on. The page underneath swaps a number in the
+  // address for the listing name (useNamedLink), which must not reload
+  // the composer over what is being typed.
+  const [editId] = useState(id);
+  const { search } = useLocation();
+  const returnToSource = useKonnectReturn();
+  const initialKind: Kind =
+    new URLSearchParams(search).get('kind') === 'wanted' ? 'wanted' : 'offer';
+
+  const handleCancel = useCallback(() => {
+    if (editId) {
+      history.replace(`/hub/wachuneed/listings/${editId}`);
+      return;
+    }
+    // Opened from a record (`?konnect=`): back to it.
+    if (returnToSource('/hub/wachuneed')) return;
+    history.replace(
+      initialKind === 'wanted' ? '/hub/wachuneed/desired' : '/hub/wachuneed',
+    );
+  }, [editId, history, initialKind, returnToSource]);
+
+  const handleDone = useCallback(
+    (path: string) => {
+      history.push(path);
+    },
+    [history],
+  );
+
+  return (
+    <>
+      {editId ? <ListingDetail /> : <Wachuneed />}
+      <ListingComposer
+        key={editId ?? `new-${initialKind}`}
+        editId={editId}
+        initialKind={initialKind}
+        onCancel={handleCancel}
+        onDone={handleDone}
+      />
+    </>
   );
 };
 

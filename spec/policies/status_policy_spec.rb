@@ -333,6 +333,7 @@ RSpec.describe StatusPolicy, type: :model do
       end
 
       it 'grants access when private and viewer is mentioned but not otherwise allowed' do
+        status.account = Fabricate(:account, domain: 'example.com', uri: 'https://example.com/users/ana')
         status.visibility = :private
         status.mentions = [Fabricate(:mention, account: bob)]
 
@@ -348,7 +349,7 @@ RSpec.describe StatusPolicy, type: :model do
       end
 
       it 'denies access when private and account is following viewer' do
-        follow = Fabricate(:follow)
+        follow = Fabricate(:follow, target_account: Fabricate(:account, domain: 'example.com', uri: 'https://example.com/users/ana'))
         status.visibility = :private
         status.account = follow.target_account
 
@@ -356,6 +357,7 @@ RSpec.describe StatusPolicy, type: :model do
       end
 
       it 'denies access when public but policy does not allow anyone' do
+        status.account = Fabricate(:account, domain: 'example.com', uri: 'https://example.com/users/ana')
         viewer = Fabricate(:account)
         expect(subject).to_not permit(viewer, status)
       end
@@ -367,6 +369,7 @@ RSpec.describe StatusPolicy, type: :model do
       end
 
       it 'denies access when public and policy allows followers but viewer is not one' do
+        status.account = Fabricate(:account, domain: 'example.com', uri: 'https://example.com/users/ana')
         status.quote_approval_policy = Status::QUOTE_APPROVAL_POLICY_FLAGS[:followers]
         viewer = Fabricate(:account)
         expect(subject).to_not permit(viewer, status)

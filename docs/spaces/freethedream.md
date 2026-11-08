@@ -250,12 +250,18 @@ getting involved, not for doing the work itself:
   **New talk**, the gangs with talk from other people they haven't
   looked at, with a count (opening a gang clears its count); and **On
   you**, what they're actualising and what they're bringing.
-- **Komponents** as tiles (a Komponent is a gang in the code: Tal,
-  2026-10-30), each with how many people have a hand in it and its
-  progress ("3 of 8 sorted"). **Nobody leads a Komponent**, so no owner
+- **Komponents** as a row of cards that scrolls sideways, the next card
+  peeking in, with **+ Add a Komponent** last (Tal, 2026-11-08: "swipable
+  cards rather than grid view"; `GroupTiles row`, the shared row's measure).
+  A Komponent is a gang in the code (Tal, 2026-10-30). Each card has how
+  many people have a hand in it and its progress ("3 of 8 sorted"). **Nobody leads a Komponent**, so no owner
   shows on a tile or a Komponent's page (the owner still exists in the
   data, for who may edit it). The ones you have a hand in come first,
   tagged with any new talk. Members get **+ Add a Komponent**.
+- **Kuestions**: the Kuestions asked in the projekt, as a row of cards
+  with **Ask** last for its members (docs/spaces/kuestions.md, Kuestions in
+  a Krew). Whoever can see the projekt answers them. Shown once it has one;
+  its first is asked from Konnect (New Kuestion).
 - No lists of work, Krew row or joining on a projekt's own page (Tal,
   2026-10-30): it is part of its Krew, whose page has its people, and a
   clearer view of what needs work is still to be designed. The lists'
@@ -269,8 +275,11 @@ getting involved, not for doing the work itself:
 - **Joining a Komponent** (Tal, 2026-10-30: "the UX for joining should
   be simple and intuitive"): on a Komponent's page, anyone in the projekt
   has one pill at the top, **Join**, then **Joined** (which leaves), with a
-  line saying what it does. Joined people are in its people and its tile
-  says Joined. Joining is how you hear about it: a Nudge when someone says
+  line saying what it does. **Whoever makes a Komponent is in it**, so they
+  see Joined, not Join (Tal, 2026-11-08, "Join Button":
+  `Project#join_gang_owner!`; the makers of Komponents from before were
+  added by the `JoinKomponentMakers` migration). Joined people are in its
+  people and its tile says Joined. Joining is how you hear about it: a Nudge when someone says
   something in its talk, a fractal's or a thing's on its lists
   (`freethedream.gang.talked`), or adds to it, brings something or takes
   a job on (`freethedream.gang.updated`; Activity lines). Not the person
@@ -286,9 +295,12 @@ getting involved, not for doing the work itself:
   `events` on the shape). A Komponent's page lists its own and its
   fractals'. **Anyone in the projekt can make one** (`can.link_event`;
   nobody leads a Komponent, so owner-only left a Komponent with nobody to
-  make one): a picker chooses the whole projekt or one Komponent, and
-  **Make an event** opens Kalendar's composer with that part Konnected, so
-  the event belongs to it and its Krew sees it (Kronk::EventLinks).
+  make one): a **+** beside the section's title opens Kalendar's composer
+  with this page Konnected, so the event belongs to it and its Krew sees it
+  (Kronk::EventLinks). On a projekt's page that is the whole projekt; a
+  Komponent's event is made from the Komponent's own page. No picker (Tal,
+  2026-11-08, "'Make and event' button"). With nothing planned it says so,
+  in one quiet line.
 - **Activity**: the latest eight things that happened, with who did them
   ("Isabelle is bringing 2 speakers", "Tomas coalesced the gang
   Ceremony"). It keeps itself up to date while the page is open and in
@@ -319,16 +331,18 @@ the place the work is done:
 - **Who's in it** comes first: everyone with a hand in the gang, side by
   side, each with what they're bringing and actualising there ("Bringing
   pots, gas · Actualising dahl for 40"), whoever is on the most first.
-- The meta line under the title says **how much gear is gathered** ("12 of
-  20 gear gathered").
-- **Fractals** as tiles (people, progress), each opening its own page;
-  members get **+ Add a fractal**.
-- **Thing Bringing**, **Actualise** and **On offer** in full: what's on the
-  gang itself (**For all of Kitchen**: power, water, what every fractal
-  uses), then each fractal under its name. Each row says who's on it, with
-  one tap to bring or jump on board, and a one-line box adds to the list.
-- What it depends on, and its Activity, Talk and the owner's actions
-  beside.
+- **Fractals** as the same row of cards (people, progress), each opening
+  its own page; members get **+ Add a fractal** last.
+- Its Kuestions, Getting together, Activity and Talk.
+- **Off the page for now** (Tal, 2026-11-08, "Sections": "We'll build up
+  functionality as we need it"): **Thing Bringing**, **Actualise**, **On
+  offer** and **Depends on**, and the "12 of 20 needs met" count under the
+  title ("Tidy up"). The data, the API and the lists' own pages
+  (`/p/:id/bring` and the like) are unchanged. On those pages the add line
+  says just "Add what's needed" or "Add an idea to bring to life", with no
+  examples ("Tidy up"), and a row has no "Nobody bringing yet" or "Nobody
+  on it yet" line, no comments icon and no category pills under the add
+  line ("Pills"): a need is Things and an idea is Skills.
 
 **A fractal's page** is the same, without fractals of its own; its back
 chip goes to its gang.
@@ -435,9 +449,9 @@ into each emergence.
   offers on its own; what you said you'd bring against a need stays,
   since someone may be counting on it. Leaving an emergence takes what
   you shared there out with you.
-- **Every need and Actualise item has a category**, picked as it is added:
-  a row of category chips under the quick-add line (the pick stays for the
-  next line) and under a new gang's needs boxes (one pick for the set).
+- **Every need and Actualise item has a category.** The quick-add line
+  sets Things for a need and Skills for an idea (its chips went on
+  2026-11-08); a thing's own page can change it.
   `$400` is Money whatever is picked. Needs with no category (added before
   this) match nothing.
 - **Where they meet** (`Freethedream::MyceliumMatch`, one rule: same

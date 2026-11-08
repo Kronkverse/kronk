@@ -9,6 +9,10 @@
 #     make: true            # the Konnect picker offers "New …" here
 #     route: /hub/x/new     # optional: where "New …" goes, if not compose.route
 #     label: 'New thing'    # optional: what it says, if not compose.label
+#     kind: work            # group, happening, work, exchange or talk
+#     to:                   # the Konnect grid (Kronk::KonnectGrid): per
+#       krew: space         # korner, `space` (turns a section on there) or
+#       kalendar: link      # `link` (ties one record)
 #     effects:              # what a Konnection with a space does beyond the link
 #       - with: krew
 #         does: "The Krew joins the event's audience."
@@ -28,7 +32,7 @@ module Kronk
   module KornerKonnect
     module_function
 
-    KEYS = %w(noun make route label effects).freeze
+    KEYS = %w(noun make route label effects kind to).freeze
     EFFECT_KEYS = %w(with does).freeze
 
     def issues(manifests)
@@ -47,6 +51,7 @@ module Kronk
       issues.concat(noun_issues(manifest, raw))
       issues.concat(override_issues(manifest, raw))
       issues.concat(make_issues(manifest, raw))
+      issues.concat(grid_issues(manifest, raw, by_slug))
       issues.concat(effects_issues(manifest, raw, by_slug))
       issues
     end
@@ -74,6 +79,37 @@ module Kronk
       issues << "#{manifest.slug}: `konnect.make: true` needs a `konnect.route` or a `compose.route` for \"New …\" to open" if make_route(manifest, raw).blank?
       issues << "#{manifest.slug}: `konnect.make: true` needs a `konnect.label` or a `compose.label` for \"New …\" to say" if make_label(manifest, raw).blank?
       issues << "#{manifest.slug}: `konnect.make: true` but it takes no links (`no_attachments:`)" if manifest.no_attachments.present?
+      issues
+    end
+
+    # The Konnect grid (Kronk::KonnectGrid): a korner that takes links says
+    # what kind it is and where it Konnects (`to: {}` for nowhere of its
+    # own; others may still list it). Each `to:` names a korner that takes
+    # links, not itself, as `space` or `link`.
+    def grid_issues(manifest, raw, by_slug)
+      slug = manifest.slug
+      issues = []
+      kind = raw['kind']
+      if raw.key?('kind')
+        issues << "#{slug}: `konnect.kind` must be one of #{Kronk::KonnectGrid::KINDS.join(', ')}" unless Kronk::KonnectGrid::KINDS.include?(kind)
+      elsif takes_links?(manifest)
+        issues << "#{slug}: takes links but has no `konnect.kind` (#{Kronk::KonnectGrid::KINDS.join(', ')}): it has no row in the Konnect grid"
+      end
+      return issues + ["#{slug}: takes links but has no `konnect.to` (where it Konnects; `{}` for nowhere)"] if !raw.key?('to') && takes_links?(manifest)
+      return issues unless raw.key?('to')
+      return issues + ["#{slug}: `konnect.to` must be a mapping of korner to `space` or `link`"] unless raw['to'].is_a?(Hash)
+
+      raw['to'].each do |other, mode|
+        where = "#{slug}: `konnect.to.#{other}`"
+        issues << "#{where} must be `space` or `link`" unless Kronk::KonnectGrid::MODES.include?(mode.to_s)
+        if other.to_s == slug
+          issues << "#{where}: a korner doesn't Konnect to itself"
+        elsif !by_slug.key?(other.to_s)
+          issues << "#{where} names a korner with no manifest"
+        elsif !takes_links?(by_slug[other.to_s])
+          issues << "#{where} names a korner that takes no links"
+        end
+      end
       issues
     end
 

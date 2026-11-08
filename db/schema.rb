@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_31_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2278,7 +2278,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_120000) do
     t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.bigint "created_by_account_id"
+    t.bigint "freethedream_project_id"
     t.string "kind", default: "community", null: false
+    t.bigint "krew_id"
     t.boolean "locked", default: false, null: false
     t.jsonb "mc_options", default: [], null: false
     t.text "prompt"
@@ -2289,7 +2291,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_120000) do
     t.index ["answer_format"], name: "index_questions_on_answer_format_nontext", where: "((answer_format)::text <> 'text'::text)"
     t.index ["archived_at"], name: "index_questions_on_archived_at", where: "(archived_at IS NOT NULL)"
     t.index ["created_by_account_id"], name: "index_questions_on_created_by_account_id"
+    t.index ["freethedream_project_id"], name: "index_questions_on_freethedream_project_id", where: "(freethedream_project_id IS NOT NULL)"
     t.index ["kind"], name: "index_questions_on_kind", where: "((kind)::text <> 'community'::text)"
+    t.index ["krew_id"], name: "index_questions_on_krew_id", where: "(krew_id IS NOT NULL)"
     t.index ["locked"], name: "index_questions_on_locked", where: "(locked = true)"
     t.index ["seed_key"], name: "index_questions_on_seed_key", unique: true, where: "(seed_key IS NOT NULL)"
     t.index ["status_id"], name: "index_questions_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
@@ -3150,6 +3154,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_120000) do
   add_foreign_key "question_skips", "accounts", on_delete: :cascade
   add_foreign_key "question_skips", "questions", on_delete: :cascade
   add_foreign_key "questions", "accounts", column: "created_by_account_id", on_delete: :cascade
+  add_foreign_key "questions", "freethedream_projects", on_delete: :cascade
+  add_foreign_key "questions", "krews", on_delete: :cascade
   add_foreign_key "quotes", "accounts", column: "quoted_account_id", on_delete: :nullify
   add_foreign_key "quotes", "accounts", on_delete: :cascade
   add_foreign_key "quotes", "statuses", column: "quoted_status_id", on_delete: :nullify

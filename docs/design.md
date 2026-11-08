@@ -39,6 +39,13 @@ cover. Titles use a serif display face over a sans body.
 6. **Semantic over literal.** Use `--accent`, `--surface-elevated`,
    `--decision-agree`, not the palette token behind them. That is also what
    makes Personal Appearance work ([§2.8](#28-the-per-user-layer--personal-appearance)).
+7. **No emoji in Kronk's own interface** (Tal). Where a picture is wanted,
+   use an icon: a space's glyph (`useKornerIcon`) or a Material Symbol. A card
+   with no image shows its space's glyph (`.space-card__photo--placeholder`).
+   Words, not pictographs, in labels, previews and push text. Plain
+   typographic marks (✓, ♥, ✦) are type, not emoji. The one exception is
+   Nudges reactions, which stay emoji (Tal). What people write in their own
+   posts and messages is theirs.
 
 ---
 
@@ -317,6 +324,10 @@ no Invite.
   a Booth card's menu) keeps its own Edit, because the Ж menu can't know which
   item in the list you mean. A reactions bar shown inside an item's own view
   passes `hideEdit` to `<StatusEngagement>`.
+- **A post's action bar is Reply · Froth · Nudge · Repost** (Edit where
+  Nudge is, on your own posts). There is no … menu (2026-11-08): deleting a
+  post, pinning it and who can see it live inside Edit, at the top of the
+  composer (`features/compose/components/edit_indicator.jsx`).
 - **The moons always open on screen.** The Ж can sit anywhere along either
   side and a page can add moons, so the fan isn't fixed per corner:
   `layoutMoons` (`kronk_menu_layout.ts`) measures where the Ж is when the
@@ -605,6 +616,12 @@ doctor checks for it (Standard L11).
 5. **The title and tagline belong to the Frame.** `<AutoSpaceHeader>` renders
    the `<h1>` and tagline. A korner must not emit its own `<h1>` or repeat the
    tagline. Other lede copy is content and is fine.
+6. **Pop-ups keep their gutter** (Tal: "a hard rule for pop up boxes").
+   Nothing inside a pop-up, sheet or dialog touches its edge: content sits
+   inside the pop-up's padding, and a full-width field counts its own padding
+   inside its width. Pop-ups render outside the Stage, so the Stage's
+   border-box rule doesn't reach them; `_kronk_stage.scss` gives every pop-up
+   root's fields the same, and a new kind of pop-up is added to that list.
 
 ### Related files
 
@@ -891,8 +908,9 @@ Nudges keep a per-device draft per conversation instead
 
 #### Konnect
 
-Any creation Konnects to any other (decisions.md, 2026-10-23), and every
-composer that makes a record offers it: `konnect` is a required prop of
+A record Konnects where the Konnect grid allows (decisions.md,
+2026-11-08; docs/korners/adding_a_korner.md §2.6), and every composer that
+makes a record offers it: `konnect` is a required prop of
 `<ComposeShell>`, so a composer can't leave it out by forgetting. `useKonnect(korner)` (`hooks/useKonnect.ts`) holds what
 the new record will be Konnected to: the record it was opened from
 (`?konnect=<slug>:<id>`, which the Konnect picker's **New …** sends) and any

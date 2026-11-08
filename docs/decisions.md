@@ -17,6 +17,206 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — The Konnect grid: Spaces and Links
+
+Tal, after Krew Kuestions Konnected one public Kuestion: "some of the
+konnect spaces work well, others are clunky ... we went for the 'connects
+to everywhere' approach, but in hindsight there's a number of things that
+probably don't need the functions. I wonder how we can pick and choose what
+needs what?" Worked through with Tal in "Konnect: what joins to what"
+(https://claude.ai/artifact/6azzLf2ozga8hjifpQpffH).
+
+**Decision:** Konnect does two jobs. A **Space** turns a section on for a
+Krew or projekt, with its own New and Add existing; a **Link** ties one
+record to a Krew, a projekt, an event or a Place. Everything Konnects to
+one of those four; works don't Konnect to works, nor groups to groups,
+except a Booth set to the Art on its cover. Each manifest holds its row
+(`konnect.kind`, `konnect.to`), the picker offers only those pairs, and the
+attachments API refuses the rest. Links made before, and links Kronk makes
+itself (Krew audiences, Places), stay. This supersedes 2026-10-23, "Any
+creation Konnects to any other", and generalises #2499's `konnect.space`.
+
+| Konnect this                  | Krew                                   | Projekt | Event | Place |
+| ----------------------------- | -------------------------------------- | ------- | ----- | ----- |
+| Projekts                      | Space                                  |         | Link  |       |
+| Kalendar                      | Space                                  | Space   |       | Link  |
+| Huddle                        | Space                                  | Space   | Link  |       |
+| Kuestions                     | Space                                  | Space   |       |       |
+| Albutts                       | Space                                  | Space   | Link  |       |
+| Art, Cinema, Booth, Kronikles | Space (Gallery, Films, Music, Stories) | Link    | Link  |       |
+| Wachuneed                     | Link                                   | Link    |       |       |
+| Karporn                       |                                        |         | Link  | Link  |
+| Kommons                       |                                        |         |       |       |
+
+Tal's other calls: a space's section has New and Add existing; the Albutts
+korner lists every album you can see, Krew ones included; Komponents stay
+at projekt level except calls; projekt event invitations pick any mix of a
+Komponent, the projekt, chosen Mates or open; Moments show on an event's
+page while live. Still to build: the works' Krew sections and Albutts as a
+projekt space (next), Moments on events, the Booth cover-Art link, Komponent
+calls, mixed invitations. The Krew chat stays turned on from Krew settings.
+
+## 2026-11-08 — Kuestions is a Krew space, with its own Ask
+
+Tal, trying the entry below on shadow: "Hitting the konnect 'Kuestions' just
+konnected one specific kuestion rather than opening a section in the krew page
+with the ability to ask specific kuestions. And the kuestion i asked appears
+to be visible to all users. What i want is to konnect kuestions, then be able
+to ask specific kuestions for the krew. It probably will need its own
+composer."
+
+What happened: Konnect → Kuestions offered existing Kuestions to link, as it
+does from anywhere, and linking one made a tile for a public Kuestion. The
+one Tal asked was made by the pre-#2484 composer still cached in the browser
+(shadow had deployed minutes before): public, with a feed post, then linked
+to the Krew.
+
+**Decision:** Kuestions is a space a Krew turns on, like its chat (2026-10-31):
+a `kuestions` row in `krew_korners`.
+
+- **Konnect → Kuestions on a Krew turns it on**, and the picker closes. A
+  manifest says so with `konnect.space: true` (checked by `korners doctor`:
+  only spaces in `KrewKorner::KORNERS`); the picker turns it on through the
+  page's `onTurnOnSpace`. Elsewhere the picker offers Kuestions to link as
+  before. Krew settings, Spaces, offers it too.
+- **On, the Krew page has a Kuestions section and tile**, with Ask even
+  before there are any. Off, neither; the Kuestions are kept.
+- **Ask opens a small composer of its own** over the page: the question, how
+  it's answered, and who sees it. Nothing else from the Kuestions composer.
+- **A projekt follows its Krew:** its section shows when its Krew has
+  Kuestions on. Projekts have no spaces of their own to turn on.
+- **Kuestions linked to a Krew before this** stay public tiles.
+- The rest of the entry below (homes, who sees them, no Deck, no feed post)
+  stands; its "the first is asked from Konnect (New Kuestion)" is replaced
+  by the above.
+
+## 2026-11-08 — Posts: no … menu; Repost is back
+
+Tal: "this little ... button needs some refinement, it feels like a relic of
+mastodon era, not kronk 2.0. I actually think none of these options are
+required, so let's remove that entirely. We'll replace it, I think by
+bringing back the 'repost' function."
+
+**Decision:** a post's action bar is Reply · Froth · Nudge · Repost (Edit in
+Nudge's place on your own posts), and the … menu is gone.
+
+- **Moved into Edit:** Delete (with a confirm), who can see it, and Pin to
+  profile, at the top of the composer when you edit your own post. Edit now
+  always opens the composer, on a wide screen too.
+- **Dropped:** Open, Copy link, Share, Embed, Mute conversation, Filter,
+  Delete and redraft, Remove from my profile (a Mate's post on your profile
+  stays until they delete it), revoking someone's quote of your post, and the
+  admin links (admins use /admin).
+- **Report, Block and Mute are gone for now** (Tal: "we'll bring them in when
+  we need to"). Members have no way to report or block in the app until they
+  return; admins still act from /admin. The modals, actions and API stay in
+  the code, and settings still lists and lifts existing blocks and mutes.
+- **Repost is a quote post.** Anyone who can see a post can repost it, and the
+  repost reaches only people who could already see the original: it takes a
+  narrower original's reach tier and Krews, and is hidden from anyone who
+  can't see the original. See docs/spaces/feed.md, Reposts.
+
+## 2026-11-08 — The listing composer is photos, name, description, price
+
+Tal, on the listing composer after it moved onto the shared overlay (#2493):
+"way too busy. The standard composer should be just posting simple items.
+Shop section, availability, variations, options, how people book it are not
+necessary for the standard sales composer. Also remove all the examples in
+the text boxes ... lets reduce the standard composer to photo, name,
+description and price. can remove the 'konnect' option also."
+
+**Decision:** Wachuneed's listing composer asks for photos, name,
+description and price (a budget for a wanted ad), with who can see it in the
+header, and nothing else: no switcher (offering or wanted comes from where it
+was opened), no Konnect row, no example text in any field. The richer
+settings (section, availability, variations, options, booking) are for the
+shop item composer; until it takes options and booking, nothing new sets
+them. Editing a listing sends only the fields this composer owns, so a
+listing that already has them keeps them. See docs/spaces/wachuneed.md.
+
+---
+
+## 2026-11-08 — A projekt's pages, pared back
+
+Six of Tal's proposals from the same evening ("Tidy up", "Pills",
+"Sections", "Join Button", "Komponent Cards", "'Make and event' button"):
+the projekt and Komponent pages were busy with lists nobody used yet.
+
+**Decision:** a Komponent's page drops Thing Bringing, Actualise, On offer
+and Depends on, and the "needs met" count ("We'll build up functionality as
+we need it"). The data and API stay, and so do the lists' own pages, which
+lose their category pills, example placeholders, "Nobody bringing yet" and
+comments icon. Komponents are a row of cards that scrolls sideways.
+Getting together has a + by its title that makes an event for the page it
+is on, with no picker: the whole projekt from the projekt, a Komponent from
+its own page. Whoever makes a Komponent is in it. See
+docs/spaces/freethedream.md, The page.
+
+## 2026-11-08 — No emoji in Kronk's own interface
+
+Tal, on a Wachuneed listing with no photo: "I'm not into the emoji used when
+no image is uploaded to a listing, i thought we had an agreement of no emojis
+site-wide." The agreement had never reached the repo, and cards across four
+spaces drew an emoji when they had no picture.
+
+**Decision:** Kronk's own interface uses no emoji. A card with no image shows
+its space's glyph, push and Nudges previews use words, and the rule is in
+docs/design.md (Aesthetic system, principle 7). Nudges reactions stay emoji,
+the only exception (Tal); what people write is theirs. The same change
+drops the Wachuneed composer's Category field (Tal), and with it the category
+chip on listings.
+
+## 2026-11-08 — Kuestions asked in a Krew or projekt are its own
+
+Tal's proposal "Kuestions" (2026-11-08): "Asking a kuestion in a krew should
+be about asking questions which are relevant to the krew, and also relevent
+to a projekt", with a row of swipable Kuestion cards on the page and an Ask
+card last. Tal, asked: **Krew only** (only its members see and answer), and
+**projekts too** (whoever can see the projekt).
+
+**Decision:** a Kuestion can have a home, a Krew (`questions.krew_id`) or a
+projekt (`questions.freethedream_project_id`). Without one it is everyone's,
+as before.
+
+- **Who sees it** is decided on the server: `Question#visible_to?` and
+  `Question.reachable_by`. A Krew's are its members'; a projekt's are
+  whoever can see the projekt (`Freethedream::Project#visible_to?`). Anyone
+  else gets a 404 from show, answer, skip and seen, and never finds it in a
+  list or the Konnect search. The answer gate still applies inside.
+- **It stays out of the Deck**, members' Decks included: it lives on its
+  page. It is on the Answered list of whoever answered or asked it, while
+  they can still see it.
+- **No feed post.** A homed Kuestion makes no companion Status, so nothing
+  of it reaches Home or anyone's profile.
+- **The home is set when it's asked, not by a Konnection.** The composer is
+  opened with `?konnect=krew:<id>` or `freethedream:<id>` (the Ask card, or
+  Konnect's New Kuestion), and sends `krew_id` or `project_id` with the
+  create. A Konnection is made only after the record exists, which would
+  leave it public, with a public feed post, until then; so the source is
+  `sourceHandled` and isn't Konnected as well.
+- **Who asks:** a Krew's members while it is active; a projekt's members.
+- **The Kuestion goes with its home** (`on_delete: :cascade`), so it can
+  never fall back to being everyone's.
+- **A Krew or projekt with none** shows no section; its first is asked from
+  Konnect (New Kuestion), like its first projekt.
+
+---
+
+## 2026-11-08 — Proposers can withdraw their own proposals
+
+Tal's proposal "Delete Proposals": "I can't delete a proposal that I no
+longer want." Only the shell could annul one.
+
+**Decision:** the proposer can **withdraw** it from the Ж menu. It ends
+annulled rather than deleted: backers get their ₭ back, the record and its
+thread stay, and it leaves the board as annulled ones already do. Allowed
+while open, or claimed by the proposer with nobody joined; once someone
+else has claimed or joined it, it is their work in progress, so the
+proposer asks them to unclaim first. Actioned and later are unchanged:
+the proposer closes. See docs/spaces/kommons.md, Withdraw.
+
+---
+
 ## 2026-10-31 — A Krew's chat is a space it Konnects
 
 Every Krew used to come with a group chat in Nudges, whether it wanted one or

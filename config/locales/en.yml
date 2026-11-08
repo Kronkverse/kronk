@@ -1243,9 +1243,9 @@ en:
     delete_account: Delete account
     delete_account_html: If you wish to delete your account, you can <a href="%{path}">proceed here</a>. You will be asked for confirmation.
     description:
-      prefix_invited_by_user: "@%{name} invites you to join this Kronk server!"
-      prefix_sign_up: Sign up on Kronk today!
-      suffix: With an account, you will be able to follow people, post updates and exchange messages with users from any server and more!
+      prefix_invited_by_user: "@%{name} invites you to Kronk."
+      prefix_sign_up: Join Kronk.
+      suffix: A small community platform we're building together. Share art and posts, find your Krews, start projekts, swap things on Wachuneed, meet up in Huddle and the Kalendar, and propose what gets built next on the Kommons board.
     didnt_get_confirmation: Didn't receive a confirmation link?
     dont_have_your_security_key: Don't have your security key?
     forgot_password: Forgot your password?

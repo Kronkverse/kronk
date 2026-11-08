@@ -21,6 +21,8 @@ import {
   apiAcceptKrewJoinRequest,
   apiDeclineKrewJoinRequest,
   apiInviteToKrew,
+  apiAttachKorner,
+  isKrewKornerSlug,
 } from 'mastodon/api/krew';
 import type {
   ApiKrewActivityJSON,
@@ -35,6 +37,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
+import { HomeKuestions } from 'mastodon/features/questions/home_kuestions';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -134,6 +137,7 @@ const messages = defineMessages({
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
   projektsTile: { id: 'krew.detail.tile.projekts', defaultMessage: 'Projekts' },
   chatTile: { id: 'krew.detail.tile.chat', defaultMessage: 'Chat' },
+  kuestions: { id: 'krew.detail.kuestions', defaultMessage: 'Kuestions' },
   kuddles: {
     id: 'krew.detail.kuddles',
     defaultMessage: '{count, plural, one {Kuddle} other {Kuddles}}',
@@ -316,12 +320,17 @@ const JumpTile: React.FC<{
 // Where each section is, for its tile.
 const SECTION_IDS = {
   projekts: 'krew-projekts',
+  kuestions: 'krew-kuestions',
   chat: 'krew-chat',
   kuddles: 'krew-kuddles',
 } as const;
 
 // The spaces whose things open in place below the tiles.
 const PANEL_SPACES = ['albutts', 'kalendar'] as const;
+
+// Spaces Konnect turns on when picked rather than linking one record (the
+// grid says `space`; Albutts and Kalendar turn on by linking instead).
+const TURN_ON_SPACES = ['kuestions'] as const;
 
 const SpaceTile: React.FC<{
   slug: 'albutts' | 'kalendar';
@@ -388,6 +397,8 @@ export const KrewDetail = () => {
   // The Krew's chat is a space it Konnects (decisions.md, 2026-10-31): a
   // Krew without one has no chat on the page.
   const chatOn = Boolean(krew?.korners.includes('nudges'));
+  // Kuestions is a space the Krew turns on (decisions.md, 2026-11-08).
+  const kuestionsOn = Boolean(krew?.korners.includes('kuestions'));
 
   // The chat, for members of a Krew that has one. `cancelled` drops a late
   // answer for a Krew you've already left, so moving quickly between Krews
@@ -553,6 +564,17 @@ export const KrewDetail = () => {
     setOpenSpace((now) => (now === space ? null : space));
   }, []);
 
+  // A space that is a Krew's own rather than a record (Kuestions; manifest
+  // grid `space`, TURN_ON_SPACES) is turned on when it is picked in Konnect.
+  const spaceKrewId = krew?.id;
+  const turnOnSpace = useCallback(
+    async (slug: string) => {
+      if (!spaceKrewId || !isKrewKornerSlug(slug)) return;
+      setKrew(await apiAttachKorner(spaceKrewId, slug));
+    },
+    [spaceKrewId],
+  );
+
   // Konnect opens the picker straight away (Tal 2026-10-22: no extra step).
   // It is also how a space gets onto the page: Konnecting or making an album
   // or an event turns that space on (decisions.md, 2026-10-25).
@@ -616,6 +638,21 @@ export const KrewDetail = () => {
     });
   }, []);
 
+  const frameKuestions = useCallback(
+    (row: React.ReactNode) => (
+      <section
+        id={SECTION_IDS.kuestions}
+        className='krew-detail__section krew-detail__kuestions'
+      >
+        <h3 className='korner-section-heading'>
+          {intl.formatMessage(messages.kuestions)}
+        </h3>
+        {row}
+      </section>
+    ),
+    [intl],
+  );
+
   // Tiles for what has its own section further down: tapping one scrolls
   // there.
   const jumpTiles = [
@@ -626,6 +663,16 @@ export const KrewDetail = () => {
             slug='freethedream'
             target={SECTION_IDS.projekts}
             label={intl.formatMessage(messages.projektsTile)}
+          />,
+        ]
+      : []),
+    ...(isMember && kuestionsOn
+      ? [
+          <JumpTile
+            key='kuestions'
+            slug='kuestions'
+            target={SECTION_IDS.kuestions}
+            label={intl.formatMessage(messages.kuestions)}
           />,
         ]
       : []),
@@ -964,6 +1011,8 @@ export const KrewDetail = () => {
               }
               renderKonnect={renderKonnect}
               onKonnections={handleKonnections}
+              onTurnOnSpace={turnOnSpace}
+              turnOnSlugs={TURN_ON_SPACES}
             />
 
             {isMember && openNow === 'kalendar' && (
@@ -981,6 +1030,16 @@ export const KrewDetail = () => {
               canStart={isMember && !krew.archived}
               onCount={setProjektCount}
             />
+
+            {/* Its own Kuestions, for its members only, once it has turned
+                Kuestions on. */}
+            {isMember && kuestionsOn && (
+              <HomeKuestions
+                home={{ kind: 'krew', id: krew.id }}
+                canAsk={!krew.archived}
+                frame={frameKuestions}
+              />
+            )}
 
             {isMember && chatOn && activity && (
               <KrewChat

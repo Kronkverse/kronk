@@ -54,6 +54,7 @@ module Freethedream
 
     before_validation :set_root, on: :create
     after_create :join_owner!, if: :top?
+    after_create :join_gang_owner!, if: :gang?
     after_create :join_krew_members!, if: -> { top? && krew_id.present? }
 
     scope :top_level, -> { where(parent_id: nil) }
@@ -99,6 +100,18 @@ module Freethedream
     # Who sees a projekt follows its Krew (Tal, 2026-10-30): anyone signed
     # in when the Krew is listed (open, asking to join, or with
     # requirements), only its members when it's invite only.
+    # Every projekt `account` can see (visible_to?, as a relation): its top
+    # has no Krew, a listed one, or one they're in.
+    def self.visible_to(account)
+      return none if account.nil?
+
+      tops = unscoped.where(parent_id: nil)
+      tops = tops.where(krew_id: nil)
+                 .or(tops.where(krew_id: Krew.where.not(access: 'invite_only').select(:id)))
+                 .or(tops.where(krew_id: account.krews.select(:id)))
+      unscoped.where(id: tops.select(:id)).or(unscoped.where(root_id: tops.select(:id)))
+    end
+
     def visible_to?(account)
       return false if account.nil?
 
@@ -306,6 +319,13 @@ module Freethedream
 
     def join_owner!
       memberships.create!(account_id: owner_id, state: :member) if owner_id
+    end
+
+    # Whoever makes a Komponent is in it, and hears about it like anyone who
+    # joined (Kommons "Join Button", 2026-11-08: "I created the komponent and
+    # i'm in it and i'm still seeing the 'join' button").
+    def join_gang_owner!
+      gang_members.find_or_create_by!(account_id: owner_id) if owner_id
     end
 
     # A new projekt has everyone in its Krew, and is Konnected to it so the

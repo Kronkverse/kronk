@@ -134,7 +134,12 @@ export const editStatus = (id) => (dispatch, getState) => {
 
   api().get(`/api/v1/statuses/${id}/source`).then(response => {
     dispatch(fetchStatusSourceSuccess());
-    ensureComposeIsVisible(getState);
+    // Straight to the composer: on a wide screen one is always mounted out of
+    // sight, which is all ensureComposeIsVisible checks (composeOnProfile does
+    // the same). Delete, Pin and who can see it live here now (2026-11-08).
+    if (browserHistory.location.pathname !== '/publish') {
+      browserHistory.push('/publish');
+    }
     dispatch(setComposeToStatus(status, response.data.text, response.data.spoiler_text));
   }).catch(error => {
     dispatch(fetchStatusSourceFail(error));

@@ -7,11 +7,13 @@ import {
   useIntl,
 } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
+import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import api from 'mastodon/api';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
+import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
 
@@ -26,6 +28,23 @@ const messages = defineMessages({
   editFromMenu: {
     id: 'governance.page_action.edit',
     defaultMessage: 'Edit proposal',
+  },
+  withdraw: {
+    id: 'governance.page_action.withdraw',
+    defaultMessage: 'Withdraw proposal',
+  },
+  withdrawTitle: {
+    id: 'governance.withdraw.title',
+    defaultMessage: 'Withdraw “{title}”?',
+  },
+  withdrawBody: {
+    id: 'governance.withdraw.body',
+    defaultMessage:
+      'It comes off the board and anyone backing it gets their ₭ back. This can’t be undone.',
+  },
+  withdrawFailed: {
+    id: 'governance.withdraw.failed',
+    defaultMessage: 'Couldn’t withdraw it. Refresh and try again.',
   },
 });
 
@@ -167,6 +186,45 @@ export const ProposalDetail: React.FC<{
     },
     handleEditOpen,
     isProposer && proposal.status !== 'actioned' && !editing && !closing,
+  );
+
+  // Withdraw, also in the Ж menu: the proposer taking back a proposal they no
+  // longer want, while nobody else is on it (Kronk::ProposalStates.withdraw!).
+  const history = useHistory();
+  const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const canWithdraw =
+    isProposer &&
+    (proposal.status === 'open' ||
+      (proposal.status === 'claimed' && isClaimant && joined.length === 0));
+  const askWithdraw = useCallback(() => {
+    setWithdrawError(null);
+    setConfirmingWithdraw(true);
+  }, []);
+  const cancelWithdraw = useCallback(() => {
+    setConfirmingWithdraw(false);
+  }, []);
+  const handleWithdraw = useCallback(() => {
+    setConfirmingWithdraw(false);
+    api()
+      .post<Proposal>(`/api/v1/proposals/${proposal.id}/withdraw`)
+      .then(() => {
+        history.push('/hub/kommons');
+        return undefined;
+      })
+      .catch(() => {
+        setWithdrawError(intl.formatMessage(messages.withdrawFailed));
+      });
+  }, [proposal.id, history, intl]);
+  useRegisterPageAction(
+    {
+      key: 'withdraw',
+      label: intl.formatMessage(messages.withdraw),
+      icon: DeleteIcon,
+      iconId: 'delete',
+    },
+    askWithdraw,
+    canWithdraw && !editing && !closing,
   );
 
   const handleEditCancel = useCallback(() => {
@@ -590,6 +648,9 @@ export const ProposalDetail: React.FC<{
               {claimError && (
                 <p className='kommons-form__error'>{claimError}</p>
               )}
+              {withdrawError && (
+                <p className='kommons-form__error'>{withdrawError}</p>
+              )}
               {confirmingAction && (
                 <div className='kommons-detail__confirm'>
                   <p className='kommons-detail__confirm-text'>
@@ -640,6 +701,18 @@ export const ProposalDetail: React.FC<{
           </>
         )}
       </div>
+      {confirmingWithdraw && (
+        <ConfirmDialog
+          title={intl.formatMessage(messages.withdrawTitle, {
+            title: proposal.title,
+          })}
+          message={intl.formatMessage(messages.withdrawBody)}
+          confirmLabel={intl.formatMessage(messages.withdraw)}
+          destructive
+          onConfirm={handleWithdraw}
+          onCancel={cancelWithdraw}
+        />
+      )}
     </div>
   );
 };

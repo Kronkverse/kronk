@@ -11,8 +11,8 @@ RSpec.describe 'Attachments across korners' do
   let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
   let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
 
-  let(:album)    { Album.create!(owner: user.account, title: 'Roadtrip', visibility: :public) }
-  let(:proposal) { Fabricate(:proposal, created_by_account: other.account, title: 'Build a shed') }
+  let(:album) { Album.create!(owner: user.account, title: 'Roadtrip', visibility: :public) }
+  let(:event) { Event.create!(account: other.account, title: 'Build a shed', start_time: 2.days.from_now, end_time: 2.days.from_now + 2.hours) }
 
   before { Kronk::KornerRegistry.reload! }
 
@@ -32,21 +32,41 @@ RSpec.describe 'Attachments across korners' do
     expect(Kronk::KornerRegistry.all.select { |m| m.no_attachments.present? }.map(&:slug)).to contain_exactly('inflow', 'klot', 'moments', 'nudges', 'rose')
   end
 
-  it 'lets an album link to a proposal, shown from both ends at its real page' do
-    attach('albutts', album, 'kommons', proposal)
+  it 'lets an album link to an event, shown from both ends at its real page' do
+    event.update!(account: user.account)
+    attach('albutts', album, 'kalendar', event)
     expect(response).to have_http_status(200)
-    expect(response.parsed_body['target']).to include('title' => 'Build a shed', 'url' => "/hub/kommons/p/#{proposal.id}")
+    expect(response.parsed_body['target']).to include('title' => 'Build a shed')
 
-    get "/api/v1/attachments?target=kommons/#{proposal.id}", headers: headers
+    get "/api/v1/attachments?target=kalendar/#{event.id}", headers: headers
     expect(response.parsed_body.map { |row| row['source']['url'] }).to eq(["/hub/albutts/albums/#{album.id}"])
   end
 
-  it 'lets whoever proposed a proposal link it, and nobody else' do
-    attach('kommons', proposal, 'albutts', album)
+  it 'lets whoever hosts an event link it, and nobody else' do
+    album.update!(owner: other.account)
+    attach('kalendar', event, 'albutts', album)
     expect(response).to have_http_status(403)
 
-    proposal.update!(created_by_account: user.account)
-    attach('kommons', proposal, 'albutts', album)
+    event.update!(account: user.account)
+    album.update!(owner: user.account)
+    attach('kalendar', event, 'albutts', album)
+    expect(response).to have_http_status(200)
+  end
+
+  # The Konnect grid (decisions.md, 2026-11-08): works don't Konnect to
+  # works, and Kommons proposals Konnect to nothing for now.
+  it 'refuses a pair the Konnect grid leaves out' do
+    proposal = Fabricate(:proposal, created_by_account: user.account, title: 'Build a shed')
+    attach('albutts', album, 'kommons', proposal)
+    expect(response).to have_http_status(422)
+
+    attach('albutts', album, 'booth', Fabricate(:booth_set, account: user.account))
+    expect(response).to have_http_status(422)
+  end
+
+  it 'lets a Booth set link to the Art on its cover' do
+    piece = ArtPiece.create!(owner: user.account, title: 'Cover')
+    attach('booth', Fabricate(:booth_set, account: user.account), 'art', piece)
     expect(response).to have_http_status(200)
   end
 
@@ -67,19 +87,22 @@ RSpec.describe 'Attachments across korners' do
   end
 
   it 'takes the links away when either end is deleted' do
-    attach('albutts', album, 'kommons', proposal)
-    expect { proposal.destroy! }.to change(KornerAttachment, :count).by(-1)
+    event.update!(account: user.account)
+    attach('albutts', album, 'kalendar', event)
+    expect { event.destroy! }.to change(KornerAttachment, :count).by(-1)
 
-    attach('albutts', album, 'booth', Fabricate(:booth_set, account: user.account))
+    krew = Krew.create!(slug: 'shedders', name: 'Shedders', access: 'open')
+    krew.krew_memberships.create!(account: user.account, role: 'member', source: 'direct')
+    attach('albutts', album, 'krew', krew)
     expect { album.destroy! }.to change(KornerAttachment, :count).by(-1)
   end
 
   it 'Konnects two records once, whichever way round' do
-    proposal.update!(created_by_account: user.account)
-    attach('albutts', album, 'kommons', proposal)
+    event.update!(account: user.account)
+    attach('albutts', album, 'kalendar', event)
     expect(response).to have_http_status(200)
 
-    expect { attach('kommons', proposal, 'albutts', album) }.to_not change(KornerAttachment, :count)
+    expect { attach('kalendar', event, 'albutts', album) }.to_not change(KornerAttachment, :count)
     expect(response).to have_http_status(422)
     expect(response.parsed_body['error']).to eq('Already Konnected')
   end
@@ -88,7 +111,7 @@ RSpec.describe 'Attachments across korners' do
     let(:owner_token) { Fabricate(:accessible_access_token, resource_owner_id: other.id, scopes: 'read:statuses write:statuses') }
     let(:hidden_album) { Album.create!(owner: other.account, title: 'Secret plans', visibility: :self_only) }
     let!(:link) do
-      KornerAttachment.create!(source_slug: 'albutts', source_id: hidden_album.id, target_slug: 'kommons', target_id: proposal.id,
+      KornerAttachment.create!(source_slug: 'albutts', source_id: hidden_album.id, target_slug: 'kalendar', target_id: event.id,
                                kind: 'link', created_by_account: other.account)
     end
 
@@ -102,6 +125,7 @@ RSpec.describe 'Attachments across korners' do
 
     it 'answers 403 to changing a link it can see but looks after neither end of' do
       hidden_album.update!(visibility: :public)
+      EventInvitation.create!(event: event, account: user.account, invited_by: other.account)
       patch "/api/v1/attachments/#{link.id}", headers: headers, params: { audience_follows: nil }
 
       expect(response).to have_http_status(403)
@@ -123,7 +147,7 @@ RSpec.describe 'Attachments across korners' do
 
   describe 'searching for something to attach' do
     it 'finds proposals, which it could not before' do
-      proposal
+      Fabricate(:proposal, created_by_account: other.account, title: 'Build a shed')
       get '/api/v1/attachments/candidates?korner=kommons&q=shed', headers: headers
       expect(response.parsed_body.pluck('title')).to eq(['Build a shed'])
     end

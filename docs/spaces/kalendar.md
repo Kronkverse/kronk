@@ -67,7 +67,12 @@ who has a Krew to tick, and says in words who will see the event. A Krew's
 page lists what it has coming up (`GET /api/v1/events?krew_id=`) when its
 **Kalendar** tile is open, and the Ж menu's + there opens the composer
 (`/hub/kalendar/composer?krew=<id>`) with that Krew already the only
-audience. Each event carries `krews` (id and name) in the API.
+audience; picking Kronkverse there instead makes it public and hosted by the
+Krew, still on the Krew's page. Either way, **everyone in the Krew is
+invited** when the event is made (`EventsController#invite_krews!`, Kommons
+"Creating krew event invitations", 2026-11-08): an `EventInvitation` and an
+`event_invitation` notification each, for the Krews the host belongs to, not
+the host. Each event carries `krews` (id and name) in the API.
 `post_to_feed: false` skips the Status, which leaves host and invitees only.
 
 There is no anonymous access; every event endpoint needs a sign-in.
@@ -84,7 +89,11 @@ event. An RSVP publishes `kalendar.event.rsvpd`, which Nudges routes to the
 host if the two are Mates.
 
 **Invitations.** `POST /api/v1/events/:id/invite` writes `EventInvitation`
-rows and sends an `event_invitation` notification.
+rows and sends an `event_invitation` notification. Only the host can invite,
+and the event page shows its **Invite** to the host on every event, Krew-only
+and Mates ones included (until 2026-11-08 it showed on public events only,
+and to everyone, though only the host's invites went through). Someone
+invited can always see the event.
 
 **Editing.** The Ж menu's Edit event on the event page
 (`features/events/event_detail.tsx`) opens the same `EventComposer` over the

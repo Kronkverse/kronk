@@ -97,6 +97,9 @@ class Quote < ApplicationRecord
 
   def validate_visibility
     return if account_id == quoted_account_id || quoted_status.nil? || quoted_status.distributable?
+    # Kronk: a local post can be reposted by anyone who can see it; the repost
+    # takes its reach (docs/decisions.md, 2026-11-08).
+    return if quoted_status.local? && account&.local?
 
     errors.add(:quoted_status_id, :visibility_mismatch)
   end

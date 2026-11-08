@@ -39,6 +39,14 @@
   height: 100%;
   min-height: 0;
 
+  // A gutter on the left at desktop widths, to balance the korner rail on
+  // the right: without it every space started 16 to 24px from the edge of
+  // the screen (Kommons, Page edges, 2026-11-08). Phones keep each space's
+  // own even padding.
+  @media (width >= 890px) {
+    padding-inline-start: 1.5rem;
+  }
+
   // Lift above the right-band fade strip (z-24) so its soft inner edge
   // never dims Stage content; matches the top chrome (z-25).
   z-index: 25;
@@ -73,6 +81,26 @@
 .kronk-stage,
 .kronk-stage * {
   box-sizing: border-box;
+}
+
+// Pop-ups render outside the Stage (portals), so the rule above never
+// reached them, and a full-width field's padding pushed it past the
+// pop-up's own padding to its edge (the invite message, 2026-11-08; Tal:
+// "this should be a hard rule for pop up boxes"). In every pop-up a
+// field's padding counts inside its width and it is never wider than the
+// pop-up. docs/design.md, Frame, Rules 6.
+:is(
+    .modal-root,
+    .compose-shell,
+    .confirm-dialog,
+    .share-sheet,
+    .space-info,
+    .kuestions-sheet-wrap,
+    .attachment-picker
+  )
+  :is(input:not([type='checkbox'], [type='radio']), textarea, select) {
+  box-sizing: border-box;
+  max-inline-size: 100%;
 }
 
 // Classic Mastodon `body.layout-single-column { overflow-y: scroll }`

@@ -55,6 +55,12 @@ export interface ApiKornerKonnectJSON {
   label?: string;
   // What a Konnection with a given space does beyond the link itself.
   effects?: { with: string; does: string }[];
+  // The Konnect grid (decisions.md, 2026-11-08): what kind of korner it
+  // is, and per korner it Konnects to, `space` (turns a section on there)
+  // or `link` (ties one record). A pair is offered when either side lists
+  // the other (hooks/useAttachTargets).
+  kind?: 'group' | 'happening' | 'work' | 'exchange' | 'talk';
+  to?: Record<string, 'space' | 'link'>;
 }
 
 // Manifest `icon:` is normalized server-side into an object shape.

@@ -26,7 +26,10 @@ Three, split by what the thing is (`Listing::CATEGORIES`):
 They are three different kinds of exchange (making, passing on, doing for), so
 they stay separate. The `subcategory` column exists and is indexed for search,
 but nothing in the UI sets or reads it. The browse page has no category filter
-(the tabs were removed on 2026-09-07); category shows as a chip on each listing.
+(the tabs were removed on 2026-09-07). Since 2026-11-08 nothing asks for or
+shows a category either (Tal: the composer doesn't need it): a new listing is
+filed as `goods`, an edited one keeps what it had, and no card or listing page
+shows a category chip. A card without a photo shows Wachuneed's glyph.
 
 ## Offered and wanted
 
@@ -77,22 +80,33 @@ An empty section says what belongs there and carries the one button that
 fixes it: **List something**, or **Post a wanted ad** in Desired.
 
 **List something.** The Ж-menu "New listing" action opens `/hub/wachuneed/new`
-(`features/wachuneed/new_listing.tsx`): first whether you're offering
-something or looking for something (`?kind=wanted` opens on the second), then
-title, description, category, optional price (a budget, when wanted) in AUD,
-up to ten photos (`Listing::MAX_PHOTOS`), and
-**Who can see this?**, the reach control (see Who can see it). There is no
-location field: where it is, is a Konnection to a Map Place from the Konnect
-row (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). A
-listing's `location` reads its own old free text first (older listings, the
-Android app) and its Konnected Place's name when that is empty.
+(`ListingComposer` in `features/wachuneed/new_listing.tsx`). It is the
+standard composer overlay (`<ComposeShell>`, over Wachuneed's home), like
+every other composer (Kommons "Market Composer", 2026-11-08; until then it
+was a page of its own). **It asks for four things and nothing else** (Tal,
+2026-11-08, decisions.md "The listing composer is photos, name, description,
+price"): up to ten photos (`Listing::MAX_PHOTOS`), the name, a description,
+and an optional price (a budget, when wanted) in AUD. No field carries
+example text. The reach control in its header is who can see it (see Who can
+see it). There is no switcher, Konnect row, shop section, availability,
+variations, options or booking here: whether it is on offer or wanted comes
+from where it was opened (the Ж menu's New listing is an offering; Desired's
+**Post a wanted ad**, `?kind=wanted`, is titled **Wanted ad**; Cancel goes
+back to Desired from there, to Wachuneed's home otherwise). Opened from a
+record (`?konnect=`), the new listing is still Konnected to it, with no row
+showing. A new listing keeps a draft as you write (`useDraft`, kind
+`listing`, or `wanted_listing` for a wanted ad; docs/design.md, Drafts).
+The richer settings belong to the shop item composer; a listing that
+already has any keeps them (Edit your own, below). A listing's `location`
+reads its own old free text first (older listings, the Android app) and its
+Konnected Place's name when that is empty.
 Photos upload as they are picked; the first is the cover, and **Make cover**
 on any other moves it to the front. It always
 creates the listing as `live`. No price means free or by arrangement
 (`Listing#free_or_by_arrangement?`).
 
 **Look at one.** `/hub/wachuneed/listings/:name` (by name, `Kronk::NamedLink`;
-an old number still opens it) shows the title, category,
+an old number still opens it) shows the title,
 photos full size and uncropped (bounded to 60vh) in a strip you swipe or
 arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,
@@ -105,9 +119,15 @@ clears the phone tab bar and the Ж menu.
 
 **Edit your own.** The poster edits from the Ж menu's **Edit listing** moon
 (there is no inline Edit on the listing; others see "Message the poster").
-It opens `/hub/wachuneed/listings/:id/edit`, the composer prefilled.
-Saving keeps the listing's state; the photos are only sent if you added,
-removed or reordered them. A title change also updates the feed card's companion Status
+It opens `/hub/wachuneed/listings/:id/edit`, the composer prefilled over
+the listing's page, with the same four fields and no draft (a listing keeps
+its kind). **Take down listing** at its foot asks first (`useConfirmDialog`).
+Saving sends only the name, description, price and who can see it, and the
+photos only if you added, removed or reordered them; the server changes only
+the keys it is sent, so a listing's state, section, availability,
+variations, options and booking stay as they were. A listing that comes in
+kinds has a price per kind, so the composer shows it no price field, and its
+photos keep the kind each one shows. A title change also updates the feed card's companion Status
 text.
 
 **Take it down.** The edit form ends with **Take down listing**, for
@@ -155,9 +175,9 @@ appearing in Offered and the feed exactly as before.
   creams. Underneath they are the shop's sections
   (`listing_shop_sections`; called Sections until then). The seller names,
   orders and removes them in **Shop details**. A listing sits in one or in
-  none: the listing form and the shop item composer still ask **Section of
-  your shop**, and the shop page's **Arrange Kollections** changes it in
-  place. Removing a Kollection drops its listings back to "Everything
+  none: the shop item composer asks **Section of your shop** (the listing
+  composer does not, since 2026-11-08), and the shop page's **Arrange
+  Kollections** changes it in place. Removing a Kollection drops its listings back to "Everything
   else".
 - **The shop page** is `/hub/wachuneed/shop/<username>`
   (`shop_page.tsx`), the shop front. It is the standard detail page
@@ -246,8 +266,8 @@ Each is its own. An item's reach decides who sees it wherever it shows
 who can message about it. The shop's decides who sees the shop page and can
 message the seller from it, and is where a new item in the shop builder
 starts; the item can then be set wider or narrower. A shop page lists only
-the items the visitor can see. The listing form asks **Who can see this?**;
-the shop item composer has the control in its header; shop details ask
+the items the visitor can see. The listing composer and the shop item
+composer have the control in their header; shop details ask
 **Who can see your shop?**
 
 `Listing#messageable_by?` is `visible_to?` for anyone but the seller, never
@@ -364,8 +384,9 @@ named group of choices, such as Length (30 minutes, 1 hour) or Size, and a
 choice can **add** to the listing's price. The listing keeps one base
 price; nothing replaces it.
 
-- **Setting them** (`features/wachuneed/listing_options_editor.tsx`, in the
-  listing form): nothing shows until asked for. A row of suggestions fits
+- **Setting them** (`features/wachuneed/listing_options_editor.tsx`; out of
+  the listing composer since 2026-11-08, so nothing currently sets them,
+  until the shop item composer takes them): nothing shows until asked for. A row of suggestions fits
   the category (Offerings: Length, Style, Where, When; Stuff: Size, Colour,
   Condition, Pickup or delivery; Art: Size, Medium, Framing, Edition), plus
   **Something else**. Tapping one opens it as its own card, with the usual
@@ -488,8 +509,10 @@ Kalendars.
   dropped with it, bad hours and past times dropped); `{}` is a listing
   that is not booked. Sent on create; on an edit it replaces the whole
   thing when present and is left alone when absent. Served on the detail
-  response only. A wanted ad has none. The shop item composer doesn't ask;
-  the listing form can set it on a shop item.
+  response only. A wanted ad has none. Since 2026-11-08 neither composer
+  asks (the listing composer was cut to four fields): existing booking is
+  kept and still works for buyers, and the editor
+  (`listing_booking_editor.tsx`) waits for the shop item composer.
 
 ## Brands
 

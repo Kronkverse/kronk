@@ -75,6 +75,7 @@ class FeedManager
   # @return [Boolean]
   def push_to_home(account, status, update: false)
     return false unless account.user&.signed_in_recently?
+    return false if quoted_hidden_from?(account, status)
     return false unless add_to_feed(:home, account.id, status, aggregate_reblogs: account.user&.aggregates_reblogs?)
 
     trim(:home, account.id)
@@ -414,6 +415,16 @@ class FeedManager
   end
 
   private
+
+  # A repost (quote post) of a local post the reader can't see stays out of
+  # their home feed (docs/decisions.md, 2026-11-08). Public originals cost
+  # nothing.
+  def quoted_hidden_from?(account, status)
+    quoted = status.proper.quote&.quoted_status
+    return false if quoted.nil? || !quoted.local? || quoted.distributable? || quoted.account_id == account.id
+
+    !StatusPolicy.new(account, quoted).show?
+  end
 
   # Trim a feed to maximum size by removing older items
   # @param [Symbol] type

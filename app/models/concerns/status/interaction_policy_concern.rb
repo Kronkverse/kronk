@@ -35,6 +35,20 @@ module Status::InteractionPolicyConcern
     # Post author is always allowed to quote themselves
     return :automatic if account_id == other_account.id
 
+    # Kronk: anyone who can see a local post can repost it (docs/decisions.md,
+    # 2026-11-08, "Posts: no … menu; Repost is back"). The repost then reaches
+    # only people who could already see the original (PostStatusService caps
+    # its reach; StatusPolicy#show? and FeedManager#push_to_home keep it from
+    # anyone else). No per-post author setting.
+    # A public or unlisted post is one anyone can see, so it needs no policy
+    # check (that ran per post, and loading an album asked it for every
+    # photo); Mastodon treats its own public quote policy the same way.
+    if account&.local?
+      return :automatic if public_visibility? || unlisted_visibility?
+
+      return StatusPolicy.new(other_account, self, preloaded_relations).show? ? :automatic : :denied
+    end
+
     automatic_policy = quote_approval_policy >> 16
     manual_policy = quote_approval_policy & 0xFFFF
 

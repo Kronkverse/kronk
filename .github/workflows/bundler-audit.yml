@@ -31,7 +31,7 @@ jobs:
     # queue: a new upstream CVE should not freeze feature merges (it is surfaced
     # on the PR and the weekly cron instead).
     if: ${{ github.event_name != 'merge_group' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       BUNDLE_ONLY: development

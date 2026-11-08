@@ -5,9 +5,11 @@ import type { IntlShape } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import { apiDeleteAttachment } from 'mastodon/api/attachments';
 import { apiFtdRsvp } from 'mastodon/api/freethedream';
 import type { FtdEvent, FtdProject } from 'mastodon/api_types/freethedream';
+import { Icon } from 'mastodon/components/icon';
 import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 import { konnectSearch } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -18,8 +20,9 @@ import { projectPath, Section } from './shared';
 // projekt or for one of its Komponents, soonest first, each a date tile
 // with its time, place and who's going, and one tap to say you're going.
 // On a projekt's page the Komponents' events show too, tagged with the
-// Komponent. Anyone in the projekt can make one, for the whole projekt or
-// for one Komponent: Kalendar's own composer opens with that part
+// Komponent. Anyone in the projekt can make one with the + by the title:
+// for the whole projekt on its page, for a Komponent on the Komponent's
+// own page (Tal, 2026-11-08). Kalendar's own composer opens with that part
 // Konnected, so the event belongs to it and its Krew hears about it
 // (Kronk::EventLinks). The events themselves live in Kalendar; this reads
 // them.
@@ -31,22 +34,9 @@ const messages = defineMessages({
   },
   empty: {
     id: 'freethedream.together.empty',
-    defaultMessage:
-      'A meetup, a working session, a launch: make an event and everyone in the Krew can see it and come.',
+    defaultMessage: 'Nothing planned yet.',
   },
   make: { id: 'freethedream.event.make', defaultMessage: 'Make an event' },
-  forWhole: {
-    id: 'freethedream.together.for_whole',
-    defaultMessage: 'For the whole projekt',
-  },
-  forPart: {
-    id: 'freethedream.together.for_part',
-    defaultMessage: 'For {title}',
-  },
-  forLabel: {
-    id: 'freethedream.together.for_label',
-    defaultMessage: 'Who the event is for',
-  },
   going: { id: 'freethedream.event.going', defaultMessage: 'Going' },
   imGoing: {
     id: 'freethedream.together.im_going',
@@ -102,17 +92,30 @@ export const GettingTogether: React.FC<{
 }> = ({ project, refresh }) => {
   const intl = useIntl();
   const route = useKorner('kalendar')?.compose?.route;
-  const [forId, setForId] = useState(project.id);
   const canMake = project.can.link_event && !!route;
-
-  const handleFor = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setForId(e.target.value);
-  }, []);
 
   if (project.events.length === 0 && !canMake) return null;
 
+  // A + beside the title makes an event for this page: the whole projekt
+  // on a projekt, the Komponent on a Komponent's own page (Tal,
+  // 2026-11-08). No picker.
+  const make =
+    canMake && route ? (
+      <Link
+        to={{
+          pathname: route,
+          search: konnectSearch('freethedream', project.id),
+        }}
+        className='freethedream-section__add'
+        title={intl.formatMessage(messages.make)}
+        aria-label={intl.formatMessage(messages.make)}
+      >
+        <Icon id='add' icon={AddIcon} />
+      </Link>
+    ) : null;
+
   return (
-    <Section title={intl.formatMessage(messages.title)}>
+    <Section title={intl.formatMessage(messages.title)} aside={make}>
       {project.events.length === 0 ? (
         <p className='freethedream__quiet'>
           {intl.formatMessage(messages.empty)}
@@ -123,41 +126,6 @@ export const GettingTogether: React.FC<{
             <EventRow key={event.id} event={event} onChange={refresh} />
           ))}
         </ul>
-      )}
-
-      {canMake && route && (
-        <div className='freethedream-together__make'>
-          {project.sections.length > 0 && (
-            <select
-              className='freethedream__input freethedream__input--inline'
-              value={forId}
-              onChange={handleFor}
-              aria-label={intl.formatMessage(messages.forLabel)}
-            >
-              <option value={project.id}>
-                {project.top
-                  ? intl.formatMessage(messages.forWhole)
-                  : intl.formatMessage(messages.forPart, {
-                      title: project.title,
-                    })}
-              </option>
-              {project.sections.map((part) => (
-                <option key={part.id} value={part.id}>
-                  {intl.formatMessage(messages.forPart, { title: part.title })}
-                </option>
-              ))}
-            </select>
-          )}
-          <Link
-            to={{
-              pathname: route,
-              search: konnectSearch('freethedream', forId),
-            }}
-            className='freethedream__button freethedream__button--small'
-          >
-            {intl.formatMessage(messages.make)}
-          </Link>
-        </div>
       )}
     </Section>
   );

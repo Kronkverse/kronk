@@ -26,6 +26,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useIdentity } from 'mastodon/identity_context';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
+import { downloadMediaFiles } from 'mastodon/utils/download_media';
 
 import { AlbumComposer } from './album_composer';
 import { CaptionText } from './caption_text';
@@ -114,17 +115,21 @@ const messages = defineMessages({
   downloadStarted: {
     id: 'albutts.detail.download_started',
     defaultMessage:
-      'Putting {count, plural, one {# photo} other {# photos}} into a zip. The download starts when it is ready.',
+      '{count, plural, one {Getting # photo.} other {Getting # photos, each as its own file.}}',
+  },
+  downloadFailed: {
+    id: 'albutts.detail.download_failed',
+    defaultMessage: 'Couldn’t get the photos. Try again in a moment.',
   },
   downloadTooBig: {
     id: 'albutts.detail.download_too_big',
     defaultMessage:
-      'That is more than 1 GB, too much for one download. Use Select photos and download it in parts.',
+      'That is more than 1 GB, too much for one go. Use Select photos and download it in parts.',
   },
 });
 
-// One download may carry this much. Mirrors `Albutts::AlbumArchive::MAX_BYTES`
-// on the server, which is the one that enforces it.
+// One download may carry this much: the photos are held in the page until
+// they are saved.
 const MAX_DOWNLOAD_BYTES = 1024 ** 3;
 
 const VISIBILITY_LABEL = {
@@ -210,28 +215,21 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
     setSelected(new Set());
   }, []);
 
-  // The zip is built by the server and opened as a plain link, so the
-  // browser saves it like any other download. `photoIds` null is the whole
-  // album.
+  // Each photo saves as its own file, fetched in the page so you stay where
+  // you are in the album (utils/download_media, Kommons "Photo
+  // Downloading"). `photoIds` null is the whole album.
   const download = useCallback(
     (photoIds: string[] | null) => {
-      const photos = photoIds
-        ? album.photos.filter((p) => photoIds.includes(p.id))
-        : album.photos;
+      const photos = (
+        photoIds
+          ? album.photos.filter((p) => photoIds.includes(p.id))
+          : album.photos
+      ).filter((p): p is typeof p & { url: string } => !!p.url);
       const bytes = photos.reduce((sum, p) => sum + (p.size ?? 0), 0);
       if (bytes > MAX_DOWNLOAD_BYTES) {
         dispatch(showAlert({ message: messages.downloadTooBig }));
         return;
       }
-
-      const link = document.createElement('a');
-      link.href = `/api/v1/albutts/albums/${album.id}/download${
-        photoIds ? `?photo_ids=${photoIds.join(',')}` : ''
-      }`;
-      link.download = '';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
 
       dispatch(
         showAlert({
@@ -239,8 +237,16 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
           values: { count: photos.length },
         }),
       );
+      void downloadMediaFiles(
+        photos.map((p) => ({ url: p.url, id: p.id })),
+      ).then((saved) => {
+        if (saved === 0 && photos.length > 0) {
+          dispatch(showAlert({ message: messages.downloadFailed }));
+        }
+        return saved;
+      });
     },
-    [album.id, album.photos, dispatch],
+    [album.photos, dispatch],
   );
   const downloadAlbum = useCallback(() => {
     download(null);

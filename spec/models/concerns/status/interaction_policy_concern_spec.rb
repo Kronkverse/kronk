@@ -3,7 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe Status::InteractionPolicyConcern do
-  let(:status) { Fabricate(:status, quote_approval_policy: (0b0101 << 16) | 0b0010) }
+  # Mastodon's quote-approval policies apply to federated posts; Kronk's own
+  # posts can be reposted by anyone who can see them (below).
+  let(:remote_author) { Fabricate(:account, domain: 'example.com', uri: 'https://example.com/users/ana') }
+  let(:status) { Fabricate(:status, account: remote_author, quote_approval_policy: (0b0101 << 16) | 0b0010) }
 
   describe '#quote_policy_as_keys' do
     it 'returns the expected values' do
@@ -48,10 +51,25 @@ RSpec.describe Status::InteractionPolicyConcern do
     end
 
     context 'when the account falls into the unknown bucket' do
-      let(:status) { Fabricate(:status, quote_approval_policy: (0b0001 << 16) | 0b0100) }
+      let(:status) { Fabricate(:status, account: remote_author, quote_approval_policy: (0b0001 << 16) | 0b0100) }
 
       it 'returns :automatic because of the followers entry in the automatic policy' do
         expect(status.quote_policy_for_account(account)).to eq :unknown
+      end
+    end
+
+    context 'with a Kronk post' do
+      let(:status) { Fabricate(:status, visibility: :mates, quote_approval_policy: 0) }
+
+      it 'is :automatic for anyone who can see it' do
+        account.follow!(status.account)
+        status.account.follow!(account)
+
+        expect(status.quote_policy_for_account(account)).to eq :automatic
+      end
+
+      it 'is :denied for anyone who cannot' do
+        expect(status.quote_policy_for_account(account)).to eq :denied
       end
     end
   end

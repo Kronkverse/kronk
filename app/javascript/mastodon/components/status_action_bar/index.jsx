@@ -15,21 +15,18 @@ import { clearTimeline, expandAccountTimeline } from 'mastodon/actions/timelines
 import api from 'mastodon/api';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
+import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import HeartBorderIcon from '@/material-icons/400-24px/favorite.svg?react';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
-import { PERMISSION_MANAGE_USERS, PERMISSION_MANAGE_FEDERATION } from 'mastodon/permissions';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
-import { Dropdown } from 'mastodon/components/dropdown_menu';
-import { me, quickBoosting } from '../../initial_state';
+import { me } from '../../initial_state';
 
 import { IconButton } from '../icon_button';
 import { NudgeButton } from '../status/nudge_button';
-import { RemoveQuoteHint } from './remove_quote_hint';
 
 const messages = defineMessages({
   delete: { id: 'status.delete', defaultMessage: 'Delete' },
@@ -39,6 +36,7 @@ const messages = defineMessages({
   mute: { id: 'account.mute', defaultMessage: 'Mute @{name}' },
   block: { id: 'account.block', defaultMessage: 'Block @{name}' },
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
+  repost: { id: 'status.repost', defaultMessage: 'Repost' },
   share: { id: 'status.share', defaultMessage: 'Share' },
   more: { id: 'status.more', defaultMessage: 'More' },
   whoCanSee: { id: 'status.who_can_see', defaultMessage: 'Who can see this?' },
@@ -248,121 +246,23 @@ class StatusActionBar extends ImmutablePureComponent {
     this.props.onAddFilter(this.props.status);
   };
 
+  // Repost: a quote post. The composer opens with this post embedded and your
+  // words above it (docs/decisions.md, 2026-11-08).
+  handleRepostClick = () => {
+    this.props.onQuote(this.props.status);
+    this.props.history.push('/publish');
+  };
+
   handleCopy = () => {
     const url = this.props.status.get('url');
     navigator.clipboard.writeText(url);
   };
 
   render () {
-    const { status, relationship, quotedAccountId, contextType, intl, withDismiss, withCounters, scrollKey } = this.props;
-    const { signedIn, permissions } = this.props.identity;
-
-    const publicStatus       = ['public', 'unlisted'].includes(status.get('visibility'));
-    const pinnableStatus     = ['public', 'unlisted', 'private'].includes(status.get('visibility'));
-    const mutingConversation = status.get('muted');
-    const account            = status.get('account');
-    const writtenByMe        = status.getIn(['account', 'id']) === me;
-    const isRemote           = status.getIn(['account', 'username']) !== status.getIn(['account', 'acct']);
-    const isQuotingMe        = quotedAccountId === me;
-
-    let menu = [];
-
-    menu.push({ text: intl.formatMessage(messages.open), action: this.handleOpen });
-
-    if (publicStatus && isRemote) {
-      menu.push({ text: intl.formatMessage(messages.openOriginalPage), href: status.get('url') });
-    }
-
-    menu.push({ text: intl.formatMessage(messages.copy), action: this.handleCopy });
-
-    if (publicStatus && 'share' in navigator) {
-      menu.push({ text: intl.formatMessage(messages.share), action: this.handleShareClick });
-    }
-
-    if (publicStatus && !isRemote) {
-      menu.push({ text: intl.formatMessage(messages.embed), action: this.handleEmbed });
-    }
-
-    if (signedIn) {
-      menu.push(null);
-
-      if (writtenByMe && pinnableStatus) {
-        menu.push({ text: intl.formatMessage(status.get('pinned') ? messages.unpin : messages.pin), action: this.handlePinClick });
-        menu.push(null);
-      }
-
-      if (writtenByMe || withDismiss) {
-        menu.push({ text: intl.formatMessage(mutingConversation ? messages.unmuteConversation : messages.muteConversation), action: this.handleConversationMuteClick });
-        // Quote-policy control retired 2026-09-13 alongside the rest
-        // of the quote primitive (Tal audit). Inbound federated
-        // quotes still render + revoke; new-quote composition is
-        // gone.
-        menu.push(null);
-      }
-
-      if (status.getIn(['profile_account', 'id']) === me) {
-        menu.push({ text: intl.formatMessage(messages.removeFromProfile), action: this.handleRemoveFromProfile });
-      }
-
-      if (writtenByMe) {
-        menu.push({ text: intl.formatMessage(messages.whoCanSee), action: this.handleWhoCanSeeClick });
-        if (!this.props.hideEdit) {
-          menu.push({ text: intl.formatMessage(messages.edit), action: this.handleEditClick });
-        }
-        if (status.get('post_type') !== 'answer') {
-          menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
-          menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
-        }
-      } else {
-        if (isQuotingMe) {
-          menu.push({ text: intl.formatMessage(messages.revokeQuote, { name: account.get('username') }), action: this.handleRevokeQuoteClick, dangerous: true });
-        }
-
-        if (relationship && relationship.get('muting')) {
-          menu.push({ text: intl.formatMessage(messages.unmute, { name: account.get('username') }), action: this.handleMuteClick });
-        } else {
-          menu.push({ text: intl.formatMessage(messages.mute, { name: account.get('username') }), action: this.handleMuteClick, dangerous: true });
-        }
-
-        if (relationship && relationship.get('blocking')) {
-          menu.push({ text: intl.formatMessage(messages.unblock, { name: account.get('username') }), action: this.handleBlockClick });
-        } else {
-          menu.push({ text: intl.formatMessage(messages.block, { name: account.get('username') }), action: this.handleBlockClick, dangerous: true });
-        }
-
-        if (!this.props.onFilter) {
-          menu.push(null);
-          menu.push({ text: intl.formatMessage(messages.filter), action: this.handleFilterClick, dangerous: true });
-          menu.push(null);
-        }
-
-        menu.push({ text: intl.formatMessage(messages.report, { name: account.get('username') }), action: this.handleReport, dangerous: true });
-
-        if (account.get('acct') !== account.get('username')) {
-          const domain = account.get('acct').split('@')[1];
-
-          menu.push(null);
-
-          if (relationship && relationship.get('domain_blocking')) {
-            menu.push({ text: intl.formatMessage(messages.unblockDomain, { domain }), action: this.handleUnblockDomain });
-          } else {
-            menu.push({ text: intl.formatMessage(messages.blockDomain, { domain }), action: this.handleBlockDomain, dangerous: true });
-          }
-        }
-
-        if ((permissions & PERMISSION_MANAGE_USERS) === PERMISSION_MANAGE_USERS || (isRemote && (permissions & PERMISSION_MANAGE_FEDERATION) === PERMISSION_MANAGE_FEDERATION)) {
-          menu.push(null);
-          if ((permissions & PERMISSION_MANAGE_USERS) === PERMISSION_MANAGE_USERS) {
-            menu.push({ text: intl.formatMessage(messages.admin_account, { name: account.get('username') }), href: `/admin/accounts/${status.getIn(['account', 'id'])}` });
-            menu.push({ text: intl.formatMessage(messages.admin_status), href: `/admin/accounts/${status.getIn(['account', 'id'])}/statuses/${status.get('id')}` });
-          }
-          if (isRemote && (permissions & PERMISSION_MANAGE_FEDERATION) === PERMISSION_MANAGE_FEDERATION) {
-            const domain = account.get('acct').split('@')[1];
-            menu.push({ text: intl.formatMessage(messages.admin_domain, { domain: domain }), href: `/admin/instances/${domain}` });
-          }
-        }
-      }
-    }
+    const { status, intl, withCounters } = this.props;
+    const writtenByMe = status.getIn(['account', 'id']) === me;
+    // Anyone who can see a post can repost it (the server says so per viewer).
+    const canRepost = ['automatic', 'manual'].includes(status.getIn(['quote_approval', 'current_user']));
 
     let replyIcon;
     let replyIconComponent;
@@ -380,14 +280,12 @@ class StatusActionBar extends ImmutablePureComponent {
 
     const favouriteTitle = intl.formatMessage(status.get('favourited') ? messages.removeFavourite : messages.favourite);
     const isReply = status.get('in_reply_to_account_id') === status.getIn(['account', 'id']);
-  
-    const shouldShowQuoteRemovalHint = isQuotingMe && contextType === 'notifications';
 
     return (
       <div className='status__action-bar'>
-        {/* Kronk action bar (2026-08-12): Reply · Froth · Nudge (right).
-            Boost + Bookmark buttons retired — federation still receives
-            boosts/bookmarks; only the primary-bar buttons are gone. */}
+        {/* Kronk action bar: Reply · Froth · Nudge (Edit on your own) ·
+            Repost. No … menu (docs/decisions.md, 2026-11-08): Delete, who
+            can see it and Pin live inside Edit. */}
         <div className='status__action-bar__button-wrapper'>
           <IconButton className='status__action-bar__button' title={replyTitle} icon={isReply ? 'reply' : replyIcon} iconComponent={isReply ? ReplyIcon : replyIconComponent} onClick={this.handleReplyClick} counter={status.get('replies_count')} />
         </div>
@@ -410,24 +308,11 @@ class StatusActionBar extends ImmutablePureComponent {
             <NudgeButton status={status} className='status__action-bar__button' />
           )}
         </div>
-        <RemoveQuoteHint className='status__action-bar__button-wrapper' canShowHint={shouldShowQuoteRemovalHint}>
-          {(dismissQuoteHint) => (
-            <Dropdown
-              scrollKey={scrollKey}
-              status={status}
-              needsStatusRefresh={quickBoosting && status.get('quote_approval') === null}
-              items={menu}
-              icon='ellipsis-h'
-              iconComponent={MoreHorizIcon}
-              direction='right'
-              title={intl.formatMessage(messages.more)}
-              onOpen={() => {
-                dismissQuoteHint();
-                return true;
-              }}
-            />
-          )}
-        </RemoveQuoteHint>
+        {canRepost && (
+          <div className='status__action-bar__button-wrapper'>
+            <IconButton className='status__action-bar__button' title={intl.formatMessage(messages.repost)} icon='repeat' iconComponent={RepeatIcon} onClick={this.handleRepostClick} />
+          </div>
+        )}
       </div>
     );
   }
