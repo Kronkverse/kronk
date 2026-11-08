@@ -32,6 +32,7 @@ import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { CopyIconButton } from 'mastodon/components/copy_icon_button';
 import { Icon } from 'mastodon/components/icon';
 import { KornerDetail } from 'mastodon/components/korner_detail';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { Stage } from 'mastodon/components/stage';
@@ -498,7 +499,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             }`}
           >
             <div ref={descRef} className='event-detail__description__text'>
-              {event.description}
+              <LinkifiedText text={event.description} />
             </div>
             {descOverflows && !descExpanded && (
               <button

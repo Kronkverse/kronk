@@ -9,6 +9,7 @@ import { apiDeleteFilm, apiGetFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -154,7 +155,9 @@ export const FilmViewer: React.FC<Props> = ({ film, onChange }) => {
       {film.description && (
         <section className='cinema-viewer__description'>
           <h2>{intl.formatMessage(messages.description)}</h2>
-          <p>{film.description}</p>
+          <p>
+            <LinkifiedText text={film.description} />
+          </p>
         </section>
       )}
 

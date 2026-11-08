@@ -10,6 +10,7 @@ import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
@@ -196,7 +197,7 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
           <p
             className={`art-piece-detail__description${aboutOpen ? '' : ' art-piece-detail__description--folded'}`}
           >
-            {piece.description}
+            <LinkifiedText text={piece.description} />
           </p>
           {piece.description.length > ABOUT_FOLD && (
             <button

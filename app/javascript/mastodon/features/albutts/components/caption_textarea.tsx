@@ -7,6 +7,8 @@ import {
   useState,
 } from 'react';
 
+import TextareaAutosize from 'react-textarea-autosize';
+
 import { apiSearchMatesToMention } from 'mastodon/api/accounts';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Avatar } from 'mastodon/components/avatar';
@@ -28,6 +30,9 @@ interface Suggestion {
   kind: 'account';
   account: ApiAccountJSON;
 }
+
+// The most rows the box grows to before it scrolls.
+const MAX_ROWS = 8;
 
 const MIN_QUERY = 1; // one character after the `@` before we search
 
@@ -224,7 +229,10 @@ export const CaptionTextarea = forwardRef<
 
   return (
     <div className='caption-textarea'>
-      <textarea
+      {/* Grows with what's written, up to MAX_ROWS, so a long comment can be
+          read back before it's posted (Kommons "Comment on phone",
+          2026-11-08). */}
+      <TextareaAutosize
         ref={textareaRef}
         id={id}
         className={className}
@@ -234,7 +242,8 @@ export const CaptionTextarea = forwardRef<
         onBlur={handleBlur}
         placeholder={placeholder}
         disabled={disabled}
-        rows={rows}
+        minRows={rows}
+        maxRows={MAX_ROWS}
         maxLength={maxLength}
         data-key={dataKey}
         // eslint-disable-next-line jsx-a11y/no-autofocus

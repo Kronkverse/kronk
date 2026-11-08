@@ -23,6 +23,7 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
@@ -404,7 +405,7 @@ const ProjectView: React.FC<{
       subtitle={
         project.description && (
           <span className='freethedream-detail__about'>
-            {project.description}
+            <LinkifiedText text={project.description} />
           </span>
         )
       }

@@ -11,6 +11,7 @@ import type { ApiKarJSON } from 'mastodon/api_types/karporn';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -197,7 +198,9 @@ export const KarViewer: React.FC<Props> = ({ kar, onChange }) => {
       {kar.description && (
         <section className='karporn-viewer__description'>
           <h2>{intl.formatMessage(messages.description)}</h2>
-          <p>{kar.description}</p>
+          <p>
+            <LinkifiedText text={kar.description} />
+          </p>
         </section>
       )}
 

@@ -9,6 +9,8 @@ import {
 
 import { Link } from 'react-router-dom';
 
+import TextareaAutosize from 'react-textarea-autosize';
+
 import api from 'mastodon/api';
 
 // Comments on a proposal — the discussion surface (support-model proposal page).
@@ -191,12 +193,13 @@ export const ProposalComments: React.FC<{ proposalId: string }> = ({
                 className='proposal-comments__reply-form'
                 onSubmit={handleReplySubmit}
               >
-                <textarea
+                <TextareaAutosize
                   className='proposal-comments__textarea'
                   value={replyDraft}
                   onChange={handleReplyDraft}
                   placeholder={intl.formatMessage(messages.replyPlaceholder)}
-                  rows={2}
+                  minRows={2}
+                  maxRows={12}
                 />
                 <button
                   type='submit'
@@ -212,12 +215,13 @@ export const ProposalComments: React.FC<{ proposalId: string }> = ({
       </div>
 
       <form className='proposal-comments__add' onSubmit={handleSubmit}>
-        <textarea
+        <TextareaAutosize
           className='proposal-comments__textarea'
           value={draft}
           onChange={handleDraft}
           placeholder={intl.formatMessage(messages.placeholder)}
-          rows={3}
+          minRows={3}
+          maxRows={12}
         />
         <div className='proposal-comments__add-actions'>
           <button
