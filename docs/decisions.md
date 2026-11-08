@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — A projekt's pages, pared back
+
+Six of Tal's proposals from the same evening ("Tidy up", "Pills",
+"Sections", "Join Button", "Komponent Cards", "'Make and event' button"):
+the projekt and Komponent pages were busy with lists nobody used yet.
+
+**Decision:** a Komponent's page drops Thing Bringing, Actualise, On offer
+and Depends on, and the "needs met" count ("We'll build up functionality as
+we need it"). The data and API stay, and so do the lists' own pages, which
+lose their category pills, example placeholders, "Nobody bringing yet" and
+comments icon. Komponents are a row of cards that scrolls sideways.
+Getting together has a + by its title that makes an event for the page it
+is on, with no picker: the whole projekt from the projekt, a Komponent from
+its own page. Whoever makes a Komponent is in it. See
+docs/spaces/freethedream.md, The page.
+
 ## 2026-11-08 — No emoji in Kronk's own interface
 
 Tal, on a Wachuneed listing with no photo: "I'm not into the emoji used when

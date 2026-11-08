@@ -123,4 +123,33 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(page).to have_current_path("/hub/krew/#{krew.slug}/p/#{doof.slug}")
     expect(Freethedream::Project.where(title: 'Kitchen')).to be_empty
   end
+
+  # Kommons, 2026-11-08 (Komponent Cards, Join Button, Sections, Make an
+  # event): Komponents are a row of cards, whoever makes one is in it, its
+  # page has no lists, and Getting together has a + for the whole projekt.
+  it 'shows Komponents as a row, puts their maker in them, and keeps the page plain' do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    make = find('.freethedream-section__add')
+    expect(make[:href]).to include('konnect=freethedream')
+    expect(page).to have_no_css('.freethedream-together select')
+    expect(page).to have_no_text('needs met')
+
+    click_on '+ Add a Komponent'
+    within('.compose-shell') do
+      fill_in placeholder: 'Sound, Design, Paperwork', with: 'Kitchen'
+      click_on 'Add'
+    end
+    expect(page).to have_css('.freethedream-groups--row .freethedream-group', text: 'Kitchen')
+
+    within('.freethedream-groups') { click_link 'Kitchen' }
+    expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
+    expect(page).to have_css('.freethedream-join-gang', text: 'Joined')
+    ['Thing Bringing', 'Actualise', 'On offer', 'Depends on'].each do |heading|
+      expect(page).to have_no_css('.freethedream-section__title', text: heading)
+    end
+  end
 end
