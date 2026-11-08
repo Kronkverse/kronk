@@ -179,6 +179,8 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         find('.kronk-menu__moon[title="Add an item"]').click
 
         expect(page).to have_css('.compose-shell')
+        # What are you offering? first (Tal, 2026-11-09).
+        within('.compose-shell') { click_on 'Something to buy' }
         within('.compose-shell') { expect(page).to have_field('What is it called?') }
       end
 
@@ -253,6 +255,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     it 'adds an item that comes in sizes and colours, priced by size, quietly' do
       visit '/hub/wachuneed/my-shop'
       click_on 'Add an item'
+      within('.compose-shell') { click_on 'Something to buy' }
 
       # The shop item composer, in the shared shell over the list.
       within('.compose-shell') do
@@ -275,8 +278,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     end
 
     it 'adds one item after another, then changes one from the list' do
-      visit '/hub/wachuneed/my-shop?item=new'
-
+      visit '/hub/wachuneed/my-shop?item=new&offering=product'
       within('.compose-shell') do
         fill_in 'What is it called?', with: 'Lip balm'
         fill_in 'Price (in AUD)', with: '8'

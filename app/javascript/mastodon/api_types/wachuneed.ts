@@ -67,7 +67,16 @@ export interface ApiListingBookingJSON {
   slots?: string[];
   time_zone?: string;
   ask?: string;
+  // An appointment: where it happens, and how long each Length kind books.
+  where?: ListingBookingWhere;
+  lengths?: Record<string, number>;
 }
+
+export type ListingBookingWhere = 'online' | 'in_person' | 'either';
+
+// What a listing offers (docs/spaces/wachuneed.md, What are you offering?).
+// Null or absent is a product.
+export type ListingOffering = 'product' | 'appointment' | 'service' | 'trip';
 
 export interface ApiListingJSON {
   id: string;
@@ -99,6 +108,7 @@ export interface ApiListingJSON {
   options?: ApiListingOptionJSON[];
   // Detail endpoint only: how it is booked, if it is.
   booking?: ApiListingBookingJSON;
+  offering?: ListingOffering | null;
   // An item that keeps selling rather than a one-off, and whether there is
   // one to be had.
   ongoing?: boolean;

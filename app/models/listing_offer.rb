@@ -56,7 +56,7 @@ class ListingOffer < ApplicationRecord
     parts = listing.booking['parts']
     if parts.include?('time')
       self.starts_at = parse_time(starts_at)
-      minutes = listing.booking['minutes'].to_i
+      minutes = listing.booking_minutes_for(choices&.dig('variant')).to_i
       self.ends_at = self.starts_at + minutes.minutes if self.starts_at && minutes.positive?
     end
     self.route   = clean_route(route) if parts.include?('route')
@@ -151,7 +151,7 @@ class ListingOffer < ApplicationRecord
     if parts.include?('time')
       if starts_at.nil?
         errors.add(:base, 'Choose a time')
-      elsif !Wachuneed::BookingTimes.new(listing).free?(starts_at)
+      elsif !Wachuneed::BookingTimes.new(listing, minutes: listing.booking_minutes_for(choices&.dig('variant'))).free?(starts_at)
         errors.add(:base, 'That time is not free')
       end
     end

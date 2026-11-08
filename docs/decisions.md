@@ -17,6 +17,26 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-09 — Wachuneed asks what you are offering
+
+Tal: four friends want to sell on Kronk (consultations, music production, a
+car delivery service, retreats and workshops) and the composer should be
+"really flowing and clear and intuitive … not overly busy". Tal approved a
+mock-up of five phone screens and answered:
+
+- **Payment** is arranged between the two people for now; Kronk takes none.
+- **Tickets** are a shop item that also makes linked Kalendar events, or a
+  link to a ticket platform elsewhere.
+- **Services** are packages with prices, or a quote.
+- **Anywhere, but simple**: the quick New listing stays the four-field form
+  and opens on Something to buy; the other kinds are one link away.
+
+So a listing records what it offers (`listings.offering`), adding to a shop
+starts with What are you offering?, and Appointment, Service and Trip or
+delivery each have a short composer over the existing booking, variations
+and options. Tickets follow in their own change. Supersedes the 2026-11-08
+note that booking and options wait for the shop item composer.
+
 ## 2026-11-09 — Kronikles are written documents; a projekt has a Kronikles section
 
 Tal: "I want to upload a constitution to a krew/projekt, and it makes sense

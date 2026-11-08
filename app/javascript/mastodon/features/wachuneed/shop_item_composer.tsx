@@ -45,6 +45,7 @@ import {
   variantValues,
 } from './listing_variants_editor';
 import type { VariantState } from './listing_variants_editor';
+import { offeringMessages } from './offering';
 
 // The shop item composer (docs/spaces/wachuneed.md, The shop builder): how
 // a seller fills their shop, one product after another, over the Items
@@ -202,6 +203,8 @@ interface Props {
   // Something was added, changed or taken down. `again` when the seller is
   // carrying on to the next item, so the composer stays open.
   onSaved: (again: boolean) => void;
+  // Back to What are you offering? (a new item only).
+  onChangeOffering?: () => void;
 }
 
 export const ShopItemComposer: React.FC<Props> = ({
@@ -210,6 +213,7 @@ export const ShopItemComposer: React.FC<Props> = ({
   editId,
   onCancel,
   onSaved,
+  onChangeOffering,
 }) => {
   const intl = useIntl();
   const [confirmDialog, confirm] = useConfirmDialog();
@@ -534,6 +538,17 @@ export const ShopItemComposer: React.FC<Props> = ({
       label={intl.formatMessage(
         editId ? messages.titleEdit : messages.titleNew,
       )}
+      subtitle={
+        onChangeOffering ? (
+          <button
+            type='button'
+            className='wachuneed-offering-change'
+            onClick={onChangeOffering}
+          >
+            {intl.formatMessage(offeringMessages.change)}
+          </button>
+        ) : undefined
+      }
       submitLabel={intl.formatMessage(editId ? messages.save : messages.add)}
       submittingLabel={intl.formatMessage(messages.saving)}
       submitting={busy}

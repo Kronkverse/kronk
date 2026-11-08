@@ -12,10 +12,13 @@ class Wachuneed::BookingTimes
   STEP_WITHOUT_LENGTH = 60 # minutes
   MAX_TIMES = 200
 
-  def initialize(listing, now: Time.current)
+  # `minutes`: how long this booking takes, when the listing comes in
+  # lengths (Listing#booking_minutes_for); the listing's own length otherwise.
+  def initialize(listing, now: Time.current, minutes: nil)
     @listing = listing
     @booking = listing.booking
     @now     = now
+    @minutes = minutes.presence || @booking['minutes'].presence
   end
 
   def suggested?
@@ -41,7 +44,7 @@ class Wachuneed::BookingTimes
   private
 
   def length
-    @booking['minutes'].to_i.minutes
+    @minutes.to_i.minutes
   end
 
   def zone
@@ -66,7 +69,7 @@ class Wachuneed::BookingTimes
     hours = Array(@booking['hours'])
     return [] if hours.empty?
 
-    step = (@booking['minutes'].presence || STEP_WITHOUT_LENGTH).to_i.minutes
+    step = (@minutes || STEP_WITHOUT_LENGTH).to_i.minutes
     (from.in_time_zone(zone).to_date..until_time.in_time_zone(zone).to_date).flat_map do |date|
       hours.select { |h| h['day'] == date.wday }.flat_map do |h|
         start  = zone.parse("#{date} #{h['from']}")

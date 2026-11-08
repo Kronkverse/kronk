@@ -133,12 +133,15 @@ export const AskForListing: React.FC<{
 
   return (
     <div className='wachuneed-detail__ask'>
-      {booked && listing.booking && (
+      {/* An appointment in lengths shows its times once a length is
+          picked, since each books for its own time. */}
+      {booked && listing.booking && (!listing.booking.lengths || variant) && (
         <BookingFields
           listingId={listing.id}
           booking={listing.booking}
           value={booking}
           onChange={setBooking}
+          variant={listing.booking.lengths ? variant?.values : undefined}
         />
       )}
       <KornerPill

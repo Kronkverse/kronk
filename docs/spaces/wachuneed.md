@@ -154,6 +154,57 @@ what the caller can see (a listing they can't is a 404). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
 order) and `photo_url`, the cover. There is no delete endpoint.
 
+## What are you offering?
+
+Tal, 2026-11-09: a shop should be easy to set up for consultations, music
+production, a delivery service and retreats, with a composer that is
+"clear and tidy to create, super intuitive, and not overly busy". So an
+offer is picked first, and each kind has a short composer of its own
+(`offering_chooser.tsx`, `offering_composer.tsx`). What it offers is
+stored on the listing (`listings.offering`: `product`, `appointment`,
+`service`, `trip`; null is a product, as every older listing is), so
+**Edit** opens the same composer again.
+
+- **Where it is asked.** **Add an item** in a shop opens **What are you
+  offering?** first: five large choices, each with a line saying what it is
+  for (`/hub/wachuneed/my-shop?item=new`, then `&offering=`). The quick
+  **New listing** opens straight on **Something to buy**, the four-field
+  form, with **Change what you are offering** under its title for the rest
+  (`/hub/wachuneed/new?offering=`, `choose` for the picker). A wanted ad is
+  never asked. Every kind's composer carries the same link while new.
+- **Something to buy** is the product form as before: the shop item
+  composer in a shop, the listing composer elsewhere.
+- **Appointment** (consultations, sessions): **Lengths and prices**, a row
+  each (how long, an optional name, a price). One length is the listing's
+  price and `booking.minutes`; more than one is a **Length** variation with
+  a price per kind, and `booking.lengths` says how long each books, so the
+  free times and the booking's end follow the length chosen
+  (`Listing#booking_minutes_for`, `Wachuneed::BookingTimes` `minutes:`,
+  `GET …/times?variant[]=`; the listing page shows times once a length is
+  picked). **Where**: Online, In person or Either (`booking.where`; Either
+  adds a **Where** choice for the person booking). **When you are free**:
+  weekly hours (Monday to Friday, nine to five to start), in the seller's
+  time zone. It books with the `time` part.
+- **Service** (production, design, repairs): **Packages**, a name and a
+  price each, a blank price read as a quote (a **Package** variation);
+  **Also take quote requests** adds a **Something else** package with no
+  price; and **What should people tell you?** (`booking.ask`, the
+  `details` part). The listing's price is its lowest package's.
+- **Trip or delivery**: **Set price** or **Quote each trip** (no price);
+  **When**: **Any time** (people suggest one) or **Your hours**; and what to
+  ask. It books with `time`, `route` (pick-up and drop-off on the Map, seen
+  only by the seller, only on that request) and `details`.
+- **Tickets** (retreats, workshops) is designed and not built yet: dates
+  with seats, ticket types, each date a linked Kalendar event, or a link to
+  a ticket site elsewhere.
+
+All four are ordinary listings underneath (category Offerings), so they
+show in Offered, the shop, search and the feed as before, and are asked for
+or booked through Requests. Kronk takes no payment: the seller says how to
+pay in the shop, and accepting is the agreement.
+
+Not built: a Huddle call link for online appointments (in the design).
+
 ## Shops
 
 A shop is one seller's live offers on a page of their own, in Kollections
