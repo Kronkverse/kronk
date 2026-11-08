@@ -12,6 +12,7 @@
   // ── Semantic surfaces + text ────────────────────────────────────
   --semantic-accent: #4414cc;
   --semantic-accent-text: color-mix(in oklab, var(--accent) 50%, var(--text-primary));
+  --semantic-signal: var(--kronk-purple-bright);
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #191b22;
   --semantic-surface-elevated: #292938;
@@ -36,6 +37,7 @@
   // Consumer aliases — SCSS uses the short names below directly.
   --accent: var(--semantic-accent);
   --accent-text: var(--semantic-accent-text);
+  --signal: var(--semantic-signal);
   --text-on-accent: var(--semantic-text-on-accent);
   --surface-primary: var(--semantic-surface-primary);
   --surface-elevated: var(--semantic-surface-elevated);
@@ -107,6 +109,7 @@
 
   --semantic-accent: #6364ff;
   --semantic-accent-text: color-mix(in oklab, var(--accent) 85%, var(--text-primary));
+  --semantic-signal: var(--kronk-purple-bright);
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #ffffff;
   --semantic-surface-elevated: #f5f4f9;
