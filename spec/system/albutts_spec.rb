@@ -60,7 +60,7 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
     visit "/hub/albutts/albums/#{album.id}"
 
     click_on 'Download album'
-    expect(page).to have_content('Putting 2 photos into a zip')
+    expect(page).to have_content('Getting 2 photos, each as its own file.')
 
     click_on 'Select photos'
     expect(page).to have_content('Tap photos to choose them')
@@ -69,7 +69,7 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
     first('.albutts-photo__trigger').click
     expect(page).to have_content('1 selected')
     click_on 'Download'
-    expect(page).to have_content('Putting 1 photo into a zip')
+    expect(page).to have_content('Getting 1 photo.')
 
     click_on 'Done'
     expect(page).to have_no_css('.albutts-select-bar')

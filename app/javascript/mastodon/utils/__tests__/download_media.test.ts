@@ -1,4 +1,8 @@
-import { downloadMedia, handleMediaDownloadClick } from '../download_media';
+import {
+  downloadMedia,
+  downloadMediaFiles,
+  handleMediaDownloadClick,
+} from '../download_media';
 
 const opts = {
   url: 'https://media.example/media_attachments/files/1/original/abc.JPG',
@@ -139,5 +143,63 @@ describe('handleMediaDownloadClick', () => {
     const newTab = click({ metaKey: true });
     handleMediaDownloadClick(newTab, photo);
     expect(newTab.preventDefault).not.toHaveBeenCalled();
+  });
+});
+
+describe('downloadMediaFiles', () => {
+  const items = [
+    { url: 'https://media.example/a/original/one.jpg', id: '1' },
+    { url: 'https://media.example/a/original/two.png', id: '2' },
+  ];
+
+  it('downloads each file on its own on a computer', async () => {
+    vi.useFakeTimers();
+    setPointer(false);
+    setShare(undefined);
+
+    const done = downloadMediaFiles(items);
+    await vi.runAllTimersAsync();
+
+    expect(await done).toBe(2);
+    expect(clicked.map((c) => c.download)).toEqual([
+      'kronk-1.jpg',
+      'kronk-2.png',
+    ]);
+    vi.useRealTimers();
+  });
+
+  it('shares them all at once on a phone', async () => {
+    setPointer(true);
+    const share = vi.fn(() => Promise.resolve());
+    setShare(share);
+
+    expect(await downloadMediaFiles(items)).toBe(2);
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(
+      (share.mock.calls[0] as unknown as [ShareData])[0].files,
+    ).toHaveLength(2);
+    expect(clicked).toEqual([]);
+  });
+
+  it('skips a file it cannot fetch', async () => {
+    vi.useFakeTimers();
+    setPointer(false);
+    setShare(undefined);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve(
+          url.endsWith('two.png')
+            ? new Response(null, { status: 404 })
+            : new Response(new Blob(['x'], { type: 'image/jpeg' })),
+        ),
+      ),
+    );
+
+    const done = downloadMediaFiles(items);
+    await vi.runAllTimersAsync();
+
+    expect(await done).toBe(1);
+    vi.useRealTimers();
   });
 });
