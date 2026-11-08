@@ -17,6 +17,42 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — Kuestions asked in a Krew or projekt are its own
+
+Tal's proposal "Kuestions" (2026-11-08): "Asking a kuestion in a krew should
+be about asking questions which are relevant to the krew, and also relevent
+to a projekt", with a row of swipable Kuestion cards on the page and an Ask
+card last. Tal, asked: **Krew only** (only its members see and answer), and
+**projekts too** (whoever can see the projekt).
+
+**Decision:** a Kuestion can have a home, a Krew (`questions.krew_id`) or a
+projekt (`questions.freethedream_project_id`). Without one it is everyone's,
+as before.
+
+- **Who sees it** is decided on the server: `Question#visible_to?` and
+  `Question.reachable_by`. A Krew's are its members'; a projekt's are
+  whoever can see the projekt (`Freethedream::Project#visible_to?`). Anyone
+  else gets a 404 from show, answer, skip and seen, and never finds it in a
+  list or the Konnect search. The answer gate still applies inside.
+- **It stays out of the Deck**, members' Decks included: it lives on its
+  page. It is on the Answered list of whoever answered or asked it, while
+  they can still see it.
+- **No feed post.** A homed Kuestion makes no companion Status, so nothing
+  of it reaches Home or anyone's profile.
+- **The home is set when it's asked, not by a Konnection.** The composer is
+  opened with `?konnect=krew:<id>` or `freethedream:<id>` (the Ask card, or
+  Konnect's New Kuestion), and sends `krew_id` or `project_id` with the
+  create. A Konnection is made only after the record exists, which would
+  leave it public, with a public feed post, until then; so the source is
+  `sourceHandled` and isn't Konnected as well.
+- **Who asks:** a Krew's members while it is active; a projekt's members.
+- **The Kuestion goes with its home** (`on_delete: :cascade`), so it can
+  never fall back to being everyone's.
+- **A Krew or projekt with none** shows no section; its first is asked from
+  Konnect (New Kuestion), like its first projekt.
+
+---
+
 ## 2026-11-08 — Proposers can withdraw their own proposals
 
 Tal's proposal "Delete Proposals": "I can't delete a proposal that I no
@@ -29,6 +65,8 @@ while open, or claimed by the proposer with nobody joined; once someone
 else has claimed or joined it, it is their work in progress, so the
 proposer asks them to unclaim first. Actioned and later are unchanged:
 the proposer closes. See docs/spaces/kommons.md, Withdraw.
+
+---
 
 ## 2026-10-31 — A Krew's chat is a space it Konnects
 

@@ -19,6 +19,6 @@ class Api::V2::Kuestions::SkipsController < Api::BaseController
   private
 
   def set_question
-    @question = Question.find(params[:kuestion_id])
+    @question = Question.find_for!(params[:kuestion_id], current_account)
   end
 end

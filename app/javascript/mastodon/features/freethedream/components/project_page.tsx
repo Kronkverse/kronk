@@ -27,6 +27,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
+import { HomeKuestions } from 'mastodon/features/questions/home_kuestions';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
@@ -98,6 +99,7 @@ const messages = defineMessages({
     defaultMessage: 'You hear when people talk or add things here.',
   },
   groups: { id: 'freethedream.gangs', defaultMessage: 'Komponents' },
+  kuestions: { id: 'freethedream.kuestions', defaultMessage: 'Kuestions' },
   addGroup: {
     id: 'freethedream.coalesce_gang',
     defaultMessage: '+ Add a Komponent',
@@ -180,6 +182,12 @@ const ProjectView: React.FC<{
   // Opening a project or section is looking at its talk: nothing in it is
   // new to you after that.
   const isMember = project.membership === 'member';
+  const frameKuestions = useCallback(
+    (row: React.ReactNode) => (
+      <Section title={intl.formatMessage(messages.kuestions)}>{row}</Section>
+    ),
+    [intl],
+  );
   useEffect(() => {
     if (isMember) void act(apiFtdSeen(project.id));
   }, [isMember, project.id]);
@@ -499,6 +507,13 @@ const ProjectView: React.FC<{
                 onDiskonnect={project.can.edit ? handleDiskonnect : undefined}
               />
             ))}
+            {/* Its own Kuestions: whoever can see the projekt answers them,
+                its members ask them. */}
+            <HomeKuestions
+              home={{ kind: 'projekt', id: project.id }}
+              canAsk={isMember}
+              frame={frameKuestions}
+            />
             {project.top ? (
               <Updates
                 updates={project.updates}

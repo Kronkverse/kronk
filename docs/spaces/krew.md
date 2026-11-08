@@ -195,8 +195,8 @@ All in `app/javascript/mastodon/features/krew/`.
     **Kalendar** open in place below the tiles, one at a time, and close on
     a second tap: the Krew's albums (`krew_albums.tsx`), and what is coming
     up for the Krew and what's been (`krew_events.tsx`). Nothing is open on
-    arrival. **Projekts**, **Chat** and **Kuddle** scroll down to their
-    section. Then what the Krew is Konnected to elsewhere (an art piece, a
+    arrival. **Projekts**, **Kuestions**, **Chat** and **Kuddle** scroll
+    down to their section. Then what the Krew is Konnected to elsewhere (an art piece, a
     proposal…), and last **Konnect** (a +). A space gets its tile once
     something is Konnected or made in it, or once it is turned on in
     Settings.
@@ -214,6 +214,13 @@ All in `app/javascript/mastodon/features/krew/`.
     who could open them (an invite-only Krew's to its members). Anyone else
     sees the section on a listed Krew that has projekts, without New
     projekt.
+  - **Kuestions**: the Kuestions asked in the Krew, for its members only
+    (docs/spaces/kuestions.md, Kuestions in a Krew): a row of cards, each
+    the question with whether you've answered it and how many have, and
+    for members of an active Krew a last card, **Ask**, opening the
+    composer for this Krew. Tapping a card answers it in place, or shows
+    what everyone said. A Krew with none has no section; its first is asked
+    from Konnect (Kuestions, **New Kuestion**).
   - **Chat**: the Krew's chat from Nudges, when the Krew has one (see
     **Chat** below), read and written on the page (`krew_chat.tsx`, the
     messenger's `ConversationView` without its header), with "Open in

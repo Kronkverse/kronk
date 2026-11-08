@@ -31,6 +31,20 @@ export const apiListProfileKuestions = () =>
     filter: 'profile',
   });
 
+// Where a Kuestion was asked, when not for everyone: a Krew or a projekt.
+export interface KuestionHome {
+  kind: 'krew' | 'projekt';
+  id: string;
+}
+
+// A Krew's or projekt's Kuestions, newest first, each with the viewer's own
+// answer. Only its members (a Krew) or whoever can see it (a projekt).
+export const apiListHomeKuestions = (home: KuestionHome) =>
+  apiRequestGet<ApiKuestionJSON[]>(
+    'v2/kuestions',
+    home.kind === 'krew' ? { krew_id: home.id } : { project_id: home.id },
+  );
+
 export const apiGetKuestion = (id: string) =>
   apiRequestGet<ApiKuestionJSON>(`v2/kuestions/${id}`);
 
@@ -44,6 +58,9 @@ interface CreateKuestionParams {
   answer_format: KuestionAnswerFormat | KuestionProfileFormat;
   mc_options?: string[];
   kind?: 'community' | 'profile';
+  // Asked in a Krew or a projekt: its own, not everyone's.
+  krew_id?: string;
+  project_id?: string;
   [key: string]: unknown;
 }
 

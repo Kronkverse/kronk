@@ -105,6 +105,13 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
 
   const handleCreated = useCallback(
     (created: ApiKuestionJSON | ApiProfileKuestionJSON) => {
+      // Asked in a Krew or a projekt: back to its page, where it now is.
+      if (
+        created.kind === 'community' &&
+        created.home &&
+        returnToSource('/hub/kuestions/answered')
+      )
+        return;
       // A profile Kuestion lands in the Profile grid. Any other lands at
       // the top of Answered, where the asker can answer their own and see
       // the running count.
@@ -116,7 +123,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
       setAnsweredRefresh((n) => n + 1);
       history.push('/hub/kuestions/answered');
     },
-    [history],
+    [history, returnToSource],
   );
 
   // Keyboard: Escape closes the composer overlay (shell handles this
