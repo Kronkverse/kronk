@@ -35,6 +35,13 @@ module Status::InteractionPolicyConcern
     # Post author is always allowed to quote themselves
     return :automatic if account_id == other_account.id
 
+    # Kronk: anyone who can see a local post can repost it (docs/decisions.md,
+    # 2026-11-08, "Posts: no … menu; Repost is back"). The repost then reaches
+    # only people who could already see the original (PostStatusService caps
+    # its reach; StatusPolicy#show? and FeedManager#push_to_home keep it from
+    # anyone else). No per-post author setting.
+    return StatusPolicy.new(other_account, self, preloaded_relations).show? ? :automatic : :denied if account&.local?
+
     automatic_policy = quote_approval_policy >> 16
     manual_policy = quote_approval_policy & 0xFFFF
 

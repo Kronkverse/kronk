@@ -127,6 +127,28 @@ one (Tal, 2026-09-14).
 - **The home feed shows no replies at all**
   (`FeedManager#filter_from_home`). Search labels a comment as a Comment.
 
+### Reposts
+
+A **repost** is a quote post: your words above someone's post, embedded
+(Tal, 2026-11-08). **Repost** on a post's action bar opens the composer
+with the post attached (`quoteComposeById`). It replaced the retired boost,
+and new quote posts, retired on 2026-09-13 (#1848), are back.
+
+- **Anyone who can see a post can repost it.** For Kronk's own posts the
+  author's quote-approval policy doesn't apply
+  (`Status#quote_policy_for_account` answers from `StatusPolicy#show?`);
+  federated posts keep Mastodon's rules. `Quote#validate_visibility` allows a
+  non-public local post to be quoted.
+- **A repost reaches only people who could already see the original.**
+  `PostStatusService#cap_repost_reach!` gives a repost of a narrower post the
+  original's reach tier and its Krews, and drops added people, so a
+  Krew-only post stays Krew-only inside it. Reach alone isn't enough (your
+  Mates aren't the author's), so `StatusPolicy#show?` hides a repost from
+  anyone who can't see its original, and `FeedManager#push_to_home` keeps it
+  out of their home feed. Public originals cost nothing on either path.
+- **The original is drawn inside the repost** for those who can see it
+  (`REST::BaseQuoteSerializer`, `StatusFilter`).
+
 ### Mentions
 
 **You can only tag your Mates** (Tal, 2026-10-29: "users should only be able

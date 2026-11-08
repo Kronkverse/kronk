@@ -17,6 +17,32 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — Posts: no … menu; Repost is back
+
+Tal: "this little ... button needs some refinement, it feels like a relic of
+mastodon era, not kronk 2.0. I actually think none of these options are
+required, so let's remove that entirely. We'll replace it, I think by
+bringing back the 'repost' function."
+
+**Decision:** a post's action bar is Reply · Froth · Nudge · Repost (Edit in
+Nudge's place on your own posts), and the … menu is gone.
+
+- **Moved into Edit:** Delete (with a confirm), who can see it, and Pin to
+  profile, at the top of the composer when you edit your own post. Edit now
+  always opens the composer, on a wide screen too.
+- **Dropped:** Open, Copy link, Share, Embed, Mute conversation, Filter,
+  Delete and redraft, Remove from my profile (a Mate's post on your profile
+  stays until they delete it), revoking someone's quote of your post, and the
+  admin links (admins use /admin).
+- **Report, Block and Mute are gone for now** (Tal: "we'll bring them in when
+  we need to"). Members have no way to report or block in the app until they
+  return; admins still act from /admin. The modals, actions and API stay in
+  the code, and settings still lists and lifts existing blocks and mutes.
+- **Repost is a quote post.** Anyone who can see a post can repost it, and the
+  repost reaches only people who could already see the original: it takes a
+  narrower original's reach tier and Krews, and is hidden from anyone who
+  can't see the original. See docs/spaces/feed.md, Reposts.
+
 ## 2026-11-08 — The listing composer is photos, name, description, price
 
 Tal, on the listing composer after it moved onto the shared overlay (#2493):

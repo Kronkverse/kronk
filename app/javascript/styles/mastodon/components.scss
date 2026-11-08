@@ -1348,6 +1348,44 @@
   }
 }
 
+.edit-indicator__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 4px;
+}
+
+.edit-indicator__tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--background-border-color);
+  border-radius: 999px;
+  background: transparent;
+  color: $secondary-text-color;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  .icon {
+    inline-size: 16px;
+    block-size: 16px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $primary-text-color;
+    border-color: $ui-highlight-color;
+  }
+
+  &--danger:hover,
+  &--danger:focus-visible {
+    color: $error-red;
+    border-color: $error-red;
+  }
+}
+
 .edit-indicator {
   border-radius: 4px 4px 0 0;
   background: lighten($ui-base-color, 4%);

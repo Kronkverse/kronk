@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class PostStatusService < BaseService
+  # Kronk reach ladder, widest first (used to cap a repost's reach).
+  REACH_RANK = { public: 4, unlisted: 3, private: 2, orbit: 2, mates: 1, self_only: 0, limited: -1, direct: -1 }.freeze
+
   include Redisable
   include LanguagesHelper
 
@@ -71,11 +74,23 @@ class PostStatusService < BaseService
     @visibility   = @options[:visibility] || @account.user&.setting_default_privacy
     @visibility   = :unlisted if @visibility&.to_sym == :public && @account.silenced?
     @visibility   = :private if @quoted_status&.private_visibility? && %i(public unlisted).include?(@visibility&.to_sym)
+    cap_repost_reach! if @quoted_status&.local? && !@quoted_status.distributable?
     @visibility   = inherited_comment_visibility || @visibility
     @scheduled_at = @options[:scheduled_at]&.to_datetime
     @scheduled_at = nil if scheduled_in_the_past?
   rescue ArgumentError
     raise ActiveRecord::RecordInvalid
+  end
+
+  # A repost of a narrower post takes the original's tier, and its Krews: a
+  # Krew-only post stays Krew-only inside a repost (docs/decisions.md,
+  # 2026-11-08). Added people are dropped, since they could only widen it.
+  def cap_repost_reach!
+    original = @quoted_status.visibility.to_sym
+    wanted = (@visibility || :public).to_sym
+    @visibility = original if REACH_RANK.fetch(original, 0) < REACH_RANK.fetch(wanted, 4)
+    @options = @options.except(:audience_grant_ids)
+    @options[:krew_ids] = @quoted_status.krew_ids if @quoted_status.krews.any?
   end
 
   def process_status!
