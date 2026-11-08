@@ -83,4 +83,27 @@ RSpec.describe 'Krew spaces: albums and works', :js, :streaming do
       expect(page).to have_button('New')
     end
   end
+
+  # decisions.md, 2026-11-09: a projekt's Kronikles (its constitution among
+  # them) are a section like its albums.
+  it "shows a projekt's Kronikles once one is Konnected", :aggregate_failures do
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    rules = Chronicle.create!(owner: bob.account, title: 'Our constitution', kind: :constitution, visibility: :public,
+                              body: 'We decide together.')
+
+    visit "/hub/freethedream/p/#{doof.slug}"
+    expect(page).to have_css('.freethedream-detail')
+    expect(page).to have_no_css('.space-shelf h3', text: /kronikles/i)
+
+    KornerAttachment.create!(source_slug: 'kronikles', source_id: rules.id, target_slug: 'freethedream', target_id: doof.id,
+                             kind: 'link', created_by_account: bob.account)
+    visit "/hub/freethedream/p/#{doof.slug}"
+    within('.space-shelf', text: /kronikles/i) do
+      expect(page).to have_link('Our constitution')
+      click_on 'New'
+    end
+
+    expect(page).to have_css('.compose-shell')
+    within('.compose-shell') { expect(page).to have_css('option', text: 'Constitution', visible: :all) }
+  end
 end

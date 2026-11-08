@@ -3,7 +3,9 @@
 # Kronikles — a single long-form written work by one author. The body
 # is stored as raw markdown (no length limit); rendering happens
 # client-side. Kind labels the work as poetry / short story / essay /
-# letter / journal / other — a display badge, not a schema constraint,
+# letter / journal / constitution / legal document / other: Kronikles are
+# written documents of any sort, a Krew's or projekt's constitution as much
+# as a story (Tal, 2026-11-09). A display badge, not a schema constraint,
 # so re-labeling is a plain update. Its audience is the reach ladder
 # plus any Krews it is for (`record_krews`, Kronk::KrewAudience).
 class Chronicle < ApplicationRecord
@@ -31,9 +33,9 @@ class Chronicle < ApplicationRecord
 
   # Kind labels — displayed as a badge on the reader and the feed card,
   # filterable in the directory once the picker earns a place. `other`
-  # is the escape hatch for anything the six named kinds don't cover.
+  # is the escape hatch for anything the named kinds don't cover.
   enum :kind,
-       { essay: 0, short_story: 1, poetry: 2, letter: 3, journal: 4, other: 5 },
+       { essay: 0, short_story: 1, poetry: 2, letter: 3, journal: 4, other: 5, constitution: 6, legal: 7 },
        suffix: :kind
 
   # Reach ladder. Krews are an additive axis on top (Kronk::KrewAudience,

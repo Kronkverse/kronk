@@ -64,6 +64,10 @@ import { Updates } from './updates';
 
 const messages = defineMessages({
   albums: { id: 'freethedream.albums.title', defaultMessage: 'Albums' },
+  kronikles: {
+    id: 'freethedream.kronikles.title',
+    defaultMessage: 'Kronikles',
+  },
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
   remove: { id: 'freethedream.remove', defaultMessage: 'Remove' },
   removeTitle: {
@@ -380,9 +384,9 @@ const ProjectView: React.FC<{
         korner: 'freethedream',
         id: project.id,
         canManage: project.can.edit,
-        // Albums show in their own section (a Space, decisions.md
-        // 2026-11-08), not as tiles.
-        excludeSlugs: ['huddle', 'albutts'],
+        // Albums and Kronikles show in their own sections (Spaces,
+        // decisions.md 2026-11-08), not as tiles.
+        excludeSlugs: ['huddle', 'albutts', 'kronikles'],
         onKonnections: handleKonnections,
         // Getting together already lists the linked events, and a projekt
         // lives in its Krew.
@@ -488,6 +492,17 @@ const ProjectView: React.FC<{
               homeId={project.id}
               korner='albutts'
               title={intl.formatMessage(messages.albums)}
+              canAdd={project.can.edit}
+              hideWhenEmpty
+            />
+            {/* Its Kronikles: written documents, its constitution among
+                them (Tal, 2026-11-09). Shown once one is Konnected, from
+                Konnect → Kronikles → New Kronikle. */}
+            <SpaceShelf
+              homeSlug='freethedream'
+              homeId={project.id}
+              korner='kronikles'
+              title={intl.formatMessage(messages.kronikles)}
               canAdd={project.can.edit}
               hideWhenEmpty
             />

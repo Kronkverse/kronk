@@ -668,3 +668,12 @@ then **New** (the album composer with `?konnect=freethedream:<id>`) and
 **Add existing**. It shows once an album is Konnected, from Konnect →
 Albutts; until then there is no section. Albums aren't repeated as
 Konnected tiles.
+
+## Kronikles
+
+A projekt's Kronikles are a section the same way (Tal, 2026-11-09): its
+written documents, a constitution or a legal document as much as a story
+(Kronikle kinds Constitution and Legal document, docs/spaces/kronikles.md).
+Konnect → Kronikles → New Kronikle opens the Kronikles composer with
+`?konnect=freethedream:<id>`; once it's published the section appears with
+it as a card. Kronikles aren't repeated as Konnected tiles.

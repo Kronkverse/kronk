@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-09 — Kronikles are written documents; a projekt has a Kronikles section
+
+Tal: "I want to upload a constitution to a krew/projekt, and it makes sense
+to konnect 'Kronikles' as a space, then create a new 'Kronikle' which would
+be the constitution. This means kronikles are just essentially written
+documents, which might be art or stories or journal entries, but also may be
+something like a constitution, or legal document."
+
+- Two new Kronikle kinds: **Constitution** and **Legal document**
+  (`constitution`, `legal`).
+- In the Konnect grid, Kronikles → projekt changes from `link` to `space`: a
+  projekt shows its Kronikles as a section of cards, like its albums.
+- File upload (PDFs) is not part of this; Tal: "We might need upload
+  capability (pdf) later". When it comes, the proposal attachment storage
+  (private, served as a download) is the starting point.
+
 ## 2026-11-08 — The Quiet card
 
 Tal: "I've been wanting to redesign the standard kronk cards for a while, the
