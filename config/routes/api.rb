@@ -365,7 +365,7 @@ namespace :api, format: false do
 
     # Kronikles — single-author long-form written works. Body is
     # markdown, no length limit; kind labels the work (essay / short
-    # story / poetry / letter / journal / other).
+    # story / poetry / letter / journal / constitution / legal / other).
     namespace :kronikles do
       resources :chronicles, only: [:index, :show, :create, :update, :destroy]
       # A writer's Kronikles as ordered chapters (docs/spaces/kronikles.md,

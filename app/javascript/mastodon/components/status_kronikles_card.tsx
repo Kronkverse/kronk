@@ -1,6 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import MenuBookIcon from '@/material-icons/400-24px/menu_book.svg?react';
+import type { ChronicleKind } from 'mastodon/api_types/kronikles';
 import {
   CardTitle,
   CardMeta,
@@ -23,13 +24,15 @@ const KIND_LABELS: Record<KronikleSummary['kind'], string> = {
   poetry: 'Poetry',
   letter: 'Letter',
   journal: 'Journal',
+  constitution: 'Constitution',
+  legal: 'Legal document',
   other: 'Piece',
 };
 
 interface KronikleSummary {
   id: string;
   title: string;
-  kind: 'essay' | 'short_story' | 'poetry' | 'letter' | 'journal' | 'other';
+  kind: ChronicleKind;
   visibility: 'public' | 'mates' | 'orbit' | 'self_only';
   excerpt: string;
   owner_acct: string;

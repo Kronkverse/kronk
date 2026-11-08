@@ -5,13 +5,15 @@ import type { ApiAccountJSON } from './accounts';
 export type ChronicleVisibility = 'public' | 'orbit' | 'mates' | 'self_only';
 
 // Kind label — a display badge, not a schema constraint. Matches
-// Chronicle#kind. `other` catches anything the six named kinds don't.
+// Chronicle#kind. `other` catches anything the named kinds don't.
 export type ChronicleKind =
   | 'essay'
   | 'short_story'
   | 'poetry'
   | 'letter'
   | 'journal'
+  | 'constitution'
+  | 'legal'
   | 'other';
 
 // A picture the body places between paragraphs, written there as

@@ -57,6 +57,14 @@ const messages = defineMessages({
     id: 'kronikles.reader.kind_journal',
     defaultMessage: 'Journal',
   },
+  kindConstitution: {
+    id: 'kronikles.reader.kind_constitution',
+    defaultMessage: 'Constitution',
+  },
+  kindLegal: {
+    id: 'kronikles.reader.kind_legal',
+    defaultMessage: 'Legal document',
+  },
   kindOther: { id: 'kronikles.reader.kind_other', defaultMessage: 'Other' },
 });
 
@@ -76,6 +84,8 @@ export const KIND_LABEL: Record<
   poetry: messages.kindPoetry,
   letter: messages.kindLetter,
   journal: messages.kindJournal,
+  constitution: messages.kindConstitution,
+  legal: messages.kindLegal,
   other: messages.kindOther,
 };
 
