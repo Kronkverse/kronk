@@ -26,7 +26,10 @@ Three, split by what the thing is (`Listing::CATEGORIES`):
 They are three different kinds of exchange (making, passing on, doing for), so
 they stay separate. The `subcategory` column exists and is indexed for search,
 but nothing in the UI sets or reads it. The browse page has no category filter
-(the tabs were removed on 2026-09-07); category shows as a chip on each listing.
+(the tabs were removed on 2026-09-07). Since 2026-11-08 nothing asks for or
+shows a category either (Tal: the composer doesn't need it): a new listing is
+filed as `goods`, an edited one keeps what it had, and no card or listing page
+shows a category chip. A card without a photo shows Wachuneed's glyph.
 
 ## Offered and wanted
 
@@ -84,7 +87,7 @@ was a page of its own). Its switcher says whether you're offering something
 or looking for something (`?kind=wanted` opens on the second; Cancel goes back
 to Desired from there, to Wachuneed's home otherwise), and the reach control
 in its header is who can see it (see Who can see it). Then up to ten photos
-(`Listing::MAX_PHOTOS`), title, description, category, optional price (a
+(`Listing::MAX_PHOTOS`), title, description, optional price (a
 budget, when wanted) in AUD, and for something on offer its availability,
 variations, options and booking. A new listing keeps a draft as you write
 (`useDraft`, kind `listing`; docs/design.md, Drafts). There is no
@@ -98,7 +101,7 @@ creates the listing as `live`. No price means free or by arrangement
 (`Listing#free_or_by_arrangement?`).
 
 **Look at one.** `/hub/wachuneed/listings/:name` (by name, `Kronk::NamedLink`;
-an old number still opens it) shows the title, category,
+an old number still opens it) shows the title,
 photos full size and uncropped (bounded to 60vh) in a strip you swipe or
 arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,

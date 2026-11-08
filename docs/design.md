@@ -39,6 +39,13 @@ cover. Titles use a serif display face over a sans body.
 6. **Semantic over literal.** Use `--accent`, `--surface-elevated`,
    `--decision-agree`, not the palette token behind them. That is also what
    makes Personal Appearance work ([§2.8](#28-the-per-user-layer--personal-appearance)).
+7. **No emoji in Kronk's own interface** (Tal). Where a picture is wanted,
+   use an icon: a space's glyph (`useKornerIcon`) or a Material Symbol. A card
+   with no image shows its space's glyph (`.space-card__photo--placeholder`).
+   Words, not pictographs, in labels, previews and push text. Plain
+   typographic marks (✓, ♥, ✦) are type, not emoji. The one exception is
+   Nudges reactions, which stay emoji (Tal). What people write in their own
+   posts and messages is theirs.
 
 ---
 

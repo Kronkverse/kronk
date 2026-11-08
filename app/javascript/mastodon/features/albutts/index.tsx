@@ -31,6 +31,7 @@ import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { parseKonnectParam } from 'mastodon/hooks/useKonnect';
 import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { useIdentity } from 'mastodon/identity_context';
 
@@ -147,6 +148,7 @@ interface DirectoryProps {
 
 const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
+  const albuttsGlyph = useKornerIcon('albutts');
   const history = useHistory();
   const { signedIn } = useIdentity();
   const scope = useCurrentScope();
@@ -272,7 +274,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
             key={a.id}
             to={albumPath(a)}
             image={a.cover_url}
-            placeholder='🖼'
+            placeholder={<Icon id='korner-albutts' icon={albuttsGlyph} />}
             title={a.title}
             meta={`${intl.formatMessage(messages.photos, {
               count: a.photo_count,

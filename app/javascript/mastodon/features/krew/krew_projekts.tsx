@@ -4,9 +4,11 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { apiFtdProjects } from 'mastodon/api/freethedream';
 import type { FtdProjectSummary } from 'mastodon/api_types/freethedream';
+import { Icon } from 'mastodon/components/icon';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { projectPath } from 'mastodon/features/freethedream/components/shared';
 import { konnectSearch } from 'mastodon/hooks/useKonnect';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // A Krew's projekts, under its spaces (docs/spaces/krew.md, Projekts): a
 // row of their cards, each opening the projekt, and for a member a last
@@ -33,6 +35,7 @@ export const KrewProjekts: React.FC<{
   onCount?: (count: number) => void;
 }> = ({ krewId, canStart, id, onCount }) => {
   const intl = useIntl();
+  const projektGlyph = useKornerIcon('freethedream');
   const [projekts, setProjekts] = useState<FtdProjectSummary[] | null>(null);
 
   useEffect(() => {
@@ -63,7 +66,7 @@ export const KrewProjekts: React.FC<{
             key={p.id}
             to={projectPath(p)}
             image={p.image_url}
-            placeholder='🌱'
+            placeholder={<Icon id='korner-freethedream' icon={projektGlyph} />}
             title={p.title}
             meta={
               p.done
