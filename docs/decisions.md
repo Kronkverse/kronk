@@ -17,6 +17,20 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-08 — No emoji in Kronk's own interface
+
+Tal, on a Wachuneed listing with no photo: "I'm not into the emoji used when
+no image is uploaded to a listing, i thought we had an agreement of no emojis
+site-wide." The agreement had never reached the repo, and cards across four
+spaces drew an emoji when they had no picture.
+
+**Decision:** Kronk's own interface uses no emoji. A card with no image shows
+its space's glyph, push and Nudges previews use words, and the rule is in
+docs/design.md (Aesthetic system, principle 7). Nudges reactions stay emoji,
+the only exception (Tal); what people write is theirs. The same change
+drops the Wachuneed composer's Category field (Tal), and with it the category
+chip on listings.
+
 ## 2026-11-08 — Kuestions asked in a Krew or projekt are its own
 
 Tal's proposal "Kuestions" (2026-11-08): "Asking a kuestion in a krew should

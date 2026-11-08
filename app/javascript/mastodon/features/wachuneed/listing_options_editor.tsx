@@ -169,6 +169,10 @@ const PRESETS: Record<Category, Preset[]> = {
   ],
 };
 
+const ALL_PRESETS: Preset[] = Object.values(PRESETS)
+  .flat()
+  .filter((p, i, all) => all.findIndex((q) => q.id === p.id) === i);
+
 // The form's rows from a saved listing, and back to what the server takes.
 export const optionRowsFrom = (
   options: ApiListingOptionJSON[] | undefined,
@@ -201,7 +205,9 @@ export const optionRowsToPayload = (
   });
 
 interface Props {
-  category: Category;
+  // Suggestions come from every kind of listing now that the composer
+  // doesn't ask for a category (Tal, 2026-11-08).
+  category?: Category;
   rows: OptionRow[];
   onChange: (rows: OptionRow[]) => void;
 }
@@ -220,7 +226,7 @@ export const ListingOptionsEditor: React.FC<Props> = ({
 
   const handleAdd = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
     (e) => {
-      const preset = PRESETS[category].find(
+      const preset = (category ? PRESETS[category] : ALL_PRESETS).find(
         (p) => p.id === e.currentTarget.dataset.preset,
       );
       const labels = preset?.choices.map((m) => intl.formatMessage(m)) ?? [];
@@ -324,7 +330,7 @@ export const ListingOptionsEditor: React.FC<Props> = ({
 
   // A suggestion already added steps out of the row.
   const taken = new Set(rows.map((row) => row.name.trim().toLowerCase()));
-  const suggestions = PRESETS[category].filter(
+  const suggestions = (category ? PRESETS[category] : ALL_PRESETS).filter(
     (preset) => !taken.has(intl.formatMessage(preset.name).toLowerCase()),
   );
 

@@ -341,7 +341,6 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       visit '/hub/wachuneed/new'
 
       fill_in 'A short name — what is it?', with: 'Massage'
-      select 'Offerings — services you provide', from: 'Category'
       fill_in 'Price (in AUD)', with: '50'
       click_on 'Length'
       # "30 minutes" and "1 hour" arrive filled in; the hour costs more.
@@ -374,7 +373,6 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       visit '/hub/wachuneed/new'
 
       fill_in 'A short name — what is it?', with: 'Garden help'
-      select 'Offerings — services you provide', from: 'Category'
       click_on 'Job'
       # A job starts as a time, a from and a to, and what to ask; this one
       # needs no from and to, takes two hours, and posts one time.

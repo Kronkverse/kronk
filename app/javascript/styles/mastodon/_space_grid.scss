@@ -192,3 +192,10 @@
 .space-grid__cell {
   display: flex;
 }
+
+// A card without a picture shows its space's glyph (no emoji, site-wide).
+.space-card__photo--placeholder .icon {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  opacity: 0.6;
+}
