@@ -21,6 +21,8 @@ import {
   apiAcceptKrewJoinRequest,
   apiDeclineKrewJoinRequest,
   apiInviteToKrew,
+  apiAttachKorner,
+  isKrewKornerSlug,
 } from 'mastodon/api/krew';
 import type {
   ApiKrewActivityJSON,
@@ -391,6 +393,8 @@ export const KrewDetail = () => {
   // The Krew's chat is a space it Konnects (decisions.md, 2026-10-31): a
   // Krew without one has no chat on the page.
   const chatOn = Boolean(krew?.korners.includes('nudges'));
+  // Kuestions is a space the Krew turns on (decisions.md, 2026-11-08).
+  const kuestionsOn = Boolean(krew?.korners.includes('kuestions'));
 
   // The chat, for members of a Krew that has one. `cancelled` drops a late
   // answer for a Krew you've already left, so moving quickly between Krews
@@ -556,6 +560,17 @@ export const KrewDetail = () => {
     setOpenSpace((now) => (now === space ? null : space));
   }, []);
 
+  // A space that is a Krew's own rather than a record (Kuestions; manifest
+  // `konnect.space`) is turned on when it is picked in Konnect.
+  const spaceKrewId = krew?.id;
+  const turnOnSpace = useCallback(
+    async (slug: string) => {
+      if (!spaceKrewId || !isKrewKornerSlug(slug)) return;
+      setKrew(await apiAttachKorner(spaceKrewId, slug));
+    },
+    [spaceKrewId],
+  );
+
   // Konnect opens the picker straight away (Tal 2026-10-22: no extra step).
   // It is also how a space gets onto the page: Konnecting or making an album
   // or an event turns that space on (decisions.md, 2026-10-25).
@@ -593,11 +608,9 @@ export const KrewDetail = () => {
   ];
   const [kuddles, setKuddles] = useState<{ room: string; link: string }[]>([]);
   const [projektCount, setProjektCount] = useState(0);
-  const [kuestionCount, setKuestionCount] = useState(0);
   useEffect(() => {
     setKuddles([]);
     setProjektCount(0);
-    setKuestionCount(0);
   }, [id]);
   const handleKonnections = useCallback((rows: ApiAttachmentJSON[]) => {
     const seen = new Set<string>();
@@ -649,7 +662,7 @@ export const KrewDetail = () => {
           />,
         ]
       : []),
-    ...(isMember && kuestionCount > 0
+    ...(isMember && kuestionsOn
       ? [
           <JumpTile
             key='kuestions'
@@ -994,6 +1007,7 @@ export const KrewDetail = () => {
               }
               renderKonnect={renderKonnect}
               onKonnections={handleKonnections}
+              onTurnOnSpace={turnOnSpace}
             />
 
             {isMember && openNow === 'kalendar' && (
@@ -1012,12 +1026,12 @@ export const KrewDetail = () => {
               onCount={setProjektCount}
             />
 
-            {/* Its own Kuestions, for its members only. */}
-            {isMember && (
+            {/* Its own Kuestions, for its members only, once it has turned
+                Kuestions on. */}
+            {isMember && kuestionsOn && (
               <HomeKuestions
                 home={{ kind: 'krew', id: krew.id }}
                 canAsk={!krew.archived}
-                onCount={setKuestionCount}
                 frame={frameKuestions}
               />
             )}

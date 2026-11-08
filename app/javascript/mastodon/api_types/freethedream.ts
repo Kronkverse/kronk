@@ -254,7 +254,14 @@ export interface FtdProject {
   members: FtdAccount[];
   people: FtdPersonRow[];
   // The Krew made with the emergence: everyone in it is in the Krew.
-  krew: { id: string; slug: string; name: string; access: string } | null;
+  krew: {
+    id: string;
+    slug: string;
+    name: string;
+    access: string;
+    // The Krew has turned Kuestions on, so its projekts have them too.
+    kuestions?: boolean;
+  } | null;
   // emergence → gang → fractal (Kitchen → Cooking); nothing goes deeper.
   level: 'emergence' | 'gang' | 'fractal';
   // A gang's or fractal's people and what each is on there.

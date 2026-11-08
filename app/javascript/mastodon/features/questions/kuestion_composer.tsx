@@ -491,7 +491,7 @@ interface FmtOptionProps {
   onSelect: () => void;
 }
 
-const FmtOption: React.FC<FmtOptionProps> = ({
+export const FmtOption: React.FC<FmtOptionProps> = ({
   active,
   title,
   body,
@@ -539,7 +539,7 @@ interface McEditorProps {
   onChange: (next: string[]) => void;
 }
 
-const McEditor: React.FC<McEditorProps> = ({ options, onChange }) => {
+export const McEditor: React.FC<McEditorProps> = ({ options, onChange }) => {
   const intl = useIntl();
 
   const handleOptionInput = useCallback(

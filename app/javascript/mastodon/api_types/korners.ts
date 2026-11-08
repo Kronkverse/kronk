@@ -55,6 +55,10 @@ export interface ApiKornerKonnectJSON {
   label?: string;
   // What a Konnection with a given space does beyond the link itself.
   effects?: { with: string; does: string }[];
+  // Picked in a Krew's Konnect, the space is turned on for the Krew (a
+  // `krew_korners` row) instead of offering records to link: its section
+  // shows on the Krew page (decisions.md, 2026-11-08).
+  space?: boolean;
 }
 
 // Manifest `icon:` is normalized server-side into an object shape.
