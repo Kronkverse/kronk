@@ -49,6 +49,7 @@ class Api::V1::EventsController < Api::BaseController
     # from every timeline (visible only on the author profile / direct URL).
     @event.save!
     create_status_for_event!(@event) if post_to_feed?
+    invite_krews!(@event)
 
     render json: @event, serializer: REST::EventSerializer
   end
@@ -114,18 +115,7 @@ class Api::V1::EventsController < Api::BaseController
     authorize_event_owner!
 
     account_ids = Array(params[:account_ids]).map(&:to_i)
-    accounts = Account.where(id: account_ids)
-
-    accounts.each do |account|
-      invitation = @event.invitations.find_or_initialize_by(account: account, invited_by: current_account)
-
-      if invitation.new_record?
-        invitation.save!
-        NotifyService.new.call(account, :event_invitation, invitation)
-      else
-        invitation.save!
-      end
-    end
+    send_invitations!(@event, Account.where(id: account_ids))
 
     render json: @event, serializer: REST::EventSerializer
   end
@@ -237,6 +227,33 @@ class Api::V1::EventsController < Api::BaseController
     return 'self_only' if event.invite_only? || !post_to_feed?
 
     params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+  end
+
+  # One invitation per person, and a notification the first time.
+  def send_invitations!(event, accounts)
+    accounts.each do |account|
+      invitation = event.invitations.find_or_initialize_by(account: account, invited_by: current_account)
+
+      if invitation.new_record?
+        invitation.save!
+        NotifyService.new.call(account, :event_invitation, invitation)
+      else
+        invitation.save!
+      end
+    end
+  end
+
+  # An event made for a Krew invites everyone in it (Kommons "Creating krew
+  # event invitations", 2026-11-08), whether it is for the Krew alone or
+  # public and hosted by the Krew. Only Krews the host belongs to; not the
+  # host.
+  def invite_krews!(event)
+    krew_ids = Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
+    return if krew_ids.empty?
+
+    krews = Krew.where(id: krew_ids).where(id: KrewMembership.where(account_id: current_account.id).select(:krew_id))
+    members = Account.where(id: KrewMembership.where(krew_id: krews.select(:id)).select(:account_id)).where.not(id: current_account.id)
+    send_invitations!(event, members)
   end
 
   def create_status_for_event!(event)
