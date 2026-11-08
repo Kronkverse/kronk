@@ -103,7 +103,10 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
 - **Who sees it:** a Krew's members, or whoever can see the projekt
   (`Question#visible_to?`, `Question.reachable_by`). For anyone else it
   doesn't exist: show, answer, skip and seen 404, and no list or Konnect
-  search returns it. The answer gate applies as usual.
+  search returns it. **It has no answer gate** (Tal, 2026-11-09: "all
+  people in the krew should be able to see answers, whether they've
+  answered it themselves or not"): whoever can see it sees every answer
+  (`Kuestions::VisibilityGate`, `Question#homed?`), locked or not.
 - **Kuestions is a space a Krew turns on** (decisions.md, 2026-11-08, "Kuestions
   is a Krew space"): a `kuestions` row in `krew_korners`. On the Krew page,
   Konnect → Kuestions turns it on (manifest `konnect.space: true`; the
@@ -117,6 +120,14 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
   (Ask alone when there are none yet), from `GET /api/v2/kuestions?krew_id=`
   or `?project_id=`. Not in the Deck, and it makes no feed post. It is on
   your Answered list once you've answered or asked it, while you can see it.
+- **Opening one** (Tal, 2026-11-09): a card opens the standard pop-up over
+  the page (`home_kuestion_dialog.tsx`, the compose shell), not the
+  Kuestions korner's sheet from the bottom. It shows the question, a box to
+  answer it while you haven't (words, or the choices to tap), the asker
+  included, and everyone's answers. Nothing to Konnect. The button at its
+  foot is **Answer** while you are writing one, then **Next kuestion**,
+  which steps through the row's Kuestions in turn (**Done** when there is
+  only one). The asker gets **Delete Kuestion** at its foot.
 - **Asking:** Ask opens a small composer of its own over the page
   (`home_kuestion_composer.tsx`): the question, how it's answered (words,
   choices, yes or no) and a line saying who sees it. No deck or profile
