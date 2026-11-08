@@ -1221,3 +1221,11 @@ $krew-column-width: 720px;
   font-size: 0.82rem;
   font-weight: 600;
 }
+
+// A space's New and Add existing (components/space_shelf.tsx).
+.space-shelf__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

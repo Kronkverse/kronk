@@ -10,7 +10,7 @@
 # one only once it is Konnected. Without the row its conversation, if any,
 # stays where it is but is neither listed in Nudges nor shown on the page.
 class KrewKorner < ApplicationRecord
-  KORNERS = %w(booth huddle kalendar kommons map albutts kuestions nudges).freeze
+  KORNERS = %w(booth huddle kalendar kommons map albutts kuestions nudges art cinema kronikles).freeze
 
   belongs_to :krew
 

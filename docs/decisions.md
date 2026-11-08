@@ -52,9 +52,13 @@ Tal's other calls: a space's section has New and Add existing; the Albutts
 korner lists every album you can see, Krew ones included; Komponents stay
 at projekt level except calls; projekt event invitations pick any mix of a
 Komponent, the projekt, chosen Mates or open; Moments show on an event's
-page while live. Still to build: the works' Krew sections and Albutts as a
-projekt space (next), Moments on events, the Booth cover-Art link, Komponent
-calls, mixed invitations. The Krew chat stays turned on from Krew settings.
+page while live. The works' Krew sections (Gallery, Films, Music, Stories)
+and a projekt's Albums section, each with New and Add existing, followed in
+"Krew spaces: albums and works"; the Albutts korner already lists every
+album you can see, Krew ones included (its `all` scope is
+`Album.visible_to`). Still to build: Moments on events, the Booth cover-Art
+link in the composers, Komponent calls, mixed invitations. The Krew chat
+stays turned on from Krew settings.
 
 ## 2026-11-08 — Kuestions is a Krew space, with its own Ask
 

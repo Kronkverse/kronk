@@ -35,6 +35,7 @@ import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
+import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { Stage } from 'mastodon/components/stage';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
 import { HomeKuestions } from 'mastodon/features/questions/home_kuestions';
@@ -65,7 +66,14 @@ import { KrewSpaceIcon } from './krew_space_icon';
 // events. Only spaces with a Krew part get a tile (KREW_PAGE_SPACES); a
 // Krew that turned on another space keeps it, but it has nothing to show
 // here yet. People opens from the faces under the Krew's name.
-type OpenSpace = 'albutts' | 'kalendar' | 'people' | null;
+type PanelSpace =
+  | 'albutts'
+  | 'kalendar'
+  | 'art'
+  | 'cinema'
+  | 'booth'
+  | 'kronikles';
+type OpenSpace = PanelSpace | 'people' | null;
 
 const messages = defineMessages({
   title: { id: 'krew.detail.title', defaultMessage: 'Krew' },
@@ -273,9 +281,9 @@ const JoinRequestRow: React.FC<{
 
 // A tile that opens its space below the grid. The open one is marked.
 const OpenTile: React.FC<{
-  space: 'albutts' | 'kalendar';
+  space: PanelSpace;
   open: boolean;
-  onOpen: (space: 'albutts' | 'kalendar') => void;
+  onOpen: (space: PanelSpace) => void;
   glyph: React.ReactNode;
   label: string;
 }> = ({ space, open, onOpen, glyph, label }) => {
@@ -325,26 +333,63 @@ const SECTION_IDS = {
   kuddles: 'krew-kuddles',
 } as const;
 
-// The spaces whose things open in place below the tiles.
-const PANEL_SPACES = ['albutts', 'kalendar'] as const;
+// The spaces whose things open in place below the tiles. The works are a
+// Krew's Gallery, Films, Music and Stories (decisions.md, 2026-11-08).
+const PANEL_SPACES: readonly PanelSpace[] = [
+  'albutts',
+  'kalendar',
+  'art',
+  'cinema',
+  'booth',
+  'kronikles',
+];
+const WORK_SPACES: readonly PanelSpace[] = [
+  'art',
+  'cinema',
+  'booth',
+  'kronikles',
+];
 
 // Spaces Konnect turns on when picked rather than linking one record (the
 // grid says `space`; Albutts and Kalendar turn on by linking instead).
-const TURN_ON_SPACES = ['kuestions'] as const;
+const TURN_ON_SPACES = [
+  'kuestions',
+  'art',
+  'cinema',
+  'booth',
+  'kronikles',
+] as const;
+
+// What a Krew calls its works space.
+const spaceNames = defineMessages({
+  art: { id: 'krew.space.gallery', defaultMessage: 'Gallery' },
+  cinema: { id: 'krew.space.films', defaultMessage: 'Films' },
+  booth: { id: 'krew.space.music', defaultMessage: 'Music' },
+  kronikles: { id: 'krew.space.stories', defaultMessage: 'Stories' },
+});
+const spaceName = (slug: PanelSpace) =>
+  slug === 'art' ||
+  slug === 'cinema' ||
+  slug === 'booth' ||
+  slug === 'kronikles'
+    ? spaceNames[slug]
+    : null;
 
 const SpaceTile: React.FC<{
-  slug: 'albutts' | 'kalendar';
+  slug: PanelSpace;
   open: boolean;
-  onOpen: (space: 'albutts' | 'kalendar') => void;
+  onOpen: (space: PanelSpace) => void;
 }> = ({ slug, open, onOpen }) => {
+  const intl = useIntl();
   const korner = useKorner(slug);
+  const own = spaceName(slug);
   return (
     <OpenTile
       space={slug}
       open={open}
       onOpen={onOpen}
       glyph={<KrewSpaceIcon slug={slug} className='space-tile__glyph' />}
-      label={korner?.name ?? slug}
+      label={own ? intl.formatMessage(own) : (korner?.name ?? slug)}
     />
   );
 };
@@ -560,7 +605,7 @@ export const KrewDetail = () => {
   const togglePeople = useCallback(() => {
     setOpenSpace((now) => (now === 'people' ? null : 'people'));
   }, []);
-  const toggleSpace = useCallback((space: 'albutts' | 'kalendar') => {
+  const toggleSpace = useCallback((space: PanelSpace) => {
     setOpenSpace((now) => (now === space ? null : space));
   }, []);
 
@@ -1020,8 +1065,24 @@ export const KrewDetail = () => {
             )}
 
             {isMember && openNow === 'albutts' && (
-              <KrewAlbums krewId={krew.id} />
+              <KrewAlbums krewId={krew.id} canAdd={!krew.archived} />
             )}
+
+            {isMember &&
+              openNow &&
+              WORK_SPACES.includes(openNow as PanelSpace) && (
+                <SpaceShelf
+                  homeSlug='krew'
+                  homeId={krew.id}
+                  korner={openNow}
+                  title={intl.formatMessage(
+                    spaceNames[
+                      openNow as 'art' | 'cinema' | 'booth' | 'kronikles'
+                    ],
+                  )}
+                  canAdd={!krew.archived}
+                />
+              )}
 
             {/* What the Krew is making. */}
             <KrewProjekts

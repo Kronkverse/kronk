@@ -657,3 +657,12 @@ first native build went to shadow the same day. 2026-10-13: reshaped for
 in-person events (sections, bring, units, updates, threads that resolve),
 then split into an Overview (cover, Kalendar event, people, invites) and
 Kontribute (the work), and put back on one page the same day.
+
+## Albums
+
+A projekt's albums are a section on its page (`components/space_shelf.tsx`,
+the Konnect grid, decisions.md 2026-11-08): albums Konnected to the projekt,
+then **New** (the album composer with `?konnect=freethedream:<id>`) and
+**Add existing**. It shows once an album is Konnected, from Konnect →
+Albutts; until then there is no section. Albums aren't repeated as
+Konnected tiles.
