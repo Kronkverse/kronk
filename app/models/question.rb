@@ -93,8 +93,10 @@ class Question < ApplicationRecord
     question
   end
 
+  # Read through the attributes, so data migrations that ran before the
+  # home columns existed can still save a Question.
   def homed?
-    krew_id.present? || freethedream_project_id.present?
+    self[:krew_id].present? || self[:freethedream_project_id].present?
   end
 
   def visible_to?(account)
@@ -165,7 +167,7 @@ class Question < ApplicationRecord
   def one_home
     return unless homed?
 
-    errors.add(:base, 'a Kuestion has one home') if krew_id.present? && freethedream_project_id.present?
+    errors.add(:base, 'a Kuestion has one home') if self[:krew_id].present? && self[:freethedream_project_id].present?
     errors.add(:kind, 'only community Kuestions are asked in a Krew or projekt') unless community?
   end
 
