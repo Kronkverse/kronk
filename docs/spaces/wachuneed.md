@@ -86,8 +86,9 @@ every other composer (Kommons "Market Composer", 2026-11-08; until then it
 was a page of its own). **It asks for four things and nothing else** (Tal,
 2026-11-08, decisions.md "The listing composer is photos, name, description,
 price"): up to ten photos (`Listing::MAX_PHOTOS`), the name, a description,
-and an optional price (a budget, when wanted) in AUD. No field carries
-example text. The reach control in its header is who can see it (see Who can
+and an optional price (a budget, when wanted) in AUD. The name and
+description boxes show just "Title" and "Description" as hint text, no
+examples. The reach control in its header is who can see it (see Who can
 see it). There is no switcher, Konnect row, shop section, availability,
 variations, options or booking here: whether it is on offer or wanted comes
 from where it was opened (the Ж menu's New listing is an offering; Desired's

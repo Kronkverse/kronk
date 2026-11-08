@@ -502,6 +502,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             value={title}
             onChange={handleTitleChange}
             aria-label={intl.formatMessage(messages.labelTitle)}
+            placeholder={intl.formatMessage(messages.labelTitle)}
             required
             maxLength={200}
           />
@@ -510,6 +511,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             value={description}
             onChange={handleDescriptionChange}
             aria-label={intl.formatMessage(messages.labelDescription)}
+            placeholder={intl.formatMessage(messages.labelDescription)}
           />
 
           {!comesInKinds && (

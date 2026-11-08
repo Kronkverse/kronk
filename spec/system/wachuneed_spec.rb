@@ -62,7 +62,8 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(page).to have_css('.compose-shell__label', text: 'New listing')
       expect(page).to have_no_css('.korner-pill')
       expect(page).to have_no_css('.konnect-row')
-      expect(page).to have_no_css('input[placeholder], textarea[placeholder]')
+      expect(page).to have_field(placeholder: 'Title')
+      expect(page).to have_field(placeholder: 'Description')
       ['Availability', 'How long', 'Section of your shop'].each { |label| expect(page).to have_no_field(label) }
       expect(page).to have_no_content('Variations')
       expect(page).to have_no_content('Options')
