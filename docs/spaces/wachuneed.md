@@ -162,7 +162,7 @@ production, a delivery service and retreats, with a composer that is
 offer is picked first, and each kind has a short composer of its own
 (`offering_chooser.tsx`, `offering_composer.tsx`). What it offers is
 stored on the listing (`listings.offering`: `product`, `appointment`,
-`service`, `trip`; null is a product, as every older listing is), so
+`service`, `trip`, `tickets`; null is a product, as every older listing is), so
 **Edit** opens the same composer again.
 
 - **Where it is asked.** **Add an item** in a shop opens **What are you
@@ -194,18 +194,46 @@ stored on the listing (`listings.offering`: `product`, `appointment`,
   **When**: **Any time** (people suggest one) or **Your hours**; and what to
   ask. It books with `time`, `route` (pick-up and drop-off on the Map, seen
   only by the seller, only on that request) and `details`.
-- **Tickets** (retreats, workshops) is designed and not built yet: dates
-  with seats, ticket types, each date a linked Kalendar event, or a link to
-  a ticket site elsewhere.
+- **Tickets** (retreats, workshops; see Tickets below): **Sell here** or
+  **Sold elsewhere** (a link to the ticket site), **Dates** (when, where,
+  how many seats), and ticket types with prices (a **Ticket** variation).
 
-All four are ordinary listings underneath (category Offerings), so they
+All of them are ordinary listings underneath (category Offerings), so they
 show in Offered, the shop, search and the feed as before, and are asked for
 or booked through Requests. Kronk takes no payment: the seller says how to
 pay in the shop, and accepting is the agreement.
 
 Not built: a Huddle call link for online appointments (in the design).
 
-## Shops
+## Tickets
+
+A listing that sells seats (`offering: tickets`; Tal, 2026-11-09:
+"Both linked, but also someone might be using a separate platform so a
+link to that would be necessary").
+
+- **Dates** (`listing_ticket_dates`): each a start, an optional end, a
+  place and how many seats (none when sold elsewhere), up to
+  `ListingTicketDate::MAX_PER_LISTING`. Sent whole as `ticket_dates` on
+  create and edit (a row with an `id` changes that date);
+  `Wachuneed::TicketDates.sync` keeps them. A date with accepted tickets
+  can't be removed (422).
+- **A Kalendar event for each date**, the seller's, with the listing's
+  title, description and place, Konnected to the listing (the Konnect
+  grid gains Wachuneed → Kalendar as a link). Its Status is at the
+  listing's reach and written quietly, without fan-out, since the
+  listing's own feed card announces it; title, description and reach
+  follow the listing when it is edited.
+- **Asking.** On the listing page the upcoming dates are cards to pick,
+  each with the seats left (`ticket_dates_field.tsx`); **Ask for tickets**
+  sends the date (`ticket_date_id`), the ticket type and how many. A
+  request needs a date that is still ahead with room; several requests by
+  one person are allowed. The request carries the date's time, so once
+  accepted it shows in both people's Kalendars like a booking.
+- **Seats** are taken when the seller accepts (`ListingTicketDate#seats_left`
+  counts accepted requests); accepting more than are left is refused.
+  Nothing waiting holds a seat.
+- **Sold elsewhere** (`listings.ticket_url`): the dates still show, without
+  seats, and **Get tickets** opens the link; nothing is asked here.
 
 A shop is one seller's live offers on a page of their own, in Kollections
 they name (Tal, 2026-10-12; Kommons "Market Layout"; named Kollections

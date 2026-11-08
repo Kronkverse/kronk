@@ -69,4 +69,41 @@ RSpec.describe 'Wachuneed offerings', :js, :streaming do
     expect(page).to have_current_path(%r{/hub/wachuneed/listings/})
     expect(Listing.find_by(title: 'Car delivery')).to have_attributes(offering: 'trip', price_cents: nil, booking: include('parts' => %w(time route details)))
   end
+
+  it 'adds a retreat with dates and ticket types, each date a Kalendar event', :aggregate_failures do
+    ListingShop.create!(account: bob.account, name: 'Bob Retreats')
+    visit '/hub/wachuneed/my-shop?item=new'
+    within('.compose-shell') { click_on 'Tickets' }
+    within('.compose-shell') do
+      find('input[aria-label="Name"]').fill_in with: 'Winter retreat'
+      find('input[aria-label="Starts"]').fill_in with: 10.days.from_now.strftime('%Y-%m-%dT10:00')
+      find('input[aria-label="Where"]').fill_in with: 'Basket Range Hall'
+      find('input[aria-label="Full"]').fill_in with: 'Full'
+      find('input[aria-label="Price"]').fill_in with: '450'
+      click_on 'Add to shop'
+    end
+
+    expect(page).to have_no_css('.compose-shell')
+    listing = Listing.find_by(title: 'Winter retreat')
+    expect(listing).to have_attributes(offering: 'tickets', price_cents: 45_000)
+    expect(listing.ticket_dates.first).to have_attributes(place: 'Basket Range Hall', seats: 20)
+    expect(listing.ticket_dates.first.event.title).to eq 'Winter retreat'
+  end
+
+  it 'asks for tickets on a date' do
+    seller = Fabricate(:account, username: 'retreats')
+    seller.follow!(bob.account)
+    bob.account.follow!(seller)
+    listing = Listing.create!(account: seller, title: 'Breathwork day', category: 'service', state: 'live', offering: 'tickets',
+                              ongoing: true, price_cents: 9000, price_currency: 'AUD')
+    Wachuneed::TicketDates.sync(listing, [{ starts_at: 12.days.from_now.iso8601, place: 'The Hall', seats: 10 }])
+
+    visit "/hub/wachuneed/listings/#{listing.id}"
+    expect(page).to have_content('10 seats left')
+    find('.wachuneed-ticket-date', text: 'The Hall').click
+    click_on 'Ask for tickets'
+
+    expect(page).to have_content('Asked.')
+    expect(listing.listing_offers.last.ticket_date).to eq listing.ticket_dates.first
+  end
 end
