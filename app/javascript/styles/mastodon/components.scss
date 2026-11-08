@@ -12153,9 +12153,40 @@ noscript {
 
   &__link-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     margin-top: 16px;
+  }
+
+  &__message {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  &__message-label {
+    font-size: 13px;
+    color: $darker-text-color;
+  }
+
+  &__message-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--background-border-color);
+    border-radius: 8px;
+    background: var(--background-color);
+    color: $primary-text-color;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: $ui-highlight-color;
+    }
   }
 
   &__link-input {
