@@ -18,11 +18,15 @@ import {
 import { useAttachments } from 'mastodon/hooks/useAttachments';
 import { konnectSearch } from 'mastodon/hooks/useKonnect';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // A space a Krew or projekt has turned on, as its own section on the page:
 // a row of cards that scrolls sideways, one for each thing in it, then New
-// (the korner's own composer, Konnecting what it makes here) and Add
-// existing (the Konnect picker kept to that korner) as the last two cards
+// as the last card: the korner's own composer, Konnecting what it makes
+// here, which also offers Add existing (Tal, 2026-11-08: "the composer that
+// opens can contain the 'Add existing' rather than having two cards";
+// ComposeShell, `konnect.source`). A space with no composer keeps an Add
+// existing card instead
 // (Tal, 2026-11-08: "when a space is konnected, it should have its own
 // section in the krew page, and in it, a similar layout of horizontal
 // cards"). The Konnect grid, decisions.md 2026-11-08: "a Space has New and
@@ -36,7 +40,7 @@ const messages = defineMessages({
   newThing: { id: 'space_shelf.new', defaultMessage: 'New' },
   newBody: {
     id: 'space_shelf.new_body',
-    defaultMessage: 'Make one here',
+    defaultMessage: 'Make one, or add one you have',
   },
   addExisting: {
     id: 'space_shelf.add_existing',
@@ -59,7 +63,9 @@ export interface ShelfCard {
   meta?: string;
 }
 
-const ActionCard: React.FC<{
+// A card that does something rather than opening a thing: New at the end of
+// a shelf or a row (a Krew's projekts too), so every row ends the same way.
+export const ActionCard: React.FC<{
   glyph: React.ReactNode;
   label: string;
   body: string;
@@ -120,6 +126,7 @@ export const SpaceShelf: React.FC<{
   const intl = useIntl();
   const history = useHistory();
   const manifest = useKorner(korner);
+  const glyph = useKornerIcon(korner);
   const { attached, attachedFrom, loading, refresh } = useAttachments(
     homeSlug,
     homeId,
@@ -192,7 +199,7 @@ export const SpaceShelf: React.FC<{
               key={card.key}
               to={card.to}
               image={card.image}
-              placeholder={title.slice(0, 1)}
+              placeholder={<Icon id={`korner-${korner}`} icon={glyph} />}
               title={card.title}
               meta={card.meta}
             />
@@ -205,7 +212,7 @@ export const SpaceShelf: React.FC<{
               onClick={handleNew}
             />
           )}
-          {canAdd && (
+          {canAdd && !makeRoute && (
             <ActionCard
               glyph={<Icon id='link' icon={LinkIcon} />}
               label={intl.formatMessage(messages.addExisting)}

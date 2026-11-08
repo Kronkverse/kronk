@@ -61,9 +61,11 @@ you made.
   korner turns it on, `TURN_ON_SPACES` in `krew_detail.tsx`) or Krew
   settings (`KrewKorner::KORNERS`, `KREW_PAGE_SPACES`). Each is its own
   section (`components/space_shelf.tsx`): what of that korner is Konnected
-  to the Krew as a row of cards, then **New** (the korner's composer with
-  `?konnect=krew:<id>`) and **Add existing** (the Konnect picker kept to
-  that korner) as the last two cards. Albums and Events are the same.
+  to the Krew as a row of cards, then **New** as the last card: the
+  korner's composer with `?konnect=krew:<id>`, which also offers **Add
+  existing** (the Konnect picker kept to that korner) in a strip under its
+  header (`ComposeShell`, `konnect.source`). Albums and Events are the
+  same.
 - **An emergence's Krew shares its events** (`Kronk::EventLinks`). Linking
   an event to the Krew links it to the Krew's FreeTheDream emergence too,
   and an event attached to the emergence (or one of its gangs) by its maker
@@ -199,7 +201,12 @@ All in `app/javascript/mastodon/features/krew/`.
   in it. The rest is for members (decisions.md, 2026-10-18), in this
   order since Tal's second 2026-10-31 pass (decisions.md, 2026-10-31). Each
   section shows only once the Krew has that thing, so a Krew with nothing
-  Konnected is its header, the Konnect tile and its posts:
+  Konnected is its header, the Konnect tile and its posts. Members can
+  rearrange the sections below Spaces in Settings, **Page order** (Tal,
+  2026-11-08; `krews.section_order`, the kit's `<ArrangeList>`): each
+  space's section, Projekts, Kuestions, Chat and Kuddles move as a whole,
+  and the Spaces tiles follow. Posts stay last. What's left out of the
+  saved order keeps its place below it:
   - **Spaces**: first, a tile for each thing the Krew has, each scrolling
     down to its section. Then what the Krew is Konnected to elsewhere (a
     listing…), and last **Konnect** (a +). A space gets its tile and
@@ -209,11 +216,13 @@ All in `app/javascript/mastodon/features/krew/`.
     section (`TURN_ON_SPACES`); it doesn't link one record.
   - **A section for each space it has on** (Tal, 2026-11-08), each a row
     of cards that scrolls sideways (`components/space_shelf.tsx`, the kit's
-    `SpaceGrid` row), ending in **New** and **Add existing**: **Albums**
+    `SpaceGrid` row), ending in **New**, whose composer also offers **Add
+    existing** (Tal, 2026-11-08): **Albums**
     (`krew_albums.tsx`: albums whose audience includes the Krew, so an
     album shared to it from its composer shows too), **Events**
     (`krew_events.tsx`: what is coming up for the Krew, then what's been),
-    and the works (Gallery, Films, Music, Stories). Add existing on Events
+    and the works (Gallery, Films, Music, Stories). A card with no picture
+    shows its space's glyph. Add existing on Events
     Konnects one of your events, which shares it into the Krew
     (`Kronk::EventLinks`) and makes it a card here. The + moon is always
     **Post to <Krew>**; each section's New makes the rest.

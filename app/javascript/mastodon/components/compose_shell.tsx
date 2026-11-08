@@ -1,9 +1,11 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import LinkIcon from '@/material-icons/400-24px/link.svg?react';
+import { AttachmentPicker } from 'mastodon/components/attachment_picker';
 import { DraftBar } from 'mastodon/components/draft_bar';
 import { Icon } from 'mastodon/components/icon';
 import { KonnectRow } from 'mastodon/components/konnect_row';
@@ -26,6 +28,12 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // callbacks — `onSubmit` and `onCancel` — and passes them through
 // to the footer bar; the body just tells the shell whether the
 // submit button should be enabled + which label it wears mid-flight.
+//
+// Add existing: a composer opened for a record (`konnect.source`, from a
+// Krew's New card or the Konnect picker's New) also offers to Konnect one
+// already made, in a strip under the header, instead of a second card
+// beside New (Tal, 2026-11-08). The Konnect picker opens kept to this
+// korner; once one is Konnected the composer closes.
 //
 // Drafts (docs/design.md, Drafts): a composer that keeps drafts passes its
 // `useDraft()` result as `draft`. Saving is silent; the shell draws the
@@ -51,6 +59,14 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 const messages = defineMessages({
   cancel: { id: 'compose_shell.cancel', defaultMessage: 'Cancel' },
   close: { id: 'compose_shell.close', defaultMessage: 'Close' },
+  existingHint: {
+    id: 'compose_shell.existing_hint',
+    defaultMessage: 'Already made one? Konnect it instead.',
+  },
+  addExisting: {
+    id: 'compose_shell.add_existing',
+    defaultMessage: 'Add existing',
+  },
 });
 
 interface ComposeShellProps {
@@ -106,16 +122,25 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
 }) => {
   const intl = useIntl();
   const KornerIconComponent = useKornerIcon(korner);
+  const [picking, setPicking] = useState(false);
+  const openPicker = useCallback(() => {
+    setPicking(true);
+  }, []);
+  const closePicker = useCallback(() => {
+    setPicking(false);
+  }, []);
+  const source = konnect?.source ?? null;
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !submitting) onCancel();
+      // The picker closes itself on Escape; the composer stays.
+      if (e.key === 'Escape' && !submitting && !picking) onCancel();
     };
     window.addEventListener('keydown', handleKey);
     return () => {
       window.removeEventListener('keydown', handleKey);
     };
-  }, [onCancel, submitting]);
+  }, [onCancel, submitting, picking]);
 
   const handleSubmit = useCallback(() => {
     if (canSubmit && !submitting) onSubmit();
@@ -163,6 +188,23 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
 
         {switcher && <div className='compose-shell__switcher'>{switcher}</div>}
 
+        {source && konnect && (
+          <div className='compose-shell__existing'>
+            <span className='compose-shell__existing-hint'>
+              {intl.formatMessage(messages.existingHint)}
+            </span>
+            <button
+              type='button'
+              className='compose-shell__existing-button'
+              onClick={openPicker}
+              disabled={submitting}
+            >
+              <Icon id='link' icon={LinkIcon} />
+              {intl.formatMessage(messages.addExisting)}
+            </button>
+          </div>
+        )}
+
         <div className='compose-shell__body'>
           {children}
           {konnect && <KonnectRow konnect={konnect} disabled={submitting} />}
@@ -190,6 +232,16 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
           </button>
         </footer>
       </div>
+
+      {picking && source && konnect && (
+        <AttachmentPicker
+          sourceSlug={source.slug}
+          sourceId={source.id}
+          onlySlug={konnect.korner}
+          onClose={closePicker}
+          onAttached={onCancel}
+        />
+      )}
     </div>,
     document.body,
   );
