@@ -83,4 +83,18 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
     expect(page).to have_css('.attachment-section')
     expect(page).to have_no_css('.krew-detail__kuestions')
   end
+
+  # Tal, 2026-11-08: whoever asked a Kuestion can delete it.
+  it 'deletes a Kuestion you asked, after asking first', :aggregate_failures do
+    turn_on_kuestions
+    Question.create!(title: 'Who brings the generator?', created_by_account: bob.account, krew: krew, locked: true)
+
+    visit "/hub/krew/#{krew.slug}"
+    within('.krew-detail__kuestions') { find('.home-kuestions__card', text: 'Who brings the generator?').click }
+    click_on 'Delete Kuestion'
+    within('.confirm-dialog__panel') { click_on 'Delete' }
+
+    within('.krew-detail__kuestions') { expect(page).to have_no_css('.home-kuestions__card', text: 'Who brings the generator?') }
+    expect(Question.find_by(title: 'Who brings the generator?')).to be_nil
+  end
 end

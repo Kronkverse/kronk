@@ -134,6 +134,14 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
 Kuestions never close. There is no result moment, timer or age-out; the
 answer count is a running total.
 
+**Deleting one** (Tal, 2026-11-08): whoever asked a community Kuestion can
+delete it. Opening your own (from Answered, or a Krew's or projekt's row)
+shows **Delete Kuestion** under the answers; it asks first, then the
+Kuestion goes with its answers, its Konnections and its post in the feed
+(`DELETE /api/v2/kuestions/:id`, `Question#deletable_by?`). Nobody else can
+delete it, and a profile Kuestion can't be deleted this way, since its
+answers sit on other people's profiles.
+
 ### Feed projection
 
 One card per **ask**, not per answer, so deck activity doesn't flood the
@@ -239,7 +247,7 @@ Kuestions, and only with **Daily prompt in my post box** on (Tal,
 
 - **Models** — `Question`, `Answer`, `QuestionSkip`. A `Question` links to
   its feed Status via `status_id`.
-- **API** — `/api/v2/kuestions` (`index`, `show`, `create`), nested
+- **API** — `/api/v2/kuestions` (`index`, `show`, `create`, `destroy`), nested
   `answers` (`create`), `skip` (`create`, `destroy`), and
   `kuestions/prompt/today` (`config/routes/api.rb`).
 - **Frontend** — `app/javascript/mastodon/features/questions/`.

@@ -613,6 +613,23 @@
   justify-content: center;
 }
 
+// The asker's Delete Kuestion, quiet under the sheet's actions.
+.kuestions-reveal__delete {
+  margin-top: 1rem;
+  text-align: center;
+
+  .link-button {
+    color: var(--text-error, var(--text-secondary));
+    font-size: 0.85rem;
+  }
+}
+
+.kuestions-reveal__delete-error {
+  margin-top: 0.35rem;
+  color: var(--text-error, var(--text-secondary));
+  font-size: 0.8rem;
+}
+
 .kuestions-reveal__banner {
   display: flex;
   align-items: center;
