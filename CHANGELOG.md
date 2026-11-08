@@ -7,6 +7,27 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.9 "Rose"] - 2026-11-08
+
+- CI on Ubuntu 24.04, Rails 8.1.4.1 (#2483)
+- Withdraw a proposal (#2486)
+- Page edges (#2487)
+- Krew event invitations (#2488)
+- Projekts icon (#2489)
+- Admin on Me (#2490)
+- Invite message (#2491)
+- Market composer (#2493)
+- Krew Kuestions (#2484)
+- Uploads keep the screen on (#2485)
+- Album downloads as files (#2495)
+- No emoji, no Category (#2496)
+- Pop-up gutter (#2498)
+- Projekt tidy (#2497)
+- Simple listing composer (#2501)
+- Post bar and Repost (#2502)
+- Kuestions as a Krew space (#2499)
+- Konnect grid (#2503)
+
 ### [2.1.8 "Rose"] - 2026-11-05
 
 - Emergence on its Krew's page (#2444)
