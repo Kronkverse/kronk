@@ -23,6 +23,8 @@ class ListingOffer < ApplicationRecord
   belongs_to :listing
   belongs_to :offerer, class_name: 'Account'
   belongs_to :cancelled_by, class_name: 'Account', optional: true
+  # A ticket request: the date it is for (docs/spaces/wachuneed.md, Tickets).
+  belongs_to :ticket_date, class_name: 'ListingTicketDate', optional: true, inverse_of: :listing_offers
 
   validates :state, inclusion: { in: STATES }
   validates :quantity, numericality: { only_integer: true, in: 1..MAX_QUANTITY }
@@ -44,11 +46,22 @@ class ListingOffer < ApplicationRecord
   # `variant` is a choice per variation, in the seller's order; `options`
   # is [{ name:, choice: }]. Anything that doesn't match the listing is an
   # error rather than a guess.
-  def self.ask(listing, offerer:, variant: nil, options: nil, quantity: 1, message: nil, starts_at: nil, route: nil, details: nil)
+  def self.ask(listing, offerer:, variant: nil, options: nil, quantity: 1, message: nil, starts_at: nil, route: nil, details: nil, ticket_date_id: nil)
     request = new(listing: listing, offerer: offerer, quantity: quantity.to_i, message: message.to_s.strip.presence)
     request.choose(variant, options)
     request.book(starts_at, route, details) if listing.bookable?
+    request.pick_date(ticket_date_id) if listing.tickets?
     request
+  end
+
+  # A ticket is for one of the listing's dates, and holds its time, so an
+  # accepted one shows in both Kalendars like a booking.
+  def pick_date(id)
+    self.ticket_date = listing.ticket_dates.find_by(id: id)
+    return if ticket_date.nil?
+
+    self.starts_at = ticket_date.starts_at
+    self.ends_at   = ticket_date.ends_at
   end
 
   # What the listing's booking parts ask for, and only that.
@@ -88,8 +101,10 @@ class ListingOffer < ApplicationRecord
   # A booked listing stays up for the next booking.
   def accept!
     transaction do
+      raise ActiveRecord::RecordInvalid, self if ticket_date && !ticket_date.lock!.room_for?(quantity) && seats_error!
+
       update!(state: 'accepted', responded_at: Time.current)
-      listing.update!(state: 'reserved') if !listing.ongoing? && !listing.bookable? && listing.state == 'live'
+      listing.update!(state: 'reserved') if !listing.ongoing? && !listing.bookable? && !listing.tickets? && listing.state == 'live'
     end
     publish_offer_response('wachuneed.offer.accepted')
   end
@@ -114,6 +129,11 @@ class ListingOffer < ApplicationRecord
       listing_id: listing_id,
       offer_id: id
     )
+  end
+
+  def seats_error!
+    errors.add(:base, 'Not enough seats left')
+    true
   end
 
   private
@@ -192,7 +212,13 @@ class ListingOffer < ApplicationRecord
       errors.add(:base, 'This is not on offer')
     elsif !listing.messageable_by?(offerer)
       errors.add(:base, 'You cannot ask for this')
-    elsif !listing.bookable? && listing.listing_offers.pending.exists?(offerer_id: offerer.id)
+    elsif listing.tickets_elsewhere?
+      errors.add(:base, 'Tickets for this are sold elsewhere')
+    elsif listing.tickets? && ticket_date.nil?
+      errors.add(:base, 'Choose a date')
+    elsif listing.tickets? && (ticket_date.starts_at <= Time.current || !ticket_date.room_for?(quantity))
+      errors.add(:base, ticket_date.starts_at <= Time.current ? 'That date has passed' : 'Not enough seats left')
+    elsif !listing.bookable? && !listing.tickets? && listing.listing_offers.pending.exists?(offerer_id: offerer.id)
       errors.add(:base, 'You have already asked for this')
     end
   end

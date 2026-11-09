@@ -34,8 +34,10 @@ mock-up of five phone screens and answered:
 So a listing records what it offers (`listings.offering`), adding to a shop
 starts with What are you offering?, and Appointment, Service and Trip or
 delivery each have a short composer over the existing booking, variations
-and options. Tickets follow in their own change. Supersedes the 2026-11-08
-note that booking and options wait for the shop item composer.
+and options. Tickets: dates with seats, each a Kalendar event Konnected to
+the listing (the Konnect grid gains Wachuneed → Kalendar), or a link to the
+ticket site. Supersedes the 2026-11-08 note that booking and options wait
+for the shop item composer.
 
 ## 2026-11-09 — Kronikles are written documents; a projekt has a Kronikles section
 

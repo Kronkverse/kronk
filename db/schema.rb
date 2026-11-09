@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1536,6 +1536,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_100000) do
     t.jsonb "route", default: {}, null: false
     t.datetime "starts_at"
     t.string "state", default: "pending", null: false
+    t.bigint "ticket_date_id"
     t.integer "total_cents"
     t.datetime "updated_at", null: false
     t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
@@ -1543,6 +1544,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_100000) do
     t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"
     t.index ["listing_id"], name: "index_listing_offers_on_listing_id"
     t.index ["offerer_id"], name: "index_listing_offers_on_offerer_id"
+    t.index ["ticket_date_id"], name: "index_listing_offers_on_ticket_date_id"
   end
 
   create_table "listing_photos", force: :cascade do |t|
@@ -1585,6 +1587,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_100000) do
     t.index ["visibility"], name: "index_listing_shops_on_visibility"
   end
 
+  create_table "listing_ticket_dates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "ends_at"
+    t.bigint "event_id"
+    t.bigint "listing_id", null: false
+    t.string "place"
+    t.integer "seats"
+    t.datetime "starts_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_listing_ticket_dates_on_event_id"
+    t.index ["listing_id"], name: "index_listing_ticket_dates_on_listing_id"
+  end
+
   create_table "listings", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.boolean "announced", default: true, null: false
@@ -1608,6 +1623,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_100000) do
     t.string "state", default: "draft", null: false
     t.bigint "status_id"
     t.string "subcategory"
+    t.string "ticket_url"
     t.string "title", limit: 200, null: false
     t.datetime "updated_at", null: false
     t.jsonb "variants", default: {}, null: false
@@ -3072,6 +3088,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_100000) do
   add_foreign_key "listing_shop_sections", "listing_shops", on_delete: :cascade
   add_foreign_key "listing_shops", "accounts", on_delete: :cascade
   add_foreign_key "listing_shops", "media_attachments", on_delete: :nullify
+  add_foreign_key "listing_ticket_dates", "listings", on_delete: :cascade
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
