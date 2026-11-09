@@ -17,6 +17,21 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-09 — A comment never appears as a post
+
+Tal, on a screenshot of a comment open on its own page: "a comment should
+never ever appear as an individual post. The comment should live in the
+comment section of the post it was commented on."
+
+So a comment's address opens the post at the top of its thread with
+`?comment=<id>`, and the comment section picks that comment out. This covers
+every link to a comment — the time on a comment, nudges (View reply, a
+mention or froth on a comment), push, search, the posted toast and shared
+links — without each one having to know the thread's root. A comment whose
+post is gone says so; it isn't shown alone. Lists that drew comments as
+cards (Krew posts, Froths, Bookmarks, profile shelves and others) stop doing
+so; Froths and Bookmarks show the post with the comment marked.
+
 ## 2026-11-09 — Wachuneed asks what you are offering
 
 Tal: four friends want to sell on Kronk (consultations, music production, a
