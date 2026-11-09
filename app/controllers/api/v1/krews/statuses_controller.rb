@@ -24,7 +24,8 @@ class Api::V1::Krews::StatusesController < Api::BaseController
   MAX_SCANS = 5
 
   def index
-    scope = @krew.statuses.reorder(id: :desc).includes(:account)
+    # A comment lives under its post, never as a Krew post (feed.md (Comments)).
+    scope = @krew.statuses.without_replies.reorder(id: :desc).includes(:account)
     newer_than = params[:since_id].presence || params[:min_id].presence
     scope = scope.where(Status.arel_table[:id].gt(newer_than)) if newer_than
 

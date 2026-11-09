@@ -37,6 +37,7 @@ import { hasKornerCard, pickKornerCard } from './korner_cards';
 import { KronkLinkCards, kronkPathsIn } from './kronk_link_card';
 import { StatusKrewBadge } from './status_krew_badge';
 import { StatusSpaceBar } from './status_space_bar';
+import { StatusCommentLabel } from './status_comment_label';
 import { StatusProfileLabel } from './status_profile_label';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
@@ -447,6 +448,15 @@ class Status extends ImmutablePureComponent {
       }
 
       status  = status.get('reblog');
+    } else if (status.get('kronk_comment_id') && (contextType === 'favourites' || contextType === 'bookmarks')) {
+      prepend = (
+        <StatusCommentLabel
+          acct={status.getIn(['account', 'acct'])}
+          statusId={status.get('id')}
+          commentId={status.get('kronk_comment_id')}
+          list={contextType}
+        />
+      );
     } else if (status.get('visibility') === 'direct') {
       prepend = (
         <div className='status__prepend'>

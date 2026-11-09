@@ -134,7 +134,8 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   # The owner has hand-picked ids in `order_ids`. Preserve that order;
   # ignore any id that no longer resolves (deleted post, etc.). The tagged
   # shelf picks from the photos that still tag the owner; every other shelf
-  # from the owner's own posts.
+  # from the owner's own posts. No shelf holds a comment: it lives under its
+  # post (docs/spaces/feed.md (Comments)).
   def chosen_statuses(section)
     ids = Array(section.settings&.dig('order_ids'))
     return [] if ids.empty?
@@ -144,7 +145,7 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
            elsif section.gallery?
              ProfileSection.gallery_statuses(@account)
            else
-             @account.statuses
+             @account.statuses.without_replies
            end
     found = pool.where(id: ids).index_by { |s| s.id.to_s }
     ids.filter_map { |id| found[id.to_s] }
@@ -168,7 +169,7 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
     manifest = Kronk::KornerRegistry.find(slug)
     return Status.none unless manifest
 
-    scope = @account.statuses
+    scope = @account.statuses.without_replies
 
     # Prefer the has_one association when the manifest declares one;
     # fall back to post_type discriminator otherwise. Both are common
@@ -197,6 +198,6 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
     tag = Tag.find_by(name: tag_name.downcase)
     return Status.none unless tag
 
-    @account.statuses.joins(:tags).where(tags: { id: tag.id })
+    @account.statuses.without_replies.joins(:tags).where(tags: { id: tag.id })
   end
 end

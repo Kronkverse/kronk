@@ -42,6 +42,18 @@ RSpec.describe 'API V1 Krews statuses' do
     expect(response.parsed_body).to contain_exactly(include(id: status.id.to_s))
   end
 
+  # A comment lives under its post, never as a Krew post (feed.md (Comments)).
+  it 'leaves comments out' do
+    post = Fabricate(:status, account: user.account)
+    comment = Fabricate(:status, account: user.account, thread: post)
+    krew.statuses << post
+    krew.statuses << comment
+
+    get "/api/v1/krews/#{krew.slug}/statuses", headers: headers
+
+    expect(response.parsed_body.pluck(:id)).to contain_exactly(post.id.to_s)
+  end
+
   # A Krew post keeps its own reach. Members see it through the Krew;
   # anyone else only sees what StatusPolicy would show them anyway.
   describe 'who sees which posts' do

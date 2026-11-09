@@ -19,6 +19,8 @@ class LinkFeed < PublicFeed
 
     scope = public_scope
 
+    # Kronk: a comment lives under its post, never on its own (feed.md (Comments)).
+    scope.merge!(without_replies_scope)
     scope.merge!(discoverable)
     scope.merge!(attached_to_preview_card)
     scope.merge!(account_filters_scope) if account?
