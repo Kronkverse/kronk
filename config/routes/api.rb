@@ -116,6 +116,7 @@ namespace :api, format: false do
           post :seen
           post :take_over
           post :hand_over
+          post :spaces, action: :turn_on_space
         end
         resources :requests, only: [], param: :account_id do
           member do

@@ -38,8 +38,8 @@ import { projectPath, Section } from './shared';
 
 const messages = defineMessages({
   title: {
-    id: 'freethedream.together.title',
-    defaultMessage: 'Getting together',
+    id: 'freethedream.events.title',
+    defaultMessage: 'Events',
   },
   empty: {
     id: 'freethedream.together.empty',

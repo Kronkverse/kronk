@@ -17,6 +17,21 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-09 — A projekt's spaces work as a Krew's
+
+Tal: "Alright let's clean up the 'konnected' spaces on projekts, i really
+like how the krew setup now works". A projekt now turns its spaces on from
+Konnect (Kalendar, Albutts, Kronikles, Kuestions, the grid's `space` for a
+projekt), has a tile for each at the top that scrolls to its section, and
+arranges the sections and its Activity in Edit's Page order
+(`freethedream_projects.spaces`, `section_order`). Getting together is
+renamed Events and moves into the work, as on a Krew. Kuestions on a
+projekt are its own space rather than following its Krew's. Only the
+projekt itself turns spaces on: Komponents stay as they were (the Konnect
+grid, "Komponents stay at projekt level"). A space a projekt already has
+something in shows without being turned on, so nothing goes missing. Turning
+a space off is not built yet. docs/spaces/freethedream.md, The page.
+
 ## 2026-11-09 — A comment never appears as a post
 
 Tal, on a screenshot of a comment open on its own page: "a comment should

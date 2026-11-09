@@ -221,6 +221,9 @@ export interface FtdMine {
   needed_count: number;
 }
 
+// The spaces a projekt turns on from Konnect (Freethedream::Project::SPACES).
+export type FtdSpace = 'kalendar' | 'albutts' | 'kronikles' | 'kuestions';
+
 export interface FtdProject {
   id: string;
   slug: string;
@@ -235,6 +238,11 @@ export interface FtdProject {
   events: FtdEvent[];
   ends_on: string | null;
   done: boolean;
+  // Its spaces, each a section of its page: those turned on from Konnect
+  // and any it already has something in. And the order its page shows
+  // them, and its Activity, in (FTD_SECTION_ORDER).
+  spaces: FtdSpace[];
+  section_order: string[];
   joining: FtdJoining;
   up_for_grabs: boolean;
   source_idea: FtdRef | null;
