@@ -13,6 +13,11 @@ import { Progress, projectPath } from './shared';
 // you haven't seen in your own. Nobody leads a
 // gang (Tal, 2026-10-15), so no owner shows. Members get the tile to
 // coalesce a new one.
+//
+// They are what a projekt is made of, so they have a card of their own,
+// larger than a space's (Tal, 2026-11-09: "Komponents are the important part
+// of a projekt, and currently they look the same as kuestions"): its
+// name large, who's in it, and how far along it is as a bar along the foot.
 
 const messages = defineMessages({
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
@@ -47,8 +52,7 @@ export const GroupTiles: React.FC<{
       {sections.map((section) => (
         <li key={section.id}>
           <Link to={projectPath(section)} className='freethedream-group'>
-            <span className='freethedream-group__title'>
-              {section.title}
+            <span className='freethedream-group__tags'>
               {!!section.unseen && (
                 <span className='freethedream-tag'>
                   {intl.formatMessage(messages.unseen, {
@@ -67,6 +71,7 @@ export const GroupTiles: React.FC<{
                 </span>
               )}
             </span>
+            <span className='freethedream-group__title'>{section.title}</span>
             <span className='freethedream-group__meta'>
               {[
                 section.people_count > 0 &&
