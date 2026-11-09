@@ -19,6 +19,5 @@ class CreateListingTicketDates < ActiveRecord::Migration[8.1]
 
     add_column :listings, :ticket_url, :string
     add_column :listing_offers, :ticket_date_id, :bigint
-    add_index :listing_offers, :ticket_date_id
   end
 end
