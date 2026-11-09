@@ -138,6 +138,8 @@ class Status extends ImmutablePureComponent {
     showInlineReplies: PropTypes.bool,
     // Every reply in the card, not the feed's first few (the post's own page).
     allReplies: PropTypes.bool,
+    // A comment to pick out in the comment section (the post page's `?comment=`).
+    highlightComment: PropTypes.string,
     // The post's own page: its text always shows in full, never "Read more".
     detailed: PropTypes.bool,
     pictureInPicture: ImmutablePropTypes.contains({
@@ -391,7 +393,7 @@ class Status extends ImmutablePureComponent {
   };
 
   render () {
-    const { intl, hidden, featured, unfocusable, unread, showThread, isQuotedPost = false, scrollKey, pictureInPicture, previousId, nextInReplyToId, rootId, skipPrepend, avatarSize = 46, children, showInlineReplies, contextType, allReplies, detailed } = this.props;
+    const { intl, hidden, featured, unfocusable, unread, showThread, isQuotedPost = false, scrollKey, pictureInPicture, previousId, nextInReplyToId, rootId, skipPrepend, avatarSize = 46, children, showInlineReplies, contextType, allReplies, highlightComment, detailed } = this.props;
 
     let { status, account, ...other } = this.props;
 
@@ -712,6 +714,7 @@ class Status extends ImmutablePureComponent {
                     statusVisibility={status.get('visibility')}
                     repliesCount={status.get('replies_count')}
                     all={allReplies}
+                    highlightId={highlightComment}
                   />
                 )}
               </>
