@@ -222,7 +222,12 @@ export interface FtdMine {
 }
 
 // The spaces a projekt turns on from Konnect (Freethedream::Project::SPACES).
-export type FtdSpace = 'kalendar' | 'albutts' | 'kronikles' | 'kuestions';
+export type FtdSpace =
+  | 'kalendar'
+  | 'albutts'
+  | 'kronikles'
+  | 'kuestions'
+  | 'nudges';
 
 export interface FtdProject {
   id: string;

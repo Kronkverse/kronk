@@ -19,6 +19,7 @@ import {
   ComposeInput,
   ComposeSection,
   ComposeTitle,
+  ComposeCheck,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
@@ -28,6 +29,12 @@ import { parseKonnectParam, useKonnect } from 'mastodon/hooks/useKonnect';
 import { errorOf } from './shared';
 
 const messages = defineMessages({
+  chat: { id: 'freethedream.compose.chat', defaultMessage: 'Chat' },
+  chatHint: {
+    id: 'freethedream.compose.chat_hint',
+    defaultMessage:
+      'A group chat in Nudges for everyone in the projekt, on its page.',
+  },
   pageOrder: {
     id: 'freethedream.compose.page_order',
     defaultMessage: 'Page order',
@@ -166,6 +173,13 @@ export const ProjectComposer: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   const top = editing ? editing.top : !parent;
+  // Its chat, on and off as a Krew's is in Settings.
+  const [chat, setChat] = useState(
+    editing ? editing.spaces.includes('nudges') : false,
+  );
+  const handleChat = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setChat(e.target.checked);
+  }, []);
   // Its page's sections, in the order they show (a projekt's own, from
   // Edit, like a Krew's Page order): its spaces and its Activity.
   const [order, setOrder] = useState<string[]>(() => {
@@ -184,6 +198,7 @@ export const ProjectComposer: React.FC<Props> = ({
     albutts: intl.formatMessage(messages.sectionAlbums),
     kronikles: intl.formatMessage(messages.sectionKronikles),
     kuestions: intl.formatMessage(messages.sectionKuestions),
+    nudges: intl.formatMessage(messages.chat),
     updates: intl.formatMessage(messages.sectionUpdates),
   };
   const orderItems: ArrangeItem[] = order.map((key) => ({
@@ -294,7 +309,7 @@ export const ProjectComposer: React.FC<Props> = ({
         ? {
             cover_media_attachment_id: cover?.id ?? null,
             ...(editing
-              ? { ends_on: endsOn || null, section_order: order }
+              ? { ends_on: endsOn || null, section_order: order, chat }
               : { krew_id: krewId }),
           }
         : {}),
@@ -321,6 +336,7 @@ export const ProjectComposer: React.FC<Props> = ({
     description,
     endsOn,
     order,
+    chat,
     cover,
     krewId,
     top,
@@ -430,6 +446,15 @@ export const ProjectComposer: React.FC<Props> = ({
         >
           <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
         </ComposeField>
+      )}
+      {top && editing && (
+        <ComposeCheck
+          role='switch'
+          label={intl.formatMessage(messages.chat)}
+          hint={intl.formatMessage(messages.chatHint)}
+          checked={chat}
+          onChange={handleChat}
+        />
       )}
       {top && editing && orderItems.length > 1 && (
         <ComposeField

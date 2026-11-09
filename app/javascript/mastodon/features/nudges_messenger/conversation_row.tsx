@@ -39,7 +39,8 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
     onDecline?.(conversation.id);
   }, [conversation.id, onDecline]);
 
-  const isKrew = conversation.kind === 'krew';
+  // A group chat: a Krew's or a projekt's.
+  const isKrew = conversation.kind !== 'mate';
 
   // A pending Krew-chat invite renders as a request: who invited you + accept /
   // decline, instead of an openable chat row.
@@ -140,7 +141,7 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
 };
 
 const titleFor = (c: ApiNudgeConversationJSON) => {
-  if (c.kind === 'krew') return c.krew?.name ?? 'Krew';
+  if (c.kind !== 'mate') return c.krew?.name ?? 'Krew';
   if (c.other_account) {
     return c.other_account.display_name || c.other_account.username;
   }

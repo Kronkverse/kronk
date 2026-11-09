@@ -178,6 +178,13 @@ $freethedream-wide: 1000px;
     gap: 2rem;
   }
 
+  // A projekt's page: one column, as a Krew's is.
+  &--single {
+    @container frame (width >= #{$freethedream-wide}) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   &__main,
   &__aside {
     display: flex;
