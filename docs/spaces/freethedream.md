@@ -332,7 +332,8 @@ getting involved, not for doing the work itself:
   Ceremony"). It keeps itself up to date while the page is open and in
   view (every 20 seconds, from `GET /projects/:id/activity`), and new
   lines fade in.
-- **Beside it** (below it, on a phone): Talk. An event that already exists is linked with the page's
+- **One column**, as a Krew's page is (Tal, 2026-11-09): Talk was the
+  side column's, and is gone (see Chat). An event that already exists is linked with the page's
   Konnect (the old card's "Or link one of your events" went on
   2026-10-27). To bring someone in, **Share** the emergence from the
   Ж menu; there is no Invite (Tal 2026-10-17: "no invite anywhere, only
@@ -403,7 +404,23 @@ date, Done) and a Joined or Asked tag; what it's about and its progress
 are on its page;
 Mycelium a reading column.
 
-### Talk
+### Chat
+
+Tal, 2026-11-09: "'Talk' currently isnt a nudges chat, its some other
+weird system which isn't necessary". A projekt's talk is its own **Nudges
+group chat**, the same chat a Krew has (`Nudges::Conversation` kind
+`projekt`, `freethedream_project_id`): everyone in the projekt is in it,
+whoever joins is added and whoever leaves taken out (`Freethedream::
+Membership`). Its owner turns it on and off in **Edit** (**Chat**), as a
+Krew's is in Settings (`nudges` in `spaces`). Once on it is a **Chat** tile
+and section on the projekt's page, read and written there (`KrewChat`,
+`GET /projects/:id/chat`), and a chat in Nudges named after the projekt.
+It can be muted; it can't be left on its own, as it follows the projekt.
+A Komponent's page has no chat of its own. The threads below are off the
+projekt's and Komponents' pages; their data stays, and an item's page still
+has its own.
+
+### Threads (an item's)
 
 Every emergence, gang and item has its own **threads**. A thread has
 replies under it, and replies can be answered in turn. Anyone in the

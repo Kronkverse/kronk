@@ -69,10 +69,10 @@ class Nudges::PushPayload
   end
 
   def message_title
-    krew = @record.conversation.krew
-    return I18n.t('nudges.push.message.mate', who: who) unless krew
+    conversation = @record.conversation
+    return I18n.t('nudges.push.message.mate', who: who) unless conversation.group?
 
-    I18n.t('nudges.push.message.krew', who: who, krew: krew.name)
+    I18n.t('nudges.push.message.krew', who: who, krew: conversation.group_name)
   end
 
   # An invite reads the same whichever space it is to; anything else this

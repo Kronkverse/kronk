@@ -23,7 +23,9 @@ export interface ApiNudgeKrewJSON {
 
 export interface ApiNudgeConversationJSON {
   id: string;
-  kind: 'mate' | 'krew';
+  // A projekt's chat is a group chat like a Krew's, its `krew` descriptor
+  // the projekt (docs/spaces/freethedream.md, Chat).
+  kind: 'mate' | 'krew' | 'projekt';
   last_activity_at: string | null;
   expires_at: string | null;
   unread_count: number;

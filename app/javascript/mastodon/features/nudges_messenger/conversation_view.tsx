@@ -615,7 +615,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     );
   }
 
-  const isKrew = detail.conversation.kind === 'krew';
+  // A group chat: a Krew's or a projekt's. Only a Krew's can be left; a
+  // projekt's follows the projekt.
+  const isKrew = detail.conversation.kind !== 'mate';
+  const canLeave = detail.conversation.kind === 'krew';
   const other =
     !isKrew && detail.conversation.other_account
       ? createAccountFromServerJSON(detail.conversation.other_account)
@@ -628,10 +631,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   // scroll container). Then run through `aggregateStream` to collapse
   // consecutive passive nudges per brief §Open decisions (resolved
   // 2026-07-22).
-  const oldestFirst = aggregateStream(
-    [...detail.stream].reverse(),
-    detail.conversation.kind,
-  );
+  // The stream reads a projekt's chat as it does a Krew's: a group chat.
+  const streamKind = detail.conversation.kind === 'mate' ? 'mate' : 'krew';
+  const oldestFirst = aggregateStream([...detail.stream].reverse(), streamKind);
 
   return (
     <div className='nudges-conversation'>
@@ -697,16 +699,18 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                   />
                 )}
               </button>
-              <button
-                type='button'
-                className='nudges-conversation__leave'
-                onClick={handleLeaveKrew}
-              >
-                <FormattedMessage
-                  id='nudges.krew.leave'
-                  defaultMessage='Leave'
-                />
-              </button>
+              {canLeave && (
+                <button
+                  type='button'
+                  className='nudges-conversation__leave'
+                  onClick={handleLeaveKrew}
+                >
+                  <FormattedMessage
+                    id='nudges.krew.leave'
+                    defaultMessage='Leave'
+                  />
+                </button>
+              )}
             </>
           )}
           {detail.conversation.expires_at && (
@@ -746,12 +750,12 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
               {item.kind === 'aggregate' ? (
                 <AggregatedEventItem
                   item={item}
-                  conversationKind={detail.conversation.kind}
+                  conversationKind={streamKind}
                 />
               ) : (
                 <StreamItem
                   item={item}
-                  conversationKind={detail.conversation.kind}
+                  conversationKind={streamKind}
                   otherLastReadMessageId={
                     detail.conversation.other_last_read_message_id
                   }

@@ -182,7 +182,8 @@ const ConversationSettings: React.FC = () => {
   }
 
   const { conversation } = detail;
-  const isKrew = conversation.kind === 'krew';
+  // A group chat: a Krew's or a projekt's (only a Krew's can be left).
+  const isKrew = conversation.kind !== 'mate';
   const other = conversation.other_account
     ? createAccountFromServerJSON(conversation.other_account)
     : null;
@@ -279,7 +280,7 @@ const ConversationSettings: React.FC = () => {
           </Link>
         </section>
 
-        {isKrew && (
+        {conversation.kind === 'krew' && (
           <section className='nudges-settings__section'>
             <h2 className='nudges-settings__section-heading'>
               <FormattedMessage

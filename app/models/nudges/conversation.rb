@@ -10,6 +10,9 @@
 # - **krew** — a group chat attached to a `Krew` (`krew_id`).
 #   Membership + per-account read state live on
 #   `Nudges::ConversationMembership`. One row per krew.
+# - **projekt** — the same, attached to a projekt
+#   (`freethedream_project_id`), for its members (Tal, 2026-11-09: a
+#   projekt's Talk becomes its own Nudges chat). One row per projekt.
 #
 # The uniqueness invariants are enforced at the DB level (partial
 # indexes on `(account_a_id, account_b_id)` where kind='mate' and on
@@ -18,13 +21,17 @@ module Nudges
   class Conversation < ApplicationRecord
     self.table_name = 'nudges_conversations'
 
-    KINDS = %w(mate krew).freeze
+    KINDS = %w(mate krew projekt).freeze
     MATE  = 'mate'
     KREW  = 'krew'
+    PROJEKT = 'projekt'
+    # The group chats: everyone in them is a ConversationMembership.
+    GROUPS = [KREW, PROJEKT].freeze
 
     belongs_to :account_a, class_name: 'Account', optional: true
     belongs_to :account_b, class_name: 'Account', optional: true
     belongs_to :krew, class_name: 'Krew', optional: true
+    belongs_to :freethedream_project, class_name: 'Freethedream::Project', optional: true
 
     has_many :messages,
              -> { order(id: :asc) },
@@ -54,15 +61,18 @@ module Nudges
     scope :active, -> { where('expires_at IS NULL OR expires_at > ?', Time.current) }
     scope :mate,   -> { where(kind: MATE) }
     scope :krew,   -> { where(kind: KREW) }
+    scope :group_chats, -> { where(kind: GROUPS) }
     # What the chat list shows: the chat of every Krew that has one Konnected
     # (a `nudges` KrewKorner, docs/spaces/krew.md, Chat), and a Mate chat
     # once it has a message in it. An empty Mate chat is not listed — one is
     # created the moment you pick a Mate to write to, and should not linger
     # if you never write.
     scope :listable, lambda {
-      where(<<~SQL.squish, krew: KREW, mate: MATE)
+      where(<<~SQL.squish, krew: KREW, mate: MATE, projekt: PROJEKT)
         (nudges_conversations.kind = :krew
           AND EXISTS (SELECT 1 FROM krew_korners kk WHERE kk.krew_id = nudges_conversations.krew_id AND kk.korner = 'nudges'))
+        OR (nudges_conversations.kind = :projekt
+          AND EXISTS (SELECT 1 FROM freethedream_projects fp WHERE fp.id = nudges_conversations.freethedream_project_id AND 'nudges' = ANY(fp.spaces)))
         OR (nudges_conversations.kind = :mate
           AND EXISTS (SELECT 1 FROM nudges_conversation_messages m WHERE m.conversation_id = nudges_conversations.id))
       SQL
@@ -72,7 +82,7 @@ module Nudges
     # rows this account is a member of.
     scope :for_account, lambda { |account|
       mate_ids = mate.where('account_a_id = :id OR account_b_id = :id', id: account.id).select(:id)
-      krew_ids = krew.joins(:memberships).where(nudges_conversation_memberships: { account_id: account.id }).select(:id)
+      krew_ids = group_chats.joins(:memberships).where(nudges_conversation_memberships: { account_id: account.id }).select(:id)
       where(id: mate_ids).or(where(id: krew_ids))
     }
 
@@ -122,12 +132,42 @@ module Nudges
       convo
     end
 
+    # A projekt's chat, with everyone in the projekt in it. Like
+    # `krew_for!`, it adds anyone missing, so it is the one place the
+    # members are brought up to date (Freethedream::Membership calls it
+    # too as people join).
+    def self.projekt_for!(project)
+      convo = find_or_create_by!(kind: PROJEKT, freethedream_project: project) do |c|
+        c.last_activity_at = Time.current
+      end
+
+      Account.where(id: project.memberships.member.select(:account_id)).find_each do |account|
+        convo.memberships.find_or_create_by!(account_id: account.id) do |m|
+          m.joined_at = Time.current
+        end
+      end
+      convo
+    end
+
     def mate?
       kind == MATE
     end
 
     def krew?
       kind == KREW
+    end
+
+    def projekt?
+      kind == PROJEKT
+    end
+
+    def group?
+      GROUPS.include?(kind)
+    end
+
+    # What a group chat is called: its Krew's name or its projekt's title.
+    def group_name
+      krew&.name || freethedream_project&.title
     end
 
     def other_account_for(account)
@@ -205,7 +245,7 @@ module Nudges
     # unread-nothing members (nil pointer) since they contribute no
     # signal. Nil for Mate (use `other_last_read_message_id` there).
     def krew_read_pointers(viewer)
-      return nil unless krew?
+      return nil unless group?
 
       memberships
         .where.not(account_id: viewer.id)
@@ -253,14 +293,18 @@ module Nudges
     # the schema invariant at model level in addition to the DB
     # partial indexes.
     def mate_or_krew_shape
-      if kind == MATE
+      case kind
+      when MATE
         errors.add(:base, 'mate requires account_a and account_b') if account_a_id.blank? || account_b_id.blank?
         errors.add(:account_b_id, 'must differ from account_a') if account_a_id.present? && account_a_id == account_b_id
         errors.add(:base, 'account_a_id must be less than account_b_id') if account_a_id.present? && account_b_id.present? && account_a_id >= account_b_id
         errors.add(:krew_id, 'must be blank for mate') if krew_id.present?
-      elsif kind == KREW
+      when KREW
         errors.add(:krew_id, 'is required for krew') if krew_id.blank?
         errors.add(:base, 'krew must not carry mate accounts') if account_a_id.present? || account_b_id.present?
+      when PROJEKT
+        errors.add(:freethedream_project_id, 'is required for projekt') if freethedream_project_id.blank?
+        errors.add(:base, 'projekt must not carry mate accounts or a krew') if account_a_id.present? || account_b_id.present? || krew_id.present?
       end
     end
 

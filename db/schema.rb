@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_10_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1919,6 +1919,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_100000) do
     t.bigint "account_b_id"
     t.datetime "created_at", null: false
     t.datetime "expires_at"
+    t.bigint "freethedream_project_id"
     t.string "kind", default: "mate", null: false
     t.bigint "krew_id"
     t.datetime "last_activity_at", null: false
@@ -1931,6 +1932,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_100000) do
     t.index ["account_a_id"], name: "index_nudges_conversations_on_account_a_id"
     t.index ["account_b_id"], name: "index_nudges_conversations_on_account_b_id"
     t.index ["expires_at"], name: "index_nudges_conversations_on_expires_at", where: "(expires_at IS NOT NULL)"
+    t.index ["freethedream_project_id"], name: "index_nudges_convos_on_freethedream_project_id", unique: true, where: "(freethedream_project_id IS NOT NULL)"
     t.index ["krew_id"], name: "index_nudges_conversations_on_krew_id"
     t.index ["krew_id"], name: "index_nudges_convos_on_krew_id_unique", unique: true, where: "(krew_id IS NOT NULL)"
     t.index ["last_activity_at"], name: "index_nudges_conversations_on_last_activity_at", order: :desc
@@ -3134,6 +3136,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_100000) do
   add_foreign_key "nudges_conversation_messages", "nudges_conversations", column: "conversation_id", on_delete: :cascade
   add_foreign_key "nudges_conversations", "accounts", column: "account_a_id", on_delete: :cascade
   add_foreign_key "nudges_conversations", "accounts", column: "account_b_id", on_delete: :cascade
+  add_foreign_key "nudges_conversations", "freethedream_projects", on_delete: :cascade
   add_foreign_key "nudges_conversations", "krews", on_delete: :cascade
   add_foreign_key "nudges_events", "accounts", column: "actor_account_id", on_delete: :cascade
   add_foreign_key "nudges_events", "accounts", column: "recipient_account_id", on_delete: :cascade

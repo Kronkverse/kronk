@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 
 import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
@@ -14,13 +14,10 @@ import {
   apiFtdRemoveProject,
   apiFtdSeen,
   apiFtdTurnOnSpace,
+  apiFtdChat,
   FTD_SPACES,
 } from 'mastodon/api/freethedream';
-import type {
-  FtdProject,
-  FtdQuotedItem,
-  FtdSpace,
-} from 'mastodon/api_types/freethedream';
+import type { FtdProject, FtdSpace } from 'mastodon/api_types/freethedream';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
@@ -30,6 +27,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { SpaceShelf } from 'mastodon/components/space_shelf';
+import { KrewChat } from 'mastodon/features/krew/krew_chat';
 import {
   arrangeSections,
   JumpTile,
@@ -54,7 +52,6 @@ import {
   useKrewAddress,
   useLoaded,
 } from './shared';
-import { Talk } from './talk';
 import { Updates } from './updates';
 
 // A projekt, a Komponent (a gang in the code) or a fractal, on one page.
@@ -121,6 +118,7 @@ const messages = defineMessages({
   },
   groups: { id: 'freethedream.gangs', defaultMessage: 'Komponents' },
   kuestions: { id: 'freethedream.kuestions', defaultMessage: 'Kuestions' },
+  chat: { id: 'krew.detail.tile.chat', defaultMessage: 'Chat' },
   addGroup: {
     id: 'freethedream.coalesce_gang',
     defaultMessage: '+ Add a Komponent',
@@ -160,21 +158,6 @@ const ProjectView: React.FC<{
   const refresh = useCallback(() => {
     void act(apiFtdProject(project.id).then(onChange));
   }, [project.id, onChange]);
-
-  // "Talk about it" on a thing on the list lands here with ?quote=<item>,
-  // and Talk opens a thread about it.
-  const { pathname, search } = useLocation();
-  const quoteId = new URLSearchParams(search).get('quote');
-  const quote: FtdQuotedItem | null = quoteId
-    ? ([
-        ...project.items,
-        ...project.inside.flatMap((g) => g.items),
-        ...project.still_needed,
-      ].find((item) => item.id === quoteId) ?? null)
-    : null;
-  const clearQuote = useCallback(() => {
-    history.replace(pathname);
-  }, [history, pathname]);
 
   const close = useCallback(() => {
     setComposer(null);
@@ -349,12 +332,35 @@ const ProjectView: React.FC<{
           ? messages.albums
           : slug === 'kronikles'
             ? messages.kronikles
-            : messages.kuestions,
+            : slug === 'nudges'
+              ? messages.chat
+              : messages.kuestions,
     );
+  // Kuestions and its chat are the projekt's own, not a Komponent's.
   const spaces = project.spaces.filter(
-    (slug) => slug !== 'kuestions' || project.top,
+    (slug) => (slug !== 'kuestions' && slug !== 'nudges') || project.top,
   );
   const hasSpace = (slug: FtdSpace) => spaces.includes(slug);
+
+  // Its chat, in place of Talk (Tal, 2026-11-09): the projekt's own Nudges
+  // group chat, read and written here as a Krew's is on its page.
+  const chatOn = hasSpace('nudges') && isMember;
+  const [chat, setChat] = useState<string | null>(null);
+  useEffect(() => {
+    setChat(null);
+    if (!chatOn) return undefined;
+    let cancelled = false;
+    apiFtdChat(project.id)
+      .then((next) => {
+        if (!cancelled) setChat(next.conversation_id);
+        return undefined;
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [chatOn, project.id]);
+  const handleChatRead = useCallback(() => undefined, []);
 
   const goRoot = useCallback(() => {
     history.push(projectPath(project.root));
@@ -536,7 +542,9 @@ const ProjectView: React.FC<{
           cardsApart
         />
 
-        <div className='freethedream-layout'>
+        {/* One column, as a Krew's page is (Tal, 2026-11-09): Talk was
+            the side column's, and its chat is a section now. */}
+        <div className='freethedream-layout freethedream-layout--single'>
           <div className='freethedream-layout__main'>
             {kuddles.map((k) => (
               <KuddleFrame
@@ -602,37 +610,25 @@ const ProjectView: React.FC<{
                 ),
               ],
               [
-                'updates',
-                project.top && (
-                  <Updates
-                    key='updates'
-                    updates={project.updates}
-                    hereId={project.id}
-                    rootId={project.root.id}
-                  />
+                'nudges',
+                chat && (
+                  <div key='nudges' id={spaceSectionId('nudges')}>
+                    <KrewChat conversationId={chat} onRead={handleChatRead} />
+                  </div>
                 ),
               ],
+              [
+                'updates',
+                <Updates
+                  key='updates'
+                  updates={project.updates}
+                  hereId={project.id}
+                  rootId={project.root.id}
+                />,
+              ],
             ])}
-          </div>
-          <aside className='freethedream-layout__aside'>
-            {!project.top && (
-              <Updates
-                updates={project.updates}
-                hereId={project.id}
-                rootId={project.root.id}
-              />
-            )}
-            <Talk
-              subjectType='project'
-              subjectId={project.id}
-              emergenceId={project.root.id}
-              comments={project.comments}
-              canComment={project.can.comment}
-              quote={quote}
-              onQuoteDone={clearQuote}
-            />
             {actions}
-          </aside>
+          </div>
         </div>
       </>
 
