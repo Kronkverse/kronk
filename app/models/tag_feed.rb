@@ -27,6 +27,8 @@ class TagFeed < PublicFeed
 
     scope = public_scope
 
+    # Kronk: a comment lives under its post, never on its own (feed.md (Comments)).
+    scope.merge!(without_replies_scope)
     scope.merge!(tagged_with_any_scope)
     scope.merge!(tagged_with_all_scope)
     scope.merge!(tagged_with_none_scope)

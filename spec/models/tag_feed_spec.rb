@@ -59,12 +59,13 @@ RSpec.describe TagFeed do
       expect(results).to_not include status_tagged_with_cats
     end
 
-    it 'allows replies to be included' do
+    # Kronk: a comment lives under its post, never on its own (feed.md (Comments)).
+    it 'leaves replies out' do
       original = Fabricate(:status)
       status = Fabricate(:status, tags: [tag_cats], in_reply_to_id: original.id)
 
       results = described_class.new(tag_cats, nil).get(20)
-      expect(results).to include(status)
+      expect(results).to_not include(status)
     end
 
     it 'paginates with max_id' do
