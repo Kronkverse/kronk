@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1205,8 +1205,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_130000) do
     t.bigint "owner_id"
     t.bigint "parent_id"
     t.bigint "root_id"
+    t.string "section_order", default: [], null: false, array: true
     t.string "slug", null: false
     t.bigint "source_idea_id"
+    t.string "spaces", default: [], null: false, array: true
     t.date "starts_on"
     t.string "title", null: false
     t.datetime "updated_at", null: false

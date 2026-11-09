@@ -60,6 +60,7 @@ module Freethedream
       # they're told why when they can't.
       others_inside = owner && project.holds_others_work?(@viewer)
       own_items = tree.items_in([project.id])
+      project_events = events(project, tree, owner)
 
       {
         id: project.id.to_s,
@@ -72,7 +73,11 @@ module Freethedream
         ancestors: project.ancestors.map { |a| { id: a.id.to_s, slug: a.slug, title: a.title } },
         cover: cover(project),
         event: event(project, owner),
-        events: events(project, tree, owner),
+        events: project_events,
+        # Its spaces, each a section of its page, and their order
+        # (Project::SPACES).
+        spaces: project.shown_spaces(has_events: project_events.any?),
+        section_order: project.section_order,
         ends_on: project.ends_on,
         done: project.done?,
         joining: top.joining_via_krew,

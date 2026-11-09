@@ -278,13 +278,13 @@ const JoinRequestRow: React.FC<{
 
 // A tile for something with its own section further down the page (a
 // space, the projekts, the chat, a Kuddle): tapping it scrolls there.
-const scrollToSection = (target: string) => {
+export const scrollToSection = (target: string) => {
   document
     .getElementById(target)
     ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-const JumpTile: React.FC<{
+export const JumpTile: React.FC<{
   slug: string;
   target: string;
   label: string;

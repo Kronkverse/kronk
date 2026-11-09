@@ -71,6 +71,17 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
+  # Konnect → a space turns that space on (Project::SPACES), the projekt
+  # itself only: its Komponents show what they have.
+  def turn_on_space
+    permit!(@project.owned_by?(current_account) && @project.top?)
+    slug = params.require(:korner).to_s
+    return render json: { error: 'unknown_space' }, status: 422 unless Freethedream::Project::SPACES.include?(slug)
+
+    @project.update!(spaces: @project.spaces | [slug])
+    render json: view.project(@project)
+  end
+
   def destroy
     permit!(@project.owned_by?(current_account) && !@project.holds_others_work?(current_account))
     @project.remove!
@@ -181,7 +192,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   end
 
   def project_params
-    params.expect(project: [:title, :description, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id])
+    params.expect(project: [:title, :description, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id, section_order: []])
   end
 
   # The Krew a new projekt goes into: one of yours that is still going.

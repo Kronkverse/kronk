@@ -26,6 +26,14 @@ module Freethedream
     TITLE_MAX = 120
     DESCRIPTION_MAX = 5000
 
+    # The spaces a projekt turns on from Konnect, each a section of its page
+    # with New and Add existing, like a Krew's (Tal, 2026-11-09: "i really
+    # like how the krew setup now works"). The Konnect grid says `space`
+    # for each (decisions.md, 2026-11-08). Its page arranges them, and its
+    # Activity, in `section_order`; anything unknown or repeated is dropped.
+    SPACES = %w(kalendar albutts kronikles kuestions).freeze
+    SECTION_KEYS = (SPACES + %w(updates)).freeze
+
     belongs_to :parent, class_name: 'Freethedream::Project', optional: true
     belongs_to :root, class_name: 'Freethedream::Project', optional: true
     belongs_to :owner, class_name: 'Account', optional: true
@@ -53,6 +61,7 @@ module Freethedream
     validate :gangs_and_fractals_only, on: :create
 
     before_validation :set_root, on: :create
+    before_validation :tidy_spaces
     after_create :join_owner!, if: :top?
     after_create :join_gang_owner!, if: :gang?
     after_create :join_krew_members!, if: -> { top? && krew_id.present? }
@@ -305,7 +314,24 @@ module Freethedream
       end
     end
 
+    # The spaces its page shows: those turned on, and any it already has
+    # something in (an album or Kronikle Konnected, a Kuestion asked), so
+    # a projekt from before spaces keeps what it had.
+    def shown_spaces(has_events: false)
+      linked = KornerAttachment.from_source('freethedream', id).distinct.pluck(:target_slug) +
+               KornerAttachment.where(target_slug: 'freethedream', target_id: id).distinct.pluck(:source_slug)
+      had = linked & %w(albutts kronikles)
+      had << 'kalendar' if has_events
+      had << 'kuestions' if Question.exists?(freethedream_project_id: id)
+      SPACES & (spaces + had)
+    end
+
     private
+
+    def tidy_spaces
+      self.spaces = Array(spaces).map(&:to_s).select { |slug| SPACES.include?(slug) }.uniq
+      self.section_order = Array(section_order).map(&:to_s).select { |key| SECTION_KEYS.include?(key) }.uniq
+    end
 
     def set_root
       self.root_id = parent && (parent.root_id || parent.id)
