@@ -7,6 +7,26 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.10 "Rose"] - 2026-11-09
+
+- Krew spaces: albums and works (#2504)
+- Kuestions off Komponents (#2506)
+- Listing hints (#2505)
+- Krew space sections (#2507)
+- Delete your Kuestion (#2509)
+- Links, Kronikles comments, growing comment boxes (#2510)
+- Krew page order and New (#2511)
+- The Quiet card (#2512)
+- One space purple (#2513)
+- Krew card fixes (#2514)
+- Kronikles as documents (#2515)
+- Projekt events on the standard card (#2516)
+- Home-screen shortcuts (#2518)
+- Krew Kuestions pop-up (#2519)
+- Wachuneed offerings (#2517)
+- Wachuneed tickets (#2520)
+- Wachuneed + asks first (#2521)
+
 ### [2.1.9 "Rose"] - 2026-11-08
 
 - CI on Ubuntu 24.04, Rails 8.1.4.1 (#2483)
