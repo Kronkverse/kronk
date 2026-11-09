@@ -31,6 +31,9 @@ RSpec.describe 'Feed posts', :inline_jobs, :js, :streaming do
     let(:comment) { PostStatusService.new.call(bob.account, text: 'Mine is bent', thread: post) }
     let(:answer)  { PostStatusService.new.call(bob.account, text: 'Mine is fine', thread: comment) }
 
+    # A comment's avatar is the default one on the test domain, which doesn't answer.
+    before { ignore_js_error(/Failed to load resource: the server responded with a status of 404/) }
+
     it 'opens the post it was on, with the comment picked out' do
       visit "/@#{bob.account.username}/#{comment.id}"
 
