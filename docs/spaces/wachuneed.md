@@ -168,10 +168,10 @@ stored on the listing (`listings.offering`: `product`, `appointment`,
 - **Where it is asked.** **Add an item** in a shop opens **What are you
   offering?** first: five large choices, each with a line saying what it is
   for (`/hub/wachuneed/my-shop?item=new`, then `&offering=`). The quick
-  **New listing** opens straight on **Something to buy**, the four-field
-  form, with **Change what you are offering** under its title for the rest
-  (`/hub/wachuneed/new?offering=`, `choose` for the picker). A wanted ad is
-  never asked. Every kind's composer carries the same link while new.
+  **New listing** (+ on the Ж menu, or **List something**) asks the same
+  question first (Tal, 2026-11-09): `/hub/wachuneed/new` is the picker, and
+  a choice sets `?offering=` (`product` for **Something to buy**, the
+  four-field form). A wanted ad is never asked. Every kind's composer carries the same link while new.
 - **Something to buy** is the product form as before: the shop item
   composer in a shop, the listing composer elsewhere.
 - **Appointment** (consultations, sessions): **Lengths and prices**, a row

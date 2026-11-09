@@ -590,9 +590,9 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const query = new URLSearchParams(search);
   const initialKind: Kind = query.get('kind') === 'wanted' ? 'wanted' : 'offer';
   // What it offers (docs/spaces/wachuneed.md, What are you offering?): a
-  // new one says so in the address (`?offering=`, or `choose` for the
-  // picker), defaulting to a thing to buy; one being changed says it
-  // itself.
+  // new one says so in the address (`?offering=`) and opens on the picker
+  // until it does (Tal, 2026-11-09); a wanted ad is never asked, and one
+  // being changed says it itself.
   const asked = query.get('offering');
   const [editOffering, setEditOffering] = useState<ListingOffering | null>(
     null,
@@ -612,11 +612,11 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   }, [editId]);
   const offering: ListingOffering | 'choose' | null = editId
     ? editOffering
-    : asked === 'choose'
-      ? 'choose'
-      : isOffering(asked)
-        ? asked
-        : 'product';
+    : isOffering(asked)
+      ? asked
+      : initialKind === 'wanted'
+        ? 'product'
+        : 'choose';
 
   const handleCancel = useCallback(() => {
     if (editId) {
@@ -642,7 +642,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const goOffering = useCallback(
     (next: ListingOffering | 'choose') => {
       const params = new URLSearchParams(search);
-      if (next === 'product') params.delete('offering');
+      if (next === 'choose') params.delete('offering');
       else params.set('offering', next);
       history.replace({ pathname, search: `?${params.toString()}` });
     },

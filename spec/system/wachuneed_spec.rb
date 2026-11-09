@@ -58,6 +58,8 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
   it 'posts an offering with just a name and price, and asks for nothing else' do
     visit '/hub/wachuneed/new'
 
+    within('.compose-shell') { click_on 'Something to buy' }
+
     within('.compose-shell') do
       expect(page).to have_css('.compose-shell__label', text: 'New listing')
       expect(page).to have_no_css('.korner-pill')
