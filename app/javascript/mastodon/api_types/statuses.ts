@@ -149,6 +149,9 @@ export interface ApiStatusJSON {
   // Set on a post that only backs something a space owns (a Moment, an
   // album photo, a Kuestions answer): the page to see it on instead.
   kronk_page?: string | null;
+  // Froths and Bookmarks only: this post stands in for a comment on it, the
+  // one frothed or bookmarked (docs/spaces/feed.md (Comments)).
+  kronk_comment_id?: string;
   // Feed projection discriminator (docs/spaces/feed.md (How korners reach the feed)): the
   // korner slug this Status projects a card for; null for an ordinary post.
   source_korner?: string | null;

@@ -569,7 +569,9 @@ class FeedManager
   # @param [Hash] crutches
   # @return [Boolean]
   def filter_from_tags?(status, receiver_id, crutches)
-    receiver_id == status.account_id ||                                                                                          # Receiver is status account?
+    # Kronk: a comment lives under its post, never on its own (feed.md (Comments)).
+    status.reply? ||
+      receiver_id == status.account_id ||                                                                                        # Receiver is status account?
       ((crutches[:active_mentions][status.id] || []) + [status.account_id])                                                      # For mentioned accounts or status account:
         .any? { |target_account_id| crutches[:blocking][target_account_id] || crutches[:muting][target_account_id] } ||          #   - Target account is muted or blocked?
       crutches[:blocked_by][status.account_id] ||                                                                                # Blocked by status account?
