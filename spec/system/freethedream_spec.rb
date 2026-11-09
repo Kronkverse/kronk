@@ -126,10 +126,10 @@ RSpec.describe 'Projekts', :js, :streaming do
 
   # Kommons, 2026-11-08 (Komponent Cards, Join Button, Sections, Make an
   # event): Komponents are a row of cards, whoever makes one is in it, its
-  # page has no lists, and Getting together has a + for the whole projekt.
+  # page has no lists, and its Events have a + for the whole projekt.
   it 'shows Komponents as a row, puts their maker in them, and keeps the page plain' do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
-    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, spaces: ['kalendar'])
     krew = doof.reload.krew
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
@@ -153,13 +153,12 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
   end
 
-  # Kommons, 2026-11-08: Kuestions are the projekt's alone. With its Krew's
-  # Kuestions on, the projekt page has the row and a Komponent's page has none.
+  # Kommons, 2026-11-08: Kuestions are the projekt's alone. With Kuestions
+  # on, the projekt page has the row and a Komponent's page has none.
   it 'shows Kuestions on the projekt, not on its Komponents' do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
-    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, spaces: ['kuestions'])
     krew = doof.reload.krew
-    krew.krew_korners.create!(korner: 'kuestions')
     Freethedream::Project.create!(owner: bob.account, title: 'Kitchen', parent: doof, root: doof)
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
@@ -183,5 +182,46 @@ RSpec.describe 'Projekts', :js, :streaming do
       expect(page).to have_css('.standard-card .standard-card__title', text: 'Set-up day')
       expect(page).to have_css('.freethedream-together__date')
     end
+  end
+
+  # docs/spaces/freethedream.md, A projekt's spaces (Tal, 2026-11-09): its
+  # spaces work as a Krew's do.
+  it 'turns a space on from Konnect, with a tile and a section', :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.korner-detail__title', text: 'Mini Doof')
+    expect(page).to have_no_css('.space-shelf')
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') { click_on 'Kronikles' }
+
+    expect(page).to have_no_css('.attachment-picker')
+    within('.space-shelf') do
+      expect(page).to have_css('h3', text: /kronikles/i)
+      expect(page).to have_button('New')
+    end
+    within('.attachment-section') { expect(page).to have_button('Kronikles') }
+    expect(doof.reload.spaces).to eq ['kronikles']
+  end
+
+  it "arranges a projekt's sections from Edit" do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, spaces: %w(kalendar kronikles))
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.freethedream-section__title', text: /events/i)
+    find('.kronk-menu__trigger').click
+    click_on 'Edit'
+    within('.compose-shell') do
+      expect(page).to have_css('.arrange-list__label', text: 'Events')
+      click_on 'Move Activity up'
+      click_on 'Save'
+    end
+
+    expect(page).to have_no_css('.compose-shell')
+    expect(doof.reload.section_order).to eq %w(kalendar updates kronikles)
   end
 end

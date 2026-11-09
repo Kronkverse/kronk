@@ -31,7 +31,18 @@ export interface FtdProjectParams {
   krew_id?: string;
   done?: boolean;
   parent_id?: string;
+  section_order?: string[];
 }
+
+// A projekt page's sections in their usual order: its spaces, then its
+// Activity (Freethedream::Project::SECTION_KEYS).
+export const FTD_SPACES = [
+  'kalendar',
+  'albutts',
+  'kronikles',
+  'kuestions',
+] as const;
+export const FTD_SECTION_ORDER = [...FTD_SPACES, 'updates'] as const;
 
 export interface FtdItemParams {
   project_id?: string;
@@ -98,6 +109,10 @@ export type FtdProjectAction =
 
 export const apiFtdProjectAction = (id: string, action: FtdProjectAction) =>
   apiRequestPost<FtdProject>(`${base}/projects/${id}/${action}`);
+
+// Konnect → a space: turns it on, so it gets its section.
+export const apiFtdTurnOnSpace = (id: string, korner: string) =>
+  apiRequestPost<FtdProject>(`${base}/projects/${id}/spaces`, { korner });
 
 // A cover photo goes up as ordinary media first; the project then points
 // at it (cover_media_attachment_id).
