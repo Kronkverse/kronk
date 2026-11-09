@@ -81,7 +81,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   # locked together by definition; deletion of the pair is a
   # different concern).
   def leave
-    unless @conversation.krew?
+    unless @conversation.group?
       render json: { error: 'mate_conversations_cannot_be_left' }, status: :unprocessable_entity
       return
     end
@@ -148,7 +148,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   end
 
   def set_muted!(value)
-    unless @conversation.krew?
+    unless @conversation.group?
       render json: { error: 'mate_conversations_cannot_be_muted' }, status: :unprocessable_entity
       return
     end

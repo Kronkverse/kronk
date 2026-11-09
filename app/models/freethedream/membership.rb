@@ -17,7 +17,10 @@ module Freethedream
     validate :project_is_top_level
 
     after_destroy :leave_krew, if: :member?
+    # Its chat, once it has one (Nudges::Conversation.projekt_for!).
+    after_destroy :leave_chat
     after_save :join_krew, if: :member?
+    after_save :join_chat, if: :member?
 
     private
 
@@ -30,6 +33,17 @@ module Freethedream
 
     def leave_krew
       project.krew&.krew_memberships&.where(account_id: account_id)&.destroy_all
+    end
+
+    def join_chat
+      convo = Nudges::Conversation.find_by(kind: Nudges::Conversation::PROJEKT, freethedream_project_id: project_id)
+      convo&.memberships&.find_or_create_by!(account_id: account_id) { |m| m.joined_at = Time.current }
+    end
+
+    def leave_chat
+      Nudges::ConversationMembership.joins(:conversation)
+                                    .where(account_id: account_id, nudges_conversations: { kind: Nudges::Conversation::PROJEKT, freethedream_project_id: project_id })
+                                    .destroy_all
     end
 
     def project_is_top_level

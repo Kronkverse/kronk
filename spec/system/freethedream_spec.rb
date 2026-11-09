@@ -223,4 +223,31 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(page).to have_no_css('.compose-shell')
     expect(doof.reload.section_order).to eq %w(kalendar updates kronikles)
   end
+
+  # docs/spaces/freethedream.md, Chat (Tal, 2026-11-09): Talk becomes the
+  # projekt's own Nudges chat, turned on in Edit as a Krew's is in Settings.
+  it 'turns its chat on from Edit and chats on the page', :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.korner-detail__title', text: 'Mini Doof')
+    expect(page).to have_no_css('.krew-detail__chat')
+    expect(page).to have_no_field(placeholder: 'Start a thread')
+    find('.kronk-menu__trigger').click
+    click_on 'Edit'
+    within('.compose-shell') do
+      find('[role="switch"]').click
+      click_on 'Save'
+    end
+
+    within('.krew-detail__chat') do
+      find('.nudges-composer textarea').fill_in(with: 'Who has the urn?')
+      click_button(class: 'nudges-composer__send')
+      expect(page).to have_text('Who has the urn?')
+    end
+    within('.attachment-section') { expect(page).to have_button('Chat') }
+    expect(Nudges::Conversation.find_by(kind: 'projekt', freethedream_project: doof).messages.last.body).to eq 'Who has the urn?'
+  end
 end

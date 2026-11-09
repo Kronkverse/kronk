@@ -46,7 +46,7 @@ class Nudges::PushWorker
   end
 
   def row_key
-    return @record.conversation.krew? ? 'messages.krew' : 'messages.mate' if @kind == 'message'
+    return @record.conversation.group? ? 'messages.krew' : 'messages.mate' if @kind == 'message'
 
     Nudges::MuteCatalogue.key_for(@record.source_korner_slug, @record.verb)
   end

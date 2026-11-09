@@ -31,7 +31,10 @@ module Freethedream
     # like how the krew setup now works"). The Konnect grid says `space`
     # for each (decisions.md, 2026-11-08). Its page arranges them, and its
     # Activity, in `section_order`; anything unknown or repeated is dropped.
-    SPACES = %w(kalendar albutts kronikles kuestions).freeze
+    # `nudges` is its chat, a Nudges group chat for its members, turned on
+    # and off from Edit as a Krew's is from Settings (Tal, 2026-11-09:
+    # Talk becomes the projekt's own Nudges chat).
+    SPACES = %w(kalendar albutts kronikles kuestions nudges).freeze
     SECTION_KEYS = (SPACES + %w(updates)).freeze
 
     belongs_to :parent, class_name: 'Freethedream::Project', optional: true

@@ -17,6 +17,16 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-09 — A projekt's talk is its own Nudges chat
+
+Tal: "'Talk' currently isnt a nudges chat, its some other weird system
+which isn't necessary", and, asked whose chat: its own. A projekt gets a
+Nudges group chat of its own (kind `projekt`), with its members, turned on
+in Edit as a Krew's chat is in Settings, shown as a Chat section on its page
+and listed in Nudges. Talk's threads leave the projekt's and Komponents'
+pages (their data stays; an item's page keeps its threads), and the page is
+one column, as a Krew's. docs/spaces/freethedream.md, Chat.
+
 ## 2026-11-09 — A projekt's spaces work as a Krew's
 
 Tal: "Alright let's clean up the 'konnected' spaces on projekts, i really
