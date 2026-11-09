@@ -726,3 +726,88 @@
     }
   }
 }
+
+// Tickets (offering_composer.tsx, ticket_dates_field.tsx): a date row in
+// the composer wraps onto two lines on a phone; on the listing page each
+// date is a card to pick, with the seats left.
+.wachuneed-date-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+
+  > .compose-input {
+    inline-size: auto;
+    min-inline-size: 0;
+  }
+
+  > .compose-input:nth-child(3) {
+    grid-column: 1 / 2;
+  }
+
+  &__seats {
+    grid-column: 2 / 3;
+  }
+
+  .wachuneed-rows__remove {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+.wachuneed-ticket-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.wachuneed-ticket-date {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  inline-size: 100%;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-medium);
+  background: var(--surface-card-inset);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+
+  &:is(button) {
+    cursor: pointer;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &--on {
+    border-color: var(--signal);
+    background: color-mix(
+      in oklab,
+      var(--signal) 12%,
+      var(--surface-card-inset)
+    );
+  }
+
+  &__when {
+    font-size: 0.9375rem;
+  }
+
+  &__place,
+  &__seats {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+  }
+}

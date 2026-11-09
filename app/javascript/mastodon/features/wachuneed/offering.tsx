@@ -13,6 +13,7 @@ export const OFFERINGS: readonly ListingOffering[] = [
   'appointment',
   'service',
   'trip',
+  'tickets',
 ];
 
 export const isOffering = (value: unknown): value is ListingOffering =>
@@ -41,6 +42,11 @@ export const offeringMessages = defineMessages({
     defaultMessage: 'Packages or a quote: production, design, repairs',
   },
   trip: { id: 'wachuneed.offering.trip', defaultMessage: 'Trip or delivery' },
+  tickets: { id: 'wachuneed.offering.tickets', defaultMessage: 'Tickets' },
+  ticketsHint: {
+    id: 'wachuneed.offering.tickets_hint',
+    defaultMessage: 'Seats at a retreat, workshop or event',
+  },
   tripHint: {
     id: 'wachuneed.offering.trip_hint',
     defaultMessage: 'From one place to another, at a time',
@@ -72,6 +78,10 @@ export const OFFERING_LABEL: Record<
     hint: offeringMessages.serviceHint,
   },
   trip: { label: offeringMessages.trip, hint: offeringMessages.tripHint },
+  tickets: {
+    label: offeringMessages.tickets,
+    hint: offeringMessages.ticketsHint,
+  },
 };
 
 // Line glyphs for each, in the space purple (--signal).
@@ -100,6 +110,12 @@ const GLYPHS: Record<ListingOffering, React.ReactNode> = {
       <circle cx='6' cy='18' r='2.5' />
       <circle cx='18' cy='6' r='2.5' />
       <path d='M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5' />
+    </>
+  ),
+  tickets: (
+    <>
+      <path d='M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z' />
+      <path d='M14 7v10' strokeDasharray='2 2' />
     </>
   ),
 };

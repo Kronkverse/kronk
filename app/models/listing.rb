@@ -97,6 +97,8 @@ class Listing < ApplicationRecord
   has_many   :listing_photos, -> { order(:position) }, dependent: :destroy, inverse_of: :listing
   has_many   :media_attachments, through: :listing_photos
   has_many   :listing_offers, dependent: :destroy
+  # Tickets (docs/spaces/wachuneed.md, Tickets): the dates it runs on.
+  has_many   :ticket_dates, -> { order(:starts_at) }, class_name: 'ListingTicketDate', dependent: :destroy, inverse_of: :listing
   # Where it sits in the seller's shop, if they have one and chose a section.
   belongs_to :listing_shop_section, optional: true
 
@@ -105,6 +107,8 @@ class Listing < ApplicationRecord
   validates :state,    inclusion: { in: STATES }
   validates :kind,     inclusion: { in: KINDS }
   validates :offering, inclusion: { in: OFFERINGS }, allow_nil: true
+  # Sold on another platform: where to get the tickets.
+  validates :ticket_url, length: { maximum: 400 }, format: { with: %r{\Ahttps?://\S+\z} }, allow_blank: true
   validates :availability, inclusion: { in: AVAILABILITIES }
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
@@ -312,6 +316,15 @@ class Listing < ApplicationRecord
 
   def bookable?
     booking['parts'].present?
+  end
+
+  def tickets?
+    offering == 'tickets'
+  end
+
+  # Tickets bought on another platform, not asked for here.
+  def tickets_elsewhere?
+    tickets? && ticket_url.present?
   end
 
   # A list may come as an array, or as a form-encoded hash keyed by index.

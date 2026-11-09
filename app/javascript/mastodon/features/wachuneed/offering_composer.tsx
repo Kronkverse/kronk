@@ -50,6 +50,9 @@ import { WEEKDAYS_NINE_TO_FIVE, WeeklyHoursField } from './weekly_hours_field';
 //   ask people (`booking.ask`, the details part).
 // - Trip or delivery: a set price or a quote each trip, any time or your
 //   hours, and pick-up and drop-off on the Map (the job parts).
+// - Tickets: sold here or elsewhere (a link); its dates, each with a place
+//   and seats, each made a Kalendar event; and ticket types with prices (a
+//   Ticket kind each). A ticket request names its date.
 
 type Offering = Exclude<ListingOffering, 'product'>;
 
@@ -161,6 +164,40 @@ const messages = defineMessages({
     defaultMessage:
       'People drop pick-up and drop-off on the map. Only you see their places, and only on that request.',
   },
+  sellHere: { id: 'wachuneed.offer.sell_here', defaultMessage: 'Sell here' },
+  soldElsewhere: {
+    id: 'wachuneed.offer.sold_elsewhere',
+    defaultMessage: 'Sold elsewhere',
+  },
+  ticketUrl: {
+    id: 'wachuneed.offer.ticket_url',
+    defaultMessage: 'Where to get tickets',
+  },
+  dates: { id: 'wachuneed.offer.dates', defaultMessage: 'Dates' },
+  addDate: { id: 'wachuneed.offer.add_date', defaultMessage: '+ Add a date' },
+  starts: { id: 'wachuneed.offer.starts', defaultMessage: 'Starts' },
+  ends: { id: 'wachuneed.offer.ends', defaultMessage: 'Ends (optional)' },
+  place: { id: 'wachuneed.offer.place', defaultMessage: 'Where' },
+  seats: { id: 'wachuneed.offer.seats', defaultMessage: 'Seats' },
+  ticketTypes: {
+    id: 'wachuneed.offer.ticket_types',
+    defaultMessage: 'Tickets',
+  },
+  ticketName: { id: 'wachuneed.offer.ticket_name', defaultMessage: 'Full' },
+  addTicketType: {
+    id: 'wachuneed.offer.add_ticket_type',
+    defaultMessage: '+ Add a ticket type',
+  },
+  ticketsHint: {
+    id: 'wachuneed.offer.tickets_hint',
+    defaultMessage:
+      'Each date becomes a Kalendar event linked to this. People ask for a ticket; when you accept, the seats are taken and it goes in their Kalendar.',
+  },
+  elsewhereHint: {
+    id: 'wachuneed.offer.elsewhere_hint',
+    defaultMessage:
+      'Your dates still show here and in Kalendar, with a button to your ticket site.',
+  },
   announce: {
     id: 'wachuneed.new.announce',
     defaultMessage: 'Announce it in the feed',
@@ -189,7 +226,26 @@ const messages = defineMessages({
 
 const MINUTES = [15, 30, 45, 60, 90, 120, 180, 240, 480];
 const MAX_ROWS = 10;
+const MAX_DATES = 20;
 const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+interface DateRow {
+  id?: string;
+  // As a datetime-local value, in this person's own time.
+  start: string;
+  end: string;
+  place: string;
+  seats: string;
+}
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const toLocal = (iso: string | null | undefined) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+const fromLocal = (value: string) =>
+  value ? new Date(value).toISOString() : null;
 
 interface PriceRow {
   name: string;
@@ -253,8 +309,17 @@ const RowEditor: React.FC<{
   row: PriceRow;
   withMinutes: boolean;
   namePlaceholder: string;
+  // What a blank price reads as: "Quote" for a package.
+  pricePlaceholder?: string;
   onChange: (index: number, row: PriceRow | null) => void;
-}> = ({ index, row, withMinutes, namePlaceholder, onChange }) => {
+}> = ({
+  index,
+  row,
+  withMinutes,
+  namePlaceholder,
+  pricePlaceholder,
+  onChange,
+}) => {
   const intl = useIntl();
   const handleName = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
@@ -311,7 +376,10 @@ const RowEditor: React.FC<{
         className='wachuneed-rows__price'
         value={row.price}
         onChange={handlePrice}
-        placeholder={withMinutes ? '$' : intl.formatMessage(messages.quote)}
+        placeholder={
+          pricePlaceholder ??
+          (withMinutes ? '$' : intl.formatMessage(messages.quote))
+        }
         aria-label={intl.formatMessage(messages.price)}
       />
       <button
@@ -331,6 +399,75 @@ const lengthLabel = (intl: ReturnType<typeof useIntl>, minutes: number) =>
   minutes % 60 === 0
     ? intl.formatMessage(messages.hours, { hours: minutes / 60 })
     : intl.formatMessage(messages.minutes, { minutes });
+
+// One date of a ticketed listing: when, where, how many seats.
+const DateEditor: React.FC<{
+  index: number;
+  row: DateRow;
+  withSeats: boolean;
+  onChange: (index: number, row: DateRow | null) => void;
+}> = ({ index, row, withSeats, onChange }) => {
+  const intl = useIntl();
+  const handle = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      const field = e.currentTarget.dataset.field as keyof DateRow;
+      onChange(index, { ...row, [field]: e.currentTarget.value });
+    },
+    [index, row, onChange],
+  );
+  const handleRemove = useCallback(() => {
+    onChange(index, null);
+  }, [index, onChange]);
+
+  return (
+    <li className='wachuneed-date-row'>
+      <ComposeInput
+        type='datetime-local'
+        data-field='start'
+        value={row.start}
+        onChange={handle}
+        aria-label={intl.formatMessage(messages.starts)}
+      />
+      <ComposeInput
+        type='datetime-local'
+        data-field='end'
+        value={row.end}
+        onChange={handle}
+        aria-label={intl.formatMessage(messages.ends)}
+        title={intl.formatMessage(messages.ends)}
+      />
+      <ComposeInput
+        data-field='place'
+        value={row.place}
+        onChange={handle}
+        placeholder={intl.formatMessage(messages.place)}
+        aria-label={intl.formatMessage(messages.place)}
+        maxLength={200}
+      />
+      {withSeats && (
+        <ComposeInput
+          type='number'
+          min={1}
+          data-field='seats'
+          value={row.seats}
+          onChange={handle}
+          placeholder={intl.formatMessage(messages.seats)}
+          aria-label={intl.formatMessage(messages.seats)}
+          className='wachuneed-date-row__seats'
+        />
+      )}
+      <button
+        type='button'
+        className='wachuneed-rows__remove'
+        onClick={handleRemove}
+        aria-label={intl.formatMessage(messages.remove)}
+        title={intl.formatMessage(messages.remove)}
+      >
+        ×
+      </button>
+    </li>
+  );
+};
 
 interface Props {
   offering: Offering;
@@ -387,6 +524,15 @@ export const OfferingComposer: React.FC<Props> = ({
   const [quoted, setQuoted] = useState(true);
   const [price, setPrice] = useState('');
   const [anyTime, setAnyTime] = useState(true);
+  // Tickets
+  const [sellHere, setSellHere] = useState(true);
+  const [ticketUrl, setTicketUrl] = useState('');
+  const [dates, setDates] = useState<DateRow[]>([
+    { start: '', end: '', place: '', seats: '20' },
+  ]);
+  const [ticketTypes, setTicketTypes] = useState<PriceRow[]>([
+    { name: '', price: '', minutes: 0 },
+  ]);
 
   const [loading, setLoading] = useState(!!editId);
   const [busy, setBusy] = useState(false);
@@ -444,6 +590,36 @@ export const OfferingComposer: React.FC<Props> = ({
                   minutes: 0,
                 }))
               : [{ name: '', price: '', minutes: 0 }],
+          );
+        }
+        if (offering === 'tickets') {
+          setSellHere(!listing.ticket_url);
+          setTicketUrl(listing.ticket_url ?? '');
+          const kept = listing.ticket_dates ?? [];
+          if (kept.length)
+            setDates(
+              kept.map((date) => ({
+                id: date.id,
+                start: toLocal(date.starts_at),
+                end: toLocal(date.ends_at),
+                place: date.place ?? '',
+                seats: date.seats ? String(date.seats) : '',
+              })),
+            );
+          setTicketTypes(
+            axis
+              ? axis.values.map((value) => ({
+                  name: value,
+                  price: priceFor(value),
+                  minutes: 0,
+                }))
+              : [
+                  {
+                    name: '',
+                    price: priceOf(listing.price_cents),
+                    minutes: 0,
+                  },
+                ],
           );
         }
         if (offering === 'trip') {
@@ -524,6 +700,42 @@ export const OfferingComposer: React.FC<Props> = ({
   const addPackage = useCallback(() => {
     setPackages((rows) => [...rows, { name: '', price: '', minutes: 0 }]);
   }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleTicketType = useCallback(editRows(setTicketTypes), []);
+  const addTicketType = useCallback(() => {
+    setTicketTypes((rows) => [...rows, { name: '', price: '', minutes: 0 }]);
+  }, []);
+  const handleDate = useCallback((index: number, row: DateRow | null) => {
+    setDates((rows) => {
+      const next = [...rows];
+      if (row) next[index] = row;
+      else next.splice(index, 1);
+      return next;
+    });
+  }, []);
+  const addDate = useCallback(() => {
+    setDates((rows) => {
+      const last = rows[rows.length - 1];
+      return [
+        ...rows,
+        {
+          start: '',
+          end: '',
+          place: last?.place ?? '',
+          seats: last?.seats ?? '20',
+        },
+      ];
+    });
+  }, []);
+  const handleSellHere = useCallback((value: 'here' | 'elsewhere') => {
+    setSellHere(value === 'here');
+  }, []);
+  const handleTicketUrl = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setTicketUrl(e.currentTarget.value);
+  }, []);
+
   const handleQuoted = useCallback((value: 'set' | 'quote') => {
     setQuoted(value === 'quote');
   }, []);
@@ -643,6 +855,47 @@ export const OfferingComposer: React.FC<Props> = ({
       };
     }
 
+    if (offering === 'tickets') {
+      const rows = ticketTypes.filter((row) => row.name.trim());
+      const one = rows.length <= 1 ? (rows[0] ?? ticketTypes[0]) : undefined;
+      const prices = rows
+        .map((row) => centsOf(row.price))
+        .filter((c): c is number => c !== null);
+      return {
+        ...base,
+        price_cents: one
+          ? centsOf(one.price)
+          : prices.length
+            ? Math.min(...prices)
+            : null,
+        price_currency: 'AUD',
+        options: [],
+        booking: {},
+        variants: one
+          ? {}
+          : {
+              axes: [
+                { name: 'Ticket', values: rows.map((row) => row.name.trim()) },
+              ],
+              items: rows.map((row) => ({
+                values: [row.name.trim()],
+                price_cents: centsOf(row.price),
+                availability: 'available' as const,
+              })),
+            },
+        ticket_url: sellHere ? null : ticketUrl.trim(),
+        ticket_dates: dates
+          .filter((row) => row.start)
+          .map((row) => ({
+            ...(row.id ? { id: row.id } : {}),
+            starts_at: fromLocal(row.start) ?? '',
+            ends_at: fromLocal(row.end),
+            place: row.place.trim() || null,
+            seats: sellHere && row.seats ? Number(row.seats) : null,
+          })),
+      };
+    }
+
     // Trip or delivery
     return {
       ...base,
@@ -676,6 +929,10 @@ export const OfferingComposer: React.FC<Props> = ({
     quoted,
     price,
     anyTime,
+    sellHere,
+    ticketUrl,
+    dates,
+    ticketTypes,
     intl,
   ]);
 
@@ -687,7 +944,10 @@ export const OfferingComposer: React.FC<Props> = ({
     (offering !== 'appointment' || (lengths.length > 0 && hours.length > 0)) &&
     (offering !== 'service' ||
       takeQuotes ||
-      packages.some((row) => row.name.trim()));
+      packages.some((row) => row.name.trim())) &&
+    (offering !== 'tickets' ||
+      (dates.some((row) => row.start) &&
+        (sellHere || /^https?:\/\/\S+$/.test(ticketUrl.trim()))));
 
   const handleSubmit = useCallback(() => {
     setBusy(true);
@@ -973,6 +1233,94 @@ export const OfferingComposer: React.FC<Props> = ({
                   maxLength={120}
                 />
               </ComposeField>
+            </>
+          )}
+
+          {offering === 'tickets' && (
+            <>
+              <Pills
+                label={intl.formatMessage(OFFERING_LABEL.tickets.label)}
+                value={sellHere ? 'here' : 'elsewhere'}
+                onChange={handleSellHere}
+                options={[
+                  { id: 'here', label: intl.formatMessage(messages.sellHere) },
+                  {
+                    id: 'elsewhere',
+                    label: intl.formatMessage(messages.soldElsewhere),
+                  },
+                ]}
+              />
+              {!sellHere && (
+                <ComposeField
+                  label={intl.formatMessage(messages.ticketUrl)}
+                  hint={intl.formatMessage(messages.elsewhereHint)}
+                >
+                  <ComposeInput
+                    type='url'
+                    value={ticketUrl}
+                    onChange={handleTicketUrl}
+                    placeholder='https://'
+                    maxLength={400}
+                  />
+                </ComposeField>
+              )}
+              <ComposeField label={intl.formatMessage(messages.dates)}>
+                <div className='wachuneed-rows'>
+                  <ul className='wachuneed-rows__list'>
+                    {dates.map((row, index) => (
+                      <DateEditor
+                        key={index}
+                        index={index}
+                        row={row}
+                        withSeats={sellHere}
+                        onChange={handleDate}
+                      />
+                    ))}
+                  </ul>
+                  {dates.length < MAX_DATES && (
+                    <button
+                      type='button'
+                      className='wachuneed-rows__add'
+                      onClick={addDate}
+                    >
+                      {intl.formatMessage(messages.addDate)}
+                    </button>
+                  )}
+                </div>
+              </ComposeField>
+              {sellHere && (
+                <ComposeField
+                  label={intl.formatMessage(messages.ticketTypes)}
+                  hint={intl.formatMessage(messages.ticketsHint)}
+                >
+                  <div className='wachuneed-rows'>
+                    <ul className='wachuneed-rows__list'>
+                      {ticketTypes.map((row, index) => (
+                        <RowEditor
+                          key={index}
+                          index={index}
+                          row={row}
+                          withMinutes={false}
+                          namePlaceholder={intl.formatMessage(
+                            messages.ticketName,
+                          )}
+                          pricePlaceholder='$'
+                          onChange={handleTicketType}
+                        />
+                      ))}
+                    </ul>
+                    {ticketTypes.length < MAX_ROWS && (
+                      <button
+                        type='button'
+                        className='wachuneed-rows__add'
+                        onClick={addTicketType}
+                      >
+                        {intl.formatMessage(messages.addTicketType)}
+                      </button>
+                    )}
+                  </div>
+                </ComposeField>
+              )}
             </>
           )}
 

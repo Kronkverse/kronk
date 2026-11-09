@@ -139,6 +139,9 @@ konnect:
   to:
     krew: link
     freethedream: link
+    # A ticketed listing's dates are Kalendar events, Konnected to it
+    # (Tal, 2026-11-09: tickets are "both, linked").
+    kalendar: link
   # What one of its records is called wherever Kronk names it beside
   # its title ("the Ember event"), so records that share a title can be
   # told apart (decisions.md, 2026-10-26).

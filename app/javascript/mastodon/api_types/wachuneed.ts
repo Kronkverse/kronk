@@ -76,7 +76,26 @@ export type ListingBookingWhere = 'online' | 'in_person' | 'either';
 
 // What a listing offers (docs/spaces/wachuneed.md, What are you offering?).
 // Null or absent is a product.
-export type ListingOffering = 'product' | 'appointment' | 'service' | 'trip';
+export type ListingOffering =
+  | 'product'
+  | 'appointment'
+  | 'service'
+  | 'trip'
+  | 'tickets';
+
+// One date a ticketed listing runs on (docs/spaces/wachuneed.md, Tickets).
+// `seats` and `seats_left` are null when it has no limit (or is sold
+// elsewhere).
+export interface ApiTicketDateJSON {
+  id: string;
+  starts_at: string;
+  ends_at: string | null;
+  place: string | null;
+  seats: number | null;
+  seats_left: number | null;
+  event_id: string | null;
+  event_slug: string | null;
+}
 
 export interface ApiListingJSON {
   id: string;
@@ -109,6 +128,9 @@ export interface ApiListingJSON {
   // Detail endpoint only: how it is booked, if it is.
   booking?: ApiListingBookingJSON;
   offering?: ListingOffering | null;
+  // Tickets: the dates still to come, and where they are sold when not here.
+  ticket_dates?: ApiTicketDateJSON[];
+  ticket_url?: string | null;
   // An item that keeps selling rather than a one-off, and whether there is
   // one to be had.
   ongoing?: boolean;

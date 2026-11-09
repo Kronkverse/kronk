@@ -30,6 +30,10 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attribute :options, if: :detail?
   # How it is booked, if it is (Listing::BOOKING_PARTS), for the same two.
   attribute :booking, if: :detail?
+  # Tickets (docs/spaces/wachuneed.md, Tickets): the dates still to come,
+  # with the seats left, and where to buy them when sold elsewhere.
+  attribute :ticket_dates, if: :detail?
+  attribute :ticket_url, if: :detail?
   # What it comes in, for the listing page and the edit form; whether it
   # was posted to the feed; and what the seller's shop says of every item.
   attribute :variants, if: :detail?
@@ -132,5 +136,22 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
 
   def photo_full_url
     photos.first&.dig(:full_url)
+  end
+
+  def ticket_dates
+    return [] unless object.tickets?
+
+    object.ticket_dates.upcoming.map do |date|
+      {
+        id: date.id.to_s,
+        starts_at: date.starts_at.iso8601,
+        ends_at: date.ends_at&.iso8601,
+        place: date.place,
+        seats: date.seats,
+        seats_left: date.seats_left,
+        event_id: date.event_id&.to_s,
+        event_slug: date.event&.slug,
+      }
+    end
   end
 end

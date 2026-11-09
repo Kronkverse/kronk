@@ -73,6 +73,8 @@ export interface AskParams {
   starts_at?: string;
   route?: ApiRouteJSON;
   details?: string;
+  // Tickets: the date asked for.
+  ticket_date_id?: string;
 }
 
 export const apiAskForListing = (listingId: string, params: AskParams) =>

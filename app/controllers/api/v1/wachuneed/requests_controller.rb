@@ -36,7 +36,8 @@ class Api::V1::Wachuneed::RequestsController < Api::BaseController
     request = ListingOffer.ask(listing, offerer: current_account,
                                         variant: params[:variant], options: params[:options],
                                         quantity: params.fetch(:quantity, 1), message: params[:message],
-                                        starts_at: params[:starts_at], route: params[:route], details: params[:details])
+                                        starts_at: params[:starts_at], route: params[:route], details: params[:details],
+                                        ticket_date_id: params[:ticket_date_id])
     request.save!
 
     render json: request, serializer: REST::WachuneedRequestSerializer
