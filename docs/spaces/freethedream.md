@@ -260,8 +260,9 @@ getting involved, not for doing the work itself:
   tagged with any new talk. Members get **+ Add a Komponent**.
 - **Kuestions**: the Kuestions asked in the projekt, as a row of cards
   with **Ask** last for its members (docs/spaces/kuestions.md, Kuestions in
-  a Krew). Whoever can see the projekt answers them. Shown once it has one;
-  its first is asked from Konnect (New Kuestion).
+  a Krew). Whoever can see the projekt answers them. Shown when its Krew
+  has Kuestions turned on, and on the projekt's own page only, not on its
+  Komponents (Tal, 2026-11-08).
 - No lists of work, Krew row or joining on a projekt's own page (Tal,
   2026-10-30): it is part of its Krew, whose page has its people, and a
   clearer view of what needs work is still to be designed. The lists'
@@ -333,7 +334,8 @@ the place the work is done:
   pots, gas · Actualising dahl for 40"), whoever is on the most first.
 - **Fractals** as the same row of cards (people, progress), each opening
   its own page; members get **+ Add a fractal** last.
-- Its Kuestions, Getting together, Activity and Talk.
+- Getting together, Activity and Talk. Kuestions are the projekt's, so a
+  gang's page has none of its own.
 - **Off the page for now** (Tal, 2026-11-08, "Sections": "We'll build up
   functionality as we need it"): **Thing Bringing**, **Actualise**, **On
   offer** and **Depends on**, and the "12 of 20 needs met" count under the
@@ -657,3 +659,21 @@ first native build went to shadow the same day. 2026-10-13: reshaped for
 in-person events (sections, bring, units, updates, threads that resolve),
 then split into an Overview (cover, Kalendar event, people, invites) and
 Kontribute (the work), and put back on one page the same day.
+
+## Albums
+
+A projekt's albums are a section on its page (`components/space_shelf.tsx`,
+the Konnect grid, decisions.md 2026-11-08): albums Konnected to the projekt,
+then **New** (the album composer with `?konnect=freethedream:<id>`) and
+**Add existing**. It shows once an album is Konnected, from Konnect →
+Albutts; until then there is no section. Albums aren't repeated as
+Konnected tiles.
+
+## Kronikles
+
+A projekt's Kronikles are a section the same way (Tal, 2026-11-09): its
+written documents, a constitution or a legal document as much as a story
+(Kronikle kinds Constitution and Legal document, docs/spaces/kronikles.md).
+Konnect → Kronikles → New Kronikle opens the Kronikles composer with
+`?konnect=freethedream:<id>`; once it's published the section appears with
+it as a card. Kronikles aren't repeated as Konnected tiles.

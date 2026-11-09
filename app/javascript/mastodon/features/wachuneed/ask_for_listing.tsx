@@ -21,6 +21,7 @@ import {
 import type { BookingValue } from './booking_fields';
 import { selectedVariant } from './listing_variant_chooser';
 import type { ChosenVariant } from './listing_variant_chooser';
+import { TicketDatesField } from './ticket_dates_field';
 
 // Ask for this (docs/spaces/wachuneed.md, Requests): sends the seller a
 // request with the kind, extras and quantity picked above it on the listing
@@ -33,6 +34,18 @@ import type { ChosenVariant } from './listing_variant_chooser';
 const messages = defineMessages({
   ask: { id: 'wachuneed.requests.ask', defaultMessage: 'Ask for this' },
   book: { id: 'wachuneed.requests.book', defaultMessage: 'Book' },
+  askTickets: {
+    id: 'wachuneed.requests.ask_tickets',
+    defaultMessage: 'Ask for tickets',
+  },
+  getTickets: {
+    id: 'wachuneed.requests.get_tickets',
+    defaultMessage: 'Get tickets',
+  },
+  pickDate: {
+    id: 'wachuneed.requests.pick_date',
+    defaultMessage: 'Choose a date to ask for tickets.',
+  },
   booked: {
     id: 'wachuneed.requests.booked',
     defaultMessage: 'Booked. You will hear when they say yes.',
@@ -67,6 +80,14 @@ export const AskForListing: React.FC<{
   const [state, setState] = useState<'idle' | 'busy' | 'asked'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState<BookingValue>(EMPTY_BOOKING_VALUE);
+  // Tickets: the date picked.
+  const tickets = listing.offering === 'tickets';
+  const [dateId, setDateId] = useState<string | null>(null);
+  const pickedDate = listing.ticket_dates?.find((d) => d.id === dateId);
+  const dateReady =
+    !tickets ||
+    (!!pickedDate &&
+      (pickedDate.seats_left === null || pickedDate.seats_left >= quantity));
   const parts = useMemo(() => listing.booking?.parts ?? [], [listing.booking]);
   const booked = parts.length > 0;
   const bookingReady =
@@ -87,6 +108,7 @@ export const AskForListing: React.FC<{
         return choice ? [{ name: option.name, choice: choice.label }] : [];
       }),
       quantity,
+      ...(tickets && dateId ? { ticket_date_id: dateId } : {}),
       ...(booked
         ? {
             starts_at: booking.startsAt ?? undefined,
@@ -111,6 +133,8 @@ export const AskForListing: React.FC<{
   }, [
     booked,
     booking,
+    tickets,
+    dateId,
     chosen,
     intl,
     listing,
@@ -131,22 +155,64 @@ export const AskForListing: React.FC<{
     );
   }
 
+  // Sold on another platform: the dates for reference, and a way there.
+  if (tickets && listing.ticket_url) {
+    return (
+      <div className='wachuneed-detail__ask'>
+        <TicketDatesField dates={listing.ticket_dates ?? []} value={null} />
+        <a
+          href={listing.ticket_url}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='korner-pill korner-pill--primary'
+        >
+          <span className='korner-pill__label'>
+            {intl.formatMessage(messages.getTickets)}
+          </span>
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className='wachuneed-detail__ask'>
-      {booked && listing.booking && (
+      {tickets && (
+        <TicketDatesField
+          dates={listing.ticket_dates ?? []}
+          value={dateId}
+          onChange={setDateId}
+        />
+      )}
+      {/* An appointment in lengths shows its times once a length is
+          picked, since each books for its own time. */}
+      {booked && listing.booking && (!listing.booking.lengths || variant) && (
         <BookingFields
           listingId={listing.id}
           booking={listing.booking}
           value={booking}
           onChange={setBooking}
+          variant={listing.booking.lengths ? variant?.values : undefined}
         />
       )}
       <KornerPill
-        label={intl.formatMessage(booked ? messages.book : messages.ask)}
+        label={intl.formatMessage(
+          tickets ? messages.askTickets : booked ? messages.book : messages.ask,
+        )}
         variant='primary'
         onClick={handleAsk}
-        disabled={state === 'busy' || needsKind || soldOut || !bookingReady}
+        disabled={
+          state === 'busy' ||
+          needsKind ||
+          soldOut ||
+          !bookingReady ||
+          !dateReady
+        }
       />
+      {tickets && !dateId && (
+        <p className='wachuneed__compose-hint'>
+          {intl.formatMessage(messages.pickDate)}
+        </p>
+      )}
       {needsKind && (
         <p className='wachuneed__compose-hint'>
           {intl.formatMessage(messages.pickKind)}

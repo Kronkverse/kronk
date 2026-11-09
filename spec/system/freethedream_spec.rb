@@ -152,4 +152,36 @@ RSpec.describe 'Projekts', :js, :streaming do
       expect(page).to have_no_css('.freethedream-section__title', text: heading)
     end
   end
+
+  # Kommons, 2026-11-08: Kuestions are the projekt's alone. With its Krew's
+  # Kuestions on, the projekt page has the row and a Komponent's page has none.
+  it 'shows Kuestions on the projekt, not on its Komponents' do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+    krew.krew_korners.create!(korner: 'kuestions')
+    Freethedream::Project.create!(owner: bob.account, title: 'Kitchen', parent: doof, root: doof)
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.home-kuestions__card--ask')
+
+    within('.freethedream-groups') { click_link 'Kitchen' }
+    expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
+    expect(page).to have_no_css('.home-kuestions')
+  end
+
+  # Tal, 2026-11-09: "event card on projekt should be standard".
+  it "shows a projekt's events as standard cards, with Going", :aggregate_failures do
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+    event = Event.create!(account: bob.account, title: 'Set-up day', start_time: 3.days.from_now, end_time: 3.days.from_now + 2.hours)
+    KornerAttachment.create!(source_slug: 'kalendar', source_id: event.id, target_slug: 'freethedream', target_id: doof.id,
+                             kind: 'link', created_by_account: bob.account)
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    within('.freethedream-together') do
+      expect(page).to have_css('.standard-card .standard-card__title', text: 'Set-up day')
+      expect(page).to have_css('.freethedream-together__date')
+    end
+  end
 end

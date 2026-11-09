@@ -29,7 +29,10 @@ export type KrewKornerSlug =
   | 'map'
   | 'albutts'
   | 'kuestions'
-  | 'nudges';
+  | 'nudges'
+  | 'art'
+  | 'cinema'
+  | 'kronikles';
 
 // The spaces that can show a Krew's own things on its page (decisions.md,
 // 2026-10-18). Only these are offered when gathering a Krew or adding a
@@ -42,6 +45,28 @@ export const KREW_PAGE_SPACES: KrewKornerSlug[] = [
   'kalendar',
   'nudges',
   'kuestions',
+  // The works, as a Krew's Gallery, Films, Music and Stories (the Konnect
+  // grid, decisions.md 2026-11-08).
+  'art',
+  'cinema',
+  'booth',
+  'kronikles',
+];
+
+// The sections of a Krew's page in their default order, which its members
+// can rearrange (`section_order`): each space with a section, then its
+// projekts, Kuestions, chat (`nudges`) and Kuddles.
+export const KREW_SECTION_ORDER: readonly string[] = [
+  'albutts',
+  'kalendar',
+  'art',
+  'cinema',
+  'booth',
+  'kronikles',
+  'projekts',
+  'kuestions',
+  'nudges',
+  'kuddles',
 ];
 
 const KREW_KORNER_SLUGS: readonly string[] = [
@@ -53,6 +78,9 @@ const KREW_KORNER_SLUGS: readonly string[] = [
   'albutts',
   'kuestions',
   'nudges',
+  'art',
+  'cinema',
+  'kronikles',
 ];
 
 export const isKrewKornerSlug = (slug: string): slug is KrewKornerSlug =>
@@ -91,6 +119,9 @@ export interface ApiKrewJSON {
   // Only present in responses to members; other viewers get null.
   invite_token: string | null;
   korners: KrewKornerSlug[];
+  // The order the page's sections run in, as arranged in Settings: space
+  // slugs plus `projekts` and `kuddles`. Empty means the default order.
+  section_order: string[];
   requirements: ApiKrewRequirementJSON[];
   image_url: string | null;
 }
@@ -184,6 +215,7 @@ export const apiUpdateKrew = (
     discoverable: boolean;
     governance_framework: string;
     governance_threshold: number;
+    section_order: string[];
   }>,
 ) => apiRequestPut<ApiKrewJSON>(`v1/krews/${id}`, params);
 

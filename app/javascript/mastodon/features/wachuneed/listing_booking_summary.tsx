@@ -37,6 +37,13 @@ const messages = defineMessages({
     defaultMessage: 'A from and a to, on the Map',
   },
   ask: { id: 'wachuneed.booking.summary.ask', defaultMessage: 'Tell them' },
+  where: { id: 'wachuneed.booking.summary.where', defaultMessage: 'Where' },
+  online: { id: 'wachuneed.offer.online', defaultMessage: 'Online' },
+  inPerson: { id: 'wachuneed.offer.in_person', defaultMessage: 'In person' },
+  either: {
+    id: 'wachuneed.booking.summary.either',
+    defaultMessage: 'Online or in person',
+  },
 });
 
 // 2026-11-01 was a Sunday: day 0, as the server counts them.
@@ -82,6 +89,21 @@ export const ListingBookingSummary: React.FC<{
       className='wachuneed-detail__terms wachuneed-booking-summary'
       aria-label={intl.formatMessage(messages.heading)}
     >
+      {booking.where ? (
+        <>
+          <dt>{intl.formatMessage(messages.where)}</dt>
+          <dd>
+            {intl.formatMessage(
+              booking.where === 'online'
+                ? messages.online
+                : booking.where === 'in_person'
+                  ? messages.inPerson
+                  : messages.either,
+            )}
+          </dd>
+        </>
+      ) : null}
+
       {parts.includes('time') && booking.minutes ? (
         <>
           <dt>{intl.formatMessage(messages.length)}</dt>

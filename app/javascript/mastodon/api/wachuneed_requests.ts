@@ -73,6 +73,8 @@ export interface AskParams {
   starts_at?: string;
   route?: ApiRouteJSON;
   details?: string;
+  // Tickets: the date asked for.
+  ticket_date_id?: string;
 }
 
 export const apiAskForListing = (listingId: string, params: AskParams) =>
@@ -92,8 +94,17 @@ export const apiAnswerRequest = (
 
 // A booked listing's free times for two weeks from `from`; `suggest` when
 // the seller posted none and the person suggests a time instead.
-export const apiGetListingTimes = (listingId: string, from?: string) =>
+// `variant`: the kind chosen, for a listing whose kinds book for
+// different lengths (an appointment's Length).
+export const apiGetListingTimes = (
+  listingId: string,
+  from?: string,
+  variant?: string[],
+) =>
   apiRequestGet<{ suggest: boolean; times: string[] }>(
     `v1/wachuneed/listings/${listingId}/times`,
-    from ? { from } : undefined,
+    {
+      ...(from ? { from } : {}),
+      ...(variant?.length ? { variant } : {}),
+    },
   );

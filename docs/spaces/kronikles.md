@@ -12,7 +12,7 @@ Deliberately single-author. Multi-author writing is a real thing but not this sh
 
 - **Title** — required, up to 240 chars.
 - **Body** — required. Raw markdown, **no length limit**. Stored as plain text; rendered client-side.
-- **Kind** — required. One of `essay / short_story / poetry / letter / journal / other`. Displayed as a badge on the feed card and reader meta row; `other` is the escape hatch.
+- **Kind** — required. One of `essay / short_story / poetry / letter / journal / constitution / legal / other`. Kronikles are written documents of any sort: a Krew's or projekt's constitution or a legal document (Constitution, Legal document; Tal, 2026-11-09) as much as a story. Displayed as a badge on the feed card and reader meta row; `other` is the escape hatch.
 - **Visibility** — the reach ladder: `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25).
 
 The kind is a **label, not a schema constraint** — re-classifying an essay as a short story is a plain `PATCH` on the row, no data reshape.
@@ -52,7 +52,7 @@ All input is treated as untrusted: the renderer builds React nodes directly (no 
 
 - **`/hub/kronikles` directory** — the shared tile grid (`<SpaceGrid>` + `<SpaceCard>`, two across on a phone, four from tablet width): the Kronikle's first picture, or the Kronikles glyph when it has none, over its title, the author's handle and its kind. A Series is one tile (badge "Series", chapter count and author). Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator. (It was a column of full-width cards with an excerpt until 2026-10-27, Kommons "Better formatting for posted work".)
 - **`/hub/kronikles/series/:id`** — a Series' page and contents (see Series).
-- **`/hub/kronikles/:id` reader** — title header + meta row (kind · visibility · owner), rendered markdown body, then the **shared reactions bar** every space uses (`<StatusEngagement>` on the Kronikle's Status, `status_id` on the API response): Reply, Froth, Nudge, as on an album photo, a Moment or a trek. Only the bar, not the reply thread under it (`showThread={false}`); Edit stays in the Ж menu (`hideEdit`). A chapter also shows its Series and Previous / Next (see Series). The author gets **Edit Kronikle** in the Ж menu, which opens the create composer in edit mode (title, kind, body; reach is shown but locked while editing). **Delete Kronikle** sits at the foot of that form, not on the page.
+- **`/hub/kronikles/:id` reader** — title header + meta row (kind · visibility · owner), rendered markdown body, then the **shared reactions bar** every space uses (`<StatusEngagement>` on the Kronikle's Status, `status_id` on the API response): Reply, Froth, Nudge, as on an album photo, a Moment or a trek. Under the bar, the comments: the feed's comment box and replies (`<StatusReplies all>`), so a reader comments without leaving the piece (Kommons "Comment on Kronikles", 2026-11-08). Edit stays in the Ж menu (`hideEdit`). A chapter also shows its Series and Previous / Next (see Series). The author gets **Edit Kronikle** in the Ж menu, which opens the create composer in edit mode (title, kind, body; reach is shown but locked while editing). **Delete Kronikle** sits at the foot of that form, not on the page.
 - **Home feed** — one card per Kronikle lifetime. `StatusKroniklesCard` renders kind badge + title + a 360-char plain-text excerpt (leading markdown syntax stripped). Later body edits do not spawn new cards.
 
 ## Composer
@@ -107,7 +107,6 @@ API, under `/api/v1/kronikles`:
 - **Real markdown pipeline** — `render_markdown.tsx` is deliberately minimal. Once long-form authors ask for tables, code fences, or footnotes, the honest move is to add a real library (`marked` or `remark`) with `DOMPurify`, not to grow the hand-written transformer into a full parser.
 - **Reading time / word count** — nothing shown on the feed card today. Could sit next to the kind badge once we know what value looks like.
 - **Draft state** — every Kronikle is publish-on-submit. Multi-session drafts (save-and-continue) haven't been needed yet; add a `drafted_at` or a separate `chronicle_drafts` table if long-form authors start losing work to browser refreshes.
-- **Replies on the reader** — the reactions bar is there, but the replies themselves show only on the post (tap Reply, or open the feed card). Showing the thread under the Kronikle, as treks do, is the next step if readers want it.
 - **Changing reach after posting** — the API accepts it but doesn't re-scope the item's feed post, so the edit form locks it.
 
 ## Related

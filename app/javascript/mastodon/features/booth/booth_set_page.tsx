@@ -16,6 +16,7 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
@@ -419,7 +420,9 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         </section>
 
         {set.description && (
-          <p className='booth-set__description'>{set.description}</p>
+          <p className='booth-set__description'>
+            <LinkifiedText text={set.description} />
+          </p>
         )}
 
         <Tracklist set={set} />

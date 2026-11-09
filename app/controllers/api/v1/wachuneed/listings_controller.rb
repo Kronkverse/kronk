@@ -14,6 +14,10 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   include KrewAudienceParams
 
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show, :times]
+
+  rescue_from Wachuneed::TicketDates::Invalid do |e|
+    render json: { error: e.message }, status: 422
+  end
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :close]
   before_action :require_user!
   before_action :set_listing, only: [:show, :update, :close, :times]
@@ -65,6 +69,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     ApplicationRecord.transaction do
       @listing.save!
       attach_media!(@listing, media_attachment_ids_param)
+      Wachuneed::TicketDates.sync(@listing, params[:ticket_dates]) if @listing.tickets? && params.key?(:ticket_dates)
     end
     sync_krew_audience!(@listing)
 
@@ -99,6 +104,14 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
         @listing.listing_photos.destroy_all
         attach_media!(@listing, media_attachment_ids_param)
       end
+
+      # Its dates, whole, when sent; otherwise its events keep up with the
+      # title, place and reach.
+      if @listing.tickets? && params.key?(:ticket_dates)
+        Wachuneed::TicketDates.sync(@listing, params[:ticket_dates])
+      elsif @listing.tickets?
+        Wachuneed::TicketDates.new(@listing).refresh_events!
+      end
     end
 
     sync_krew_audience!(@listing)
@@ -129,7 +142,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   # from `from` (default now) for two weeks: `suggest` when the seller
   # posted no hours or times and the person suggests one instead.
   def times
-    times = Wachuneed::BookingTimes.new(@listing)
+    minutes = @listing.booking_minutes_for(params[:variant])
+    times = Wachuneed::BookingTimes.new(@listing, minutes: minutes)
     from  = (Time.zone.parse(params[:from].to_s) if params[:from].present?) || Time.current
 
     render json: { suggest: times.suggested?, times: times.suggested? ? [] : times.free(from: from).map(&:iso8601) }
@@ -182,7 +196,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
   def listing_params
     params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state, :kind,
-                  :listing_shop_section_id, :ongoing, :availability, :announced, :visibility)
+                  :listing_shop_section_id, :ongoing, :availability, :announced, :visibility, :offering, :ticket_url)
   end
 
   # Accept a homogeneous array of media_attachment_ids under either

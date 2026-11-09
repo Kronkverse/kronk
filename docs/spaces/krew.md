@@ -55,6 +55,17 @@ you made.
 - The Krew page lists its albums (`GET /api/v1/albutts/albums?krew_id=`)
   when Albutts is one of its spaces, and its events, coming up and
   **Earlier** (`GET /api/v1/events?krew_id=&filter=past`), when Kalendar is.
+- **Its works are spaces too** (the Konnect grid, decisions.md
+  2026-11-08): a Krew turns on a **Gallery** (Art), **Films** (Cinema),
+  **Music** (Booth) or **Stories** (Kronikles), from Konnect (picking the
+  korner turns it on, `TURN_ON_SPACES` in `krew_detail.tsx`) or Krew
+  settings (`KrewKorner::KORNERS`, `KREW_PAGE_SPACES`). Each is its own
+  section (`components/space_shelf.tsx`): what of that korner is Konnected
+  to the Krew as a row of cards, then **New** as the last card: the
+  korner's composer with `?konnect=krew:<id>`, which also offers **Add
+  existing** (the Konnect picker kept to that korner) in a strip under its
+  header (`ComposeShell`, `konnect.source`). Albums and Events are the
+  same.
 - **An emergence's Krew shares its events** (`Kronk::EventLinks`). Linking
   an event to the Krew links it to the Krew's FreeTheDream emergence too,
   and an event attached to the emergence (or one of its gangs) by its maker
@@ -190,16 +201,32 @@ All in `app/javascript/mastodon/features/krew/`.
   in it. The rest is for members (decisions.md, 2026-10-18), in this
   order since Tal's second 2026-10-31 pass (decisions.md, 2026-10-31). Each
   section shows only once the Krew has that thing, so a Krew with nothing
-  Konnected is its header, the Konnect tile and its posts:
-  - **Spaces**: first, a tile for each thing the Krew has. **Albutts** and
-    **Kalendar** open in place below the tiles, one at a time, and close on
-    a second tap: the Krew's albums (`krew_albums.tsx`), and what is coming
-    up for the Krew and what's been (`krew_events.tsx`). Nothing is open on
-    arrival. **Projekts**, **Kuestions**, **Chat** and **Kuddle** scroll
-    down to their section. Then what the Krew is Konnected to elsewhere (an art piece, a
-    proposal…), and last **Konnect** (a +). A space gets its tile once
-    something is Konnected or made in it, or once it is turned on in
-    Settings.
+  Konnected is its header, the Konnect tile and its posts. Members can
+  rearrange the sections below Spaces in Settings, **Page order** (Tal,
+  2026-11-08; `krews.section_order`, the kit's `<ArrangeList>`): each
+  space's section, Projekts, Kuestions, Chat and Kuddles move as a whole,
+  and the Spaces tiles follow. Posts stay last. What's left out of the
+  saved order keeps its place below it:
+  - **Spaces**: first, a tile for each thing the Krew has, each scrolling
+    down to its section. Then what the Krew is Konnected to elsewhere (a
+    listing…), and last **Konnect** (a +). A space gets its tile and
+    section once it is picked in Konnect, once something is made in it, or
+    once it is turned on in Settings. Picking **Albutts**, **Kalendar**,
+    **Kuestions** or a work in Konnect turns that space on and goes to its
+    section (`TURN_ON_SPACES`); it doesn't link one record.
+  - **A section for each space it has on** (Tal, 2026-11-08), each a row
+    of cards that scrolls sideways (`components/space_shelf.tsx`, the kit's
+    `SpaceGrid` row), ending in **New**, whose composer also offers **Add
+    existing** (Tal, 2026-11-08): **Albums**
+    (`krew_albums.tsx`: albums whose audience includes the Krew, so an
+    album shared to it from its composer shows too), **Events**
+    (`krew_events.tsx`: what is coming up for the Krew, soonest first; past events stay in
+    Kalendar, Tal 2026-11-09),
+    and the works (Gallery, Films, Music, Stories). A card with no picture
+    shows its space's glyph. Add existing on Events
+    Konnects one of your events, which shares it into the Krew
+    (`Kronk::EventLinks`) and makes it a card here. The + moon is always
+    **Post to <Krew>**; each section's New makes the rest.
   - **Projekts**: what the Krew is making, as a
     row of cards (`krew_projekts.tsx`, the kit's `SpaceGrid` row): each
     projekt's cover, title and how much of what it needs is sorted (no

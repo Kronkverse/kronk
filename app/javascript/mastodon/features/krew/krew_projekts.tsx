@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { useHistory } from 'react-router-dom';
+
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import { apiFtdProjects } from 'mastodon/api/freethedream';
 import type { FtdProjectSummary } from 'mastodon/api_types/freethedream';
 import { Icon } from 'mastodon/components/icon';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
+import { ActionCard } from 'mastodon/components/space_shelf';
 import { projectPath } from 'mastodon/features/freethedream/components/shared';
 import { konnectSearch } from 'mastodon/hooks/useKonnect';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -21,6 +25,10 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 const messages = defineMessages({
   title: { id: 'krew.projekts.title', defaultMessage: 'Projekts' },
   newProjekt: { id: 'krew.projekts.new', defaultMessage: 'New projekt' },
+  newProjektBody: {
+    id: 'krew.projekts.new_body',
+    defaultMessage: 'Start one in this Krew',
+  },
   sorted: {
     id: 'krew.projekts.sorted',
     defaultMessage: '{sorted} of {total} sorted',
@@ -36,6 +44,13 @@ export const KrewProjekts: React.FC<{
 }> = ({ krewId, canStart, id, onCount }) => {
   const intl = useIntl();
   const projektGlyph = useKornerIcon('freethedream');
+  const history = useHistory();
+  const handleNew = useCallback(() => {
+    history.push({
+      pathname: '/hub/krew/composer/projekt',
+      search: konnectSearch('krew', krewId),
+    });
+  }, [history, krewId]);
   const [projekts, setProjekts] = useState<FtdProjectSummary[] | null>(null);
 
   useEffect(() => {
@@ -81,10 +96,11 @@ export const KrewProjekts: React.FC<{
           />
         ))}
         {canStart && (
-          <SpaceCard
-            to={`/hub/krew/composer/projekt${konnectSearch('krew', krewId)}`}
-            placeholder='+'
-            title={intl.formatMessage(messages.newProjekt)}
+          <ActionCard
+            glyph={<Icon id='add' icon={AddIcon} />}
+            label={intl.formatMessage(messages.newProjekt)}
+            body={intl.formatMessage(messages.newProjektBody)}
+            onClick={handleNew}
           />
         )}
       </SpaceGrid>

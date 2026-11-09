@@ -2,11 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import {
-  apiGetKuestion,
-  apiListHomeKuestions,
-  apiMarkKuestionSeen,
-} from 'mastodon/api/kuestions';
+import { apiListHomeKuestions } from 'mastodon/api/kuestions';
 import type { KuestionHome } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 import { SpaceGrid } from 'mastodon/components/space_grid';
@@ -17,14 +13,14 @@ import {
   StandardCard,
 } from 'mastodon/components/standard_card';
 
-import { AnswerSheet } from './answer_sheet';
 import { HomeKuestionComposer } from './home_kuestion_composer';
-import { RevealSheet } from './reveal_sheet';
+import { HomeKuestionDialog } from './home_kuestion_dialog';
 
 // The Kuestions asked in a Krew or a projekt, on its page (Tal's proposal
 // "Kuestions", 2026-11-08): a row of cards that scrolls sideways, the last
 // one Ask, which opens the composer for this Krew or projekt. Tapping a card
-// answers it in place, or shows what everyone said once you have. Only the
+// opens it in the standard pop-up (home_kuestion_dialog.tsx): answer it,
+// see what everyone said, step to the next one. Only the
 // Krew's members, or whoever can see the projekt, get them from the server
 // (docs/spaces/kuestions.md, Kuestions in a Krew).
 //
@@ -67,8 +63,7 @@ export const HomeKuestions: React.FC<Props> = ({
   const intl = useIntl();
   const [asking, setAsking] = useState(false);
   const [list, setList] = useState<ApiKuestionJSON[] | null>(null);
-  const [answering, setAnswering] = useState<ApiKuestionJSON | null>(null);
-  const [revealing, setRevealing] = useState<ApiKuestionJSON | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const homeKind = home.kind;
   const homeId = home.id;
 
@@ -90,44 +85,11 @@ export const HomeKuestions: React.FC<Props> = ({
     onCount?.(count);
   }, [count, onCount]);
 
-  const reveal = useCallback((id: string) => {
-    void apiGetKuestion(id)
-      .then((detail) => {
-        setRevealing(detail);
-        void apiMarkKuestionSeen(id).catch(() => undefined);
-        return undefined;
-      })
-      .catch(() => undefined);
+  const handleOpen = useCallback((kuestion: ApiKuestionJSON) => {
+    setOpenId(kuestion.id);
   }, []);
-
-  // One you haven't answered opens to be answered; one you have (or asked)
-  // opens on what everyone said.
-  const handleOpen = useCallback(
-    (kuestion: ApiKuestionJSON) => {
-      if (kuestion.has_answered || kuestion.asked_by_me) {
-        reveal(kuestion.id);
-      } else {
-        setAnswering(kuestion);
-      }
-    },
-    [reveal],
-  );
-
-  const handleCancelAnswer = useCallback(() => {
-    setAnswering(null);
-  }, []);
-
-  const handleAnswered = useCallback(
-    (updated: ApiKuestionJSON) => {
-      setAnswering(null);
-      setRevealing(updated);
-      load();
-    },
-    [load],
-  );
-
-  const handleCloseReveal = useCallback(() => {
-    setRevealing(null);
+  const handleClose = useCallback(() => {
+    setOpenId(null);
   }, []);
 
   const handleAsk = useCallback(() => {
@@ -191,15 +153,13 @@ export const HomeKuestions: React.FC<Props> = ({
           )}
         </SpaceGrid>,
       )}
-      {answering && (
-        <AnswerSheet
-          kuestion={answering}
-          onCancel={handleCancelAnswer}
-          onSubmitted={handleAnswered}
+      {openId && (
+        <HomeKuestionDialog
+          kuestions={list}
+          startId={openId}
+          onClose={handleClose}
+          onChanged={load}
         />
-      )}
-      {revealing && (
-        <RevealSheet kuestion={revealing} onNext={handleCloseReveal} />
       )}
       {asking && (
         <HomeKuestionComposer

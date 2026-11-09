@@ -18,6 +18,7 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { LoadingState } from 'mastodon/components/loading_state';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useCallState } from 'mastodon/hooks/useCallState';
@@ -789,7 +790,9 @@ export const LiveRoom: React.FC<Props> = ({ id, announce }) => {
         )}
 
         {live.description && (
-          <p className='booth-set__description'>{live.description}</p>
+          <p className='booth-set__description'>
+            <LinkifiedText text={live.description} />
+          </p>
         )}
 
         {joinFailed && (

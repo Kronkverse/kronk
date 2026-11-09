@@ -18,6 +18,8 @@ RSpec.describe 'Manifest' do
           id: '/home',
           name: Setting.site_title
         )
+      expect(response.parsed_body[:shortcuts].pluck(:url))
+        .to eq(%w(/publish /nudges /hub))
     end
   end
 end

@@ -98,9 +98,11 @@ const TimePill: React.FC<{
 
 const TimeField: React.FC<{
   listingId: string;
+  variant?: string[];
   value: string | null;
   onChange: (time: string | null) => void;
-}> = ({ listingId, value, onChange }) => {
+}> = ({ listingId, variant, value, onChange }) => {
+  const variantKey = variant?.join('\u241f') ?? '';
   const intl = useIntl();
   const [suggest, setSuggest] = useState(false);
   const [times, setTimes] = useState<string[] | null>(null);
@@ -109,7 +111,11 @@ const TimeField: React.FC<{
   useEffect(() => {
     let cancelled = false;
 
-    apiGetListingTimes(listingId, from)
+    apiGetListingTimes(
+      listingId,
+      from,
+      variantKey ? variantKey.split('\u241f') : undefined,
+    )
       .then((result) => {
         if (!cancelled) {
           setSuggest(result.suggest);
@@ -124,7 +130,7 @@ const TimeField: React.FC<{
     return () => {
       cancelled = true;
     };
-  }, [listingId, from]);
+  }, [listingId, from, variantKey]);
 
   // The free times by day, in this reader's own time.
   const days = useMemo(() => {
@@ -276,7 +282,10 @@ export const BookingFields: React.FC<{
   booking: ApiListingBookingJSON;
   value: BookingValue;
   onChange: (value: BookingValue) => void;
-}> = ({ listingId, booking, value, onChange }) => {
+  // The kind chosen, when each books for its own length (an appointment's
+  // Length): the free times are for that length.
+  variant?: string[];
+}> = ({ listingId, booking, value, onChange, variant }) => {
   const intl = useIntl();
   const parts = booking.parts ?? [];
 
@@ -308,6 +317,7 @@ export const BookingFields: React.FC<{
       {parts.includes('time') && (
         <TimeField
           listingId={listingId}
+          variant={variant}
           value={value.startsAt}
           onChange={handleTime}
         />

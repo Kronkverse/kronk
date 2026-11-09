@@ -1221,3 +1221,33 @@ $krew-column-width: 720px;
   font-size: 0.82rem;
   font-weight: 600;
 }
+
+// A space's section (components/space_shelf.tsx): a row of standard cards,
+// with New and Add existing as the last two, faced like Kuestions' Ask.
+.space-shelf {
+  &__action {
+    width: 100%;
+    border: 0;
+    font: inherit;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  &__face {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-card-inset);
+  }
+
+  &__glyph {
+    display: flex;
+    color: var(--signal);
+
+    .icon {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+}

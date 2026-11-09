@@ -109,8 +109,10 @@ konnect:
   # other; anything else is refused.
   kind: work
   to:
-    krew: link
-    freethedream: link
+    krew: space
+    # A projekt's Kronikles are a section of their own, like its albums:
+    # its constitution and other written documents (Tal, 2026-11-09).
+    freethedream: space
     kalendar: link
   # What one of its records is called wherever Kronk names it beside
   # its title ("the Ember event"), so records that share a title can be

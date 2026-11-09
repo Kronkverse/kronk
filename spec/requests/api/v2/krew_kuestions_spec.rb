@@ -82,6 +82,18 @@ RSpec.describe 'Kuestions in a Krew or projekt' do
       expect(question.answers).to be_empty
     end
 
+    # Tal, 2026-11-09: everyone in the Krew sees the answers, answered or not.
+    it 'shows every answer to a member who has not answered', :aggregate_failures do
+      other = Fabricate(:user)
+      krew.krew_memberships.create!(account: other.account, role: 'member', source: 'direct')
+      Answer.create!(question: question, account: member.account, body: 'Me')
+
+      get "/api/v2/kuestions/#{question.id}", headers: headers_for(other)
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body[:answers].pluck(:body)).to eq ['Me']
+    end
+
     it 'leaves Answered once you leave the Krew', :aggregate_failures do
       Answer.create!(question: question, account: outsider.account, body: 'Me')
 

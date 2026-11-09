@@ -17,6 +17,96 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-09 — Wachuneed asks what you are offering
+
+Tal: four friends want to sell on Kronk (consultations, music production, a
+car delivery service, retreats and workshops) and the composer should be
+"really flowing and clear and intuitive … not overly busy". Tal approved a
+mock-up of five phone screens and answered:
+
+- **Payment** is arranged between the two people for now; Kronk takes none.
+- **Tickets** are a shop item that also makes linked Kalendar events, or a
+  link to a ticket platform elsewhere.
+- **Services** are packages with prices, or a quote.
+- **Anywhere, but simple**: the quick New listing stays the four-field form
+  and opens on Something to buy; the other kinds are one link away.
+
+So a listing records what it offers (`listings.offering`), adding to a shop
+starts with What are you offering?, and Appointment, Service and Trip or
+delivery each have a short composer over the existing booking, variations
+and options. Tickets: dates with seats, each a Kalendar event Konnected to
+the listing (the Konnect grid gains Wachuneed → Kalendar), or a link to the
+ticket site. Supersedes the 2026-11-08 note that booking and options wait
+for the shop item composer.
+
+## 2026-11-09 — Kronikles are written documents; a projekt has a Kronikles section
+
+Tal: "I want to upload a constitution to a krew/projekt, and it makes sense
+to konnect 'Kronikles' as a space, then create a new 'Kronikle' which would
+be the constitution. This means kronikles are just essentially written
+documents, which might be art or stories or journal entries, but also may be
+something like a constitution, or legal document."
+
+- Two new Kronikle kinds: **Constitution** and **Legal document**
+  (`constitution`, `legal`).
+- In the Konnect grid, Kronikles → projekt changes from `link` to `space`: a
+  projekt shows its Kronikles as a section of cards, like its albums.
+- File upload (PDFs) is not part of this; Tal: "We might need upload
+  capability (pdf) later". When it comes, the proposal attachment storage
+  (private, served as a download) is the starting point.
+
+## 2026-11-08 — The Quiet card
+
+Tal: "I've been wanting to redesign the standard kronk cards for a while, the
+purple is all wrong, and i don't love the layout." From five directions
+(Quiet, Poster, Stub, Paper, Hairline) laid beside today's card, Tal picked
+**Quiet**.
+
+- Cards are a warm neutral (`--surface-card`), borderless, with the picture
+  inset in a rounded well (`--surface-card-inset`).
+- Colour is a signal, not a fill: the korner label, a glyph, progress, in
+  `--signal`, the same purple as the space tiles and the Konnect picker
+  (Tal, the same day). The feed card loses its solid accent bar for the same
+  label.
+- Grid tiles are left-aligned under the picture, superseding the centred
+  title and meta of 2026-10-30.
+- A thing with no picture shows its space's glyph in the well.
+
+The accent itself (CTAs, active states) is unchanged; this is the card.
+
+## 2026-11-08 — A Krew's spaces are sections of cards
+
+Tal, trying the Konnect grid on shadow: Konnecting an album and an event to
+a Krew showed nothing on the page. Both had worked (the events were shared
+into the Krew), but a member's page hid Konnected albums and events from
+the tiles (2026-10-22) and listed them only inside the Albutts or Kalendar
+tile once it was opened. Tal: "when a space is konnected, it should have its
+own section in the krew page, and in it, a similar layout of horizontal
+cards. In kalendar case, connecting kalendar opens the space and can either
+create a new event or konnect an event so it appears as a card in the
+kalendar section."
+
+- Every space a Krew has on is its own section, always shown to members: a
+  row of cards ending in **New** (`components/space_shelf.tsx`; Add
+  existing is in its composer, below). Its tile scrolls there.
+- Picking Albutts or Kalendar in the Krew's Konnect turns the space on and
+  goes to its section, as Kuestions and the works already did. Picking one
+  no longer links one record from the picker; Add existing does that.
+- The + moon on a Krew page is always Post to the Krew; the sections' New
+  makes albums and events.
+
+Later the same day (Tal, on shadow): "on creating 'New' event (or other),
+the composer that opens can contain the 'Add existing' rather than having
+two cards", and "how can we arrange the order the spaces appear in?
+Perhaps the 'edit' page can have an arranging list?" So a section ends in
+**New** alone, and any composer opened for a record (`?konnect=`) offers
+**Add existing** under its header; and a Krew's members set the order of
+its sections in Settings (`section_order`).
+
+Supersedes 2026-10-18 "the tiles open their space below the grid, one at a
+time" and the Albutts/Kalendar exception in the Konnect grid entry below
+("Albutts and Kalendar still turn on by linking").
+
 ## 2026-11-08 — The Konnect grid: Spaces and Links
 
 Tal, after Krew Kuestions Konnected one public Kuestion: "some of the
@@ -52,9 +142,13 @@ Tal's other calls: a space's section has New and Add existing; the Albutts
 korner lists every album you can see, Krew ones included; Komponents stay
 at projekt level except calls; projekt event invitations pick any mix of a
 Komponent, the projekt, chosen Mates or open; Moments show on an event's
-page while live. Still to build: the works' Krew sections and Albutts as a
-projekt space (next), Moments on events, the Booth cover-Art link, Komponent
-calls, mixed invitations. The Krew chat stays turned on from Krew settings.
+page while live. The works' Krew sections (Gallery, Films, Music, Stories)
+and a projekt's Albums section, each with New and Add existing, followed in
+"Krew spaces: albums and works"; the Albutts korner already lists every
+album you can see, Krew ones included (its `all` scope is
+`Album.visible_to`). Still to build: Moments on events, the Booth cover-Art
+link in the composers, Komponent calls, mixed invitations. The Krew chat
+stays turned on from Krew settings.
 
 ## 2026-11-08 — Kuestions is a Krew space, with its own Ask
 

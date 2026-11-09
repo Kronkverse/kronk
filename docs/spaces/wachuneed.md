@@ -86,8 +86,9 @@ every other composer (Kommons "Market Composer", 2026-11-08; until then it
 was a page of its own). **It asks for four things and nothing else** (Tal,
 2026-11-08, decisions.md "The listing composer is photos, name, description,
 price"): up to ten photos (`Listing::MAX_PHOTOS`), the name, a description,
-and an optional price (a budget, when wanted) in AUD. No field carries
-example text. The reach control in its header is who can see it (see Who can
+and an optional price (a budget, when wanted) in AUD. The name and
+description boxes show just "Title" and "Description" as hint text, no
+examples. The reach control in its header is who can see it (see Who can
 see it). There is no switcher, Konnect row, shop section, availability,
 variations, options or booking here: whether it is on offer or wanted comes
 from where it was opened (the Ж menu's New listing is an offering; Desired's
@@ -153,7 +154,86 @@ what the caller can see (a listing they can't is a 404). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
 order) and `photo_url`, the cover. There is no delete endpoint.
 
-## Shops
+## What are you offering?
+
+Tal, 2026-11-09: a shop should be easy to set up for consultations, music
+production, a delivery service and retreats, with a composer that is
+"clear and tidy to create, super intuitive, and not overly busy". So an
+offer is picked first, and each kind has a short composer of its own
+(`offering_chooser.tsx`, `offering_composer.tsx`). What it offers is
+stored on the listing (`listings.offering`: `product`, `appointment`,
+`service`, `trip`, `tickets`; null is a product, as every older listing is), so
+**Edit** opens the same composer again.
+
+- **Where it is asked.** **Add an item** in a shop opens **What are you
+  offering?** first: five large choices, each with a line saying what it is
+  for (`/hub/wachuneed/my-shop?item=new`, then `&offering=`). The quick
+  **New listing** (+ on the Ж menu, or **List something**) asks the same
+  question first (Tal, 2026-11-09): `/hub/wachuneed/new` is the picker, and
+  a choice sets `?offering=` (`product` for **Something to buy**, the
+  four-field form). A wanted ad is never asked. Every kind's composer carries the same link while new.
+- **Something to buy** is the product form as before: the shop item
+  composer in a shop, the listing composer elsewhere.
+- **Appointment** (consultations, sessions): **Lengths and prices**, a row
+  each (how long, an optional name, a price). One length is the listing's
+  price and `booking.minutes`; more than one is a **Length** variation with
+  a price per kind, and `booking.lengths` says how long each books, so the
+  free times and the booking's end follow the length chosen
+  (`Listing#booking_minutes_for`, `Wachuneed::BookingTimes` `minutes:`,
+  `GET …/times?variant[]=`; the listing page shows times once a length is
+  picked). **Where**: Online, In person or Either (`booking.where`; Either
+  adds a **Where** choice for the person booking). **When you are free**:
+  weekly hours (Monday to Friday, nine to five to start), in the seller's
+  time zone. It books with the `time` part.
+- **Service** (production, design, repairs): **Packages**, a name and a
+  price each, a blank price read as a quote (a **Package** variation);
+  **Also take quote requests** adds a **Something else** package with no
+  price; and **What should people tell you?** (`booking.ask`, the
+  `details` part). The listing's price is its lowest package's.
+- **Trip or delivery**: **Set price** or **Quote each trip** (no price);
+  **When**: **Any time** (people suggest one) or **Your hours**; and what to
+  ask. It books with `time`, `route` (pick-up and drop-off on the Map, seen
+  only by the seller, only on that request) and `details`.
+- **Tickets** (retreats, workshops; see Tickets below): **Sell here** or
+  **Sold elsewhere** (a link to the ticket site), **Dates** (when, where,
+  how many seats), and ticket types with prices (a **Ticket** variation).
+
+All of them are ordinary listings underneath (category Offerings), so they
+show in Offered, the shop, search and the feed as before, and are asked for
+or booked through Requests. Kronk takes no payment: the seller says how to
+pay in the shop, and accepting is the agreement.
+
+Not built: a Huddle call link for online appointments (in the design).
+
+## Tickets
+
+A listing that sells seats (`offering: tickets`; Tal, 2026-11-09:
+"Both linked, but also someone might be using a separate platform so a
+link to that would be necessary").
+
+- **Dates** (`listing_ticket_dates`): each a start, an optional end, a
+  place and how many seats (none when sold elsewhere), up to
+  `ListingTicketDate::MAX_PER_LISTING`. Sent whole as `ticket_dates` on
+  create and edit (a row with an `id` changes that date);
+  `Wachuneed::TicketDates.sync` keeps them. A date with accepted tickets
+  can't be removed (422).
+- **A Kalendar event for each date**, the seller's, with the listing's
+  title, description and place, Konnected to the listing (the Konnect
+  grid gains Wachuneed → Kalendar as a link). Its Status is at the
+  listing's reach and written quietly, without fan-out, since the
+  listing's own feed card announces it; title, description and reach
+  follow the listing when it is edited.
+- **Asking.** On the listing page the upcoming dates are cards to pick,
+  each with the seats left (`ticket_dates_field.tsx`); **Ask for tickets**
+  sends the date (`ticket_date_id`), the ticket type and how many. A
+  request needs a date that is still ahead with room; several requests by
+  one person are allowed. The request carries the date's time, so once
+  accepted it shows in both people's Kalendars like a booking.
+- **Seats** are taken when the seller accepts (`ListingTicketDate#seats_left`
+  counts accepted requests); accepting more than are left is refused.
+  Nothing waiting holds a seat.
+- **Sold elsewhere** (`listings.ticket_url`): the dates still show, without
+  seats, and **Get tickets** opens the link; nothing is asked here.
 
 A shop is one seller's live offers on a page of their own, in Kollections
 they name (Tal, 2026-10-12; Kommons "Market Layout"; named Kollections

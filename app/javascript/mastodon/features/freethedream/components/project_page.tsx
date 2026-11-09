@@ -23,7 +23,9 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { useSpaceBack } from 'mastodon/components/space_back';
+import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
 import { HomeKuestions } from 'mastodon/features/questions/home_kuestions';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
@@ -54,13 +56,18 @@ import { Updates } from './updates';
 //
 // A gang's page is its overview at a lower level (Tal, 2026-10-15): who's
 // in it first, then its fractals (Kitchen → Cooking, Cleaning, Storage,
-// Logistics) as a row of cards, its Kuestions, Getting together, Activity
-// and Talk. Thing Bringing, Actualise, On offer and Depends on are off the
+// Logistics) as a row of cards, Getting together, Activity and Talk.
+// Kuestions are the projekt's, not a Komponent's (Tal, 2026-11-08). Thing Bringing, Actualise, On offer and Depends on are off the
 // page, to come back as they're needed, and so is the "needs met" count
 // (Tal, 2026-11-08). A fractal's page is the same without fractals of its
 // own.
 
 const messages = defineMessages({
+  albums: { id: 'freethedream.albums.title', defaultMessage: 'Albums' },
+  kronikles: {
+    id: 'freethedream.kronikles.title',
+    defaultMessage: 'Kronikles',
+  },
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
   remove: { id: 'freethedream.remove', defaultMessage: 'Remove' },
   removeTitle: {
@@ -377,7 +384,9 @@ const ProjectView: React.FC<{
         korner: 'freethedream',
         id: project.id,
         canManage: project.can.edit,
-        excludeSlugs: ['huddle'],
+        // Albums and Kronikles show in their own sections (Spaces,
+        // decisions.md 2026-11-08), not as tiles.
+        excludeSlugs: ['huddle', 'albutts', 'kronikles'],
         onKonnections: handleKonnections,
         // Getting together already lists the linked events, and a projekt
         // lives in its Krew.
@@ -400,7 +409,7 @@ const ProjectView: React.FC<{
       subtitle={
         project.description && (
           <span className='freethedream-detail__about'>
-            {project.description}
+            <LinkifiedText text={project.description} />
           </span>
         )
       }
@@ -467,14 +476,36 @@ const ProjectView: React.FC<{
             ))}
             {/* Its own Kuestions, once its Krew has turned Kuestions on:
                 whoever can see the projekt answers them, its members ask
-                them. */}
-            {project.krew?.kuestions && (
+                them. The projekt itself only, not its Komponents (Tal,
+                2026-11-08). */}
+            {project.top && project.krew?.kuestions && (
               <HomeKuestions
                 home={{ kind: 'projekt', id: project.id }}
                 canAsk={isMember}
                 frame={frameKuestions}
               />
             )}
+            {/* Its albums, a Space with New and Add existing (decisions.md,
+                2026-11-08): shown once one is Konnected, from Konnect. */}
+            <SpaceShelf
+              homeSlug='freethedream'
+              homeId={project.id}
+              korner='albutts'
+              title={intl.formatMessage(messages.albums)}
+              canAdd={project.can.edit}
+              hideWhenEmpty
+            />
+            {/* Its Kronikles: written documents, its constitution among
+                them (Tal, 2026-11-09). Shown once one is Konnected, from
+                Konnect → Kronikles → New Kronikle. */}
+            <SpaceShelf
+              homeSlug='freethedream'
+              homeId={project.id}
+              korner='kronikles'
+              title={intl.formatMessage(messages.kronikles)}
+              canAdd={project.can.edit}
+              hideWhenEmpty
+            />
             {project.top && (
               <Updates
                 updates={project.updates}

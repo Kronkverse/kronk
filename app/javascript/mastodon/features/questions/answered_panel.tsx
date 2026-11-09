@@ -138,6 +138,11 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
     setRevealing(null);
   }, []);
 
+  const handleDeleted = useCallback((deletedId: string) => {
+    setRevealing(null);
+    setList((prev) => prev?.filter((k) => k.id !== deletedId) ?? prev);
+  }, []);
+
   // A linked Kuestion (`?k=`) opens over the list, or over the empty state
   // for someone who hasn't answered any yet.
   const sheets = (
@@ -150,7 +155,11 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
         />
       )}
       {revealing && (
-        <RevealSheet kuestion={revealing} onNext={handleCloseReveal} />
+        <RevealSheet
+          kuestion={revealing}
+          onNext={handleCloseReveal}
+          onDeleted={handleDeleted}
+        />
       )}
     </>
   );

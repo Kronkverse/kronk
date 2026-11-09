@@ -365,7 +365,7 @@ namespace :api, format: false do
 
     # Kronikles — single-author long-form written works. Body is
     # markdown, no length limit; kind labels the work (essay / short
-    # story / poetry / letter / journal / other).
+    # story / poetry / letter / journal / constitution / legal / other).
     namespace :kronikles do
       resources :chronicles, only: [:index, :show, :create, :update, :destroy]
       # A writer's Kronikles as ordered chapters (docs/spaces/kronikles.md,
@@ -928,7 +928,7 @@ namespace :api, format: false do
 
     # Kuestions v2 rebuild — swipe-deck shape + gated answers. Legacy
     # /api/v1/questions stays for the transition (see docs/spaces/kuestions.md).
-    resources :kuestions, only: [:index, :show, :create] do
+    resources :kuestions, only: [:index, :show, :create, :destroy] do
       collection do
         get 'prompt/today', to: 'kuestions/daily_prompt#show'
         get   'pinned', to: 'kuestions/pinned#index'

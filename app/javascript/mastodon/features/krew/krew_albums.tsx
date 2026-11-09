@@ -1,35 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
-
-import { Link } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 import { albumPath } from 'mastodon/api/albutts';
 import type { ApiAlbumListItemJSON } from 'mastodon/api_types/albutts';
+import { SpaceShelf } from 'mastodon/components/space_shelf';
+import type { ShelfCard } from 'mastodon/components/space_shelf';
 
-// A Krew's albums, on its page when its Albutts tile is open
-// (docs/spaces/krew.md, Linking): albums whose audience includes this Krew.
-// Making one is the Ж menu's +. Linking one made elsewhere, and taking it
-// off again, is the page's Konnect and Diskonnect (decisions.md,
-// 2026-10-27), not this list.
+// A Krew's albums, its Albums section once Albutts is on (docs/spaces/
+// krew.md, Linking): albums whose audience includes this Krew, as a row of
+// cards. New makes one for the Krew; Add existing links one made elsewhere
+// (a Space has New and Add existing, decisions.md 2026-11-08). Taking one
+// off is the page's Diskonnect.
 
 const messages = defineMessages({
   title: { id: 'krew.albums.title', defaultMessage: 'Albums' },
-  empty: {
-    id: 'krew.albums.empty',
-    defaultMessage:
-      'No albums in this Krew yet. The + in the Ж menu makes one.',
-  },
 });
 
 type AlbumItem = ApiAlbumListItemJSON;
 
 export const KrewAlbums: React.FC<{
   krewId: string;
-}> = ({ krewId }) => {
+  id?: string;
+  canAdd?: boolean;
+}> = ({ krewId, id, canAdd = false }) => {
   const intl = useIntl();
   const [albums, setAlbums] = useState<AlbumItem[] | null>(null);
+  const [loads, setLoads] = useState(0);
 
   useEffect(() => {
     setAlbums(null);
@@ -41,34 +39,37 @@ export const KrewAlbums: React.FC<{
       .catch(() => {
         setAlbums([]);
       });
-  }, [krewId]);
+  }, [krewId, loads]);
+
+  const reload = useCallback(() => {
+    setLoads((n) => n + 1);
+  }, []);
+
+  const cards = useMemo<ShelfCard[] | null>(
+    () =>
+      albums?.map((album) => ({
+        key: album.id,
+        id: album.id,
+        to: albumPath(album),
+        image: album.cover_url,
+        title: album.title,
+        meta: album.owner.display_name || album.owner.acct,
+      })) ?? null,
+    [albums],
+  );
 
   return (
-    <section className='krew-detail__section krew-detail__albums'>
-      <h3 className='korner-section-heading'>
-        {intl.formatMessage(messages.title)}
-      </h3>
-
-      {albums?.length === 0 && (
-        <p className='krew-detail__section-hint'>
-          {intl.formatMessage(messages.empty)}
-        </p>
-      )}
-
-      {albums && albums.length > 0 && (
-        <ul className='krew-detail__event-list'>
-          {albums.map((album) => (
-            <li key={album.id}>
-              <Link to={albumPath(album)} className='krew-detail__event'>
-                <span className='krew-detail__event-title'>{album.title}</span>
-                <span className='krew-detail__event-where'>
-                  {album.owner.display_name || album.owner.acct}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <SpaceShelf
+      homeSlug='krew'
+      homeId={krewId}
+      korner='albutts'
+      id={id}
+      title={intl.formatMessage(messages.title)}
+      canAdd={canAdd}
+      cards={cards}
+      newSearch={`?krew=${krewId}`}
+      onAdded={reload}
+      className='krew-detail__albums'
+    />
   );
 };

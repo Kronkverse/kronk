@@ -57,9 +57,23 @@ semantic:
       dark: 'color-mix(in oklab, var(--accent) 50%, var(--text-primary))',
       light: 'color-mix(in oklab, var(--accent) 85%, var(--text-primary))',
     }
+  # A space's mark: its glyph and label wherever it says "this is from
+  # Kalendar" (space tiles, the Konnect picker, card labels and no-picture
+  # glyphs). One colour so a tile and a card agree (Tal, 2026-11-08: "the
+  # purple on the cards is different to the purple of the spaces konnect
+  # options").
+  signal:
+    { dark: 'var(--kronk-purple-bright)', light: 'var(--kronk-purple-bright)' }
   text-on-accent: { dark: '#ffffff', light: '#ffffff' } # white on the purple accent; theme-invariant (accent is purple in both themes)
   surface-primary: { dark: '#191b22', light: '#ffffff' }
   surface-elevated: { dark: '#292938', light: '#f5f4f9' }
+  # Cards (the Quiet card, Tal 2026-11-08: "the purple is all wrong"): a
+  # warm neutral, not purple-grey, so colour on a card is a signal (its
+  # space label, glyph, progress in --accent-text) rather than a tint over
+  # everything. `inset` is the well a picture sits in, and what shows when
+  # a thing has no picture.
+  surface-card: { dark: '#1b1b1f', light: '#ffffff' }
+  surface-card-inset: { dark: '#25252b', light: '#f0eff3' }
   # The panel a page sits on inside the Stage. The Kosmos starfield behind
   # it is dark in every theme, so dark needs no panel, but dark text on the
   # bare starfield would vanish in light. Light gets a pale panel tinted
