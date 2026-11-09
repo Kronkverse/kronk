@@ -14,7 +14,11 @@ import { Section, formatAmount } from './shared';
 // what, who's bringing what, who took a job. It keeps itself up to date
 // while the page is open and in view, and what arrives fades in.
 
-const SHOWN = 8;
+// The latest few from the last fortnight (Tal, 2026-11-09: "should only
+// be the latest 3 or 4, maybe only recent ones too"); with nothing recent
+// the section isn't there.
+const SHOWN = 4;
+const RECENT_MS = 14 * 24 * 60 * 60 * 1000;
 const EVERY_MS = 20_000;
 
 // Something added belongs to the gang, not to whoever typed it (Tal,
@@ -111,12 +115,16 @@ export const Updates: React.FC<{
     updates.forEach((u) => known.current.add(u.id));
   }, [updates]);
 
-  if (updates.length === 0) return null;
+  const since = Date.now() - RECENT_MS;
+  const shown = updates
+    .filter((u) => new Date(u.created_at).getTime() >= since)
+    .slice(0, SHOWN);
+  if (shown.length === 0) return null;
 
   return (
     <Section title={intl.formatMessage(messages.title)}>
       <ul className='freethedream-updates'>
-        {updates.slice(0, SHOWN).map((u) => {
+        {shown.map((u) => {
           const title = u.data.title ?? '';
           const name =
             u.account?.display_name ?? intl.formatMessage(messages.someone);

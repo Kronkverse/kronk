@@ -27,6 +27,7 @@ import { KonnectedCard, hasCard } from 'mastodon/components/konnected_card';
 import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import { useAttachments } from 'mastodon/hooks/useAttachments';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useRecordName } from 'mastodon/hooks/useRecordName';
 import { serverError } from 'mastodon/utils/api_error';
@@ -143,6 +144,12 @@ interface AttachmentSectionProps {
   // Krew's Kuestions).
   onTurnOnSpace?: (slug: string) => Promise<void>;
   turnOnSlugs?: readonly string[];
+  // Each record with something to show (a Place's map) in a section of its
+  // own under this one, headed with its space's name, rather than as a
+  // card above the tiles: a Krew's and a projekt's pages, whose spaces are
+  // each a section (Tal, 2026-11-09: "a map being connected, but not in its
+  // own section").
+  cardsApart?: boolean;
   // Under the grid, inside the section (the Krew page's tray). A function
   // gets the one that opens the picker.
   children?: React.ReactNode | ((openPicker: () => void) => React.ReactNode);
@@ -167,6 +174,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   onKonnections,
   onTurnOnSpace,
   turnOnSlugs,
+  cardsApart = false,
   children,
   className,
 }) => {
@@ -323,22 +331,43 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   // No flash of an empty heading while the first load is out.
   if (empty && loading) return null;
 
-  return (
-    <section
-      className={['attachment-section', className].filter(Boolean).join(' ')}
-    >
-      <h3 className='korner-section-heading'>
-        {heading ?? (
-          <FormattedMessage
-            id='attachment_section.heading_konnected'
-            defaultMessage='Konnected'
-          />
-        )}
-      </h3>
+  const cardSlugs = cardsApart
+    ? [...new Set(cards.map((link) => link.otherSlug))]
+    : [];
 
-      {cards.length > 0 && (
-        <ul className='konnected-cards'>
-          {cards.map((link) => (
+  return (
+    <>
+      <section
+        className={['attachment-section', className].filter(Boolean).join(' ')}
+      >
+        <h3 className='korner-section-heading'>
+          {heading ?? (
+            <FormattedMessage
+              id='attachment_section.heading_konnected'
+              defaultMessage='Konnected'
+            />
+          )}
+        </h3>
+
+        {!cardsApart && cards.length > 0 && (
+          <ul className='konnected-cards'>
+            {cards.map((link) => (
+              <KonnectedTile
+                key={link.attachment.id}
+                link={link}
+                canManage={canManage}
+                canFollow={canFollow && followable(link)}
+                onRemove={diskonnect}
+                onFollow={changeFollow}
+              />
+            ))}
+          </ul>
+        )}
+
+        <ul className='space-tiles'>
+          {leading}
+
+          {tiles.map((link) => (
             <KonnectedTile
               key={link.attachment.id}
               link={link}
@@ -348,86 +377,105 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
               onFollow={changeFollow}
             />
           ))}
+
+          {canKonnect &&
+            (renderKonnect ? (
+              renderKonnect(openPicker)
+            ) : (
+              <li>
+                <button
+                  type='button'
+                  className='space-tile space-tile--action'
+                  onClick={openPicker}
+                >
+                  <span className='space-tile__glyph' aria-hidden='true'>
+                    <Icon id='add' icon={AddIcon} />
+                  </span>
+                  <span className='space-tile__name'>
+                    {intl.formatMessage(messages.konnect)}
+                  </span>
+                </button>
+              </li>
+            ))}
         </ul>
-      )}
 
-      <ul className='space-tiles'>
-        {leading}
+        {notes.map(({ link, mismatch }) => {
+          const own = names.the(link.own);
+          const other = names.the({ ...link.other, slug: link.otherSlug });
+          return (
+            <p className='attachment-section__note' key={link.attachment.id}>
+              {mismatch.everyone
+                ? intl.formatMessage(messages.notEveryoneCanOpen, {
+                    own,
+                    other,
+                  })
+                : intl.formatMessage(messages.krewsCantOpen, {
+                    krews: krewNames(intl, mismatch.krews),
+                    own,
+                  })}
+              {canFollow && followable(link) && !leads(link) && (
+                <NoteFix link={link} other={other} onFollow={changeFollow} />
+              )}
+            </p>
+          );
+        })}
 
-        {tiles.map((link) => (
-          <KonnectedTile
-            key={link.attachment.id}
-            link={link}
-            canManage={canManage}
-            canFollow={canFollow && followable(link)}
-            onRemove={diskonnect}
-            onFollow={changeFollow}
-          />
-        ))}
-
-        {canKonnect &&
-          (renderKonnect ? (
-            renderKonnect(openPicker)
-          ) : (
-            <li>
-              <button
-                type='button'
-                className='space-tile space-tile--action'
-                onClick={openPicker}
-              >
-                <span className='space-tile__glyph' aria-hidden='true'>
-                  <Icon id='add' icon={AddIcon} />
-                </span>
-                <span className='space-tile__name'>
-                  {intl.formatMessage(messages.konnect)}
-                </span>
-              </button>
-            </li>
-          ))}
-      </ul>
-
-      {notes.map(({ link, mismatch }) => {
-        const own = names.the(link.own);
-        const other = names.the({ ...link.other, slug: link.otherSlug });
-        return (
-          <p className='attachment-section__note' key={link.attachment.id}>
-            {mismatch.everyone
-              ? intl.formatMessage(messages.notEveryoneCanOpen, { own, other })
-              : intl.formatMessage(messages.krewsCantOpen, {
-                  krews: krewNames(intl, mismatch.krews),
-                  own,
-                })}
-            {canFollow && followable(link) && !leads(link) && (
-              <NoteFix link={link} other={other} onFollow={changeFollow} />
-            )}
+        {linkError && (
+          <p
+            className='attachment-section__note attachment-section__note--error'
+            role='alert'
+          >
+            {linkError}
           </p>
-        );
-      })}
+        )}
 
-      {linkError && (
-        <p
-          className='attachment-section__note attachment-section__note--error'
-          role='alert'
-        >
-          {linkError}
-        </p>
-      )}
+        {confirmDialog}
 
-      {confirmDialog}
+        {typeof children === 'function' ? children(openPicker) : children}
 
-      {typeof children === 'function' ? children(openPicker) : children}
+        {pickerOpen && recordId != null && (
+          <AttachmentPicker
+            sourceSlug={korner}
+            sourceId={recordId}
+            onClose={closePicker}
+            onAttached={refresh}
+            onTurnOnSpace={onTurnOnSpace}
+            turnOnSlugs={turnOnSlugs}
+            exclude={linked}
+          />
+        )}
+      </section>
+      {cardSlugs.map((slug) => (
+        <CardSection key={slug} slug={slug}>
+          {cards
+            .filter((link) => link.otherSlug === slug)
+            .map((link) => (
+              <KonnectedTile
+                key={link.attachment.id}
+                link={link}
+                canManage={canManage}
+                canFollow={canFollow && followable(link)}
+                onRemove={diskonnect}
+                onFollow={changeFollow}
+              />
+            ))}
+        </CardSection>
+      ))}
+    </>
+  );
+};
 
-      {pickerOpen && recordId != null && (
-        <AttachmentPicker
-          sourceSlug={korner}
-          sourceId={recordId}
-          onClose={closePicker}
-          onAttached={refresh}
-          onTurnOnSpace={onTurnOnSpace}
-          turnOnSlugs={turnOnSlugs}
-          exclude={linked}
-        />
-      )}
+// A space's cards in a section of their own (`cardsApart`), headed with
+// the space's name: a Place's map under "Map".
+const CardSection: React.FC<{ slug: string; children: React.ReactNode }> = ({
+  slug,
+  children,
+}) => {
+  const korner = useKorner(slug);
+  return (
+    <section className='attachment-section attachment-section--apart'>
+      <h3 className='korner-section-heading'>{korner?.name ?? slug}</h3>
+      <ul className='konnected-cards'>{children}</ul>
     </section>
   );
 };

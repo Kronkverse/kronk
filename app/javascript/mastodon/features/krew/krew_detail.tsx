@@ -1055,6 +1055,7 @@ export const KrewDetail = () => {
               onKonnections={handleKonnections}
               onTurnOnSpace={turnOnSpace}
               turnOnSlugs={TURN_ON_SPACES}
+              cardsApart
             />
 
             {/* Each space it has on as its own section of cards, then its

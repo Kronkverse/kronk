@@ -406,14 +406,16 @@ $freethedream-wide: 1000px;
 .freethedream-groups--row {
   grid-template-columns: none;
   grid-auto-flow: column;
-  grid-auto-columns: calc((100% - 0.75rem) / 2.25);
+
+  // Wider than a space's row: a Komponent card is the page's main thing.
+  grid-auto-columns: calc((100% - 0.75rem) / 1.4);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   padding-bottom: 0.5rem;
 
   @media (width >= 720px) {
-    grid-auto-columns: calc((100% - 3rem) / 4.25);
+    grid-auto-columns: calc((100% - 1.5rem) / 2.5);
   }
 
   > li {
@@ -427,9 +429,10 @@ $freethedream-wide: 1000px;
   flex-direction: column;
   gap: 6px;
   inline-size: 100%;
-  padding: 0.875rem 1rem;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
+  min-block-size: 9rem;
+  padding: 1rem 1.125rem 1.125rem;
+  background: var(--surface-card);
+  border: 1px solid transparent;
   border-radius: var(--radius-large);
   color: var(--text-primary);
   font: inherit;
@@ -447,13 +450,19 @@ $freethedream-wide: 1000px;
     color: var(--text-primary);
   }
 
-  &__title {
+  &__tags {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 8px;
+    gap: 6px;
+    min-block-size: 1.25rem;
+  }
+
+  &__title {
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
   }
 
   &__meta {
@@ -461,10 +470,25 @@ $freethedream-wide: 1000px;
     font-size: 13px;
   }
 
+  // How far along it is, along the card's foot.
+  .freethedream-progress {
+    display: flex;
+    margin-block-start: auto;
+    padding-block-start: 0.5rem;
+  }
+
+  .freethedream-progress__bar {
+    block-size: 6px;
+  }
+
+  .freethedream-progress__fill {
+    background: var(--signal);
+  }
+
   &--add {
     align-items: center;
     justify-content: center;
-    min-block-size: 5rem;
+    min-block-size: 9rem;
     background: transparent;
     border-style: dashed;
     color: var(--text-secondary);
@@ -505,92 +529,6 @@ $freethedream-wide: 1000px;
   .freethedream__quiet {
     margin: 0;
     font-size: 13px;
-  }
-}
-
-.freethedream-together {
-  // Getting together (event_card.tsx): one standard card per event
-  // (<StandardCard variant='flow'>, the Quiet card), soonest first. What is
-  // left here is what an event card has and a card in general does not:
-  // the date in the picture's place when there is no picture, and the
-  // Going row.
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  // The Quiet card's inset, as on a grid tile: the picture (or date) in
-  // its own rounded well, the words lined up under it.
-  &__event {
-    padding: 8px 8px 12px;
-    gap: 4px;
-
-    .standard-card__media {
-      border-radius: var(--radius-medium);
-      margin-block-end: 6px;
-    }
-
-    .standard-card__title,
-    .standard-card__meta,
-    .standard-card__actions {
-      padding-inline: 6px;
-      padding-block: 0;
-    }
-  }
-
-  &__picture {
-    aspect-ratio: 16 / 9;
-
-    a {
-      display: block;
-      block-size: 100%;
-    }
-  }
-
-  &__date a {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 8px;
-    padding-block: 14px;
-    color: var(--signal);
-    text-decoration: none;
-  }
-
-  &__day {
-    font-family: var(--font-display);
-    font-size: 28px;
-    line-height: 1;
-  }
-
-  &__month {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .freethedream &__title,
-  &__title {
-    color: var(--text-primary);
-    text-decoration: none;
-  }
-
-  &__foot {
-    flex-wrap: wrap;
-    gap: 4px 10px;
-    padding-block-start: 8px;
-
-    .freethedream__quiet {
-      margin: 0;
-      font-size: 13px;
-    }
-
-    .freethedream__button {
-      margin-inline-start: auto;
-    }
   }
 }
 
