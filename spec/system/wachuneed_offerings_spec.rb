@@ -39,10 +39,9 @@ RSpec.describe 'Wachuneed offerings', :js, :streaming do
     expect(listing.options.first['name']).to eq 'Where'
   end
 
-  it 'posts a service with packages and quotes from the quick New listing', :aggregate_failures do
+  it 'asks what is on offer first from the quick New listing, and posts a service', :aggregate_failures do
     visit '/hub/wachuneed/new'
 
-    within('.compose-shell') { click_on 'Change what you are offering' }
     within('.compose-shell') { click_on 'Service' }
     within('.compose-shell') do
       find('input[aria-label="Name"]').fill_in with: 'Music production'
