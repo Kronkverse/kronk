@@ -26,6 +26,40 @@ RSpec.describe 'Feed posts', :inline_jobs, :js, :streaming do
     end
   end
 
+  describe 'a comment\'s own address' do
+    let(:post)    { PostStatusService.new.call(bob.account, text: 'Who has a ladder?') }
+    let(:comment) { PostStatusService.new.call(bob.account, text: 'Mine is bent', thread: post) }
+    let(:answer)  { PostStatusService.new.call(bob.account, text: 'Mine is fine', thread: comment) }
+
+    # A comment's avatar is the default one on the test domain, which doesn't answer.
+    before { ignore_js_error(/Failed to load resource: the server responded with a status of 404/) }
+
+    it 'opens the post it was on, with the comment picked out' do
+      visit "/@#{bob.account.username}/#{comment.id}"
+
+      expect(page).to have_current_path("/@#{bob.account.username}/#{post.id}?comment=#{comment.id}")
+      within('.status__wrapper') { expect(page).to have_content('Who has a ladder?') }
+      expect(page).to have_css('.status-replies__item--highlighted', text: 'Mine is bent')
+    end
+
+    it 'opens a comment on a comment with its branch open' do
+      visit "/@#{bob.account.username}/#{answer.id}"
+
+      expect(page).to have_current_path("/@#{bob.account.username}/#{post.id}?comment=#{answer.id}")
+      expect(page).to have_css('.status-replies__item--highlighted', text: 'Mine is fine')
+    end
+
+    it 'says so when the post is gone, and shows no comment' do
+      comment
+      post.discard
+
+      visit "/@#{bob.account.username}/#{comment.id}"
+
+      expect(page).to have_content('The post this comment was on is gone.')
+      expect(page).to have_no_content('Mine is bent')
+    end
+  end
+
   it 'posts a comment as written, without tagging the person answered' do
     # The home feed asks the Huddle server how full the room is; there is none here.
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)

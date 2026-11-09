@@ -3538,6 +3538,7 @@
   "status.cannot_quote": "You are not allowed to quote this post",
   "status.cannot_reblog": "This post cannot be shared",
   "status.child_replies_count": "{count, plural, one {# reply} other {# replies}}",
+  "status.comment_post_gone": "The post this comment was on is gone.",
   "status.contains_quote": "Contains quote",
   "status.continued_thread": "Continued thread",
   "status.copy": "Copy link to post",
