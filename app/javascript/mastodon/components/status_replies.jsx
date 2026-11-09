@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { PureComponent } from 'react';
+import { PureComponent, createRef } from 'react';
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl';
 import { Link } from 'react-router-dom';
 import ImmutablePropTypes from 'react-immutable-proptypes';
@@ -56,6 +56,11 @@ function countDescendants(node) {
   return node.children.reduce((sum, child) => sum + 1 + countDescendants(child), 0);
 }
 
+// Whether a comment further down this one's branch is `id`.
+function hasDescendant(node, id) {
+  return !!id && (node.children || []).some(child => child.id === id || hasDescendant(child, id));
+}
+
 // Build a recursive reply tree from a flat list of descendants. A feed card
 // shows the first few; `all` (the post's own page) shows every reply.
 function buildReplyTree(descendants, parentId, all = false, depth = 0) {
@@ -77,6 +82,13 @@ class ReplyItem extends PureComponent {
   static propTypes = {
     reply: PropTypes.object.isRequired,
     depth: PropTypes.number,
+    // The post the comments are on: a comment's time links to the comment
+    // there, never to a page of its own.
+    rootId: PropTypes.string.isRequired,
+    rootAcct: PropTypes.string.isRequired,
+    // A comment to pick out (the post page's `?comment=`): it is marked and
+    // scrolled to, and the branches above it start open.
+    highlightId: PropTypes.string,
     currentAccount: ImmutablePropTypes.map,
     onReplySubmit: PropTypes.func.isRequired,
     onFrothToggle: PropTypes.func.isRequired,
@@ -91,13 +103,21 @@ class ReplyItem extends PureComponent {
     showReplyInput: false,
     replyText: '',
     submitting: false,
-    childrenExpanded: false,
+    childrenExpanded: hasDescendant(this.props.reply, this.props.highlightId),
     // Replies here are plain API objects held in local state, not the
     // Redux store, so froth is tracked locally (optimistically) too.
     frothed: !!this.props.reply.favourited,
     frothCount: this.props.reply.favourites_count || 0,
     frothing: false,
   };
+
+  itemRef = createRef();
+
+  componentDidMount() {
+    if (this.props.highlightId === this.props.reply.id) {
+      this.itemRef.current?.scrollIntoView({ block: 'center' });
+    }
+  }
 
   handleToggleFroth = () => {
     const { reply, onFrothToggle } = this.props;
@@ -163,7 +183,7 @@ class ReplyItem extends PureComponent {
   };
 
   render() {
-    const { reply, depth, currentAccount, onReplySubmit, onFrothToggle, intl } = this.props;
+    const { reply, depth, rootId, rootAcct, highlightId, currentAccount, onReplySubmit, onFrothToggle, intl } = this.props;
     const { showReplyInput, replyText, submitting, childrenExpanded, frothed, frothCount } = this.state;
     const account = reply.account;
     const avatarSize = depth === 0 ? 28 : 24;
@@ -171,7 +191,7 @@ class ReplyItem extends PureComponent {
     const totalDescendants = countDescendants(reply);
 
     return (
-      <div className={`status-replies__item status-replies__item--depth-${Math.min(depth, MAX_DEPTH)}`}>
+      <div ref={this.itemRef} className={`status-replies__item status-replies__item--depth-${Math.min(depth, MAX_DEPTH)}${reply.id === highlightId ? ' status-replies__item--highlighted' : ''}`}>
         <div className='status-replies__item__main'>
           <Link to={`/@${account.acct}`} className='status-replies__item__avatar'>
             <img src={account.avatar} alt='' width={avatarSize} height={avatarSize} />
@@ -183,7 +203,7 @@ class ReplyItem extends PureComponent {
               </Link>
               <span className='status-replies__item__acct'>@{account.acct}</span>
               <span className='status-replies__item__dot'>&middot;</span>
-              <Link to={`/@${account.acct}/${reply.id}`} className='status-replies__item__time'>
+              <Link to={`/@${rootAcct}/${rootId}?comment=${reply.id}`} className='status-replies__item__time'>
                 <RelativeTimestamp timestamp={reply.created_at} />
               </Link>
             </div>
@@ -256,6 +276,9 @@ class ReplyItem extends PureComponent {
                 key={child.id}
                 reply={child}
                 depth={depth + 1}
+                rootId={rootId}
+                rootAcct={rootAcct}
+                highlightId={highlightId}
                 currentAccount={currentAccount}
                 onReplySubmit={onReplySubmit}
                 onFrothToggle={onFrothToggle}
@@ -276,6 +299,7 @@ class StatusReplies extends PureComponent {
     statusVisibility: PropTypes.string,
     repliesCount: PropTypes.number,
     all: PropTypes.bool,
+    highlightId: PropTypes.string,
     currentAccount: ImmutablePropTypes.map,
     dispatch: PropTypes.func.isRequired,
     intl: PropTypes.object.isRequired,
@@ -410,7 +434,7 @@ class StatusReplies extends PureComponent {
   };
 
   render() {
-    const { repliesCount, currentAccount, intl, statusId, all } = this.props;
+    const { repliesCount, currentAccount, intl, statusId, statusAcct, all, highlightId } = this.props;
     const { loading, replies, replyText, submitting } = this.state;
 
     // Don't show anything if no replies and not signed in
@@ -434,6 +458,9 @@ class StatusReplies extends PureComponent {
                       key={reply.id}
                       reply={reply}
                       depth={0}
+                      rootId={statusId}
+                      rootAcct={statusAcct}
+                      highlightId={highlightId}
                       currentAccount={currentAccount}
                       onReplySubmit={this.handleInlineReplySubmit}
                       onFrothToggle={this.handleFrothToggle}
