@@ -173,6 +173,14 @@ RSpec.describe Status do
       reply.destroy
       expect(subject.replies_count).to eq 0
     end
+
+    it 'counts comments on a Mates post' do
+      subject.update!(visibility: :mates)
+      reply = Fabricate(:status, account: bob, thread: subject, visibility: :mates)
+      expect(subject.replies_count).to eq 1
+      reply.destroy
+      expect(subject.replies_count).to eq 0
+    end
   end
 
   describe '#favourites_count' do

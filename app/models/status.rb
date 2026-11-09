@@ -641,7 +641,9 @@ class Status < ApplicationRecord
     # A hidden post is not one of the author's posts, so it isn't counted as one.
     account&.increment_count!(:statuses_count) unless kronk_feed_suppressed?
     reblog&.increment_count!(:reblogs_count) if reblog?
-    thread&.increment_count!(:replies_count) if in_reply_to_id.present? && distributable?
+    # Every comment counts, not just public ones: a Mates or Orbit post's
+    # comment section loads only when its count says it has comments.
+    thread&.increment_count!(:replies_count) if in_reply_to_id.present?
   end
 
   def decrement_counter_caches
@@ -649,7 +651,7 @@ class Status < ApplicationRecord
 
     account&.decrement_count!(:statuses_count) unless kronk_feed_suppressed?
     reblog&.decrement_count!(:reblogs_count) if reblog?
-    thread&.decrement_count!(:replies_count) if in_reply_to_id.present? && distributable?
+    thread&.decrement_count!(:replies_count) if in_reply_to_id.present?
   end
 
   def trigger_create_webhooks
