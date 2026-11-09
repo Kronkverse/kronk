@@ -42,7 +42,7 @@ import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { act } from './act';
 import { Crew } from './crew';
-import { eventMapHref, eventWhen, GettingTogether } from './event_card';
+import { eventMapHref, eventWhen, ProjectEvents } from './event_card';
 import { GroupTiles } from './groups';
 import { Yours } from './overview';
 import { ProjectComposer } from './project_composer';
@@ -480,7 +480,27 @@ const ProjectView: React.FC<{
           </p>
         )}
 
-        {/* Its spaces first, as on a Krew: a tile for each, scrolling to its
+        {/* Its Komponents first, the main thing on a projekt's page (Tal,
+            2026-11-09): gangs under the emergence, fractals under a gang,
+            nothing under a fractal. */}
+        {(project.sections.length > 0 || canAddInside) && (
+          <Section
+            title={intl.formatMessage(
+              project.top ? messages.groups : messages.fractals,
+            )}
+          >
+            <GroupTiles
+              row
+              sections={groups}
+              addLabel={intl.formatMessage(
+                project.top ? messages.addGroup : messages.addFractal,
+              )}
+              onAdd={canAddInside ? openSection : undefined}
+            />
+          </Section>
+        )}
+
+        {/* Then its spaces, as on a Krew: a tile for each, scrolling to its
             section, then what it's Konnected to, then Konnect. */}
         <AttachmentSection
           korner='freethedream'
@@ -513,26 +533,8 @@ const ProjectView: React.FC<{
             project.top && project.can.edit ? turnOnSpace : undefined
           }
           turnOnSlugs={FTD_SPACES}
+          cardsApart
         />
-
-        {/* Gangs under the emergence, fractals under a gang, nothing under
-            a fractal. */}
-        {(project.sections.length > 0 || canAddInside) && (
-          <Section
-            title={intl.formatMessage(
-              project.top ? messages.groups : messages.fractals,
-            )}
-          >
-            <GroupTiles
-              row
-              sections={groups}
-              addLabel={intl.formatMessage(
-                project.top ? messages.addGroup : messages.addFractal,
-              )}
-              onAdd={canAddInside ? openSection : undefined}
-            />
-          </Section>
-        )}
 
         <div className='freethedream-layout'>
           <div className='freethedream-layout__main'>
@@ -551,9 +553,12 @@ const ProjectView: React.FC<{
               [
                 'kalendar',
                 (hasSpace('kalendar') || !project.top) && (
-                  <div key='kalendar' id={spaceSectionId('kalendar')}>
-                    <GettingTogether project={project} refresh={refresh} />
-                  </div>
+                  <ProjectEvents
+                    key='kalendar'
+                    id={spaceSectionId('kalendar')}
+                    project={project}
+                    refresh={refresh}
+                  />
                 ),
               ],
               [

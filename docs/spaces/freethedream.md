@@ -250,18 +250,25 @@ getting involved, not for doing the work itself:
   **New talk**, the gangs with talk from other people they haven't
   looked at, with a count (opening a gang clears its count); and **On
   you**, what they're actualising and what they're bringing.
-- **Komponents** as a row of cards that scrolls sideways, the next card
-  peeking in, with **+ Add a Komponent** last (Tal, 2026-11-08: "swipable
-  cards rather than grid view"; `GroupTiles row`, the shared row's measure).
+- **Komponents** first, as a row of cards that scrolls sideways, the next
+  card peeking in, with **+ Add a Komponent** last (Tal, 2026-11-08:
+  "swipable cards rather than grid view"; `GroupTiles row`). They are what a
+  projekt is made of, so their card is its own and larger than a space's
+  (Tal, 2026-11-09: "Komponents are the important part of a projekt, and
+  currently they look the same as kuestions"): the name large, who's in it,
+  and how far along it is as a bar along its foot.
   A Komponent is a gang in the code (Tal, 2026-10-30). Each card has how
   many people have a hand in it and its progress ("3 of 8 sorted"). **Nobody leads a Komponent**, so no owner
   shows on a tile or a Komponent's page (the owner still exists in the
   data, for who may edit it). The ones you have a hand in come first,
   tagged with any new talk. Members get **+ Add a Komponent**.
 - **Spaces** (Tal, 2026-11-09: "i really like how the krew setup now
-  works"): a projekt's spaces work as a Krew's do. At the top of the work,
+  works"): a projekt's spaces work as a Krew's do. Under its Komponents,
   under **Spaces**, a tile for each space it has, which scrolls to its
-  section, then what it's Konnected to, then **Konnect**. Konnect → a
+  section, then what it's Konnected to, then **Konnect**. Something
+  Konnected with a picture of its own (a Place's map) is a section of its
+  own under that, headed with its space's name, on a Krew's page too
+  (`AttachmentSection cardsApart`). Konnect → a
   space (the grid's `space` for a projekt: Kalendar, Albutts, Kronikles,
   Kuestions) turns it on (`POST /projects/:id/spaces`, owner only,
   `Project::SPACES`) and goes to its section; anything else is linked as
@@ -303,13 +310,13 @@ getting involved, not for doing the work itself:
   into one (10 minutes). A fractal is heard about through its Komponent
   (`freethedream_gang_members`, `Freethedream::GangNudges`,
   `POST /projects/:id/join_gang` and `leave_gang`).
-- **Events** (Tal, 2026-10-30, as Getting together; in the work and
-  named as on a Krew since 2026-11-09): the Kalendar
-  events made for the projekt or any Komponent or fractal inside it that
-  haven't ended, soonest first, as rows of a date tile, the title, when
-  and where (a pin opens the Map), the Komponent it's for as a tag, how
-  many are going and an **I'm going** toggle (`event_card.tsx`,
-  `events` on the shape). A Komponent's page lists its own and its
+- **Events** (Tal, 2026-10-30, as Getting together; since 2026-11-09 the
+  same section as a Krew's, so the same thing has one name and one look):
+  the Kalendar events made for the projekt or any Komponent or fractal
+  inside it that haven't ended, soonest first, as the standard row of
+  cards (picture, title, when, and the Komponent it's for), then **New**,
+  whose composer offers Add existing (`ProjectEvents` in `event_card.tsx`,
+  `SpaceShelf`, `events` on the shape). Going is on the event's page. A Komponent's page lists its own and its
   fractals'. **Anyone in the projekt can make one** (`can.link_event`;
   nobody leads a Komponent, so owner-only left a Komponent with nobody to
   make one): a **+** beside the section's title opens Kalendar's composer
@@ -318,7 +325,9 @@ getting involved, not for doing the work itself:
   Komponent's event is made from the Komponent's own page. No picker (Tal,
   2026-11-08, "'Make and event' button"). With nothing planned it says so,
   in one quiet line.
-- **Activity**: the latest eight things that happened, with who did them
+- **Activity**: the latest four things that happened in the last
+  fortnight (Tal, 2026-11-09: "only the latest 3 or 4, maybe only recent
+  ones too"), with who did them
   ("Isabelle is bringing 2 speakers", "Tomas coalesced the gang
   Ceremony"). It keeps itself up to date while the page is open and in
   view (every 20 seconds, from `GET /projects/:id/activity`), and new

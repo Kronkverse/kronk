@@ -133,9 +133,7 @@ RSpec.describe 'Projekts', :js, :streaming do
     krew = doof.reload.krew
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
-    make = find('.freethedream-section__add')
-    expect(make[:href]).to include('konnect=freethedream')
-    expect(page).to have_no_css('.freethedream-together select')
+    within('#projekt-space-kalendar') { expect(page).to have_button('New') }
     expect(page).to have_no_text('needs met')
 
     click_on '+ Add a Komponent'
@@ -169,8 +167,9 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(page).to have_no_css('.home-kuestions')
   end
 
-  # Tal, 2026-11-09: "event card on projekt should be standard".
-  it "shows a projekt's events as standard cards, with Going", :aggregate_failures do
+  # Tal, 2026-11-09: "event card on projekt should be standard", then the
+  # same Events section as a Krew's.
+  it "shows a projekt's events as a Krew's are", :aggregate_failures do
     doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
     krew = doof.reload.krew
     event = Event.create!(account: bob.account, title: 'Set-up day', start_time: 3.days.from_now, end_time: 3.days.from_now + 2.hours)
@@ -178,9 +177,9 @@ RSpec.describe 'Projekts', :js, :streaming do
                              kind: 'link', created_by_account: bob.account)
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
-    within('.freethedream-together') do
-      expect(page).to have_css('.standard-card .standard-card__title', text: 'Set-up day')
-      expect(page).to have_css('.freethedream-together__date')
+    within('#projekt-space-kalendar') do
+      expect(page).to have_css('h3', text: /events/i)
+      expect(page).to have_link('Set-up day')
     end
   end
 
@@ -212,7 +211,7 @@ RSpec.describe 'Projekts', :js, :streaming do
     krew = doof.reload.krew
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
-    expect(page).to have_css('.freethedream-section__title', text: /events/i)
+    expect(page).to have_css('#projekt-space-kalendar h3', text: /events/i)
     find('.kronk-menu__trigger').click
     click_on 'Edit'
     within('.compose-shell') do
