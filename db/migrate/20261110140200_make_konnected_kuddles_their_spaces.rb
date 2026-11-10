@@ -13,7 +13,8 @@ class MakeKonnectedKuddlesTheirSpaces < ActiveRecord::Migration[8.1]
       links(slug).each do |room_id, space_id|
         next if select_value("SELECT 1 FROM huddle_sessions WHERE #{column} = #{space_id.to_i}")
 
-        execute(<<~SQL.squish)
+        # One row each, by id: no lock to speak of.
+        safety_assured { execute(<<~SQL.squish) }
           UPDATE huddle_sessions SET scope = 'space', #{column} = #{space_id.to_i}
           WHERE id = #{room_id.to_i} AND scope = 'room' AND retired_at IS NULL
             AND krew_id IS NULL AND freethedream_project_id IS NULL
