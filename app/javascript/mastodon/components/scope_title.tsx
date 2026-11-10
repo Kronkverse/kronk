@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -53,6 +53,9 @@ interface Props {
 //     so an outer pointer-capturer (MapLibre canvas, FeedDrum swipe)
 //     can't take the gesture before the click dispatches.
 //   * Keyboard: ArrowLeft → prev, ArrowRight / Enter / Space → next.
+//   * Swipe (touch): a sideways swipe across the title band steps one
+//     view, left → next. It's the way to turn where the space itself
+//     takes sideways drags (the map pans, the Kalendar spiral turns).
 
 const messages = defineMessages({
   cycle: {
@@ -91,6 +94,34 @@ export const ScopeTitle: React.FC<Props> = ({
     [faces, idx, n, value, onChange],
   );
 
+  // A swipe ends with a click on the label; that click mustn't step again.
+  const swipe = useRef<{ x: number; y: number; id: number } | null>(null);
+  const swiped = useRef(false);
+
+  const handleSwipeStart = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch' || !e.isPrimary) return;
+    swipe.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+  }, []);
+
+  const handleSwipeEnd = useCallback(
+    (e: React.PointerEvent) => {
+      const start = swipe.current;
+      swipe.current = null;
+      if (start?.id !== e.pointerId) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (Math.abs(dx) < 30 || Math.abs(dx) <= Math.abs(dy)) return;
+      swiped.current = true;
+      setTimeout(() => (swiped.current = false), 400);
+      step(dx < 0 ? 1 : -1);
+    },
+    [step],
+  );
+
+  const handleSwipeCancel = useCallback(() => {
+    swipe.current = null;
+  }, []);
+
   // Tap the label anywhere → decide direction by x-coordinate: LEFT
   // half advances backward, RIGHT half advances forward. The whole
   // title band becomes a bidirectional selector, so a tap that
@@ -101,7 +132,7 @@ export const ScopeTitle: React.FC<Props> = ({
   const handleLabelClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement | null;
-      if (target?.closest('button')) return;
+      if (target?.closest('button') || swiped.current) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const midX = rect.left + rect.width / 2;
       step(e.clientX < midX ? -1 : 1);
@@ -159,7 +190,12 @@ export const ScopeTitle: React.FC<Props> = ({
   if (!face) return null;
 
   return (
-    <div className='scope-title'>
+    <div
+      className='scope-title'
+      onPointerDown={handleSwipeStart}
+      onPointerUp={handleSwipeEnd}
+      onPointerCancel={handleSwipeCancel}
+    >
       {/* Subtle chevrons that step one view each way. They sit absolutely on the
           left/right edges of the title band so they don't push the centred
           `.space-header` around. Kept dim by default and brightened on hover /

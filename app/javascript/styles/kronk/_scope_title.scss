@@ -53,6 +53,8 @@
   // row that hugged the title, which fixed the orphan look but
   // made them move page-to-page. This grid gets both properties —
   // fixed page-position AND anchored to the reading column.
+  // Sideways drags here are a swipe to the next view (scope_title.tsx).
+  touch-action: pan-y;
   display: grid;
   grid-template-columns: 3rem minmax(0, 34rem) 3rem;
   align-items: center;
