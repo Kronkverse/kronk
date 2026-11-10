@@ -9,11 +9,13 @@
 #   POST /api/v1/huddle/rooms  — create a new Room (any signed-in user):
 #     name, description, and optionally krew_id, a Krew the creator is in,
 #     which the new Room is Konnected (linked) to. The Room stays open.
+#   GET  /api/v1/huddle/rooms/:id — one Kuddle, open or a space's own, for
+#     whoever may get into it (HuddleSession#open_to?); 404 otherwise
 #   POST /api/v1/huddle/rooms/:id/join — mark a Room active as someone enters
 #   POST /api/v1/huddle/rooms/:id/follow, /unfollow — Follow or Unfollow a
 #     Kuddle (a Room, to people; Huddle::Follows). Both answer with the Room.
 class Api::V1::Huddle::RoomsController < Api::BaseController
-  before_action -> { doorkeeper_authorize! :read }, only: [:index]
+  before_action -> { doorkeeper_authorize! :read }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write }, only: [:create, :join, :follow, :unfollow]
   before_action :require_user!
 
@@ -33,17 +35,21 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
            follow_states: Huddle::Follows.state_for(current_account, @rooms)
   end
 
+  def show
+    render json: kuddle, serializer: REST::HuddleRoomSerializer
+  end
+
   # POST /api/v1/huddle/rooms/:id/join — someone went into the Room. Marks
   # it active, which is what keeps the reaper away and sorts the list; it
   # used to be set only at creation, so busy Rooms retired after six months.
   def join
-    room = HuddleSession.rooms.not_retired.find(params[:id])
+    room = kuddle
     room.bump_activity!
     render json: room, serializer: REST::HuddleRoomSerializer
   end
 
   def follow
-    room = HuddleSession.rooms.not_retired.find(params[:id])
+    room = kuddle
     Huddle::Follows.follow!(current_account, room)
     render json: room, serializer: REST::HuddleRoomSerializer
   end
@@ -51,7 +57,7 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
   # Stored as a choice, so a Krew member stops following their Krew's
   # Kuddle too.
   def unfollow
-    room = HuddleSession.rooms.not_retired.find(params[:id])
+    room = kuddle
     Huddle::Follows.unfollow!(current_account, room)
     render json: room, serializer: REST::HuddleRoomSerializer
   end
@@ -75,6 +81,13 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
   end
 
   private
+
+  # A Kuddle the viewer may get into: an open one, or their space's own.
+  def kuddle
+    @kuddle ||= HuddleSession.kuddles.not_retired.find(params[:id]).tap do |room|
+      raise ActiveRecord::RecordNotFound unless room.open_to?(current_account)
+    end
+  end
 
   # The Krew named by `krew_id`: nil when none was asked for, false when it
   # isn't a live Krew the creator is a member of (one answer for both, so a

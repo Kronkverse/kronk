@@ -78,6 +78,8 @@ module Freethedream
         # (Project::SPACES).
         spaces: project.shown_spaces(has_events: project_events.any?),
         section_order: project.section_order,
+        # Its own Kuddle, once someone has Konnected one (HuddleSession space).
+        kuddle_id: HuddleSession.spaces.not_retired.where(freethedream_project_id: project.id).pick(:id)&.to_s,
         ends_on: project.ends_on,
         done: project.done?,
         joining: top.joining_via_krew,

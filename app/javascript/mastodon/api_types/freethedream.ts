@@ -248,6 +248,8 @@ export interface FtdProject {
   // them, and its Activity, in (FTD_SECTION_ORDER).
   spaces: FtdSpace[];
   section_order: string[];
+  // Its own Kuddle, once one is Konnected (docs/spaces/huddle.md).
+  kuddle_id?: string | null;
   joining: FtdJoining;
   up_for_grabs: boolean;
   source_idea: FtdRef | null;
