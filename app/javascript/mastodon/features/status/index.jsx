@@ -221,7 +221,7 @@ class Status extends ImmutablePureComponent {
         <ScrollContainer scrollKey='thread'>
           <div className='item-list scrollable scrollable--flex'>
             {/* Edit is the Ж menu's on a detail page (docs/design.md). */}
-            <StatusQuoteManager id={status.get('id')} allReplies detailed hideEdit highlightComment={highlightComment} />
+            <StatusQuoteManager id={status.get('id')} allReplies detailed hideEdit withCounters highlightComment={highlightComment} />
           </div>
         </ScrollContainer>
 

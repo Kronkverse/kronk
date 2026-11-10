@@ -3552,6 +3552,7 @@
   "status.favourite": "Froth",
   "status.favourites": "{count, plural, one {froth} other {froths}}",
   "status.filter": "Filter this post",
+  "status.frothed_by": "Who frothed this",
   "status.frothed_comment": "You frothed a comment on this",
   "status.hide_replies": "Hide replies",
   "status.history.created": "{name} created {date}",
