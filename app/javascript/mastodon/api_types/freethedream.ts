@@ -92,6 +92,7 @@ export interface FtdSectionRow {
   id: string;
   slug: string;
   title: string;
+  description: string;
   owner: FtdAccount | null;
   done: boolean;
   sections_count: number;

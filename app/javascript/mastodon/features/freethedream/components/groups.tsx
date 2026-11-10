@@ -21,14 +21,6 @@ import { Progress, projectPath } from './shared';
 
 const messages = defineMessages({
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
-  sectionsCount: {
-    id: 'freethedream.fractals_count',
-    defaultMessage: '{count, plural, one {# fractal} other {# fractals}}',
-  },
-  peopleIn: {
-    id: 'freethedream.group.people',
-    defaultMessage: '{count, plural, one {# person} other {# people}}',
-  },
   unseen: { id: 'freethedream.dash.new_count', defaultMessage: '{count} new' },
   joined: { id: 'freethedream.gang.joined', defaultMessage: 'Joined' },
 });
@@ -72,20 +64,13 @@ export const GroupTiles: React.FC<{
               )}
             </span>
             <span className='freethedream-group__title'>{section.title}</span>
-            <span className='freethedream-group__meta'>
-              {[
-                section.people_count > 0 &&
-                  intl.formatMessage(messages.peopleIn, {
-                    count: section.people_count,
-                  }),
-                section.sections_count > 0 &&
-                  intl.formatMessage(messages.sectionsCount, {
-                    count: section.sections_count,
-                  }),
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </span>
+            {/* What it is, not how many: its description, in brief (Tal,
+                2026-11-10). */}
+            {section.description && (
+              <span className='freethedream-group__about'>
+                {section.description}
+              </span>
+            )}
             {section.progress.total > 0 && (
               <Progress
                 done={section.progress.sorted}

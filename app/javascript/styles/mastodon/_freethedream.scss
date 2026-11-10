@@ -133,9 +133,13 @@ $freethedream-wide: 1000px;
     background-size: cover;
   }
 
+  // A projekt's cover is a band, not the page (Tal, 2026-11-10: it took
+  // up almost half the screen at 16 / 9).
   &--wide .korner-detail__hero {
+    aspect-ratio: 5 / 2;
+
     @container frame (width >= #{$freethedream-wide}) {
-      aspect-ratio: 3 / 1;
+      aspect-ratio: 4 / 1;
     }
   }
 
@@ -246,11 +250,6 @@ $freethedream-wide: 1000px;
     display: flex;
     min-inline-size: 0;
   }
-
-  // A gang's crew: wider tiles, so what each is on has room.
-  &--crew {
-    grid-template-columns: repeat(auto-fill, minmax(min(10.5rem, 100%), 1fr));
-  }
 }
 
 .freethedream-dreamer {
@@ -301,17 +300,6 @@ $freethedream-wide: 1000px;
   &__when {
     font-size: 12px;
     color: var(--text-muted);
-  }
-
-  // A gang's crew: long lists of what each is bringing and actualising
-  // stop after three lines (its tiles are wider, .freethedream-dreamers--crew).
-  &--crew {
-    .freethedream-dreamer__on {
-      display: -webkit-box;
-      overflow: hidden;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-    }
   }
 }
 
@@ -472,9 +460,14 @@ $freethedream-wide: 1000px;
     overflow-wrap: anywhere;
   }
 
-  &__meta {
+  // What it is, in brief: its description, to two lines.
+  &__about {
+    display: -webkit-box;
+    overflow: hidden;
     color: var(--text-secondary);
     font-size: 13px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   // How far along it is, along the card's foot.

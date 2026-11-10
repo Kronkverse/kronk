@@ -29,10 +29,6 @@ const messages = defineMessages({
     id: 'krew.projekts.new_body',
     defaultMessage: 'Start one in this Krew',
   },
-  sorted: {
-    id: 'krew.projekts.sorted',
-    defaultMessage: '{sorted} of {total} sorted',
-  },
   done: { id: 'krew.projekts.done', defaultMessage: 'Done' },
 });
 
@@ -83,16 +79,7 @@ export const KrewProjekts: React.FC<{
             image={p.image_url}
             placeholder={<Icon id='korner-freethedream' icon={projektGlyph} />}
             title={p.title}
-            meta={
-              p.done
-                ? intl.formatMessage(messages.done)
-                : p.progress.total > 0
-                  ? intl.formatMessage(messages.sorted, {
-                      sorted: p.progress.sorted,
-                      total: p.progress.total,
-                    })
-                  : undefined
-            }
+            meta={p.done ? intl.formatMessage(messages.done) : undefined}
           />
         ))}
         {canStart && (

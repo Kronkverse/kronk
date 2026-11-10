@@ -251,6 +251,8 @@ module Freethedream
         id: section.id.to_s,
         slug: section.slug,
         title: section.title,
+        # In brief, for its card.
+        description: section.description.to_s.truncate(200, separator: ' '),
         owner: account(section.owner),
         done: section.done?,
         sections_count: tree.children(section.id).size,
