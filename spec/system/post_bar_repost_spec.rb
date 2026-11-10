@@ -52,4 +52,19 @@ RSpec.describe 'Post bar and Repost', :inline_jobs, :js, :streaming do
     sleep 0.2 while Status.exists?(id: post.id) && Time.zone.now < deadline
     expect(Status.exists?(id: post.id)).to be false
   end
+
+  it "shows a post's froths on its own page, and who frothed it" do
+    ana = Fabricate(:account, username: 'ana')
+    cleo = Fabricate(:account, username: 'cleo', display_name: 'Cleo')
+    post = PostStatusService.new.call(ana, text: 'Doof at dusk', visibility: 'public')
+    FavouriteService.new.call(cleo, post)
+
+    visit "/@ana/#{post.id}"
+    within('.status__action-bar', match: :first) do
+      find('.status__action-bar__froths', text: '1').click
+    end
+
+    expect(page).to have_current_path("/@ana/#{post.id}/favourites")
+    expect(page).to have_content('Cleo')
+  end
 end
