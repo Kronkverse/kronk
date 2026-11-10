@@ -60,6 +60,12 @@ const ownsSidewaysDrag = (
   return false;
 };
 
+// What a swipe never starts on, wherever it is on the page: anything you type
+// in, menus, pop-ups drawn inside the space (a composer sheet), and anything
+// marked `data-no-swipe` (an open Nudges chat).
+const NOT_A_SWIPE =
+  'input, textarea, select, [contenteditable="true"], form, [role="dialog"], [role="menu"], .hub-switcher, .kronk-menu, [data-no-swipe]';
+
 // Swipe feel. The finger decides sideways or not once it has moved
 // AXIS_LOCK_PX; dragging across the whole width is the whole quarter-turn.
 // Letting go past COMMIT_FRACTION of the width, or flicking faster than
@@ -162,7 +168,40 @@ export class FeedDrum extends Component<Props> {
     }
   }
 
+  // The swipe listens on the whole page the drum sits in (the Stage, or Home's
+  // column), not just the drum: on a short page the drum is a thin band, and
+  // the space's other sections and the empty space below count too.
+  //
+  // It listens to touch events, not pointer events, and claims a sideways drag
+  // by cancelling its first move. Pointer events lose the drag whenever the
+  // touch starts inside a box that scrolls on its own (Treks, Nudges, any
+  // full-height space): touch-action on the drum doesn't reach past that box,
+  // so the browser takes the drag and cancels the pointer.
+  private area: HTMLElement | null = null;
+
+  componentDidMount() {
+    const root = this.rootRef.current;
+    if (!root) return;
+    const area = root.closest<HTMLElement>('.kronk-stage, .column') ?? root;
+    area.addEventListener('touchstart', this.handleTouchStart, {
+      passive: true,
+    });
+    area.addEventListener('touchmove', this.handleTouchMove, {
+      passive: false,
+    });
+    area.addEventListener('touchend', this.handleTouchEnd);
+    area.addEventListener('touchcancel', this.handleTouchCancel);
+    this.area = area;
+  }
+
   componentWillUnmount() {
+    const area = this.area;
+    if (area) {
+      area.removeEventListener('touchstart', this.handleTouchStart);
+      area.removeEventListener('touchmove', this.handleTouchMove);
+      area.removeEventListener('touchend', this.handleTouchEnd);
+      area.removeEventListener('touchcancel', this.handleTouchCancel);
+    }
     this.cleanup();
   }
 
@@ -298,37 +337,56 @@ export class FeedDrum extends Component<Props> {
   // away and a blank face comes round. Let go far enough (or flick) and the
   // scope steps, the turn finishing from where the finger left it; otherwise
   // it springs back. Vertical drags stay the page's scroll.
-  private handlePointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== 'touch' || !e.isPrimary) {
-      // A second finger (pinch) ends the swipe.
-      if (this.gesture && !e.isPrimary) this.abandonGesture();
+  private handleTouchStart = (e: TouchEvent) => {
+    // A second finger (pinch) ends the swipe.
+    if (e.touches.length > 1) {
+      if (this.gesture) this.abandonGesture();
       return;
     }
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const target = e.target instanceof Element ? e.target : null;
+    const off =
+      !target ||
+      !!target.closest(NOT_A_SWIPE) ||
+      ownsSidewaysDrag(target, this.area);
     // Mid-turn, a new swipe snaps the turn to done and takes over (startDrag).
     this.gesture = {
-      id: e.pointerId,
-      x0: e.clientX,
-      y0: e.clientY,
-      mode: ownsSidewaysDrag(e.target, this.rootRef.current)
-        ? 'off'
-        : 'pending',
-      samples: [{ x: e.clientX, t: e.timeStamp }],
+      id: t.identifier,
+      x0: t.clientX,
+      y0: t.clientY,
+      mode: off ? 'off' : 'pending',
+      samples: [{ x: t.clientX, t: e.timeStamp }],
     };
   };
 
-  private handlePointerMove = (e: React.PointerEvent) => {
+  private findTouch(e: TouchEvent) {
     const g = this.gesture;
-    if (!g || g.id !== e.pointerId || g.mode === 'off') return;
+    if (!g) return null;
+    return Array.from(e.changedTouches).find((t) => t.identifier === g.id);
+  }
 
-    const dx = e.clientX - g.x0;
-    const dy = e.clientY - g.y0;
-    g.samples.push({ x: e.clientX, t: e.timeStamp });
+  private handleTouchMove = (e: TouchEvent) => {
+    const g = this.gesture;
+    if (!g || g.mode === 'off') return;
+    const t = this.findTouch(e);
+    if (!t) return;
+
+    const dx = t.clientX - g.x0;
+    const dy = t.clientY - g.y0;
+    g.samples.push({ x: t.clientX, t: e.timeStamp });
     while (g.samples.length > 2 && e.timeStamp - (g.samples[0]?.t ?? 0) > 100)
       g.samples.shift();
 
     if (g.mode === 'pending') {
       if (Math.hypot(dx, dy) < AXIS_LOCK_PX) return;
-      if (Math.abs(dx) <= Math.abs(dy) || this.props.order.length < 2) {
+      // Already scrolling (the browser has the drag), up and down, or nowhere
+      // to turn to: not a swipe.
+      if (
+        !e.cancelable ||
+        Math.abs(dx) <= Math.abs(dy) ||
+        this.props.order.length < 2
+      ) {
         g.mode = 'off';
         return;
       }
@@ -341,24 +399,28 @@ export class FeedDrum extends Component<Props> {
       g.mode = 'drag';
     }
 
+    // The drag is the drum's: the page doesn't scroll under it.
+    if (e.cancelable) e.preventDefault();
+
     const drag = this.drag;
     if (!drag) return;
     drag.angle = Math.max(-90, Math.min(90, (dx / drag.width) * 90));
     this.setAngle(drag.cube, drag.faces, drag.half, drag.angle, 0);
   };
 
-  private handlePointerUp = (e: React.PointerEvent) => {
+  private handleTouchEnd = (e: TouchEvent) => {
     const g = this.gesture;
-    if (!g || g.id !== e.pointerId) return;
+    const t = this.findTouch(e);
+    if (!g || !t) return;
     this.gesture = null;
     if (g.mode !== 'drag') return;
 
     const drag = this.drag;
     const width = drag?.width ?? this.rootRef.current?.clientWidth ?? 0;
-    const dx = e.clientX - g.x0;
+    const dx = t.clientX - g.x0;
     const first = g.samples[0];
     const dt = first ? e.timeStamp - first.t : 0;
-    const v = first && dt > 0 ? (e.clientX - first.x) / dt : 0;
+    const v = first && dt > 0 ? (t.clientX - first.x) / dt : 0;
     const far = Math.abs(dx) > width * COMMIT_FRACTION;
     const flick =
       Math.abs(v) > FLICK_PX_PER_MS &&
@@ -388,8 +450,8 @@ export class FeedDrum extends Component<Props> {
     }, 600);
   };
 
-  private handlePointerCancel = (e: React.PointerEvent) => {
-    if (this.gesture?.id === e.pointerId) this.abandonGesture();
+  private handleTouchCancel = (e: TouchEvent) => {
+    if (this.findTouch(e)) this.abandonGesture();
   };
 
   private abandonGesture() {
@@ -462,10 +524,6 @@ export class FeedDrum extends Component<Props> {
         className='feed-drum'
         ref={this.rootRef}
         style={{ touchAction: 'pan-y' }}
-        onPointerDown={this.handlePointerDown}
-        onPointerMove={this.handlePointerMove}
-        onPointerUp={this.handlePointerUp}
-        onPointerCancel={this.handlePointerCancel}
       >
         <div className='feed-drum__live' ref={this.liveRef}>
           {this.props.children}

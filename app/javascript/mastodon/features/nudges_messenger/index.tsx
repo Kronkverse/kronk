@@ -123,10 +123,6 @@ const FaceHeader: React.FC<{
   return null;
 };
 
-const stopPointerDown = (e: React.PointerEvent) => {
-  e.stopPropagation();
-};
-
 // The list and the open chat. Its height is measured, not inherited: see
 // `useFillViewport`.
 const MessengerFrame: React.FC<{
@@ -408,11 +404,11 @@ const NudgesMessenger: React.FC = () => {
                 />
               </aside>
 
-              {/* A drag that starts inside an open chat never reaches the
-                  barrel's swipe handler. */}
+              {/* A drag that starts inside an open chat never turns the
+                  barrel. */}
               <section
                 className='nudges-messenger__pane'
-                onPointerDown={conversationId ? stopPointerDown : undefined}
+                data-no-swipe={conversationId ? '' : undefined}
               >
                 {conversationId ? (
                   <ConversationView

@@ -108,10 +108,6 @@ interface StagedMedia {
 const ACCEPT_PHOTOS = 'image/*,video/*';
 const ACCEPT_FILE = 'image/*,video/*,audio/*';
 
-const stopPointerDown = (e: React.PointerEvent) => {
-  e.stopPropagation();
-};
-
 const formatDuration = (totalSeconds: number): string => {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
@@ -451,9 +447,8 @@ export const Composer: React.FC<ComposerProps> = ({
       className='nudges-composer'
       onSubmit={handleSubmit}
       // A sideways drag in here is someone moving the caret or sliding
-      // across the controls, not turning Nudges to its other face. Keep
-      // the gesture from reaching the barrel's swipe handler.
-      onPointerDown={stopPointerDown}
+      // across the controls, not turning Nudges to its other face. Being a
+      // form keeps it from turning the barrel (FeedDrum's NOT_A_SWIPE).
     >
       {sharedLink && (
         <StandardCard

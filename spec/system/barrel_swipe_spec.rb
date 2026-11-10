@@ -17,6 +17,9 @@ RSpec.describe 'Swiping the barrel', :js, :streaming do
   before do
     as_a_logged_in_user
     page.current_window.resize_to(390, 800)
+  end
+
+  def visit_home
     visit '/home'
     # The feed has loaded (an empty one, for a new member), so a touch lands
     # on it and not on whatever the page showed while loading.
@@ -55,6 +58,7 @@ RSpec.describe 'Swiping the barrel', :js, :streaming do
   end
 
   it 'turns to the next view on a swipe left, and back on a swipe right' do
+    visit_home
     first = title
     swipe(point_in('.feed-drum', 60), across: -200)
     expect(page).to have_no_css('.scope-title .space-header__title', exact_text: first)
@@ -66,6 +70,7 @@ RSpec.describe 'Swiping the barrel', :js, :streaming do
   end
 
   it 'turns under the finger, and springs back when it comes back' do
+    visit_home
     first = title
     from = point_in('.feed-drum', 60)
     swipe(from, across: -90, lift: false) do |touch|
@@ -80,6 +85,7 @@ RSpec.describe 'Swiping the barrel', :js, :streaming do
   end
 
   it 'springs back from a short drag' do
+    visit_home
     first = title
     swipe(point_in('.feed-drum', 60), across: -14, steps: 2)
     at_rest
@@ -87,6 +93,7 @@ RSpec.describe 'Swiping the barrel', :js, :streaming do
   end
 
   it 'leaves an up-and-down drag alone' do
+    visit_home
     first = title
     swipe(point_in('.feed-drum', 60), across: -60, down: 120)
     at_rest
@@ -94,8 +101,43 @@ RSpec.describe 'Swiping the barrel', :js, :streaming do
   end
 
   it 'turns on a swipe across the title band' do
+    visit_home
     first = title
     swipe(point_in('.scope-title', 20), across: -120)
     expect(page).to have_no_css('.scope-title .space-header__title', exact_text: first)
+  end
+
+  it 'turns from the empty space below a short page' do
+    visit '/hub/albutts'
+    expect(page).to have_css('.scope-title h1', text: 'All albums')
+    swipe([195, 600], across: -200)
+    expect(page).to have_no_css('.scope-title h1', text: 'All albums')
+  end
+
+  context 'with Nudges, whose faces scroll in a box of their own' do
+    let(:ana) { Fabricate(:account, username: 'ana', display_name: 'Ana') }
+
+    before do
+      Fabricate(:follow, account: bob.account, target_account: ana)
+      Fabricate(:follow, account: ana, target_account: bob.account)
+      chat = Nudges::Conversation.mate_between!(bob.account, ana)
+      Fabricate(:nudges_conversation_message, conversation: chat, author_account: ana, body: 'Dawn patrol tomorrow?')
+    end
+
+    it 'turns from the middle of the page' do
+      visit '/nudges'
+      expect(page).to have_css('.scope-title h1', text: 'Notifications')
+      swipe([195, 450], across: -200)
+      expect(page).to have_current_path('/nudges/messages')
+    end
+
+    it 'stays put inside an open chat' do
+      visit '/nudges/messages'
+      find('.nudges-row', text: 'Ana').click
+      expect(page).to have_content('Dawn patrol tomorrow?')
+      swipe(point_in('.nudges-messenger__pane', 200), across: -200)
+      expect(page).to have_content('Dawn patrol tomorrow?')
+      expect(page).to have_no_current_path('/nudges')
+    end
   end
 end
