@@ -180,7 +180,12 @@ export const apiFtdUpdateItem = (id: string, item: FtdItemParams) =>
 export const apiFtdRemoveItem = (id: string) =>
   apiRequestDelete(`${base}/items/${id}`);
 
-export type FtdItemAction = 'claim' | 'unclaim' | 'take_over';
+export type FtdItemAction =
+  | 'claim'
+  | 'unclaim'
+  | 'take_over'
+  | 'done'
+  | 'undone';
 
 export const apiFtdItemAction = (id: string, action: FtdItemAction) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/${action}`);

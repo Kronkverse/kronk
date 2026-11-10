@@ -1150,6 +1150,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_100000) do
     t.text "body", default: "", null: false
     t.integer "category"
     t.datetime "created_at", null: false
+    t.datetime "done_at"
     t.integer "kind", null: false
     t.boolean "more_welcome", default: false, null: false
     t.bigint "mycelium_item_id"
@@ -1209,6 +1210,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_100000) do
     t.datetime "done_at"
     t.date "ends_on"
     t.integer "joining", default: 0, null: false
+    t.integer "kind"
     t.bigint "krew_id"
     t.string "location", default: "", null: false
     t.bigint "owner_id"

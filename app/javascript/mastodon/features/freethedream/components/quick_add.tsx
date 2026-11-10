@@ -28,15 +28,11 @@ const messages = defineMessages({
   },
   howMany: { id: 'freethedream.quick.how_many', defaultMessage: 'How many' },
   job: {
-    id: 'freethedream.quick.actualise',
-    defaultMessage: 'Add an idea to bring to life',
+    id: 'freethedream.quick.todo',
+    defaultMessage: 'Add something to do',
   },
   add: { id: 'freethedream.quick.add', defaultMessage: 'Add' },
   added: { id: 'freethedream.quick.added', defaultMessage: 'Added {what}' },
-  addedOn: {
-    id: 'freethedream.quick.added_on',
-    defaultMessage: 'Added {what}. You’re on it.',
-  },
 });
 
 interface Props {
@@ -114,7 +110,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
                       ? `${line.title} (${formatNeed(line.quantity, line.unit, line.more)})`
                       : line.title,
                 })
-              : intl.formatMessage(messages.addedOn, { what: line.title }),
+              : intl.formatMessage(messages.added, { what: line.title }),
           );
           onAdded();
           input.current?.focus();

@@ -155,6 +155,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
       api(cara, :post, "/freethedream/projects/#{doof['id']}/join")
       kitchen = api(bob, :post, '/freethedream/projects', project: { title: 'Kitchen', parent_id: doof['id'] })
       fire = api(bob, :post, '/freethedream/items', item: { project_id: kitchen['id'], kind: 'job', title: 'build the fire', quantity: 2 })
+      api(bob, :post, "/freethedream/items/#{fire['id']}/claim")
       api(cara, :post, "/freethedream/items/#{fire['id']}/claim")
     end
 

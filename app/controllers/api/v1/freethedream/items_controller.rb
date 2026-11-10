@@ -30,8 +30,6 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
       grow_into_mycelium!(item)
       item.save!
       item.placements.create!(project: project)
-      # Whoever adds something to Actualise is its first actualiser.
-      item.claims.create!(account: current_account) if item.job_kind?
     end
     log!(project, item, "#{item.kind}_added")
     Freethedream::MyceliumMatch.nudge_for(item)
@@ -92,6 +90,25 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
 
   def unclaim
     @item.claims.where(account_id: current_account.id).delete_all
+    render json: view.item(@item)
+  end
+
+  # Ticking a To do off, and back on: anyone in the projekt, as anyone can
+  # pick one up (docs/spaces/freethedream.md, The checklist).
+  def done
+    require_member!(@item.root)
+    permit!(@item.job_kind?)
+    unless @item.done?
+      @item.update!(done_at: Time.now.utc)
+      log!(home, @item, 'done')
+    end
+    render json: view.item(@item)
+  end
+
+  def undone
+    require_member!(@item.root)
+    permit!(@item.job_kind?)
+    @item.update!(done_at: nil)
     render json: view.item(@item)
   end
 
