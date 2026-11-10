@@ -57,7 +57,7 @@ you made.
   **Earlier** (`GET /api/v1/events?krew_id=&filter=past`), when Kalendar is.
 - **Its works are spaces too** (the Konnect grid, decisions.md
   2026-11-08): a Krew turns on a **Gallery** (Art), **Films** (Cinema),
-  **Music** (Booth) or **Stories** (Kronikles), from Konnect (picking the
+  **Music** (Booth) or **Kronikles**, from Konnect (picking the
   korner turns it on, `TURN_ON_SPACES` in `krew_detail.tsx`) or Krew
   settings (`KrewKorner::KORNERS`, `KREW_PAGE_SPACES`). Each is its own
   section (`components/space_shelf.tsx`): what of that korner is Konnected
@@ -202,12 +202,13 @@ All in `app/javascript/mastodon/features/krew/`.
   order since Tal's second 2026-10-31 pass (decisions.md, 2026-10-31). Each
   section shows only once the Krew has that thing, so a Krew with nothing
   Konnected is its header, the Konnect tile and its posts. Members can
-  rearrange the sections below Spaces in Settings, **Page order** (Tal,
+  rearrange the sections in Settings, **Page order** (Tal,
   2026-11-08; `krews.section_order`, the kit's `<ArrangeList>`): each
   space's section, Projekts, Kuestions, Chat and Kuddles move as a whole,
-  and the Spaces tiles follow. Posts stay last. What's left out of the
-  saved order keeps its place below it:
-  - **Spaces**: first, a tile for each thing the Krew has, each scrolling
+  and the Spaces tiles follow. Spaces sit just above Posts (Tal,
+  2026-11-10: not at the top of the page), and Posts stay last. What's left
+  out of the saved order keeps its place below it:
+  - **Spaces**: after the sections, a tile for each thing the Krew has, each scrolling
     down to its section. Then what the Krew is Konnected to elsewhere (a
     listing…), and last **Konnect** (a +). A space gets its tile and
     section once it is picked in Konnect, once something is made in it, or
@@ -222,7 +223,7 @@ All in `app/javascript/mastodon/features/krew/`.
     album shared to it from its composer shows too), **Events**
     (`krew_events.tsx`: what is coming up for the Krew, soonest first; past events stay in
     Kalendar, Tal 2026-11-09),
-    and the works (Gallery, Films, Music, Stories). A card with no picture
+    and the works (Gallery, Films, Music, Kronikles). A card with no picture
     shows its space's glyph. Add existing on Events
     Konnects one of your events, which shares it into the Krew
     (`Kronk::EventLinks`) and makes it a card here. The + moon is always
