@@ -3,7 +3,8 @@
 require 'rails_helper'
 
 # A projekt's chat (docs/spaces/freethedream.md, Chat): a Nudges group chat
-# for its members, turned on from Edit, in place of Talk.
+# for its members, on from the start and turned off and on from Edit, in
+# place of Talk.
 RSpec.describe 'API V1 FreeTheDream chat' do
   let(:alice) { Fabricate(:user) }
   let(:bob)   { Fabricate(:user) }
@@ -26,6 +27,15 @@ RSpec.describe 'API V1 FreeTheDream chat' do
     conversation = Nudges::Conversation.find(chat['conversation_id'])
     expect(conversation).to have_attributes(kind: 'projekt', freethedream_project_id: doof.id)
     expect(conversation.memberships.pluck(:account_id)).to contain_exactly(alice.account.id, bob.account.id)
+  end
+
+  it 'starts on for a new projekt, not for its Komponents', :aggregate_failures do
+    made = api(alice, :post, '/freethedream/projects', project: { title: 'Camp', krew_id: Fabricate(:krew, seeded_by: alice.account).id })
+    expect(made['spaces']).to include('nudges')
+    expect(Nudges::Conversation.where(kind: 'projekt', freethedream_project_id: made['id'])).to exist
+
+    part = api(alice, :post, '/freethedream/projects', project: { title: 'Tents', parent_id: made['id'] })
+    expect(part['spaces']).to be_empty
   end
 
   it 'brings in whoever joins later, and lets go of whoever leaves' do
