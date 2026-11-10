@@ -600,6 +600,137 @@ export function getDaylightInfo(
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * The moon's ecliptic longitude in degrees (0–360), measured from the
+ * equinox of date, from its mean elements and the main periodic terms.
+ * Good to about a third of a degree.
+ */
+function moonEclipticLongitude(jd: number): number {
+  const T = (jd - 2451545.0) / 36525;
+  // Moon's mean longitude, mean anomaly, mean elongation, node (all degrees)
+  const L0 = 218.3164477 + 481267.88123421 * T;
+  const M = ((357.5291092 + 35999.0502909 * T) % 360) * DEG; // sun's anomaly
+  const Mprime = ((134.9633964 + 477198.8675055 * T) % 360) * DEG; // moon's anomaly
+  const D = ((297.8501921 + 445267.1114034 * T) % 360) * DEG; // elongation
+  const Om = ((125.0445479 - 1934.1362608 * T) % 360) * DEG; // node
+
+  // Longitude correction (degrees) — main terms only
+  const dLon =
+    6.289 * Math.sin(Mprime) -
+    1.274 * Math.sin(2 * D - Mprime) +
+    0.658 * Math.sin(2 * D) -
+    0.186 * Math.sin(M) -
+    0.059 * Math.sin(2 * Mprime - 2 * D) -
+    0.057 * Math.sin(Mprime - 2 * D + M) +
+    0.053 * Math.sin(Mprime + 2 * D) +
+    0.046 * Math.sin(2 * D - M) +
+    0.041 * Math.sin(Mprime - M) -
+    0.035 * Math.sin(D) -
+    0.031 * Math.sin(Mprime + M) -
+    0.015 * Math.sin(2 * Om) +
+    0.011 * Math.sin(Mprime - 4 * D);
+
+  return (((L0 + dLon) % 360) + 360) % 360;
+}
+
+export const ZODIAC_SIGNS = [
+  'aries',
+  'taurus',
+  'gemini',
+  'cancer',
+  'leo',
+  'virgo',
+  'libra',
+  'scorpio',
+  'sagittarius',
+  'capricorn',
+  'aquarius',
+  'pisces',
+] as const;
+
+export type ZodiacSign = (typeof ZODIAC_SIGNS)[number];
+
+/**
+ * The zodiac sign the moon is in: the tropical sign, 30 degrees of the
+ * ecliptic each from the March equinox, as an almanac gives it (not the
+ * constellation behind it, which getSunConstellation reads for the sun).
+ */
+export function getMoonSign(date: Date): ZodiacSign {
+  const lon = moonEclipticLongitude(toJulianDay(date));
+  return ZODIAC_SIGNS[Math.floor(lon / 30) % 12] ?? 'aries';
+}
+
+/**
+ * The instant of the new or full moon numbered k (Meeus, Astronomical
+ * Algorithms, ch. 49): k counts lunations from the new moon of
+ * 2000-01-06, and k + 0.5 is the full moon after it. Main periodic terms
+ * only, so within a few minutes; a JS Date (UTC).
+ */
+function truePhase(k: number, full: boolean): Date {
+  const T = k / 1236.85;
+  const T2 = T * T;
+  const T3 = T2 * T;
+  const T4 = T3 * T;
+  const jde =
+    2451550.09766 +
+    29.530588861 * k +
+    0.00015437 * T2 -
+    0.00000015 * T3 +
+    0.00000000073 * T4;
+  const E = 1 - 0.002516 * T - 0.0000074 * T2;
+  const M = (2.5534 + 29.1053567 * k - 0.0000014 * T2 - 0.00000011 * T3) * DEG;
+  const Mp =
+    (201.5643 +
+      385.81693528 * k +
+      0.0107582 * T2 +
+      0.00001238 * T3 -
+      0.000000058 * T4) *
+    DEG;
+  const F =
+    (160.7108 +
+      390.67050284 * k -
+      0.0016118 * T2 -
+      0.00000227 * T3 +
+      0.000000011 * T4) *
+    DEG;
+  const Om = (124.7746 - 1.56375588 * k + 0.0020672 * T2) * DEG;
+
+  const correction =
+    (full ? -0.40614 : -0.4072) * Math.sin(Mp) +
+    (full ? 0.17302 : 0.17241) * E * Math.sin(M) +
+    (full ? 0.01614 : 0.01608) * Math.sin(2 * Mp) +
+    (full ? 0.01043 : 0.01039) * Math.sin(2 * F) +
+    (full ? 0.00734 : 0.00739) * E * Math.sin(Mp - M) -
+    (full ? 0.00515 : 0.00514) * E * Math.sin(Mp + M) +
+    (full ? 0.00209 : 0.00208) * E * E * Math.sin(2 * M) -
+    0.00111 * Math.sin(Mp - 2 * F) -
+    0.00057 * Math.sin(Mp + 2 * F) +
+    0.00056 * E * Math.sin(2 * Mp + M) -
+    0.00042 * Math.sin(3 * Mp) +
+    0.00042 * E * Math.sin(M + 2 * F) +
+    0.00038 * E * Math.sin(M - 2 * F) -
+    0.00024 * E * Math.sin(2 * Mp - M) -
+    0.00017 * Math.sin(Om);
+
+  // Dynamical time to UT: about 69 s these years.
+  const jd = jde + correction - 69 / 86400;
+  return new Date((jd - 2440587.5) * 86400000);
+}
+
+/** The next new or full moon after `date`. */
+export function getNextMoonPhase(date: Date, phase: 'new' | 'full'): Date {
+  const offset = phase === 'full' ? 0.5 : 0;
+  // A lunation or so before, then step forward to the first one after.
+  let k =
+    Math.floor((toJulianDay(date) - 2451550.09766) / 29.530588861) - 1 + offset;
+  let when = truePhase(k, phase === 'full');
+  while (when.getTime() <= date.getTime()) {
+    k += 1;
+    when = truePhase(k, phase === 'full');
+  }
+  return when;
+}
+
+/**
  * Returns moon rise and set as UTC Dates for a given local calendar date
  * at lat/lon. Returns null where the moon doesn't rise or set that day.
  */
@@ -616,28 +747,8 @@ export function getMoonRiseSet(
 
   function moonRaDec(jd: number): { ra: number; dec: number } {
     const T = (jd - 2451545.0) / 36525;
-    // Moon's mean longitude, mean anomaly, mean elongation, node (all degrees)
-    const L0 = (218.3164477 + 481267.88123421 * T) % 360;
-    const M = ((357.5291092 + 35999.0502909 * T) % 360) * DEG; // sun's anomaly
     const Mprime = ((134.9633964 + 477198.8675055 * T) % 360) * DEG; // moon's anomaly
-    const D = ((297.8501921 + 445267.1114034 * T) % 360) * DEG; // elongation
     const Om = ((125.0445479 - 1934.1362608 * T) % 360) * DEG; // node
-
-    // Longitude correction (degrees) — main terms only
-    const dLon =
-      6.289 * Math.sin(Mprime) -
-      1.274 * Math.sin(2 * D - Mprime) +
-      0.658 * Math.sin(2 * D) -
-      0.186 * Math.sin(M) -
-      0.059 * Math.sin(2 * Mprime - 2 * D) -
-      0.057 * Math.sin(Mprime - 2 * D + M) +
-      0.053 * Math.sin(Mprime + 2 * D) +
-      0.046 * Math.sin(2 * D - M) +
-      0.041 * Math.sin(Mprime - M) -
-      0.035 * Math.sin(D) -
-      0.031 * Math.sin(Mprime + M) -
-      0.015 * Math.sin(2 * Om) +
-      0.011 * Math.sin(Mprime - 4 * D);
 
     const dLat =
       5.128 * Math.sin(Om) +
@@ -647,7 +758,7 @@ export function getMoonRiseSet(
       0.055 * Math.sin(2 * Mprime - Om);
 
     // Ecliptic coordinates → equatorial
-    const lon = (L0 + dLon) * DEG;
+    const lon = moonEclipticLongitude(jd) * DEG;
     const latMoon = dLat * DEG;
     const eps = 23.4393 * DEG; // obliquity (approximate)
 
