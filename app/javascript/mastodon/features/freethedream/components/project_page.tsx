@@ -2,38 +2,44 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 
 import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import { apiDeleteAttachment } from 'mastodon/api/attachments';
-import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
 import {
   apiFtdProject,
   apiFtdProjectAction,
   apiFtdRemoveProject,
   apiFtdSeen,
+  apiFtdTurnOnSpace,
+  apiFtdChat,
+  FTD_SPACES,
 } from 'mastodon/api/freethedream';
-import type {
-  FtdProject,
-  FtdQuotedItem,
-} from 'mastodon/api_types/freethedream';
+import { apiSpaceKuddle } from 'mastodon/api/huddle_spaces';
+import type { FtdProject, FtdSpace } from 'mastodon/api_types/freethedream';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LinkifiedText } from 'mastodon/components/linkified_text';
+import { PeopleRow } from 'mastodon/components/people_row';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { SpaceShelf } from 'mastodon/components/space_shelf';
+import { KrewChat } from 'mastodon/features/krew/krew_chat';
+import {
+  arrangeSections,
+  JumpTile,
+  scrollToSection,
+} from 'mastodon/features/krew/krew_detail';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
 import { HomeKuestions } from 'mastodon/features/questions/home_kuestions';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { act } from './act';
-import { Crew } from './crew';
-import { eventMapHref, eventWhen, GettingTogether } from './event_card';
+import { eventMapHref, eventWhen, ProjectEvents } from './event_card';
 import { GroupTiles } from './groups';
 import { Yours } from './overview';
 import { ProjectComposer } from './project_composer';
@@ -45,7 +51,6 @@ import {
   useKrewAddress,
   useLoaded,
 } from './shared';
-import { Talk } from './talk';
 import { Updates } from './updates';
 
 // A projekt, a Komponent (a gang in the code) or a fractal, on one page.
@@ -62,7 +67,15 @@ import { Updates } from './updates';
 // (Tal, 2026-11-08). A fractal's page is the same without fractals of its
 // own.
 
+// Its spaces work as a Krew's do (Tal, 2026-11-09: "i really like how the
+// krew setup now works"): Konnect turns one on, a tile at the top scrolls
+// to it, and each is a section of its own, in the order its owner arranged
+// in Edit. Only the projekt turns spaces on; a Komponent shows what it has.
+const spaceSectionId = (slug: FtdSpace) => `projekt-space-${slug}`;
+
 const messages = defineMessages({
+  spaces: { id: 'freethedream.spaces', defaultMessage: 'Spaces' },
+  events: { id: 'freethedream.events.title', defaultMessage: 'Events' },
   albums: { id: 'freethedream.albums.title', defaultMessage: 'Albums' },
   kronikles: {
     id: 'freethedream.kronikles.title',
@@ -104,6 +117,7 @@ const messages = defineMessages({
   },
   groups: { id: 'freethedream.gangs', defaultMessage: 'Komponents' },
   kuestions: { id: 'freethedream.kuestions', defaultMessage: 'Kuestions' },
+  chat: { id: 'krew.detail.tile.chat', defaultMessage: 'Chat' },
   addGroup: {
     id: 'freethedream.coalesce_gang',
     defaultMessage: '+ Add a Komponent',
@@ -143,21 +157,6 @@ const ProjectView: React.FC<{
   const refresh = useCallback(() => {
     void act(apiFtdProject(project.id).then(onChange));
   }, [project.id, onChange]);
-
-  // "Talk about it" on a thing on the list lands here with ?quote=<item>,
-  // and Talk opens a thread about it.
-  const { pathname, search } = useLocation();
-  const quoteId = new URLSearchParams(search).get('quote');
-  const quote: FtdQuotedItem | null = quoteId
-    ? ([
-        ...project.items,
-        ...project.inside.flatMap((g) => g.items),
-        ...project.still_needed,
-      ].find((item) => item.id === quoteId) ?? null)
-    : null;
-  const clearQuote = useCallback(() => {
-    history.replace(pathname);
-  }, [history, pathname]);
 
   const close = useCallback(() => {
     setComposer(null);
@@ -275,34 +274,71 @@ const ProjectView: React.FC<{
   );
   const canAddInside = project.level !== 'fractal' && project.can.add;
 
-  // Kuddles Konnected here show as call frames at the top of the work, not
-  // as tiles (Tal, 2026-10-30: "konnecting a huddle should put a frame
-  // into the space"). Attached reports its Konnections, so a new one shows
-  // at once.
-  const [kuddles, setKuddles] = useState<{ room: string; link: string }[]>([]);
-  const handleKonnections = useCallback((rows: ApiAttachmentJSON[]) => {
-    const seen = new Set<string>();
-    setKuddles(
-      rows.flatMap((row) => {
-        const room =
-          row.target_slug === 'huddle'
-            ? row.target_id
-            : row.source_slug === 'huddle'
-              ? row.source_id
-              : null;
-        if (!room || seen.has(room)) return [];
-        seen.add(room);
-        return [{ room, link: row.id }];
-      }),
+  // Konnect → a space turns it on and goes to its section, New and Add
+  // existing first.
+  const [scrollTarget, setScrollTarget] = useState<string | null>(null);
+  const turnOnSpace = useCallback(
+    async (slug: string) => {
+      // Konnect → Kuddle makes its own Kuddle, or goes to it, on a
+      // Komponent's page too (docs/spaces/huddle.md, A space's own Kuddle).
+      if (slug === 'huddle') {
+        await apiSpaceKuddle({ project_id: project.id });
+        onChange(await apiFtdProject(project.id));
+        setScrollTarget('projekt-kuddle');
+        return;
+      }
+      onChange(await apiFtdTurnOnSpace(project.id, slug));
+      setScrollTarget(spaceSectionId(slug as FtdSpace));
+    },
+    [project.id, onChange],
+  );
+  useEffect(() => {
+    if (!scrollTarget) return;
+    const frame = requestAnimationFrame(() => {
+      scrollToSection(scrollTarget);
+      setScrollTarget(null);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [scrollTarget, project]);
+  const spaceLabel = (slug: FtdSpace) =>
+    intl.formatMessage(
+      slug === 'kalendar'
+        ? messages.events
+        : slug === 'albutts'
+          ? messages.albums
+          : slug === 'kronikles'
+            ? messages.kronikles
+            : slug === 'nudges'
+              ? messages.chat
+              : messages.kuestions,
     );
-  }, []);
-  const handleDiskonnect = useCallback((link: string) => {
-    void act(
-      apiDeleteAttachment(link).then(() => {
-        setKuddles((current) => current.filter((k) => k.link !== link));
-      }),
-    );
-  }, []);
+  // Kuestions and its chat are the projekt's own, not a Komponent's.
+  const spaces = project.spaces.filter(
+    (slug) => (slug !== 'kuestions' && slug !== 'nudges') || project.top,
+  );
+  const hasSpace = (slug: FtdSpace) => spaces.includes(slug);
+
+  // Its chat, in place of Talk (Tal, 2026-11-09): the projekt's own Nudges
+  // group chat, read and written here as a Krew's is on its page.
+  const chatOn = hasSpace('nudges') && isMember;
+  const [chat, setChat] = useState<string | null>(null);
+  useEffect(() => {
+    setChat(null);
+    if (!chatOn) return undefined;
+    let cancelled = false;
+    apiFtdChat(project.id)
+      .then((next) => {
+        if (!cancelled) setChat(next.conversation_id);
+        return undefined;
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [chatOn, project.id]);
+  const handleChatRead = useCallback(() => undefined, []);
 
   const goRoot = useCallback(() => {
     history.push(projectPath(project.root));
@@ -380,23 +416,6 @@ const ProjectView: React.FC<{
   return (
     <KornerDetail
       className='freethedream-detail freethedream-detail--wide'
-      attached={{
-        korner: 'freethedream',
-        id: project.id,
-        canManage: project.can.edit,
-        // Albums and Kronikles show in their own sections (Spaces,
-        // decisions.md 2026-11-08), not as tiles.
-        excludeSlugs: ['huddle', 'albutts', 'kronikles'],
-        onKonnections: handleKonnections,
-        // Getting together already lists the linked events, and a projekt
-        // lives in its Krew.
-        exclude: [
-          ...project.events.map((e) => ({ slug: 'kalendar', id: e.id })),
-          ...(project.top && project.krew
-            ? [{ slug: 'krew', id: project.krew.id }]
-            : []),
-        ],
-      }}
       hero={
         project.top && cover ? (
           <div
@@ -413,15 +432,21 @@ const ProjectView: React.FC<{
           </span>
         )
       }
-      meta={meta}
+      meta={
+        project.top ? (
+          meta
+        ) : (
+          <>
+            {meta}
+            {/* Who's in it, at a glance (Tal, 2026-11-10). */}
+            <PeopleRow people={project.crew.map((row) => row.account)} />
+          </>
+        )
+      }
       actions={gangBar}
     >
       <>
-        {project.top ? (
-          <Yours project={project} />
-        ) : (
-          <Crew crew={project.crew} />
-        )}
+        {project.top && <Yours project={project} />}
         {project.source_idea && (
           <div className='freethedream-intro'>
             <p className='freethedream__quiet'>
@@ -445,8 +470,9 @@ const ProjectView: React.FC<{
           </p>
         )}
 
-        {/* Gangs under the emergence, fractals under a gang, nothing under
-            a fractal. */}
+        {/* Its Komponents first, the main thing on a projekt's page (Tal,
+            2026-11-09): gangs under the emergence, fractals under a gang,
+            nothing under a fractal. */}
         {(project.sections.length > 0 || canAddInside) && (
           <Section
             title={intl.formatMessage(
@@ -464,76 +490,130 @@ const ProjectView: React.FC<{
           </Section>
         )}
 
-        <div className='freethedream-layout'>
+        {/* One column, as a Krew's page is (Tal, 2026-11-09): Talk was
+            the side column's, and its chat is a section now. */}
+        <div className='freethedream-layout freethedream-layout--single'>
           <div className='freethedream-layout__main'>
-            {kuddles.map((k) => (
-              <KuddleFrame
-                key={k.room}
-                roomId={k.room}
-                link={k.link}
-                onDiskonnect={project.can.edit ? handleDiskonnect : undefined}
-              />
-            ))}
-            {/* Its own Kuestions, once its Krew has turned Kuestions on:
-                whoever can see the projekt answers them, its members ask
-                them. The projekt itself only, not its Komponents (Tal,
-                2026-11-08). */}
-            {project.top && project.krew?.kuestions && (
-              <HomeKuestions
-                home={{ kind: 'projekt', id: project.id }}
-                canAsk={isMember}
-                frame={frameKuestions}
-              />
+            {/* Its own Kuddle, a call frame at the top of the work (Tal,
+                2026-10-30: "konnecting a huddle should put a frame into the
+                space"). */}
+            {project.kuddle_id && (
+              <div id='projekt-kuddle'>
+                <KuddleFrame roomId={project.kuddle_id} />
+              </div>
             )}
-            {/* Its albums, a Space with New and Add existing (decisions.md,
-                2026-11-08): shown once one is Konnected, from Konnect. */}
-            <SpaceShelf
-              homeSlug='freethedream'
-              homeId={project.id}
-              korner='albutts'
-              title={intl.formatMessage(messages.albums)}
-              canAdd={project.can.edit}
-              hideWhenEmpty
-            />
-            {/* Its Kronikles: written documents, its constitution among
-                them (Tal, 2026-11-09). Shown once one is Konnected, from
-                Konnect → Kronikles → New Kronikle. */}
-            <SpaceShelf
-              homeSlug='freethedream'
-              homeId={project.id}
-              korner='kronikles'
-              title={intl.formatMessage(messages.kronikles)}
-              canAdd={project.can.edit}
-              hideWhenEmpty
-            />
-            {project.top && (
-              <Updates
-                updates={project.updates}
-                hereId={project.id}
-                rootId={project.root.id}
-              />
-            )}
-          </div>
-          <aside className='freethedream-layout__aside'>
-            <GettingTogether project={project} refresh={refresh} />
-            {!project.top && (
-              <Updates
-                updates={project.updates}
-                hereId={project.id}
-                rootId={project.root.id}
-              />
-            )}
-            <Talk
-              subjectType='project'
-              subjectId={project.id}
-              emergenceId={project.root.id}
-              comments={project.comments}
-              canComment={project.can.comment}
-              quote={quote}
-              onQuoteDone={clearQuote}
+            {/* Each space it has as its own section, then its Activity, in
+                the order its owner arranged in Edit. A Komponent keeps its
+                events here, with + for one of its own. */}
+            {arrangeSections(project.section_order, [
+              [
+                'kalendar',
+                (hasSpace('kalendar') || !project.top) && (
+                  <ProjectEvents
+                    key='kalendar'
+                    id={spaceSectionId('kalendar')}
+                    project={project}
+                    refresh={refresh}
+                  />
+                ),
+              ],
+              [
+                'albutts',
+                hasSpace('albutts') && (
+                  <SpaceShelf
+                    key='albutts'
+                    id={spaceSectionId('albutts')}
+                    homeSlug='freethedream'
+                    homeId={project.id}
+                    korner='albutts'
+                    title={intl.formatMessage(messages.albums)}
+                    canAdd={project.can.edit}
+                  />
+                ),
+              ],
+              [
+                'kronikles',
+                hasSpace('kronikles') && (
+                  <SpaceShelf
+                    key='kronikles'
+                    id={spaceSectionId('kronikles')}
+                    homeSlug='freethedream'
+                    homeId={project.id}
+                    korner='kronikles'
+                    title={intl.formatMessage(messages.kronikles)}
+                    canAdd={project.can.edit}
+                  />
+                ),
+              ],
+              [
+                'kuestions',
+                hasSpace('kuestions') && (
+                  <div key='kuestions' id={spaceSectionId('kuestions')}>
+                    <HomeKuestions
+                      home={{ kind: 'projekt', id: project.id }}
+                      canAsk={isMember}
+                      frame={frameKuestions}
+                    />
+                  </div>
+                ),
+              ],
+              [
+                'nudges',
+                chat && (
+                  <div key='nudges' id={spaceSectionId('nudges')}>
+                    <KrewChat conversationId={chat} onRead={handleChatRead} />
+                  </div>
+                ),
+              ],
+              [
+                'updates',
+                <Updates
+                  key='updates'
+                  updates={project.updates}
+                  hereId={project.id}
+                  rootId={project.root.id}
+                />,
+              ],
+            ])}
+            {/* Its Konnect tiles, last, as a Krew's sit just above its posts
+                (Tal, 2026-11-10): a tile for each space, scrolling to its
+                section, then what it's Konnected to, then Konnect. */}
+            <AttachmentSection
+              korner='freethedream'
+              recordId={project.id}
+              canManage={project.can.edit}
+              heading={
+                spaces.length > 0 ? (
+                  <FormattedMessage {...messages.spaces} />
+                ) : undefined
+              }
+              leading={spaces.map((slug) => (
+                <JumpTile
+                  key={slug}
+                  slug={slug}
+                  target={spaceSectionId(slug)}
+                  label={spaceLabel(slug)}
+                />
+              ))}
+              // Its spaces' records show in their sections, a Kuddle as a call
+              // frame, and a projekt lives in its Krew.
+              excludeSlugs={['huddle', 'albutts', 'kronikles', ...spaces]}
+              exclude={[
+                ...project.events.map((e) => ({ slug: 'kalendar', id: e.id })),
+                ...(project.top && project.krew
+                  ? [{ slug: 'krew', id: project.krew.id }]
+                  : []),
+              ]}
+              onTurnOnSpace={isMember ? turnOnSpace : undefined}
+              turnOnSlugs={
+                project.top && project.can.edit
+                  ? [...FTD_SPACES, 'huddle']
+                  : ['huddle']
+              }
+              cardsApart
             />
             {actions}
-          </aside>
+          </div>
         </div>
       </>
 

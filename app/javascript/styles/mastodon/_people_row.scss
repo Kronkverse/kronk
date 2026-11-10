@@ -1,0 +1,58 @@
+// Who's in a space, at a glance (components/people_row.tsx): round
+// pictures overlapping in a row, then a "+N" for the rest.
+.people-row {
+  --people-row-size: 32px;
+
+  display: flex;
+  align-items: center;
+  margin-block: 0.5rem;
+
+  &__person,
+  &__more {
+    flex-shrink: 0;
+    inline-size: var(--people-row-size);
+    block-size: var(--people-row-size);
+    border: 2px solid var(--surface-primary);
+    border-radius: var(--radius-round);
+
+    &:not(:first-child) {
+      margin-inline-start: calc(var(--people-row-size) * -0.3);
+    }
+  }
+
+  &__person {
+    overflow: hidden;
+    background: var(--surface-elevated);
+
+    img {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+    }
+
+    &:hover,
+    &:focus-visible {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  &__more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: auto;
+    min-inline-size: var(--people-row-size);
+    padding-inline: 0.4rem;
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+// Under a detail page title it lines up with the title, centred.
+.korner-detail__meta .people-row {
+  justify-content: center;
+}

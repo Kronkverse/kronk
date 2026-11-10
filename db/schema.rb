@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_140200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1205,8 +1205,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
     t.bigint "owner_id"
     t.bigint "parent_id"
     t.bigint "root_id"
+    t.string "section_order", default: [], null: false, array: true
     t.string "slug", null: false
     t.bigint "source_idea_id"
+    t.string "spaces", default: [], null: false, array: true
     t.date "starts_on"
     t.string "title", null: false
     t.datetime "updated_at", null: false
@@ -1266,8 +1268,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
     t.datetime "created_at", null: false
     t.text "description"
     t.datetime "ended_at"
+    t.bigint "freethedream_project_id"
     t.bigint "host_account_id"
     t.string "icon", limit: 32
+    t.bigint "krew_id"
     t.datetime "last_active_at"
     t.datetime "retired_at"
     t.datetime "scheduled_end"
@@ -1278,7 +1282,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
     t.bigint "status_id"
     t.string "title", limit: 200, null: false
     t.datetime "updated_at", null: false
+    t.index ["freethedream_project_id"], name: "index_huddle_sessions_on_freethedream_project_id", unique: true, where: "(freethedream_project_id IS NOT NULL)"
     t.index ["host_account_id"], name: "index_huddle_sessions_on_host_account_id"
+    t.index ["krew_id"], name: "index_huddle_sessions_on_krew_id", unique: true, where: "(krew_id IS NOT NULL)"
     t.index ["scheduled_start"], name: "index_huddle_sessions_on_scheduled_start", where: "(scheduled_start IS NOT NULL)"
     t.index ["scope", "last_active_at"], name: "index_huddle_sessions_live_rooms", where: "(retired_at IS NULL)"
     t.index ["state"], name: "index_huddle_sessions_on_state"
@@ -1917,6 +1923,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
     t.bigint "account_b_id"
     t.datetime "created_at", null: false
     t.datetime "expires_at"
+    t.bigint "freethedream_project_id"
     t.string "kind", default: "mate", null: false
     t.bigint "krew_id"
     t.datetime "last_activity_at", null: false
@@ -1929,6 +1936,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
     t.index ["account_a_id"], name: "index_nudges_conversations_on_account_a_id"
     t.index ["account_b_id"], name: "index_nudges_conversations_on_account_b_id"
     t.index ["expires_at"], name: "index_nudges_conversations_on_expires_at", where: "(expires_at IS NOT NULL)"
+    t.index ["freethedream_project_id"], name: "index_nudges_convos_on_freethedream_project_id", unique: true, where: "(freethedream_project_id IS NOT NULL)"
     t.index ["krew_id"], name: "index_nudges_conversations_on_krew_id"
     t.index ["krew_id"], name: "index_nudges_convos_on_krew_id_unique", unique: true, where: "(krew_id IS NOT NULL)"
     t.index ["last_activity_at"], name: "index_nudges_conversations_on_last_activity_at", order: :desc
@@ -3056,6 +3064,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :nullify, validate: false
+  add_foreign_key "huddle_sessions", "freethedream_projects", on_delete: :nullify
+  add_foreign_key "huddle_sessions", "krews", on_delete: :nullify
   add_foreign_key "identities", "users", name: "fk_bea040f377", on_delete: :cascade
   add_foreign_key "instance_moderation_notes", "accounts", on_delete: :cascade
   add_foreign_key "invites", "users", on_delete: :cascade
@@ -3132,6 +3142,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_120100) do
   add_foreign_key "nudges_conversation_messages", "nudges_conversations", column: "conversation_id", on_delete: :cascade
   add_foreign_key "nudges_conversations", "accounts", column: "account_a_id", on_delete: :cascade
   add_foreign_key "nudges_conversations", "accounts", column: "account_b_id", on_delete: :cascade
+  add_foreign_key "nudges_conversations", "freethedream_projects", on_delete: :cascade
   add_foreign_key "nudges_conversations", "krews", on_delete: :cascade
   add_foreign_key "nudges_events", "accounts", column: "actor_account_id", on_delete: :cascade
   add_foreign_key "nudges_events", "accounts", column: "recipient_account_id", on_delete: :cascade

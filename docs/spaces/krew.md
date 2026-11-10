@@ -57,7 +57,7 @@ you made.
   **Earlier** (`GET /api/v1/events?krew_id=&filter=past`), when Kalendar is.
 - **Its works are spaces too** (the Konnect grid, decisions.md
   2026-11-08): a Krew turns on a **Gallery** (Art), **Films** (Cinema),
-  **Music** (Booth) or **Stories** (Kronikles), from Konnect (picking the
+  **Music** (Booth) or **Kronikles**, from Konnect (picking the
   korner turns it on, `TURN_ON_SPACES` in `krew_detail.tsx`) or Krew
   settings (`KrewKorner::KORNERS`, `KREW_PAGE_SPACES`). Each is its own
   section (`components/space_shelf.tsx`): what of that korner is Konnected
@@ -202,12 +202,13 @@ All in `app/javascript/mastodon/features/krew/`.
   order since Tal's second 2026-10-31 pass (decisions.md, 2026-10-31). Each
   section shows only once the Krew has that thing, so a Krew with nothing
   Konnected is its header, the Konnect tile and its posts. Members can
-  rearrange the sections below Spaces in Settings, **Page order** (Tal,
+  rearrange the sections in Settings, **Page order** (Tal,
   2026-11-08; `krews.section_order`, the kit's `<ArrangeList>`): each
   space's section, Projekts, Kuestions, Chat and Kuddles move as a whole,
-  and the Spaces tiles follow. Posts stay last. What's left out of the
-  saved order keeps its place below it:
-  - **Spaces**: first, a tile for each thing the Krew has, each scrolling
+  and the Spaces tiles follow. Spaces sit just above Posts (Tal,
+  2026-11-10: not at the top of the page), and Posts stay last. What's left
+  out of the saved order keeps its place below it:
+  - **Spaces**: after the sections, a tile for each thing the Krew has, each scrolling
     down to its section. Then what the Krew is Konnected to elsewhere (a
     listing…), and last **Konnect** (a +). A space gets its tile and
     section once it is picked in Konnect, once something is made in it, or
@@ -222,14 +223,14 @@ All in `app/javascript/mastodon/features/krew/`.
     album shared to it from its composer shows too), **Events**
     (`krew_events.tsx`: what is coming up for the Krew, soonest first; past events stay in
     Kalendar, Tal 2026-11-09),
-    and the works (Gallery, Films, Music, Stories). A card with no picture
+    and the works (Gallery, Films, Music, Kronikles). A card with no picture
     shows its space's glyph. Add existing on Events
     Konnects one of your events, which shares it into the Krew
     (`Kronk::EventLinks`) and makes it a card here. The + moon is always
     **Post to <Krew>**; each section's New makes the rest.
   - **Projekts**: what the Krew is making, as a
     row of cards (`krew_projekts.tsx`, the kit's `SpaceGrid` row): each
-    projekt's cover, title and how much of what it needs is sorted (no
+    projekt's cover and title (no sorted count, Tal 2026-11-10; no
     people count: everyone in the Krew is in it), opening the projekt. For
     members a last card, **New projekt**, opens the projekt composer
     (`/hub/krew/composer/projekt`) with this Krew picked
@@ -256,10 +257,10 @@ All in `app/javascript/mastodon/features/krew/`.
     screen, not when the page opens. The chat is found through
     `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`), which also
     lists recent lines the page no longer shows.
-  - **Kuddle**: a Kuddle Konnected to the Krew is a call frame under its
-    own heading, as in a projekt (docs/spaces/huddle.md, A frame in a
-    projekt), not a tile among the spaces. One made from the Krew's Konnect
-    brings you back here, joining.
+  - **Kuddles** (Tal, 2026-11-10): the Krew's own Kuddle as a call frame,
+    made by picking Kuddle in Konnect, then its projekts' and Komponents'
+    own Kuddles as cards opening their pages (docs/spaces/huddle.md, A
+    space's own Kuddle). Members only, not a tile among the spaces.
   - **Posts**: last on the page, the posts sent to the Krew, newest first,
     as the standard feed card in the standard timeline (`krew_posts.tsx`,
     `StatusListContainer` on the `krew:<id>` timeline,
@@ -366,8 +367,8 @@ two can't collide.
   RSVP. The schema is there (`source: rsvp_auto`, `rsvp_event_id`); nothing
   creates those rows.
 - **Krew-scoped korners.** Only Albutts and Kalendar know which Krew their
-  things belong to. Krew Huddles are reserved (`HuddleSession` scope
-  `krew`) but no code creates them; Map, Booth, Kommons and Kuestions have
+  things belong to. A Krew's own Kuddle is a `HuddleSession`
+  with its `krew_id` (docs/spaces/huddle.md); Map, Booth, Kommons and Kuestions have
   nothing yet. Each joins `KREW_PAGE_SPACES` when it does.
 - **Requirement-gated vs "the directory is the gate".** The original design had
   only listed and unlisted Krews. `requirement_gated` was added later; confirm

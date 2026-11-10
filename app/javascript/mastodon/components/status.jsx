@@ -37,6 +37,7 @@ import { hasKornerCard, pickKornerCard } from './korner_cards';
 import { KronkLinkCards, kronkPathsIn } from './kronk_link_card';
 import { StatusKrewBadge } from './status_krew_badge';
 import { StatusSpaceBar } from './status_space_bar';
+import { StatusCommentLabel } from './status_comment_label';
 import { StatusProfileLabel } from './status_profile_label';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
@@ -137,6 +138,8 @@ class Status extends ImmutablePureComponent {
     showInlineReplies: PropTypes.bool,
     // Every reply in the card, not the feed's first few (the post's own page).
     allReplies: PropTypes.bool,
+    // A comment to pick out in the comment section (the post page's `?comment=`).
+    highlightComment: PropTypes.string,
     // The post's own page: its text always shows in full, never "Read more".
     detailed: PropTypes.bool,
     pictureInPicture: ImmutablePropTypes.contains({
@@ -390,7 +393,7 @@ class Status extends ImmutablePureComponent {
   };
 
   render () {
-    const { intl, hidden, featured, unfocusable, unread, showThread, isQuotedPost = false, scrollKey, pictureInPicture, previousId, nextInReplyToId, rootId, skipPrepend, avatarSize = 46, children, showInlineReplies, contextType, allReplies, detailed } = this.props;
+    const { intl, hidden, featured, unfocusable, unread, showThread, isQuotedPost = false, scrollKey, pictureInPicture, previousId, nextInReplyToId, rootId, skipPrepend, avatarSize = 46, children, showInlineReplies, contextType, allReplies, highlightComment, detailed } = this.props;
 
     let { status, account, ...other } = this.props;
 
@@ -447,6 +450,15 @@ class Status extends ImmutablePureComponent {
       }
 
       status  = status.get('reblog');
+    } else if (status.get('kronk_comment_id') && (contextType === 'favourites' || contextType === 'bookmarks')) {
+      prepend = (
+        <StatusCommentLabel
+          acct={status.getIn(['account', 'acct'])}
+          statusId={status.get('id')}
+          commentId={status.get('kronk_comment_id')}
+          list={contextType}
+        />
+      );
     } else if (status.get('visibility') === 'direct') {
       prepend = (
         <div className='status__prepend'>
@@ -702,6 +714,7 @@ class Status extends ImmutablePureComponent {
                     statusVisibility={status.get('visibility')}
                     repliesCount={status.get('replies_count')}
                     all={allReplies}
+                    highlightId={highlightComment}
                   />
                 )}
               </>

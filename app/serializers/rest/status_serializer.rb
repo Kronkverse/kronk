@@ -13,6 +13,9 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   # Only a post that backs something a space owns has one (Status#kronk_page).
   attribute :kronk_page, if: -> { object.kronk_feed_suppressed? }
+  # In Froths and Bookmarks a comment shows as the post it is on; this names
+  # the comment (KronkCommentsAsPosts). Nothing else passes the marks.
+  attribute :kronk_comment_id, if: -> { kronk_comment_marks&.key?(object.id) }
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
   attribute :muted, if: :current_user?
@@ -71,6 +74,14 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def kronk_page
     object.kronk_page
+  end
+
+  def kronk_comment_id
+    kronk_comment_marks[object.id].to_s
+  end
+
+  def kronk_comment_marks
+    instance_options && instance_options[:kronk_comment_marks]
   end
 
   def id

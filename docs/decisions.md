@@ -17,6 +17,60 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-10 — A Krew, projekt or Komponent has its own Kuddle
+
+Tal: "adding a kuddle to any of them (konnecting a kuddle) would create a
+kuddle space specifically tied to that space. the schedule type part of it
+would be more about an event". Konnect → Kuddle on a Krew, projekt or
+Komponent makes that space's own Kuddle (or goes to it): one each, members
+only (a Komponent's are its projekt's), not listed on the Huddle page.
+Open Kuddles are no longer linked to spaces; the one already Konnected to
+a Krew became that Krew's own. A Krew's Kuddles section gathers its own and
+its projekts' and Komponents'. Kuddles stay dateless: a scheduled call is an
+event that uses its space's Kuddle (next). Supersedes "Krew Huddles … not
+built" and the open Kuddle Konnected to a Krew. docs/spaces/huddle.md, A
+space's own Kuddle.
+
+## 2026-11-09 — A projekt's talk is its own Nudges chat
+
+Tal: "'Talk' currently isnt a nudges chat, its some other weird system
+which isn't necessary", and, asked whose chat: its own. A projekt gets a
+Nudges group chat of its own (kind `projekt`), with its members, turned on
+in Edit as a Krew's chat is in Settings, shown as a Chat section on its page
+and listed in Nudges. Talk's threads leave the projekt's and Komponents'
+pages (their data stays; an item's page keeps its threads), and the page is
+one column, as a Krew's. docs/spaces/freethedream.md, Chat.
+
+## 2026-11-09 — A projekt's spaces work as a Krew's
+
+Tal: "Alright let's clean up the 'konnected' spaces on projekts, i really
+like how the krew setup now works". A projekt now turns its spaces on from
+Konnect (Kalendar, Albutts, Kronikles, Kuestions, the grid's `space` for a
+projekt), has a tile for each at the top that scrolls to its section, and
+arranges the sections and its Activity in Edit's Page order
+(`freethedream_projects.spaces`, `section_order`). Getting together is
+renamed Events and moves into the work, as on a Krew. Kuestions on a
+projekt are its own space rather than following its Krew's. Only the
+projekt itself turns spaces on: Komponents stay as they were (the Konnect
+grid, "Komponents stay at projekt level"). A space a projekt already has
+something in shows without being turned on, so nothing goes missing. Turning
+a space off is not built yet. docs/spaces/freethedream.md, The page.
+
+## 2026-11-09 — A comment never appears as a post
+
+Tal, on a screenshot of a comment open on its own page: "a comment should
+never ever appear as an individual post. The comment should live in the
+comment section of the post it was commented on."
+
+So a comment's address opens the post at the top of its thread with
+`?comment=<id>`, and the comment section picks that comment out. This covers
+every link to a comment — the time on a comment, nudges (View reply, a
+mention or froth on a comment), push, search, the posted toast and shared
+links — without each one having to know the thread's root. A comment whose
+post is gone says so; it isn't shown alone. Lists that drew comments as
+cards (Krew posts, Froths, Bookmarks, profile shelves and others) stop doing
+so; Froths and Bookmarks show the post with the comment marked.
+
 ## 2026-11-09 — Wachuneed asks what you are offering
 
 Tal: four friends want to sell on Kronk (consultations, music production, a

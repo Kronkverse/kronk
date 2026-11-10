@@ -7,6 +7,23 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.11 "Rose"] - 2026-11-10
+
+- Comments stay out of lists (#2523)
+- A comment opens on its post (#2524)
+- Comments on Mates posts (#2526)
+- Projekt spaces (#2527)
+- Projekt page cohesion (#2528)
+- Projekt chat (#2529)
+- Projekt chat starts on (#2530)
+- Konnect above posts (#2531)
+- Froth count (#2534)
+- Space Kuddles (#2533)
+- Space Kuddle migration (#2535)
+- Veil follows the day (#2536)
+- Veil moons (#2537)
+- Projekts and Krew work (#2538)
+
 ### [2.1.10 "Rose"] - 2026-11-09
 
 - Krew spaces: albums and works (#2504)

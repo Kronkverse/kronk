@@ -52,6 +52,45 @@ RSpec.describe 'Bookmarks' do
       end
     end
 
+    # A comment never shows as a post of its own (docs/spaces/feed.md
+    # (Comments)): the list shows the post it is on, naming the comment.
+    context 'with a bookmarked comment' do
+      let(:post)     { Fabricate(:status) }
+      let(:comment)  { Fabricate(:status, thread: post) }
+      let(:reply_to) { Fabricate(:status, thread: comment) }
+
+      it 'shows the post with the comment named, once' do
+        Fabricate(:bookmark, account: user.account, status: comment)
+        Fabricate(:bookmark, account: user.account, status: reply_to)
+
+        subject
+
+        rows = response.parsed_body.select { |row| row[:id] == post.id.to_s }
+        expect(rows.size).to eq 1
+        expect(rows.first[:kronk_comment_id]).to eq reply_to.id.to_s
+        expect(response.parsed_body.pluck(:id)).to_not include(comment.id.to_s, reply_to.id.to_s)
+      end
+
+      it 'leaves the comment out when its post is gone' do
+        Fabricate(:bookmark, account: user.account, status: comment)
+        post.destroy!
+
+        subject
+
+        expect(response.parsed_body.pluck(:id)).to_not include(comment.id.to_s, post.id.to_s)
+      end
+
+      it 'does not name a comment on a post bookmarked for itself' do
+        Fabricate(:bookmark, account: user.account, status: comment)
+        Fabricate(:bookmark, account: user.account, status: post)
+
+        subject
+
+        row = response.parsed_body.find { |r| r[:id] == post.id.to_s }
+        expect(row).to_not have_key(:kronk_comment_id)
+      end
+    end
+
     context 'without the authorization header' do
       let(:headers) { {} }
 

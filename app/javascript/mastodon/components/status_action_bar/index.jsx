@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 
 import { defineMessages, injectIntl } from 'react-intl';
 
-import { withRouter } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
@@ -25,6 +25,7 @@ import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
 import { me } from '../../initial_state';
 
+import { AnimatedNumber } from '../animated_number';
 import { IconButton } from '../icon_button';
 import { NudgeButton } from '../status/nudge_button';
 
@@ -43,6 +44,7 @@ const messages = defineMessages({
   replyAll: { id: 'status.replyAll', defaultMessage: 'Reply to thread' },
   favourite: { id: 'status.favourite', defaultMessage: 'Froth' },
   removeFavourite: { id: 'status.remove_favourite', defaultMessage: 'Remove froth' },
+  frothedBy: { id: 'status.frothed_by', defaultMessage: 'Who frothed this' },
   open: { id: 'status.open', defaultMessage: 'Expand this status' },
   report: { id: 'status.report', defaultMessage: 'Report @{name}' },
   muteConversation: { id: 'status.mute_conversation', defaultMessage: 'Mute conversation' },
@@ -290,7 +292,17 @@ class StatusActionBar extends ImmutablePureComponent {
           <IconButton className='status__action-bar__button' title={replyTitle} icon={isReply ? 'reply' : replyIcon} iconComponent={isReply ? ReplyIcon : replyIconComponent} onClick={this.handleReplyClick} counter={status.get('replies_count')} />
         </div>
         <div className='status__action-bar__button-wrapper'>
-          <IconButton className='status__action-bar__button star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} counter={withCounters ? status.get('favourites_count') : undefined} />
+          <IconButton className='status__action-bar__button star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} />
+          {/* The count opens who frothed it; the heart itself froths. */}
+          {withCounters && (
+            <Link
+              className='icon-button__counter status__action-bar__froths'
+              to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/favourites`}
+              title={intl.formatMessage(messages.frothedBy)}
+            >
+              <AnimatedNumber value={status.get('favourites_count')} />
+            </Link>
+          )}
         </div>
         <div className='status__action-bar__button-wrapper'>
           {/* Nudge hides on your own posts (can't nudge yourself); reuse that

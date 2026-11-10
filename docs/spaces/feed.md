@@ -126,6 +126,21 @@ one (Tal, 2026-09-14).
   post's own page never folds (`detailed` on `components/status.jsx`).
 - **The home feed shows no replies at all**
   (`FeedManager#filter_from_home`). Search labels a comment as a Comment.
+- **A comment never appears as a post.** It has no page of its own: its
+  address opens the post at the top of its thread with `?comment=<id>`, and
+  the comment section marks that comment, opens the branch above it and
+  scrolls to it (`features/status/index.jsx`, `status_replies.jsx`). So any
+  link to a comment — its time, a nudge, push, search, a shared link — lands
+  in the right place. If that post is gone, the page says so and doesn't show
+  the comment (Tal, 2026-11-09).
+- **No list shows a comment as a post.** Besides Home: a Krew's Posts,
+  profile shelves, the quotes list, hashtag and link timelines, the
+  hashtag stream and followed hashtags into Home all leave replies out.
+  **Froths and Bookmarks** list what you frothed or bookmarked, so a comment
+  there shows as the post it is on, once, with a line above naming it
+  ("You frothed a comment on this") that opens the post at that comment
+  (`KronkCommentsAsPosts`, `kronk_comment_id`, `StatusCommentLabel`). A
+  comment whose post is gone, or that you can't see, is left out.
 
 ### Reposts
 

@@ -13,17 +13,14 @@ import { Progress, projectPath } from './shared';
 // you haven't seen in your own. Nobody leads a
 // gang (Tal, 2026-10-15), so no owner shows. Members get the tile to
 // coalesce a new one.
+//
+// They are what a projekt is made of, so they have a card of their own,
+// larger than a space's (Tal, 2026-11-09: "Komponents are the important part
+// of a projekt, and currently they look the same as kuestions"): its
+// name large, who's in it, and how far along it is as a bar along the foot.
 
 const messages = defineMessages({
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
-  sectionsCount: {
-    id: 'freethedream.fractals_count',
-    defaultMessage: '{count, plural, one {# fractal} other {# fractals}}',
-  },
-  peopleIn: {
-    id: 'freethedream.group.people',
-    defaultMessage: '{count, plural, one {# person} other {# people}}',
-  },
   unseen: { id: 'freethedream.dash.new_count', defaultMessage: '{count} new' },
   joined: { id: 'freethedream.gang.joined', defaultMessage: 'Joined' },
 });
@@ -47,8 +44,7 @@ export const GroupTiles: React.FC<{
       {sections.map((section) => (
         <li key={section.id}>
           <Link to={projectPath(section)} className='freethedream-group'>
-            <span className='freethedream-group__title'>
-              {section.title}
+            <span className='freethedream-group__tags'>
               {!!section.unseen && (
                 <span className='freethedream-tag'>
                   {intl.formatMessage(messages.unseen, {
@@ -67,20 +63,14 @@ export const GroupTiles: React.FC<{
                 </span>
               )}
             </span>
-            <span className='freethedream-group__meta'>
-              {[
-                section.people_count > 0 &&
-                  intl.formatMessage(messages.peopleIn, {
-                    count: section.people_count,
-                  }),
-                section.sections_count > 0 &&
-                  intl.formatMessage(messages.sectionsCount, {
-                    count: section.sections_count,
-                  }),
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </span>
+            <span className='freethedream-group__title'>{section.title}</span>
+            {/* What it is, not how many: its description, in brief (Tal,
+                2026-11-10). */}
+            {section.description && (
+              <span className='freethedream-group__about'>
+                {section.description}
+              </span>
+            )}
             {section.progress.total > 0 && (
               <Progress
                 done={section.progress.sorted}

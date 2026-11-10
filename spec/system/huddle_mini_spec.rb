@@ -149,24 +149,24 @@ RSpec.describe 'Huddle mini window', :js, :streaming do
       expect(page).to have_button('Huddle Up')
     end
 
-    # docs/spaces/huddle.md, A frame in a projekt: a Kuddle Konnected to a
-    # projekt is a call frame on its page, not a tile, and its call follows
-    # you back to the projekt.
-    it 'shows a Konnected Kuddle as a frame in the projekt, and its call comes back there' do
+    # docs/spaces/huddle.md, A space's own Kuddle: a projekt's is a call
+    # frame on its page, not a tile, and its call follows you back to the
+    # projekt.
+    it "shows a projekt's own Kuddle as a frame, and its call comes back there" do
       doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
-      KornerAttachment.create!(source_slug: 'freethedream', source_id: doof.id, target_slug: 'huddle', target_id: kuddle.id, kind: 'link', created_by_account: bob.account)
+      HuddleSession.for_space!(doof, bob.account)
       projekt = "/hub/krew/#{doof.reload.krew.slug}/p/#{doof.slug}"
 
       visit projekt
       within('.kuddle-frame') do
-        expect(page).to have_link('Ember')
+        expect(page).to have_link('Mini Doof')
         click_on 'Join the call'
       end
       expect(page).to have_css('.huddle-call .fake-call', visible: :visible)
-      expect(page).to have_no_css('.attachment-section .space-tile', text: 'Ember')
+      expect(page).to have_no_css('.attachment-section .space-tile', text: 'Mini Doof')
 
       visit_in_app('/home')
-      within('.huddle-mini') { expect(page).to have_css('.huddle-mini__title', text: 'Ember') }
+      within('.huddle-mini') { expect(page).to have_css('.huddle-mini__title', text: 'Mini Doof') }
 
       click_on 'Back to the Huddle'
       expect(page).to have_current_path(projekt)
@@ -174,18 +174,22 @@ RSpec.describe 'Huddle mini window', :js, :streaming do
       expect(page.evaluate_script('window.__jitsiDisposed')).to be_nil
     end
 
-    it 'shows a Kuddle Konnected to a Krew as a frame on the Krew page' do
+    it "shows a Krew's own Kuddle as a frame, and its projekts' as cards" do
       krew = Krew.create!(slug: 'growers', name: 'Growers', access: 'open', seeded_by: bob.account, last_activity_at: Time.current)
       krew.krew_memberships.create!(account: bob.account, role: 'seeder', source: 'direct')
-      KornerAttachment.create!(source_slug: 'krew', source_id: krew.id, target_slug: 'huddle', target_id: kuddle.id, kind: 'link', created_by_account: bob.account)
+      doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, krew: krew)
+      HuddleSession.for_space!(krew, bob.account)
+      HuddleSession.for_space!(doof, bob.account)
 
       visit "/hub/krew/#{krew.slug}"
-      within('.kuddle-frame') do
-        expect(page).to have_link('Ember')
-        click_on 'Join the call'
+      within('#krew-kuddles') do
+        expect(page).to have_css('.space-card', text: 'Mini Doof')
+        within('.kuddle-frame') do
+          expect(page).to have_link('Growers')
+          click_on 'Join the call'
+        end
       end
       expect(page).to have_css('.huddle-call .fake-call', visible: :visible)
-      expect(page).to have_no_css('.attachment-section .space-tile', text: 'Ember')
     end
 
     it "ends the Main Huddle's call on joining a Kuddle: one call at a time" do

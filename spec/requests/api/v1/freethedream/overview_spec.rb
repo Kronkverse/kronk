@@ -167,7 +167,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
         [alice.account.id.to_s, true, 0],
       ]
       expect(body['people'].pluck('last_active')).to all(be_present)
-      expect(body['sections'].first).to include('title' => 'Kitchen', 'people_count' => 2)
+      expect(body['sections'].first).to include('title' => 'Kitchen', 'description' => '', 'people_count' => 2)
     end
 
     it 'counts saying something as being active' do

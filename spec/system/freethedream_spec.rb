@@ -126,16 +126,14 @@ RSpec.describe 'Projekts', :js, :streaming do
 
   # Kommons, 2026-11-08 (Komponent Cards, Join Button, Sections, Make an
   # event): Komponents are a row of cards, whoever makes one is in it, its
-  # page has no lists, and Getting together has a + for the whole projekt.
+  # page has no lists, and its Events have a + for the whole projekt.
   it 'shows Komponents as a row, puts their maker in them, and keeps the page plain' do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
-    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, spaces: ['kalendar'])
     krew = doof.reload.krew
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
-    make = find('.freethedream-section__add')
-    expect(make[:href]).to include('konnect=freethedream')
-    expect(page).to have_no_css('.freethedream-together select')
+    within('#projekt-space-kalendar') { expect(page).to have_button('New') }
     expect(page).to have_no_text('needs met')
 
     click_on '+ Add a Komponent'
@@ -153,13 +151,37 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
   end
 
-  # Kommons, 2026-11-08: Kuestions are the projekt's alone. With its Krew's
-  # Kuestions on, the projekt page has the row and a Komponent's page has none.
-  it 'shows Kuestions on the projekt, not on its Komponents' do
+  # Kommons, 2026-11-10 (Projekts and Krew work): a Komponent's card says
+  # what it is, not how many, and its page shows who's in it as a row of
+  # pictures under its description.
+  it "shows a Komponent's description on its card and its people as a row", :aggregate_failures do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
     doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
     krew = doof.reload.krew
-    krew.krew_korners.create!(korner: 'kuestions')
+    Freethedream::Project.create!(title: 'Sound', description: 'Speakers, a desk and the long cable run', parent: doof, owner: bob.account)
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.freethedream-group', text: 'Speakers, a desk and the long cable run')
+    expect(page).to have_no_css('.freethedream-group', text: /person|people|fractal/)
+
+    click_on '+ Add a Komponent'
+    within('.compose-shell') do
+      fill_in placeholder: 'Sound, Design, Paperwork', with: 'Kitchen'
+      click_on 'Add'
+    end
+    within('.freethedream-groups') { click_link 'Kitchen' }
+
+    expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
+    expect(page).to have_css(".people-row a[href='/@#{bob.account.username}']")
+    expect(page).to have_no_text('Who’s in it')
+  end
+
+  # Kommons, 2026-11-08: Kuestions are the projekt's alone. With Kuestions
+  # on, the projekt page has the row and a Komponent's page has none.
+  it 'shows Kuestions on the projekt, not on its Komponents' do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, spaces: ['kuestions'])
+    krew = doof.reload.krew
     Freethedream::Project.create!(owner: bob.account, title: 'Kitchen', parent: doof, root: doof)
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
@@ -170,8 +192,9 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(page).to have_no_css('.home-kuestions')
   end
 
-  # Tal, 2026-11-09: "event card on projekt should be standard".
-  it "shows a projekt's events as standard cards, with Going", :aggregate_failures do
+  # Tal, 2026-11-09: "event card on projekt should be standard", then the
+  # same Events section as a Krew's.
+  it "shows a projekt's events as a Krew's are", :aggregate_failures do
     doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
     krew = doof.reload.krew
     event = Event.create!(account: bob.account, title: 'Set-up day', start_time: 3.days.from_now, end_time: 3.days.from_now + 2.hours)
@@ -179,9 +202,77 @@ RSpec.describe 'Projekts', :js, :streaming do
                              kind: 'link', created_by_account: bob.account)
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
-    within('.freethedream-together') do
-      expect(page).to have_css('.standard-card .standard-card__title', text: 'Set-up day')
-      expect(page).to have_css('.freethedream-together__date')
+    within('#projekt-space-kalendar') do
+      expect(page).to have_css('h3', text: /events/i)
+      expect(page).to have_link('Set-up day')
     end
+  end
+
+  # docs/spaces/freethedream.md, A projekt's spaces (Tal, 2026-11-09): its
+  # spaces work as a Krew's do.
+  it 'turns a space on from Konnect, with a tile and a section', :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.korner-detail__title', text: 'Mini Doof')
+    expect(page).to have_no_css('.space-shelf')
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') { click_on 'Kronikles' }
+
+    expect(page).to have_no_css('.attachment-picker')
+    within('.space-shelf') do
+      expect(page).to have_css('h3', text: /kronikles/i)
+      expect(page).to have_button('New')
+    end
+    within('.attachment-section') { expect(page).to have_button('Kronikles') }
+    expect(doof.reload.spaces).to eq ['kronikles']
+  end
+
+  it "arranges a projekt's sections from Edit" do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, spaces: %w(kalendar kronikles))
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('#projekt-space-kalendar h3', text: /events/i)
+    find('.kronk-menu__trigger').click
+    click_on 'Edit'
+    within('.compose-shell') do
+      expect(page).to have_css('.arrange-list__label', text: 'Events')
+      click_on 'Move Activity up'
+      click_on 'Save'
+    end
+
+    expect(page).to have_no_css('.compose-shell')
+    expect(doof.reload.section_order).to eq %w(kalendar updates kronikles)
+  end
+
+  # docs/spaces/freethedream.md, Chat (Tal, 2026-11-09): Talk becomes the
+  # projekt's own Nudges chat, turned on in Edit as a Krew's is in Settings.
+  it 'turns its chat on from Edit and chats on the page', :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.korner-detail__title', text: 'Mini Doof')
+    expect(page).to have_no_css('.krew-detail__chat')
+    expect(page).to have_no_field(placeholder: 'Start a thread')
+    find('.kronk-menu__trigger').click
+    click_on 'Edit'
+    within('.compose-shell') do
+      find('[role="switch"]').click
+      click_on 'Save'
+    end
+
+    within('.krew-detail__chat') do
+      find('.nudges-composer textarea').fill_in(with: 'Who has the urn?')
+      click_button(class: 'nudges-composer__send')
+      expect(page).to have_text('Who has the urn?')
+    end
+    within('.attachment-section') { expect(page).to have_button('Chat') }
+    expect(Nudges::Conversation.find_by(kind: 'projekt', freethedream_project: doof).messages.last.body).to eq 'Who has the urn?'
   end
 end

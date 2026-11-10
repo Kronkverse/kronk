@@ -57,7 +57,11 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
   # two member avatar URLs to render the stacked-pair thumbnail in the
   # sidebar per docs/spaces/nudges.md (Nudges spec) §Surface 2. Preference: (viewer
   # first if a member), then remaining members ordered by join time.
+  #
+  # A projekt's chat has the same descriptor (it is a group chat too), with
+  # the projekt's title and its members.
   def krew
+    return projekt_group if object.projekt?
     return nil unless object.krew?
 
     krew = object.krew
@@ -72,8 +76,25 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
     }
   end
 
+  def projekt_group
+    project = object.freethedream_project
+    return nil unless project
+
+    members = object.memberships.active.order(:id)
+    {
+      id: project.id.to_s,
+      name: project.title,
+      member_count: members.count,
+      avatar_urls: group_avatar_urls(members.limit(4).map(&:account)),
+      read_pointers: viewer ? object.krew_read_pointers(viewer) : [],
+    }
+  end
+
   def krew_avatar_urls(krew)
-    ordered = krew.krew_memberships.order(:id).limit(4).map(&:account)
+    group_avatar_urls(krew.krew_memberships.order(:id).limit(4).map(&:account))
+  end
+
+  def group_avatar_urls(ordered)
     ordered = [viewer] + ordered.reject { |a| a.id == viewer&.id } if viewer && ordered.any? { |a| a.id == viewer.id }
     ordered.first(2).map { |a| full_asset_url(a.avatar_original_url) }
   end

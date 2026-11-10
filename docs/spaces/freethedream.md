@@ -250,19 +250,43 @@ getting involved, not for doing the work itself:
   **New talk**, the gangs with talk from other people they haven't
   looked at, with a count (opening a gang clears its count); and **On
   you**, what they're actualising and what they're bringing.
-- **Komponents** as a row of cards that scrolls sideways, the next card
-  peeking in, with **+ Add a Komponent** last (Tal, 2026-11-08: "swipable
-  cards rather than grid view"; `GroupTiles row`, the shared row's measure).
-  A Komponent is a gang in the code (Tal, 2026-10-30). Each card has how
-  many people have a hand in it and its progress ("3 of 8 sorted"). **Nobody leads a Komponent**, so no owner
+- **Komponents** first, as a row of cards that scrolls sideways, the next
+  card peeking in, with **+ Add a Komponent** last (Tal, 2026-11-08:
+  "swipable cards rather than grid view"; `GroupTiles row`). They are what a
+  projekt is made of, so their card is its own and larger than a space's
+  (Tal, 2026-11-09: "Komponents are the important part of a projekt, and
+  currently they look the same as kuestions"): the name large, its
+  description in brief (two lines), and how far along it is as a bar along
+  its foot. No counts of people or fractals on the card (Tal, 2026-11-10:
+  "would be better with the brief description of the komponent instead").
+  A Komponent is a gang in the code (Tal, 2026-10-30). **Nobody leads a Komponent**, so no owner
   shows on a tile or a Komponent's page (the owner still exists in the
   data, for who may edit it). The ones you have a hand in come first,
   tagged with any new talk. Members get **+ Add a Komponent**.
+- **Spaces** (Tal, 2026-11-09: "i really like how the krew setup now
+  works"): a projekt's spaces work as a Krew's do. Last on the page,
+  after its sections (Tal, 2026-11-10, as a Krew's sit just above its
+  posts), under **Spaces**, a tile for each space it has, which scrolls to its
+  section, then what it's Konnected to, then **Konnect**. Something
+  Konnected with a picture of its own (a Place's map) is a section of its
+  own under that, headed with its space's name, on a Krew's page too
+  (`AttachmentSection cardsApart`). Konnect → a
+  space (the grid's `space` for a projekt: Kalendar, Albutts, Kronikles,
+  Kuestions) turns it on (`POST /projects/:id/spaces`, owner only,
+  `Project::SPACES`) and goes to its section; anything else is linked as
+  before. Each space is a section of its own, in the order its owner set
+  in Edit's **Page order** (`section_order`, with Activity among them):
+  **Events**, **Albums** and **Kronikles** (a row of cards, New and Add
+  existing; Albums and Kronikles below), **Kuestions**. A projekt from
+  before keeps what it had: a space it already has something in (an event,
+  an album or Kronikle Konnected, a Kuestion asked) shows without being
+  turned on (`Project#shown_spaces`). Only the projekt turns spaces on; a
+  Komponent's page shows what it has, and always its Events.
 - **Kuestions**: the Kuestions asked in the projekt, as a row of cards
   with **Ask** last for its members (docs/spaces/kuestions.md, Kuestions in
-  a Krew). Whoever can see the projekt answers them. Shown when its Krew
-  has Kuestions turned on, and on the projekt's own page only, not on its
-  Komponents (Tal, 2026-11-08).
+  a Krew). Whoever can see the projekt answers them. A space of the
+  projekt's own, turned on from Konnect (it used to follow its Krew's), on
+  the projekt's own page only, not on its Komponents (Tal, 2026-11-08).
 - No lists of work, Krew row or joining on a projekt's own page (Tal,
   2026-10-30): it is part of its Krew, whose page has its people, and a
   clearer view of what needs work is still to be designed. The lists'
@@ -270,9 +294,10 @@ getting involved, not for doing the work itself:
   Done, Hand over and Remove are off the page too. A Komponent or a
   fractal can still be removed, by whoever made it, from the Ж menu beside
   Edit (Tal, 2026-10-31).
-- **A Kuddle Konnected here** is a call frame at the top of the work, not
-  a tile under Attached: join the call in the page, and it floats with you
-  when you leave (docs/spaces/huddle.md, A frame in a projekt).
+- **Its own Kuddle** (Konnect → Kuddle, on a Komponent too; Tal,
+  2026-11-10) is a call frame at the top of the work, not a tile: join the
+  call in the page, and it floats with you when you leave. Members only
+  (docs/spaces/huddle.md, A space's own Kuddle).
 - **Joining a Komponent** (Tal, 2026-10-30: "the UX for joining should
   be simple and intuitive"): on a Komponent's page, anyone in the projekt
   has one pill at the top, **Join**, then **Joined** (which leaves), with a
@@ -288,12 +313,13 @@ getting involved, not for doing the work itself:
   into one (10 minutes). A fractal is heard about through its Komponent
   (`freethedream_gang_members`, `Freethedream::GangNudges`,
   `POST /projects/:id/join_gang` and `leave_gang`).
-- **Getting together** (Tal, 2026-10-30), beside the work: the Kalendar
-  events made for the projekt or any Komponent or fractal inside it that
-  haven't ended, soonest first, as rows of a date tile, the title, when
-  and where (a pin opens the Map), the Komponent it's for as a tag, how
-  many are going and an **I'm going** toggle (`event_card.tsx`,
-  `events` on the shape). A Komponent's page lists its own and its
+- **Events** (Tal, 2026-10-30, as Getting together; since 2026-11-09 the
+  same section as a Krew's, so the same thing has one name and one look):
+  the Kalendar events made for the projekt or any Komponent or fractal
+  inside it that haven't ended, soonest first, as the standard row of
+  cards (picture, title, when, and the Komponent it's for), then **New**,
+  whose composer offers Add existing (`ProjectEvents` in `event_card.tsx`,
+  `SpaceShelf`, `events` on the shape). Going is on the event's page. A Komponent's page lists its own and its
   fractals'. **Anyone in the projekt can make one** (`can.link_event`;
   nobody leads a Komponent, so owner-only left a Komponent with nobody to
   make one): a **+** beside the section's title opens Kalendar's composer
@@ -302,21 +328,22 @@ getting involved, not for doing the work itself:
   Komponent's event is made from the Komponent's own page. No picker (Tal,
   2026-11-08, "'Make and event' button"). With nothing planned it says so,
   in one quiet line.
-- **Activity**: the latest eight things that happened, with who did them
+- **Activity**: the latest four things that happened in the last
+  fortnight (Tal, 2026-11-09: "only the latest 3 or 4, maybe only recent
+  ones too"), with who did them
   ("Isabelle is bringing 2 speakers", "Tomas coalesced the gang
   Ceremony"). It keeps itself up to date while the page is open and in
   view (every 20 seconds, from `GET /projects/:id/activity`), and new
   lines fade in.
-- **Beside it** (below it, on a phone): **Getting together** (above),
-  then Talk. An event that already exists is linked with the page's
+- **One column**, as a Krew's page is (Tal, 2026-11-09): Talk was the
+  side column's, and is gone (see Chat). An event that already exists is linked with the page's
   Konnect (the old card's "Or link one of your events" went on
   2026-10-27). To bring someone in, **Share** the emergence from the
   Ж menu; there is no Invite (Tal 2026-10-17: "no invite anywhere, only
   share"). The server's invite (`POST /projects/:id/invite` and its nudge)
-  went too (Tal 2026-10-19: "the share button is plenty"). Getting
-  together is where linked events show, so the page's **Attached** block
-  leaves them out (`<KornerDetail attached={{ exclude }}>`) rather than
-  listing it twice.
+  went too (Tal 2026-10-19: "the share button is plenty"). Events is
+  where linked events show, so the Konnected tiles leave them out
+  (`AttachmentSection exclude`) rather than listing them twice.
 
 **A list's page** (`/p/:id/actualise` and the like) is that list in full:
 what's on the emergence itself, a one-line box to add to it (type "30
@@ -329,12 +356,13 @@ tap to Bring or Jump on board.
 **A gang's page** is its overview at a lower level (Tal, 2026-10-15), and
 the place the work is done:
 
-- **Who's in it** comes first: everyone with a hand in the gang, side by
-  side, each with what they're bringing and actualising there ("Bringing
-  pots, gas · Actualising dahl for 40"), whoever is on the most first.
-- **Fractals** as the same row of cards (people, progress), each opening
+- **Who's in it** is a row of their pictures under its description,
+  overlapping, then "+7" for the rest (`PeopleRow`, a kit primitive; Tal,
+  2026-11-10: "a rough idea of which people, and how many"), whoever is on
+  the most first. Each picture opens that person.
+- **Fractals** as the same row of cards (description, progress), each opening
   its own page; members get **+ Add a fractal** last.
-- Getting together, Activity and Talk. Kuestions are the projekt's, so a
+- Events, Activity and Talk. Kuestions are the projekt's, so a
   gang's page has none of its own.
 - **Off the page for now** (Tal, 2026-11-08, "Sections": "We'll build up
   functionality as we need it"): **Thing Bringing**, **Actualise**, **On
@@ -380,7 +408,25 @@ date, Done) and a Joined or Asked tag; what it's about and its progress
 are on its page;
 Mycelium a reading column.
 
-### Talk
+### Chat
+
+Tal, 2026-11-09: "'Talk' currently isnt a nudges chat, its some other
+weird system which isn't necessary". A projekt's talk is its own **Nudges
+group chat**, the same chat a Krew has (`Nudges::Conversation` kind
+`projekt`, `freethedream_project_id`): everyone in the projekt is in it,
+whoever joins is added and whoever leaves taken out (`Freethedream::
+Membership`). It starts on (Tal, 2026-11-10, after finding no chat on a
+projekt), projekts made before that included; its owner can turn it off and
+on in **Edit** (**Chat**), as a Krew's is in Settings (`nudges` in
+`spaces`). While on it is a **Chat** tile
+and section on the projekt's page, read and written there (`KrewChat`,
+`GET /projects/:id/chat`), and a chat in Nudges named after the projekt.
+It can be muted; it can't be left on its own, as it follows the projekt.
+A Komponent's page has no chat of its own. The threads below are off the
+projekt's and Komponents' pages; their data stays, and an item's page still
+has its own.
+
+### Threads (an item's)
 
 Every emergence, gang and item has its own **threads**. A thread has
 replies under it, and replies can be answered in turn. Anyone in the
@@ -556,8 +602,8 @@ shadow.
   `/hub/freethedream/:id` (where attachments link) redirects to `/p/:id`.
   Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`. The project
   shape's `people` (each member with `organiser`, `leads`, `jobs`,
-  `bringing`) and each section row's `people_count` feed the page's
-  People and working-group tiles (`groups.tsx`).
+  `bringing`) feed the page's People; each section row's `description`
+  (to 200 characters) its Komponent cards (`groups.tsx`).
 - **The dashboard** (2026-10-13,
   `db/migrate/20261013190000_create_freethedream_reads.rb`):
   `freethedream_reads` keeps when each person last looked at a space's talk
@@ -592,7 +638,7 @@ shadow.
   the gang and fractal shapes add `level`, `crew` (`View#crew`) and `gear`
   (`View#gear`); `Item#sorted?` for a need is enough being brought
   (`covered >= quantity`). Page:
-  `crew.tsx`, the gang branch of `project_page.tsx`, one-tap
+  the gang branch of `project_page.tsx` (`crew` drawn as a `PeopleRow`), one-tap
   `BringControl` (`bring.tsx`). Specs: `coordination_spec.rb`, "a gang's
   page".
 
@@ -665,15 +711,15 @@ Kontribute (the work), and put back on one page the same day.
 A projekt's albums are a section on its page (`components/space_shelf.tsx`,
 the Konnect grid, decisions.md 2026-11-08): albums Konnected to the projekt,
 then **New** (the album composer with `?konnect=freethedream:<id>`) and
-**Add existing**. It shows once an album is Konnected, from Konnect →
-Albutts; until then there is no section. Albums aren't repeated as
-Konnected tiles.
+**Add existing**. It shows once Albutts is turned on from Konnect, or an
+album is Konnected (The page, Spaces). Albums aren't repeated as Konnected
+tiles.
 
 ## Kronikles
 
 A projekt's Kronikles are a section the same way (Tal, 2026-11-09): its
 written documents, a constitution or a legal document as much as a story
 (Kronikle kinds Constitution and Legal document, docs/spaces/kronikles.md).
-Konnect → Kronikles → New Kronikle opens the Kronikles composer with
-`?konnect=freethedream:<id>`; once it's published the section appears with
-it as a card. Kronikles aren't repeated as Konnected tiles.
+Konnect → Kronikles turns the section on, and its **New** opens the
+Kronikles composer with `?konnect=freethedream:<id>`. Kronikles aren't
+repeated as Konnected tiles.

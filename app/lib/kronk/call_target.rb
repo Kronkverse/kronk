@@ -10,7 +10,7 @@
 #     tuning out of Huddle quiets its feed and nudges, not the room).
 #     Moderated by staff. Recordings: every signed-in member.
 #   * Kuddle: open to everyone signed in while it isn't retired (a retired
-#     one isn't there). Moderated by its maker and staff; once the maker's
+#     one isn't there); a space's own Kuddle, to its members only. Moderated by its maker and staff; once the maker's
 #     account is purged, by everyone in it. Recordings: whoever can see the
 #     Kuddle.
 #   * Booth live set: whoever its reach allows (BoothLive#visible_to?), while
@@ -28,7 +28,7 @@ module Kronk
     def self.find!(kind, id = nil)
       case kind.to_s
       when 'huddle' then new('huddle', nil)
-      when 'kuddle' then new('kuddle', HuddleSession.rooms.not_retired.find(id))
+      when 'kuddle' then new('kuddle', HuddleSession.kuddles.not_retired.find(id))
       when 'booth_live' then new('booth_live', BoothLive.find(id))
       else raise ActiveRecord::RecordNotFound
       end
@@ -43,7 +43,7 @@ module Kronk
 
       if (live = BoothLive.find_by(room_key: key))
         new('booth_live', live)
-      elsif (kuddle = HuddleSession.rooms.find_by(session_url: key))
+      elsif (kuddle = HuddleSession.kuddles.find_by(session_url: key))
         new('kuddle', kuddle)
       end
     end
@@ -83,7 +83,7 @@ module Kronk
 
       case kind
       when 'huddle' then true
-      when 'kuddle' then !record.retired?
+      when 'kuddle' then record.open_to?(account)
       when 'booth_live' then record.visible_to?(account)
       else false
       end
@@ -113,7 +113,7 @@ module Kronk
 
     def host?(account)
       case kind
-      when 'kuddle' then record.host_account_id.nil? || record.host_account_id == account.id
+      when 'kuddle' then (record.room? && record.host_account_id.nil?) || record.host_account_id == account.id
       when 'booth_live' then record.account_id == account.id
       else false
       end

@@ -1674,6 +1674,21 @@
     }
   }
 
+  // The froth count beside the heart opens who frothed the post.
+  &__action-bar__froths {
+    display: inline-block;
+    margin-inline-start: -4px;
+    padding: 4px;
+    vertical-align: middle;
+    color: $action-button-color;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
   &--first-in-thread {
     border-top: 1px solid var(--background-border-color);
   }

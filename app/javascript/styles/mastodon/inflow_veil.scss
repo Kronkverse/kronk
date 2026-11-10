@@ -146,6 +146,11 @@ body.inflow-veil-revealing .columns-area__panels__main {
     color: color-mix(in srgb, var(--kronk-purple-bright, #b39dff) 70%, #fff);
     font-weight: 600;
   }
+
+  // The next full and new moon, a row under the day's times.
+  &--moons {
+    margin-top: 8px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

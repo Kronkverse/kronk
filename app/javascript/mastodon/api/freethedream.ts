@@ -31,7 +31,22 @@ export interface FtdProjectParams {
   krew_id?: string;
   done?: boolean;
   parent_id?: string;
+  section_order?: string[];
+  chat?: boolean;
 }
+
+// A projekt page's sections in their usual order: its spaces, then its
+// Activity (Freethedream::Project::SECTION_KEYS).
+export const FTD_SPACES = [
+  'kalendar',
+  'albutts',
+  'kronikles',
+  'kuestions',
+] as const;
+// Its chat is turned on in Edit rather than from Konnect, so it is a
+// section but not one of FTD_SPACES.
+export const FTD_SECTION_KEYS = [...FTD_SPACES, 'nudges', 'updates'] as const;
+export const FTD_SECTION_ORDER = FTD_SECTION_KEYS;
 
 export interface FtdItemParams {
   project_id?: string;
@@ -98,6 +113,16 @@ export type FtdProjectAction =
 
 export const apiFtdProjectAction = (id: string, action: FtdProjectAction) =>
   apiRequestPost<FtdProject>(`${base}/projects/${id}/${action}`);
+
+// Its chat, for its page: the Nudges conversation and what's unread.
+export const apiFtdChat = (id: string) =>
+  apiRequestGet<{ conversation_id: string; unread: number }>(
+    `${base}/projects/${id}/chat`,
+  );
+
+// Konnect → a space: turns it on, so it gets its section.
+export const apiFtdTurnOnSpace = (id: string, korner: string) =>
+  apiRequestPost<FtdProject>(`${base}/projects/${id}/spaces`, { korner });
 
 // A cover photo goes up as ordinary media first; the project then points
 // at it (cover_media_attachment_id).

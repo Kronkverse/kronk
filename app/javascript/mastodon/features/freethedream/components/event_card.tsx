@@ -1,61 +1,28 @@
-import { useCallback, useState } from 'react';
+import { useMemo } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 import type { IntlShape } from 'react-intl';
 
-import { Link } from 'react-router-dom';
-
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import { apiDeleteAttachment } from 'mastodon/api/attachments';
-import { apiFtdRsvp } from 'mastodon/api/freethedream';
 import type { FtdEvent, FtdProject } from 'mastodon/api_types/freethedream';
-import { Icon } from 'mastodon/components/icon';
-import {
-  CardActions,
-  CardMedia,
-  CardMeta,
-  CardTitle,
-  StandardCard,
-} from 'mastodon/components/standard_card';
+import { SpaceShelf } from 'mastodon/components/space_shelf';
+import type { ShelfCard } from 'mastodon/components/space_shelf';
 import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
-import { konnectSearch } from 'mastodon/hooks/useKonnect';
-import { useKorner } from 'mastodon/hooks/useKorner';
 
-import { projectPath, Section } from './shared';
-
-// Getting together (Tal, 2026-10-30): the Kalendar events made for a
-// projekt or for one of its Komponents, soonest first, each the standard
-// card (Tal, 2026-11-09: "event card on projekt should be standard"): its
-// picture, or its date when it has none, then what, when and where, and
-// who's going with one tap to say you're going.
-// On a projekt's page the Komponents' events show too, tagged with the
-// Komponent. Anyone in the projekt can make one with the + by the title:
-// for the whole projekt on its page, for a Komponent on the Komponent's
-// own page (Tal, 2026-11-08). Kalendar's own composer opens with that part
-// Konnected, so the event belongs to it and its Krew hears about it
-// (Kronk::EventLinks). The events themselves live in Kalendar; this reads
-// them.
+// A projekt's Events, the same section as a Krew's (Tal, 2026-11-09: "i
+// want it aligned so people don't have to recognise the same
+// functionality with different names"): the Kalendar events made for the
+// projekt or one of its Komponents that are still to come, soonest first,
+// as the standard row of cards, each its picture, title and when (and the
+// Komponent it's for). New makes one for this page (the whole projekt on
+// its page, a Komponent on the Komponent's), and its composer offers Add
+// existing (Kronk::EventLinks). Going is on the event's own page. The
+// events themselves live in Kalendar; this reads them.
 
 const messages = defineMessages({
   title: {
-    id: 'freethedream.together.title',
-    defaultMessage: 'Getting together',
+    id: 'freethedream.events.title',
+    defaultMessage: 'Events',
   },
-  empty: {
-    id: 'freethedream.together.empty',
-    defaultMessage: 'Nothing planned yet.',
-  },
-  make: { id: 'freethedream.event.make', defaultMessage: 'Make an event' },
-  going: { id: 'freethedream.event.going', defaultMessage: 'Going' },
-  imGoing: {
-    id: 'freethedream.together.im_going',
-    defaultMessage: "I'm going",
-  },
-  goingCount: {
-    id: 'freethedream.together.going_count',
-    defaultMessage: '{count} going',
-  },
-  unlink: { id: 'freethedream.event.unlink', defaultMessage: 'Unlink' },
 });
 
 export const DATE: Intl.DateTimeFormatOptions = {
@@ -95,162 +62,40 @@ export const eventMapHref = (event: FtdEvent) =>
     ? `/hub/map?event=${encodeURIComponent(event.slug)}`
     : null;
 
-export const GettingTogether: React.FC<{
+export const ProjectEvents: React.FC<{
   project: FtdProject;
+  id?: string;
   refresh: () => void;
-}> = ({ project, refresh }) => {
+}> = ({ project, id, refresh }) => {
   const intl = useIntl();
-  const route = useKorner('kalendar')?.compose?.route;
-  const canMake = project.can.link_event && !!route;
-
-  if (project.events.length === 0 && !canMake) return null;
-
-  // A + beside the title makes an event for this page: the whole projekt
-  // on a projekt, the Komponent on a Komponent's own page (Tal,
-  // 2026-11-08). No picker.
-  const make =
-    canMake && route ? (
-      <Link
-        to={{
-          pathname: route,
-          search: konnectSearch('freethedream', project.id),
-        }}
-        className='freethedream-section__add'
-        title={intl.formatMessage(messages.make)}
-        aria-label={intl.formatMessage(messages.make)}
-      >
-        <Icon id='add' icon={AddIcon} />
-      </Link>
-    ) : null;
-
-  return (
-    <Section title={intl.formatMessage(messages.title)} aside={make}>
-      {project.events.length === 0 ? (
-        <p className='freethedream__quiet'>
-          {intl.formatMessage(messages.empty)}
-        </p>
-      ) : (
-        <ul className='freethedream-together'>
-          {project.events.map((event) => (
-            <EventRow key={event.id} event={event} onChange={refresh} />
-          ))}
-        </ul>
-      )}
-    </Section>
+  const cards = useMemo<ShelfCard[]>(
+    () =>
+      project.events.map((event) => {
+        const when = eventWhen(intl, event);
+        return {
+          key: event.id,
+          id: event.id,
+          to: `/hub/kalendar/${event.slug}`,
+          image: event.image_url,
+          title: event.title,
+          meta: [when.date, when.time, event.for?.title]
+            .filter(Boolean)
+            .join(' · '),
+        };
+      }),
+    [project.events, intl],
   );
-};
-
-const EventRow: React.FC<{
-  event: FtdEvent;
-  onChange: () => void;
-}> = ({ event, onChange }) => {
-  const intl = useIntl();
-  const [busy, setBusy] = useState(false);
-  const start = new Date(event.start_time);
-  const when = eventWhen(intl, event);
-  const mapHref = eventMapHref(event);
-  const going = event.my_rsvp === 'going';
-  const href = `/hub/kalendar/${event.slug}`;
-
-  const handleGoing = useCallback(() => {
-    setBusy(true);
-    apiFtdRsvp(event.id, going ? 'remove' : 'going')
-      .then(() => {
-        setBusy(false);
-        onChange();
-      })
-      .catch(() => {
-        setBusy(false);
-      });
-  }, [event.id, going, onChange]);
-
-  const handleUnlink = useCallback(() => {
-    void apiDeleteAttachment(event.attachment_id).then(onChange);
-  }, [event.attachment_id, onChange]);
 
   return (
-    <li className='freethedream-together__cell'>
-      <StandardCard variant='flow' className='freethedream-together__event'>
-        <CardMedia
-          className={
-            event.image_url
-              ? 'freethedream-together__picture'
-              : 'freethedream-together__date'
-          }
-        >
-          <Link to={href} tabIndex={-1} aria-hidden>
-            {event.image_url ? (
-              <img src={event.image_url} alt='' />
-            ) : (
-              <>
-                <span className='freethedream-together__day'>
-                  {intl.formatDate(start, { day: 'numeric' })}
-                </span>
-                <span className='freethedream-together__month'>
-                  {intl.formatDate(start, { month: 'short' })}
-                </span>
-              </>
-            )}
-          </Link>
-        </CardMedia>
-        <CardTitle>
-          <Link to={href} className='freethedream-together__title'>
-            {event.title}
-          </Link>
-        </CardTitle>
-        <CardMeta>
-          {when.date}, {when.time}
-          {event.location_name && (
-            <>
-              {' · '}
-              {mapHref ? (
-                <Link to={mapHref}>{event.location_name}</Link>
-              ) : (
-                event.location_name
-              )}
-            </>
-          )}
-        </CardMeta>
-        <CardActions className='freethedream-together__foot'>
-          {event.for && (
-            <Link
-              to={projectPath(event.for)}
-              className='freethedream-tag freethedream-tag--flush'
-            >
-              {event.for.title}
-            </Link>
-          )}
-          <span className='freethedream__quiet'>
-            {intl.formatMessage(messages.goingCount, {
-              count: event.going_count,
-            })}
-          </span>
-          {event.can_unlink && (
-            <button
-              type='button'
-              className='freethedream__link'
-              onClick={handleUnlink}
-            >
-              {intl.formatMessage(messages.unlink)}
-            </button>
-          )}
-          {event.rsvp_enabled && (
-            <button
-              type='button'
-              className={
-                going
-                  ? 'freethedream__button freethedream__button--small'
-                  : 'freethedream__button freethedream__button--small freethedream__button--quiet'
-              }
-              aria-pressed={going}
-              disabled={busy}
-              onClick={handleGoing}
-            >
-              {intl.formatMessage(going ? messages.going : messages.imGoing)}
-            </button>
-          )}
-        </CardActions>
-      </StandardCard>
-    </li>
+    <SpaceShelf
+      homeSlug='freethedream'
+      homeId={project.id}
+      korner='kalendar'
+      id={id}
+      title={intl.formatMessage(messages.title)}
+      canAdd={project.can.link_event}
+      cards={cards}
+      onAdded={refresh}
+    />
   );
 };

@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 class Api::V1::BookmarksController < Api::BaseController
+  include KronkCommentsAsPosts
+
   before_action -> { doorkeeper_authorize! :read, :'read:bookmarks' }
   before_action :require_user!
   after_action :insert_pagination_headers
 
   def index
-    @statuses = load_statuses
-    render json: @statuses, each_serializer: REST::StatusSerializer, relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id)
+    @statuses, comment_marks = comments_as_their_posts(load_statuses)
+    render json: @statuses, each_serializer: REST::StatusSerializer, relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id), kronk_comment_marks: comment_marks
   end
 
   private

@@ -10,6 +10,8 @@ import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import api from 'mastodon/api';
+import { EmptyState } from 'mastodon/components/empty_state';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ScrollContainer } from 'mastodon/containers/scroll_container';
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
@@ -17,6 +19,7 @@ import { PageActionRegistrar } from 'mastodon/features/ui/components/page_action
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
+import { importFetchedStatuses } from '../../actions/importer';
 import { fetchStatus, editStatus } from '../../actions/statuses';
 import { openModal } from '../../actions/modal';
 import ColumnHeader from '../../components/column_header';
@@ -28,6 +31,7 @@ const messages = defineMessages({
   editPost: { id: 'status.page_action.edit', defaultMessage: 'Edit post' },
   statusTitleWithAttachments: { id: 'status.title.with_attachments', defaultMessage: '{user} posted {attachmentCount, plural, one {an attachment} other {# attachments}}' },
   detailedStatus: { id: 'status.detailed_status', defaultMessage: 'Detailed conversation view' },
+  commentPostGone: { id: 'status.comment_post_gone', defaultMessage: 'The post this comment was on is gone.' },
 });
 
 const makeMapStateToProps = () => {
@@ -65,6 +69,10 @@ const titleFromStatus = (intl, status) => {
 // card, with its replies and the reply box inside — just without the rest
 // of the feed. The one difference: every reply shows, not the feed's first
 // few.
+//
+// A comment has no page of its own (docs/spaces/feed.md (Comments)): its
+// address opens the post at the top of its thread, with the comment picked
+// out in the comment section (`?comment=`).
 class Status extends ImmutablePureComponent {
   static propTypes = {
     identity: identityContextPropShape,
@@ -78,8 +86,49 @@ class Status extends ImmutablePureComponent {
     ...WithRouterPropTypes
   };
 
+  state = {
+    // For a comment: the post its thread starts at ({ id, acct }), `null`
+    // when that post is gone, 'error' when the lookup failed.
+    threadRoot: undefined,
+    threadRootFor: null,
+  };
+
   UNSAFE_componentWillMount () {
     this.props.dispatch(fetchStatus(this.props.params.statusId, { forceFetch: true }));
+  }
+
+  componentDidMount () {
+    this.findThreadRoot();
+  }
+
+  componentDidUpdate () {
+    this.findThreadRoot();
+  }
+
+  // `ancestors` come root first. If the first is itself a reply, the post
+  // the thread started at has been deleted.
+  findThreadRoot () {
+    const { status, dispatch } = this.props;
+    if (!status || !status.get('in_reply_to_id')) return;
+
+    const id = status.get('id');
+    if (this.state.threadRootFor === id) return;
+
+    this.setState({ threadRootFor: id, threadRoot: undefined });
+
+    api().get(`/api/v1/statuses/${id}/context`).then(({ data }) => {
+      if (this.state.threadRootFor !== id) return;
+
+      const root = data.ancestors[0];
+      if (root && !root.in_reply_to_id) {
+        dispatch(importFetchedStatuses([root]));
+        this.setState({ threadRoot: { id: root.id, acct: root.account.acct } });
+      } else {
+        this.setState({ threadRoot: null });
+      }
+    }).catch(() => {
+      if (this.state.threadRootFor === id) this.setState({ threadRoot: 'error' });
+    });
   }
 
   UNSAFE_componentWillReceiveProps (nextProps) {
@@ -127,6 +176,35 @@ class Status extends ImmutablePureComponent {
       return <Redirect to={{ pathname, search: query ? `?${query}` : '' }} />;
     }
 
+    if (status.get('in_reply_to_id')) {
+      const { threadRoot, threadRootFor } = this.state;
+
+      if (threadRootFor !== status.get('id') || threadRoot === undefined) {
+        return (
+          <Column>
+            <LoadingIndicator />
+          </Column>
+        );
+      }
+
+      if (threadRoot === 'error') {
+        return <BundleColumnError multiColumn={multiColumn} errorType='network' />;
+      }
+
+      if (threadRoot === null) {
+        return (
+          <Column bindToDocument={!multiColumn} label={intl.formatMessage(messages.detailedStatus)}>
+            <ColumnHeader showBackButton multiColumn={multiColumn} />
+            <EmptyState title={intl.formatMessage(messages.commentPostGone)} />
+          </Column>
+        );
+      }
+
+      return <Redirect to={{ pathname: `/@${threadRoot.acct}/${threadRoot.id}`, search: `?comment=${status.get('id')}` }} />;
+    }
+
+    const highlightComment = new URLSearchParams(this.props.location.search).get('comment');
+
     const isLocal = status.getIn(['account', 'acct'], '').indexOf('@') === -1;
     const isIndexable = !status.getIn(['account', 'noindex']);
 
@@ -143,7 +221,7 @@ class Status extends ImmutablePureComponent {
         <ScrollContainer scrollKey='thread'>
           <div className='item-list scrollable scrollable--flex'>
             {/* Edit is the Ж menu's on a detail page (docs/design.md). */}
-            <StatusQuoteManager id={status.get('id')} allReplies detailed hideEdit />
+            <StatusQuoteManager id={status.get('id')} allReplies detailed hideEdit withCounters highlightComment={highlightComment} />
           </div>
         </ScrollContainer>
 

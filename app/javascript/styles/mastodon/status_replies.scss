@@ -263,6 +263,15 @@
         padding-left: 8px;
       }
     }
+
+    // The comment a link pointed at (the post page's `?comment=`). Padded
+    // out by as much as it's pulled in, so nothing around it moves.
+    &--highlighted > .status-replies__item__main {
+      margin: -6px;
+      padding: 6px;
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      border-radius: var(--radius-small);
+    }
   }
 
   &__quick-reply {

@@ -282,6 +282,8 @@ class FanOutOnWriteService < BaseService
   end
 
   def broadcast_to_hashtag_streams!
+    return if @status.reply? # Kronk: comments stay under their post
+
     @status.tags.map(&:name).each do |hashtag|
       redis.publish("timeline:hashtag:#{hashtag.downcase}", anonymous_payload)
       redis.publish("timeline:hashtag:#{hashtag.downcase}:local", anonymous_payload) if @status.local?

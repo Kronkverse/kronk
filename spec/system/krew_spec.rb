@@ -30,17 +30,17 @@ RSpec.describe 'Krew page', :js, :streaming do
     find('.kronk-menu__trigger').click
   end
 
-  it 'puts the spaces first, then the chat' do
+  it 'puts the chat first, then the spaces, just above the posts' do
     visit "/hub/krew/#{krew.slug}"
 
     expect(page).to have_css('.krew-detail__chat')
     expect(page).to have_css('.attachment-section')
     expect(page).to have_no_text("What's happening")
-    chat_after_spaces = page.evaluate_script(<<~JS)
-      !!(document.querySelector('.attachment-section').compareDocumentPosition(
-        document.querySelector('.krew-detail__chat')) & Node.DOCUMENT_POSITION_FOLLOWING)
+    spaces_after_chat = page.evaluate_script(<<~JS)
+      !!(document.querySelector('.krew-detail__chat').compareDocumentPosition(
+        document.querySelector('.attachment-section')) & Node.DOCUMENT_POSITION_FOLLOWING)
     JS
-    expect(chat_after_spaces).to be true
+    expect(spaces_after_chat).to be true
     expect(plus_moon).to eq 'Post to Growers'
   end
 
@@ -104,21 +104,14 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(page).to have_css('.compose-shell', text: 'New event')
   end
 
-  it 'makes a new Kuddle for the Krew from the Konnect picker' do
-    # The Huddle lobby under the composer asks the Jitsi host who is in, a
-    # server this suite does not run (as in huddle_spec).
-    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+  # docs/spaces/huddle.md, A space's own Kuddle (Tal, 2026-11-10).
+  it 'gives the Krew its own Kuddle from the Konnect picker' do
     visit "/hub/krew/#{krew.slug}"
     within('.attachment-section') { click_on 'Konnect' }
-    within('.attachment-picker') do
-      click_on 'Huddle'
-      click_on 'New Kuddle'
-    end
+    within('.attachment-picker') { click_on 'Huddle' }
 
-    expect(page).to have_current_path("/hub/huddle/composer?konnect=krew:#{krew.id}")
-    within('.compose-shell .konnect-row') do
-      expect(page).to have_css('.space-tile', text: 'Growers')
-    end
+    within('#krew-kuddles .kuddle-frame') { expect(page).to have_link('Growers') }
+    expect(HuddleSession.spaces.where(krew: krew).count).to eq 1
   end
 
   it 'shows each space it has as a section of cards, ending in New', :aggregate_failures do

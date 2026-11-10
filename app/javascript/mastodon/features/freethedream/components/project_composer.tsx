@@ -6,9 +6,12 @@ import {
   apiFtdCreateProject,
   apiFtdUpdateProject,
   apiFtdUploadCover,
+  FTD_SECTION_ORDER,
 } from 'mastodon/api/freethedream';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type { FtdCover, FtdProject } from 'mastodon/api_types/freethedream';
+import { ArrangeList } from 'mastodon/components/arrange_list';
+import type { ArrangeItem } from 'mastodon/components/arrange_list';
 import {
   ComposeBody,
   ComposeField,
@@ -16,6 +19,7 @@ import {
   ComposeInput,
   ComposeSection,
   ComposeTitle,
+  ComposeCheck,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
@@ -25,6 +29,37 @@ import { parseKonnectParam, useKonnect } from 'mastodon/hooks/useKonnect';
 import { errorOf } from './shared';
 
 const messages = defineMessages({
+  chat: { id: 'freethedream.compose.chat', defaultMessage: 'Chat' },
+  chatHint: {
+    id: 'freethedream.compose.chat_hint',
+    defaultMessage:
+      'A group chat in Nudges for everyone in the projekt, on its page.',
+  },
+  pageOrder: {
+    id: 'freethedream.compose.page_order',
+    defaultMessage: 'Page order',
+  },
+  pageOrderHint: {
+    id: 'freethedream.compose.page_order_hint',
+    defaultMessage: 'The order its sections show in on its page.',
+  },
+  sectionEvents: { id: 'freethedream.events.title', defaultMessage: 'Events' },
+  sectionAlbums: {
+    id: 'freethedream.albums.title',
+    defaultMessage: 'Albums',
+  },
+  sectionKronikles: {
+    id: 'freethedream.kronikles.title',
+    defaultMessage: 'Kronikles',
+  },
+  sectionKuestions: {
+    id: 'freethedream.kuestions',
+    defaultMessage: 'Kuestions',
+  },
+  sectionUpdates: {
+    id: 'freethedream.activity.title',
+    defaultMessage: 'Activity',
+  },
   newProject: {
     id: 'freethedream.compose.seed',
     defaultMessage: 'Seed a projekt',
@@ -138,6 +173,38 @@ export const ProjectComposer: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   const top = editing ? editing.top : !parent;
+  // Its chat, on and off as a Krew's is in Settings.
+  const [chat, setChat] = useState(
+    editing ? editing.spaces.includes('nudges') : true,
+  );
+  const handleChat = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setChat(e.target.checked);
+  }, []);
+  // Its page's sections, in the order they show (a projekt's own, from
+  // Edit, like a Krew's Page order): its spaces and its Activity.
+  const [order, setOrder] = useState<string[]>(() => {
+    if (!editing) return [];
+    const keys: string[] = FTD_SECTION_ORDER.filter(
+      (key) => key === 'updates' || (editing.spaces as string[]).includes(key),
+    );
+    const rank = (key: string) => {
+      const at = editing.section_order.indexOf(key);
+      return at === -1 ? FTD_SECTION_ORDER.length + keys.indexOf(key) : at;
+    };
+    return [...keys].sort((x, y) => rank(x) - rank(y));
+  });
+  const sectionNames: Record<string, string> = {
+    kalendar: intl.formatMessage(messages.sectionEvents),
+    albutts: intl.formatMessage(messages.sectionAlbums),
+    kronikles: intl.formatMessage(messages.sectionKronikles),
+    kuestions: intl.formatMessage(messages.sectionKuestions),
+    nudges: intl.formatMessage(messages.chat),
+    updates: intl.formatMessage(messages.sectionUpdates),
+  };
+  const orderItems: ArrangeItem[] = order.map((key) => ({
+    key,
+    label: sectionNames[key] ?? key,
+  }));
   const newTop = top && !editing;
   // Adding inside an emergence makes a gang; inside a gang, a fractal.
   const fractal = parent?.level === 'gang';
@@ -241,7 +308,9 @@ export const ProjectComposer: React.FC<Props> = ({
       ...(top
         ? {
             cover_media_attachment_id: cover?.id ?? null,
-            ...(editing ? { ends_on: endsOn || null } : { krew_id: krewId }),
+            ...(editing
+              ? { ends_on: endsOn || null, section_order: order, chat }
+              : { krew_id: krewId }),
           }
         : {}),
     };
@@ -266,6 +335,8 @@ export const ProjectComposer: React.FC<Props> = ({
     title,
     description,
     endsOn,
+    order,
+    chat,
     cover,
     krewId,
     top,
@@ -374,6 +445,23 @@ export const ProjectComposer: React.FC<Props> = ({
           hint={intl.formatMessage(messages.endsHint)}
         >
           <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
+        </ComposeField>
+      )}
+      {top && editing && (
+        <ComposeCheck
+          role='switch'
+          label={intl.formatMessage(messages.chat)}
+          hint={intl.formatMessage(messages.chatHint)}
+          checked={chat}
+          onChange={handleChat}
+        />
+      )}
+      {top && editing && orderItems.length > 1 && (
+        <ComposeField
+          label={intl.formatMessage(messages.pageOrder)}
+          hint={intl.formatMessage(messages.pageOrderHint)}
+        >
+          <ArrangeList items={orderItems} onChange={setOrder} />
         </ComposeField>
       )}
       {error && <ComposeHint error>{error}</ComposeHint>}

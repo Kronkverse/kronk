@@ -41,14 +41,18 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     krew = parent ? nil : own_krew
     return render json: { error: 'Pick one of your Krews for it to live in' }, status: 422 if parent.nil? && krew.nil?
 
-    attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id)
+    attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id, :chat)
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params[:cover_media_attachment_id].present?
     project = Freethedream::Project.new(attrs.merge(parent: parent, owner: current_account, krew: krew))
     project.joining = 'open' if parent
+    # A projekt starts with its chat on, as a Krew's page has one; the owner
+    # can turn it off in Edit.
+    project.spaces = ['nudges'] unless parent
     Freethedream::Project.transaction do
       project.save!
       start!(project)
     end
+    Nudges::Conversation.projekt_for!(project) if project.spaces.include?('nudges')
 
     Freethedream::Activity.log!(project: parent, account: current_account, verb: 'section_added', title: project.title, section_id: project.id.to_s) if parent
 
@@ -60,14 +64,40 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   def update
     permit!(@project.owned_by?(current_account))
 
-    attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id)
+    attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id, :chat)
+    attrs[:spaces] = chat_spaces(project_params[:chat]) if project_params.key?(:chat) && @project.top?
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params.key?(:cover_media_attachment_id)
     attrs[:done_at] = done_at(project_params[:done]) if project_params.key?(:done)
     was_done = @project.done?
     return render_invalid(@project) unless @project.update(attrs)
 
+    Nudges::Conversation.projekt_for!(@project) if @project.spaces.include?('nudges')
+
     Freethedream::Activity.log!(project: @project, account: current_account, verb: 'done', title: @project.title) if @project.done? && !was_done
 
+    render json: view.project(@project)
+  end
+
+  # Its chat, for its page: the Nudges conversation and how much of it the
+  # viewer hasn't read. Members only, while the chat is on. `projekt_for!`
+  # brings everyone in, so it runs only when the viewer has no place yet.
+  def chat
+    require_member!(@project)
+    return render json: { error: 'no_chat' }, status: 404 unless @project.top? && @project.spaces.include?('nudges')
+
+    conversation = Nudges::Conversation.find_by(kind: Nudges::Conversation::PROJEKT, freethedream_project: @project)
+    conversation = Nudges::Conversation.projekt_for!(@project) unless conversation&.memberships&.exists?(account_id: current_account.id)
+    render json: { conversation_id: conversation.id.to_s, unread: conversation.unread_count_for(current_account) }
+  end
+
+  # Konnect → a space turns that space on (Project::SPACES), the projekt
+  # itself only: its Komponents show what they have.
+  def turn_on_space
+    permit!(@project.owned_by?(current_account) && @project.top?)
+    slug = params.require(:korner).to_s
+    return render json: { error: 'unknown_space' }, status: 422 unless Freethedream::Project::SPACES.include?(slug)
+
+    @project.update!(spaces: @project.spaces | [slug])
     render json: view.project(@project)
   end
 
@@ -181,7 +211,12 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   end
 
   def project_params
-    params.expect(project: [:title, :description, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id])
+    params.expect(project: [:title, :description, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id, :chat, section_order: []])
+  end
+
+  def chat_spaces(on)
+    on = ActiveModel::Type::Boolean.new.cast(on)
+    on ? @project.spaces | ['nudges'] : @project.spaces - ['nudges']
   end
 
   # The Krew a new projekt goes into: one of yours that is still going.
