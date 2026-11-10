@@ -499,6 +499,16 @@ transparent zones that only position their children. The korner rail starts
     current face. The view picker then renders nothing. `/home` uses the same
     rotator for Mates / Orbit / Kronkverse, with `<FeedDrum>` turning the
     content.
+  - **Swiping the rotator** (touch). A sideways swipe on the content turns
+    the drum under the finger. Let go past a third of the width, or flick,
+    and it finishes the turn to the next face; less, and it springs back. It
+    decides sideways or not after 10px, so a slightly slanted thumb still
+    counts. A swipe across the title band steps too, and is the only swipe
+    where the content takes sideways drags itself: anything that scrolls
+    sideways, anything with `touch-action: none` (the Kalendar spiral), and
+    the map, which pans. A swipe started mid-turn finishes that turn and
+    takes over. A swipe in from the screen's very edge is the phone's back
+    gesture and never reaches the page.
   - **Pills** (default): a segmented row, one button per view, the active one
     `aria-pressed`.
   - **Menu** (`header.picker: menu`): a dropdown.
@@ -834,7 +844,7 @@ with `app/`, `config/` or `styles/`.
 | `<SpaceHeaderRow>` + `<AutoSpaceBadge>` + `<AutoSpaceHeader>` + `<AutoSpaceViewPicker>` | The header row: back badge, title and tagline, view switch. Manifest-driven.                                            | `components/space_header_row.tsx`, `auto_space_*.tsx`, `space_badge.tsx`                |
 | `useSpaceHeaderOverride`                                                                | Put a route's own title in the header slot.                                                                             | `components/space_header_override.tsx`                                                  |
 | `<ScopeTitle>`                                                                          | The rotating title (chevrons, tap halves, position strip) for `header.rotator: true` and `/home`.                       | `components/scope_title.tsx`                                                            |
-| `<FeedDrum>`                                                                            | The quarter-turn animation when the rotator changes face (home and most korners).                                       | `components/feed_drum.tsx`                                                              |
+| `<FeedDrum>`                                                                            | The quarter-turn when the rotator changes face, and the swipe that turns it under the finger (home and most korners).   | `components/feed_drum.tsx`                                                              |
 | `<SettingsSpaceHeader>`                                                                 | A settings page's title, pushed into the header slot.                                                                   | `features/settings/space_header.tsx`                                                    |
 | `<StandardCard>` + slot components                                                      | The card shell: six slots, three arrangements. See [Card standard](#card-standard).                                     | `components/standard_card.tsx`                                                          |
 | `<SpaceGrid>` + `<SpaceCard>`                                                           | The grid arrangement as a ready-made tile grid.                                                                         | `components/space_grid.tsx`                                                             |
