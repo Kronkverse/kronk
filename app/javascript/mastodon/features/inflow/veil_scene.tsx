@@ -9,8 +9,11 @@ import {
   getMoonIllumination,
   getMoonPhaseName,
   getMoonRiseSet,
+  getMoonSign,
+  getNextMoonPhase,
   getDaylightInfo,
 } from 'mastodon/features/events/components/celestial_calendar';
+import type { ZodiacSign } from 'mastodon/features/events/components/celestial_calendar';
 import { setKosmosBrightness } from 'mastodon/features/kosmos/brightness';
 
 import { buildDailyIntegrationText } from './components/daily_integration';
@@ -35,6 +38,28 @@ const messages = defineMessages({
   moonset: { id: 'inflow.veil.moonset', defaultMessage: 'Moonset' },
   sunrise: { id: 'inflow.veil.sunrise', defaultMessage: 'Sunrise' },
   sunset: { id: 'inflow.veil.sunset', defaultMessage: 'Sunset' },
+  inSign: { id: 'inflow.veil.in_sign', defaultMessage: 'in {sign}' },
+  nextFull: { id: 'inflow.veil.next_full', defaultMessage: 'Full moon' },
+  nextNew: { id: 'inflow.veil.next_new', defaultMessage: 'New moon' },
+});
+
+// The moon's zodiac sign, by name.
+const signs = defineMessages<ZodiacSign>({
+  aries: { id: 'inflow.veil.sign.aries', defaultMessage: 'Aries' },
+  taurus: { id: 'inflow.veil.sign.taurus', defaultMessage: 'Taurus' },
+  gemini: { id: 'inflow.veil.sign.gemini', defaultMessage: 'Gemini' },
+  cancer: { id: 'inflow.veil.sign.cancer', defaultMessage: 'Cancer' },
+  leo: { id: 'inflow.veil.sign.leo', defaultMessage: 'Leo' },
+  virgo: { id: 'inflow.veil.sign.virgo', defaultMessage: 'Virgo' },
+  libra: { id: 'inflow.veil.sign.libra', defaultMessage: 'Libra' },
+  scorpio: { id: 'inflow.veil.sign.scorpio', defaultMessage: 'Scorpio' },
+  sagittarius: {
+    id: 'inflow.veil.sign.sagittarius',
+    defaultMessage: 'Sagittarius',
+  },
+  capricorn: { id: 'inflow.veil.sign.capricorn', defaultMessage: 'Capricorn' },
+  aquarius: { id: 'inflow.veil.sign.aquarius', defaultMessage: 'Aquarius' },
+  pisces: { id: 'inflow.veil.sign.pisces', defaultMessage: 'Pisces' },
 });
 
 // The InFlow veil — the feed parts to reveal a night sky that was always there.
@@ -131,6 +156,19 @@ function fmtPhase(name: string): string {
     .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+// "Mon 24 Nov, 14:53" where the sky is read.
+function fmtWhen(d: Date): string {
+  return d.toLocaleString('en-AU', {
+    timeZone: skyPlace().tz,
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
 function fmtTime(d: Date | null): string {
@@ -265,6 +303,9 @@ export const VeilScene: React.FC = () => {
       moon: getMoonRiseSet(year, month, day, place.lat, place.lon),
       daylight: getDaylightInfo(year, month, day, place.lat, place.lon),
       reflection: buildDailyIntegrationText(),
+      sign: getMoonSign(now),
+      nextFull: getNextMoonPhase(now, 'full'),
+      nextNew: getNextMoonPhase(now, 'new'),
     };
     // dayKey: read the sky again when the day turns.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -469,7 +510,10 @@ export const VeilScene: React.FC = () => {
           </h2>
           <div className='inflow-veil__phase'>
             {fmtPhase(sky.phase)} ·{' '}
-            {intl.formatMessage(messages.lit, { percent: lit })}
+            {intl.formatMessage(messages.lit, { percent: lit })} ·{' '}
+            {intl.formatMessage(messages.inSign, {
+              sign: intl.formatMessage(signs[sky.sign]),
+            })}
           </div>
           <p className='inflow-veil__reflection'>{sky.reflection}</p>
           <div className='inflow-veil__almanac'>
@@ -489,6 +533,23 @@ export const VeilScene: React.FC = () => {
               {intl.formatMessage(messages.sunset)}{' '}
               <b>{fmtTime(sky.daylight.set)}</b>
             </span>
+          </div>
+          {/* The next full and new moon, soonest first. */}
+          <div className='inflow-veil__almanac inflow-veil__almanac--moons'>
+            {(sky.nextFull < sky.nextNew
+              ? [
+                  [messages.nextFull, sky.nextFull] as const,
+                  [messages.nextNew, sky.nextNew] as const,
+                ]
+              : [
+                  [messages.nextNew, sky.nextNew] as const,
+                  [messages.nextFull, sky.nextFull] as const,
+                ]
+            ).map(([label, when]) => (
+              <span key={label.id}>
+                {intl.formatMessage(label)} <b>{fmtWhen(when)}</b>
+              </span>
+            ))}
           </div>
         </div>
       </div>
