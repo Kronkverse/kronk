@@ -151,6 +151,31 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
   end
 
+  # Kommons, 2026-11-10 (Projekts and Krew work): a Komponent's card says
+  # what it is, not how many, and its page shows who's in it as a row of
+  # pictures under its description.
+  it "shows a Komponent's description on its card and its people as a row", :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+    Freethedream::Project.create!(title: 'Sound', description: 'Speakers, a desk and the long cable run', parent: doof, owner: bob.account)
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.freethedream-group', text: 'Speakers, a desk and the long cable run')
+    expect(page).to have_no_css('.freethedream-group', text: /person|people|fractal/)
+
+    click_on '+ Add a Komponent'
+    within('.compose-shell') do
+      fill_in placeholder: 'Sound, Design, Paperwork', with: 'Kitchen'
+      click_on 'Add'
+    end
+    within('.freethedream-groups') { click_link 'Kitchen' }
+
+    expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
+    expect(page).to have_css(".people-row a[href='/@#{bob.account.username}']")
+    expect(page).to have_no_text('Who’s in it')
+  end
+
   # Kommons, 2026-11-08: Kuestions are the projekt's alone. With Kuestions
   # on, the projekt page has the row and a Komponent's page has none.
   it 'shows Kuestions on the projekt, not on its Komponents' do

@@ -24,6 +24,7 @@ import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LinkifiedText } from 'mastodon/components/linkified_text';
+import { PeopleRow } from 'mastodon/components/people_row';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { KrewChat } from 'mastodon/features/krew/krew_chat';
@@ -38,7 +39,6 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { act } from './act';
-import { Crew } from './crew';
 import { eventMapHref, eventWhen, ProjectEvents } from './event_card';
 import { GroupTiles } from './groups';
 import { Yours } from './overview';
@@ -432,15 +432,21 @@ const ProjectView: React.FC<{
           </span>
         )
       }
-      meta={meta}
+      meta={
+        project.top ? (
+          meta
+        ) : (
+          <>
+            {meta}
+            {/* Who's in it, at a glance (Tal, 2026-11-10). */}
+            <PeopleRow people={project.crew.map((row) => row.account)} />
+          </>
+        )
+      }
       actions={gangBar}
     >
       <>
-        {project.top ? (
-          <Yours project={project} />
-        ) : (
-          <Crew crew={project.crew} />
-        )}
+        {project.top && <Yours project={project} />}
         {project.source_idea && (
           <div className='freethedream-intro'>
             <p className='freethedream__quiet'>
