@@ -123,25 +123,10 @@ Reading room, and so on). Anyone can join; there's no membership or invite.
   unique key (slug plus a random suffix, stored in `session_url`) so two rooms
   with the same name don't collide. It publishes `huddle.room.created`, and
   the creator goes straight into the new room, and follows it (below).
-- **Konnected to a Krew:** with `krew_id` (a live Krew the creator is in;
-  anything else is a 422 and no Room is made) the Room and a `link`
-  attachment huddle → krew are made in one transaction, so the Room shows in
-  the Krew page's spaces. It is a link only: the Room stays open to everyone,
-  and members-only Krew Huddles (below) are still not built. The composer
-  takes `?krew=<id>` (`/hub/huddle/composer?krew=<id>`) to start with that
-  Krew picked, as the Kalendar and Albutts composers do; only Krews you're in
-  are offered (`useAvailableKrews`), one at most.
-- **A frame in a projekt** (Tal, 2026-10-30: "konnecting a huddle should
-  put a frame into the space"): a Kuddle Konnected to a projekt or a
-  Komponent shows at the top of its page as a frame (`kuddle_frame.tsx`),
-  not a tile: the Kuddle's name (opening its page), how many are in it and
-  **Join the call**. The call then sits in the frame with Kronk's controls,
-  and it follows you like any Kuddle's: leave the page and it floats, and
-  the window's Back comes to the projekt. It is the same call as the
-  Kuddle's own page (`use_kuddle_call.ts`, which `room.tsx` uses too), so
-  moving between the two keeps it. **New Kuddle** from a projekt's Konnect
-  comes back to the projekt and joins the call there. Whoever looks after
-  the projekt can Diskonnect it from the frame.
+- **Konnected to a space:** no longer; Konnect → Kuddle on a Krew,
+  projekt or Komponent makes its own Kuddle (3, below). `krew_id` on
+  create still links a new open Kuddle to a Krew you're in (the old
+  composer path), but the Krew's page doesn't show it.
 - **List:** `GET /api/v1/huddle/rooms` returns non-retired rooms, most
   recently active first (`REST::HuddleRoomSerializer`). Who created a room is
   deliberately not shown.
@@ -183,12 +168,37 @@ Following a Kuddle means a nudge when people gather in it (Kommons
   shape carries `followed` and `followed_via_krew` for the viewer; the card
   shows Following either way.
 
-**3. Krew Huddles.** The design is one Huddle per Krew, joinable only by its
-members. **Not built.** `krew` is a valid scope value but no code creates or
-reads one. A Krew can turn on "huddle" in its korner list (`KrewKorner`), but
-that tile just links to `/hub/huddle`. See [Open](#open). A Kuddle Konnected to a Krew is
-not one of these: it stays open to everyone, and the Krew's members follow
-it (above).
+**3. A space's own Kuddle** (Tal, 2026-11-10; decisions.md). A Krew, a
+projekt and a Komponent each can have one Kuddle of its own, for its members
+only (a Komponent's members are its projekt's). It is made the first time
+someone in the space picks **Kuddle** in its Konnect, and picking it again
+goes to it (`POST /api/v1/huddle/spaces` with `krew_id` or `project_id`;
+`HuddleSession.for_space!`, scope `space`, `krew_id` or
+`freethedream_project_id`, one each). Named after its space. Everyone else
+gets a 404 for it, its page and a pass (`HuddleSession#open_to?`,
+`Kronk::CallTarget`); it isn't on `/hub/huddle` and is never reaped. Its
+members follow it by being members (`Huddle::Follows`), so they are nudged
+when people gather; Unfollow still stops them. It shows:
+
+- on its projekt's or Komponent's page as a call frame at the top of the
+  work (`kuddle_frame.tsx`; `kuddle_id` on the projekt; Tal, 2026-10-30:
+  "konnecting a huddle should put a frame into the space"): its name
+  (opening its page), how many are in it and **Join the call**. The call
+  sits in the frame with Kronk's controls and follows you when you leave,
+  the window's Back coming to the page; it is the same call as the
+  Kuddle's own page (`use_kuddle_call.ts`), so moving between them keeps
+  it. And
+- on its Krew's page, under **Kuddles**: the Krew's own as a call frame,
+  then its projekts' and Komponents' as cards that open their page
+  (`GET /api/v1/huddle/spaces?krew_id=`).
+
+`GET /api/v1/huddle/rooms/:id` gives one Kuddle, open or a space's own, to
+whoever may get into it; the frame and the Kuddle's page read it. Open
+Kuddles are no longer Konnected to spaces: the one Konnected to a Krew when
+this shipped became that Krew's own (migration
+`MakeKonnectedKuddlesTheirSpaces`; a space with several kept the first).
+Kuddles have no dates; a scheduled call is an event using its space's
+Kuddle.
 
 ## People are huddling (Fomo noto)
 
@@ -391,8 +401,9 @@ longer makes Huddle-type events (its edit form lost the type toggle on
 
 ## Open
 
-- **Krew Huddles.** Not built (see above). Undecided: what happens to a
-  Krew's Huddle when the Krew is archived, and whether a Krew can remove one.
+- **A space's own Kuddle.** Undecided: what happens to it when its Krew is
+  archived or its projekt removed (the row stays, unreachable), and whether
+  a space can turn it off.
 - **Activity tracking is half wired.** Opening a Kuddle calls
   `POST /api/v1/huddle/rooms/:id/join`, which moves `last_active_at` (so the
   list and the reaper see use). Nothing writes `huddle_participants` or calls

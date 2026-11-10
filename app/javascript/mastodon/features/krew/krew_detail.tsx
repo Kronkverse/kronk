@@ -8,8 +8,8 @@ import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import { changeComposeKrewTargets } from 'mastodon/actions/compose';
-import { apiDeleteAttachment } from 'mastodon/api/attachments';
-import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
+import { apiKrewKuddles, apiSpaceKuddle } from 'mastodon/api/huddle_spaces';
+import type { ApiSpaceKuddleJSON } from 'mastodon/api/huddle_spaces';
 import {
   apiGetKrew,
   apiGetKrewMembers,
@@ -148,6 +148,15 @@ const messages = defineMessages({
   projektsTile: { id: 'krew.detail.tile.projekts', defaultMessage: 'Projekts' },
   chatTile: { id: 'krew.detail.tile.chat', defaultMessage: 'Chat' },
   kuestions: { id: 'krew.detail.kuestions', defaultMessage: 'Kuestions' },
+  projektKuddles: {
+    id: 'krew.detail.projekt_kuddles',
+    defaultMessage: 'In its projekts',
+  },
+  kuddleHere: {
+    id: 'krew.detail.kuddle_here',
+    defaultMessage:
+      '{count, plural, =0 {Nobody in it} one {# in it now} other {# in it now}}',
+  },
   kuddles: {
     id: 'krew.detail.kuddles',
     defaultMessage: '{count, plural, one {Kuddle} other {Kuddles}}',
@@ -351,6 +360,7 @@ const TURN_ON_SPACES = [
   'cinema',
   'booth',
   'kronikles',
+  'huddle',
 ] as const;
 
 // What a Krew calls its works space.
@@ -613,6 +623,37 @@ export const KrewDetail = () => {
     setPeopleOpen((now) => !now);
   }, []);
 
+  // A member sees the Krew's albums and events in the Albutts and Kalendar
+  // tiles, so the Konnected tiles beside them leave those two spaces out
+  // and each album or event shows once (decisions.md, 2026-10-22).
+  // Its projekts have their own section below, so they aren't tiles too.
+  // Its Kuddles are a section of their own, not tiles (Tal, 2026-11-10):
+  // the Krew's own Kuddle as a call frame, then its projekts' and
+  // Komponents' as cards. Kuddles Konnected before stay off the tiles too.
+  const konnectedSkip = [
+    ...(isMember ? shownSpaces : []),
+    'freethedream',
+    'huddle',
+  ];
+  const [kuddles, setKuddles] = useState<ApiSpaceKuddleJSON[]>([]);
+  const [projektCount, setProjektCount] = useState(0);
+  const kuddleKrewId = isMember ? krew?.id : undefined;
+  const loadKuddles = useCallback(() => {
+    if (!kuddleKrewId) return Promise.resolve();
+    return apiKrewKuddles(kuddleKrewId)
+      .then(setKuddles)
+      .catch(() => undefined);
+  }, [kuddleKrewId]);
+  useEffect(() => {
+    setKuddles([]);
+    setProjektCount(0);
+  }, [id]);
+  useEffect(() => {
+    void loadKuddles();
+  }, [loadKuddles]);
+  const ownKuddle = kuddles.find((k) => k.space?.kind === 'krew');
+  const otherKuddles = kuddles.filter((k) => k.space?.kind !== 'krew');
+
   // A space that is a Krew's own rather than a record (Kuestions; manifest
   // grid `space`, TURN_ON_SPACES) is turned on when it is picked in Konnect.
   const spaceKrewId = krew?.id;
@@ -620,6 +661,13 @@ export const KrewDetail = () => {
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
   const turnOnSpace = useCallback(
     async (slug: string) => {
+      // Konnect → Kuddle makes the Krew's own Kuddle, or goes to it.
+      if (spaceKrewId && slug === 'huddle') {
+        await apiSpaceKuddle({ krew_id: spaceKrewId });
+        await loadKuddles();
+        setScrollTarget(SECTION_IDS.kuddles);
+        return;
+      }
       if (!spaceKrewId || !isKrewKornerSlug(slug)) return;
       setKrew(await apiAttachKorner(spaceKrewId, slug));
       setScrollTarget(
@@ -628,7 +676,7 @@ export const KrewDetail = () => {
           : spaceSectionId(slug as PanelSpace),
       );
     },
-    [spaceKrewId],
+    [spaceKrewId, loadKuddles],
   );
   useEffect(() => {
     if (!scrollTarget) return;
@@ -639,7 +687,7 @@ export const KrewDetail = () => {
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [scrollTarget, krew]);
+  }, [scrollTarget, krew, kuddles]);
 
   // Konnect opens the picker straight away (Tal 2026-10-22: no extra step).
   // It is also how a space gets onto the page: Konnecting or making an album
@@ -663,46 +711,6 @@ export const KrewDetail = () => {
     ),
     [],
   );
-
-  // A member sees the Krew's albums and events in the Albutts and Kalendar
-  // tiles, so the Konnected tiles beside them leave those two spaces out
-  // and each album or event shows once (decisions.md, 2026-10-22).
-  // Its projekts have their own section below, so they aren't tiles too.
-  // A Kuddle Konnected here is a call frame in its own section, as in a
-  // projekt (Tal, 2026-10-30: "konnecting a huddle should put a frame into
-  // the space"), so it isn't a tile as well.
-  const konnectedSkip = [
-    ...(isMember ? shownSpaces : []),
-    'freethedream',
-    'huddle',
-  ];
-  const [kuddles, setKuddles] = useState<{ room: string; link: string }[]>([]);
-  const [projektCount, setProjektCount] = useState(0);
-  useEffect(() => {
-    setKuddles([]);
-    setProjektCount(0);
-  }, [id]);
-  const handleKonnections = useCallback((rows: ApiAttachmentJSON[]) => {
-    const seen = new Set<string>();
-    setKuddles(
-      rows.flatMap((row) => {
-        const room =
-          row.target_slug === 'huddle'
-            ? row.target_id
-            : row.source_slug === 'huddle'
-              ? row.source_id
-              : null;
-        if (!room || seen.has(room)) return [];
-        seen.add(room);
-        return [{ room, link: row.id }];
-      }),
-    );
-  }, []);
-  const handleDiskonnect = useCallback((link: string) => {
-    void apiDeleteAttachment(link).then(() => {
-      setKuddles((current) => current.filter((k) => k.link !== link));
-    });
-  }, []);
 
   const frameKuestions = useCallback(
     (row: React.ReactNode) => (
@@ -1105,17 +1113,29 @@ export const KrewDetail = () => {
                         count: kuddles.length,
                       })}
                     </h3>
-                    {kuddles.map((k) => (
-                      <KuddleFrame
-                        key={k.room}
-                        roomId={k.room}
-                        link={k.link}
-                        showKind={false}
-                        onDiskonnect={
-                          krew.archived ? undefined : handleDiskonnect
-                        }
+                    {ownKuddle && (
+                      <KuddleFrame roomId={ownKuddle.id} showKind={false} />
+                    )}
+                    {otherKuddles.length > 0 && (
+                      <SpaceShelf
+                        homeSlug='krew'
+                        homeId={krew.id}
+                        korner='huddle'
+                        title={intl.formatMessage(messages.projektKuddles)}
+                        canAdd={false}
+                        cards={otherKuddles.map((k) => ({
+                          key: k.id,
+                          id: k.id,
+                          to: k.space
+                            ? `/hub/freethedream/p/${k.space.id}`
+                            : `/hub/huddle/kuddle/${k.id}`,
+                          title: k.space?.name ?? k.name,
+                          meta: intl.formatMessage(messages.kuddleHere, {
+                            count: k.occupancy,
+                          }),
+                        }))}
                       />
-                    ))}
+                    )}
                   </section>
                 ),
               ],
@@ -1144,7 +1164,6 @@ export const KrewDetail = () => {
                   : undefined
               }
               renderKonnect={renderKonnect}
-              onKonnections={handleKonnections}
               onTurnOnSpace={turnOnSpace}
               turnOnSlugs={TURN_ON_SPACES}
               cardsApart

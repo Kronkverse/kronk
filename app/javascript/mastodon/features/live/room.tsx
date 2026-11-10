@@ -111,11 +111,10 @@ export const LiveRoom: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     setRoom(null);
-    apiRequestGet<HuddleRoomJSON[]>('v1/huddle/rooms')
-      .then((rooms) => {
+    apiRequestGet<HuddleRoomJSON>(`v1/huddle/rooms/${id}`)
+      .then((found) => {
         if (cancelled) return;
-        const found = rooms.find((r) => r.id === id);
-        if (found) setRoom(found);
+        if (found.id) setRoom(found);
         else setError(true);
       })
       .catch(() => {

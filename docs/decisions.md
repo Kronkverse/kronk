@@ -17,6 +17,20 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-10 — A Krew, projekt or Komponent has its own Kuddle
+
+Tal: "adding a kuddle to any of them (konnecting a kuddle) would create a
+kuddle space specifically tied to that space. the schedule type part of it
+would be more about an event". Konnect → Kuddle on a Krew, projekt or
+Komponent makes that space's own Kuddle (or goes to it): one each, members
+only (a Komponent's are its projekt's), not listed on the Huddle page.
+Open Kuddles are no longer linked to spaces; the one already Konnected to
+a Krew became that Krew's own. A Krew's Kuddles section gathers its own and
+its projekts' and Komponents'. Kuddles stay dateless: a scheduled call is an
+event that uses its space's Kuddle (next). Supersedes "Krew Huddles … not
+built" and the open Kuddle Konnected to a Krew. docs/spaces/huddle.md, A
+space's own Kuddle.
+
 ## 2026-11-09 — A projekt's talk is its own Nudges chat
 
 Tal: "'Talk' currently isnt a nudges chat, its some other weird system

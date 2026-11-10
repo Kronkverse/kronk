@@ -14,16 +14,21 @@
 #     Anyone signed in can create one via HuddleRoom::CreateService;
 #     the reaper (HuddleRoomReaper) soft-retires rooms with no session
 #     activity for 6 continuous months.
-#   * `krew` — one per Krew (Group), scoped to that Krew's members.
-#     Phase 9.1 / 9.2 territory — the migration reserves the string
-#     but no code path uses it yet.
+#   * `space` — a Krew's, projekt's or Komponent's own Kuddle (Tal,
+#     2026-11-10), one each, made the first time someone Konnects Kuddle
+#     to it (HuddleSession.for_space!). Only the space's members see it
+#     and get in; a Komponent's members are its projekt's. Not listed on
+#     /hub/huddle and never reaped. (`krew` was reserved for this and
+#     never used.)
 class HuddleSession < ApplicationRecord
   include Kronk::AttachmentSource
 
   self.attachment_source_slug = 'huddle'
 
   STATES = %w(draft scheduled live ended).freeze
-  SCOPES = %w(main room krew).freeze
+  SCOPES = %w(main room space).freeze
+  # What people call a Kuddle: an open Room or a space's own.
+  KUDDLE_SCOPES = %w(room space).freeze
 
   # Threshold after which an idle Room is retired by the reaper. The
   # migration's `last_active_at` seed uses `updated_at` so pre-scope
@@ -48,6 +53,9 @@ class HuddleSession < ApplicationRecord
   # deletes their files; the app retires a Kuddle rather than deleting it,
   # which keeps them, and purging its maker leaves it too.
   has_many   :call_recordings, dependent: :destroy
+  # The space a `space` Kuddle is its own (one of the two).
+  belongs_to :krew, optional: true
+  belongs_to :freethedream_project, class_name: 'Freethedream::Project', optional: true
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :session_url, presence: true, length: { maximum: 400 }
@@ -60,10 +68,12 @@ class HuddleSession < ApplicationRecord
   # cover this because Main is never retired and we want exactly one
   # global row, not one-per-anything).
   validate :main_singleton, on: :create, if: -> { scope == 'main' }
+  validate :one_space, on: :create, if: :space?
 
   scope :main_scope,    -> { where(scope: 'main') }
   scope :rooms,         -> { where(scope: 'room') }
-  scope :krew_huddles,  -> { where(scope: 'krew') }
+  scope :spaces,        -> { where(scope: 'space') }
+  scope :kuddles,       -> { where(scope: KUDDLE_SCOPES) }
   scope :live,          -> { where(state: 'live') }
   scope :scheduled,     -> { where(state: 'scheduled') }
   scope :upcoming,      -> { where('scheduled_start > ?', Time.now.utc).order(scheduled_start: :asc) }
@@ -94,8 +104,50 @@ class HuddleSession < ApplicationRecord
     scope == 'room'
   end
 
-  def krew?
-    scope == 'krew'
+  def space?
+    scope == 'space'
+  end
+
+  # The Krew or projekt (or Komponent) this is the own Kuddle of.
+  def space
+    krew || freethedream_project
+  end
+
+  # Account ids of everyone in its space.
+  def space_member_ids
+    case space
+    when Krew then KrewMembership.where(krew_id: krew_id).pluck(:account_id)
+    when Freethedream::Project then Freethedream::Membership.member.where(project_id: space.top_id).pluck(:account_id)
+    else []
+    end
+  end
+
+  # May `account` see and get into it? An open Room, anyone signed in; a
+  # space's own, its members (none once its space is gone).
+  def open_to?(account)
+    return false if account.nil? || retired?
+    return true unless space?
+
+    space.present? && space.member?(account)
+  end
+
+  # A space's own Kuddle, made the first time it's asked for. Whoever
+  # makes it follows it, as with any Kuddle; the members follow it by
+  # being members (Huddle::Follows).
+  def self.for_space!(space, account)
+    column = space.is_a?(Krew) ? :krew : :freethedream_project
+    found = spaces.find_by(column => space)
+    return found if found
+
+    name = space.is_a?(Krew) ? space.name : space.title
+    transaction do
+      session = create!(:scope => 'space', column => space, :title => name.to_s[0, 80], :host_account => account,
+                        :session_url => HuddleRoom::CreateService.room_key(name.to_s), :state => 'live', :last_active_at => Time.current)
+      HuddleFollow.create!(account: account, huddle_session: session)
+      session
+    end
+  rescue ActiveRecord::RecordNotUnique
+    spaces.find_by!(column => space)
   end
 
   # Called by the join path (frontend hits POST /join or the Jitsi
@@ -140,6 +192,10 @@ class HuddleSession < ApplicationRecord
   end
 
   private
+
+  def one_space
+    errors.add(:base, 'a space Kuddle belongs to one Krew or projekt') unless [krew_id, freethedream_project_id].compact.one?
+  end
 
   def main_singleton
     return unless self.class.main_scope.exists?
