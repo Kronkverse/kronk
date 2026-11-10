@@ -499,16 +499,20 @@ transparent zones that only position their children. The korner rail starts
     current face. The view picker then renders nothing. `/home` uses the same
     rotator for Mates / Orbit / Kronkverse, with `<FeedDrum>` turning the
     content.
-  - **Swiping the rotator** (touch). A sideways swipe on the content turns
-    the drum under the finger. Let go past a third of the width, or flick,
-    and it finishes the turn to the next face; less, and it springs back. It
-    decides sideways or not after 10px, so a slightly slanted thumb still
-    counts. A swipe across the title band steps too, and is the only swipe
-    where the content takes sideways drags itself: anything that scrolls
-    sideways, anything with `touch-action: none` (the Kalendar spiral), and
-    the map, which pans. A swipe started mid-turn finishes that turn and
-    takes over. A swipe in from the screen's very edge is the phone's back
-    gesture and never reaches the page.
+  - **Swiping the rotator** (touch). A sideways swipe anywhere on the space
+    (the Stage, or Home's column: the empty space below a short page counts)
+    turns the drum under the finger. Let go past a third of the width, or
+    flick, and it finishes the turn to the next face; less, and it springs
+    back. It decides sideways or not after 10px, so a slanted thumb still
+    counts. It never starts on something that takes sideways drags itself
+    (anything that scrolls sideways, anything with `touch-action: none` like
+    the Kalendar spiral, the map), on anything you type in, a form, a menu or
+    a pop-up, or inside `data-no-swipe` (an open Nudges chat). There the
+    title band is the swipe: it steps the rotator too. A swipe started
+    mid-turn finishes that turn and takes over. It listens to touch events
+    and cancels the first sideways move, because pointer events lose the
+    drag inside a box that scrolls on its own. A swipe in from the screen's
+    very edge is the phone's back gesture and never reaches the page.
   - **Pills** (default): a segmented row, one button per view, the active one
     `aria-pressed`.
   - **Menu** (`header.picker: menu`): a dropdown.
