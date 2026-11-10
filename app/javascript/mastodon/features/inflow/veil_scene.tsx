@@ -99,6 +99,32 @@ function writeCollapsedOn(dayKey: string): void {
   }
 }
 
+// The sky's day, kept current while the app stays open: a phone can
+// leave the home feed mounted for days, and the sky is read for a day.
+// Checked each minute and whenever the app comes back into view.
+export function useSkyDay(): string {
+  const [dayKey, setDayKey] = useState(() => placeDayKey());
+
+  useEffect(() => {
+    const check = () => {
+      setDayKey(placeDayKey());
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') check();
+    };
+    const timer = window.setInterval(check, 60 * 1000);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', check);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', check);
+    };
+  }, []);
+
+  return dayKey;
+}
+
 // getMoonPhaseName returns a snake_case key (e.g. "full_moon").
 function fmtPhase(name: string): string {
   return name
@@ -182,8 +208,9 @@ export const VeilScene: React.FC = () => {
   // Start collapsed if the user collapsed the veil earlier today
   // (the sky's day). A fresh day always starts expanded — that's the
   // "daily reopen" behaviour.
+  const dayKey = useSkyDay();
   const [expanded, setExpanded] = useState<boolean>(() => {
-    return readCollapsedOn() !== placeDayKey();
+    return readCollapsedOn() !== dayKey;
   });
 
   // Tracks whether the current expanded view is the result of a
@@ -192,6 +219,14 @@ export const VeilScene: React.FC = () => {
   // only surfaces after a manual reopen — the first-of-the-day view
   // still relies on scroll-past + dwell to fold itself away.
   const [openedManually, setOpenedManually] = useState(false);
+
+  // A new day while the app is open reopens the veil, as a fresh load would.
+  const [shownDay, setShownDay] = useState(dayKey);
+  if (shownDay !== dayKey) {
+    setShownDay(dayKey);
+    setExpanded(readCollapsedOn() !== dayKey);
+    setOpenedManually(false);
+  }
 
   // Reopen is session-only: it flips the local state back to expanded
   // but does NOT clear the stored day key. If the user drops out of
@@ -231,7 +266,9 @@ export const VeilScene: React.FC = () => {
       daylight: getDaylightInfo(year, month, day, place.lat, place.lon),
       reflection: buildDailyIntegrationText(),
     };
-  }, [place]);
+    // dayKey: read the sky again when the day turns.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [place, dayKey]);
 
   useEffect(() => {
     if (!host) return;
