@@ -175,7 +175,7 @@ export const ProjectComposer: React.FC<Props> = ({
   const top = editing ? editing.top : !parent;
   // Its chat, on and off as a Krew's is in Settings.
   const [chat, setChat] = useState(
-    editing ? editing.spaces.includes('nudges') : false,
+    editing ? editing.spaces.includes('nudges') : true,
   );
   const handleChat = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setChat(e.target.checked);

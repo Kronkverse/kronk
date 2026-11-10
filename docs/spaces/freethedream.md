@@ -411,8 +411,10 @@ weird system which isn't necessary". A projekt's talk is its own **Nudges
 group chat**, the same chat a Krew has (`Nudges::Conversation` kind
 `projekt`, `freethedream_project_id`): everyone in the projekt is in it,
 whoever joins is added and whoever leaves taken out (`Freethedream::
-Membership`). Its owner turns it on and off in **Edit** (**Chat**), as a
-Krew's is in Settings (`nudges` in `spaces`). Once on it is a **Chat** tile
+Membership`). It starts on (Tal, 2026-11-10, after finding no chat on a
+projekt), projekts made before that included; its owner can turn it off and
+on in **Edit** (**Chat**), as a Krew's is in Settings (`nudges` in
+`spaces`). While on it is a **Chat** tile
 and section on the projekt's page, read and written there (`KrewChat`,
 `GET /projects/:id/chat`), and a chat in Nudges named after the projekt.
 It can be muted; it can't be left on its own, as it follows the projekt.

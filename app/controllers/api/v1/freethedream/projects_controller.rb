@@ -45,10 +45,14 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params[:cover_media_attachment_id].present?
     project = Freethedream::Project.new(attrs.merge(parent: parent, owner: current_account, krew: krew))
     project.joining = 'open' if parent
+    # A projekt starts with its chat on, as a Krew's page has one; the owner
+    # can turn it off in Edit.
+    project.spaces = ['nudges'] unless parent
     Freethedream::Project.transaction do
       project.save!
       start!(project)
     end
+    Nudges::Conversation.projekt_for!(project) if project.spaces.include?('nudges')
 
     Freethedream::Activity.log!(project: parent, account: current_account, verb: 'section_added', title: project.title, section_id: project.id.to_s) if parent
 
@@ -75,7 +79,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   end
 
   # Its chat, for its page: the Nudges conversation and how much of it the
-  # viewer hasn't read. Members only, once the chat is on. `projekt_for!`
+  # viewer hasn't read. Members only, while the chat is on. `projekt_for!`
   # brings everyone in, so it runs only when the viewer has no place yet.
   def chat
     require_member!(@project)
