@@ -9,7 +9,11 @@ import {
   FTD_SECTION_ORDER,
 } from 'mastodon/api/freethedream';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
-import type { FtdCover, FtdProject } from 'mastodon/api_types/freethedream';
+import type {
+  FtdCover,
+  FtdProject,
+  FtdProjektKind,
+} from 'mastodon/api_types/freethedream';
 import { ArrangeList } from 'mastodon/components/arrange_list';
 import type { ArrangeItem } from 'mastodon/components/arrange_list';
 import {
@@ -20,12 +24,20 @@ import {
   ComposeSection,
   ComposeTitle,
   ComposeCheck,
+  ComposeSelect,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { parseKonnectParam, useKonnect } from 'mastodon/hooks/useKonnect';
 
+import { KindChooser } from './kind_chooser';
+import {
+  PROJEKT_KINDS,
+  kindMessages,
+  kindName,
+  kindSuggestions,
+} from './kinds';
 import { errorOf } from './shared';
 
 const messages = defineMessages({
@@ -137,6 +149,7 @@ const messages = defineMessages({
 // What a project draft keeps (docs/design.md, Drafts). The cover photo
 // goes as an upload id alongside.
 interface ProjectDraftParams {
+  kind?: FtdProjektKind | null;
   title?: string;
   description?: string;
   endsOn?: string;
@@ -147,7 +160,12 @@ interface Props {
   // Editing this project or part, or adding a part inside `parent`, or
   // (neither) starting a new project.
   editing?: FtdProject;
-  parent?: { id: string; title: string; level: FtdProject['level'] };
+  parent?: {
+    id: string;
+    title: string;
+    level: FtdProject['level'];
+    kind?: FtdProjektKind | null;
+  };
   onCancel: () => void;
   onSaved: (project: FtdProject) => void;
 }
@@ -159,6 +177,11 @@ export const ProjectComposer: React.FC<Props> = ({
   onSaved,
 }) => {
   const intl = useIntl();
+  // A projekt's kind: picked first when seeding (KindChooser), changed in
+  // Edit. A Komponent goes by its projekt's.
+  const [kind, setKind] = useState<FtdProjektKind | null>(
+    editing?.kind ?? null,
+  );
   const [title, setTitle] = useState(editing?.title ?? '');
   const [description, setDescription] = useState(editing?.description ?? '');
   const [endsOn, setEndsOn] = useState(editing?.ends_on ?? '');
@@ -221,6 +244,7 @@ export const ProjectComposer: React.FC<Props> = ({
   const applyDraft = useCallback(
     (d: ApiComposerDraftJSON<ProjectDraftParams> | null) => {
       const p = d?.params ?? {};
+      if (p.kind) setKind(p.kind);
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
       setEndsOn(p.endsOn ?? '');
@@ -247,6 +271,7 @@ export const ProjectComposer: React.FC<Props> = ({
     active: !editing,
     snapshot: {
       params: {
+        kind,
         title,
         description,
         endsOn,
@@ -267,6 +292,18 @@ export const ProjectComposer: React.FC<Props> = ({
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
+  }, []);
+  const handleSuggestion = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      setTitle(e.currentTarget.value);
+    },
+    [],
+  );
+  const handleKind = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setKind((e.target.value || null) as FtdProjektKind | null);
+  }, []);
+  const clearKind = useCallback(() => {
+    setKind(null);
   }, []);
   const handleDescription = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -307,6 +344,7 @@ export const ProjectComposer: React.FC<Props> = ({
       description: description.trim(),
       ...(top
         ? {
+            kind,
             cover_media_attachment_id: cover?.id ?? null,
             ...(editing
               ? { ends_on: endsOn || null, section_order: order, chat }
@@ -332,6 +370,7 @@ export const ProjectComposer: React.FC<Props> = ({
         setBusy(false);
       });
   }, [
+    kind,
     title,
     description,
     endsOn,
@@ -362,6 +401,16 @@ export const ProjectComposer: React.FC<Props> = ({
       ? intl.formatMessage(messages.partSubtitle, { title: parent.title })
       : intl.formatMessage(messages.projectSubtitle);
 
+  // Seeding: what kind of projekt first, as Wachuneed asks what you're
+  // offering.
+  if (newTop && kind === null) {
+    return <KindChooser label={label} onPick={setKind} onCancel={onCancel} />;
+  }
+
+  // Adding a Komponent: names its projekt's kind suggests, to tap.
+  const suggestions =
+    parent && !fractal && !editing ? kindSuggestions(parent.kind) : [];
+
   return (
     <ComposeShell
       korner='freethedream'
@@ -389,6 +438,40 @@ export const ProjectComposer: React.FC<Props> = ({
         )}
         aria-label={intl.formatMessage(messages.name)}
       />
+      {newTop && kind && (
+        <p className='freethedream-kind-picked'>
+          {intl.formatMessage(kindName(kind))} ·{' '}
+          <button
+            type='button'
+            className='freethedream__link'
+            onClick={clearKind}
+          >
+            {intl.formatMessage(kindMessages.change)}
+          </button>
+        </p>
+      )}
+      {suggestions.length > 0 && (
+        <div
+          className='freethedream-kind-ideas'
+          role='group'
+          aria-label={intl.formatMessage(kindMessages.suggestions)}
+        >
+          {suggestions.map((idea) => {
+            const name = intl.formatMessage(idea);
+            return (
+              <button
+                key={idea.id}
+                type='button'
+                value={name}
+                aria-pressed={title === name}
+                onClick={handleSuggestion}
+              >
+                {name}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {newTop && krewId === '' && (
         <ComposeHint>{intl.formatMessage(messages.krewNone)}</ComposeHint>
       )}
@@ -445,6 +528,18 @@ export const ProjectComposer: React.FC<Props> = ({
           hint={intl.formatMessage(messages.endsHint)}
         >
           <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
+        </ComposeField>
+      )}
+      {top && editing && (
+        <ComposeField label={intl.formatMessage(kindMessages.label)}>
+          <ComposeSelect value={kind ?? ''} onChange={handleKind}>
+            <option value=''>{intl.formatMessage(kindMessages.none)}</option>
+            {PROJEKT_KINDS.map((k) => (
+              <option key={k} value={k}>
+                {intl.formatMessage(kindName(k))}
+              </option>
+            ))}
+          </ComposeSelect>
         </ComposeField>
       )}
       {top && editing && (

@@ -196,15 +196,39 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(api(alice, :get, "/items/#{need['id']}")).to include('covered' => 150, 'spare' => 0)
     end
 
-    it 'puts whoever adds to Actualise on it, and anyone can jump on board', :aggregate_failures do
+    # The checklist (Tal, 2026-11-10): adding a To do doesn't put you on
+    # it; anyone can say they're on it, and anyone can tick it off.
+    it 'adds a To do with nobody on it, and anyone can get on it and tick it off', :aggregate_failures do
       fire = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Fire twirler' })
-      expect(fire).to include('claimed' => 1, 'claimed_by_me' => true)
+      expect(fire).to include('claimed' => 0, 'claimed_by_me' => false, 'done' => false)
 
+      api(alice, :post, "/items/#{fire['id']}/claim")
       api(bob, :post, "/items/#{fire['id']}/claim")
       expect(api(cara, :post, "/items/#{fire['id']}/claim")['claimed']).to eq 3
 
       api(alice, :post, "/items/#{fire['id']}/unclaim")
       expect(api(bob, :get, "/items/#{fire['id']}")['claimers'].pluck('id')).to eq [bob.account_id.to_s, cara.account_id.to_s]
+
+      expect(api(cara, :post, "/items/#{fire['id']}/done")['done']).to be true
+      expect(api(bob, :post, "/items/#{fire['id']}/undone")['done']).to be false
+    end
+
+    it 'ticks off only a To do, and only for people in the projekt', :aggregate_failures do
+      gas = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Gas' })
+      api(alice, :post, "/items/#{gas['id']}/done")
+      expect(response).to have_http_status(403)
+
+      fire = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Fire twirler' })
+      api(Fabricate(:user), :post, "/items/#{fire['id']}/done")
+      expect(response).to have_http_status(403)
+    end
+
+    it "keeps a projekt's kind on the projekt, and shows it on its Komponents", :aggregate_failures do
+      expect(api(alice, :put, "/projects/#{doof['id']}", project: { kind: 'gathering' })['kind']).to eq 'gathering'
+      kitchen = api(alice, :post, '/projects', project: { title: 'Kitchen', parent_id: doof['id'], kind: 'campaign' })
+      expect(kitchen['kind']).to eq 'gathering'
+      api(alice, :put, "/projects/#{doof['id']}", project: { kind: 'nonsense' })
+      expect(response).to have_http_status(422)
     end
 
     it 'adds no new ideas: an idea goes into Actualise' do
@@ -321,6 +345,7 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       doof = start_project(alice)
       api(bob, :post, "/projects/#{doof['id']}/join")
       job = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sound tech' })
+      api(alice, :post, "/items/#{job['id']}/claim")
       api(bob, :post, "/items/#{job['id']}/claim")
 
       leave_krew(bob, doof)

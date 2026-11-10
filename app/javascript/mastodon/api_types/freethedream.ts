@@ -144,6 +144,8 @@ export interface FtdItemRow {
   claimed?: number;
   claimers?: (FtdAccount | null)[];
   claimed_by_me?: boolean;
+  // A To do on a checklist: ticked off.
+  done?: boolean;
   need?: FtdRef | null;
   // An offer: shared from its owner's Mycelium.
   mycelium?: boolean;
@@ -230,11 +232,25 @@ export type FtdSpace =
   | 'kuestions'
   | 'nudges';
 
+// What sort of projekt it is (Freethedream::Project::KINDS).
+export type FtdProjektKind =
+  | 'gathering'
+  | 'creation'
+  | 'build'
+  | 'organisation'
+  | 'governance'
+  | 'mutual_aid'
+  | 'learning'
+  | 'campaign';
+
 export interface FtdProject {
   id: string;
   slug: string;
   title: string;
   description: string;
+  // The projekt's kind (a Komponent carries its projekt's); none on older
+  // projekts.
+  kind: FtdProjektKind | null;
   owner: FtdAccount | null;
   top: boolean;
   root: FtdRef;

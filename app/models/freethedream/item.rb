@@ -74,13 +74,18 @@ module Freethedream
       claims.loaded? ? claims.any? : claims.exists?
     end
 
+    # A To do on a Komponent's checklist is ticked off.
+    def done?
+      done_at.present?
+    end
+
     # Something to bring is sorted once as many as it asks for are coming.
     # The amount is a floor, "20+" (Tal, 2026-10-18: more is better): one
     # pot is sorted by one tap, twenty plates by twenty, and anything over
-    # is extra and welcome. An Actualise item is sorted once somebody is
-    # on it.
+    # is extra and welcome. A To do (a job) is sorted once it's ticked off
+    # (Tal, 2026-11-10, the checklist), not when someone is on it.
     def sorted?
-      need_kind? ? covered >= quantity : actualised?
+      need_kind? ? covered >= quantity : done?
     end
 
     private
