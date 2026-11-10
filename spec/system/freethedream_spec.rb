@@ -71,8 +71,15 @@ RSpec.describe 'Projekts', :js, :streaming do
     doof = Freethedream::Project.find_by(title: 'Mini Doof')
     expect(doof.krew).to eq krew
     expect(doof.kind).to eq 'gathering'
+  end
 
-    # Its kind suggests Komponents to start with.
+  # docs/spaces/freethedream.md, Kinds: a projekt's kind suggests names for
+  # its Komponents, to tap.
+  it 'suggests Komponents from the projekt kind' do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, kind: 'gathering')
+
+    visit "/hub/krew/#{doof.reload.krew.slug}/p/#{doof.slug}"
     click_on '+ Add a Komponent'
     within('.compose-shell') do
       click_on 'Kitchen'
@@ -85,21 +92,11 @@ RSpec.describe 'Projekts', :js, :streaming do
   # Kommons, 2026-11-10 (Projekts and Krew work): a Komponent's page is its
   # checklist. A To do is ticked off and anyone can say they're on it;
   # something to Bring is "I'll bring it".
-  it "keeps a Komponent's checklist", :aggregate_failures do
-    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
-    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, kind: 'gathering')
-    krew = doof.reload.krew
-    kitchen = Freethedream::Project.create!(title: 'Kitchen', parent: doof, owner: bob.account)
-
-    visit "/hub/krew/#{krew.slug}/p/#{kitchen.slug}"
-    expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
+  it "ticks off a To do on a Komponent's checklist", :aggregate_failures do
+    visit_kitchen
     expect(page).to have_text('Nothing on it yet')
-
     within('.freethedream-checklist__add') do
       fill_in placeholder: 'Add something to do', with: 'Email the council'
-      send_keys :enter
-      click_on 'Bring'
-      fill_in placeholder: "Add what's needed", with: 'gas bottle'
       send_keys :enter
     end
 
@@ -110,6 +107,15 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
     expect(page).to have_css('.freethedream-checklist__entry--done', text: 'Email the council')
     expect(Freethedream::Item.find_by(title: 'Email the council')).to be_done
+  end
+
+  it "brings something on a Komponent's checklist" do
+    visit_kitchen
+    within('.freethedream-checklist__add') do
+      click_on 'Bring'
+      fill_in placeholder: "Add what's needed", with: 'gas bottle'
+      send_keys :enter
+    end
 
     within('.freethedream-checklist__entry', text: 'gas bottle') do
       expect(page).to have_css('.freethedream-checklist__kind', text: 'Bring')
@@ -325,5 +331,13 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
     within('.attachment-section') { expect(page).to have_button('Chat') }
     expect(Nudges::Conversation.find_by(kind: 'projekt', freethedream_project: doof).messages.last.body).to eq 'Who has the urn?'
+  end
+
+  def visit_kitchen
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, kind: 'gathering')
+    kitchen = Freethedream::Project.create!(title: 'Kitchen', parent: doof, owner: bob.account)
+    visit "/hub/krew/#{doof.reload.krew.slug}/p/#{kitchen.slug}"
+    expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
   end
 end
