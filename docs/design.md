@@ -1082,11 +1082,12 @@ redone: FreeTheDream's (#2101, redone in #2114) and Wachuneed's shop page
 are listed as `kitBurnDown` in `eslint.config.mjs` and come off it as they
 move.
 
-| Primitive        | What it does                                                                                                                                                                                               | Where                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`, and `attached` (the record, for the Konnected block). On `.stage-column`. | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
-| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                                                                              | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
-| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                                                                              | `components/back_to_korner.tsx`                                      |
+| Primitive        | What it does                                                                                                                                                                                                  | Where                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`, and `attached` (the record, for the Konnected block). On `.stage-column`.    | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
+| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                                                                                 | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
+| `<PeopleRow>`    | Who's in a space at a glance: round pictures overlapping, then "+N" past the first five. Each opens that person. Used on a Komponent's page; the Krew page's faces are the same idea and should move onto it. | `components/people_row.tsx`, `styles/mastodon/_people_row.scss`      |
+| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                                                                                 | `components/back_to_korner.tsx`                                      |
 
 ### Actions
 

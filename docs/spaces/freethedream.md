@@ -255,10 +255,11 @@ getting involved, not for doing the work itself:
   "swipable cards rather than grid view"; `GroupTiles row`). They are what a
   projekt is made of, so their card is its own and larger than a space's
   (Tal, 2026-11-09: "Komponents are the important part of a projekt, and
-  currently they look the same as kuestions"): the name large, who's in it,
-  and how far along it is as a bar along its foot.
-  A Komponent is a gang in the code (Tal, 2026-10-30). Each card has how
-  many people have a hand in it and its progress ("3 of 8 sorted"). **Nobody leads a Komponent**, so no owner
+  currently they look the same as kuestions"): the name large, its
+  description in brief (two lines), and how far along it is as a bar along
+  its foot. No counts of people or fractals on the card (Tal, 2026-11-10:
+  "would be better with the brief description of the komponent instead").
+  A Komponent is a gang in the code (Tal, 2026-10-30). **Nobody leads a Komponent**, so no owner
   shows on a tile or a Komponent's page (the owner still exists in the
   data, for who may edit it). The ones you have a hand in come first,
   tagged with any new talk. Members get **+ Add a Komponent**.
@@ -355,10 +356,11 @@ tap to Bring or Jump on board.
 **A gang's page** is its overview at a lower level (Tal, 2026-10-15), and
 the place the work is done:
 
-- **Who's in it** comes first: everyone with a hand in the gang, side by
-  side, each with what they're bringing and actualising there ("Bringing
-  pots, gas · Actualising dahl for 40"), whoever is on the most first.
-- **Fractals** as the same row of cards (people, progress), each opening
+- **Who's in it** is a row of their pictures under its description,
+  overlapping, then "+7" for the rest (`PeopleRow`, a kit primitive; Tal,
+  2026-11-10: "a rough idea of which people, and how many"), whoever is on
+  the most first. Each picture opens that person.
+- **Fractals** as the same row of cards (description, progress), each opening
   its own page; members get **+ Add a fractal** last.
 - Events, Activity and Talk. Kuestions are the projekt's, so a
   gang's page has none of its own.
@@ -600,8 +602,8 @@ shadow.
   `/hub/freethedream/:id` (where attachments link) redirects to `/p/:id`.
   Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`. The project
   shape's `people` (each member with `organiser`, `leads`, `jobs`,
-  `bringing`) and each section row's `people_count` feed the page's
-  People and working-group tiles (`groups.tsx`).
+  `bringing`) feed the page's People; each section row's `description`
+  (to 200 characters) its Komponent cards (`groups.tsx`).
 - **The dashboard** (2026-10-13,
   `db/migrate/20261013190000_create_freethedream_reads.rb`):
   `freethedream_reads` keeps when each person last looked at a space's talk
@@ -636,7 +638,7 @@ shadow.
   the gang and fractal shapes add `level`, `crew` (`View#crew`) and `gear`
   (`View#gear`); `Item#sorted?` for a need is enough being brought
   (`covered >= quantity`). Page:
-  `crew.tsx`, the gang branch of `project_page.tsx`, one-tap
+  the gang branch of `project_page.tsx` (`crew` drawn as a `PeopleRow`), one-tap
   `BringControl` (`bring.tsx`). Specs: `coordination_spec.rb`, "a gang's
   page".
 

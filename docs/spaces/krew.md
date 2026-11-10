@@ -230,7 +230,7 @@ All in `app/javascript/mastodon/features/krew/`.
     **Post to <Krew>**; each section's New makes the rest.
   - **Projekts**: what the Krew is making, as a
     row of cards (`krew_projekts.tsx`, the kit's `SpaceGrid` row): each
-    projekt's cover, title and how much of what it needs is sorted (no
+    projekt's cover and title (no sorted count, Tal 2026-11-10; no
     people count: everyone in the Krew is in it), opening the projekt. For
     members a last card, **New projekt**, opens the projekt composer
     (`/hub/krew/composer/projekt`) with this Krew picked
