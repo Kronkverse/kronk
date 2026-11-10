@@ -7,6 +7,7 @@
 #
 #   * make it: HuddleRoom::CreateService follows it for its maker;
 #   * press Follow: a HuddleFollow row with `following: true`;
+#   * be in the space it is the own Kuddle of (a Krew, a projekt), or
 #   * be in a Krew it is Konnected to. Worked out from membership, never
 #     stored per person, so joining the Krew is enough and leaving it is
 #     too. Only a link its maker made counts, to a live Krew the maker is
@@ -39,8 +40,10 @@ module Huddle
       links  = krew_links(ids)
       mine   = KrewMembership.where(account_id: account.id, krew_id: links.values.flatten.uniq).pluck(:krew_id).to_set
 
+      own = rooms.select { |room| room.space? && room.open_to?(account) }.to_set(&:id)
+
       ids.index_with do |id|
-        via_krew = links.fetch(id, []).any? { |krew_id| mine.include?(krew_id) }
+        via_krew = own.include?(id) || links.fetch(id, []).any? { |krew_id| mine.include?(krew_id) }
         { followed: chosen.fetch(id, via_krew), via_krew: via_krew }
       end
     end
@@ -55,6 +58,7 @@ module Huddle
       chosen   = rows.select(&:last).map(&:first)
       declined = rows.reject(&:last).to_set(&:first)
       krew     = KrewMembership.where(krew_id: krew_links([room.id]).fetch(room.id, [])).pluck(:account_id)
+      krew    += room.space_member_ids if room.space?
 
       (chosen + krew).uniq.reject { |id| declined.include?(id) }
     end
@@ -70,6 +74,7 @@ module Huddle
 
       kuddles.where(id: followed)
              .or(kuddles.where(id: linked))
+             .or(HuddleSession.spaces.not_retired)
              .where("session_url ~ '^[a-z0-9-]+$'")
              .order(Arel.sql('last_active_at DESC NULLS LAST'))
              .limit(limit)

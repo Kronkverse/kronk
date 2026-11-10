@@ -12,6 +12,7 @@ import {
   huddleMinimized,
   huddleExpanded,
 } from 'mastodon/actions/huddle';
+import { apiSpaceKuddle } from 'mastodon/api/huddle_spaces';
 import { CallControls } from 'mastodon/components/call_controls';
 import { CallRecordings } from 'mastodon/components/call_recordings';
 import { Stage } from 'mastodon/components/stage';
@@ -212,25 +213,40 @@ const Live: React.FC<{
   const konnectFrom = autoOpenComposer
     ? parseKonnectParam(location.search)
     : null;
-  const composerKrewId = konnectFrom?.slug === 'krew' ? konnectFrom.id : null;
+  // From a Krew or a projekt, a Kuddle is that space's own (docs/spaces/
+  // huddle.md, A space's own Kuddle): no composer, it is made or found and
+  // the page goes back there, joining the call.
+  const spaceFrom =
+    konnectFrom?.slug === 'krew' || konnectFrom?.slug === 'freethedream'
+      ? konnectFrom
+      : null;
   const returnToSource = useKonnectReturn();
   const closeComposer = useCallback(() => {
     if (returnToSource('/hub/huddle')) return;
     history.replace('/hub/huddle');
   }, [history, returnToSource]);
-  // Made from a projekt (its Konnect's New Kuddle): back there, straight
-  // into the call in its frame (kuddle_frame.tsx). Otherwise into the
-  // Kuddle's own page.
+  const spaceSlug = spaceFrom?.slug;
+  const spaceId = spaceFrom?.id;
+  useEffect(() => {
+    if (!spaceSlug || !spaceId) return;
+    void apiSpaceKuddle(
+      spaceSlug === 'krew' ? { krew_id: spaceId } : { project_id: spaceId },
+    )
+      .then((room) => {
+        wantsKuddleJoin(room.id);
+        if (!returnToSource(`/hub/huddle/kuddle/${room.id}`)) {
+          history.replace(`/hub/huddle/kuddle/${room.id}`);
+        }
+      })
+      .catch(() => {
+        history.replace('/hub/huddle');
+      });
+  }, [spaceSlug, spaceId, history, returnToSource]);
   const handleRoomCreated = useCallback(
     (room: CreatedRoom) => {
-      const source = parseKonnectParam(history.location.search);
-      if (source?.slug === 'freethedream' || source?.slug === 'krew') {
-        wantsKuddleJoin(room.id);
-        if (returnToSource(`/hub/huddle/kuddle/${room.id}`)) return;
-      }
       history.push(`/hub/huddle/kuddle/${room.id}`);
     },
-    [history, returnToSource],
+    [history],
   );
   // The call area on this page: the call is drawn over it.
   const slotRef = useRef<HTMLDivElement>(null);
@@ -590,12 +606,8 @@ const Live: React.FC<{
         )}
       </div>
 
-      {autoOpenComposer && (
-        <RoomComposer
-          forKrewId={composerKrewId}
-          onCancel={closeComposer}
-          onCreated={handleRoomCreated}
-        />
+      {autoOpenComposer && !spaceFrom && (
+        <RoomComposer onCancel={closeComposer} onCreated={handleRoomCreated} />
       )}
 
       <Helmet>

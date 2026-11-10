@@ -257,10 +257,10 @@ All in `app/javascript/mastodon/features/krew/`.
     screen, not when the page opens. The chat is found through
     `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`), which also
     lists recent lines the page no longer shows.
-  - **Kuddle**: a Kuddle Konnected to the Krew is a call frame under its
-    own heading, as in a projekt (docs/spaces/huddle.md, A frame in a
-    projekt), not a tile among the spaces. One made from the Krew's Konnect
-    brings you back here, joining.
+  - **Kuddles** (Tal, 2026-11-10): the Krew's own Kuddle as a call frame,
+    made by picking Kuddle in Konnect, then its projekts' and Komponents'
+    own Kuddles as cards opening their pages (docs/spaces/huddle.md, A
+    space's own Kuddle). Members only, not a tile among the spaces.
   - **Posts**: last on the page, the posts sent to the Krew, newest first,
     as the standard feed card in the standard timeline (`krew_posts.tsx`,
     `StatusListContainer` on the `krew:<id>` timeline,
@@ -367,8 +367,8 @@ two can't collide.
   RSVP. The schema is there (`source: rsvp_auto`, `rsvp_event_id`); nothing
   creates those rows.
 - **Krew-scoped korners.** Only Albutts and Kalendar know which Krew their
-  things belong to. Krew Huddles are reserved (`HuddleSession` scope
-  `krew`) but no code creates them; Map, Booth, Kommons and Kuestions have
+  things belong to. A Krew's own Kuddle is a `HuddleSession`
+  with its `krew_id` (docs/spaces/huddle.md); Map, Booth, Kommons and Kuestions have
   nothing yet. Each joins `KREW_PAGE_SPACES` when it does.
 - **Requirement-gated vs "the directory is the gate".** The original design had
   only listed and unlisted Krews. `requirement_gated` was added later; confirm

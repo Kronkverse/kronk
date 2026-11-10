@@ -293,9 +293,10 @@ getting involved, not for doing the work itself:
   Done, Hand over and Remove are off the page too. A Komponent or a
   fractal can still be removed, by whoever made it, from the Ж menu beside
   Edit (Tal, 2026-10-31).
-- **A Kuddle Konnected here** is a call frame at the top of the work, not
-  a tile under Attached: join the call in the page, and it floats with you
-  when you leave (docs/spaces/huddle.md, A frame in a projekt).
+- **Its own Kuddle** (Konnect → Kuddle, on a Komponent too; Tal,
+  2026-11-10) is a call frame at the top of the work, not a tile: join the
+  call in the page, and it floats with you when you leave. Members only
+  (docs/spaces/huddle.md, A space's own Kuddle).
 - **Joining a Komponent** (Tal, 2026-10-30: "the UX for joining should
   be simple and intuitive"): on a Komponent's page, anyone in the projekt
   has one pill at the top, **Join**, then **Joined** (which leaves), with a

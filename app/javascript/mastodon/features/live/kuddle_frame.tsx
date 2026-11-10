@@ -77,11 +77,10 @@ export const KuddleFrame: React.FC<{
 
   useEffect(() => {
     let cancelled = false;
-    apiRequestGet<KuddleJSON[]>('v1/huddle/rooms')
-      .then((rooms) => {
+    apiRequestGet<KuddleJSON>(`v1/huddle/rooms/${roomId}`)
+      .then((found) => {
         if (cancelled) return;
-        const found = rooms.find((r) => r.id === roomId);
-        if (found) setRoom(found);
+        if (found.id) setRoom(found);
         else setGone(true);
       })
       .catch(() => {

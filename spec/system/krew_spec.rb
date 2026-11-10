@@ -104,21 +104,14 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(page).to have_css('.compose-shell', text: 'New event')
   end
 
-  it 'makes a new Kuddle for the Krew from the Konnect picker' do
-    # The Huddle lobby under the composer asks the Jitsi host who is in, a
-    # server this suite does not run (as in huddle_spec).
-    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+  # docs/spaces/huddle.md, A space's own Kuddle (Tal, 2026-11-10).
+  it 'gives the Krew its own Kuddle from the Konnect picker' do
     visit "/hub/krew/#{krew.slug}"
     within('.attachment-section') { click_on 'Konnect' }
-    within('.attachment-picker') do
-      click_on 'Huddle'
-      click_on 'New Kuddle'
-    end
+    within('.attachment-picker') { click_on 'Huddle' }
 
-    expect(page).to have_current_path("/hub/huddle/composer?konnect=krew:#{krew.id}")
-    within('.compose-shell .konnect-row') do
-      expect(page).to have_css('.space-tile', text: 'Growers')
-    end
+    within('#krew-kuddles .kuddle-frame') { expect(page).to have_link('Growers') }
+    expect(HuddleSession.spaces.where(krew: krew).count).to eq 1
   end
 
   it 'shows each space it has as a section of cards, ending in New', :aggregate_failures do

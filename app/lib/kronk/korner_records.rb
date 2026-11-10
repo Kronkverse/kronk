@@ -21,9 +21,8 @@ module Kronk
       'Proposal' => ->(_proposal, _viewer) { true },
       # A Krew's page opens for anyone with its link.
       'Krew' => ->(krew, viewer) { krew.archived_at.nil? || krew.member?(viewer) },
-      # Main and Rooms are open; a Krew's huddle is its members' (and has no
-      # link to its Krew here, so it stays private).
-      'HuddleSession' => ->(session, _viewer) { !session.krew? },
+      # Main and Rooms are open; a space's own Kuddle is its members'.
+      'HuddleSession' => ->(session, viewer) { session.main? || session.open_to?(viewer) },
       # An item is seen by whoever can see its emergence.
       'Freethedream::Item' => ->(item, viewer) { item.root.visible_to?(viewer) },
     }.freeze

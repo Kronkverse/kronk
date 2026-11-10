@@ -40,7 +40,7 @@ module HuddleRoom
           title: name,
           description: normalise(description, DESCRIPTION_MAX),
           host_account: account,
-          session_url: build_room_key(name),
+          session_url: self.class.room_key(name),
           state: 'live',
           last_active_at: Time.current
         )
@@ -61,6 +61,17 @@ module HuddleRoom
       session
     end
 
+    # Jitsi room name = the session_url field. Slug-ish: lowercase,
+    # dashes for whitespace, keep alphanum + dash + a stable random
+    # suffix so two "Coworking" rooms don't collide on the Jitsi side.
+    # (Name-uniqueness at the display level is deliberately not
+    # enforced — see docs/spaces/huddle.md § Open.)
+    def self.room_key(name)
+      slug = name.downcase.gsub(/[^a-z0-9]+/, '-').gsub(/(?:^-|-$)/, '')
+      slug = 'room' if slug.blank?
+      "#{slug}-#{SecureRandom.hex(4)}"
+    end
+
     private
 
     def normalise(value, max)
@@ -70,17 +81,6 @@ module HuddleRoom
       return nil if trimmed.empty?
 
       trimmed[0, max]
-    end
-
-    # Jitsi room name = the session_url field. Slug-ish: lowercase,
-    # dashes for whitespace, keep alphanum + dash + a stable random
-    # suffix so two "Coworking" rooms don't collide on the Jitsi side.
-    # (Name-uniqueness at the display level is deliberately not
-    # enforced — see docs/spaces/huddle.md § Open.)
-    def build_room_key(name)
-      slug = name.downcase.gsub(/[^a-z0-9]+/, '-').gsub(/(?:^-|-$)/, '')
-      slug = 'room' if slug.blank?
-      "#{slug}-#{SecureRandom.hex(4)}"
     end
   end
 end

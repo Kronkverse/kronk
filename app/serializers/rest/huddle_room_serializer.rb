@@ -18,6 +18,9 @@ class REST::HuddleRoomSerializer < ActiveModel::Serializer
              :session_url, :occupancy,
              :last_active_at, :created_at
 
+  # A space's own Kuddle says whose it is: { kind: 'krew' | 'freethedream',
+  # id, name, top_id } (top_id: a Komponent's projekt, for its page).
+  attribute :space, if: -> { object.space? }
   attribute :is_host, if: :current_user?
   # Whether the viewer follows this Kuddle, and whether it is one of their
   # Krews' (Huddle::Follows). A list passes `follow_states` worked out once.
@@ -60,6 +63,17 @@ class REST::HuddleRoomSerializer < ActiveModel::Serializer
 
   def followed_via_krew
     follow_state[:via_krew] || false
+  end
+
+  def space
+    space = object.space
+    return nil if space.nil?
+
+    if space.is_a?(Krew)
+      { kind: 'krew', id: space.id.to_s, name: space.name, slug: space.slug }
+    else
+      { kind: 'freethedream', id: space.id.to_s, name: space.title, top_id: space.top_id.to_s }
+    end
   end
 
   def current_user?

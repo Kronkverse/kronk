@@ -6,8 +6,6 @@ import { Link, useHistory, useParams } from 'react-router-dom';
 
 import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import { apiDeleteAttachment } from 'mastodon/api/attachments';
-import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
 import {
   apiFtdProject,
   apiFtdProjectAction,
@@ -17,6 +15,7 @@ import {
   apiFtdChat,
   FTD_SPACES,
 } from 'mastodon/api/freethedream';
+import { apiSpaceKuddle } from 'mastodon/api/huddle_spaces';
 import type { FtdProject, FtdSpace } from 'mastodon/api_types/freethedream';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
@@ -275,40 +274,19 @@ const ProjectView: React.FC<{
   );
   const canAddInside = project.level !== 'fractal' && project.can.add;
 
-  // Kuddles Konnected here show as call frames at the top of the work, not
-  // as tiles (Tal, 2026-10-30: "konnecting a huddle should put a frame
-  // into the space"). Attached reports its Konnections, so a new one shows
-  // at once.
-  const [kuddles, setKuddles] = useState<{ room: string; link: string }[]>([]);
-  const handleKonnections = useCallback((rows: ApiAttachmentJSON[]) => {
-    const seen = new Set<string>();
-    setKuddles(
-      rows.flatMap((row) => {
-        const room =
-          row.target_slug === 'huddle'
-            ? row.target_id
-            : row.source_slug === 'huddle'
-              ? row.source_id
-              : null;
-        if (!room || seen.has(room)) return [];
-        seen.add(room);
-        return [{ room, link: row.id }];
-      }),
-    );
-  }, []);
-  const handleDiskonnect = useCallback((link: string) => {
-    void act(
-      apiDeleteAttachment(link).then(() => {
-        setKuddles((current) => current.filter((k) => k.link !== link));
-      }),
-    );
-  }, []);
-
   // Konnect → a space turns it on and goes to its section, New and Add
   // existing first.
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
   const turnOnSpace = useCallback(
     async (slug: string) => {
+      // Konnect → Kuddle makes its own Kuddle, or goes to it, on a
+      // Komponent's page too (docs/spaces/huddle.md, A space's own Kuddle).
+      if (slug === 'huddle') {
+        await apiSpaceKuddle({ project_id: project.id });
+        onChange(await apiFtdProject(project.id));
+        setScrollTarget('projekt-kuddle');
+        return;
+      }
       onChange(await apiFtdTurnOnSpace(project.id, slug));
       setScrollTarget(spaceSectionId(slug as FtdSpace));
     },
@@ -510,14 +488,14 @@ const ProjectView: React.FC<{
             the side column's, and its chat is a section now. */}
         <div className='freethedream-layout freethedream-layout--single'>
           <div className='freethedream-layout__main'>
-            {kuddles.map((k) => (
-              <KuddleFrame
-                key={k.room}
-                roomId={k.room}
-                link={k.link}
-                onDiskonnect={project.can.edit ? handleDiskonnect : undefined}
-              />
-            ))}
+            {/* Its own Kuddle, a call frame at the top of the work (Tal,
+                2026-10-30: "konnecting a huddle should put a frame into the
+                space"). */}
+            {project.kuddle_id && (
+              <div id='projekt-kuddle'>
+                <KuddleFrame roomId={project.kuddle_id} />
+              </div>
+            )}
             {/* Each space it has as its own section, then its Activity, in
                 the order its owner arranged in Edit. A Komponent keeps its
                 events here, with + for one of its own. */}
@@ -620,11 +598,12 @@ const ProjectView: React.FC<{
                   ? [{ slug: 'krew', id: project.krew.id }]
                   : []),
               ]}
-              onKonnections={handleKonnections}
-              onTurnOnSpace={
-                project.top && project.can.edit ? turnOnSpace : undefined
+              onTurnOnSpace={isMember ? turnOnSpace : undefined}
+              turnOnSlugs={
+                project.top && project.can.edit
+                  ? [...FTD_SPACES, 'huddle']
+                  : ['huddle']
               }
-              turnOnSlugs={FTD_SPACES}
               cardsApart
             />
             {actions}
