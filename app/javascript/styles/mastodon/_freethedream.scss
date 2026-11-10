@@ -1440,3 +1440,144 @@ $freethedream-wide: 1000px;
 .freethedream-share__suggestions {
   margin-top: 10px;
 }
+
+// ── Kinds (kind_chooser.tsx, project_composer.tsx) ──
+// Seeding a projekt starts with what kind it is: one large choice each,
+// with a line under its name, as Wachuneed's What are you offering? is.
+.freethedream-kind-question {
+  margin: 0 0 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.freethedream-kind-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.freethedream-kind-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  inline-size: 100%;
+  padding: 0.875rem;
+  border: 0;
+  border-radius: var(--radius-medium);
+  background: var(--surface-card-inset);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--surface-card-inset) 88%,
+      var(--text-primary)
+    );
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+  }
+
+  &__hint {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+  }
+}
+
+// The kind picked, under the composer's title, with a way back.
+.freethedream-kind-picked {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+// Names a Komponent could have, to tap, from its projekt's kind.
+.freethedream-kind-ideas,
+.freethedream-checklist__kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  button {
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    &[aria-pressed='true'] {
+      border-color: var(--accent);
+      background: color-mix(in oklab, var(--accent) 16%, transparent);
+      color: var(--text-primary);
+    }
+  }
+}
+
+// ── A Komponent's checklist (checklist.tsx) ──
+.freethedream-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__entry {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+
+    .people-row {
+      --people-row-size: 24px;
+
+      margin-block: 0;
+    }
+  }
+
+  &__entry--done &__title {
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  &__kind {
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--accent) 14%, transparent);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  &__tick {
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    accent-color: var(--accent);
+  }
+
+  &__title {
+    flex: 1 1 8rem;
+    min-inline-size: 0;
+  }
+
+  &__add {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-block-start: 0.75rem;
+  }
+}

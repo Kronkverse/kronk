@@ -194,6 +194,33 @@ Pieces of a project overlap, and the model holds that both ways:
 - **Dependencies.** A gang can depend on another gang. _Power_ is its own
   gang, and Live Stage and Kitchen depend on it.
 
+### Kinds
+
+A projekt's **kind** is picked first when it's seeded, one large choice
+each with a line under it (`kind_chooser.tsx`, as Wachuneed's What are you
+offering?), and changed in Edit (decisions.md, 2026-11-10). The eight:
+Gathering, Creation, Build, Organisation, Governance, Mutual aid,
+Learning, Campaign (`Project::KINDS`, `kinds.ts`). Older projekts have
+none. **+ Add a Komponent** offers names the kind suggests, to tap
+(Gathering: Site, Kitchen, Sound, On the day; Build: Materials, Stages,
+Tools; …). A Komponent's page reads its projekt's kind.
+
+### The checklist
+
+A Komponent's page (and a fractal's) leads with its **checklist**
+(`checklist.tsx`; Tal, 2026-11-10). One list, what's not done first, each
+entry a kind with its own action:
+
+- **To do** (a `job` item): a tick anyone in the projekt can tick or
+  untick (`POST /items/:id/done`, `/undone`, `done_at`), and **I'm on it**
+  for whoever is doing it (a claim), their pictures beside it. Adding one
+  doesn't put you on it. It counts as sorted once ticked.
+- **Bring** (a `need`): "I'll bring it", as before (`BringControl`).
+
+Entries go in one line at a time under the list, with To do or Bring
+picked above the box (`QuickAdd`). **Decide**, **Pay** and **Book** are
+next (decisions.md, 2026-11-10).
+
 ### The kinds of item
 
 | List               | What it is                                                     | How people take part                                                                                                                                                                                                                                                  |

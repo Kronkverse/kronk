@@ -39,6 +39,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { act } from './act';
+import { Checklist } from './checklist';
 import { eventMapHref, eventWhen, ProjectEvents } from './event_card';
 import { GroupTiles } from './groups';
 import { Yours } from './overview';
@@ -469,6 +470,10 @@ const ProjectView: React.FC<{
             {intl.formatMessage(messages.upForGrabs)}
           </p>
         )}
+
+        {/* A Komponent's checklist first: what it needs doing and
+            bringing (Tal, 2026-11-10). */}
+        {!project.top && <Checklist project={project} onChange={refresh} />}
 
         {/* Its Komponents first, the main thing on a projekt's page (Tal,
             2026-11-09): gangs under the emergence, fractals under a gang,

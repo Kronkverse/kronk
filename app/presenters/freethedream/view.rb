@@ -67,6 +67,8 @@ module Freethedream
         slug: project.slug,
         title: project.title,
         description: project.description,
+        # The projekt's kind; a Komponent shows its projekt's.
+        kind: top.kind,
         owner: account(project.owner),
         top: project.top?,
         root: { id: top.id.to_s, slug: top.slug, title: top.title },
@@ -381,6 +383,7 @@ module Freethedream
         row[:contributors] = item.offers.map { |o| { account: account(o.owner), quantity: o.quantity, offer_id: o.id.to_s } }
         row[:my_quantity] = @viewer ? item.offers.select { |o| o.owner_id == @viewer.id }.sum(&:quantity) : 0
       when 'job'
+        row[:done] = item.done?
         row[:claimed] = item.claims.size
         row[:claimers] = item.claims.map { |c| account(c.account) }
         row[:claimed_by_me] = @viewer.present? && item.claims.any? { |c| c.account_id == @viewer.id }
@@ -586,7 +589,7 @@ module Freethedream
       def progress(id)
         counted = items_in(subtree_ids(id)).select { |i| i.need_kind? || i.job_kind? }
         sorted = counted.count(&:sorted?)
-        open_jobs = counted.count { |i| i.job_kind? && !i.actualised? }
+        open_jobs = counted.count { |i| i.job_kind? && !i.done? && !i.actualised? }
         { sorted: sorted, total: counted.size, open_jobs: open_jobs }
       end
 

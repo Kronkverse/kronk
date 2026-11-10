@@ -60,6 +60,7 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
       pots = api(alice, :post, '/items', item: { project_id: cooking['id'], kind: 'need', title: 'pots' })
       api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'gas' })
       dahl = api(bob, :post, '/items', item: { project_id: cooking['id'], kind: 'job', title: 'dahl for 40' })
+      dahl = api(bob, :post, "/items/#{dahl['id']}/claim")
       api(cara, :post, "/items/#{pots['id']}/bring", quantity: 1)
 
       body = api(bob, :get, "/projects/#{kitchen['id']}")
@@ -79,13 +80,15 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
       covered = api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'tables', quantity: 3 })
       api(bob, :post, "/items/#{covered['id']}/bring", quantity: 3)
 
+      # A To do is still needed until it's ticked off.
+      api(alice, :post, "/items/#{fire['id']}/done")
       body = api(cara, :get, "/projects/#{doof['id']}")
       expect(body['still_needed'].pluck('title')).to eq ['tea towels']
       expect(body['still_needed'].first['section']['title']).to eq 'Wash station'
       expect(body['progress']).to eq('sorted' => 2, 'total' => 3, 'open_jobs' => 0)
 
-      # Nobody left on it: it's needed again.
-      api(alice, :post, "/items/#{fire['id']}/unclaim")
+      # Ticked back on: it's needed again.
+      api(bob, :post, "/items/#{fire['id']}/undone")
       body = api(cara, :get, "/projects/#{doof['id']}")
       expect(body['still_needed'].pluck('title')).to contain_exactly('tea towels', 'build the fire frame')
       expect(body['progress']).to eq('sorted' => 1, 'total' => 3, 'open_jobs' => 1)

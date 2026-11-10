@@ -42,6 +42,8 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     return render json: { error: 'Pick one of your Krews for it to live in' }, status: 422 if parent.nil? && krew.nil?
 
     attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id, :chat)
+    # A kind is the projekt's; its Komponents go by it.
+    attrs = attrs.except(:kind) if parent
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params[:cover_media_attachment_id].present?
     project = Freethedream::Project.new(attrs.merge(parent: parent, owner: current_account, krew: krew))
     project.joining = 'open' if parent
@@ -65,6 +67,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     permit!(@project.owned_by?(current_account))
 
     attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id, :chat)
+    attrs = attrs.except(:kind) unless @project.top?
     attrs[:spaces] = chat_spaces(project_params[:chat]) if project_params.key?(:chat) && @project.top?
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params.key?(:cover_media_attachment_id)
     attrs[:done_at] = done_at(project_params[:done]) if project_params.key?(:done)
@@ -211,7 +214,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   end
 
   def project_params
-    params.expect(project: [:title, :description, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id, :chat, section_order: []])
+    params.expect(project: [:title, :description, :kind, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id, :chat, section_order: []])
   end
 
   def chat_spaces(on)

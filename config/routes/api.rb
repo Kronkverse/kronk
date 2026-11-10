@@ -133,6 +133,8 @@ namespace :api, format: false do
         member do
           post :claim
           post :unclaim
+          post :done
+          post :undone
           post :bring
           post :take_over
           post :hand_over

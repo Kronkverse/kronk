@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_10_140200) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1141,6 +1141,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_140200) do
     t.text "body", default: "", null: false
     t.integer "category"
     t.datetime "created_at", null: false
+    t.datetime "done_at"
     t.integer "kind", null: false
     t.boolean "more_welcome", default: false, null: false
     t.bigint "mycelium_item_id"
@@ -1200,6 +1201,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_140200) do
     t.datetime "done_at"
     t.date "ends_on"
     t.integer "joining", default: 0, null: false
+    t.integer "kind"
     t.bigint "krew_id"
     t.string "location", default: "", null: false
     t.bigint "owner_id"
