@@ -184,7 +184,8 @@ arrived live and were still pending.
 - **Turning.** Both faces wear the standard `<ScopeTitle>` rotator in the
   Frame's header slot, as every space does, and a sideways swipe turns
   between them on touch. Inside an open chat a swipe does nothing, so a
-  stray thumb can't throw you out of a conversation. Turning back to
+  stray thumb can't throw you out of a conversation (the pane is
+  `data-no-swipe`). Turning back to
   Messages returns to the chat that was open.
 - **Notifications face** (`notifications_face.tsx`). One row shape for
   everything: who (or a mark, for a system notice), a sentence, a line
