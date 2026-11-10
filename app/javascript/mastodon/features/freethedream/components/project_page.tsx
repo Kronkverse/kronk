@@ -506,42 +506,6 @@ const ProjectView: React.FC<{
           </Section>
         )}
 
-        {/* Then its spaces, as on a Krew: a tile for each, scrolling to its
-            section, then what it's Konnected to, then Konnect. */}
-        <AttachmentSection
-          korner='freethedream'
-          recordId={project.id}
-          canManage={project.can.edit}
-          heading={
-            spaces.length > 0 ? (
-              <FormattedMessage {...messages.spaces} />
-            ) : undefined
-          }
-          leading={spaces.map((slug) => (
-            <JumpTile
-              key={slug}
-              slug={slug}
-              target={spaceSectionId(slug)}
-              label={spaceLabel(slug)}
-            />
-          ))}
-          // Its spaces' records show in their sections, a Kuddle as a call
-          // frame, and a projekt lives in its Krew.
-          excludeSlugs={['huddle', 'albutts', 'kronikles', ...spaces]}
-          exclude={[
-            ...project.events.map((e) => ({ slug: 'kalendar', id: e.id })),
-            ...(project.top && project.krew
-              ? [{ slug: 'krew', id: project.krew.id }]
-              : []),
-          ]}
-          onKonnections={handleKonnections}
-          onTurnOnSpace={
-            project.top && project.can.edit ? turnOnSpace : undefined
-          }
-          turnOnSlugs={FTD_SPACES}
-          cardsApart
-        />
-
         {/* One column, as a Krew's page is (Tal, 2026-11-09): Talk was
             the side column's, and its chat is a section now. */}
         <div className='freethedream-layout freethedream-layout--single'>
@@ -627,6 +591,42 @@ const ProjectView: React.FC<{
                 />,
               ],
             ])}
+            {/* Its Konnect tiles, last, as a Krew's sit just above its posts
+                (Tal, 2026-11-10): a tile for each space, scrolling to its
+                section, then what it's Konnected to, then Konnect. */}
+            <AttachmentSection
+              korner='freethedream'
+              recordId={project.id}
+              canManage={project.can.edit}
+              heading={
+                spaces.length > 0 ? (
+                  <FormattedMessage {...messages.spaces} />
+                ) : undefined
+              }
+              leading={spaces.map((slug) => (
+                <JumpTile
+                  key={slug}
+                  slug={slug}
+                  target={spaceSectionId(slug)}
+                  label={spaceLabel(slug)}
+                />
+              ))}
+              // Its spaces' records show in their sections, a Kuddle as a call
+              // frame, and a projekt lives in its Krew.
+              excludeSlugs={['huddle', 'albutts', 'kronikles', ...spaces]}
+              exclude={[
+                ...project.events.map((e) => ({ slug: 'kalendar', id: e.id })),
+                ...(project.top && project.krew
+                  ? [{ slug: 'krew', id: project.krew.id }]
+                  : []),
+              ]}
+              onKonnections={handleKonnections}
+              onTurnOnSpace={
+                project.top && project.can.edit ? turnOnSpace : undefined
+              }
+              turnOnSlugs={FTD_SPACES}
+              cardsApart
+            />
             {actions}
           </div>
         </div>

@@ -24,8 +24,11 @@ class Api::V1::Krews::StatusesController < Api::BaseController
   MAX_SCANS = 5
 
   def index
-    # A comment lives under its post, never as a Krew post (feed.md (Comments)).
-    scope = @krew.statuses.without_replies.reorder(id: :desc).includes(:account)
+    # A comment lives under its post, never as a Krew post (feed.md (Comments)),
+    # and an album's photos live on its album: the album is the one post
+    # (Status::KRONK_BACKING_POST_TYPES; Tal, 2026-11-10, a 251-photo album
+    # showing as 251 posts).
+    scope = @krew.statuses.without_replies.without_kronk_backing_posts.reorder(id: :desc).includes(:account)
     newer_than = params[:since_id].presence || params[:min_id].presence
     scope = scope.where(Status.arel_table[:id].gt(newer_than)) if newer_than
 

@@ -312,7 +312,7 @@ const SECTION_IDS = {
 const spaceSectionId = (slug: PanelSpace) => `krew-space-${slug}`;
 
 // The spaces with a section of their own, in page order. The works are a
-// Krew's Gallery, Films, Music and Stories (decisions.md, 2026-11-08).
+// Krew's Gallery, Films, Music and Kronikles (decisions.md, 2026-11-08).
 const PANEL_SPACES: readonly PanelSpace[] = [
   'albutts',
   'kalendar',
@@ -358,7 +358,7 @@ const spaceNames = defineMessages({
   art: { id: 'krew.space.gallery', defaultMessage: 'Gallery' },
   cinema: { id: 'krew.space.films', defaultMessage: 'Films' },
   booth: { id: 'krew.space.music', defaultMessage: 'Music' },
-  kronikles: { id: 'krew.space.stories', defaultMessage: 'Stories' },
+  kronikles: { id: 'krew.space.kronikles', defaultMessage: 'Kronikles' },
 });
 const spaceName = (slug: PanelSpace) =>
   slug === 'art' ||
@@ -1030,34 +1030,6 @@ export const KrewDetail = () => {
               </section>
             )}
 
-            {/* The Krew's spaces first: a tile for each thing it has, each
-                opening in place or scrolling to its section, then what it's
-                Konnected to elsewhere, then Konnect. */}
-            <AttachmentSection
-              korner='krew'
-              recordId={krew.id}
-              canManage={isMember && !krew.archived}
-              heading={
-                isMember ? <FormattedMessage {...messages.spaces} /> : undefined
-              }
-              excludeSlugs={konnectedSkip}
-              leading={
-                isMember
-                  ? [
-                      ...shownSpaces.map((slug) => (
-                        <SpaceTile key={slug} slug={slug} />
-                      )),
-                      ...jumpTiles,
-                    ]
-                  : undefined
-              }
-              renderKonnect={renderKonnect}
-              onKonnections={handleKonnections}
-              onTurnOnSpace={turnOnSpace}
-              turnOnSlugs={TURN_ON_SPACES}
-              cardsApart
-            />
-
             {/* Each space it has on as its own section of cards, then its
                 projekts, Kuestions, chat and Kuddles, in the order its
                 members arranged in Settings. */}
@@ -1148,6 +1120,35 @@ export const KrewDetail = () => {
                 ),
               ],
             ])}
+
+            {/* Its Konnect tiles, just above its posts (Tal, 2026-11-10): a
+                tile for each thing it has, each opening in place or
+                scrolling to its section, then what it's Konnected to
+                elsewhere, then Konnect. */}
+            <AttachmentSection
+              korner='krew'
+              recordId={krew.id}
+              canManage={isMember && !krew.archived}
+              heading={
+                isMember ? <FormattedMessage {...messages.spaces} /> : undefined
+              }
+              excludeSlugs={konnectedSkip}
+              leading={
+                isMember
+                  ? [
+                      ...shownSpaces.map((slug) => (
+                        <SpaceTile key={slug} slug={slug} />
+                      )),
+                      ...jumpTiles,
+                    ]
+                  : undefined
+              }
+              renderKonnect={renderKonnect}
+              onKonnections={handleKonnections}
+              onTurnOnSpace={turnOnSpace}
+              turnOnSlugs={TURN_ON_SPACES}
+              cardsApart
+            />
 
             {/* The Krew's posts, last, so the page scrolls on into them. */}
             {isMember && <KrewPosts krewId={krew.id} />}

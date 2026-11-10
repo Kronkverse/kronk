@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 # decisions.md, 2026-11-08 (the Konnect grid): a Krew turns on its works as
-# spaces (Gallery, Films, Music, Stories), each ending in New, whose
+# spaces (Gallery, Films, Music, Kronikles), each ending in New, whose
 # composer also offers Add existing (Tal, 2026-11-08); a projekt's albums
 # are a section with the same.
 RSpec.describe 'Krew spaces: albums and works', :js, :streaming do

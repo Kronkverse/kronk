@@ -54,6 +54,18 @@ RSpec.describe 'API V1 Krews statuses' do
     expect(response.parsed_body.pluck(:id)).to contain_exactly(post.id.to_s)
   end
 
+  # An album's photos live on its album; the album is the one post.
+  it 'leaves album photos out' do
+    post = Fabricate(:status, account: user.account)
+    photo = Fabricate(:status, account: user.account, post_type: :album_photo)
+    krew.statuses << post
+    krew.statuses << photo
+
+    get "/api/v1/krews/#{krew.slug}/statuses", headers: headers
+
+    expect(response.parsed_body.pluck(:id)).to contain_exactly(post.id.to_s)
+  end
+
   # A Krew post keeps its own reach. Members see it through the Krew;
   # anyone else only sees what StatusPolicy would show them anyway.
   describe 'who sees which posts' do

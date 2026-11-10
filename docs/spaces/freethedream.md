@@ -263,8 +263,9 @@ getting involved, not for doing the work itself:
   data, for who may edit it). The ones you have a hand in come first,
   tagged with any new talk. Members get **+ Add a Komponent**.
 - **Spaces** (Tal, 2026-11-09: "i really like how the krew setup now
-  works"): a projekt's spaces work as a Krew's do. Under its Komponents,
-  under **Spaces**, a tile for each space it has, which scrolls to its
+  works"): a projekt's spaces work as a Krew's do. Last on the page,
+  after its sections (Tal, 2026-11-10, as a Krew's sit just above its
+  posts), under **Spaces**, a tile for each space it has, which scrolls to its
   section, then what it's Konnected to, then **Konnect**. Something
   Konnected with a picture of its own (a Place's map) is a section of its
   own under that, headed with its space's name, on a Krew's page too
