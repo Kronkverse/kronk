@@ -45,7 +45,9 @@ module Albutts
         text: @caption,
         visibility: ALBUM_TO_STATUS_VISIBILITY.fetch(@album.visibility, 'public'),
         media_ids: [@media_attachment.id],
-        post_type: 'album_photo'
+        post_type: 'album_photo',
+        # The people chosen to see the album (Albutts::Viewers).
+        audience_grant_ids: @album.post_audience_ids(@contributor)
       )
       status.update_column(:source_korner, 'albutts')
       attach_krews!(status) if @album.album_krews.exists?

@@ -978,6 +978,28 @@
     gap: 0.5rem;
   }
 
+  // The people chosen to see it, in the reach menu's People flyout.
+  &__viewers {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+
+    // The flyout is narrow; the search box keeps inside it.
+    .account-multi-select__search {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  &__viewers-hint {
+    margin: 0;
+    padding: 2px 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
   &__note {
     font-size: 12px;
     color: var(--text-muted);

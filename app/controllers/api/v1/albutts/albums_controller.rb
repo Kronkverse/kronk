@@ -46,7 +46,9 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     if @album.save
       sync_krews!
       sync_contributors!
+      shared = sync_viewers!
       Albutts::PublishAlbum.new(@album).call
+      viewers.tell(shared, by: current_account)
       notify_tagged!(before: '')
       render json: @album.reload, serializer: REST::AlbumSerializer, status: 201
     else
@@ -63,6 +65,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     if @album.update(album_params_for_update)
       sync_krews! if krew_params_present?
       sync_contributors! if params.key?(:contributor_account_ids)
+      viewers.tell(sync_viewers!, by: current_account)
       notify_tagged!(before: described)
       render json: @album.reload, serializer: REST::AlbumSerializer
     else
@@ -96,6 +99,8 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
       Kronk::StatusKrews.add(@album.post_status_ids, krew.id)
     end
     Albutts::RescopeAlbum.new(@album, before: before).call
+    # A Krew album is seen by the Krew or everyone, so nobody else is chosen.
+    viewers.sync!([])
 
     render json: @album.reload, serializer: REST::AlbumSerializer
   end
@@ -312,6 +317,23 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
 
     @album.album_krews.where(krew_id: contributor_ids).update_all(for_contribution: true) if contributor_ids.any?
     @album.album_krews.where.not(krew_id: contributor_ids).update_all(for_contribution: false)
+  end
+
+  def viewers
+    @viewers ||= Albutts::Viewers.new(@album)
+  end
+
+  # The people chosen to see it (`viewer_account_ids`), with the people
+  # chosen to add (you have to see an album to add to it, as a contributor
+  # Krew is an audience Krew). Left as they are when the request doesn't say.
+  # Returns the accounts newly added.
+  def sync_viewers!
+    ids = if params.key?(:viewer_account_ids)
+            Array(params[:viewer_account_ids]).map(&:to_i)
+          else
+            @album.album_viewers.pluck(:account_id)
+          end
+    viewers.sync!(ids | @album.album_contributors.pluck(:account_id))
   end
 
   # Sync the specific-people contribution roster (the "invited" list).
