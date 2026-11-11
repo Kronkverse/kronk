@@ -39,29 +39,37 @@ import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 const messages = defineMessages({
   title: { id: 'feed_settings.title', defaultMessage: 'Feed settings' },
   loading: { id: 'feed_settings.loading', defaultMessage: 'Loading…' },
-  scopeMates: {
-    id: 'feed_settings.scope.mates',
-    defaultMessage: 'Mates',
+  opensOnKronkverse: {
+    id: 'feed_settings.opens_on.kronkverse',
+    defaultMessage: 'Kronkverse',
   },
-  scopeOrbit: {
-    id: 'feed_settings.scope.orbit',
+  opensOnOrbit: {
+    id: 'feed_settings.opens_on.orbit',
     defaultMessage: 'Orbit',
   },
-  scopeKommunity: {
-    id: 'feed_settings.scope.kommunity',
-    defaultMessage: 'Kommunity',
+  opensOnMates: {
+    id: 'feed_settings.opens_on.mates',
+    defaultMessage: 'Mates',
   },
-  scopeMatesDesc: {
-    id: 'feed_settings.scope.mates_desc',
-    defaultMessage: 'Only your Mates.',
+  opensOnMe: {
+    id: 'feed_settings.opens_on.me',
+    defaultMessage: 'Me',
   },
-  scopeOrbitDesc: {
-    id: 'feed_settings.scope.orbit_desc',
+  opensOnKronkverseDesc: {
+    id: 'feed_settings.opens_on.kronkverse_desc',
+    defaultMessage: 'Everyone on this Kronk.',
+  },
+  opensOnOrbitDesc: {
+    id: 'feed_settings.opens_on.orbit_desc',
     defaultMessage: 'Your Mates plus their Mates.',
   },
-  scopeKommunityDesc: {
-    id: 'feed_settings.scope.kommunity_desc',
-    defaultMessage: 'Everyone on this Kronk.',
+  opensOnMatesDesc: {
+    id: 'feed_settings.opens_on.mates_desc',
+    defaultMessage: 'Only your Mates.',
+  },
+  opensOnMeDesc: {
+    id: 'feed_settings.opens_on.me_desc',
+    defaultMessage: 'Just your own posts.',
   },
 
   groupBoosts: {
@@ -97,16 +105,23 @@ const DISPLAY_LABELS: Record<string, MessageDescriptor | undefined> = {
   moments_strip_on_home: messages.momentsStripOnHome,
 };
 
-type Scope = 'mates' | 'orbit' | 'kommunity';
+// The width Home opens on (kronk.feed_opens_on), in the barrel's order.
+// `kommunity` is Kronkverse.
+type Scope = 'kommunity' | 'orbit' | 'mates' | 'me';
 
 const SCOPE_OPTIONS: {
   value: Scope;
   label: keyof typeof messages;
   desc: keyof typeof messages;
 }[] = [
-  { value: 'mates', label: 'scopeMates', desc: 'scopeMatesDesc' },
-  { value: 'orbit', label: 'scopeOrbit', desc: 'scopeOrbitDesc' },
-  { value: 'kommunity', label: 'scopeKommunity', desc: 'scopeKommunityDesc' },
+  {
+    value: 'kommunity',
+    label: 'opensOnKronkverse',
+    desc: 'opensOnKronkverseDesc',
+  },
+  { value: 'orbit', label: 'opensOnOrbit', desc: 'opensOnOrbitDesc' },
+  { value: 'mates', label: 'opensOnMates', desc: 'opensOnMatesDesc' },
+  { value: 'me', label: 'opensOnMe', desc: 'opensOnMeDesc' },
 ];
 
 const KornerTuneRow: React.FC<{
@@ -193,7 +208,7 @@ export const FeedSettings: React.FC = () => {
   const intl = useIntl();
   const korners = useAllKorners();
 
-  const [scope, setScope] = useState<Scope>('orbit');
+  const [scope, setScope] = useState<Scope>('kommunity');
   const [tuneStates, setTuneStates] = useState<Record<string, boolean>>({});
   const [loaded, setLoaded] = useState(false);
   const [savingScope, setSavingScope] = useState(false);
@@ -303,10 +318,11 @@ export const FeedSettings: React.FC = () => {
     let cancelled = false;
     void (async () => {
       try {
-        const scopeRes = await apiRequestGet<{ feed_scope: Scope }>(
+        const scopeRes = await apiRequestGet<{ feed_opens_on: Scope }>(
           'v1/kronk_settings',
         );
-        if (!cancelled && scopeRes.feed_scope) setScope(scopeRes.feed_scope);
+        if (!cancelled && scopeRes.feed_opens_on)
+          setScope(scopeRes.feed_opens_on);
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
       }
@@ -335,7 +351,7 @@ export const FeedSettings: React.FC = () => {
       setScope(next);
       setSavingScope(true);
       try {
-        await apiRequestPut('v1/kronk_settings', { feed_scope: next });
+        await apiRequestPut('v1/kronk_settings', { feed_opens_on: next });
       } catch {
         setScope(previous);
       } finally {
@@ -399,8 +415,8 @@ export const FeedSettings: React.FC = () => {
           }
           tagline={
             <FormattedMessage
-              id='feed_settings.hero_intro'
-              defaultMessage='Choose what fills your home column. Scope decides who; tune-ins decide what.'
+              id='feed_settings.hero_intro_opens_on'
+              defaultMessage='Choose what fills your home column: the width it opens on, and the korners in it.'
             />
           }
         />
@@ -409,8 +425,17 @@ export const FeedSettings: React.FC = () => {
 
         <section className='feed-settings__section'>
           <h2 className='feed-settings__section-title'>
-            <FormattedMessage id='feed_settings.scope' defaultMessage='Scope' />
+            <FormattedMessage
+              id='feed_settings.opens_on'
+              defaultMessage='Opens on'
+            />
           </h2>
+          <p className='feed-settings__section-hint'>
+            <FormattedMessage
+              id='feed_settings.opens_on_hint'
+              defaultMessage='Your feed opens on this width. Turn the title on Home to read wider or narrower at any time.'
+            />
+          </p>
           <div className='feed-settings__scope-options'>
             {SCOPE_OPTIONS.map((opt) => (
               <button

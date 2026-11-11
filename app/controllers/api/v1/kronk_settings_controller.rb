@@ -1,24 +1,21 @@
 # frozen_string_literal: true
 
 # Kronk-specific per-user settings. Sits alongside PreferencesController
-# but is writeable — feed_scope in particular needs a lightweight
-# writeable surface so the Home chip row doesn't require a full Rails
+# but is writeable, so feed settings can save a choice without a full Rails
 # settings-form round-trip.
 #
 #   GET  /api/v1/kronk_settings
-#       => { feed_scope: 'mates' | 'orbit' | 'kommunity' }
+#       => { feed_opens_on: 'me' | 'mates' | 'orbit' | 'kommunity' }
 #
 #   PUT  /api/v1/kronk_settings
-#       body: { feed_scope: 'mates' }
+#       body: { feed_opens_on: 'mates' }
 #       => same shape, updated
+#
+# `feed_opens_on` is the width Home opens on (`kommunity` is Kronkverse,
+# the default). Turning the barrel on Home doesn't change it (Tal,
+# 2026-11-11); only feed settings does. docs/spaces/feed.md, What the feed
+# shows.
 class Api::V1::KronkSettingsController < Api::BaseController
-  # Legacy names still allowed on write for a grace window while any
-  # persisted values age out. Normalised to the new tier before store.
-  LEGACY_SCOPE_ALIAS = {
-    'friends' => 'mates',
-    'friends_of_friends' => 'orbit',
-  }.freeze
-
   before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:show]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:update]
   before_action :require_user!
@@ -28,12 +25,11 @@ class Api::V1::KronkSettingsController < Api::BaseController
   end
 
   def update
-    scope = params[:feed_scope]
+    opens_on = params[:feed_opens_on]
 
-    if scope.present?
-      normalized = LEGACY_SCOPE_ALIAS.fetch(scope.to_s, scope.to_s)
+    if opens_on.present?
       begin
-        current_user.settings.update('kronk.feed_scope' => normalized)
+        current_user.settings.update('kronk.feed_opens_on' => opens_on.to_s)
         current_user.save!
       rescue ArgumentError => e
         return render json: { error: e.message }, status: 422
@@ -46,7 +42,6 @@ class Api::V1::KronkSettingsController < Api::BaseController
   private
 
   def settings_payload
-    stored = current_user.settings['kronk.feed_scope']
-    { feed_scope: LEGACY_SCOPE_ALIAS.fetch(stored, stored) }
+    { feed_opens_on: current_user.settings['kronk.feed_opens_on'] }
   end
 end
