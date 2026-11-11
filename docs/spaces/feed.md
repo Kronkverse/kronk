@@ -204,14 +204,17 @@ only takes a drop nothing else handled.
 
 ## What the feed shows
 
-**Width.** `UserSettings` `kronk.feed_scope` (`me | mates | orbit |
-kommunity`, default `orbit`) is the saved choice. The home feed turns
-between widths with `FeedDrum`, and the title above it (`ScopeTitle`, the
-same rotator every space uses) is the selector.
+**Width.** Home opens on `UserSettings` `kronk.feed_opens_on` (`me | mates
+| orbit | kommunity`, default `kommunity`, which reads as Kronkverse),
+chosen under **Opens on** in feed settings (`/home/settings`) (Tal,
+2026-11-11). The home feed turns between widths with `FeedDrum`, and the
+title above it (`ScopeTitle`, the same rotator every space uses) is the
+selector; a turn lasts for the visit and isn't saved. The older
+`kronk.feed_scope` held the last width turned to and is no longer read.
 
 The API reads width from the `scope` parameter, defaulting to Orbit
-(`Api::V1::Timelines::HomeController`). The client passes the saved setting
-in. With `feed_scope_enforced` on (in production, per
+(`Api::V1::Timelines::HomeController`). The client passes the width it's
+showing. With `feed_scope_enforced` on (in production, per
 `config/feature_flags.yaml`), the timeline is narrowed through
 `Kronk::AudienceScope`. Kommunity width reads the local timeline.
 **Me** reads the viewer's own posts (no replies, no Just me) from the

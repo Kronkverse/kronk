@@ -113,8 +113,7 @@ class UserSettings
   # Kronk feed reach: how wide a slice of the network the home column
   # shows. The tiers are the Me → Mates → Orbit → Kommunity distance
   # scale from docs/spaces/feed.md (The reach ladder) (Me = your own posts,
-  # the innermost ring). Default is Orbit (Mates + Mates-of-Mates) — a
-  # middle ring, not a walled garden and not the whole instance.
+  # the innermost ring).
   # Persists here; the timeline enforcement is applied by
   # Kronk::AudienceScope, gated behind
   # Kronk::FeatureFlags.feed_scope_enforced.
@@ -122,8 +121,15 @@ class UserSettings
   # Legacy values `friends | friends_of_friends` may still be present
   # in existing user hashes; the API controller translates them on
   # read and any subsequent write normalises the stored value.
+  #
+  # `feed_scope` was also the width Home last turned to, saved on every turn.
+  # Since 2026-11-11 (Tal) Home opens on `feed_opens_on` instead, Kronkverse
+  # (`kommunity`) unless the member picks another in feed settings, and a
+  # turn of the barrel isn't saved. `feed_scope` is no longer read; stored
+  # values are left where they are.
   namespace :kronk do
     setting :feed_scope, default: 'orbit', in: %w(me mates orbit kommunity)
+    setting :feed_opens_on, default: 'kommunity', in: %w(me mates orbit kommunity)
   end
 
   def initialize(original_hash)

@@ -5,16 +5,16 @@
   = button_tag t('generic.save_changes'), class: 'button', form: 'edit_user'
 
 = simple_form_for current_user, url: settings_preferences_feed_path, html: { id: :edit_user } do |f|
-  %h4 Scope
-  %p.hint What slice of the network shows up on your home feed. Locked to three values.
+  %h4 Opens on
+  %p.hint Which width your home feed opens on. Turn the title on Home to read wider or narrower at any time.
 
   .fields-group
     = f.simple_fields_for :settings, current_user.settings do |ff|
-      = ff.input :'kronk.feed_scope',
-                 collection: %w(mates orbit kommunity),
+      = ff.input :'kronk.feed_opens_on',
+                 collection: %w(kommunity orbit mates me),
                  include_blank: false,
-                 label: 'Feed scope',
-                 label_method: ->(scope) { { 'mates' => 'Mates only', 'orbit' => 'Orbit — mates + mates of mates', 'kommunity' => 'Whole Kommunity' }[scope] },
+                 label: 'Feed opens on',
+                 label_method: ->(scope) { { 'kommunity' => 'Kronkverse', 'orbit' => 'Orbit', 'mates' => 'Mates', 'me' => 'Me' }[scope] },
                  wrapper: :with_label
 
   %h4 Korners
