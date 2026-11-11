@@ -584,3 +584,21 @@
 // Rounded interior L corner — now painted inline via mask-image on
 // TopBand and RightBand (see .kronk-frame__top-band and
 // .kronk-frame__right-band above). No third element required.
+
+// Mastodon's floating player (a video that keeps playing as you scroll past
+// it) was pinned 20px from the window's corner, under the korner rail on a
+// wide screen (Kommons, "Video playing upon scroll" and "Mateing page",
+// 2026-11-08: "a hard border before the nav bar so nothing is allowed to
+// cross it"). It keeps to the Stage: clear of the right band, above the
+// bottom tab bar where there is one, and over the Stage's content.
+.picture-in-picture {
+  z-index: 26;
+  inset-inline-end: 1rem;
+  bottom: calc(3.5rem + 1rem);
+  max-inline-size: calc(100vw - 2rem);
+
+  @media (width >= 890px) {
+    inset-inline-end: calc(7.75rem + 1rem);
+    bottom: 1.25rem;
+  }
+}
