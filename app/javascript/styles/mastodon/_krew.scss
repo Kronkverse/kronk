@@ -813,19 +813,8 @@ $krew-column-width: 720px;
     }
   }
 
-  &__faces-stack {
-    display: inline-flex;
-    align-items: center;
-
-    .krew-detail__member + .krew-detail__member {
-      margin-inline-start: -0.5rem;
-    }
-  }
-
-  &__faces-more {
-    margin-inline-start: 0.35rem;
-    font-size: 0.8rem;
-    color: var(--text-muted);
+  &__faces .people-row {
+    margin-block: 0;
   }
 
   &__faces-count {
@@ -839,23 +828,6 @@ $krew-column-width: 720px;
     color: var(--text-on-accent);
     font-size: 0.75rem;
     font-weight: 600;
-  }
-
-  &__member {
-    display: inline-flex;
-    border-radius: 50%;
-    overflow: hidden;
-    box-shadow: 0 0 0 2px var(--surface-sunken);
-    transition: transform var(--dur-fast) var(--ease-out);
-
-    &:hover {
-      transform: translateY(-3px);
-    }
-
-    img {
-      display: block;
-      border-radius: 50%;
-    }
   }
 }
 

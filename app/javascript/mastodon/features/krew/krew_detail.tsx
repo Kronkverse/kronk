@@ -36,6 +36,7 @@ import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { LinkifiedText } from 'mastodon/components/linkified_text';
+import { PeopleRow } from 'mastodon/components/people_row';
 import { useComeBackHere } from 'mastodon/components/space_back';
 import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { Stage } from 'mastodon/components/stage';
@@ -193,12 +194,10 @@ const PersonRow: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
   );
 };
 
-// How many faces show under the name before "+N".
-const FACES_SHOWN = 5;
-
-// The faces under the Krew's name: a few of the people in it, how many,
-// and for members how many are asking to join. Tapping them opens People
-// below the grid (decisions.md, 2026-10-18).
+// The faces under the Krew's name: a few of the people in it as the
+// standard PeopleRow, how many, and for members how many are asking to
+// join. Tapping them opens People below the grid (decisions.md,
+// 2026-10-18), so the pictures aren't links of their own.
 const Faces: React.FC<{
   members: ApiAccountJSON[];
   count: number;
@@ -207,8 +206,6 @@ const Faces: React.FC<{
   onToggle: () => void;
 }> = ({ members, count, asking, open, onToggle }) => {
   const intl = useIntl();
-  const shown = members.slice(0, FACES_SHOWN);
-  const more = count - shown.length;
   return (
     <button
       type='button'
@@ -216,14 +213,7 @@ const Faces: React.FC<{
       onClick={onToggle}
       aria-pressed={open}
     >
-      <span className='krew-detail__faces-stack' aria-hidden='true'>
-        {shown.map((account) => (
-          <span key={account.id} className='krew-detail__member'>
-            <Avatar account={createAccountFromServerJSON(account)} size={32} />
-          </span>
-        ))}
-        {more > 0 && <span className='krew-detail__faces-more'>+{more}</span>}
-      </span>
+      <PeopleRow people={members} total={count} linked={false} />
       <span className='krew-detail__faces-count'>
         {intl.formatMessage(messages.facesCount, { count })}
       </span>
