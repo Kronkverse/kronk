@@ -9,6 +9,7 @@ import api from 'mastodon/api';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import {
   ComposeBody,
+  ComposeCheck,
   ComposeField,
   ComposeHint,
   ComposeInput,
@@ -55,6 +56,18 @@ import { useAppDispatch } from 'mastodon/store';
 // it be removed, the only location there is here.
 
 const messages = defineMessages({
+  kuddleKrew: {
+    id: 'kalendar.composer.kuddle_krew',
+    defaultMessage: 'Call in the Krew’s Kuddle',
+  },
+  kuddleProjekt: {
+    id: 'kalendar.composer.kuddle_projekt',
+    defaultMessage: 'Call in its Kuddle',
+  },
+  kuddleHint: {
+    id: 'kalendar.composer.kuddle_hint',
+    defaultMessage: 'Everyone in it joins the call from the event.',
+  },
   label: { id: 'kalendar.new.title', defaultMessage: 'New event' },
   subtitle: {
     id: 'kalendar.new.subtitle',
@@ -213,6 +226,7 @@ interface CreatePayload {
   visibility: ReachValue;
   image_id?: string;
   krew_ids?: string[];
+  kuddle_space?: string;
 }
 
 // Shape returned by POST /api/v2/media. Only the ID is required to
@@ -381,6 +395,22 @@ export const EventComposer: React.FC<Props> = ({
   });
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
+  // The Krew, projekt or Komponent it was made from, whose own Kuddle the
+  // call can be in (decisions.md, 2026-11-11).
+  const kuddleSpace = forKrewId
+    ? `krew:${forKrewId}`
+    : konnect.source &&
+        (konnect.source.slug === 'krew' ||
+          konnect.source.slug === 'freethedream')
+      ? `${konnect.source.slug}:${konnect.source.id}`
+      : null;
+  const [inKuddle, setInKuddle] = useState(false);
+  const onToggleKuddle = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInKuddle(e.target.checked);
+    },
+    [],
+  );
 
   const [title, setTitle] = useState(editing?.title ?? '');
   const [description, setDescription] = useState(editing?.description ?? '');
@@ -817,6 +847,7 @@ export const EventComposer: React.FC<Props> = ({
     if (endIso) payload.end_time = endIso;
     if (imageMediaId) payload.image_id = imageMediaId;
     if (krewIds.length > 0) payload.krew_ids = krewIds;
+    if (kuddleSpace && inKuddle) payload.kuddle_space = kuddleSpace;
 
     const inviteeIds = Array.from(invitees.keys());
 
@@ -861,9 +892,11 @@ export const EventComposer: React.FC<Props> = ({
     endIso,
     finishDraft,
     imageMediaId,
+    inKuddle,
     intl,
     invitees,
     krewIds,
+    kuddleSpace,
     onCreated,
     reach,
     startIso,
@@ -1083,6 +1116,20 @@ export const EventComposer: React.FC<Props> = ({
             {intl.formatMessage(messages.ownLocationHint)}
           </span>
         </div>
+      )}
+
+      {!editing && kuddleSpace && (
+        <ComposeCheck
+          checked={inKuddle}
+          onChange={onToggleKuddle}
+          disabled={busy}
+          label={intl.formatMessage(
+            kuddleSpace.startsWith('krew:')
+              ? messages.kuddleKrew
+              : messages.kuddleProjekt,
+          )}
+          hint={intl.formatMessage(messages.kuddleHint)}
+        />
       )}
 
       {/* Invitee picker — accounts get a nudge with the event on
