@@ -644,6 +644,10 @@ doctor checks for it (Standard L11).
    inside its width. Pop-ups render outside the Stage, so the Stage's
    border-box rule doesn't reach them; `_kronk_stage.scss` gives every pop-up
    root's fields the same, and a new kind of pop-up is added to that list.
+7. **Nothing floats under the rail.** Anything pinned to the window (the
+   floating video player is the one there is) keeps to the Stage: clear of the
+   right band on a wide screen, above the bottom tab bar where there is one,
+   and over the Stage's content (`.picture-in-picture` in `_kronk_frame.scss`).
 
 ### Related files
 
