@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
 import classNames from 'classnames';
 
+import Overlay from 'react-overlays/Overlay';
+
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import BringIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import PaymentsIcon from '@/material-icons/400-24px/payments.svg?react';
 import QuestionIcon from '@/material-icons/400-24px/question_mark.svg?react';
+import UnfoldMoreIcon from '@/material-icons/400-24px/unfold_more.svg?react';
 import { apiFtdItemAction } from 'mastodon/api/freethedream';
 import {
   apiAnswerKuestion,
@@ -21,6 +24,8 @@ import type {
   FtdProject,
   FtdTask,
 } from 'mastodon/api_types/freethedream';
+import { DropdownSelector } from 'mastodon/components/dropdown_selector';
+import type { SelectItem } from 'mastodon/components/dropdown_selector';
 import { Icon } from 'mastodon/components/icon';
 import { PeopleRow } from 'mastodon/components/people_row';
 
@@ -113,8 +118,10 @@ const TASK_WORDS: Record<
 };
 
 // The kinds to add, in the order they're offered.
-// Picked from a dropdown beside the add box, not a row of pills (Tal,
-// 2026-11-11: "i really really dont like the pill situation").
+// Picked from a small menu on the right of the add box, each kind with its
+// icon, not a row of pills (Tal, 2026-11-11: "i really really dont like the
+// pill situation"; then "the drop down menu is way larger than it needs to
+// be, and it should be on the right hand side of the text box").
 const ADD_KINDS: { kind: QuickAddKind; label: MessageDescriptor }[] = [
   { kind: 'job', label: messages.todo },
   { kind: 'need', label: messages.bring },
@@ -305,34 +312,88 @@ const ToDo: React.FC<{
 };
 
 // What's being added, beside the add box.
+// The shared menu (DropdownSelector, styled as the reach menu), opened from
+// a button only as wide as the kind it shows.
 const KindPick: React.FC<{
   kind: QuickAddKind;
   onPick: (kind: QuickAddKind) => void;
 }> = ({ kind, onPick }) => {
   const intl = useIntl();
+  const button = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const items = useMemo<SelectItem[]>(
+    () =>
+      ADD_KINDS.map((k) => ({
+        value: k.kind,
+        text: intl.formatMessage(k.label),
+        icon: KIND_ICONS[k.kind].id,
+        iconComponent: KIND_ICONS[k.kind].icon,
+      })),
+    [intl],
+  );
+  const handleToggle = useCallback(() => {
+    setOpen((was) => !was);
+  }, []);
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    button.current?.focus();
+  }, []);
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      onPick(e.target.value as QuickAddKind);
+    (value: string) => {
+      onPick(value as QuickAddKind);
     },
     [onPick],
   );
+  const label = intl.formatMessage(
+    ADD_KINDS.find((k) => k.kind === kind)?.label ?? messages.todo,
+  );
 
   return (
-    <label className='freethedream-checklist__pick'>
-      <KindIcon kind={kind} />
-      <select
-        className='freethedream__input'
-        value={kind}
-        onChange={handleChange}
-        aria-label={intl.formatMessage(messages.addKind)}
+    <>
+      <button
+        ref={button}
+        type='button'
+        className='freethedream-checklist__pick'
+        aria-haspopup='listbox'
+        aria-expanded={open}
+        aria-label={`${intl.formatMessage(messages.addKind)}: ${label}`}
+        onClick={handleToggle}
       >
-        {ADD_KINDS.map((k) => (
-          <option key={k.kind} value={k.kind}>
-            {intl.formatMessage(k.label)}
-          </option>
-        ))}
-      </select>
-    </label>
+        <KindIcon kind={kind} />
+        <span>{label}</span>
+        <Icon id='unfold' icon={UnfoldMoreIcon} aria-hidden />
+      </button>
+      <Overlay
+        show={open}
+        offset={[0, 4]}
+        placement='bottom-end'
+        onHide={handleClose}
+        flip
+        target={button.current}
+        popperConfig={{ strategy: 'fixed' }}
+      >
+        {({ props, placement }) => (
+          <div {...props} className='privacy-dropdown__overlay'>
+            <div
+              className={classNames(
+                'dropdown-animation',
+                'privacy-dropdown__dropdown',
+                'freethedream-checklist__menu',
+                placement,
+              )}
+            >
+              <DropdownSelector
+                items={items}
+                value={kind}
+                onClose={handleClose}
+                onChange={handleChange}
+                classNamePrefix='privacy-dropdown'
+              />
+            </div>
+          </div>
+        )}
+      </Overlay>
+    </>
   );
 };
 
@@ -426,7 +487,7 @@ export const Checklist: React.FC<{
             kind={kind}
             projectId={project.id}
             onAdded={onChange}
-            lead={<KindPick kind={kind} onPick={setKind} />}
+            pick={<KindPick kind={kind} onPick={setKind} />}
           />
         </div>
       )}
