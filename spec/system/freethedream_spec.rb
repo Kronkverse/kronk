@@ -112,7 +112,7 @@ RSpec.describe 'Projekts', :js, :streaming do
   it "pays for something on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do
-      click_on 'Pay'
+      find('.freethedream-checklist__pick select').select('Pay')
       fill_in placeholder: 'Add something to pay for', with: '$200 hall deposit'
       send_keys :enter
     end
@@ -130,7 +130,7 @@ RSpec.describe 'Projekts', :js, :streaming do
   it "decides something on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do
-      click_on 'Decide'
+      find('.freethedream-checklist__pick select').select('Decide')
       fill_in placeholder: 'Choices, or none for yes or no', with: 'Sat, Sun'
       fill_in placeholder: 'Add something to decide', with: 'Which day?'
       send_keys :enter
@@ -149,7 +149,7 @@ RSpec.describe 'Projekts', :js, :streaming do
   it "brings something on a Komponent's checklist" do
     visit_kitchen
     within('.freethedream-checklist__add') do
-      click_on 'Bring'
+      find('.freethedream-checklist__pick select').select('Bring')
       fill_in placeholder: "Add what's needed", with: 'gas bottle'
       send_keys :enter
     end

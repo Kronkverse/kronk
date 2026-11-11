@@ -234,7 +234,9 @@ entry a kind with its own action:
   takes its Kuestion with it.
 
 Entries go in one line at a time under the list, with To do, Bring, Pay,
-Book or Decide picked above the box (`QuickAdd`).
+Book or Decide picked from a dropdown beside the box (`QuickAdd`), each
+kind with its icon, which its entries show too. No pills: Tal, 2026-11-11,
+"i really really dont like the pill situation".
 
 ### The kinds of item
 
