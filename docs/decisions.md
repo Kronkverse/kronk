@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-11 — The feed opens on Kronkverse
+
+**Decision (Tal):** everyone's Home feed opens on Kronkverse. Feed settings
+has an **Opens on** choice (Kronkverse, Orbit, Mates or Me) for anyone who
+wants another. Turning the title on Home moves between widths for that visit
+only.
+
+**Why:** the feed opened on whatever width it was last turned to, because
+every turn of the barrel was saved, and new members started on Orbit.
+
+**How:** a new setting, `kronk.feed_opens_on` (default `kommunity`), so
+everyone starts on Kronkverse rather than on their last turn. The old
+`kronk.feed_scope` is no longer read. Supersedes the Orbit default in
+docs/spaces/feed.md (What the feed shows).
+
+---
+
 ## 2026-11-11 — An event's call is in its space's Kuddle
 
 The step left from 2026-11-10 ("Kuddles stay dateless: a scheduled call is

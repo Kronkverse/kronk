@@ -2,6 +2,8 @@
 
 require 'rails_helper'
 
+# docs/spaces/feed.md, What the feed shows: Home opens on Kronkverse unless
+# the member picks another width in feed settings (Tal, 2026-11-11).
 RSpec.describe 'KronkSettings' do
   let(:user) { Fabricate(:user) }
 
@@ -9,20 +11,29 @@ RSpec.describe 'KronkSettings' do
     let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:accounts') }
     let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
 
-    it 'returns the default feed_scope for a fresh user' do
+    it 'opens on Kronkverse for a fresh user' do
       get api_v1_kronk_settings_path, headers: headers
 
       expect(response).to have_http_status(200)
-      expect(response.parsed_body).to include('feed_scope' => 'orbit')
+      expect(response.parsed_body).to eq('feed_opens_on' => 'kommunity')
     end
 
-    it 'returns the persisted feed_scope after an update' do
+    it 'opens on Kronkverse whatever width the barrel was last turned to' do
       user.settings.update('kronk.feed_scope' => 'mates')
       user.save!
 
       get api_v1_kronk_settings_path, headers: headers
 
-      expect(response.parsed_body).to include('feed_scope' => 'mates')
+      expect(response.parsed_body).to include('feed_opens_on' => 'kommunity')
+    end
+
+    it 'returns the width the member chose' do
+      user.settings.update('kronk.feed_opens_on' => 'mates')
+      user.save!
+
+      get api_v1_kronk_settings_path, headers: headers
+
+      expect(response.parsed_body).to include('feed_opens_on' => 'mates')
     end
   end
 
@@ -30,30 +41,22 @@ RSpec.describe 'KronkSettings' do
     let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:accounts') }
     let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
 
-    it 'persists a valid feed_scope value' do
-      put api_v1_kronk_settings_path, params: { feed_scope: 'orbit' }, headers: headers
+    it 'saves the width Home opens on' do
+      put api_v1_kronk_settings_path, params: { feed_opens_on: 'me' }, headers: headers
 
       expect(response).to have_http_status(200)
-      expect(response.parsed_body).to include('feed_scope' => 'orbit')
-      expect(user.reload.settings['kronk.feed_scope']).to eq('orbit')
-    end
-
-    it 'normalises legacy scope names on write' do
-      put api_v1_kronk_settings_path, params: { feed_scope: 'friends_of_friends' }, headers: headers
-
-      expect(response).to have_http_status(200)
-      expect(response.parsed_body).to include('feed_scope' => 'orbit')
-      expect(user.reload.settings['kronk.feed_scope']).to eq('orbit')
+      expect(response.parsed_body).to include('feed_opens_on' => 'me')
+      expect(user.reload.settings['kronk.feed_opens_on']).to eq('me')
     end
 
     it 'rejects a value outside the allowed set' do
-      put api_v1_kronk_settings_path, params: { feed_scope: 'planetary' }, headers: headers
+      put api_v1_kronk_settings_path, params: { feed_opens_on: 'planetary' }, headers: headers
 
       expect(response).to have_http_status(422)
     end
 
     it 'requires authentication' do
-      put api_v1_kronk_settings_path, params: { feed_scope: 'mates' }
+      put api_v1_kronk_settings_path, params: { feed_opens_on: 'mates' }
 
       expect(response).to have_http_status(401).or have_http_status(403)
     end
