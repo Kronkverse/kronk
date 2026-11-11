@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -99,6 +99,15 @@ export const QuickAdd: React.FC<Props> = ({
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
+
+  // Changing the kind keeps what's typed (Tal, 2026-11-11: "the text i've
+  // typed gets removed"), but not a count, which is how many for Bring and
+  // how much for Pay.
+  useEffect(() => {
+    setCount('');
+    setNote(null);
+    setError(null);
+  }, [kind]);
 
   const counts = kind === 'need' || kind === 'pay';
   // With a number in the box, the line is read as if it led with it, so
