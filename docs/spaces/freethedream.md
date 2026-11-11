@@ -216,10 +216,18 @@ entry a kind with its own action:
   for whoever is doing it (a claim), their pictures beside it. Adding one
   doesn't put you on it. It counts as sorted once ticked.
 - **Bring** (a `need`): "I'll bring it", as before (`BringControl`).
+- **Pay** and **Book** (decisions.md, 2026-11-11): To dos of their own kind
+  (`items.task`: `todo`, `pay`, `book`), ticked and claimed the same way
+  but saying so: "I'll pay it" and Paid, "I'll book it" and Booked. A Pay
+  can have an amount in dollars, kept as the item's quantity with unit `$`
+  ("$200 hall deposit", or 200 in the How much box), and the list says
+  what there is to pay and how much of it is paid. Money still moves
+  outside Kronk. Paying is one person settling a bill; chipping in towards
+  something is still a Bring of "$400 for permits".
 
-Entries go in one line at a time under the list, with To do or Bring
-picked above the box (`QuickAdd`). **Decide**, **Pay** and **Book** are
-next (decisions.md, 2026-11-10).
+Entries go in one line at a time under the list, with To do, Bring, Pay or
+Book picked above the box (`QuickAdd`). **Decide** is next
+(decisions.md, 2026-11-10).
 
 ### The kinds of item
 

@@ -1563,6 +1563,24 @@ $freethedream-wide: 1000px;
     font-size: 0.75rem;
   }
 
+  // A Pay entry's amount, and Paid or Booked once it's ticked.
+  &__amount {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__state {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  // What there is to pay, over the list.
+  &__money {
+    margin: 0 0 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+
   &__tick {
     inline-size: 1.15rem;
     block-size: 1.15rem;

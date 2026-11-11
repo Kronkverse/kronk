@@ -109,6 +109,24 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.find_by(title: 'Email the council')).to be_done
   end
 
+  it "pays for something on a Komponent's checklist", :aggregate_failures do
+    visit_kitchen
+    within('.freethedream-checklist__add') do
+      click_on 'Pay'
+      fill_in placeholder: 'Add something to pay for', with: '$200 hall deposit'
+      send_keys :enter
+    end
+
+    within('.freethedream-checklist__entry', text: 'hall deposit') do
+      expect(page).to have_css('.freethedream-checklist__kind', text: 'Pay')
+      expect(page).to have_css('.freethedream-checklist__amount', text: '$200')
+      click_on 'I’ll pay it'
+      check
+    end
+    expect(page).to have_text('$200 to pay, $200 of it paid')
+    expect(Freethedream::Item.find_by(title: 'hall deposit')).to have_attributes(task: 'pay', quantity: 200, unit: '$', done?: true)
+  end
+
   it "brings something on a Komponent's checklist" do
     visit_kitchen
     within('.freethedream-checklist__add') do

@@ -15,6 +15,7 @@ import type {
   FtdMyceliumItem,
   FtdProject,
   FtdProjectSummary,
+  FtdTask,
   FtdUpdate,
 } from 'mastodon/api_types/freethedream';
 
@@ -52,6 +53,7 @@ export interface FtdItemParams {
   project_id?: string;
   need_id?: string;
   kind?: FtdItemKind;
+  task?: FtdTask;
   title?: string;
   body?: string;
   category?: FtdCategory | null;
