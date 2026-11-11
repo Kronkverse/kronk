@@ -112,7 +112,8 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
         'wachuneed.offer.declined',
         'wachuneed.offer.cancelled',
         'wachuneed.brand.listed',
-        'albutts.contribution.granted'
+        'albutts.contribution.granted',
+        'albutts.album.shared'
       )
     end
   end

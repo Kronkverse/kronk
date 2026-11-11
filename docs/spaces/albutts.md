@@ -33,7 +33,10 @@ git history (see [History](#history)).
   is deleted, the first photo is used (`REST::AlbumSerializer#cover_url`).
 - **Arranging a new album** (Tal, 2026-10-21). In the composer, before
   posting, each photo has ↑ and ↓ to move it and **Make it the cover**
-  (`PickArrange`); the first is the cover unless another is picked. The
+  (`PickArrange`); the first is the cover unless another is picked. A
+  little × in each photo's corner, opposite its upload tick, takes that
+  one out (`PickRemove`, Tal 2026-11-11); **Add photos** to an album that
+  exists has it too, until the photo is added. The
   photos are added to the album one at a time in that order, and the cover
   is set once they're in (it must be one of the album's photos). An album
   shows its newest additions first, each burst in the order it was added
@@ -75,6 +78,32 @@ the shared `Reachable` concern; `Album.visible_to(viewer)` and
 
 The photo posts and the card post copy the album's tier and krews when
 they're created.
+
+**People you choose** (decisions.md, 2026-11-11). On top of the tier and
+Krews, the owner can let named people see the album: the reach menu's
+**People** row, a person search (`AccountMultiSelect`). **Me** plus people
+shares it with only them, and the composer says so ("Only you and the 2
+people you chose can see it"). Not on a Kronkverse album (everyone sees it)
+or a Krew album.
+
+- **`AlbumViewer`** (`album_viewers`): one row per chosen person.
+  `Album#visible_to?` and `Album.visible_to` count them through Reachable's
+  optional `reachable_chosen?` / `reachable_chosen_scope`.
+- **Its posts.** Each post in the album carries them as added people
+  (`status_audience_grants`, feed.md's per-post audience), with the owner
+  too, so a photo someone else adds to a Just-me album is still the owner's
+  to see (`Album#post_audience_ids`). New posts take them as they're made
+  (`PublishAlbum`, `PublishPhoto`, `PublishPhotoBatch`).
+- **The people chosen to add photos see it too**: the server adds them to
+  the list, as a contributor Krew is always an audience Krew.
+- **Changing them.** `viewer_account_ids` on create or update (left alone
+  when an update doesn't send it). Unlike the reach, they can be changed
+  after the album is made. `Albutts::Viewers` keeps the list and the posts
+  together: someone added is told (`albutts.album.shared`, directed) and
+  gets the card in their home feed; someone taken off loses it unless they
+  can still see it. Giving the album to a Krew clears them.
+- The owner's form reads them as `viewer_ids` (`REST::AlbumSerializer`, on
+  the album itself only).
 
 ## Who can add photos
 
@@ -272,8 +301,10 @@ contributor can edit the caption from the Ж menu's **Edit caption** (or
 inline Edit, and its reactions bar hides Edit
 (`PATCH /api/v1/albutts/photos/:id`, which goes through
 `UpdateStatusService`). Only the contributor: the caption is their post and
-shows under their name. The contributor or the album owner can delete a
-photo, which also deletes its post.
+shows under their name. The contributor or the owner of a personal album
+can delete a photo, which also deletes its post: **Delete photo** in the
+same Edit, after a confirmation (`DELETE /api/v1/albutts/photos/:id`). The
+album page underneath is reloaded, so its count and cover follow.
 
 ## Tagging people
 

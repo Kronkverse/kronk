@@ -187,6 +187,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.albutts.contribution_granted',
     defaultMessage: '{who} let you add photos to their album',
   },
+  albuttsShared: {
+    id: 'nudges.notification.albutts.shared',
+    defaultMessage: '{who} shared an album with you',
+  },
   generic: {
     id: 'nudges.notification.generic',
     defaultMessage: '{who} has something for you in {korner}',
@@ -239,6 +243,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'krew.join_accepted': sentences.krewJoinAccepted,
   'albutts.contribution_requested': sentences.albuttsContributionRequested,
   'albutts.contribution_granted': sentences.albuttsContributionGranted,
+  'albutts.shared': sentences.albuttsShared,
 };
 
 export const genericSentence = sentences.generic;

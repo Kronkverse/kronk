@@ -46,6 +46,7 @@ import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useSameAs } from 'mastodon/hooks/useSameAs';
 
 import { CaptionTextarea } from './caption_textarea';
+import { PickRemove } from './pick_remove';
 
 // With no cover chosen, the album's first-added photo stands in. The album
 // lists its newest photos first, so that's the oldest, not the first.
@@ -296,6 +297,31 @@ const messages = defineMessages({
     id: 'albutts.composer.contributor_people',
     defaultMessage: 'People who can add',
   },
+  // People chosen to see it (docs/spaces/albutts.md, Who can see an album),
+  // in the reach menu's People row.
+  viewersHint: {
+    id: 'albutts.composer.viewers_hint',
+    defaultMessage: 'Let these people see it too',
+  },
+  viewersSearch: {
+    id: 'albutts.composer.viewers_search',
+    defaultMessage: 'Search people…',
+  },
+  viewersOnly: {
+    id: 'albutts.composer.viewers_only',
+    defaultMessage:
+      'Only you and {count, plural, one {the person} other {the # people}} you chose can see it.',
+  },
+  viewersToo: {
+    id: 'albutts.composer.viewers_too',
+    defaultMessage:
+      '{count, plural, one {# person} other {# people}} you chose can see it too.',
+  },
+  viewersNone: {
+    id: 'albutts.composer.viewers_none',
+    defaultMessage:
+      'Only you can see it. To share it with people you choose, open the menu at the top and add them under People.',
+  },
   contributionSelfOnlyNote: {
     id: 'albutts.composer.contribution_self_only_note',
     defaultMessage: 'Only you can add to a just-me album.',
@@ -305,6 +331,16 @@ const messages = defineMessages({
     defaultMessage: 'You’re not in any krews yet.',
   },
 });
+
+// The picker shows names, and an album carries only ids.
+const accountLites = (ids: string[]) =>
+  apiRequestGet<ApiAccountJSON[]>('v1/accounts', { id: ids }).then((accounts) =>
+    accounts.map((a) => ({
+      id: a.id,
+      acct: a.acct,
+      displayName: a.display_name || a.username,
+    })),
+  );
 
 const TITLE_MAX = 240;
 const DESCRIPTION_MAX = 4000;
@@ -448,6 +484,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [contributorAccounts, setContributorAccounts] = useState<AccountLite[]>(
     [],
   );
+  // The people chosen to see it, on top of its reach and Krews
+  // (docs/spaces/albutts.md, Who can see an album). Not on a Kronkverse
+  // album, which everyone sees.
+  const [viewerAccounts, setViewerAccounts] = useState<AccountLite[]>([]);
   // A new album's cover, by its photo here (it has no media id until it's
   // uploaded); none picked means the first photo.
   const [coverKey, setCoverKey] = useState<string | null>(null);
@@ -567,6 +607,27 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       cancelled = true;
     };
   }, [invitedIds]);
+  // The same for the people chosen to see it.
+  const viewerIds = editing?.viewer_ids;
+  const [viewersLoaded, setViewersLoaded] = useState(
+    !viewerIds || viewerIds.length === 0,
+  );
+  useEffect(() => {
+    if (!viewerIds || viewerIds.length === 0) return;
+    let cancelled = false;
+    accountLites(viewerIds)
+      .then((people) => {
+        if (cancelled) return;
+        setViewerAccounts(people);
+        setViewersLoaded(true);
+      })
+      .catch(() => {
+        // Leave `viewersLoaded` false: Save keeps them as they are.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [viewerIds]);
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -606,6 +667,13 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           displayName: a.display_name,
         })),
       );
+      setViewerAccounts(
+        (p.viewer_accounts ?? []).map((a) => ({
+          id: a.id,
+          acct: a.acct,
+          displayName: a.display_name,
+        })),
+      );
       setPhotos(d ? photosFromDraft(d) : []);
       setCoverKey(p.cover_media_id ? `draft-${p.cover_media_id}` : null);
       restoreKonnect(p.konnections);
@@ -626,6 +694,11 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         krew_ids: audienceKrewIds,
         contributor_krew_ids: contributorKrewIds,
         contributor_accounts: contributorAccounts.map((a) => ({
+          id: a.id,
+          acct: a.acct,
+          display_name: a.displayName,
+        })),
+        viewer_accounts: viewerAccounts.map((a) => ({
           id: a.id,
           acct: a.acct,
           display_name: a.displayName,
@@ -661,6 +734,12 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       });
     };
   }, []);
+
+  // A Kronkverse album is everyone's to see, so nobody is chosen.
+  const viewerAccountIds = useMemo(
+    () => (visibility === 'public' ? [] : viewerAccounts.map((a) => a.id)),
+    [visibility, viewerAccounts],
+  );
 
   const trimmed = title.trim();
   const uploadingCount = photos.filter(
@@ -869,6 +948,16 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setPhotos([]);
   }, []);
 
+  // One photo out, before the album is made. One still uploading finishes
+  // and is left unused; the draft drops it with the rest of `photos`.
+  const removePhoto = useCallback((key: string) => {
+    uploadQueueRef.current = uploadQueueRef.current.filter(
+      (p) => p.key !== key,
+    );
+    setPhotos((prev) => prev.filter((p) => p.key !== key));
+    setCoverKey((cover) => (cover === key ? null : cover));
+  }, []);
+
   // Adds the uploaded photos to the new album one at a time, in the order
   // they're arranged here: the album shows its photos in the order they
   // were added (Tal 2026-10-21, arrange before posting). They're already
@@ -959,6 +1048,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                 : chosenAdd
                   ? contributorAccounts.map((a) => a.id)
                   : [],
+              viewer_account_ids: !viewersLoaded ? undefined : viewerAccountIds,
             });
         onSaved?.(updated);
       } catch (e) {
@@ -979,6 +1069,8 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     contributorKrewIds,
     rosterLoaded,
     contributorAccounts,
+    viewersLoaded,
+    viewerAccountIds,
     onSaved,
     forKrew,
     audience,
@@ -1078,6 +1170,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
               contributor_account_ids: chosenAdd
                 ? contributorAccounts.map((a) => a.id)
                 : [],
+              viewer_account_ids: viewerAccountIds,
             });
       } catch (e) {
         console.error('[albutts] create album failed', e);
@@ -1120,6 +1213,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     chosenAdd,
     contributorKrewIds,
     contributorAccounts,
+    viewerAccountIds,
     description,
     audienceKrewIds,
     photos,
@@ -1233,9 +1327,26 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       onToggleKrew={sameAsReach.onToggleKrew}
       sameAs={sameAsReach.sameAs}
       onSameAs={sameAsReach.onSameAs}
+      peopleSlot={
+        reachValue === 'public' ? undefined : (
+          <div className='albutts-composer__viewers'>
+            <p className='albutts-composer__viewers-hint'>
+              {intl.formatMessage(messages.viewersHint)}
+            </p>
+            <AccountMultiSelect
+              value={viewerAccounts}
+              onChange={setViewerAccounts}
+              placeholder={intl.formatMessage(messages.viewersSearch)}
+            />
+          </div>
+        )
+      }
+      peopleCount={viewerAccountIds.length}
     />
   );
   const isSelfOnly = reachValue === 'self_only';
+  // Nobody but you can see it, so nobody else can add.
+  const justMe = isSelfOnly && viewerAccountIds.length === 0;
 
   return (
     <ComposeShell
@@ -1351,6 +1462,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                   >
                     {chipGlyph(p.status)}
                   </span>
+                  {!createdAlbum && !pending && (
+                    <PickRemove photoKey={p.key} onRemove={removePhoto} />
+                  )}
                 </div>
                 {!editing && photos.length > 1 && (
                   <PickArrange
@@ -1394,6 +1508,17 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           The two-axes ScopePicker retired here 2026-09-09; Album
           is the only composer whose product model actually needs
           the second question. */}
+      {!forKrew && reachValue !== 'public' && (
+        <ComposeHint>
+          {viewerAccountIds.length === 0
+            ? isSelfOnly && intl.formatMessage(messages.viewersNone)
+            : intl.formatMessage(
+                isSelfOnly ? messages.viewersOnly : messages.viewersToo,
+                { count: viewerAccountIds.length },
+              )}
+        </ComposeHint>
+      )}
+
       {forKrew ? (
         <>
           <KrewAudienceField
@@ -1422,7 +1547,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         <ComposeSection
           title={intl.formatMessage(messages.contributionHeading)}
         >
-          {isSelfOnly ? (
+          {justMe ? (
             <ComposeHint>
               {intl.formatMessage(messages.contributionSelfOnlyNote)}
             </ComposeHint>

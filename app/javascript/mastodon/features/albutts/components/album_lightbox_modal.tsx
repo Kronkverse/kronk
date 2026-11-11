@@ -9,7 +9,12 @@ import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { showAlert } from 'mastodon/actions/alerts';
 import { importFetchedStatus } from 'mastodon/actions/importer';
-import { apiUpdateAlbum, apiUpdatePhoto } from 'mastodon/api/albutts';
+import {
+  apiDeletePhoto,
+  apiGetAlbum,
+  apiUpdateAlbum,
+  apiUpdatePhoto,
+} from 'mastodon/api/albutts';
 import type {
   ApiAlbumJSON,
   ApiAlbumPhotoJSON,
@@ -19,6 +24,7 @@ import { IconButton } from 'mastodon/components/icon_button';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useIdentity } from 'mastodon/identity_context';
 import { useAppDispatch } from 'mastodon/store';
 import { handleMediaDownloadClick } from 'mastodon/utils/download_media';
@@ -34,6 +40,20 @@ const messages = defineMessages({
   useAsCover: {
     id: 'albutts.lightbox.use_as_cover',
     defaultMessage: 'Use as album cover',
+  },
+  deletePhoto: {
+    id: 'albutts.lightbox.delete',
+    defaultMessage: 'Delete photo',
+  },
+  deleteConfirm: {
+    id: 'albutts.lightbox.delete_confirm',
+    defaultMessage:
+      'Delete this photo from the album? Its caption, comments and froths go with it. This is permanent.',
+  },
+  deleted: { id: 'albutts.lightbox.deleted', defaultMessage: 'Photo deleted' },
+  deleteFailed: {
+    id: 'albutts.lightbox.delete_failed',
+    defaultMessage: "Couldn't delete the photo. Try again.",
   },
   isCover: {
     id: 'albutts.lightbox.is_cover',
@@ -100,6 +120,8 @@ interface AlbumLightboxModalProps {
   onAlbumChanged?: (album: ApiAlbumJSON) => void;
   onClose: () => void;
   onPhotoChanged?: (photo: ApiAlbumPhotoJSON) => void;
+  // A Krew album's photos are deleted by whoever added them only.
+  albumIsKrew?: boolean;
 }
 
 export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
@@ -113,8 +135,11 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   onAlbumChanged,
   onClose,
   onPhotoChanged,
+  albumIsKrew,
 }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
+  const [deletingPhoto, setDeletingPhoto] = useState(false);
   const { accountId } = useIdentity();
   const [index, setIndex] = useState(() =>
     Math.max(0, Math.min(initialIndex, photos.length - 1)),
@@ -258,6 +283,53 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     (albumCanManage ?? accountId === albumOwnerId) &&
     !!currentMediaId;
 
+  // Who added the photo can delete it, and so can the owner of a personal
+  // album (PhotosController#destroy). Its post goes with it.
+  const mayDelete =
+    !!current &&
+    accountId !== undefined &&
+    (accountId === current.contributor.id ||
+      (!albumIsKrew && accountId === albumOwnerId));
+
+  const deletePhoto = useCallback(() => {
+    if (!current || deletingPhoto) return;
+    const photoId = current.id;
+    confirmThen(intl.formatMessage(messages.deleteConfirm), 'delete', () => {
+      setDeletingPhoto(true);
+      void (async () => {
+        try {
+          await apiDeletePhoto(photoId);
+        } catch {
+          dispatch(showAlert({ message: messages.deleteFailed }));
+          setDeletingPhoto(false);
+          return;
+        }
+        const remaining = localPhotos.filter((p) => p.id !== photoId);
+        setLocalPhotos(remaining);
+        setIndex((i) => Math.min(i, Math.max(0, remaining.length - 1)));
+        setEditing(false);
+        setDeletingPhoto(false);
+        dispatch(showAlert({ message: messages.deleted }));
+        // The album page underneath, its count and cover with it.
+        if (albumId)
+          void apiGetAlbum(albumId)
+            .then((album) => onAlbumChanged?.(album))
+            .catch(() => undefined);
+        if (remaining.length === 0) onClose();
+      })();
+    });
+  }, [
+    current,
+    deletingPhoto,
+    confirmThen,
+    intl,
+    dispatch,
+    localPhotos,
+    albumId,
+    onAlbumChanged,
+    onClose,
+  ]);
+
   // Edit lives in the Ж menu (docs/design.md). The photo's contributor edits
   // its caption: the caption is their post and shows under their name. The
   // album's manager (its owner, or any member of a Krew album) chooses the
@@ -280,7 +352,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
       overlay: true,
     },
     startEditingCaption,
-    (mayCaption || mayCover) && !editing,
+    (mayCaption || mayCover || mayDelete) && !editing,
   );
 
   // The photo's media attachment. Saved in place by `downloadMedia`; the
@@ -303,6 +375,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
 
   return (
     <div className='albutts-lightbox'>
+      {confirmDialog}
       <div className='albutts-lightbox__topbar'>
         <div className='albutts-lightbox__title'>
           <span className='albutts-lightbox__album'>{albumTitle}</span>
@@ -368,6 +441,16 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
                 />
               )}
               <div className='albutts-lightbox__caption-actions'>
+                {mayDelete && (
+                  <button
+                    type='button'
+                    className='albutts-lightbox__delete'
+                    onClick={deletePhoto}
+                    disabled={deletingPhoto}
+                  >
+                    {intl.formatMessage(messages.deletePhoto)}
+                  </button>
+                )}
                 {mayCover && (
                   <KornerPill
                     className='albutts-lightbox__cover'
@@ -460,6 +543,7 @@ export const AlbumLightboxModalWrapper: React.FC<{
       albumTitle={album.title}
       albumOwnerId={album.owner.id}
       albumCanManage={album.can_manage}
+      albumIsKrew={!!album.krew_id}
       albumId={album.id}
       coverMediaId={album.cover_media_attachment_id}
       onAlbumChanged={onAlbumChanged}

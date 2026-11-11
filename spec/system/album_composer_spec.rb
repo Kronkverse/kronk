@@ -42,4 +42,38 @@ RSpec.describe 'Album composer, who can add', :js, :streaming do
     expect(page).to have_css('.albutts-composer__choices .korner-pill--active', text: 'Just me')
     expect(page).to have_no_css('.konnect-row .space-tile', text: 'Growers')
   end
+
+  # docs/spaces/albutts.md, Who can see an album: people chosen by name, in
+  # the reach menu's People row.
+  it 'shares a Just-me album with the people you choose' do
+    ana = Fabricate(:account, username: 'ana', display_name: 'Ana')
+    visit '/hub/albutts/composer'
+    find('.compose-title').set('Secret garden')
+
+    find('.reach-dropdown__button').click
+    within('.reach-dropdown__menu') do
+      find('.reach-dropdown__item', text: /\AMe/).click
+      find('.reach-dropdown__krews-row', text: 'People').hover
+      fill_in placeholder: 'Search people…', with: 'ana'
+      find('.account-multi-select__suggestion', text: 'ana').click
+    end
+    expect(page).to have_text('Only you and the person you chose can see it.')
+
+    click_on 'Create album'
+    expect(page).to have_no_css('.compose-shell')
+    expect(Album.find_by(title: 'Secret garden').album_viewers.pluck(:account_id)).to eq [ana.id]
+  end
+
+  # Tal, 2026-11-11: a little x in the photo's corner takes it out.
+  it 'takes one photo out with the x in its corner' do
+    visit '/hub/albutts/composer'
+    find('.compose-title').set('Two photos')
+    attach_file('albutts-composer-photos', [file_fixture('600x400.png'), file_fixture('attachment.jpg')], make_visible: true)
+    expect(page).to have_css('.albutts-composer__pick', count: 2)
+
+    first('.albutts-composer__pick').find('.albutts-composer__pick-remove').click
+
+    expect(page).to have_css('.albutts-composer__pick', count: 1)
+    expect(page).to have_button('Create album & add 1 photo')
+  end
 end

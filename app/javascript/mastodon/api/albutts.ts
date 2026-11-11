@@ -20,6 +20,7 @@ interface AlbumRoster {
   krew_ids?: string[]; // audience krews
   contributor_krew_ids?: string[]; // subset that also contributes
   contributor_account_ids?: string[]; // specific people who contribute
+  viewer_account_ids?: string[]; // people chosen to see it
 }
 
 interface CreateAlbumParams extends AlbumRoster {
@@ -66,6 +67,7 @@ export const apiCreateAlbum = ({
   krew_ids,
   contributor_krew_ids,
   contributor_account_ids,
+  viewer_account_ids,
   krew_id,
   audience,
   ...album
@@ -77,6 +79,7 @@ export const apiCreateAlbum = ({
     krew_ids,
     contributor_krew_ids,
     contributor_account_ids,
+    viewer_account_ids,
   });
 
 export const apiUpdateAlbum = (
@@ -85,6 +88,7 @@ export const apiUpdateAlbum = (
     krew_ids,
     contributor_krew_ids,
     contributor_account_ids,
+    viewer_account_ids,
     audience,
     ...album
   }: UpdateAlbumParams,
@@ -95,6 +99,7 @@ export const apiUpdateAlbum = (
     krew_ids,
     contributor_krew_ids,
     contributor_account_ids,
+    viewer_account_ids,
   });
 
 export const apiDeleteAlbum = (id: string) =>
@@ -129,6 +134,7 @@ export type AlbumDraftParams = {
   krew_ids?: string[];
   contributor_krew_ids?: string[];
   contributor_accounts?: { id: string; acct: string; display_name: string }[];
+  viewer_accounts?: { id: string; acct: string; display_name: string }[];
   captions?: Record<string, string>;
   // The upload picked as the new album's cover, if not the first.
   cover_media_id?: string;

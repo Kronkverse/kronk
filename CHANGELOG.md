@@ -7,6 +7,11 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.12 "Rose"] - 2026-11-11
+
+- Albums for chosen people (#2543)
+- Remove album photos (#2544)
+
 ### [2.1.11 "Rose"] - 2026-11-10
 
 - Comments stay out of lists (#2523)

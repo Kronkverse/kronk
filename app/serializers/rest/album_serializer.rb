@@ -30,6 +30,8 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   attribute :contribution_open
   attribute :contributor_krew_ids
   attribute :invited_contributor_ids
+  # The people chosen to see it (Album#album_viewers), for its owner's form.
+  attribute :viewer_ids, if: :owner_detail?
 
   belongs_to :owner, serializer: REST::AccountSerializer
   # The list of albums shows a cover and a count, so it is sent without
@@ -153,5 +155,9 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   # Specific accounts on the contribution roster (the "invited" people).
   def invited_contributor_ids
     object.album_contributors.pluck(:account_id).map(&:to_s)
+  end
+
+  def viewer_ids
+    object.album_viewers.pluck(:account_id).map(&:to_s)
   end
 end

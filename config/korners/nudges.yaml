@@ -130,6 +130,15 @@ listens:
     interaction: interactive
     cta_label: 'View album'
     cta_route: '/hub/albutts/albums/{album_id}'
+  # The owner chose you to see their album (Albutts::Viewers). They need not
+  # be your Mate, so DIRECTED.
+  - event: albutts.album.shared
+    source_korner: albutts
+    verb: shared
+    directed: true
+    interaction: interactive
+    cta_label: 'View album'
+    cta_route: '/hub/albutts/albums/{album_id}'
   - event: kommons.proposal.frothed
     source_korner: kommons
     verb: frothed
