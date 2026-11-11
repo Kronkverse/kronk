@@ -84,6 +84,14 @@ const krewFor = (search: string) => {
   return from?.slug === 'krew' ? from.id : null;
 };
 
+// The Krew an event made from a projekt or Komponent is for: its members
+// see it, nobody else (Tal, 2026-11-11), while it stays Konnected to the
+// projekt (`?audience=krew:<id>`).
+const audienceKrewFor = (search: string) => {
+  const raw = new URLSearchParams(search).get('audience');
+  return raw?.startsWith('krew:') ? raw.slice(5) : null;
+};
+
 const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const location = useLocation();
@@ -169,6 +177,7 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
           onCancel={closeComposer}
           onCreated={handleCreated}
           forKrewId={krewFor(location.search)}
+          audienceKrewId={audienceKrewFor(location.search)}
         />
       )}
     </Stage>

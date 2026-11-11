@@ -43,12 +43,18 @@ const messages = defineMessages({
   hint: {
     id: 'freethedream.call.hint',
     defaultMessage:
-      'It’s in this Komponent’s Kuddle. Everyone in it joins from the event.',
+      'Only people in the projekt see it. The call is in this Komponent’s Kuddle; everyone joins from the event.',
   },
   schedule: { id: 'freethedream.call.schedule', defaultMessage: 'Schedule' },
   cancel: { id: 'freethedream.call.cancel', defaultMessage: 'Cancel' },
   more: { id: 'freethedream.call.more', defaultMessage: 'More options' },
 });
+
+// The composer for a projekt's event: Konnected to it, seen by its Krew.
+export const audienceSearch = (project: FtdProject) =>
+  `${konnectSearch('freethedream', project.id)}${
+    project.krew ? `&audience=krew:${project.krew.id}` : ''
+  }`;
 
 const LENGTHS = [30, 60, 90, 120];
 
@@ -122,7 +128,10 @@ export const ScheduleCall: React.FC<{
             end_time: new Date(
               begins.getTime() + length * 60 * 1000,
             ).toISOString(),
-            visibility: 'public',
+            // Seen by the projekt's Krew, nobody else (Tal, 2026-11-11).
+            ...(project.krew
+              ? { visibility: 'self_only', krew_ids: [project.krew.id] }
+              : { visibility: 'public' }),
             kuddle_space: `freethedream:${project.id}`,
           });
           await apiCreateAttachment({
@@ -139,7 +148,7 @@ export const ScheduleCall: React.FC<{
         }
       })();
     },
-    [day, time, title, length, project.id, onDone],
+    [day, time, title, length, project.id, project.krew, onDone],
   );
 
   return (
@@ -218,7 +227,7 @@ export const ScheduleCall: React.FC<{
             className='freethedream-call__more'
             to={{
               pathname: composer,
-              search: konnectSearch('freethedream', project.id),
+              search: audienceSearch(project),
             }}
           >
             {intl.formatMessage(messages.more)}

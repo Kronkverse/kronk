@@ -8,7 +8,7 @@ import { SpaceShelf } from 'mastodon/components/space_shelf';
 import type { ShelfCard } from 'mastodon/components/space_shelf';
 import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 
-import { ScheduleCall } from './schedule_call';
+import { audienceSearch, ScheduleCall } from './schedule_call';
 
 // A projekt's Events, the same section as a Krew's (Tal, 2026-11-09: "i
 // want it aligned so people don't have to recognise the same
@@ -110,6 +110,7 @@ export const ProjectEvents: React.FC<{
       canAdd={project.can.link_event}
       cards={cards}
       onAdded={refresh}
+      newSearch={audienceSearch(project)}
       onNew={project.top ? undefined : handleNew}
     >
       {scheduling && (

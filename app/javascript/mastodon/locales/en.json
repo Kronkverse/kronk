@@ -1260,7 +1260,7 @@
   "freethedream.call.day": "Day",
   "freethedream.call.default_title": "{title} call",
   "freethedream.call.heading": "Schedule a call",
-  "freethedream.call.hint": "It’s in this Komponent’s Kuddle. Everyone in it joins from the event.",
+  "freethedream.call.hint": "Only people in the projekt see it. The call is in this Komponent’s Kuddle; everyone joins from the event.",
   "freethedream.call.hours": "{count, plural, one {# hour} other {# hours}}",
   "freethedream.call.length": "How long",
   "freethedream.call.minutes": "{count} minutes",

@@ -165,6 +165,8 @@ RSpec.describe 'Projekts', :js, :streaming do
     kuddle = HuddleSession.spaces.find_by!(freethedream_project: kitchen)
     expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'huddle', target_id: kuddle.id)).to exist
     expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'freethedream', target_id: kitchen.id)).to exist
+    # Only the projekt sees it.
+    expect(event.visible_to?(Fabricate(:account))).to be false
   end
 
   it "brings something on a Komponent's checklist" do
