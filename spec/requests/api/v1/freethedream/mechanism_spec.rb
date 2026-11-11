@@ -213,6 +213,25 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(api(bob, :post, "/items/#{fire['id']}/undone")['done']).to be false
     end
 
+    # Pay and Book are To dos of their own kind (decisions.md, 2026-11-11).
+    it 'adds a Pay with its amount and a Book, ticked off like any To do', :aggregate_failures do
+      hall = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'pay', title: 'Hall deposit', quantity: 200, unit: '$' })
+      expect(hall).to include('task' => 'pay', 'quantity' => 200, 'unit' => '$', 'done' => false)
+      expect(api(bob, :post, "/items/#{hall['id']}/claim")['claimed']).to eq 1
+      expect(api(bob, :post, "/items/#{hall['id']}/done")['done']).to be true
+
+      bus = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'book', title: 'The bus' })
+      expect(bus['task']).to eq 'book'
+      expect(api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sweep' })['task']).to eq 'todo'
+    end
+
+    it 'gives only a To do a kind of its own', :aggregate_failures do
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', task: 'pay', title: 'Gas' })
+      expect(response).to have_http_status(422)
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'nonsense', title: 'Sweep' })
+      expect(response).to have_http_status(422)
+    end
+
     it 'ticks off only a To do, and only for people in the projekt', :aggregate_failures do
       gas = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Gas' })
       api(alice, :post, "/items/#{gas['id']}/done")

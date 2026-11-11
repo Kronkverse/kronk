@@ -383,6 +383,7 @@ module Freethedream
         row[:contributors] = item.offers.map { |o| { account: account(o.owner), quantity: o.quantity, offer_id: o.id.to_s } }
         row[:my_quantity] = @viewer ? item.offers.select { |o| o.owner_id == @viewer.id }.sum(&:quantity) : 0
       when 'job'
+        row[:task] = item.task
         row[:done] = item.done?
         row[:claimed] = item.claims.size
         row[:claimers] = item.claims.map { |c| account(c.account) }

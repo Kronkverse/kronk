@@ -17,6 +17,20 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-11 — Pay and Book on the checklist
+
+The second of the checklist's entry kinds Tal chose on 2026-11-10 ("To do
+
+- Bring, Decide, Pay and Book").
+
+**Decision:** Pay and Book are **kinds of To do** (`items.task`), not new
+kinds of item, so ticking, claiming, progress and the activity log work as
+for any To do. Each says what it is: "I'll pay it" and Paid, "I'll book it"
+and Booked. A Pay can carry an amount in dollars, kept as the item's
+quantity and unit `$` as a Bring's money is, and the checklist totals what
+there is to pay and what's paid. Kronk doesn't move the money. A Pay is one
+person settling a bill; chipping in stays a Bring.
+
 ## 2026-11-11 — An album can be shared with people you choose
 
 Tal: "I want to be able to create an album and it be accessible only to
