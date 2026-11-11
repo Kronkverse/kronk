@@ -54,6 +54,23 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
     expect(album.reload.cover_media_attachment_id).to eq second.id
   end
 
+  it "deletes a photo from the photo's Edit" do
+    add_photo
+    add_photo
+
+    visit "/hub/albutts/albums/#{album.id}?photo=#{album.photos.last.id}"
+
+    expect(page).to have_css('.albutts-lightbox__counter', text: '2 / 2')
+    find('.kronk-menu__trigger').click
+    find('.kronk-menu__moon[title*="caption"]').click
+    click_on 'Delete photo'
+    within('.confirm-dialog') { click_on 'Delete' }
+
+    expect(page).to have_content('Photo deleted')
+    expect(page).to have_css('.albutts-lightbox__counter', text: '1 / 1')
+    expect(album.photos.count).to eq 1
+  end
+
   it 'downloads the whole album, or the photos you tick, from buttons on the page' do
     2.times { add_photo }
 
