@@ -1568,21 +1568,42 @@ $freethedream-wide: 1000px;
     }
   }
 
-  // The kind being added, beside the add box.
+  // The kind being added, on the right of the add box: only as wide as the
+  // kind it shows.
   &__pick {
     display: inline-flex;
+    flex: none;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.3rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: none;
     color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover,
+    &[aria-expanded='true'] {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
 
     .icon {
       inline-size: 18px;
       block-size: 18px;
     }
 
-    select {
-      inline-size: auto;
+    .icon:last-child {
+      inline-size: 16px;
+      block-size: 16px;
+      color: var(--text-muted);
     }
+  }
+
+  &__menu {
+    min-inline-size: 10rem;
   }
 
   // A Pay entry's amount, and Paid or Booked once it's ticked.

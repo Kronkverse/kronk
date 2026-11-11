@@ -112,7 +112,8 @@ RSpec.describe 'Projekts', :js, :streaming do
   it "pays for something on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do
-      find('.freethedream-checklist__pick select').select('Pay')
+      find('.freethedream-checklist__pick').click
+      page.document.find('.privacy-dropdown__option', text: 'Pay').click
       fill_in placeholder: 'Add something to pay for', with: '$200 hall deposit'
       send_keys :enter
     end
@@ -130,7 +131,8 @@ RSpec.describe 'Projekts', :js, :streaming do
   it "decides something on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do
-      find('.freethedream-checklist__pick select').select('Decide')
+      find('.freethedream-checklist__pick').click
+      page.document.find('.privacy-dropdown__option', text: 'Decide').click
       fill_in placeholder: 'Choices, or none for yes or no', with: 'Sat, Sun'
       fill_in placeholder: 'Add something to decide', with: 'Which day?'
       send_keys :enter
@@ -149,7 +151,8 @@ RSpec.describe 'Projekts', :js, :streaming do
   it "brings something on a Komponent's checklist" do
     visit_kitchen
     within('.freethedream-checklist__add') do
-      find('.freethedream-checklist__pick select').select('Bring')
+      find('.freethedream-checklist__pick').click
+      page.document.find('.privacy-dropdown__option', text: 'Bring').click
       fill_in placeholder: "Add what's needed", with: 'gas bottle'
       send_keys :enter
     end

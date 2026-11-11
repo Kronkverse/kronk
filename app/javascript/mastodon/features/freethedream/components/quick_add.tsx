@@ -69,8 +69,8 @@ interface Props {
   kind: QuickAddKind;
   projectId: string;
   onAdded: () => void;
-  // Goes first in the row: on a checklist, the kind being added.
-  lead?: React.ReactNode;
+  // On the right of the box: on a checklist, the kind being added.
+  pick?: React.ReactNode;
 }
 
 interface Line {
@@ -84,7 +84,7 @@ export const QuickAdd: React.FC<Props> = ({
   kind,
   projectId,
   onAdded,
-  lead,
+  pick,
 }) => {
   const intl = useIntl();
   const [text, setText] = useState('');
@@ -230,7 +230,6 @@ export const QuickAdd: React.FC<Props> = ({
 
   return (
     <form className='freethedream-quick' onSubmit={handleSubmit}>
-      {lead}
       <input
         ref={input}
         className='freethedream__input'
@@ -240,6 +239,7 @@ export const QuickAdd: React.FC<Props> = ({
         aria-label={intl.formatMessage(messages[kind])}
         maxLength={180}
       />
+      {pick}
       {counts && (
         <input
           className='freethedream__input freethedream-quick__count'
