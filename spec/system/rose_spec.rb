@@ -37,4 +37,18 @@ RSpec.describe 'Rose', :inline_jobs, :js, :streaming do
     expect(page).to have_content('You sent Ana a rose.')
     expect(Rose.where(from_account: bob.account, to_account: ana).count).to eq 1
   end
+
+  # Opened straight onto /hub/rose (a refresh, or a Nudge's "See your roses"),
+  # the page draws before the korner list loads. The icons used to keep the
+  # fallback circle.
+  it 'draws the rose, not a circle, when opened straight onto the page' do
+    Fabricate(:rose, from_account: ana, to_account: bob.account)
+
+    visit '/hub/rose'
+    expect(page).to have_css('.rose__bloom svg path')
+
+    find('.kronk-menu__trigger').click
+    expect(page).to have_css('.kronk-menu__moon-glyph svg path')
+    expect(page).to have_no_css('.kronk-menu__moon-glyph svg circle, .rose__bloom svg circle')
+  end
 end
