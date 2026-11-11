@@ -23,7 +23,9 @@ import {
 //
 // On a Komponent's checklist, Pay and Book are To dos of their own kind
 // (decisions.md, 2026-11-11). Pay takes an amount the same way, in dollars:
-// "$200 hall deposit", or 200 in the How much box.
+// "$200 hall deposit", or 200 in the How much box. A Decide is a quick
+// Kuestion: its choices go in the Choices box, "Sat, Sun", or none for Yes
+// or No.
 
 const messages = defineMessages({
   need: {
@@ -43,6 +45,18 @@ const messages = defineMessages({
   book: {
     id: 'freethedream.quick.book',
     defaultMessage: 'Add something to book',
+  },
+  decide: {
+    id: 'freethedream.quick.decide',
+    defaultMessage: 'Add something to decide',
+  },
+  choices: {
+    id: 'freethedream.quick.choices',
+    defaultMessage: 'Choices, or none for yes or no',
+  },
+  choicesCount: {
+    id: 'freethedream.quick.choices_count',
+    defaultMessage: 'Give two to four choices, or none for yes or no.',
   },
   add: { id: 'freethedream.quick.add', defaultMessage: 'Add' },
   added: { id: 'freethedream.quick.added', defaultMessage: 'Added {what}' },
@@ -68,6 +82,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
   const intl = useIntl();
   const [text, setText] = useState('');
   const [count, setCount] = useState('');
+  const [choices, setChoices] = useState('');
   const [more, setMore] = useState(false);
   // No category pills under the box any more (Tal, 2026-11-08): a need is
   // Things and an idea is Skills, which the Mycelium still matches on.
@@ -114,10 +129,29 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
     setNote(null);
   }, []);
 
+  const handleChoices = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setChoices(e.target.value);
+      setError(null);
+    },
+    [],
+  );
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
       if (!text.trim() || busy) return;
+      const options =
+        kind === 'decide'
+          ? choices
+              .split(',')
+              .map((c) => c.trim())
+              .filter(Boolean)
+          : [];
+      if (options.length === 1 || options.length > 4) {
+        setError(intl.formatMessage(messages.choicesCount));
+        return;
+      }
       const line: Line | null = parsed ?? {
         quantity: 1,
         unit: '',
@@ -130,7 +164,8 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
       apiFtdCreateItem({
         project_id: projectId,
         kind: kind === 'need' ? 'need' : 'job',
-        task: kind === 'pay' || kind === 'book' ? kind : undefined,
+        task: kind === 'need' || kind === 'job' ? undefined : kind,
+        options: options.length > 0 ? options : undefined,
         title: line.title,
         quantity: line.quantity,
         unit: counts ? line.unit : '',
@@ -140,6 +175,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
         .then(() => {
           setText('');
           setCount('');
+          setChoices('');
           setMore(false);
           setBusy(false);
           setNote(
@@ -158,7 +194,18 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
           setBusy(false);
         });
     },
-    [text, parsed, busy, kind, counts, projectId, onAdded, intl, category],
+    [
+      text,
+      choices,
+      parsed,
+      busy,
+      kind,
+      counts,
+      projectId,
+      onAdded,
+      intl,
+      category,
+    ],
   );
 
   const counted =
@@ -198,6 +245,16 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
           aria-label={intl.formatMessage(
             kind === 'pay' ? messages.howMuch : messages.howMany,
           )}
+        />
+      )}
+      {kind === 'decide' && (
+        <input
+          className='freethedream__input freethedream-quick__choices'
+          value={choices}
+          onChange={handleChoices}
+          placeholder={intl.formatMessage(messages.choices)}
+          aria-label={intl.formatMessage(messages.choices)}
+          maxLength={240}
         />
       )}
       {/* Once there's an amount: is more welcome? (Tal, 2026-10-19) */}

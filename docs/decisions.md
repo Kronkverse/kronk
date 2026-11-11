@@ -17,6 +17,19 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-11 — Decide on the checklist
+
+The last of the checklist's entry kinds Tal chose on 2026-11-10: "Decide
+(a quick Kuestion, ticked when decided)".
+
+**Decision:** a Decide is a To do (`items.task` `decide`) that asks a
+Kuestion in its Komponent when it's added, with two to four choices or Yes
+or No. The Kuestion is an ordinary projekt Kuestion, open to the projekt,
+so it also shows with the Komponent's Kuestions; the checklist entry is
+where people pick, with each choice's count beside it. Ticking it is
+saying it's decided, and it reads as the choice most picked (just
+"Decided" on a tie). The entry and its Kuestion go together.
+
 ## 2026-11-11 — Pay and Book on the checklist
 
 The second of the checklist's entry kinds Tal chose on 2026-11-10 ("To do

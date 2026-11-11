@@ -54,6 +54,8 @@ export interface FtdItemParams {
   need_id?: string;
   kind?: FtdItemKind;
   task?: FtdTask;
+  // A Decide's choices; none for Yes or No.
+  options?: string[];
   title?: string;
   body?: string;
   category?: FtdCategory | null;

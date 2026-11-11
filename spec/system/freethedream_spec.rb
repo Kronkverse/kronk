@@ -127,6 +127,25 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.find_by(title: 'hall deposit')).to have_attributes(task: 'pay', quantity: 200, unit: '$', done?: true)
   end
 
+  it "decides something on a Komponent's checklist", :aggregate_failures do
+    visit_kitchen
+    within('.freethedream-checklist__add') do
+      click_on 'Decide'
+      fill_in placeholder: 'Choices, or none for yes or no', with: 'Sat, Sun'
+      fill_in placeholder: 'Add something to decide', with: 'Which day?'
+      send_keys :enter
+    end
+
+    within('.freethedream-checklist__entry', text: 'Which day?') do
+      expect(page).to have_css('.freethedream-checklist__kind', text: 'Decide')
+      click_on 'Sun'
+      expect(page).to have_css("button[aria-pressed='true']", text: /Sun\s*1/)
+      check
+    end
+    expect(page).to have_css('.freethedream-checklist__state', text: 'Decided: Sun')
+    expect(Freethedream::Item.find_by(title: 'Which day?')).to have_attributes(task: 'decide', done?: true)
+  end
+
   it "brings something on a Komponent's checklist" do
     visit_kitchen
     within('.freethedream-checklist__add') do
