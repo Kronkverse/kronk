@@ -17,6 +17,19 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-11 — An event's call is in its space's Kuddle
+
+The step left from 2026-11-10 ("Kuddles stay dateless: a scheduled call is
+an event that uses its space's Kuddle (next)").
+
+**Decision:** an event made from a Krew, projekt or Komponent can say its
+call is in that space's own Kuddle: a tick in the composer, which Konnects
+the event to the Kuddle. No new kind of event and no dates on Kuddles. The
+event's page offers Join the call around its time, to the people who may
+get into the Kuddle (its space's members), and the Kuddle is in its
+Konnected for anyone to see. docs/spaces/kalendar.md, A call in the
+space's Kuddle.
+
 ## 2026-11-11 — Decide on the checklist
 
 The last of the checklist's entry kinds Tal chose on 2026-11-10: "Decide

@@ -73,6 +73,16 @@ invited** when the event is made (`EventsController#invite_krews!`, Kommons
 "Creating krew event invitations", 2026-11-08): an `EventInvitation` and an
 `event_invitation` notification each, for the Krews the host belongs to, not
 the host. Each event carries `krews` (id and name) in the API.
+
+**A call in the space's Kuddle** (decisions.md, 2026-11-11). Made from a
+Krew, projekt or Komponent (`?krew=`, or `?konnect=krew:` /
+`?konnect=freethedream:`), the composer offers "Call in the Krew's Kuddle"
+(or "Call in its Kuddle"). Ticked, the event is Konnected to that space's
+own Kuddle (`kuddle_space`, `EventsController#konnect_space_kuddle!`; made
+the first time it's asked for, `HuddleSession.for_space!`), so it shows in
+the event's Konnected. From half an hour before it starts until it ends (or
+four hours on, with no end), its page has **Join the call**, for whoever
+may get into the Kuddle (`kuddle` on the event, its own page only).
 `post_to_feed: false` skips the Status, which leaves host and invitees only.
 
 There is no anonymous access; every event endpoint needs a sign-in.

@@ -114,6 +114,21 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(HuddleSession.spaces.where(krew: krew).count).to eq 1
   end
 
+  # decisions.md, 2026-11-11: an event's call in the Krew's own Kuddle.
+  it "holds an event's call in the Krew's own Kuddle", :aggregate_failures do
+    visit "/hub/kalendar/composer?konnect=krew:#{krew.id}"
+    within('.compose-shell') do
+      find('input[placeholder="What is happening?"]').set('Krew meeting')
+      check 'Call in the Krew’s Kuddle'
+      click_on 'Post it'
+    end
+
+    expect(page).to have_current_path('/hub/kalendar/krew-meeting')
+    expect(page).to have_link('Join the call')
+    kuddle = HuddleSession.spaces.find_by!(krew: krew)
+    expect(KornerAttachment.where(source_slug: 'kalendar', target_slug: 'huddle', target_id: kuddle.id)).to exist
+  end
+
   it 'shows each space it has as a section of cards, ending in New', :aggregate_failures do
     visit "/hub/krew/#{krew.slug}"
 

@@ -74,6 +74,10 @@ const messages = defineMessages({
   },
   rsvp: { id: 'events.detail.rsvp', defaultMessage: 'RSVP' },
   share: { id: 'events.detail.share', defaultMessage: 'Share' },
+  joinCall: {
+    id: 'events.detail.join_call',
+    defaultMessage: 'Join the call',
+  },
   joinHuddle: {
     id: 'events.detail.join_huddle',
     defaultMessage: 'Join Huddle',
@@ -121,6 +125,8 @@ interface Event {
   own_location?: { name: string | null; url: string | null } | null;
   event_type: string;
   huddle_url: string | null;
+  // The space Kuddle its call is in, if the viewer may get into it.
+  kuddle?: { id: string; title: string } | null;
   rsvp_enabled: boolean;
   max_attendees: number | null;
   recurrence_rule: string | null;
@@ -406,6 +412,17 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     );
   }
 
+  // A call in a space's Kuddle opens half an hour before, until it ends
+  // (or four hours after it starts, without an end).
+  const callOpen =
+    !!event.kuddle &&
+    !event.cancelled &&
+    Date.now() >= new Date(event.start_time).getTime() - 30 * 60 * 1000 &&
+    Date.now() <
+      (event.end_time
+        ? new Date(event.end_time).getTime()
+        : new Date(event.start_time).getTime() + 4 * 60 * 60 * 1000);
+
   const isLive =
     event.event_type === 'huddle' &&
     new Date(event.start_time) <= new Date() &&
@@ -673,6 +690,16 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             <Icon id='videocam' icon={VideocamIcon} />{' '}
             {intl.formatMessage(messages.joinHuddle)}
           </a>
+        )}
+
+        {callOpen && event.kuddle && (
+          <Link
+            to={`/hub/huddle/kuddle/${event.kuddle.id}`}
+            className='event-detail__join-huddle'
+          >
+            <Icon id='videocam' icon={VideocamIcon} />{' '}
+            {intl.formatMessage(messages.joinCall)}
+          </Link>
         )}
 
         {/* KornerAttachments (docs/korners/adding_a_korner.md (Korner attachments) §4.2).

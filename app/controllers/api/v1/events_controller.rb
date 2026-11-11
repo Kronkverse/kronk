@@ -31,7 +31,7 @@ class Api::V1::EventsController < Api::BaseController
   end
 
   def show
-    render json: @event, serializer: REST::EventSerializer
+    render json: @event, serializer: REST::EventSerializer, with_kuddle: true
   end
 
   def create
@@ -50,6 +50,7 @@ class Api::V1::EventsController < Api::BaseController
     @event.save!
     create_status_for_event!(@event) if post_to_feed?
     invite_krews!(@event)
+    konnect_space_kuddle!(@event)
 
     render json: @event, serializer: REST::EventSerializer
   end
@@ -240,6 +241,24 @@ class Api::V1::EventsController < Api::BaseController
       else
         invitation.save!
       end
+    end
+  end
+
+  # A call held in the Kuddle of the Krew, projekt or Komponent the event
+  # was made from (`kuddle_space`: `krew:<id>` or `freethedream:<id>`;
+  # decisions.md, 2026-11-11): the event is Konnected to that space's own
+  # Kuddle, made the first time it's asked for. Only its members may.
+  def konnect_space_kuddle!(event)
+    slug, id = params[:kuddle_space].to_s.split(':', 2)
+    space = case slug
+            when 'krew' then Krew.find_by(id: id)
+            when 'freethedream' then Freethedream::Project.find_by(id: id)
+            end
+    return if space.nil? || !space.member?(current_account)
+
+    kuddle = HuddleSession.for_space!(space, current_account)
+    KornerAttachment.find_or_create_by!(source_slug: 'kalendar', source_id: event.id, target_slug: 'huddle', target_id: kuddle.id, kind: 'link') do |attachment|
+      attachment.created_by_account = current_account
     end
   end
 

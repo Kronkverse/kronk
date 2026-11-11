@@ -37,6 +37,24 @@ RSpec.describe 'Events for a Krew' do
     expect(event).to include('visibility' => 'self_only', 'krews' => [{ 'id' => krew.id.to_s, 'name' => 'Gardeners' }])
   end
 
+  # decisions.md, 2026-11-11: a call in the Krew's own Kuddle.
+  it "holds its call in the Krew's own Kuddle, open to its members", :aggregate_failures do
+    event = create_event('Meeting', visibility: 'self_only', krew_ids: [krew.id], kuddle_space: "krew:#{krew.id}")
+
+    kuddle = HuddleSession.spaces.find_by!(krew: krew)
+    expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event['id'], target_slug: 'huddle', target_id: kuddle.id)).to exist
+
+    get "/api/v1/events/#{event['id']}", headers: headers_for(member)
+    expect(response.parsed_body['kuddle']).to eq('id' => kuddle.id.to_s, 'title' => 'Gardeners')
+  end
+
+  it "doesn't use a Krew's Kuddle for someone outside it" do
+    post '/api/v1/events', headers: headers_for(stranger), params: { title: 'Gatecrash', start_time: 2.days.from_now.iso8601, kuddle_space: "krew:#{krew.id}" }
+
+    expect(response).to have_http_status(200)
+    expect(HuddleSession.spaces.where(krew: krew)).to be_empty
+  end
+
   it 'lists it for members and not for anyone else' do
     create_event('Working bee', visibility: 'self_only', krew_ids: [krew.id])
     create_event('Open day', visibility: 'public')
