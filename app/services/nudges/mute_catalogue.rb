@@ -48,6 +48,7 @@ module Nudges
       'krew.join_accepted' => { korner: 'krew', label: 'You are let into a Krew' },
       'albutts.contribution_requested' => { korner: 'albutts', label: 'Someone asks to add photos to your album' },
       'albutts.contribution_granted' => { korner: 'albutts', label: 'You can now add photos to an album' },
+      'albutts.shared' => { korner: 'albutts', label: 'Someone shares an album with you' },
       'albutts.added_photo' => { korner: 'albutts', label: 'Someone adds to an album you share' },
       'albutts.tagged' => { korner: 'albutts', label: 'Someone tags you in an album or its photos' },
       'kalendar.rsvpd_{status}' => { korner: 'kalendar', label: 'Someone answers the invite to your event' },

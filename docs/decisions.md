@@ -17,6 +17,41 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-11 — An album can be shared with people you choose
+
+Tal: "I want to be able to create an album and it be accessible only to
+specific people i choose."
+
+**Decision:** an album has **chosen people** (`album_viewers`) on top of its
+reach and Krews, the album's version of a post's added people
+(2026-08-28). They are picked in the reach menu's **People** row, as on a
+post. **Me** plus people is how an album is shared with only those people.
+As with posts, a Kronkverse album takes nobody, since everyone sees it, and
+a Krew album takes nobody either: its Krew decides. Every post in the album
+(card, photos, "added photos") carries the same people, so they can open all
+of it; the people chosen to add photos are chosen to see it too. Unlike the
+reach, the people can be changed after the album is made. Someone chosen is
+told (`albutts.album.shared`) and gets the card in their feed.
+
+## 2026-11-10 — Projekts have kinds; a Komponent is a checklist
+
+Tal's proposal "Projekts and Krew work": Komponents are "the meat of the
+organising aspect of projekts", and their workings were pared back on
+2026-11-08. Tal (question mode): a checklist first, "and then we can have
+variations in what sort of things each entry is"; a projekt has a kind;
+ask each Komponent too, "a simple checklist is a good beginning though".
+
+**Decision:** a projekt has a **kind**, picked first when it's seeded:
+Gathering, Creation, Build, Organisation, Governance, Mutual aid, Learning
+or Campaign. The kind suggests Komponent names to tap (a Gathering:
+Site, Kitchen, Sound, On the day); it is not a template. A Komponent has
+no kind of its own: its **checklist** carries it, each entry a kind with
+its own small action. First **To do** (ticked off by anyone in the
+projekt; anyone can say they're on it, and adding one doesn't put you on
+it) and **Bring** (the existing need, "I'll bring it"); **Decide** (a
+quick Kuestion, ticked when decided), **Pay** and **Book** follow. A To do
+counts as sorted once ticked, not once someone is on it.
+
 ## 2026-11-10 — A Krew, projekt or Komponent has its own Kuddle
 
 Tal: "adding a kuddle to any of them (konnecting a kuddle) would create a

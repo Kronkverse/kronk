@@ -51,6 +51,9 @@ export interface ApiAlbumJSON {
   contribution_open: boolean;
   contributor_krew_ids: string[];
   invited_contributor_ids: string[];
+  // The people chosen to see it, on top of its reach and Krews. Sent to its
+  // owner, on the album itself, only.
+  viewer_ids?: string[];
   // Audience Krews. The server only sends it when the album has any.
   krews?: { id: string; name: string; slug?: string; listed?: boolean }[];
   // A Krew album (docs/spaces/albutts.md, Krew albums) belongs to this Krew,

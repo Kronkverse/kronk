@@ -129,6 +129,8 @@ emits:
   # Someone asked to add photos; the owner let them.
   - albutts.contribution.requested
   - albutts.contribution.granted
+  # The owner chose someone to see the album (Albutts::Viewers).
+  - albutts.album.shared
   # Photo favourites + replies retired 2026-07-31 when photos became
   # Status-backed; the standard Status notification pipeline handles
   # them now.
