@@ -225,6 +225,33 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sweep' })['task']).to eq 'todo'
     end
 
+    # A Decide is a quick Kuestion in the Komponent (decisions.md, 2026-11-11).
+    it 'adds a Decide that asks a Kuestion, picked on the entry and ticked once decided', :aggregate_failures do
+      day = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'decide', title: 'Which day?', options: %w(Sat Sun) })
+      expect(day['decide']).to include('options' => [{ 'label' => 'Sat', 'count' => 0 }, { 'label' => 'Sun', 'count' => 0 }], 'mine' => nil)
+      question = Question.find(day['decide']['kuestion_id'])
+      expect(question).to have_attributes(title: 'Which day?', answer_format: 'mc', freethedream_project_id: doof['id'].to_i)
+
+      post "/api/v2/kuestions/#{question.id}/answers", params: { choice_index: 1 }, headers: headers_for(bob), as: :json
+      expect(response).to have_http_status(201)
+      seen = api(bob, :get, "/items/#{day['id']}")['decide']
+      expect(seen).to include('mine' => 1)
+      expect(seen['options'].pluck('count')).to eq [0, 1]
+      expect(api(cara, :post, "/items/#{day['id']}/done")['done']).to be true
+
+      api(alice, :delete, "/items/#{day['id']}")
+      expect(Question.exists?(question.id)).to be false
+    end
+
+    it 'asks a Decide as Yes or No without choices, and wants two to four', :aggregate_failures do
+      rain = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'decide', title: 'Go ahead if it rains?' })
+      expect(rain['decide']['options'].pluck('label')).to eq %w(Yes No)
+
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'decide', title: 'Colour?', options: %w(A B C D E) })
+      expect(response).to have_http_status(422)
+      expect(Freethedream::Item.where(title: 'Colour?')).to be_empty
+    end
+
     it 'gives only a To do a kind of its own', :aggregate_failures do
       api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', task: 'pay', title: 'Gas' })
       expect(response).to have_http_status(422)

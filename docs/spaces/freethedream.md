@@ -224,10 +224,17 @@ entry a kind with its own action:
   what there is to pay and how much of it is paid. Money still moves
   outside Kronk. Paying is one person settling a bill; chipping in towards
   something is still a Bring of "$400 for permits".
+- **Decide** (decisions.md, 2026-11-11): a To do (`task` `decide`) settled
+  by a quick Kuestion asked in the Komponent (`items.question_id`), so it
+  is in the Komponent's Kuestions too. Its choices go in the Choices box
+  ("Sat, Sun", two to four), or none for Yes or No. Everyone in the
+  projekt picks one, or changes their pick, right on the entry, which
+  shows how many picked each. Anyone ticks it once it's decided, and it
+  reads "Decided: Sun" for the choice most picked. Taking the entry off
+  takes its Kuestion with it.
 
-Entries go in one line at a time under the list, with To do, Bring, Pay or
-Book picked above the box (`QuickAdd`). **Decide** is next
-(decisions.md, 2026-11-10).
+Entries go in one line at a time under the list, with To do, Bring, Pay,
+Book or Decide picked above the box (`QuickAdd`).
 
 ### The kinds of item
 

@@ -1574,6 +1574,43 @@ $freethedream-wide: 1000px;
     font-size: 0.75rem;
   }
 
+  // A Decide's choices, each with how many picked it.
+  &__choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex-basis: 100%;
+    padding-inline-start: 1.9rem;
+
+    button {
+      display: inline-flex;
+      gap: 0.4rem;
+      padding: 0.2rem 0.65rem;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-round);
+      background: none;
+      color: var(--text-secondary);
+      font: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+
+      &[aria-pressed='true'] {
+        border-color: var(--accent);
+        background: color-mix(in oklab, var(--accent) 16%, transparent);
+        color: var(--text-primary);
+      }
+
+      &:disabled {
+        cursor: default;
+      }
+    }
+  }
+
+  &__count {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
   // What there is to pay, over the list.
   &__money {
     margin: 0 0 0.5rem;

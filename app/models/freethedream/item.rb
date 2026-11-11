@@ -29,6 +29,8 @@ module Freethedream
     belongs_to :need, class_name: 'Freethedream::Item', optional: true
     belongs_to :mycelium_item, class_name: 'Freethedream::MyceliumItem', optional: true
     belongs_to :source_idea, class_name: 'Freethedream::Item', optional: true
+    # A Decide's quick Kuestion, asked in its Komponent.
+    belongs_to :question, optional: true
 
     has_many :placements, class_name: 'Freethedream::Placement', dependent: :delete_all
     has_many :projects, through: :placements
@@ -40,9 +42,10 @@ module Freethedream
     enum :category, CATEGORIES, prefix: :category, validate: { allow_nil: true }
     # What kind of To do a job is on a Komponent's checklist: to do, pay
     # (with its amount in dollars as quantity and unit '$') or book
-    # (docs/spaces/freethedream.md, The checklist). Only a job has one.
+    # (docs/spaces/freethedream.md, The checklist), or decide, settled by a
+    # quick Kuestion (`question`). Only a job has one.
     attribute :task, :integer, default: 0
-    enum :task, { todo: 0, pay: 1, book: 2 }, prefix: :task, validate: true
+    enum :task, { todo: 0, pay: 1, book: 2, decide: 3 }, prefix: :task, validate: true
 
     validates :title, presence: true, length: { maximum: TITLE_MAX }
     validates :body, length: { maximum: BODY_MAX }
@@ -50,6 +53,8 @@ module Freethedream
     validates :quantity, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: QUANTITY_MAX }
     validate :need_is_a_need
     validate :task_is_a_jobs
+    validate :question_is_a_decides
+    validates :question, presence: true, on: :create, if: :task_decide?
     validate :no_new_ideas, on: :create
     validate :mycelium_item_is_owners
 
@@ -104,6 +109,10 @@ module Freethedream
 
     def task_is_a_jobs
       errors.add(:task, :inclusion) unless job_kind? || task_todo?
+    end
+
+    def question_is_a_decides
+      errors.add(:question, :invalid) if question_id.present? && !task_decide?
     end
 
     def no_new_ideas

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1157,6 +1157,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_110000) do
     t.bigint "need_id"
     t.bigint "owner_id"
     t.integer "quantity", default: 1, null: false
+    t.bigint "question_id"
     t.bigint "root_id", null: false
     t.string "slug", null: false
     t.bigint "source_idea_id"
@@ -1167,6 +1168,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_110000) do
     t.index ["mycelium_item_id"], name: "index_freethedream_items_on_mycelium_item_id"
     t.index ["need_id"], name: "index_freethedream_items_on_need_id"
     t.index ["owner_id"], name: "index_freethedream_items_on_owner_id"
+    t.index ["question_id"], name: "index_freethedream_items_on_question_id", where: "(question_id IS NOT NULL)"
     t.index ["root_id"], name: "index_freethedream_items_on_root_id"
     t.index ["slug"], name: "index_freethedream_items_on_slug", unique: true
     t.index ["source_idea_id"], name: "index_freethedream_items_on_source_idea_id"
@@ -3059,6 +3061,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_110000) do
   add_foreign_key "freethedream_items", "freethedream_items", column: "source_idea_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_mycelium_items", column: "mycelium_item_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_projects", column: "root_id", on_delete: :cascade
+  add_foreign_key "freethedream_items", "questions", on_delete: :nullify
   add_foreign_key "freethedream_memberships", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_memberships", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_mycelium_items", "accounts", on_delete: :cascade

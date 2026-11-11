@@ -6,7 +6,12 @@ import type { MessageDescriptor } from 'react-intl';
 import classNames from 'classnames';
 
 import { apiFtdItemAction } from 'mastodon/api/freethedream';
+import {
+  apiAnswerKuestion,
+  apiUpdateMyKuestionAnswer,
+} from 'mastodon/api/kuestions';
 import type {
+  FtdDecide,
   FtdItemRow,
   FtdProject,
   FtdTask,
@@ -25,7 +30,9 @@ import { Section, formatAmount } from './shared';
 // with its own small action: a To do is ticked off, and anyone can say
 // they're on it; something to Bring is "I'll bring it"; Pay and Book are
 // To dos that say so ("I'll pay it", Paid; "I'll book it", Booked), and a
-// Pay can have an amount. What's not done comes first. Decide comes next.
+// Pay can have an amount; a Decide is a quick Kuestion in the Komponent,
+// its choices picked right on the entry and ticked once it's decided. What's
+// not done comes first.
 
 const messages = defineMessages({
   title: { id: 'freethedream.checklist.title', defaultMessage: 'Checklist' },
@@ -33,6 +40,7 @@ const messages = defineMessages({
   bring: { id: 'freethedream.checklist.bring', defaultMessage: 'Bring' },
   pay: { id: 'freethedream.checklist.pay', defaultMessage: 'Pay' },
   book: { id: 'freethedream.checklist.book', defaultMessage: 'Book' },
+  decide: { id: 'freethedream.checklist.decide', defaultMessage: 'Decide' },
   addKind: {
     id: 'freethedream.checklist.add_kind',
     defaultMessage: 'Add to the checklist as',
@@ -42,6 +50,18 @@ const messages = defineMessages({
   tickBook: {
     id: 'freethedream.checklist.tick_book',
     defaultMessage: 'Booked',
+  },
+  tickDecide: {
+    id: 'freethedream.checklist.tick_decide',
+    defaultMessage: 'Decided',
+  },
+  decidedOn: {
+    id: 'freethedream.checklist.decided_on',
+    defaultMessage: 'Decided: {choice}',
+  },
+  choices: {
+    id: 'freethedream.checklist.choices',
+    defaultMessage: 'Pick one',
   },
   untick: {
     id: 'freethedream.checklist.untick',
@@ -79,6 +99,11 @@ const TASK_WORDS: Record<
     tick: messages.tickBook,
     onIt: messages.onItBook,
   },
+  decide: {
+    label: messages.decide,
+    tick: messages.tickDecide,
+    onIt: messages.onIt,
+  },
 };
 
 // The kinds to add, in the order they're offered.
@@ -87,6 +112,7 @@ const ADD_KINDS: { kind: QuickAddKind; label: MessageDescriptor }[] = [
   { kind: 'need', label: messages.bring },
   { kind: 'pay', label: messages.pay },
   { kind: 'book', label: messages.book },
+  { kind: 'decide', label: messages.decide },
 ];
 
 const taskOf = (item: FtdItemRow): FtdTask => item.task ?? 'todo';
@@ -99,6 +125,85 @@ const dollars = (item: FtdItemRow) =>
   item.kind === 'job' && taskOf(item) === 'pay' && item.unit === '$'
     ? item.quantity
     : 0;
+
+// The choice most picked, if one is ahead.
+const leading = (decide: FtdDecide) => {
+  const top = Math.max(0, ...decide.options.map((o) => o.count));
+  const at = decide.options.filter((o) => o.count === top);
+  return top > 0 && at.length === 1 ? at[0]?.label : undefined;
+};
+
+const Choice: React.FC<{
+  index: number;
+  label: string;
+  count: number;
+  mine: boolean;
+  disabled: boolean;
+  onPick: (index: number) => void;
+}> = ({ index, label, count, mine, disabled, onPick }) => {
+  const handleClick = useCallback(() => {
+    onPick(index);
+  }, [index, onPick]);
+
+  return (
+    <button
+      type='button'
+      aria-pressed={mine}
+      disabled={disabled}
+      onClick={handleClick}
+    >
+      {label}
+      <span className='freethedream-checklist__count'>{count}</span>
+    </button>
+  );
+};
+
+// A Decide's choices: pick one, or change your pick, right on the entry.
+const Choices: React.FC<{
+  decide: FtdDecide;
+  canAct: boolean;
+  onChange: () => void;
+}> = ({ decide, canAct, onChange }) => {
+  const intl = useIntl();
+  const [busy, setBusy] = useState(false);
+  const handlePick = useCallback(
+    (index: number) => {
+      if (index === decide.mine) return;
+      setBusy(true);
+      const pick =
+        decide.mine === null
+          ? apiAnswerKuestion(decide.kuestion_id, { choice_index: index })
+          : apiUpdateMyKuestionAnswer(decide.kuestion_id, {
+              choice_index: index,
+            });
+      void act(pick).then(() => {
+        setBusy(false);
+        onChange();
+      });
+    },
+    [decide.kuestion_id, decide.mine, onChange],
+  );
+
+  return (
+    <div
+      className='freethedream-checklist__choices'
+      role='group'
+      aria-label={intl.formatMessage(messages.choices)}
+    >
+      {decide.options.map((option, index) => (
+        <Choice
+          key={option.label}
+          index={index}
+          label={option.label}
+          count={option.count}
+          mine={decide.mine === index}
+          disabled={!canAct || busy}
+          onPick={handlePick}
+        />
+      ))}
+    </div>
+  );
+};
 
 const ToDo: React.FC<{
   item: FtdItemRow;
@@ -126,6 +231,8 @@ const ToDo: React.FC<{
   }, [item.id, item.claimed_by_me, onChange]);
   const people = (item.claimers ?? []).flatMap((a) => (a ? [a] : []));
   const amount = dollars(item);
+  const decide = taskOf(item) === 'decide' ? item.decide : null;
+  const decided = done && decide ? leading(decide) : undefined;
 
   return (
     <>
@@ -145,11 +252,13 @@ const ToDo: React.FC<{
       )}
       {done && taskOf(item) !== 'todo' && (
         <span className='freethedream-checklist__state'>
-          {intl.formatMessage(words.tick)}
+          {decided
+            ? intl.formatMessage(messages.decidedOn, { choice: decided })
+            : intl.formatMessage(words.tick)}
         </span>
       )}
       <PeopleRow people={people} max={3} />
-      {canAct && !done && (
+      {canAct && !done && !decide && (
         <button
           type='button'
           className='freethedream__link freethedream-checklist__on'
@@ -157,6 +266,9 @@ const ToDo: React.FC<{
         >
           {intl.formatMessage(item.claimed_by_me ? messages.offIt : words.onIt)}
         </button>
+      )}
+      {decide && !done && (
+        <Choices decide={decide} canAct={canAct} onChange={onChange} />
       )}
     </>
   );
