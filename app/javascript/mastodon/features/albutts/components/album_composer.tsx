@@ -46,6 +46,7 @@ import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useSameAs } from 'mastodon/hooks/useSameAs';
 
 import { CaptionTextarea } from './caption_textarea';
+import { PickRemove } from './pick_remove';
 
 // With no cover chosen, the album's first-added photo stands in. The album
 // lists its newest photos first, so that's the oldest, not the first.
@@ -947,6 +948,16 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setPhotos([]);
   }, []);
 
+  // One photo out, before the album is made. One still uploading finishes
+  // and is left unused; the draft drops it with the rest of `photos`.
+  const removePhoto = useCallback((key: string) => {
+    uploadQueueRef.current = uploadQueueRef.current.filter(
+      (p) => p.key !== key,
+    );
+    setPhotos((prev) => prev.filter((p) => p.key !== key));
+    setCoverKey((cover) => (cover === key ? null : cover));
+  }, []);
+
   // Adds the uploaded photos to the new album one at a time, in the order
   // they're arranged here: the album shows its photos in the order they
   // were added (Tal 2026-10-21, arrange before posting). They're already
@@ -1451,6 +1462,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                   >
                     {chipGlyph(p.status)}
                   </span>
+                  {!createdAlbum && !pending && (
+                    <PickRemove photoKey={p.key} onRemove={removePhoto} />
+                  )}
                 </div>
                 {!editing && photos.length > 1 && (
                   <PickArrange

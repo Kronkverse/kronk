@@ -517,7 +517,8 @@
   }
 
   &__caption-save,
-  &__caption-cancel {
+  &__caption-cancel,
+  &__delete {
     padding: 7px 16px;
     border-radius: var(--radius-round);
     font-size: 12px;
@@ -542,6 +543,21 @@
 
     &:hover:not(:disabled) {
       background: var(--kronk-purple-bright);
+    }
+  }
+
+  // Delete photo, in Edit: the owner's or the contributor's.
+  &__delete {
+    background: transparent;
+    color: var(--semantic-warning-red);
+    border-color: color-mix(
+      in oklab,
+      var(--semantic-warning-red),
+      transparent 50%
+    );
+
+    &:hover:not(:disabled) {
+      border-color: var(--semantic-warning-red);
     }
   }
 
@@ -899,6 +915,35 @@
     font-size: 12px;
     line-height: 1.4;
     color: var(--warning-red);
+  }
+
+  // The little × that takes one photo out (PickRemove), in the corner
+  // opposite the chip.
+  &__pick-remove {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-round);
+    color: var(--semantic-text-on-accent);
+    background: rgb(0 0 0 / 55%);
+    cursor: pointer;
+
+    .icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--semantic-warning-red);
+    }
   }
 
   &__chip {
