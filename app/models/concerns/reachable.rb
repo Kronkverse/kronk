@@ -33,6 +33,7 @@ module Reachable
     return false if reachable_owner.unavailable?
     return false if viewer && reachable_owner.blocking?(viewer)
     return true if reachable_krew_member?(viewer) # additive krew
+    return true if reachable_chosen?(viewer) # additive people, if the model has them
 
     case visibility
     when 'public' then true
@@ -43,6 +44,11 @@ module Reachable
   end
 
   private
+
+  # People chosen by name, on top of the tier (an album's, Album). None here.
+  def reachable_chosen?(_viewer)
+    false
+  end
 
   def reachable_mate?(viewer)
     viewer.present? && viewer.mates.exists?(id: reachable_owner_id)
@@ -72,12 +78,15 @@ module Reachable
 
       # Orbit is Mates plus their Mates, so a direct Mate's Orbit items are
       # in it too (visible_to? already said so; the list used to miss them).
-      where(col => viewer.id)
-        .or(where(visibility: :public))
-        .or(where(visibility: :mates).where(col => mate_ids))
-        .or(where(visibility: :orbit).where(col => mate_ids))
-        .or(where(visibility: :orbit).where(col => mates_of_mates))
-        .or(reachable_krew_scope(viewer.krews.select(:id)))
+      seen = where(col => viewer.id)
+             .or(where(visibility: :public))
+             .or(where(visibility: :mates).where(col => mate_ids))
+             .or(where(visibility: :orbit).where(col => mate_ids))
+             .or(where(visibility: :orbit).where(col => mates_of_mates))
+             .or(reachable_krew_scope(viewer.krews.select(:id)))
+      # People chosen by name, for a model that has them (Album).
+      seen = seen.or(reachable_chosen_scope(viewer)) if respond_to?(:reachable_chosen_scope)
+      seen
         .where.not(col => gone)
         .where.not(col => blocking_viewer)
     end

@@ -48,6 +48,12 @@ class Album < ApplicationRecord
   has_many :album_contributors, dependent: :destroy
   has_many :contribution_requests, class_name: 'AlbumContributionRequest', dependent: :delete_all, inverse_of: :album
 
+  # People the owner chose to see it, on top of its reach and Krews, as a
+  # post's added people (docs/spaces/albutts.md, Who can see an album). Not
+  # on a Kronkverse album, which everyone sees, nor on a Krew album.
+  # Albutts::Viewers keeps them and the album's posts together.
+  has_many :album_viewers, dependent: :delete_all
+
   # Reach ladder. Krew is an ORTHOGONAL, additive axis (via album_krews) — a
   # krew member sees the album on top of its reach tier — not a rung here
   # (krew:2 retired 2026-08-10 → self_only; gap intentional). See Reachable.
@@ -86,6 +92,28 @@ class Album < ApplicationRecord
 
   def self.reachable_krew_scope(krew_ids)
     where(id: AlbumKrew.where(krew_id: krew_ids).select(:album_id))
+  end
+
+  def self.reachable_chosen_scope(viewer)
+    where(id: AlbumViewer.where(account_id: viewer.id).select(:album_id)).where.not(visibility: :public).where(krew_id: nil)
+  end
+
+  # Can it have chosen people? Not when everyone sees it, nor when it's a
+  # Krew's.
+  def chooses_viewers?
+    !public_scope? && !krew_album?
+  end
+
+  # Who a post in the album by `author` is shown to besides its reach and
+  # Krews: the chosen people, and the owner (a photo someone else adds to a
+  # Just-me album is still the owner's to see).
+  def post_audience_ids(author)
+    return [] unless chooses_viewers?
+
+    ids = album_viewers.pluck(:account_id)
+    return [] if ids.empty?
+
+    (ids + [owner_id]).uniq - [author.id]
   end
 
   # Distinct set of accounts who have contributed at least one photo
@@ -166,6 +194,10 @@ class Album < ApplicationRecord
     return false if viewer.nil?
 
     album_krews.exists?(krew_id: viewer.krews.select(:id))
+  end
+
+  def reachable_chosen?(viewer)
+    viewer.present? && chooses_viewers? && album_viewers.exists?(account_id: viewer.id)
   end
 
   # Contribution-roster membership (only consulted for non-`open` albums).

@@ -288,4 +288,97 @@ RSpec.describe 'Albutts albums API' do
       expect(many).to be <= few + 2
     end
   end
+
+  # docs/spaces/albutts.md, Who can see an album: people chosen by name.
+  describe 'choosing who can see it' do
+    let(:friend)   { Fabricate(:account) }
+    let(:stranger) { Fabricate(:account) }
+
+    before { allow(Kronk::KornerEvents).to receive(:publish).and_call_original }
+
+    def create_album(visibility, **extra)
+      post '/api/v1/albutts/albums', headers: headers, params: {
+        album: { title: 'Secret', visibility: visibility },
+      }.merge(extra)
+      Album.find(response.parsed_body['id'])
+    end
+
+    def add_photo(album, by:)
+      status = Albutts::PublishPhoto.new(album: album, contributor: by, media_attachment: Fabricate(:media_attachment, account: by)).call
+      AlbumPhoto.create!(album: album, contributor: by, status: status)
+      status
+    end
+
+    it 'shows a Just-me album, and its posts, to the people chosen and nobody else', :aggregate_failures do
+      album = create_album('self_only', viewer_account_ids: [friend.id])
+
+      expect(response).to have_http_status(201)
+      expect(response.parsed_body['viewer_ids']).to eq [friend.id.to_s]
+      expect(album.visible_to?(friend)).to be true
+      expect(album.visible_to?(stranger)).to be false
+      expect(Album.visible_to(friend)).to include album
+      expect(Album.visible_to(stranger)).to_not include album
+
+      photo = add_photo(album, by: user.account)
+      expect(StatusPolicy.new(friend, album.status).show?).to be true
+      expect(StatusPolicy.new(friend, photo).show?).to be true
+      expect(StatusPolicy.new(stranger, photo).show?).to be false
+    end
+
+    it 'tells the people chosen' do
+      album = create_album('self_only', viewer_account_ids: [friend.id])
+
+      expect(Kronk::KornerEvents).to have_received(:publish)
+        .with('albutts.album.shared', hash_including(recipient_account_id: friend.id, album_id: album.id))
+    end
+
+    it 'lets the people chosen to add see it too' do
+      album = create_album('self_only', album: { title: 'Secret', visibility: 'self_only', contribution: 'invited' },
+                                        contributor_account_ids: [invitee.id])
+
+      expect(album.visible_to?(invitee)).to be true
+      expect(album.contributable_by?(invitee)).to be true
+      # The owner sees what they add.
+      expect(StatusPolicy.new(user.account, add_photo(album, by: invitee)).show?).to be true
+    end
+
+    it 'chooses nobody on a Kronkverse album' do
+      album = create_album('public', viewer_account_ids: [friend.id])
+
+      expect(album.album_viewers).to be_empty
+    end
+
+    it 'changes who is chosen when the album is edited', :aggregate_failures do
+      album = create_album('self_only', viewer_account_ids: [friend.id])
+      photo = add_photo(album, by: user.account)
+
+      put "/api/v1/albutts/albums/#{album.id}", headers: headers, params: { album: { title: 'Secret' }, viewer_account_ids: [stranger.id] }
+
+      expect(response).to have_http_status(200)
+      expect(album.reload.visible_to?(friend)).to be false
+      expect(album.visible_to?(stranger)).to be true
+      expect(StatusPolicy.new(friend, photo.reload).show?).to be false
+      expect(StatusPolicy.new(stranger, photo).show?).to be true
+      expect(Kronk::KornerEvents).to have_received(:publish)
+        .with('albutts.album.shared', hash_including(recipient_account_id: stranger.id))
+    end
+
+    it 'keeps the people chosen when an edit does not say' do
+      album = create_album('self_only', viewer_account_ids: [friend.id])
+
+      put "/api/v1/albutts/albums/#{album.id}", headers: headers, params: { album: { title: 'Renamed' } }
+
+      expect(album.reload.visible_to?(friend)).to be true
+    end
+
+    it 'chooses nobody once the album is given to a Krew' do
+      album = create_album('self_only', viewer_account_ids: [friend.id])
+
+      post "/api/v1/albutts/albums/#{album.id}/give", headers: headers, params: { krew_id: krew.id }
+
+      expect(response).to have_http_status(200)
+      expect(album.reload.visible_to?(friend)).to be false
+      expect(album.status.reload.granted_accounts).to be_empty
+    end
+  end
 end

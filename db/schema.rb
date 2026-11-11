@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -300,6 +300,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_090000) do
     t.index ["contributor_id"], name: "index_album_photos_on_contributor_id"
     t.index ["media_attachment_id"], name: "index_album_photos_on_media_attachment_id"
     t.index ["status_id"], name: "index_album_photos_on_status_id", where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "album_viewers", force: :cascade do |t|
+    t.bigint "album_id", null: false
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_album_viewers_on_account_id"
+    t.index ["album_id", "account_id"], name: "index_album_viewers_on_album_id_and_account_id", unique: true
   end
 
   create_table "albums", force: :cascade do |t|
@@ -2931,6 +2940,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_090000) do
   add_foreign_key "album_photos", "accounts", column: "contributor_id", on_delete: :cascade
   add_foreign_key "album_photos", "albums", on_delete: :cascade
   add_foreign_key "album_photos", "media_attachments", on_delete: :nullify
+  add_foreign_key "album_viewers", "accounts", on_delete: :cascade
+  add_foreign_key "album_viewers", "albums", on_delete: :cascade
   add_foreign_key "albums", "accounts", column: "owner_id", on_delete: :cascade
   add_foreign_key "albums", "krews", on_delete: :nullify, validate: false
   add_foreign_key "albums", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify

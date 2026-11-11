@@ -42,7 +42,9 @@ module Albutts
         @album.owner,
         text: @album.title,
         visibility: ALBUM_TO_STATUS_VISIBILITY.fetch(@album.visibility, 'public'),
-        krew_ids: @album.album_krews.pluck(:krew_id)
+        krew_ids: @album.album_krews.pluck(:krew_id),
+        # The people chosen to see it (Albutts::Viewers).
+        audience_grant_ids: @album.post_audience_ids(@album.owner)
       )
 
       @album.update_columns(status_id: status.id)

@@ -87,7 +87,11 @@ module Albutts
       status = if at
                  backdated(text, visibility, at)
                else
-                 PostStatusService.new.call(@account, text: text, visibility: visibility, krew_ids: krew_ids)
+                 PostStatusService.new.call(
+                   @account,
+                   text: text, visibility: visibility, krew_ids: krew_ids,
+                   audience_grant_ids: @album.post_audience_ids(@account)
+                 )
                end
       status.update_column(:source_korner, 'albutts')
       # The album's Krews, including any the person adding isn't in, as a
@@ -108,7 +112,7 @@ module Albutts
         local: true,
         created_at: at,
         updated_at: at
-      )
+      ).tap { |status| status.granted_accounts = Account.where(id: @album.post_audience_ids(@account)) }
     end
   end
 end
