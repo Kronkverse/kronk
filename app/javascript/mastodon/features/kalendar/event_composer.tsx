@@ -361,6 +361,9 @@ interface Props {
   // Arriving from a Krew (`?konnect=krew:<id>` or `?krew=<id>`): the event
   // starts out for that Krew alone.
   forKrewId?: string | null;
+  // Made from a projekt or Komponent: its Krew is the audience to start
+  // with, without the Krew taking the projekt's place as what it's for.
+  audienceKrewId?: string | null;
   // Editing this event instead of making one.
   event?: EditableEvent;
   onUpdated?: () => void;
@@ -380,6 +383,7 @@ export const EventComposer: React.FC<Props> = ({
   onCancel,
   onCreated,
   forKrewId,
+  audienceKrewId,
   event: editing,
   onUpdated,
   onDelete,
@@ -390,6 +394,7 @@ export const EventComposer: React.FC<Props> = ({
   // the record it was opened for (`?konnect=<slug>:<id>`) and any the
   // person adds in the Konnect row. A Krew it was opened for is the Krew
   // audience (`forKrewId`), which keeps its own link (EventLinks.posted).
+  const audienceKrew = forKrewId ?? audienceKrewId ?? null;
   const konnect = useKonnect('kalendar', {
     sourceHandled: !!forKrewId,
   });
@@ -463,7 +468,7 @@ export const EventComposer: React.FC<Props> = ({
   // Invite-only toggle was retired 2026-08-17: it's an audience
   // choice, so the scope picker owns it).
   const [reach, setReach] = useState<ReachValue>(
-    forKrewId ? 'self_only' : 'public',
+    audienceKrew ? 'self_only' : 'public',
   );
   // Krew is an orthogonal additive audience axis (see the reach doc
   // §2.2): members of a targeted krew see the event on top of
@@ -472,7 +477,7 @@ export const EventComposer: React.FC<Props> = ({
   // ReachDropdown's expandable Krews row.
   const availableKrews = useAvailableKrews();
   const [krewIds, setKrewIds] = useState<string[]>(
-    forKrewId ? [forKrewId] : [],
+    audienceKrew ? [audienceKrew] : [],
   );
   // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
   // user has picked from the search results. Stored as a Map keyed
@@ -502,8 +507,8 @@ export const EventComposer: React.FC<Props> = ({
       setStartTime(p.startTime ?? times.startTime);
       setEndDate(p.endDate ?? times.endDate);
       setEndTime(p.endTime ?? times.endTime);
-      setReach(p.reach ?? (forKrewId ? 'self_only' : 'public'));
-      setKrewIds(p.krewIds ?? (forKrewId ? [forKrewId] : []));
+      setReach(p.reach ?? (audienceKrew ? 'self_only' : 'public'));
+      setKrewIds(p.krewIds ?? (audienceKrew ? [audienceKrew] : []));
       setInvitees(new Map((p.invitees ?? []).map((a) => [a.id, a])));
       restoreKonnect(p.konnections);
       const cover = d?.media_attachments[0];
@@ -511,7 +516,7 @@ export const EventComposer: React.FC<Props> = ({
       setImagePreviewUrl(cover?.preview_url ?? cover?.url ?? null);
       setImageError(null);
     },
-    [forKrewId, restoreKonnect],
+    [audienceKrew, restoreKonnect],
   );
 
   const draft = useDraft<EventDraftParams>({

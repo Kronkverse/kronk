@@ -371,7 +371,16 @@ getting involved, not for doing the work itself:
   (Kronk::EventLinks). On a projekt's page that is the whole projekt; a
   Komponent's event is made from the Komponent's own page. No picker (Tal,
   2026-11-08, "'Make and event' button"). With nothing planned it says so,
-  in one quiet line.
+  in one quiet line. **On a Komponent, New schedules a call** (Tal,
+  2026-11-11: "it just needs to be really really simple, with the spaces
+  kuddle already set up"): what it's about (the Komponent's name and "call"
+  to start), the day, the time and how long, nothing else
+  (`schedule_call.tsx`). The event is Konnected to the Komponent and its
+  call is in the Komponent's own Kuddle (`kuddle_space`); **More options**
+  opens the full composer. **A projekt's or Komponent's event is for its
+  members** (Tal, 2026-11-11): the call is the projekt's Krew only, and the
+  full composer opened from a projekt starts with that Krew as its audience
+  (`?audience=krew:<id>`), which its maker can widen.
 - **Activity**: the latest four things that happened in the last
   fortnight (Tal, 2026-11-09: "only the latest 3 or 4, maybe only recent
   ones too"), with who did them

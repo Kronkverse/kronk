@@ -1524,6 +1524,66 @@ $freethedream-wide: 1000px;
   }
 }
 
+// ── A Komponent's call (schedule_call.tsx) ──
+.freethedream-call {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block-start: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+
+  &__heading {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  &__field {
+    display: flex;
+    flex: 1 1 8rem;
+    flex-direction: column;
+    gap: 0.3rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+
+    &--wide {
+      flex-basis: 100%;
+    }
+  }
+
+  &__hint,
+  &__error {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  &__hint {
+    color: var(--text-muted);
+  }
+
+  &__error {
+    color: var(--warning-red);
+  }
+
+  &__actions {
+    display: flex;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+
+  &__more {
+    margin-inline-start: auto;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+}
+
 // ── A Komponent's checklist (checklist.tsx) ──
 .freethedream-checklist {
   display: flex;
