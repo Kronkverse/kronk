@@ -54,3 +54,29 @@ export const useSpaceBack = (back: SpaceBack | null) => {
 
 export const useSpaceBackTarget = () =>
   useSyncExternalStore(subscribe, current, current);
+
+// The other way round: a page that things in other korners are opened
+// from, and that those things should come back to. A Krew shows its
+// events from Kalendar and its musik from Booth; tapping one leaves the
+// Krew, and the event's badge backed up to Kalendar (Tal's proposal
+// "Navigating Krews", 2026-11-09). While a page registers here, the router
+// stamps links into another korner with `backTo` and `backLabel`
+// (components/router.tsx), and the badge on the far side returns here.
+let returnStack: { token: number; back: SpaceBack }[] = [];
+
+export const useComeBackHere = (back: SpaceBack | null) => {
+  const href = back?.href;
+  const label = back?.label;
+
+  useEffect(() => {
+    if (!href || !label) return;
+    const token = nextToken++;
+    returnStack = [...returnStack, { token, back: { href, label } }];
+    return () => {
+      returnStack = returnStack.filter((entry) => entry.token !== token);
+    };
+  }, [href, label]);
+};
+
+export const comeBackHere = () =>
+  returnStack[returnStack.length - 1]?.back ?? null;

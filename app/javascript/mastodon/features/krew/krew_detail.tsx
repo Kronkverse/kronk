@@ -36,6 +36,7 @@ import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { LinkifiedText } from 'mastodon/components/linkified_text';
+import { useComeBackHere } from 'mastodon/components/space_back';
 import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { Stage } from 'mastodon/components/stage';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
@@ -798,6 +799,12 @@ export const KrewDetail = () => {
 
   // Any member edits the Krew (decisions.md, 2026-10-17), in its settings.
   const krewSlug = krew?.slug;
+
+  // An event, a piece of musik or anything else opened from here lives in
+  // its own korner; its back badge comes back to this Krew.
+  useComeBackHere(
+    krewSlug ? { href: `/hub/krew/${krewSlug}`, label: krewName } : null,
+  );
   const goEdit = useCallback(() => {
     if (krewSlug) history.push(`/hub/krew/${krewSlug}/settings`);
   }, [krewSlug, history]);

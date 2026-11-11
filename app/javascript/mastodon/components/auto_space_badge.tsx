@@ -33,6 +33,13 @@ import { SpaceBadge } from './space_badge';
 // to the Directory. Arriving any other way (a feed card, a shared link) has
 // no such state and backs up the hierarchy as above.
 //
+// Likewise a page opened from another korner's page that asked to be come
+// back to (a Krew's event in Kalendar, its musik in Booth): the link says
+// so with `backTo` and `backLabel`, and the badge returns to the Krew,
+// named for it (Tal's proposal "Navigating Krews", 2026-11-09). Not on a
+// korner's landing page: the rail or the bottom bar leaving the Krew for
+// Booth is going somewhere new, and Booth still backs out to the Hub.
+//
 // And a page whose layers the URL doesn't show (a FreeTheDream fractal is
 // `/p/:id` like its gang and its emergence) says its own parent through
 // `useSpaceBack` (components/space_back.ts); the badge then goes one layer
@@ -78,6 +85,11 @@ export const AutoSpaceBadge: React.FC = () => {
   const cameFrom = location.state?.backTo;
   const withinSpace =
     cameFrom === `/hub/${slug}` || cameFrom?.startsWith(`/hub/${slug}/`);
+  const cameFromLabel = location.state?.backLabel;
+
+  if (cameFrom && cameFromLabel && !withinSpace && !atSpaceRoot) {
+    return <SpaceBadge name={cameFromLabel} backTo={cameFrom} />;
+  }
 
   const ownParent =
     !atSpaceRoot && parent?.href.startsWith(`/hub/${slug}`) ? parent : null;

@@ -203,4 +203,19 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(krew.access).to eq 'requirement_gated'
     expect(krew.krew_requirements.pluck(:kind)).to eq ['located_in']
   end
+
+  # Kommons "Navigating Krews" (Tal, 2026-11-09): an event opened from the
+  # Krew lives in Kalendar, and its back badge returns to the Krew.
+  it 'goes back to the Krew from an event opened on it' do
+    status = Fabricate(:status, account: bob.account, text: 'Working bee', visibility: 'public')
+    status.krews << krew
+    Event.create!(account: bob.account, status: status, title: 'Working bee', start_time: 2.days.from_now, end_time: 2.days.from_now + 3.hours)
+
+    visit "/hub/krew/#{krew.slug}"
+    within('.krew-detail__events') { click_on 'Working bee' }
+
+    expect(page).to have_current_path(%r{\A/hub/kalendar/})
+    find('.space-badge', text: 'Growers').click
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}")
+  end
 end
