@@ -18,6 +18,13 @@
 
 .kronikles-reader {
   padding: 16px 20px 40px;
+
+  // The Stage is a flex column, and auto side margins there stop an item
+  // stretching: the reader sized to its content instead, and one long
+  // link made it wider than a phone, cutting off the right of every line
+  // (Kommons, "Right text is cut off from view", 2026-11-09). Full width,
+  // up to the reading measure, centred.
+  inline-size: 100%;
   max-inline-size: 680px;
   margin: 0 auto;
 
@@ -54,6 +61,9 @@
   &__body {
     font-size: 16px;
     line-height: 1.65;
+
+    // A long link or reference breaks onto the next line, not past the edge.
+    overflow-wrap: anywhere;
   }
 
   // The shared reactions bar under the writing, as on a trek or a moment.

@@ -80,4 +80,23 @@ RSpec.describe 'Kronikles', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.space-card__tag', text: /series/i)
     expect(page).to have_no_css('.space-card__title', text: 'Setting out')
   end
+
+  # Kommons "Right text is cut off from view" (2026-11-09): one long link
+  # made the reader wider than a phone, and the right of every line was cut.
+  it 'keeps a Kronikle with a long link inside a phone screen' do
+    page.current_window.resize_to(390, 844)
+    piece = Chronicle.create!(owner: bob.account, title: 'Trauma as Calibration Towards Survival', kind: :essay, visibility: :public,
+                              body: "## References\n\nEllis, B. J. https://www.researchgate.net/publication/2289472_DevelopmentalAdaptationToStressAnEvolutionaryPerspective")
+
+    visit "/hub/kronikles/#{piece.id}"
+
+    expect(page).to have_css('.kronikles-markdown h2', text: 'References')
+    widths = page.evaluate_script(<<~JS)
+      [document.documentElement.clientWidth,
+       document.querySelector('.kronikles-reader').getBoundingClientRect().right,
+       document.querySelector('.kronikles-markdown p').getBoundingClientRect().right]
+    JS
+    expect(widths[1]).to be <= widths[0]
+    expect(widths[2]).to be <= widths[0]
+  end
 end
