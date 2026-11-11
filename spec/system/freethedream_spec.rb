@@ -148,6 +148,25 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.find_by(title: 'Which day?')).to have_attributes(task: 'decide', done?: true)
   end
 
+  # Tal, 2026-11-11: a Komponent's event is just scheduling a call, in its
+  # own Kuddle.
+  it 'schedules a call from a Komponent', :aggregate_failures do
+    visit_kitchen
+    within('#projekt-space-kalendar') { find('.space-shelf__action', text: 'New').click }
+    within('.freethedream-call') do
+      expect(page).to have_field('What it’s about', with: 'Kitchen call')
+      click_on 'Schedule'
+    end
+
+    expect(page).to have_no_css('.freethedream-call')
+    expect(page).to have_css('.space-card', text: 'Kitchen call')
+    kitchen = Freethedream::Project.find_by!(title: 'Kitchen')
+    event = Event.find_by!(title: 'Kitchen call')
+    kuddle = HuddleSession.spaces.find_by!(freethedream_project: kitchen)
+    expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'huddle', target_id: kuddle.id)).to exist
+    expect(KornerAttachment.where(source_slug: 'kalendar', source_id: event.id, target_slug: 'freethedream', target_id: kitchen.id)).to exist
+  end
+
   it "brings something on a Komponent's checklist" do
     visit_kitchen
     within('.freethedream-checklist__add') do
