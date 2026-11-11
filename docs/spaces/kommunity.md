@@ -9,18 +9,39 @@
 ## Purpose
 
 Kommunity lets a member see Kronk as a whole rather than as a timeline,
-and find people they don't know yet. It has three views, cycled by the
-header rotator, in this order: **Discover** (the landing view, bare
-`/hub/kommunity`), **Everyone** (`/hub/kommunity/everyone`) and **Orb**
-(`/hub/kommunity/orb`). The order is Tal's Kommons proposal "Landing Page"
-([#117483791865274639](https://kronk.info/hub/kommons/p/117483791865274639),
-node `kommunity.index`): "Kommunity landing page should be the 'Discover'
-page, the Orb should be last. Also having a straight up list should be a
-middle page, with a full list of 'Visible' Users (if they choose to be
-visible)". Until then the Orb was the landing view.
+and find people they don't know yet. It has four views, cycled by the
+header rotator, in this order: **Mates** (the landing view, bare
+`/hub/kommunity`), **Discover** (`/hub/kommunity/discover`), **Everyone**
+(`/hub/kommunity/everyone`) and **Orb** (`/hub/kommunity/orb`).
+
+Mates leads since 2026-11-11, Tal's Kommons proposal "Kommunity Page"
+([#117596933443323274](https://kronk.info/hub/kommons/p/117596933443323274)):
+"The 'Discover' page shouldn't be the landing page. Maybe a list of the users
+mates should be first page, ordered by most recent posts made." The proposal
+adds "there's lots to do here, let's dive into design", so this is the first
+step, not the finished space. Before that, Discover led, from Tal's proposal
+"Landing Page"
+([#117483791865274639](https://kronk.info/hub/kommons/p/117483791865274639)):
+"Kommunity landing page should be the 'Discover' page, the Orb should be
+last. Also having a straight up list should be a middle page, with a full
+list of 'Visible' Users (if they choose to be visible)". Until then the Orb
+was the landing view.
 
 **Kronk-local only.** Remote accounts are out of scope by design. The
 korner owns no tables; it reads accounts and follows.
+
+## Mates
+
+`GET /api/v1/kommunity/mates?q=&limit=&offset=`
+(`Api::V1::Kommunity::MatesController`, a subclass of Everyone's) lists the
+viewer's Mates, newest `last_status_at` first, Mates who have never posted
+last by name. It is plain time, not a ranking. Every Mate is listed whatever
+their findability (findability is about being come across, and a Mate
+already has been); suspended, unapproved and moved accounts, and anyone the
+viewer has muted or blocked, are left out. Search and offset paging are
+Everyone's, and so is the client: `KommunityPeopleList` in
+`features/kommunity/everyone.tsx` draws both, with the shared `<Account>`
+row.
 
 ## Orb
 

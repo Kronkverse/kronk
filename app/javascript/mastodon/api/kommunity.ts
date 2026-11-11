@@ -32,10 +32,13 @@ export const apiGetKommunityLayer = (
 // viewer may find (Api::V1::Kommunity::EveryoneController). Paged by
 // offset; the next page's offset comes from the Link header, or `null`
 // when there is none.
-export const apiGetKommunityEveryone = async (
+export type KommunityListSource = 'everyone' | 'mates';
+
+const apiGetKommunityList = async (
+  source: KommunityListSource,
   query: string,
   offset: number,
-  limit = 40,
+  limit: number,
 ): Promise<{ accounts: ApiAccountJSON[]; nextOffset: number | null }> => {
   const params: Record<string, string> = {
     limit: String(limit),
@@ -44,7 +47,7 @@ export const apiGetKommunityEveryone = async (
   if (query) params.q = query;
 
   const response = await api().get<ApiAccountJSON[]>(
-    '/api/v1/kommunity/everyone',
+    `/api/v1/kommunity/${source}`,
     { params },
   );
   const next = getLinks(response).refs.find((link) => link.rel === 'next');
@@ -55,3 +58,18 @@ export const apiGetKommunityEveryone = async (
     nextOffset: nextParam ? Number(nextParam) : null,
   };
 };
+
+export const apiGetKommunityEveryone = (
+  query: string,
+  offset: number,
+  limit = 40,
+) => apiGetKommunityList('everyone', query, offset, limit);
+
+// Kommunity Mates — the viewer's Mates, most recent poster first
+// (Api::V1::Kommunity::MatesController). Same search and paging as
+// Everyone.
+export const apiGetKommunityMates = (
+  query: string,
+  offset: number,
+  limit = 40,
+) => apiGetKommunityList('mates', query, offset, limit);
