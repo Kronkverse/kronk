@@ -5,6 +5,11 @@ import type { MessageDescriptor } from 'react-intl';
 
 import classNames from 'classnames';
 
+import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import CheckIcon from '@/material-icons/400-24px/check.svg?react';
+import BringIcon from '@/material-icons/400-24px/inventory_2.svg?react';
+import PaymentsIcon from '@/material-icons/400-24px/payments.svg?react';
+import QuestionIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import { apiFtdItemAction } from 'mastodon/api/freethedream';
 import {
   apiAnswerKuestion,
@@ -16,6 +21,7 @@ import type {
   FtdProject,
   FtdTask,
 } from 'mastodon/api_types/freethedream';
+import { Icon } from 'mastodon/components/icon';
 import { PeopleRow } from 'mastodon/components/people_row';
 
 import { act } from './act';
@@ -107,6 +113,8 @@ const TASK_WORDS: Record<
 };
 
 // The kinds to add, in the order they're offered.
+// Picked from a dropdown beside the add box, not a row of pills (Tal,
+// 2026-11-11: "i really really dont like the pill situation").
 const ADD_KINDS: { kind: QuickAddKind; label: MessageDescriptor }[] = [
   { kind: 'job', label: messages.todo },
   { kind: 'need', label: messages.bring },
@@ -114,6 +122,28 @@ const ADD_KINDS: { kind: QuickAddKind; label: MessageDescriptor }[] = [
   { kind: 'book', label: messages.book },
   { kind: 'decide', label: messages.decide },
 ];
+
+// Each kind's icon, on its entries and beside the dropdown.
+const KIND_ICONS: Record<QuickAddKind, { id: string; icon: typeof CheckIcon }> =
+  {
+    job: { id: 'check', icon: CheckIcon },
+    need: { id: 'inventory_2', icon: BringIcon },
+    pay: { id: 'payments', icon: PaymentsIcon },
+    book: { id: 'calendar_month', icon: CalendarIcon },
+    decide: { id: 'question_mark', icon: QuestionIcon },
+  };
+
+const KindIcon: React.FC<{ kind: QuickAddKind }> = ({ kind }) => (
+  <Icon id={KIND_ICONS[kind].id} icon={KIND_ICONS[kind].icon} aria-hidden />
+);
+
+// An entry's kind, as the dropdown names it.
+const kindOf = (item: FtdItemRow): QuickAddKind =>
+  item.kind === 'need'
+    ? 'need'
+    : taskOf(item) === 'todo'
+      ? 'job'
+      : (taskOf(item) as QuickAddKind);
 
 const taskOf = (item: FtdItemRow): FtdTask => item.task ?? 'todo';
 
@@ -274,6 +304,38 @@ const ToDo: React.FC<{
   );
 };
 
+// What's being added, beside the add box.
+const KindPick: React.FC<{
+  kind: QuickAddKind;
+  onPick: (kind: QuickAddKind) => void;
+}> = ({ kind, onPick }) => {
+  const intl = useIntl();
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onPick(e.target.value as QuickAddKind);
+    },
+    [onPick],
+  );
+
+  return (
+    <label className='freethedream-checklist__pick'>
+      <KindIcon kind={kind} />
+      <select
+        className='freethedream__input'
+        value={kind}
+        onChange={handleChange}
+        aria-label={intl.formatMessage(messages.addKind)}
+      >
+        {ADD_KINDS.map((k) => (
+          <option key={k.kind} value={k.kind}>
+            {intl.formatMessage(k.label)}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+};
+
 const Entry: React.FC<{
   item: FtdItemRow;
   canAct: boolean;
@@ -288,6 +350,7 @@ const Entry: React.FC<{
       })}
     >
       <span className='freethedream-checklist__kind'>
+        <KindIcon kind={kindOf(item)} />
         {intl.formatMessage(
           item.kind === 'need'
             ? messages.bring
@@ -303,24 +366,6 @@ const Entry: React.FC<{
         <ToDo item={item} canAct={canAct} onChange={onChange} />
       )}
     </li>
-  );
-};
-
-const KindButton: React.FC<{
-  kind: QuickAddKind;
-  label: MessageDescriptor;
-  on: boolean;
-  onPick: (kind: QuickAddKind) => void;
-}> = ({ kind, label, on, onPick }) => {
-  const intl = useIntl();
-  const handleClick = useCallback(() => {
-    onPick(kind);
-  }, [kind, onPick]);
-
-  return (
-    <button type='button' aria-pressed={on} onClick={handleClick}>
-      {intl.formatMessage(label)}
-    </button>
   );
 };
 
@@ -376,26 +421,12 @@ export const Checklist: React.FC<{
       )}
       {canAct && (
         <div className='freethedream-checklist__add'>
-          <div
-            className='freethedream-checklist__kinds'
-            role='group'
-            aria-label={intl.formatMessage(messages.addKind)}
-          >
-            {ADD_KINDS.map((k) => (
-              <KindButton
-                key={k.kind}
-                kind={k.kind}
-                label={k.label}
-                on={kind === k.kind}
-                onPick={setKind}
-              />
-            ))}
-          </div>
           <QuickAdd
             key={kind}
             kind={kind}
             projectId={project.id}
             onAdded={onChange}
+            lead={<KindPick kind={kind} onPick={setKind} />}
           />
         </div>
       )}
