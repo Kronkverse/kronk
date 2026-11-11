@@ -298,7 +298,12 @@ const ToDo: React.FC<{
       {canAct && !done && !decide && (
         <button
           type='button'
-          className='freethedream__link freethedream-checklist__on'
+          className={classNames(
+            'freethedream__button',
+            'freethedream__button--small',
+            'freethedream-checklist__on',
+            { 'freethedream__button--quiet': item.claimed_by_me },
+          )}
           onClick={handleOnIt}
         >
           {intl.formatMessage(item.claimed_by_me ? messages.offIt : words.onIt)}
