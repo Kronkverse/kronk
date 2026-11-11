@@ -270,16 +270,14 @@ export const MomentsStrip = () => {
   if (!stripOn) return null;
   if (loading && moments.length === 0) return null; // avoid a flash for one-frame render
 
-  // Split viewer's own moment (if any) from mates' moments so the
-  // owner tile can render leftmost regardless of newest-first ordering.
-  const ownMoment = moments.find((m) => m.account.id === me);
-
-  // One ring per mate, not per Moment (Kommons #117380153039119870); the
+  // One ring per person, not per Moment (Kommons #117380153039119870); the
   // grouping, start point and "all seen" rule live in ./people so the viewer
-  // rolls on to the same next person.
-  const mates = groupMomentsByPerson(moments, isSeen).filter(
-    (p) => p.accountId !== me,
-  );
+  // rolls on to the same next person. Your own tile renders leftmost and
+  // opens your oldest live Moment, so the viewer walks forward through the
+  // rest of yours before rolling on to anyone else.
+  const people = groupMomentsByPerson(moments, isSeen, { me });
+  const ownMoment = people.find((p) => p.accountId === me)?.open;
+  const mates = people.filter((p) => p.accountId !== me);
 
   const ownerAccount: AccountJSON = ownMoment?.account ?? {
     id: me ?? '',

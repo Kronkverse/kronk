@@ -32,7 +32,7 @@ import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import MovieIcon from '@/material-icons/400-24px/movie.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
-import api, { apiRequestPost } from 'mastodon/api';
+import api, { apiRequestGet, apiRequestPost } from 'mastodon/api';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
 import {
   ComposeHint,
@@ -45,6 +45,7 @@ import type { VoiceRecorderChange } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
+import { me } from 'mastodon/initial_state';
 
 import { FILM_LOOKS, THUMB_MAX_EDGE, applyFilmToFile } from './film/film';
 import { FilmPreview } from './film/film_preview';
@@ -108,9 +109,42 @@ const VOICE_MAX_SECONDS = 60;
 const isStill = (item: Item): item is MediaItem =>
   item.kind === 'media' && !item.isVideo;
 
+// One of your Moments that is already live, shown at the start of the
+// strip so a new one reads as adding to the run, not starting another.
+interface LiveMoment {
+  id: string;
+  created_at: string;
+  media_attachment: { preview_url: string } | null;
+}
+
 export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   const intl = useIntl();
   const [items, setItems] = useState<Item[]>([]);
+
+  // Your live Moments, oldest first, for the start of the strip. Display
+  // only: they're posted, so they can't be edited or removed from here.
+  const [live, setLive] = useState<LiveMoment[]>([]);
+  useEffect(() => {
+    if (!me) return undefined;
+    let cancelled = false;
+    apiRequestGet<LiveMoment[]>('v1/moments', { account_id: me })
+      .then((list) => {
+        if (cancelled) return;
+        setLive(
+          [...list].sort(
+            (a, b) =>
+              new Date(a.created_at).getTime() -
+              new Date(b.created_at).getTime(),
+          ),
+        );
+      })
+      .catch(() => {
+        // The strip just starts with what you add.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [active, setActive] = useState(0);
   // Stage modes: the voice recorder takes over the hero while arming /
   // recording; `addMenu` is the little Camera/Upload/Voice popover the
@@ -595,8 +629,11 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           </FilmRow>
         )}
 
-        {items.length > 0 && (
+        {(items.length > 0 || live.length > 0) && (
           <div className='moments-composer__strip'>
+            {live.map((moment) => (
+              <LiveThumb key={moment.id} moment={moment} />
+            ))}
             {items.map((item, i) => (
               <Thumb
                 key={item.kind === 'media' ? item.url : `voice-${i.toString()}`}
@@ -1027,7 +1064,42 @@ const Thumb: React.FC<{
   );
 };
 
+// A Moment already live: its picture (or a mic for voice) with a Live mark.
+const LiveThumb: React.FC<{ moment: LiveMoment }> = ({ moment }) => {
+  const intl = useIntl();
+  const preview = moment.media_attachment?.preview_url;
+  return (
+    <div
+      className='moments-composer__thumb moments-composer__thumb--live'
+      role='img'
+      aria-label={intl.formatMessage(messages.liveTile)}
+    >
+      <span className='moments-composer__thumb-face'>
+        {preview ? (
+          <img
+            className='moments-composer__thumb-media'
+            src={preview}
+            alt=''
+            aria-hidden
+          />
+        ) : (
+          <span className='moments-composer__thumb-voice'>
+            <Icon id='mic' icon={MicIcon} />
+          </span>
+        )}
+      </span>
+      <span className='moments-composer__thumb-live' aria-hidden>
+        <FormattedMessage id='moments.composer.live' defaultMessage='Live' />
+      </span>
+    </div>
+  );
+};
+
 const messages = defineMessages({
+  liveTile: {
+    id: 'moments.composer.live_tile',
+    defaultMessage: 'Already live',
+  },
   camera: { id: 'moments.composer.camera', defaultMessage: 'Camera' },
   video: { id: 'moments.composer.video', defaultMessage: 'Video' },
   upload: { id: 'moments.composer.upload', defaultMessage: 'Upload' },
