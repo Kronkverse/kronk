@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { apiGetRoses } from 'mastodon/api/rose';
 import type { ApiRoseJSON } from 'mastodon/api_types/rose';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
-import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // The day's stack: today's roses, drawn outward from the centre.
 //
@@ -66,7 +66,7 @@ const Bloom: React.FC<{
   selected: boolean;
   onSelect: (id: string) => void;
 }> = ({ rose, label, selected, onSelect }) => {
-  const RoseGlyph = kornerIcon('rose');
+  const RoseGlyph = useKornerIcon('rose');
 
   const handleClick = useCallback(() => {
     onSelect(rose.id);
