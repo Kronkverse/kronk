@@ -12,6 +12,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { CaptionTextarea } from './caption_textarea';
+import { PickRemove } from './pick_remove';
 
 const messages = defineMessages({
   heading: {
@@ -372,6 +373,14 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     setPhotos([]);
   }, []);
 
+  // One photo out, before it's added.
+  const removePhoto = useCallback((key: string) => {
+    uploadQueueRef.current = uploadQueueRef.current.filter(
+      (p) => p.key !== key,
+    );
+    setPhotos((prev) => prev.filter((p) => p.key !== key));
+  }, []);
+
   // Add each photo to the album, first uploading any whose upload failed.
   const runAddPool = useCallback(
     async (todo: PhotoDraft[]) => {
@@ -599,6 +608,11 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
                     >
                       {chipGlyph(p.status)}
                     </span>
+                    {!pending &&
+                      p.status !== 'done' &&
+                      p.status !== 'adding' && (
+                        <PickRemove photoKey={p.key} onRemove={removePhoto} />
+                      )}
                   </div>
                   <div className='albutts-composer__pick-body'>
                     <PickCaptionRow
