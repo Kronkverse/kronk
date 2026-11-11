@@ -14,12 +14,16 @@ import { createBrowserHistory, parsePath } from 'history';
 import { layoutFromWindow } from 'mastodon/is_mobile';
 import { isDevelopment } from 'mastodon/utils/environment';
 
+import { comeBackHere } from './space_back';
+
 interface MastodonLocationState {
   fromMastodon?: boolean;
   mastodonModalKey?: string;
   // Where the Frame's back badge should return to, when that is not simply
   // the korner's landing page (components/auto_space_badge.tsx).
   backTo?: string;
+  // Set with a `backTo` in another korner: the name the badge shows for it.
+  backLabel?: string;
 }
 
 export type LocationState = MastodonLocationState | null | undefined;
@@ -72,11 +76,27 @@ function normalizePath(
   return location;
 }
 
+const KORNER_RE = /^(?:\/deck)?\/hub\/([a-z0-9-]+)/;
+
 browserHistory.push = (path: HistoryPath, state?: MastodonLocationState) => {
   const location = normalizePath(path, state);
 
   location.state = location.state ?? {};
   location.state.fromMastodon = true;
+
+  // Leaving a page that asked to be come back to (useComeBackHere) for a
+  // page of another korner: say so, so that page's badge returns here.
+  const here = comeBackHere();
+  const to = KORNER_RE.exec(location.pathname ?? '')?.[1];
+  if (
+    here &&
+    to &&
+    !location.state.backTo &&
+    to !== KORNER_RE.exec(here.href)?.[1]
+  ) {
+    location.state.backTo = here.href;
+    location.state.backLabel = here.label;
+  }
 
   originalPush(location);
 };

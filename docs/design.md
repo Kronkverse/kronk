@@ -248,7 +248,13 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
    doesn't show says its own parent with `useSpaceBack({ href, label })`
    (`components/space_back.ts`, 2026-10-19), and the badge goes one layer up,
    named for it: a FreeTheDream fractal backs up to its gang, a gang to its
-   emergence. Such a page draws no back chip of its own.
+   emergence. Such a page draws no back chip of its own. And a page that
+   shows things from other korners says so with `useComeBackHere({ href,
+label })` (2026-11-11). While it's open, the router stamps any link into
+   another korner with `backTo` and `backLabel`, and a deeper page there
+   backs up to it, named for it: a Krew's event in Kalendar, or its musik in
+   Booth, returns to the Krew. A korner root reached that way (from the rail,
+   say) still backs out to `/hub`.
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
    specific parent. Renders `.kronk-back-chip`.
 
