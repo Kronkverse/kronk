@@ -9,6 +9,8 @@ export type FtdCategory =
   | 'connections';
 
 export type FtdItemKind = 'idea' | 'need' | 'job' | 'offer';
+// A To do's own kind on a Komponent's checklist.
+export type FtdTask = 'todo' | 'pay' | 'book';
 // How someone outside joins: its Krew's way in (Project#joining_via_krew).
 // `krew` means through the Krew's own page (an invite or requirements).
 export type FtdJoining = 'open' | 'by_request' | 'krew';
@@ -144,8 +146,9 @@ export interface FtdItemRow {
   claimed?: number;
   claimers?: (FtdAccount | null)[];
   claimed_by_me?: boolean;
-  // A To do on a checklist: ticked off.
+  // A To do on a checklist: ticked off, and what kind of To do it is.
   done?: boolean;
+  task?: FtdTask;
   need?: FtdRef | null;
   // An offer: shared from its owner's Mycelium.
   mycelium?: boolean;
