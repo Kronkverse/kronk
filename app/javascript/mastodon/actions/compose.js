@@ -405,8 +405,10 @@ export function uploadCompose(files) {
     const media = getState().getIn(['compose', 'media_attachments']);
     const pending = getState().getIn(['compose', 'pending_media_attachments']);
     const progress = new Array(files.length).fill(0);
-
-    let total = Array.from(files).reduce((a, v) => a + v.size, 0);
+    // Each file's size as sent. A big video can be shrunk on the way out
+    // (utils/compress_video), so the upload reports its own total and that
+    // replaces the size picked.
+    const sizes = Array.from(files).map((file) => file.size);
 
     if (files.length + media.size + pending > uploadLimit) {
       dispatch(showAlert({ message: messages.uploadErrorLimit }));
@@ -427,9 +429,10 @@ export function uploadCompose(files) {
       data.append('file', file);
 
       api().post('/api/v2/media', data, {
-        onUploadProgress: function({ loaded }){
+        onUploadProgress: function({ loaded, total: sent }){
           progress[i] = loaded;
-          dispatch(uploadComposeProgress(progress.reduce((a, v) => a + v, 0), total));
+          if (sent) sizes[i] = sent;
+          dispatch(uploadComposeProgress(progress.reduce((a, v) => a + v, 0), sizes.reduce((a, v) => a + v, 0)));
         },
       }).then(({ status, data }) => {
         // If server-side processing of the media attachment has not completed yet,

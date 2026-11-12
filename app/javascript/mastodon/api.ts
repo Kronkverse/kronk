@@ -126,6 +126,29 @@ export default function api(withAuthorization = true) {
   const isUpload = (config: { method?: string; url?: string }) =>
     config.method?.toLowerCase() === 'post' &&
     !!config.url?.startsWith('/api/v2/media');
+  // A big phone video is shrunk on the device first (utils/compress_video),
+  // loaded only when one is uploaded. Registered before the wake lock so it
+  // runs after it: axios runs request interceptors last-registered first,
+  // and the screen should stay on while the video is encoded too. Async, but
+  // only for video uploads, so every other request keeps its timing.
+  const videoIn = (data: unknown) => {
+    if (!(data instanceof FormData)) return null;
+    const file = data.get('file');
+    return file instanceof File && file.type.startsWith('video/') ? file : null;
+  };
+  instance.interceptors.request.use(
+    async (config) => {
+      const file = videoIn(config.data);
+      if (file && config.data instanceof FormData) {
+        const { shrinkVideo } = await import('./utils/compress_video');
+        const smaller = await shrinkVideo(file);
+        if (smaller !== file) config.data.set('file', smaller);
+      }
+      return config;
+    },
+    null,
+    { runWhen: (config) => isUpload(config) && !!videoIn(config.data) },
+  );
   instance.interceptors.request.use(
     (config) => {
       awake.set(config, holdScreenAwake());
