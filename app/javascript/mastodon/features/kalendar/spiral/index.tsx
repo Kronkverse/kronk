@@ -34,6 +34,8 @@ import type { SeasonalMarker } from './astronomy';
 import { moonPhase, seasonalMarker } from './astronomy';
 import type { BirthdayEntry } from './day_details_sheet';
 import { DayDetailsSheet } from './day_details_sheet';
+import type { UpcomingEvent } from './upcoming_rail';
+import { UpcomingRail } from './upcoming_rail';
 
 // ── Geometry constants (mirror the HTML prototype). ─────────────
 // Only RIM + CELL are runtime-computed (via computeGeometry below);
@@ -53,11 +55,9 @@ type MarkerKind =
   | 'birthday'
   | 'event';
 
-// Only the start time is needed here — the tile is a "something happens
-// on this day" glyph, and the day sheet fetches the detail when tapped.
-interface EventDay {
-  start_time: string;
-}
+// The tile is a "something happens on this day" glyph, and the day sheet
+// fetches the detail when tapped; the rest feeds the upcoming list.
+type EventDay = UpcomingEvent;
 
 const seasonalToMarker = (s: SeasonalMarker): MarkerKind =>
   s === 'march-equinox' || s === 'september-equinox' ? 'equinox' : 'solstice';
@@ -105,6 +105,7 @@ export const KalendarSpiral: React.FC = () => {
 
   // Days carrying an event the viewer can see, keyed the same way.
   const eventIndexRef = useRef<Set<string>>(new Set());
+  const [upcoming, setUpcoming] = useState<EventDay[]>([]);
 
   // Set by the RAF effect so async data can force the pooled cells to
   // re-read their markers without tearing the whole spiral down.
@@ -149,6 +150,7 @@ export const KalendarSpiral: React.FC = () => {
         eventIndexRef.current = new Set(
           data.map((e) => isoLocal(new Date(e.start_time))),
         );
+        setUpcoming(data);
         rebindRef.current(true);
         return undefined;
       })
@@ -498,6 +500,7 @@ export const KalendarSpiral: React.FC = () => {
       <div ref={stageRef} className='kspiral__stage'>
         <div ref={fieldRef} className='kspiral__field' />
       </div>
+      <UpcomingRail events={upcoming} />
       {selectedDate && (
         <DayDetailsSheet
           date={selectedDate}
