@@ -30,6 +30,20 @@ RSpec.describe 'Krew page', :js, :streaming do
     find('.kronk-menu__trigger').click
   end
 
+  # Tal, 2026-11-11: a Krew in the list shows who's in it as faces, not a
+  # count and an age.
+  it "lists each Krew with its people's faces", :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    krew.krew_memberships.create!(account: Fabricate(:account, username: 'sam'), role: 'member', source: 'direct')
+    visit '/hub/krew'
+
+    within('.krew-page__row', text: 'Growers') do
+      expect(page).to have_css('.people-row .people-row__person', count: 2)
+      expect(page).to have_no_css('.people-row a')
+      expect(page).to have_no_text('members')
+    end
+  end
+
   it 'puts the chat first, then the spaces, just above the posts' do
     visit "/hub/krew/#{krew.slug}"
 

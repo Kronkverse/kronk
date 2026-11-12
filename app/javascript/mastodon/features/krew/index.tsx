@@ -9,6 +9,7 @@ import type { ApiKrewJSON } from 'mastodon/api/krew';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { PeopleRow } from 'mastodon/components/people_row';
 import { Stage } from 'mastodon/components/stage';
 import { ProjectComposer } from 'mastodon/features/freethedream/components/project_composer';
 import { projectPath } from 'mastodon/features/freethedream/components/shared';
@@ -28,10 +29,6 @@ import { KrewComposer } from './krew_composer';
 
 const messages = defineMessages({
   title: { id: 'krew.title', defaultMessage: 'Krews' },
-  members: {
-    id: 'krew.members_count',
-    defaultMessage: '{count, plural, one {# member} other {# members}}',
-  },
   loading: { id: 'krew.loading', defaultMessage: 'Loading…' },
   emptyYoursTitle: {
     id: 'krew.empty.yours_title',
@@ -65,20 +62,6 @@ type Lens = 'yours' | 'discover';
 const initialSquircle = (name: string): string => {
   const first = name.trim().charAt(0);
   return first.length === 0 ? 'K' : first.toUpperCase();
-};
-
-const relativeTime = (iso: string | null): string => {
-  if (!iso) return '';
-  const then = new Date(iso).getTime();
-  const seconds = Math.max(0, Math.round((Date.now() - then) / 1000));
-  if (seconds < 60) return 'just now';
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.round(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return `${Math.round(days / 7)}w ago`;
 };
 
 // What the Discover row offers beside the Krew. Open Krews join in one tap;
@@ -141,7 +124,6 @@ const KrewRow: React.FC<{
   onJoin?: (krew: ApiKrewJSON) => void;
   busy?: boolean;
 }> = ({ krew, onJoin, busy = false }) => {
-  const intl = useIntl();
   return (
     <li className='krew-page__row'>
       <Link to={`/hub/krew/${krew.slug}`} className='krew-page__row-link'>
@@ -171,14 +153,15 @@ const KrewRow: React.FC<{
           {krew.description && (
             <p className='krew-page__row-desc'>{krew.description}</p>
           )}
-          <small className='krew-page__row-meta'>
-            {intl.formatMessage(messages.members, {
-              count: krew.member_count,
-            })}
-            {krew.last_activity_at
-              ? ` · ${relativeTime(krew.last_activity_at)}`
-              : ''}
-          </small>
+          {/* Who's in it, as faces, not a count and an age (Tal,
+              2026-11-11). The row is the link, so the faces aren't. */}
+          <div className='krew-page__row-meta'>
+            <PeopleRow
+              people={krew.faces ?? []}
+              total={krew.member_count}
+              linked={false}
+            />
+          </div>
         </div>
       </Link>
       {onJoin && (

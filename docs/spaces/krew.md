@@ -173,8 +173,10 @@ All in `app/javascript/mastodon/features/krew/`.
 - **`/hub/krew`** (`index.tsx`): the directory, with two views on the
   standard rotating title: **Yours** (your Krews, including invite-only ones,
   most recently active first) and **Discover** (listed Krews). Each card
-  shows the Krew's photo (its initial when it has none), the member
-  count, and beside the name a small icon for its access
+  shows the Krew's photo (its initial when it has none), its people as
+  the standard row of faces with a "+N" (the first few come with the list,
+  `faces`; Tal, 2026-11-11, in place of a member count and an age), and
+  beside the name a small icon for its access
   (`krew_access_mark.tsx`: open, asks to join, has requirements,
   invite-only; decisions.md, 2026-10-26). A Discover row carries the way
   in beside it: **Join** for an open Krew, **Ask to join** for an

@@ -23,6 +23,8 @@ class Api::V1::KrewsController < Api::BaseController
   before_action :set_krew, only: MEMBER_ACTIONS
 
   DEFAULT_LIMIT = 40
+  # Faces on each row of the list: as many as the row shows, and one more.
+  LIST_FACES = 5
   MEMBERS_ONLY = { error: 'members only' }.freeze
 
   def index
@@ -46,7 +48,8 @@ class Api::V1::KrewsController < Api::BaseController
     scope = scope.where(Krew.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
     scope = scope.where(Krew.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
 
-    render json: scope, each_serializer: REST::KrewSerializer, scope: current_user
+    krews = scope.to_a
+    render json: krews, each_serializer: REST::KrewSerializer, scope: current_user, faces: list_faces(krews)
   end
 
   def show
@@ -249,6 +252,21 @@ class Api::V1::KrewsController < Api::BaseController
   # Accept either the numeric ID or the Krew's slug. Krew#SLUG_PATTERN
   # requires a leading letter, so a slug can never be confused with a
   # numeric id — the disjunction is disjoint at the format level.
+  # The first few people in each Krew of the list, oldest members first, as
+  # the list's row of faces (Tal, 2026-11-11: "that could probably just be
+  # profile icons"). One query for the page, not one per Krew.
+  def list_faces(krews)
+    return {} if krews.empty?
+
+    ranked = KrewMembership.where(krew_id: krews.map(&:id))
+                           .select('krew_memberships.*, ROW_NUMBER() OVER (PARTITION BY krew_id ORDER BY created_at, id) AS place')
+    KrewMembership.from(ranked, :krew_memberships)
+                  .where(place: ..(LIST_FACES + 1))
+                  .includes(:account)
+                  .reject { |membership| membership.account.nil? || membership.account.suspended? }
+                  .group_by(&:krew_id)
+  end
+
   def set_krew
     @krew = Krew.find_by(slug: params[:id]) || Krew.find(params[:id])
   end
