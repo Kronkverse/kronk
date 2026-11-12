@@ -7,6 +7,17 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.14 "Rose"] - 2026-11-12
+
+- Kuestions answer first, and share (#2569)
+- Kalendar upcoming events (#2560)
+- Krew images bigger (#2558)
+- Kommunity Mates (#2562)
+- Moments in order (#2564)
+- Videos shrink before upload (#2563)
+- Kalendar upcoming cards (#2572)
+- Kommunity without search box (#2573)
+
 ### [2.1.13 "Rose"] - 2026-11-12
 
 - Barrel swipe (#2532)
