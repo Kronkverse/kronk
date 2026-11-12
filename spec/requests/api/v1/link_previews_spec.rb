@@ -30,6 +30,22 @@ RSpec.describe 'API V1 link previews' do
     expect(previews(bob, "/hub/albutts/albums/#{album.id}").values.first).to include('title' => 'Bush doof')
   end
 
+  # Links are made with a record's name (Kronk::NamedLink), not its number:
+  # a listing, an event and an album by name show as themselves.
+  it 'previews things linked by their name', :aggregate_failures do
+    listing = Listing.create!(account: alice.account, title: 'Garden chair', category: 'service', state: 'live')
+    event   = Event.create!(account: alice.account, title: 'Seed swap', start_time: 2.days.from_now)
+    album   = Album.create!(owner: alice.account, title: 'Bush doof', visibility: :public)
+    paths   = ["/hub/wachuneed/listings/#{listing.slug}", "/hub/kalendar/#{event.slug}", "/hub/albutts/albums/#{album.slug}"]
+
+    shown = previews(bob, *paths)
+    expect(shown[paths[0]]).to include('korner' => 'wachuneed', 'title' => 'Garden chair')
+    # An event with no post is seen by its maker.
+    expect(previews(alice, paths[1])[paths[1]]).to include('korner' => 'kalendar', 'title' => 'Seed swap')
+    expect(shown[paths[2]]).to include('korner' => 'albutts', 'title' => 'Bush doof')
+    expect(previews(bob, '/hub/wachuneed/listings/no-such-thing').values.first).to be_nil
+  end
+
   it 'shows a private thing only to who can see it', :aggregate_failures do
     album = Album.create!(owner: alice.account, title: 'Just mine', visibility: :self_only)
     path = "/hub/albutts/albums/#{album.id}"
