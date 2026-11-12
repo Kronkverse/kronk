@@ -25,18 +25,14 @@ import { useAppDispatch } from 'mastodon/store';
 // it. Someone who chose nobody is never here, Mates included. Unlike
 // Discover, visible Mates are listed: this is a directory.
 //
-// The search field filters by name or handle on the server, debounced.
-// Paging is offset-based (an alphabetical list has no id cursor), with
+// No search box of its own: the search at the top (the Ж menu's Search on a
+// phone) finds people, Kommunity's first (Tal, 2026-11-12: "there's already
+// a search bar in the top nav bar"). Paging is offset-based (an alphabetical list has no id cursor), with
 // "Load more" at the foot like the Mates tab. Vertical scroll only.
 
 const PAGE_SIZE = 40;
-const SEARCH_DEBOUNCE_MS = 300;
 
 const messages = defineMessages({
-  search: {
-    id: 'kommunity.everyone.search',
-    defaultMessage: 'Search by name or handle',
-  },
   empty: {
     id: 'kommunity.everyone.empty',
     defaultMessage: 'No one to show yet.',
@@ -46,10 +42,6 @@ const messages = defineMessages({
     defaultMessage:
       'People appear here when they choose to be visible to you in their privacy settings.',
   },
-  noMatch: {
-    id: 'kommunity.everyone.no_match',
-    defaultMessage: 'No one matches “{query}”.',
-  },
   error: {
     id: 'kommunity.everyone.error',
     defaultMessage: 'Could not load the list.',
@@ -57,10 +49,6 @@ const messages = defineMessages({
   loadMore: {
     id: 'kommunity.everyone.load_more',
     defaultMessage: 'Load more',
-  },
-  matesSearch: {
-    id: 'kommunity.mates.search',
-    defaultMessage: 'Search your Mates',
   },
   matesEmpty: {
     id: 'kommunity.mates.empty',
@@ -76,39 +64,27 @@ const messages = defineMessages({
 type Fetcher = typeof apiGetKommunityEveryone;
 
 interface ListText {
-  search: string;
   empty: string;
   emptyBody: string;
 }
 
 // One list, two sources: Everyone (the directory, A to Z) and Mates (the
 // landing view: your Mates, most recent poster first; Kommons "Kommunity
-// Page", #117596933443323274). Same row, search and paging.
+// Page", #117596933443323274). Same row and paging.
 const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
   fetch,
   text,
 }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const [input, setInput] = useState('');
-  const [query, setQuery] = useState('');
   const [accountIds, setAccountIds] = useState<string[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
   // Every fetch stamps the run it belongs to; a result from an older run
-  // (the query changed while it was in flight) is dropped.
+  // (the list was fetched again while it was in flight) is dropped.
   const runId = useRef(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setQuery(input.trim());
-    }, SEARCH_DEBOUNCE_MS);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [input]);
 
   useEffect(() => {
     runId.current += 1;
@@ -116,7 +92,7 @@ const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
     setLoading(true);
     setError(false);
 
-    fetch(query, 0, PAGE_SIZE)
+    fetch('', 0, PAGE_SIZE)
       .then(({ accounts, nextOffset: next }) => {
         if (runId.current !== run) return;
         dispatch(importFetchedAccounts(accounts));
@@ -129,14 +105,14 @@ const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
       .finally(() => {
         if (runId.current === run) setLoading(false);
       });
-  }, [query, dispatch, fetch]);
+  }, [dispatch, fetch]);
 
   const handleLoadMore = useCallback(() => {
     if (nextOffset === null || loadingMore) return;
     const run = runId.current;
     setLoadingMore(true);
 
-    fetch(query, nextOffset, PAGE_SIZE)
+    fetch('', nextOffset, PAGE_SIZE)
       .then(({ accounts, nextOffset: next }) => {
         if (runId.current !== run) return;
         dispatch(importFetchedAccounts(accounts));
@@ -156,11 +132,7 @@ const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
       .finally(() => {
         if (runId.current === run) setLoadingMore(false);
       });
-  }, [dispatch, fetch, loadingMore, nextOffset, query]);
-
-  const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  }, []);
+  }, [dispatch, fetch, loadingMore, nextOffset]);
 
   let body: React.ReactNode;
   if (loading) {
@@ -168,11 +140,7 @@ const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
   } else if (error) {
     body = <EmptyState title={intl.formatMessage(messages.error)} />;
   } else if (accountIds.length === 0) {
-    body = query ? (
-      <EmptyState title={intl.formatMessage(messages.noMatch, { query })} />
-    ) : (
-      <EmptyState title={text.empty} body={text.emptyBody} />
-    );
+    body = <EmptyState title={text.empty} body={text.emptyBody} />;
   } else {
     body = (
       <>
@@ -199,17 +167,7 @@ const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
   return (
     <div className='kommunity-everyone'>
       <div className='stage-column'>
-        <div className='stage-column__inner'>
-          <input
-            type='search'
-            className='kommunity-everyone__search'
-            value={input}
-            onChange={handleInput}
-            placeholder={text.search}
-            aria-label={text.search}
-          />
-          {body}
-        </div>
+        <div className='stage-column__inner'>{body}</div>
       </div>
     </div>
   );
@@ -221,7 +179,6 @@ export const KommunityEveryone: React.FC = () => {
     <KommunityPeopleList
       fetch={apiGetKommunityEveryone}
       text={{
-        search: intl.formatMessage(messages.search),
         empty: intl.formatMessage(messages.empty),
         emptyBody: intl.formatMessage(messages.emptyBody),
       }}
@@ -235,7 +192,6 @@ export const KommunityMates: React.FC = () => {
     <KommunityPeopleList
       fetch={apiGetKommunityMates}
       text={{
-        search: intl.formatMessage(messages.matesSearch),
         empty: intl.formatMessage(messages.matesEmpty),
         emptyBody: intl.formatMessage(messages.matesEmptyBody),
       }}
