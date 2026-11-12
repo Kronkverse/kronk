@@ -66,7 +66,10 @@ module Kronk
     end
 
     # /hub/<slug>/<id>…, or /hub/<slug>/<word>/<id>… (anything after the id,
-    # like /edit or /audit, is still that record's page).
+    # like /edit or /audit, is still that record's page). The id is a name
+    # for a record reached by its name (Kronk::NamedLink: an event at
+    # /hub/kalendar/<name>, a listing at /hub/wachuneed/listings/<name>),
+    # which links are made with; a number still finds it.
     def find_record(slug, segments)
       return nil if segments.empty?
 
@@ -74,10 +77,23 @@ module Kronk
       model = model_for(slug, word)
       return nil if model.nil?
 
-      id ||= word if model == Krew # /hub/krew/:slug
+      id ||= word if model == Krew || named?(model) # /hub/krew/:slug, /hub/kalendar/:slug
       return nil if id.blank?
 
-      model == Krew ? Krew.find_by(slug: id) || Krew.find_by(id: id.to_i) : model.find_by(id: id)
+      return Krew.find_by(slug: id) || Krew.find_by(id: id.to_i) if model == Krew
+      return named_record(model, id) if named?(model)
+
+      model.find_by(id: id)
+    end
+
+    def named?(model)
+      model.include?(Kronk::NamedLink)
+    end
+
+    def named_record(model, id)
+      model.by_link!(id)
+    rescue ActiveRecord::RecordNotFound
+      nil
     end
 
     def model_for(slug, word)
