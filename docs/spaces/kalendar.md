@@ -22,6 +22,10 @@ Three faces on a rotator header (manifest `views`), mounted by
   2026-10-21, Kommons "Click on date auto align"). Moon phases and seasonal markers are computed in the
   browser (`spiral/astronomy.ts`, standard low-precision formulae, named by
   month so they read right in both hemispheres). They do not come from Inflow.
+  Down the left, under the today badge, the next six events (date, name, a
+  line of description; date and name only on a phone) link to their pages
+  (`spiral/upcoming_rail.tsx`, fed by the Spiral's own events fetch;
+  2026-11-11, Kommons "Upcoming events").
 - **Events** (`/hub/kalendar/events`): upcoming events in the shared space
   grid (`events_view.tsx`).
 - **Me** (`/hub/kalendar/me`): your accepted Wachuneed bookings, then your
