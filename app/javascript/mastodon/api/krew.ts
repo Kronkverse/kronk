@@ -6,6 +6,7 @@ import {
   apiRequestDelete,
 } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type { PeopleRowPerson } from 'mastodon/components/people_row';
 
 // The Krews a film, kar, kronikle or art piece is for, on top of its reach,
 // sent top level beside the record's own params as albums send theirs
@@ -116,6 +117,8 @@ export interface ApiKrewJSON {
   join_request_count: number;
   seeded_by_account_id: string | null;
   last_activity_at: string | null;
+  // On the list only: the first few people in it.
+  faces?: PeopleRowPerson[];
   // Only present in responses to members; other viewers get null.
   invite_token: string | null;
   korners: KrewKornerSlug[];

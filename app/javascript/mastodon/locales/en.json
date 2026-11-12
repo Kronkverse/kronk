@@ -2084,7 +2084,6 @@
   "krew.marker.invite_only": "Invite-only",
   "krew.marker.open": "Open",
   "krew.marker.requirement_gated": "Has requirements",
-  "krew.members_count": "{count, plural, one {# member} other {# members}}",
   "krew.new.access": "Access",
   "krew.new.access_approval": "Ask to join",
   "krew.new.access_approval_desc": "Anyone can find it and ask. Any member can let them in.",
