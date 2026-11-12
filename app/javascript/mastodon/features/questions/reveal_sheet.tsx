@@ -14,6 +14,7 @@ import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
+import { KuestionShare } from './kuestion_share';
 import { SheetFrame } from './sheet_frame';
 
 const messages = defineMessages({
@@ -123,13 +124,16 @@ export const RevealSheet: React.FC<RevealSheetProps> = ({
       </div>
 
       <h2 className='kuestions-sheet__q'>{kuestion.title}</h2>
-      <p className='kuestions-sheet__by'>
-        <FormattedMessage
-          id='kuestions.reveal.asked_by'
-          defaultMessage='asked by {asker}'
-          values={{ asker: askerName }}
-        />
-      </p>
+      <div className='kuestions-sheet__by'>
+        <span>
+          <FormattedMessage
+            id='kuestions.reveal.asked_by'
+            defaultMessage='asked by {asker}'
+            values={{ asker: askerName }}
+          />
+        </span>
+        <KuestionShare kuestion={kuestion} />
+      </div>
 
       {kuestion.answer_format === 'text' && kuestion.answers && (
         <TextReveal answers={kuestion.answers} />

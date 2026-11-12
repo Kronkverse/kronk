@@ -5,6 +5,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { apiAnswerKuestion } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 
+import { KuestionShare } from './kuestion_share';
 import { SheetFrame } from './sheet_frame';
 
 const messages = defineMessages({
@@ -111,12 +112,15 @@ export const AnswerSheet: React.FC<AnswerSheetProps> = ({
       closeLabel={intl.formatMessage(messages.cancel)}
     >
       <h2 className='kuestions-sheet__q'>{kuestion.title}</h2>
-      <p className='kuestions-sheet__by'>
-        {intl.formatMessage(messages.askedBy, {
-          asker: askerName,
-          count: kuestion.answers_count,
-        })}
-      </p>
+      <div className='kuestions-sheet__by'>
+        <span>
+          {intl.formatMessage(messages.askedBy, {
+            asker: askerName,
+            count: kuestion.answers_count,
+          })}
+        </span>
+        <KuestionShare kuestion={kuestion} />
+      </div>
 
       {kuestion.answer_format === 'text' && (
         <textarea

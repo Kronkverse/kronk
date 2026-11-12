@@ -497,9 +497,32 @@
 }
 
 .kuestions-sheet__by {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
   color: var(--text-muted);
   font-size: 13px;
   margin: 0 0 16px;
+}
+
+// Share, at the end of the "asked by" line.
+.kuestions-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  cursor: pointer;
+
+  .icon {
+    inline-size: 16px;
+    block-size: 16px;
+  }
 }
 
 .kuestions-sheet__hint {
