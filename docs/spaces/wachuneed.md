@@ -112,7 +112,10 @@ photos full size and uncropped (bounded to 60vh) in a strip you swipe or
 arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,
 and the seller. On a live listing, "Message the poster" links to
-`/nudges/with/<seller's account id>`, carrying the listing with it. It is
+`/nudges/with/<seller's account id>`, carrying the listing with it, and
+the message box opens with the listing's link attached, shown as a card and
+sent with the message, so the seller knows what it is about (Tal,
+2026-11-12; `nudges_messenger/shared_link.ts`). It is
 offered to whoever can see the listing (`can_message` on the detail
 response; see Who can see it). When the seller has a shop you can see,
 **See everything from <shop>** leads to it. The page pads its bottom so the poster line

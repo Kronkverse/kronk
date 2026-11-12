@@ -374,6 +374,28 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     end
   end
 
+  # Tal, 2026-11-12: Message the poster opens the chat with the listing
+  # attached, so the poster knows what it's about.
+  it 'messages the poster about the listing', :aggregate_failures do
+    seller  = Fabricate(:account, username: 'ana', display_name: 'Ana')
+    listing = Listing.create!(account: seller, title: 'Garden chair', category: 'service', state: 'live',
+                              price_cents: 2000, price_currency: 'AUD')
+    visit "/hub/wachuneed/listings/#{listing.id}"
+    click_on 'Message the poster'
+
+    expect(page).to have_current_path(%r{\A/nudges/\d+\z})
+    expect(page).to have_css('.nudges-composer__shared', text: 'Garden chair')
+    find('.nudges-composer textarea').set('Is it still around?')
+    find('.nudges-composer textarea').send_keys(:enter)
+
+    expect(page).to have_no_css('.nudges-composer__shared')
+    expect(page).to have_content('Is it still around?')
+    expect(page).to have_css('.kronk-link-card', text: 'Garden chair')
+    message = Nudges::ConversationMessage.last
+    expect(message.body).to include('Is it still around?')
+    expect(message.body).to include("/hub/wachuneed/listings/#{listing.slug || listing.id}")
+  end
+
   # docs/spaces/wachuneed.md, Booking (Kommons "Goods & Services").
   describe 'booking' do
     it 'shows how a listing is booked on its page' do

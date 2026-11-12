@@ -6,7 +6,7 @@ import { Link, useHistory, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiOpenMateConversation } from 'mastodon/api/nudges_conversations';
-import { apiGetWachuneedListing } from 'mastodon/api/wachuneed';
+import { apiGetWachuneedListing, listingPath } from 'mastodon/api/wachuneed';
 import type {
   ApiListingJSON,
   ApiListingVariantsJSON,
@@ -199,6 +199,22 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
   // or change. Kronk takes no order and no payment; the two of them agree
   // the rest by talking.
   const sellerId = listing?.account?.id;
+  // What the chat opens with: the listing, whose "who can message you"
+  // applies, and its link, which the message box shows as a card and sends
+  // with the message (nudges_messenger/shared_link.ts), so the seller knows
+  // what it's about (Tal, 2026-11-12: "it just opened the chat, without
+  // referencing the listing").
+  const chatState = useMemo(
+    () =>
+      listing
+        ? {
+            wachuneedListingId: listing.id,
+            attachStatusUrl: `${window.location.origin}${listingPath(listing)}`,
+            attachStatusBody: listing.title,
+          }
+        : undefined,
+    [listing],
+  );
   const handleMessageWithChoices = useCallback<
     React.MouseEventHandler<HTMLAnchorElement>
   >(
@@ -234,8 +250,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
             })
           : intl.formatMessage(messages.enquiry, values);
 
-      // The listing rides along, so its "who can message you" applies.
-      const state = { wachuneedListingId: listing.id };
+      const state = chatState;
       apiOpenMateConversation(sellerId, listing.id)
         .then((conversation) => {
           writeComposerDraft(`nudges:conversation:${conversation.id}`, {
@@ -249,6 +264,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         });
     },
     [
+      chatState,
       chosen,
       history,
       intl,
@@ -512,7 +528,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
               <Link
                 to={{
                   pathname: `/nudges/with/${listing.account.id}`,
-                  state: { wachuneedListingId: listing.id },
+                  state: chatState,
                 }}
                 className='wachuneed-detail__message-poster'
                 onClick={handleMessageWithChoices}
