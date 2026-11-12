@@ -14,6 +14,11 @@ const messages = defineMessages({
     id: 'status_kuestions_card.answers',
     defaultMessage: '{count, plural, one {# answer} other {# answers}}',
   },
+  answer: { id: 'status_kuestions_card.answer', defaultMessage: 'Answer' },
+  seeAnswers: {
+    id: 'status_kuestions_card.see_answers',
+    defaultMessage: 'See answers',
+  },
 });
 
 interface AnswererAvatar {
@@ -84,6 +89,13 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
             </div>
           )}
         </CardMeta>
+        {/* What tapping does, said: answer it here, not in the replies
+            (Tal, 2026-11-12). */}
+        <span className='status-korner-card__action status-kuestions-card__cta'>
+          {intl.formatMessage(
+            question.has_answered ? messages.seeAnswers : messages.answer,
+          )}
+        </span>
       </div>
     </StatusKornerCard>
   );
