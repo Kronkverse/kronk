@@ -488,7 +488,6 @@ export const Checklist: React.FC<{
       {canAct && (
         <div className='freethedream-checklist__add'>
           <QuickAdd
-            key={kind}
             kind={kind}
             projectId={project.id}
             onAdded={onChange}
