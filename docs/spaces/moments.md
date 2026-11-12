@@ -86,7 +86,9 @@ Status is kept out of every feed.
    Your own tile sits on the left with a `+`; with nothing posted it opens
    the composer. **One ring per person**, however many Moments they have
    live: it opens their oldest unseen Moment and the viewer walks the rest
-   of their stack. Photo-plus-voice Moments get a mic badge. A ring dims
+   of their stack. Your own tile always opens your oldest live Moment, so
+   forward walks through the rest of yours before rolling on to anyone else
+   (Tal, 2026-11-11: it opened the latest, and forward left your own). Photo-plus-voice Moments get a mic badge. A ring dims
    once you've seen all of that person's Moments. The strip hides if you've
    tuned out of Moments or
    turned off "Show the Moments strip at the top of my home feed" in feed
@@ -132,6 +134,13 @@ the dimmed rings and tiles and the Moments unread badge. The badge count comes f
 
 `features/moments/composer.tsx`, opened at `/hub/moments/composer` from the
 Ж menu ("Share a Moment"), the strip, or the korner.
+
+Your Moments that are already live sit at the start of the composer's strip,
+oldest first, each marked **Live**, then whatever you're adding, then the +
+(Tal, 2026-11-11: "it'd be nice if the one already posted appeared in the
+composer aligned with the + to add more, so it all feels connected"). They
+are display only: posted Moments can't be edited or removed from there. The
+strip shows whenever you have one live, even before you pick anything.
 
 - Start from **Camera** (photo), **Video**, **Upload**, or **Voice** (the
   shared `VoiceRecorder`, up to 60 seconds). Camera and Video are two
