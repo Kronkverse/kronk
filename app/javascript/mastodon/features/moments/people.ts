@@ -4,8 +4,10 @@
 // Takes the active list as the API returns it (newest first) and keeps
 // people in newest-activity order. For each person it picks where to start:
 // their oldest unseen Moment, so you catch up in order, or their oldest once
-// you've seen them all. `seen` is true only when every one of their Moments
-// is seen. Your own Moments come first when `meFirst` is set.
+// you've seen them all. Your own always start at your oldest: you've seen
+// them all as you made them, and they read as one run, first to last.
+// `seen` is true only when every one of their Moments is seen. Your own
+// Moments come first when `meFirst` is set.
 
 interface Groupable {
   id: string;
@@ -40,7 +42,8 @@ export const groupMomentsByPerson = <M extends Groupable>(
     people.push({
       accountId,
       moments: list,
-      open: unseen.at(-1) ?? list.at(-1) ?? first,
+      open:
+        (accountId === me ? undefined : unseen.at(-1)) ?? list.at(-1) ?? first,
       seen: unseen.length === 0,
     });
   }
