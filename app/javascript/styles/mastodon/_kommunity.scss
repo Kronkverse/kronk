@@ -473,26 +473,6 @@
   inline-size: 100%;
 }
 
-.kommunity-everyone__search {
-  inline-size: 100%;
-  box-sizing: border-box;
-  padding: 0.5rem 0.875rem;
-  background: var(--surface-elevated);
-  color: var(--text-primary);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-round);
-  font: inherit;
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-}
-
 .kommunity-everyone__list {
   display: flex;
   flex-direction: column;

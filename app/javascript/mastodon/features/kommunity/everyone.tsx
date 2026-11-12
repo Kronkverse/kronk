@@ -3,7 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { importFetchedAccounts } from 'mastodon/actions/importer';
-import { apiGetKommunityEveryone } from 'mastodon/api/kommunity';
+import {
+  apiGetKommunityEveryone,
+  apiGetKommunityMates,
+} from 'mastodon/api/kommunity';
 import { Account } from 'mastodon/components/account';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
@@ -22,18 +25,14 @@ import { useAppDispatch } from 'mastodon/store';
 // it. Someone who chose nobody is never here, Mates included. Unlike
 // Discover, visible Mates are listed: this is a directory.
 //
-// The search field filters by name or handle on the server, debounced.
-// Paging is offset-based (an alphabetical list has no id cursor), with
+// No search box of its own: the search at the top (the Ж menu's Search on a
+// phone) finds people, Kommunity's first (Tal, 2026-11-12: "there's already
+// a search bar in the top nav bar"). Paging is offset-based (an alphabetical list has no id cursor), with
 // "Load more" at the foot like the Mates tab. Vertical scroll only.
 
 const PAGE_SIZE = 40;
-const SEARCH_DEBOUNCE_MS = 300;
 
 const messages = defineMessages({
-  search: {
-    id: 'kommunity.everyone.search',
-    defaultMessage: 'Search by name or handle',
-  },
   empty: {
     id: 'kommunity.everyone.empty',
     defaultMessage: 'No one to show yet.',
@@ -43,10 +42,6 @@ const messages = defineMessages({
     defaultMessage:
       'People appear here when they choose to be visible to you in their privacy settings.',
   },
-  noMatch: {
-    id: 'kommunity.everyone.no_match',
-    defaultMessage: 'No one matches “{query}”.',
-  },
   error: {
     id: 'kommunity.everyone.error',
     defaultMessage: 'Could not load the list.',
@@ -55,30 +50,41 @@ const messages = defineMessages({
     id: 'kommunity.everyone.load_more',
     defaultMessage: 'Load more',
   },
+  matesEmpty: {
+    id: 'kommunity.mates.empty',
+    defaultMessage: 'No Mates yet.',
+  },
+  matesEmptyBody: {
+    id: 'kommunity.mates.empty_body',
+    defaultMessage:
+      'Turn to Discover or Everyone to find people, and send a Mate request from their card.',
+  },
 });
 
-export const KommunityEveryone: React.FC = () => {
+type Fetcher = typeof apiGetKommunityEveryone;
+
+interface ListText {
+  empty: string;
+  emptyBody: string;
+}
+
+// One list, two sources: Everyone (the directory, A to Z) and Mates (the
+// landing view: your Mates, most recent poster first; Kommons "Kommunity
+// Page", #117596933443323274). Same row and paging.
+const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
+  fetch,
+  text,
+}) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const [input, setInput] = useState('');
-  const [query, setQuery] = useState('');
   const [accountIds, setAccountIds] = useState<string[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
   // Every fetch stamps the run it belongs to; a result from an older run
-  // (the query changed while it was in flight) is dropped.
+  // (the list was fetched again while it was in flight) is dropped.
   const runId = useRef(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setQuery(input.trim());
-    }, SEARCH_DEBOUNCE_MS);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [input]);
 
   useEffect(() => {
     runId.current += 1;
@@ -86,7 +92,7 @@ export const KommunityEveryone: React.FC = () => {
     setLoading(true);
     setError(false);
 
-    apiGetKommunityEveryone(query, 0, PAGE_SIZE)
+    fetch('', 0, PAGE_SIZE)
       .then(({ accounts, nextOffset: next }) => {
         if (runId.current !== run) return;
         dispatch(importFetchedAccounts(accounts));
@@ -99,14 +105,14 @@ export const KommunityEveryone: React.FC = () => {
       .finally(() => {
         if (runId.current === run) setLoading(false);
       });
-  }, [query, dispatch]);
+  }, [dispatch, fetch]);
 
   const handleLoadMore = useCallback(() => {
     if (nextOffset === null || loadingMore) return;
     const run = runId.current;
     setLoadingMore(true);
 
-    apiGetKommunityEveryone(query, nextOffset, PAGE_SIZE)
+    fetch('', nextOffset, PAGE_SIZE)
       .then(({ accounts, nextOffset: next }) => {
         if (runId.current !== run) return;
         dispatch(importFetchedAccounts(accounts));
@@ -126,11 +132,7 @@ export const KommunityEveryone: React.FC = () => {
       .finally(() => {
         if (runId.current === run) setLoadingMore(false);
       });
-  }, [dispatch, loadingMore, nextOffset, query]);
-
-  const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  }, []);
+  }, [dispatch, fetch, loadingMore, nextOffset]);
 
   let body: React.ReactNode;
   if (loading) {
@@ -138,14 +140,7 @@ export const KommunityEveryone: React.FC = () => {
   } else if (error) {
     body = <EmptyState title={intl.formatMessage(messages.error)} />;
   } else if (accountIds.length === 0) {
-    body = query ? (
-      <EmptyState title={intl.formatMessage(messages.noMatch, { query })} />
-    ) : (
-      <EmptyState
-        title={intl.formatMessage(messages.empty)}
-        body={intl.formatMessage(messages.emptyBody)}
-      />
-    );
+    body = <EmptyState title={text.empty} body={text.emptyBody} />;
   } else {
     body = (
       <>
@@ -172,18 +167,34 @@ export const KommunityEveryone: React.FC = () => {
   return (
     <div className='kommunity-everyone'>
       <div className='stage-column'>
-        <div className='stage-column__inner'>
-          <input
-            type='search'
-            className='kommunity-everyone__search'
-            value={input}
-            onChange={handleInput}
-            placeholder={intl.formatMessage(messages.search)}
-            aria-label={intl.formatMessage(messages.search)}
-          />
-          {body}
-        </div>
+        <div className='stage-column__inner'>{body}</div>
       </div>
     </div>
+  );
+};
+
+export const KommunityEveryone: React.FC = () => {
+  const intl = useIntl();
+  return (
+    <KommunityPeopleList
+      fetch={apiGetKommunityEveryone}
+      text={{
+        empty: intl.formatMessage(messages.empty),
+        emptyBody: intl.formatMessage(messages.emptyBody),
+      }}
+    />
+  );
+};
+
+export const KommunityMates: React.FC = () => {
+  const intl = useIntl();
+  return (
+    <KommunityPeopleList
+      fetch={apiGetKommunityMates}
+      text={{
+        empty: intl.formatMessage(messages.matesEmpty),
+        emptyBody: intl.formatMessage(messages.matesEmptyBody),
+      }}
+    />
   );
 };

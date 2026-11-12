@@ -85,10 +85,18 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
     })();
   }, [refreshKey]);
 
+  // Opening a Kuestion you haven't answered (from a link, a feed card or a
+  // notification) asks you first: the answers wait behind yours, and a
+  // reveal with none of them left people answering in the post's replies
+  // instead (Tal, 2026-11-12). The asker sees the answers either way.
   const handleOpen = useCallback((id: string) => {
     void (async () => {
       try {
         const detail = await apiGetKuestion(id);
+        if (!detail.has_answered && !detail.asked_by_me) {
+          setAnswering(detail);
+          return;
+        }
         setRevealing(detail);
         setList((prev) =>
           prev
