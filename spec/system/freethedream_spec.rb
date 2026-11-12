@@ -171,11 +171,15 @@ RSpec.describe 'Projekts', :js, :streaming do
 
   it "brings something on a Komponent's checklist" do
     visit_kitchen
+    # Typed first, then the kind changed: what's typed stays.
     within('.freethedream-checklist__add') do
+      fill_in placeholder: 'Add something to do', with: 'gas bottle'
       find('.freethedream-checklist__pick').click
-      page.document.find('.privacy-dropdown__option', text: 'Bring').click
-      fill_in placeholder: "Add what's needed", with: 'gas bottle'
-      send_keys :enter
+    end
+    page.document.find('.privacy-dropdown__option', text: 'Bring').click
+    within('.freethedream-checklist__add') do
+      expect(page).to have_field(placeholder: "Add what's needed", with: 'gas bottle')
+      find_field(placeholder: "Add what's needed").send_keys :enter
     end
 
     within('.freethedream-checklist__entry', text: 'gas bottle') do
