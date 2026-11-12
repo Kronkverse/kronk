@@ -479,6 +479,9 @@ namespace :api, format: false do
       # Everyone (Tal 2026-10-26): the whole directory of people the
       # viewer may find, Mates included, alphabetical, offset-paged.
       get 'everyone', to: 'everyone#index'
+      # Mates (Tal 2026-11-11): the viewer's Mates, most recent poster
+      # first. Kommunity's landing view.
+      get 'mates', to: 'mates#index'
       # Orb — top-N local accounts + follow edges between them.
       # Powers the <KronkOrb> Fibonacci sphere; response is cached
       # server-side (see OrbController::CACHE_TTL).

@@ -3,7 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { importFetchedAccounts } from 'mastodon/actions/importer';
-import { apiGetKommunityEveryone } from 'mastodon/api/kommunity';
+import {
+  apiGetKommunityEveryone,
+  apiGetKommunityMates,
+} from 'mastodon/api/kommunity';
 import { Account } from 'mastodon/components/account';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
@@ -55,9 +58,36 @@ const messages = defineMessages({
     id: 'kommunity.everyone.load_more',
     defaultMessage: 'Load more',
   },
+  matesSearch: {
+    id: 'kommunity.mates.search',
+    defaultMessage: 'Search your Mates',
+  },
+  matesEmpty: {
+    id: 'kommunity.mates.empty',
+    defaultMessage: 'No Mates yet.',
+  },
+  matesEmptyBody: {
+    id: 'kommunity.mates.empty_body',
+    defaultMessage:
+      'Turn to Discover or Everyone to find people, and send a Mate request from their card.',
+  },
 });
 
-export const KommunityEveryone: React.FC = () => {
+type Fetcher = typeof apiGetKommunityEveryone;
+
+interface ListText {
+  search: string;
+  empty: string;
+  emptyBody: string;
+}
+
+// One list, two sources: Everyone (the directory, A to Z) and Mates (the
+// landing view: your Mates, most recent poster first; Kommons "Kommunity
+// Page", #117596933443323274). Same row, search and paging.
+const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
+  fetch,
+  text,
+}) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [input, setInput] = useState('');
@@ -86,7 +116,7 @@ export const KommunityEveryone: React.FC = () => {
     setLoading(true);
     setError(false);
 
-    apiGetKommunityEveryone(query, 0, PAGE_SIZE)
+    fetch(query, 0, PAGE_SIZE)
       .then(({ accounts, nextOffset: next }) => {
         if (runId.current !== run) return;
         dispatch(importFetchedAccounts(accounts));
@@ -99,14 +129,14 @@ export const KommunityEveryone: React.FC = () => {
       .finally(() => {
         if (runId.current === run) setLoading(false);
       });
-  }, [query, dispatch]);
+  }, [query, dispatch, fetch]);
 
   const handleLoadMore = useCallback(() => {
     if (nextOffset === null || loadingMore) return;
     const run = runId.current;
     setLoadingMore(true);
 
-    apiGetKommunityEveryone(query, nextOffset, PAGE_SIZE)
+    fetch(query, nextOffset, PAGE_SIZE)
       .then(({ accounts, nextOffset: next }) => {
         if (runId.current !== run) return;
         dispatch(importFetchedAccounts(accounts));
@@ -126,7 +156,7 @@ export const KommunityEveryone: React.FC = () => {
       .finally(() => {
         if (runId.current === run) setLoadingMore(false);
       });
-  }, [dispatch, loadingMore, nextOffset, query]);
+  }, [dispatch, fetch, loadingMore, nextOffset, query]);
 
   const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -141,10 +171,7 @@ export const KommunityEveryone: React.FC = () => {
     body = query ? (
       <EmptyState title={intl.formatMessage(messages.noMatch, { query })} />
     ) : (
-      <EmptyState
-        title={intl.formatMessage(messages.empty)}
-        body={intl.formatMessage(messages.emptyBody)}
-      />
+      <EmptyState title={text.empty} body={text.emptyBody} />
     );
   } else {
     body = (
@@ -178,12 +205,40 @@ export const KommunityEveryone: React.FC = () => {
             className='kommunity-everyone__search'
             value={input}
             onChange={handleInput}
-            placeholder={intl.formatMessage(messages.search)}
-            aria-label={intl.formatMessage(messages.search)}
+            placeholder={text.search}
+            aria-label={text.search}
           />
           {body}
         </div>
       </div>
     </div>
+  );
+};
+
+export const KommunityEveryone: React.FC = () => {
+  const intl = useIntl();
+  return (
+    <KommunityPeopleList
+      fetch={apiGetKommunityEveryone}
+      text={{
+        search: intl.formatMessage(messages.search),
+        empty: intl.formatMessage(messages.empty),
+        emptyBody: intl.formatMessage(messages.emptyBody),
+      }}
+    />
+  );
+};
+
+export const KommunityMates: React.FC = () => {
+  const intl = useIntl();
+  return (
+    <KommunityPeopleList
+      fetch={apiGetKommunityMates}
+      text={{
+        search: intl.formatMessage(messages.matesSearch),
+        empty: intl.formatMessage(messages.matesEmpty),
+        emptyBody: intl.formatMessage(messages.matesEmptyBody),
+      }}
+    />
   );
 };
