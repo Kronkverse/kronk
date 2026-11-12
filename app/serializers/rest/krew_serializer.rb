@@ -15,8 +15,23 @@ class REST::KrewSerializer < ActiveModel::Serializer
              :invite_token,
              :korners, :section_order, :requirements, :image_url
 
+  # On the list only: the first few people in it, for its row of faces.
+  attribute :faces, if: -> { instance_options.key?(:faces) }
+
   def id
     object.id.to_s
+  end
+
+  def faces
+    (instance_options[:faces][object.id] || []).map do |membership|
+      account = membership.account
+      {
+        id: account.id.to_s,
+        acct: account.acct,
+        display_name: account.display_name.presence || account.username,
+        avatar: full_asset_url(account.avatar_static_url),
+      }
+    end
   end
 
   def image_url
