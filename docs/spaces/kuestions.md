@@ -160,7 +160,17 @@ feed. Posting a Kuestion runs `Kuestions::PublishQuestion`, which writes a
 companion Status with `source_korner='kuestions'`. It renders as
 `StatusKuestionsCard`
 (`app/javascript/mastodon/components/status_kuestions_card.tsx`): title,
-prompt, answer count, recent-answerer avatars and a link.
+prompt, answer count, recent-answerer avatars and a link that says what it
+does, **Answer** or, once you have, **See answers** (Tal, 2026-11-12: an
+answer had landed in the post's replies).
+
+### A Kuestion's own address
+
+`/hub/kuestions/<id>` (the feed card's link, and the 1.x `/questions/<id>`)
+opens that Kuestion over Answered (`?k=<id>`). Someone who hasn't answered
+and didn't ask it gets the answer sheet first; the asker, and anyone who
+has answered, gets the reveal. Both sheets carry **Share** on the "asked
+by" line (`kuestion_share.tsx`), the Kronk share sheet with that address.
 
 ### Nudges
 
@@ -266,9 +276,8 @@ Kuestions, and only with **Daily prompt in my post box** on (Tal,
 
 ## Open
 
-- **No per-Kuestion page.** The feed card links to `/hub/kuestions/<id>`
-  and the answer nudge to `/hub/kuestions/q/<id>`, but the SPA has no
-  route for either; both land on the deck.
+- **The answer nudge's link.** It goes to `/hub/kuestions/q/<id>`, which
+  ends in the id and so opens the Kuestion like `/hub/kuestions/<id>`.
 - **Prompt pack.** How the seed pool grows past 10, and who curates it
   (YAML in the repo, admin UI, community submissions), is undecided.
 - **Deleted accounts.** Answers cascade-delete with the account. Whether

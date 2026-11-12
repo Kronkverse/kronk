@@ -30,4 +30,30 @@ RSpec.describe 'Kuestions', :inline_jobs, :js, :streaming do
     expect(overflow).to be <= 0
     expect(page).to have_no_css('.kuestions-stars')
   end
+
+  # Tal, 2026-11-12: a Kuestion's link opens it to answer, not to an empty
+  # reveal, and it can be shared from there.
+  it "opens a Kuestion's link to answer it, then shows the answers", :aggregate_failures do
+    asked = Question.create!(title: 'Best swim spot?', created_by_account: Fabricate(:account, username: 'cal'))
+    Answer.create!(question: asked, account: Fabricate(:account, username: 'dee'), body: 'The point')
+    visit "/hub/kuestions/#{asked.id}"
+
+    within('.kuestions-sheet') do
+      expect(page).to have_css('.kuestions-sheet__q', text: 'Best swim spot?')
+      expect(page).to have_no_text('The point')
+      click_on 'Share'
+    end
+    expect(page).to have_css('.share-sheet', text: 'Best swim spot?')
+    find('.share-sheet__panel').send_keys(:escape)
+    expect(page).to have_no_css('.share-sheet')
+
+    within('.kuestions-sheet') do
+      find('.kuestions-sheet__text').set('Under the bridge')
+      click_on 'Answer & unlock'
+    end
+    within('.kuestions-sheet') do
+      expect(page).to have_text('The point')
+      expect(page).to have_text('Under the bridge')
+    end
+  end
 end
