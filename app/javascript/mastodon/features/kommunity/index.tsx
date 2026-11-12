@@ -8,7 +8,7 @@
 import { KornerShell } from 'mastodon/components/korner_shell';
 
 import { KommunityDrawer } from './drawer';
-import { KommunityEveryone } from './everyone';
+import { KommunityEveryone, KommunityMates } from './everyone';
 import { KronkOrb } from './orb';
 
 const OrbView = () => <KronkOrb />;
@@ -21,14 +21,18 @@ const DiscoverView = () => <KommunityDrawer />;
 // Everyone — the whole alphabetical directory of people who chose to be
 // visible to you. Discover is for meeting new people; this is the list.
 const EveryoneView = () => <KommunityEveryone />;
+// Mates — the landing view (Tal's Kommons proposal "Kommunity Page",
+// #117596933443323274): your own Mates, most recent poster first.
+const MatesView = () => <KommunityMates />;
 
 export const Kommunity = () => (
   <KornerShell
     slug='kommunity'
     label='Kommunity'
     className='kommunity'
-    defaultView='discover'
+    defaultView='mates'
     views={{
+      mates: MatesView,
       discover: DiscoverView,
       everyone: EveryoneView,
       orb: OrbView,

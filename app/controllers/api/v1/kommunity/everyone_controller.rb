@@ -34,7 +34,7 @@ class Api::V1::Kommunity::EveryoneController < Api::BaseController
 
   def index
     @accounts = searched(visible_scope)
-                .reorder(NAME_ORDER)
+                .reorder(list_order)
                 .includes(:account_stat, user: :role)
                 .offset(offset_param)
                 .limit(clamp_limit)
@@ -47,6 +47,10 @@ class Api::V1::Kommunity::EveryoneController < Api::BaseController
 
   def visible_scope
     Account.kommunity_discoverable_to(current_account)
+  end
+
+  def list_order
+    NAME_ORDER
   end
 
   def searched(scope)
@@ -73,12 +77,16 @@ class Api::V1::Kommunity::EveryoneController < Api::BaseController
   def next_path
     return unless @accounts && @accounts.size == clamp_limit
 
-    api_v1_kommunity_everyone_url({ limit: clamp_limit, offset: offset_param + clamp_limit, q: query.presence }.compact)
+    page_url({ limit: clamp_limit, offset: offset_param + clamp_limit, q: query.presence }.compact)
   end
 
   def prev_path
     return if offset_param.zero?
 
-    api_v1_kommunity_everyone_url({ limit: clamp_limit, offset: [offset_param - clamp_limit, 0].max, q: query.presence }.compact)
+    page_url({ limit: clamp_limit, offset: [offset_param - clamp_limit, 0].max, q: query.presence }.compact)
+  end
+
+  def page_url(params)
+    api_v1_kommunity_everyone_url(params)
   end
 end
