@@ -29,6 +29,8 @@ module Freethedream
     belongs_to :need, class_name: 'Freethedream::Item', optional: true
     belongs_to :mycelium_item, class_name: 'Freethedream::MyceliumItem', optional: true
     belongs_to :source_idea, class_name: 'Freethedream::Item', optional: true
+    # A Decide's quick Kuestion, asked in its Komponent.
+    belongs_to :question, optional: true
 
     has_many :placements, class_name: 'Freethedream::Placement', dependent: :delete_all
     has_many :projects, through: :placements
@@ -38,12 +40,21 @@ module Freethedream
 
     enum :kind, { idea: 0, need: 1, job: 2, offer: 3 }, suffix: :kind, validate: true
     enum :category, CATEGORIES, prefix: :category, validate: { allow_nil: true }
+    # What kind of To do a job is on a Komponent's checklist: to do, pay
+    # (with its amount in dollars as quantity and unit '$') or book
+    # (docs/spaces/freethedream.md, The checklist), or decide, settled by a
+    # quick Kuestion (`question`). Only a job has one.
+    attribute :task, :integer, default: 0
+    enum :task, { todo: 0, pay: 1, book: 2, decide: 3 }, prefix: :task, validate: true
 
     validates :title, presence: true, length: { maximum: TITLE_MAX }
     validates :body, length: { maximum: BODY_MAX }
     validates :unit, length: { maximum: UNIT_MAX }
     validates :quantity, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: QUANTITY_MAX }
     validate :need_is_a_need
+    validate :task_is_a_jobs
+    validate :question_is_a_decides
+    validates :question, presence: true, on: :create, if: :task_decide?
     validate :no_new_ideas, on: :create
     validate :mycelium_item_is_owners
 
@@ -74,13 +85,18 @@ module Freethedream
       claims.loaded? ? claims.any? : claims.exists?
     end
 
+    # A To do on a Komponent's checklist is ticked off.
+    def done?
+      done_at.present?
+    end
+
     # Something to bring is sorted once as many as it asks for are coming.
     # The amount is a floor, "20+" (Tal, 2026-10-18: more is better): one
     # pot is sorted by one tap, twenty plates by twenty, and anything over
-    # is extra and welcome. An Actualise item is sorted once somebody is
-    # on it.
+    # is extra and welcome. A To do (a job) is sorted once it's ticked off
+    # (Tal, 2026-11-10, the checklist), not when someone is on it.
     def sorted?
-      need_kind? ? covered >= quantity : actualised?
+      need_kind? ? covered >= quantity : done?
     end
 
     private
@@ -89,6 +105,14 @@ module Freethedream
       return if need_id.nil?
 
       errors.add(:need_id, :invalid) unless offer_kind? && need&.need_kind? && need.root_id == root_id
+    end
+
+    def task_is_a_jobs
+      errors.add(:task, :inclusion) unless job_kind? || task_todo?
+    end
+
+    def question_is_a_decides
+      errors.add(:question, :invalid) if question_id.present? && !task_decide?
     end
 
     def no_new_ideas

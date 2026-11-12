@@ -248,7 +248,13 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
    doesn't show says its own parent with `useSpaceBack({ href, label })`
    (`components/space_back.ts`, 2026-10-19), and the badge goes one layer up,
    named for it: a FreeTheDream fractal backs up to its gang, a gang to its
-   emergence. Such a page draws no back chip of its own.
+   emergence. Such a page draws no back chip of its own. And a page that
+   shows things from other korners says so with `useComeBackHere({ href,
+label })` (2026-11-11). While it's open, the router stamps any link into
+   another korner with `backTo` and `backLabel`, and a deeper page there
+   backs up to it, named for it: a Krew's event in Kalendar, or its musik in
+   Booth, returns to the Krew. A korner root reached that way (from the rail,
+   say) still backs out to `/hub`.
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
    specific parent. Renders `.kronk-back-chip`.
 
@@ -499,6 +505,20 @@ transparent zones that only position their children. The korner rail starts
     current face. The view picker then renders nothing. `/home` uses the same
     rotator for Mates / Orbit / Kronkverse, with `<FeedDrum>` turning the
     content.
+  - **Swiping the rotator** (touch). A sideways swipe anywhere on the space
+    (the Stage, or Home's column: the empty space below a short page counts)
+    turns the drum under the finger. Let go past a third of the width, or
+    flick, and it finishes the turn to the next face; less, and it springs
+    back. It decides sideways or not after 10px, so a slanted thumb still
+    counts. It never starts on something that takes sideways drags itself
+    (anything that scrolls sideways, anything with `touch-action: none` like
+    the Kalendar spiral, the map), on anything you type in, a form, a menu or
+    a pop-up, or inside `data-no-swipe` (an open Nudges chat). There the
+    title band is the swipe: it steps the rotator too. A swipe started
+    mid-turn finishes that turn and takes over. It listens to touch events
+    and cancels the first sideways move, because pointer events lose the
+    drag inside a box that scrolls on its own. A swipe in from the screen's
+    very edge is the phone's back gesture and never reaches the page.
   - **Pills** (default): a segmented row, one button per view, the active one
     `aria-pressed`.
   - **Menu** (`header.picker: menu`): a dropdown.
@@ -624,6 +644,10 @@ doctor checks for it (Standard L11).
    inside its width. Pop-ups render outside the Stage, so the Stage's
    border-box rule doesn't reach them; `_kronk_stage.scss` gives every pop-up
    root's fields the same, and a new kind of pop-up is added to that list.
+7. **Nothing floats under the rail.** Anything pinned to the window (the
+   floating video player is the one there is) keeps to the Stage: clear of the
+   right band on a wide screen, above the bottom tab bar where there is one,
+   and over the Stage's content (`.picture-in-picture` in `_kronk_frame.scss`).
 
 ### Related files
 
@@ -834,7 +858,7 @@ with `app/`, `config/` or `styles/`.
 | `<SpaceHeaderRow>` + `<AutoSpaceBadge>` + `<AutoSpaceHeader>` + `<AutoSpaceViewPicker>` | The header row: back badge, title and tagline, view switch. Manifest-driven.                                            | `components/space_header_row.tsx`, `auto_space_*.tsx`, `space_badge.tsx`                |
 | `useSpaceHeaderOverride`                                                                | Put a route's own title in the header slot.                                                                             | `components/space_header_override.tsx`                                                  |
 | `<ScopeTitle>`                                                                          | The rotating title (chevrons, tap halves, position strip) for `header.rotator: true` and `/home`.                       | `components/scope_title.tsx`                                                            |
-| `<FeedDrum>`                                                                            | The quarter-turn animation when the rotator changes face (home and most korners).                                       | `components/feed_drum.tsx`                                                              |
+| `<FeedDrum>`                                                                            | The quarter-turn when the rotator changes face, and the swipe that turns it under the finger (home and most korners).   | `components/feed_drum.tsx`                                                              |
 | `<SettingsSpaceHeader>`                                                                 | A settings page's title, pushed into the header slot.                                                                   | `features/settings/space_header.tsx`                                                    |
 | `<StandardCard>` + slot components                                                      | The card shell: six slots, three arrangements. See [Card standard](#card-standard).                                     | `components/standard_card.tsx`                                                          |
 | `<SpaceGrid>` + `<SpaceCard>`                                                           | The grid arrangement as a ready-made tile grid.                                                                         | `components/space_grid.tsx`                                                             |
@@ -1082,12 +1106,12 @@ redone: FreeTheDream's (#2101, redone in #2114) and Wachuneed's shop page
 are listed as `kitBurnDown` in `eslint.config.mjs` and come off it as they
 move.
 
-| Primitive        | What it does                                                                                                                                                                                                  | Where                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`, and `attached` (the record, for the Konnected block). On `.stage-column`.    | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
-| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                                                                                 | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
-| `<PeopleRow>`    | Who's in a space at a glance: round pictures overlapping, then "+N" past the first five. Each opens that person. Used on a Komponent's page; the Krew page's faces are the same idea and should move onto it. | `components/people_row.tsx`, `styles/mastodon/_people_row.scss`      |
-| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                                                                                 | `components/back_to_korner.tsx`                                      |
+| Primitive        | What it does                                                                                                                                                                                                                                            | Where                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`, and `attached` (the record, for the Konnected block). On `.stage-column`.                                              | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
+| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                                                                                                                           | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
+| `<PeopleRow>`    | Who's in a space at a glance: round pictures overlapping, then "+N" past the first five. Each opens that person. Used on a Komponent's page and for a Krew's faces, where the row sits inside the button that opens People (`linked={false}`, `total`). | `components/people_row.tsx`, `styles/mastodon/_people_row.scss`      |
+| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                                                                                                                           | `components/back_to_korner.tsx`                                      |
 
 ### Actions
 

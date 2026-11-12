@@ -9,6 +9,16 @@ export type FtdCategory =
   | 'connections';
 
 export type FtdItemKind = 'idea' | 'need' | 'job' | 'offer';
+// A To do's own kind on a Komponent's checklist.
+export type FtdTask = 'todo' | 'pay' | 'book' | 'decide';
+
+// A Decide's quick Kuestion: its choices, how many picked each, and which
+// the viewer picked.
+export interface FtdDecide {
+  kuestion_id: string;
+  options: { label: string; count: number }[];
+  mine: number | null;
+}
 // How someone outside joins: its Krew's way in (Project#joining_via_krew).
 // `krew` means through the Krew's own page (an invite or requirements).
 export type FtdJoining = 'open' | 'by_request' | 'krew';
@@ -144,6 +154,10 @@ export interface FtdItemRow {
   claimed?: number;
   claimers?: (FtdAccount | null)[];
   claimed_by_me?: boolean;
+  // A To do on a checklist: ticked off, and what kind of To do it is.
+  done?: boolean;
+  task?: FtdTask;
+  decide?: FtdDecide | null;
   need?: FtdRef | null;
   // An offer: shared from its owner's Mycelium.
   mycelium?: boolean;
@@ -230,11 +244,25 @@ export type FtdSpace =
   | 'kuestions'
   | 'nudges';
 
+// What sort of projekt it is (Freethedream::Project::KINDS).
+export type FtdProjektKind =
+  | 'gathering'
+  | 'creation'
+  | 'build'
+  | 'organisation'
+  | 'governance'
+  | 'mutual_aid'
+  | 'learning'
+  | 'campaign';
+
 export interface FtdProject {
   id: string;
   slug: string;
   title: string;
   description: string;
+  // The projekt's kind (a Komponent carries its projekt's); none on older
+  // projekts.
+  kind: FtdProjektKind | null;
   owner: FtdAccount | null;
   top: boolean;
   root: FtdRef;

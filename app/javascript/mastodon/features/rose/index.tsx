@@ -4,7 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
-import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { RoseSendPicker } from './send_picker';
@@ -28,6 +28,10 @@ const views = {
 export const Rose: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const { signedIn } = useIdentity();
+  // The hook, not kornerIcon(): opened straight onto this page, the korner
+  // list may not have loaded yet, and the menu action would keep the
+  // fallback circle.
+  const roseIcon = useKornerIcon('rose');
   const [sending, setSending] = useState(false);
 
   const openPicker = useCallback(() => {
@@ -42,10 +46,10 @@ export const Rose: React.FC<{ multiColumn?: boolean }> = () => {
       () => ({
         key: 'send-rose',
         label: intl.formatMessage(messages.send),
-        icon: kornerIcon('rose'),
+        icon: roseIcon,
         iconId: 'rose',
       }),
-      [intl],
+      [intl, roseIcon],
     ),
     openPicker,
     signedIn && !sending,

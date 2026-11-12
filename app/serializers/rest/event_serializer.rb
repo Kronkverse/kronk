@@ -19,6 +19,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   attribute :going_preview
   attribute :place_id
   attribute :own_location
+  attribute :kuddle, if: :with_kuddle?
 
   def id
     object.id.to_s
@@ -95,6 +96,18 @@ class REST::EventSerializer < ActiveModel::Serializer
     Account.where(id: ids).index_by(&:id).values_at(*ids).compact.map do |a|
       { id: a.id.to_s, acct: a.acct, avatar: a.avatar_original_url }
     end
+  end
+
+  # The space Kuddle its call is in, if the viewer may get into it
+  # (decisions.md, 2026-11-11). On its own page only.
+  def kuddle
+    ids = KornerAttachment.where(source_slug: 'kalendar', source_id: object.id, target_slug: 'huddle', kind: 'link').pluck(:target_id)
+    found = HuddleSession.spaces.where(id: ids).order(:id).find { |session| session.open_to?(current_user&.account) }
+    found && { id: found.id.to_s, title: found.title }
+  end
+
+  def with_kuddle?
+    instance_options[:with_kuddle] == true
   end
 
   def current_user?

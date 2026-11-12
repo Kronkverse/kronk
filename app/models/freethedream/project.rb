@@ -58,6 +58,15 @@ module Freethedream
 
     enum :joining, { open: 0, by_request: 1 }, suffix: :joining, validate: true
 
+    # What sort of projekt it is, which suggests its Komponents
+    # (docs/spaces/freethedream.md, Kinds). A projekt's own; its Komponents
+    # read it from the top. Older projekts have none.
+    KINDS = { gathering: 0, creation: 1, build: 2, organisation: 3, governance: 4, mutual_aid: 5, learning: 6, campaign: 7 }.freeze
+    # Typed here as well, so older migrations that load this model (before
+    # the column exists) still run on a fresh database.
+    attribute :kind, :integer
+    enum :kind, KINDS, prefix: :kind, validate: { allow_nil: true }
+
     validates :title, presence: true, length: { maximum: TITLE_MAX }
     validates :description, length: { maximum: DESCRIPTION_MAX }
     validate :parent_is_fixed, on: :update

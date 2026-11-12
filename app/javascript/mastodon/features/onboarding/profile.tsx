@@ -117,8 +117,8 @@ export const Profile: React.FC<{
         // The classic Mastodon "follow suggestions" step at /start/follows
         // is retired 2026-09-05 — Kronk has no follows, and invited users
         // become mates with their inviter automatically via
-        // AutoGrooveInviterWorker. Land straight on Home; default
-        // feed_scope is `orbit`, so that's the tier they see.
+        // AutoGrooveInviterWorker. Land straight on Home, which opens on
+        // Kronkverse (kronk.feed_opens_on's default).
         history.push('/home');
         dispatch(closeOnboarding());
         return '';

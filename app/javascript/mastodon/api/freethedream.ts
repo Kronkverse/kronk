@@ -15,6 +15,7 @@ import type {
   FtdMyceliumItem,
   FtdProject,
   FtdProjectSummary,
+  FtdTask,
   FtdUpdate,
 } from 'mastodon/api_types/freethedream';
 
@@ -52,6 +53,9 @@ export interface FtdItemParams {
   project_id?: string;
   need_id?: string;
   kind?: FtdItemKind;
+  task?: FtdTask;
+  // A Decide's choices; none for Yes or No.
+  options?: string[];
   title?: string;
   body?: string;
   category?: FtdCategory | null;
@@ -180,7 +184,12 @@ export const apiFtdUpdateItem = (id: string, item: FtdItemParams) =>
 export const apiFtdRemoveItem = (id: string) =>
   apiRequestDelete(`${base}/items/${id}`);
 
-export type FtdItemAction = 'claim' | 'unclaim' | 'take_over';
+export type FtdItemAction =
+  | 'claim'
+  | 'unclaim'
+  | 'take_over'
+  | 'done'
+  | 'undone';
 
 export const apiFtdItemAction = (id: string, action: FtdItemAction) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/${action}`);

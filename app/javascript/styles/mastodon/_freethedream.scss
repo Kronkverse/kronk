@@ -1440,3 +1440,348 @@ $freethedream-wide: 1000px;
 .freethedream-share__suggestions {
   margin-top: 10px;
 }
+
+// ── Kinds (kind_chooser.tsx, project_composer.tsx) ──
+// Seeding a projekt starts with what kind it is: one large choice each,
+// with a line under its name, as Wachuneed's What are you offering? is.
+.freethedream-kind-question {
+  margin: 0 0 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.freethedream-kind-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.freethedream-kind-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  inline-size: 100%;
+  padding: 0.875rem;
+  border: 0;
+  border-radius: var(--radius-medium);
+  background: var(--surface-card-inset);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--surface-card-inset) 88%,
+      var(--text-primary)
+    );
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+  }
+
+  &__hint {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+  }
+}
+
+// The kind picked, under the composer's title, with a way back.
+.freethedream-kind-picked {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+// Names a Komponent could have, to tap, from its projekt's kind.
+.freethedream-kind-ideas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  button {
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    &[aria-pressed='true'] {
+      border-color: var(--accent);
+      background: color-mix(in oklab, var(--accent) 16%, transparent);
+      color: var(--text-primary);
+    }
+  }
+}
+
+// ── A Komponent's call (schedule_call.tsx) ──
+.freethedream-call {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block-start: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+
+  &__heading {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  &__field {
+    display: flex;
+    flex: 1 1 8rem;
+    flex-direction: column;
+    gap: 0.3rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+
+    &--wide {
+      flex-basis: 100%;
+    }
+  }
+
+  &__hint,
+  &__error {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  &__hint {
+    color: var(--text-muted);
+  }
+
+  &__error {
+    color: var(--warning-red);
+  }
+
+  &__actions {
+    display: flex;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+
+  &__more {
+    margin-inline-start: auto;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+}
+
+// ── A Komponent's checklist (checklist.tsx) ──
+.freethedream-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__entry {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+
+    .people-row {
+      --people-row-size: 24px;
+
+      margin-block: 0;
+    }
+  }
+
+  &__entry--done &__title {
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  // An entry's kind: its icon and a word, not a pill.
+  &__kind {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+
+    .icon {
+      inline-size: 16px;
+      block-size: 16px;
+    }
+  }
+
+  // The kind being added, on the right of the add box: only as wide as the
+  // kind it shows.
+  &__pick {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: none;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover,
+    &[aria-expanded='true'] {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .icon {
+      inline-size: 18px;
+      block-size: 18px;
+    }
+
+    .icon:last-child {
+      inline-size: 16px;
+      block-size: 16px;
+      color: var(--text-muted);
+    }
+  }
+
+  &__menu {
+    min-inline-size: 10rem;
+  }
+
+  // A Pay entry's amount, and Paid or Booked once it's ticked.
+  &__amount {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__state {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  // A Decide's choices, each with how many picked it.
+  &__choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    flex-basis: 100%;
+    padding-inline-start: 1.9rem;
+
+    // Plain words with a count, the picked one in the accent.
+    button {
+      display: inline-flex;
+      gap: 0.3rem;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--text-secondary);
+      font: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+
+      &[aria-pressed='true'] {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      &:disabled {
+        cursor: default;
+      }
+    }
+  }
+
+  &__count {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  // What there is to pay, over the list.
+  &__money {
+    margin: 0 0 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+
+  // Drawn in the palette, not the browser's white box: an outlined square,
+  // filled with the accent and a check once ticked.
+  &__tick {
+    display: inline-grid;
+    flex: none;
+    place-content: center;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    margin: 0;
+    border: 2px solid var(--text-secondary);
+    border-radius: var(--radius-small);
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &::after {
+      content: '';
+      inline-size: 0.35rem;
+      block-size: 0.65rem;
+      margin-block-start: -0.15rem;
+      border: solid var(--text-on-accent);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) scale(0);
+      transition: transform var(--dur-fast) var(--ease-out);
+    }
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    &:checked {
+      border-color: var(--accent);
+      background: var(--accent);
+
+      &::after {
+        transform: rotate(45deg) scale(1);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__title {
+    flex: 1 1 8rem;
+    min-inline-size: 0;
+  }
+
+  &__add {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-block-start: 0.75rem;
+  }
+}

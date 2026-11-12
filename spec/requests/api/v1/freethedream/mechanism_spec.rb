@@ -196,15 +196,85 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(api(alice, :get, "/items/#{need['id']}")).to include('covered' => 150, 'spare' => 0)
     end
 
-    it 'puts whoever adds to Actualise on it, and anyone can jump on board', :aggregate_failures do
+    # The checklist (Tal, 2026-11-10): adding a To do doesn't put you on
+    # it; anyone can say they're on it, and anyone can tick it off.
+    it 'adds a To do with nobody on it, and anyone can get on it and tick it off', :aggregate_failures do
       fire = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Fire twirler' })
-      expect(fire).to include('claimed' => 1, 'claimed_by_me' => true)
+      expect(fire).to include('claimed' => 0, 'claimed_by_me' => false, 'done' => false)
 
+      api(alice, :post, "/items/#{fire['id']}/claim")
       api(bob, :post, "/items/#{fire['id']}/claim")
       expect(api(cara, :post, "/items/#{fire['id']}/claim")['claimed']).to eq 3
 
       api(alice, :post, "/items/#{fire['id']}/unclaim")
       expect(api(bob, :get, "/items/#{fire['id']}")['claimers'].pluck('id')).to eq [bob.account_id.to_s, cara.account_id.to_s]
+
+      expect(api(cara, :post, "/items/#{fire['id']}/done")['done']).to be true
+      expect(api(bob, :post, "/items/#{fire['id']}/undone")['done']).to be false
+    end
+
+    # Pay and Book are To dos of their own kind (decisions.md, 2026-11-11).
+    it 'adds a Pay with its amount and a Book, ticked off like any To do', :aggregate_failures do
+      hall = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'pay', title: 'Hall deposit', quantity: 200, unit: '$' })
+      expect(hall).to include('task' => 'pay', 'quantity' => 200, 'unit' => '$', 'done' => false)
+      expect(api(bob, :post, "/items/#{hall['id']}/claim")['claimed']).to eq 1
+      expect(api(bob, :post, "/items/#{hall['id']}/done")['done']).to be true
+
+      bus = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'book', title: 'The bus' })
+      expect(bus['task']).to eq 'book'
+      expect(api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sweep' })['task']).to eq 'todo'
+    end
+
+    # A Decide is a quick Kuestion in the Komponent (decisions.md, 2026-11-11).
+    it 'adds a Decide that asks a Kuestion, picked on the entry and ticked once decided', :aggregate_failures do
+      day = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'decide', title: 'Which day?', options: %w(Sat Sun) })
+      expect(day['decide']).to include('options' => [{ 'label' => 'Sat', 'count' => 0 }, { 'label' => 'Sun', 'count' => 0 }], 'mine' => nil)
+      question = Question.find(day['decide']['kuestion_id'])
+      expect(question).to have_attributes(title: 'Which day?', answer_format: 'mc', freethedream_project_id: doof['id'].to_i)
+
+      post "/api/v2/kuestions/#{question.id}/answers", params: { choice_index: 1 }, headers: headers_for(bob), as: :json
+      expect(response).to have_http_status(201)
+      seen = api(bob, :get, "/items/#{day['id']}")['decide']
+      expect(seen).to include('mine' => 1)
+      expect(seen['options'].pluck('count')).to eq [0, 1]
+      expect(api(cara, :post, "/items/#{day['id']}/done")['done']).to be true
+
+      api(alice, :delete, "/items/#{day['id']}")
+      expect(Question.exists?(question.id)).to be false
+    end
+
+    it 'asks a Decide as Yes or No without choices, and wants two to four', :aggregate_failures do
+      rain = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'decide', title: 'Go ahead if it rains?' })
+      expect(rain['decide']['options'].pluck('label')).to eq %w(Yes No)
+
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'decide', title: 'Colour?', options: %w(A B C D E) })
+      expect(response).to have_http_status(422)
+      expect(Freethedream::Item.where(title: 'Colour?')).to be_empty
+    end
+
+    it 'gives only a To do a kind of its own', :aggregate_failures do
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', task: 'pay', title: 'Gas' })
+      expect(response).to have_http_status(422)
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'nonsense', title: 'Sweep' })
+      expect(response).to have_http_status(422)
+    end
+
+    it 'ticks off only a To do, and only for people in the projekt', :aggregate_failures do
+      gas = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Gas' })
+      api(alice, :post, "/items/#{gas['id']}/done")
+      expect(response).to have_http_status(403)
+
+      fire = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Fire twirler' })
+      api(Fabricate(:user), :post, "/items/#{fire['id']}/done")
+      expect(response).to have_http_status(403)
+    end
+
+    it "keeps a projekt's kind on the projekt, and shows it on its Komponents", :aggregate_failures do
+      expect(api(alice, :put, "/projects/#{doof['id']}", project: { kind: 'gathering' })['kind']).to eq 'gathering'
+      kitchen = api(alice, :post, '/projects', project: { title: 'Kitchen', parent_id: doof['id'], kind: 'campaign' })
+      expect(kitchen['kind']).to eq 'gathering'
+      api(alice, :put, "/projects/#{doof['id']}", project: { kind: 'nonsense' })
+      expect(response).to have_http_status(422)
     end
 
     it 'adds no new ideas: an idea goes into Actualise' do
@@ -321,6 +391,7 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       doof = start_project(alice)
       api(bob, :post, "/projects/#{doof['id']}/join")
       job = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sound tech' })
+      api(alice, :post, "/items/#{job['id']}/claim")
       api(bob, :post, "/items/#{job['id']}/claim")
 
       leave_krew(bob, doof)

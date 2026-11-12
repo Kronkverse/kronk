@@ -194,6 +194,50 @@ Pieces of a project overlap, and the model holds that both ways:
 - **Dependencies.** A gang can depend on another gang. _Power_ is its own
   gang, and Live Stage and Kitchen depend on it.
 
+### Kinds
+
+A projekt's **kind** is picked first when it's seeded, one large choice
+each with a line under it (`kind_chooser.tsx`, as Wachuneed's What are you
+offering?), and changed in Edit (decisions.md, 2026-11-10). The eight:
+Gathering, Creation, Build, Organisation, Governance, Mutual aid,
+Learning, Campaign (`Project::KINDS`, `kinds.ts`). Older projekts have
+none. **+ Add a Komponent** offers names the kind suggests, to tap
+(Gathering: Site, Kitchen, Sound, On the day; Build: Materials, Stages,
+Tools; …). A Komponent's page reads its projekt's kind.
+
+### The checklist
+
+A Komponent's page (and a fractal's) leads with its **checklist**
+(`checklist.tsx`; Tal, 2026-11-10). One list, what's not done first, each
+entry a kind with its own action:
+
+- **To do** (a `job` item): a tick anyone in the projekt can tick or
+  untick (`POST /items/:id/done`, `/undone`, `done_at`), and **I'm on it**
+  for whoever is doing it (a claim), their pictures beside it. Adding one
+  doesn't put you on it. It counts as sorted once ticked.
+- **Bring** (a `need`): "I'll bring it", as before (`BringControl`).
+- **Pay** and **Book** (decisions.md, 2026-11-11): To dos of their own kind
+  (`items.task`: `todo`, `pay`, `book`), ticked and claimed the same way
+  but saying so: "I'll pay it" and Paid, "I'll book it" and Booked. A Pay
+  can have an amount in dollars, kept as the item's quantity with unit `$`
+  ("$200 hall deposit", or 200 in the How much box), and the list says
+  what there is to pay and how much of it is paid. Money still moves
+  outside Kronk. Paying is one person settling a bill; chipping in towards
+  something is still a Bring of "$400 for permits".
+- **Decide** (decisions.md, 2026-11-11): a To do (`task` `decide`) settled
+  by a quick Kuestion asked in the Komponent (`items.question_id`), so it
+  is in the Komponent's Kuestions too. Its choices go in the Choices box
+  ("Sat, Sun", two to four), or none for Yes or No. Everyone in the
+  projekt picks one, or changes their pick, right on the entry, which
+  shows how many picked each. Anyone ticks it once it's decided, and it
+  reads "Decided: Sun" for the choice most picked. Taking the entry off
+  takes its Kuestion with it.
+
+Entries go in one line at a time under the list, with To do, Bring, Pay,
+Book or Decide picked from a dropdown beside the box (`QuickAdd`), each
+kind with its icon, which its entries show too. No pills: Tal, 2026-11-11,
+"i really really dont like the pill situation".
+
 ### The kinds of item
 
 | List               | What it is                                                     | How people take part                                                                                                                                                                                                                                                  |
@@ -327,7 +371,16 @@ getting involved, not for doing the work itself:
   (Kronk::EventLinks). On a projekt's page that is the whole projekt; a
   Komponent's event is made from the Komponent's own page. No picker (Tal,
   2026-11-08, "'Make and event' button"). With nothing planned it says so,
-  in one quiet line.
+  in one quiet line. **On a Komponent, New schedules a call** (Tal,
+  2026-11-11: "it just needs to be really really simple, with the spaces
+  kuddle already set up"): what it's about (the Komponent's name and "call"
+  to start), the day, the time and how long, nothing else
+  (`schedule_call.tsx`). The event is Konnected to the Komponent and its
+  call is in the Komponent's own Kuddle (`kuddle_space`); **More options**
+  opens the full composer. **A projekt's or Komponent's event is for its
+  members** (Tal, 2026-11-11): the call is the projekt's Krew only, and the
+  full composer opened from a projekt starts with that Krew as its audience
+  (`?audience=krew:<id>`), which its maker can widen.
 - **Activity**: the latest four things that happened in the last
   fortnight (Tal, 2026-11-09: "only the latest 3 or 4, maybe only recent
   ones too"), with who did them

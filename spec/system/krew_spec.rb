@@ -30,6 +30,20 @@ RSpec.describe 'Krew page', :js, :streaming do
     find('.kronk-menu__trigger').click
   end
 
+  # Tal, 2026-11-11: a Krew in the list shows who's in it as faces, not a
+  # count and an age.
+  it "lists each Krew with its people's faces", :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    krew.krew_memberships.create!(account: Fabricate(:account, username: 'sam'), role: 'member', source: 'direct')
+    visit '/hub/krew'
+
+    within('.krew-page__row', text: 'Growers') do
+      expect(page).to have_css('.people-row .people-row__person', count: 2)
+      expect(page).to have_no_css('.people-row a')
+      expect(page).to have_no_text('members')
+    end
+  end
+
   it 'puts the chat first, then the spaces, just above the posts' do
     visit "/hub/krew/#{krew.slug}"
 
@@ -112,6 +126,21 @@ RSpec.describe 'Krew page', :js, :streaming do
 
     within('#krew-kuddles .kuddle-frame') { expect(page).to have_link('Growers') }
     expect(HuddleSession.spaces.where(krew: krew).count).to eq 1
+  end
+
+  # decisions.md, 2026-11-11: an event's call in the Krew's own Kuddle.
+  it "holds an event's call in the Krew's own Kuddle", :aggregate_failures do
+    visit "/hub/kalendar/composer?konnect=krew:#{krew.id}"
+    within('.compose-shell') do
+      find('input[placeholder="What is happening?"]').set('Krew meeting')
+      check 'Call in the Krew’s Kuddle'
+      click_on 'Post it'
+    end
+
+    expect(page).to have_current_path('/hub/kalendar/krew-meeting')
+    expect(page).to have_link('Join the call')
+    kuddle = HuddleSession.spaces.find_by!(krew: krew)
+    expect(KornerAttachment.where(source_slug: 'kalendar', target_slug: 'huddle', target_id: kuddle.id)).to exist
   end
 
   it 'shows each space it has as a section of cards, ending in New', :aggregate_failures do
@@ -202,5 +231,20 @@ RSpec.describe 'Krew page', :js, :streaming do
     krew = Krew.find_by!(name: 'Seed savers')
     expect(krew.access).to eq 'requirement_gated'
     expect(krew.krew_requirements.pluck(:kind)).to eq ['located_in']
+  end
+
+  # Kommons "Navigating Krews" (Tal, 2026-11-09): an event opened from the
+  # Krew lives in Kalendar, and its back badge returns to the Krew.
+  it 'goes back to the Krew from an event opened on it' do
+    status = Fabricate(:status, account: bob.account, text: 'Working bee', visibility: 'public')
+    status.krews << krew
+    Event.create!(account: bob.account, status: status, title: 'Working bee', start_time: 2.days.from_now, end_time: 2.days.from_now + 3.hours)
+
+    visit "/hub/krew/#{krew.slug}"
+    within('.krew-detail__events') { click_on 'Working bee' }
+
+    expect(page).to have_current_path(%r{\A/hub/kalendar/})
+    find('.space-badge', text: 'Growers').click
+    expect(page).to have_current_path("/hub/krew/#{krew.slug}")
   end
 end

@@ -28,16 +28,15 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     item.kind = 'offer' if need
     Freethedream::Item.transaction do
       grow_into_mycelium!(item)
+      ask_decide!(item, project)
       item.save!
       item.placements.create!(project: project)
-      # Whoever adds something to Actualise is its first actualiser.
-      item.claims.create!(account: current_account) if item.job_kind?
     end
     log!(project, item, "#{item.kind}_added")
     Freethedream::MyceliumMatch.nudge_for(item)
     render json: view.item(item), status: 201
-  rescue ActiveRecord::RecordInvalid
-    render_invalid(item)
+  rescue ActiveRecord::RecordInvalid => e
+    render_invalid(e.record.is_a?(Question) ? e.record : item)
   end
 
   def update
@@ -50,7 +49,10 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
   def destroy
     permit!(@item.owned_by?(current_account))
     Freethedream::Comment.where(subject: @item).delete_all
+    question = @item.question
     @item.destroy!
+    # A Decide's Kuestion was made with it, so it goes with it.
+    question&.destroy!
     render_empty
   end
 
@@ -95,6 +97,25 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     render json: view.item(@item)
   end
 
+  # Ticking a To do off, and back on: anyone in the projekt, as anyone can
+  # pick one up (docs/spaces/freethedream.md, The checklist).
+  def done
+    require_member!(@item.root)
+    permit!(@item.job_kind?)
+    unless @item.done?
+      @item.update!(done_at: Time.now.utc)
+      log!(home, @item, 'done')
+    end
+    render json: view.item(@item)
+  end
+
+  def undone
+    require_member!(@item.root)
+    permit!(@item.job_kind?)
+    @item.update!(done_at: nil)
+    render json: view.item(@item)
+  end
+
   def take_over
     take_over!(@item, @item.root)
     render json: view.item(@item)
@@ -131,7 +152,24 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     item.mycelium_item = Freethedream::MyceliumItem.create!(account: current_account, category: item.category, title: item.title, quantity: item.quantity)
   end
 
+  # A Decide is settled by a quick Kuestion asked in its Komponent: its
+  # `options` (two to four), or Yes or No without them.
+  def ask_decide!(item, project)
+    return unless item.job_kind? && item.task_decide?
+
+    options = Array(params.dig(:item, :options)).map { |o| o.to_s.strip.first(80) }.compact_blank
+    item.question = Question.create!(
+      title: item.title,
+      answer_format: options.empty? ? 'yn' : 'mc',
+      mc_options: options.map { |label| { 'label' => label } },
+      created_by_account: current_account,
+      kind: 'community',
+      locked: true,
+      freethedream_project: project
+    )
+  end
+
   def item_params
-    params.expect(item: [:kind, :title, :body, :category, :quantity, :unit, :more_welcome])
+    params.expect(item: [:kind, :task, :title, :body, :category, :quantity, :unit, :more_welcome])
   end
 end

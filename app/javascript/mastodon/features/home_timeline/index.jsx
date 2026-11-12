@@ -13,7 +13,7 @@ import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { fetchAnnouncements, toggleShowAnnouncements } from 'mastodon/actions/announcements';
-import { apiRequestGet, apiRequestPut } from 'mastodon/api';
+import { apiRequestGet } from 'mastodon/api';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
@@ -79,14 +79,16 @@ class HomeTimeline extends PureComponent {
     matchesBreakpoint: PropTypes.bool,
   };
 
-  // The Home column shows one status feed at a time, driven by the user's
-  // persisted kronk.feed_scope setting. Me / Mates / Orbit all ride the
+  // The Home column shows one status feed at a time. It opens on the width
+  // the member chose in feed settings (kronk.feed_opens_on), Kronkverse
+  // unless they picked another (Tal, 2026-11-11); turning the title moves
+  // between widths for this visit and isn't saved. Me / Mates / Orbit all ride the
   // mastodon home timeline — Me and Mates fetch it with a `?scope=` param into
   // their own cache, and the server narrows them behind
   // Kronk::FeatureFlags.feed_scope_enforced (until the flag is on, every tier
   // shows the same feed). Kommunity drives the local timeline.
   state = {
-    reach: 'orbit',
+    reach: 'kommunity',
   };
 
   // Fetch a scope's timeline when it's shown. Orbit is pre-seeded and
@@ -105,26 +107,25 @@ class HomeTimeline extends PureComponent {
   // Goes through apiRequestGet so the request carries the user's access
   // token. It used to be a bare `fetch` with only the session cookie,
   // which the API (doorkeeper) never accepts — every call 401'd and the
-  // saved feed scope was silently never restored on load.
-  loadPersistedFeedScope = async () => {
+  // saved choice was silently never read.
+  loadOpensOn = async () => {
+    let scope = 'kommunity';
     try {
       const data = await apiRequestGet('v1/kronk_settings');
-      const scope = data?.feed_scope;
-      if (['me', 'mates', 'orbit', 'kommunity'].includes(scope)) {
-        this.ensureScopeLoaded(scope);
-        this.setState(prev => (prev.reach === scope ? null : { reach: scope }));
+      if (['me', 'mates', 'orbit', 'kommunity'].includes(data?.feed_opens_on)) {
+        scope = data.feed_opens_on;
       }
     } catch {
-      // Silent — default reach stays.
+      // Silent: open on Kronkverse.
     }
+    this.ensureScopeLoaded(scope);
+    this.setState(prev => (prev.reach === scope ? null : { reach: scope }));
   };
 
-  // Inline feed-scope change from the scope title / drum: optimistic swap +
-  // persist to kronk_settings, rolling back on failure. Mirrors the
-  // /home/settings changeScope so both surfaces stay in sync.
+  // Turning the scope title / drum: swap the feed for this visit. Where Home
+  // opens is feed settings' choice, so a turn isn't saved.
   handleScopeChange = (key) => {
-    const prev = this.state.reach;
-    if (key === prev) return;
+    if (key === this.state.reach) return;
 
     // Reset scroll so the feed's drum transition starts from the top of the
     // new scope (fires for both the selector and swipe paths).
@@ -132,10 +133,6 @@ class HomeTimeline extends PureComponent {
 
     this.ensureScopeLoaded(key);
     this.setState({ reach: key });
-
-    apiRequestPut('v1/kronk_settings', { feed_scope: key }).catch(() => {
-      this.setState({ reach: prev });
-    });
   };
 
   handlePin = () => {
@@ -178,7 +175,7 @@ class HomeTimeline extends PureComponent {
   componentDidMount () {
     setTimeout(() => this.props.dispatch(fetchAnnouncements()), 700);
     this._checkIfReloadNeeded(false, this.props.isPartial);
-    void this.loadPersistedFeedScope();
+    void this.loadOpensOn();
   }
 
   componentDidUpdate (prevProps) {

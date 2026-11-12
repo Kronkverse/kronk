@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { apiFtdCreateItem } from 'mastodon/api/freethedream';
-import type { FtdCategory, FtdItemKind } from 'mastodon/api_types/freethedream';
+import type { FtdCategory, FtdTask } from 'mastodon/api_types/freethedream';
 
 import {
   MoreWelcome,
@@ -20,6 +20,12 @@ import {
 // written (no amount), and whoever adds it is on it. The How many box sits
 // beside the line so it's plain a need can have a number (Tal, 2026-10-19);
 // when it's filled it wins over a number typed into the line.
+//
+// On a Komponent's checklist, Pay and Book are To dos of their own kind
+// (decisions.md, 2026-11-11). Pay takes an amount the same way, in dollars:
+// "$200 hall deposit", or 200 in the How much box. A Decide is a quick
+// Kuestion: its choices go in the Choices box, "Sat, Sun", or none for Yes
+// or No.
 
 const messages = defineMessages({
   need: {
@@ -27,49 +33,107 @@ const messages = defineMessages({
     defaultMessage: "Add what's needed",
   },
   howMany: { id: 'freethedream.quick.how_many', defaultMessage: 'How many' },
+  howMuch: { id: 'freethedream.quick.how_much', defaultMessage: 'Amount' },
   job: {
-    id: 'freethedream.quick.actualise',
-    defaultMessage: 'Add an idea to bring to life',
+    id: 'freethedream.quick.todo',
+    defaultMessage: 'Add something to do',
+  },
+  pay: {
+    id: 'freethedream.quick.pay',
+    defaultMessage: 'Add something to pay for',
+  },
+  book: {
+    id: 'freethedream.quick.book',
+    defaultMessage: 'Add something to book',
+  },
+  decide: {
+    id: 'freethedream.quick.decide',
+    defaultMessage: 'Add something to decide',
+  },
+  choices: {
+    id: 'freethedream.quick.choices',
+    defaultMessage: 'Choices, or none for yes or no',
+  },
+  choicesCount: {
+    id: 'freethedream.quick.choices_count',
+    defaultMessage: 'Give two to four choices, or none for yes or no.',
   },
   add: { id: 'freethedream.quick.add', defaultMessage: 'Add' },
   added: { id: 'freethedream.quick.added', defaultMessage: 'Added {what}' },
-  addedOn: {
-    id: 'freethedream.quick.added_on',
-    defaultMessage: 'Added {what}. You’re on it.',
-  },
 });
 
+// What's being added: a need, or a To do of one of its kinds.
+export type QuickAddKind = 'need' | 'job' | Exclude<FtdTask, 'todo'>;
+
 interface Props {
-  kind: Extract<FtdItemKind, 'need' | 'job'>;
+  kind: QuickAddKind;
   projectId: string;
   onAdded: () => void;
+  // On the right of the box: on a checklist, the kind being added.
+  pick?: React.ReactNode;
 }
 
-export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
+interface Line {
+  quantity: number;
+  unit: string;
+  title: string;
+  more: boolean;
+}
+
+export const QuickAdd: React.FC<Props> = ({
+  kind,
+  projectId,
+  onAdded,
+  pick,
+}) => {
   const intl = useIntl();
   const [text, setText] = useState('');
   const [count, setCount] = useState('');
+  const [choices, setChoices] = useState('');
   const [more, setMore] = useState(false);
   // No category pills under the box any more (Tal, 2026-11-08): a need is
   // Things and an idea is Skills, which the Mycelium still matches on.
-  const category: FtdCategory = kind === 'need' ? 'things' : 'skills';
+  const category: FtdCategory =
+    kind === 'need' ? 'things' : kind === 'pay' ? 'money' : 'skills';
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
+  // Changing the kind keeps what's typed (Tal, 2026-11-11: "the text i've
+  // typed gets removed"), but not a count, which is how many for Bring and
+  // how much for Pay.
+  useEffect(() => {
+    setCount('');
+    setNote(null);
+    setError(null);
+  }, [kind]);
+
+  const counts = kind === 'need' || kind === 'pay';
   // With a number in the box, the line is read as if it led with it, so
   // "kg rice" and 5 is 5 kg of rice.
-  const boxed = kind === 'need' && Number.parseInt(count, 10) > 0;
-  const parsed = useMemo(
-    () =>
-      kind === 'job'
-        ? null
-        : boxed
-          ? { ...parseLine(`${count} ${text.trim()}`), more }
-          : parseLine(text),
-    [kind, boxed, count, text, more],
-  );
+  const boxed = counts && Number.parseInt(count, 10) > 0;
+  const parsed = useMemo<Line | null>(() => {
+    if (kind === 'need')
+      return boxed
+        ? { ...parseLine(`${count} ${text.trim()}`), more }
+        : parseLine(text);
+    if (kind === 'pay') {
+      if (boxed)
+        return {
+          quantity: Number.parseInt(count, 10),
+          unit: '$',
+          title: text.trim(),
+          more: false,
+        };
+      // Only a dollar amount is an amount here; anything else is the title.
+      const line = parseLine(text);
+      return line.unit === '$' && line.title
+        ? { ...line, more: false }
+        : { quantity: 1, unit: '', title: text.trim(), more: false };
+    }
+    return null;
+  }, [kind, boxed, count, text, more]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
@@ -81,40 +145,62 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
     setNote(null);
   }, []);
 
+  const handleChoices = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setChoices(e.target.value);
+      setError(null);
+    },
+    [],
+  );
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
       if (!text.trim() || busy) return;
-      const line =
-        kind === 'job'
-          ? { quantity: 1, unit: '', title: text.trim(), more: false }
-          : parsed;
-      if (!line?.title) return;
+      const options =
+        kind === 'decide'
+          ? choices
+              .split(',')
+              .map((c) => c.trim())
+              .filter(Boolean)
+          : [];
+      if (options.length === 1 || options.length > 4) {
+        setError(intl.formatMessage(messages.choicesCount));
+        return;
+      }
+      const line: Line | null = parsed ?? {
+        quantity: 1,
+        unit: '',
+        title: text.trim(),
+        more: false,
+      };
+      if (!line.title) return;
       setBusy(true);
       setError(null);
       apiFtdCreateItem({
         project_id: projectId,
-        kind,
+        kind: kind === 'need' ? 'need' : 'job',
+        task: kind === 'need' || kind === 'job' ? undefined : kind,
+        options: options.length > 0 ? options : undefined,
         title: line.title,
         quantity: line.quantity,
-        unit: kind === 'need' ? line.unit : '',
+        unit: counts ? line.unit : '',
         more_welcome: kind === 'need' && line.more,
         category: line.unit === '$' ? 'money' : category,
       })
         .then(() => {
           setText('');
           setCount('');
+          setChoices('');
           setMore(false);
           setBusy(false);
           setNote(
-            kind === 'need'
-              ? intl.formatMessage(messages.added, {
-                  what:
-                    line.quantity > 1 || line.unit
-                      ? `${line.title} (${formatNeed(line.quantity, line.unit, line.more)})`
-                      : line.title,
-                })
-              : intl.formatMessage(messages.addedOn, { what: line.title }),
+            intl.formatMessage(messages.added, {
+              what:
+                counts && (line.quantity > 1 || line.unit)
+                  ? `${line.title} (${formatNeed(line.quantity, line.unit, line.more)})`
+                  : line.title,
+            }),
           );
           onAdded();
           input.current?.focus();
@@ -124,7 +210,18 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
           setBusy(false);
         });
     },
-    [text, parsed, busy, kind, projectId, onAdded, intl, category],
+    [
+      text,
+      choices,
+      parsed,
+      busy,
+      kind,
+      counts,
+      projectId,
+      onAdded,
+      intl,
+      category,
+    ],
   );
 
   const counted =
@@ -151,19 +248,36 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
         aria-label={intl.formatMessage(messages[kind])}
         maxLength={180}
       />
-      {kind === 'need' && (
+      {pick}
+      {counts && (
         <input
           className='freethedream__input freethedream-quick__count'
           type='text'
           inputMode='numeric'
           value={count}
           onChange={handleCount}
-          placeholder={intl.formatMessage(messages.howMany)}
-          aria-label={intl.formatMessage(messages.howMany)}
+          placeholder={intl.formatMessage(
+            kind === 'pay' ? messages.howMuch : messages.howMany,
+          )}
+          aria-label={intl.formatMessage(
+            kind === 'pay' ? messages.howMuch : messages.howMany,
+          )}
+        />
+      )}
+      {kind === 'decide' && (
+        <input
+          className='freethedream__input freethedream-quick__choices'
+          value={choices}
+          onChange={handleChoices}
+          placeholder={intl.formatMessage(messages.choices)}
+          aria-label={intl.formatMessage(messages.choices)}
+          maxLength={240}
         />
       )}
       {/* Once there's an amount: is more welcome? (Tal, 2026-10-19) */}
-      {counted && <MoreWelcome on={parsed.more} onToggle={handleMore} />}
+      {kind === 'need' && counted && (
+        <MoreWelcome on={parsed.more} onToggle={handleMore} />
+      )}
       <button
         type='submit'
         className='freethedream__button freethedream__button--small'

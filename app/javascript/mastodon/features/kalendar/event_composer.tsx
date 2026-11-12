@@ -9,6 +9,7 @@ import api from 'mastodon/api';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import {
   ComposeBody,
+  ComposeCheck,
   ComposeField,
   ComposeHint,
   ComposeInput,
@@ -55,6 +56,18 @@ import { useAppDispatch } from 'mastodon/store';
 // it be removed, the only location there is here.
 
 const messages = defineMessages({
+  kuddleKrew: {
+    id: 'kalendar.composer.kuddle_krew',
+    defaultMessage: 'Call in the Krew’s Kuddle',
+  },
+  kuddleProjekt: {
+    id: 'kalendar.composer.kuddle_projekt',
+    defaultMessage: 'Call in its Kuddle',
+  },
+  kuddleHint: {
+    id: 'kalendar.composer.kuddle_hint',
+    defaultMessage: 'Everyone in it joins the call from the event.',
+  },
   label: { id: 'kalendar.new.title', defaultMessage: 'New event' },
   subtitle: {
     id: 'kalendar.new.subtitle',
@@ -213,6 +226,7 @@ interface CreatePayload {
   visibility: ReachValue;
   image_id?: string;
   krew_ids?: string[];
+  kuddle_space?: string;
 }
 
 // Shape returned by POST /api/v2/media. Only the ID is required to
@@ -347,6 +361,9 @@ interface Props {
   // Arriving from a Krew (`?konnect=krew:<id>` or `?krew=<id>`): the event
   // starts out for that Krew alone.
   forKrewId?: string | null;
+  // Made from a projekt or Komponent: its Krew is the audience to start
+  // with, without the Krew taking the projekt's place as what it's for.
+  audienceKrewId?: string | null;
   // Editing this event instead of making one.
   event?: EditableEvent;
   onUpdated?: () => void;
@@ -366,6 +383,7 @@ export const EventComposer: React.FC<Props> = ({
   onCancel,
   onCreated,
   forKrewId,
+  audienceKrewId,
   event: editing,
   onUpdated,
   onDelete,
@@ -376,11 +394,28 @@ export const EventComposer: React.FC<Props> = ({
   // the record it was opened for (`?konnect=<slug>:<id>`) and any the
   // person adds in the Konnect row. A Krew it was opened for is the Krew
   // audience (`forKrewId`), which keeps its own link (EventLinks.posted).
+  const audienceKrew = forKrewId ?? audienceKrewId ?? null;
   const konnect = useKonnect('kalendar', {
     sourceHandled: !!forKrewId,
   });
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
+  // The Krew, projekt or Komponent it was made from, whose own Kuddle the
+  // call can be in (decisions.md, 2026-11-11).
+  const kuddleSpace = forKrewId
+    ? `krew:${forKrewId}`
+    : konnect.source &&
+        (konnect.source.slug === 'krew' ||
+          konnect.source.slug === 'freethedream')
+      ? `${konnect.source.slug}:${konnect.source.id}`
+      : null;
+  const [inKuddle, setInKuddle] = useState(false);
+  const onToggleKuddle = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInKuddle(e.target.checked);
+    },
+    [],
+  );
 
   const [title, setTitle] = useState(editing?.title ?? '');
   const [description, setDescription] = useState(editing?.description ?? '');
@@ -433,7 +468,7 @@ export const EventComposer: React.FC<Props> = ({
   // Invite-only toggle was retired 2026-08-17: it's an audience
   // choice, so the scope picker owns it).
   const [reach, setReach] = useState<ReachValue>(
-    forKrewId ? 'self_only' : 'public',
+    audienceKrew ? 'self_only' : 'public',
   );
   // Krew is an orthogonal additive audience axis (see the reach doc
   // §2.2): members of a targeted krew see the event on top of
@@ -442,7 +477,7 @@ export const EventComposer: React.FC<Props> = ({
   // ReachDropdown's expandable Krews row.
   const availableKrews = useAvailableKrews();
   const [krewIds, setKrewIds] = useState<string[]>(
-    forKrewId ? [forKrewId] : [],
+    audienceKrew ? [audienceKrew] : [],
   );
   // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
   // user has picked from the search results. Stored as a Map keyed
@@ -472,8 +507,8 @@ export const EventComposer: React.FC<Props> = ({
       setStartTime(p.startTime ?? times.startTime);
       setEndDate(p.endDate ?? times.endDate);
       setEndTime(p.endTime ?? times.endTime);
-      setReach(p.reach ?? (forKrewId ? 'self_only' : 'public'));
-      setKrewIds(p.krewIds ?? (forKrewId ? [forKrewId] : []));
+      setReach(p.reach ?? (audienceKrew ? 'self_only' : 'public'));
+      setKrewIds(p.krewIds ?? (audienceKrew ? [audienceKrew] : []));
       setInvitees(new Map((p.invitees ?? []).map((a) => [a.id, a])));
       restoreKonnect(p.konnections);
       const cover = d?.media_attachments[0];
@@ -481,7 +516,7 @@ export const EventComposer: React.FC<Props> = ({
       setImagePreviewUrl(cover?.preview_url ?? cover?.url ?? null);
       setImageError(null);
     },
-    [forKrewId, restoreKonnect],
+    [audienceKrew, restoreKonnect],
   );
 
   const draft = useDraft<EventDraftParams>({
@@ -817,6 +852,7 @@ export const EventComposer: React.FC<Props> = ({
     if (endIso) payload.end_time = endIso;
     if (imageMediaId) payload.image_id = imageMediaId;
     if (krewIds.length > 0) payload.krew_ids = krewIds;
+    if (kuddleSpace && inKuddle) payload.kuddle_space = kuddleSpace;
 
     const inviteeIds = Array.from(invitees.keys());
 
@@ -861,9 +897,11 @@ export const EventComposer: React.FC<Props> = ({
     endIso,
     finishDraft,
     imageMediaId,
+    inKuddle,
     intl,
     invitees,
     krewIds,
+    kuddleSpace,
     onCreated,
     reach,
     startIso,
@@ -1083,6 +1121,20 @@ export const EventComposer: React.FC<Props> = ({
             {intl.formatMessage(messages.ownLocationHint)}
           </span>
         </div>
+      )}
+
+      {!editing && kuddleSpace && (
+        <ComposeCheck
+          checked={inKuddle}
+          onChange={onToggleKuddle}
+          disabled={busy}
+          label={intl.formatMessage(
+            kuddleSpace.startsWith('krew:')
+              ? messages.kuddleKrew
+              : messages.kuddleProjekt,
+          )}
+          hint={intl.formatMessage(messages.kuddleHint)}
+        />
       )}
 
       {/* Invitee picker — accounts get a nudge with the event on

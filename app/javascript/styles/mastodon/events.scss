@@ -641,14 +641,19 @@ $ev-interested-color: #b8945f;
     flex-shrink: 0;
   }
 
+  // The serif at regular weight, a size up from the body (docs/design.md,
+  // Type; Tal, 2026-11-12: "Maybe we make the title a bit bigger too"). Two
+  // lines, then an ellipsis.
   &__title {
-    font-size: 16px;
-    font-weight: 700;
+    display: -webkit-box;
+    font-size: 1.3rem;
+    font-weight: 400;
     color: var(--primary-text-color);
-    line-height: 1.3;
-    white-space: nowrap;
+    line-height: 1.25;
     overflow: hidden;
-    text-overflow: ellipsis;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   &__location {
@@ -667,7 +672,7 @@ $ev-interested-color: #b8945f;
   // under them, so no padding here: the gap is margin, outside the clip.
   &__description {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--primary-text-color);
     line-height: 1.45;
     margin: 4px 0 8px;

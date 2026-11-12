@@ -105,6 +105,10 @@ export const SpaceShelf: React.FC<{
   cards?: ShelfCard[] | null;
   // Where New goes, when not the korner's composer with `?konnect=`.
   newSearch?: string;
+  // New does this instead of opening a composer (a Komponent's call).
+  onNew?: () => void;
+  // Shown under the row (what onNew opens).
+  children?: React.ReactNode;
   // Something was added through Add existing: reload `cards`.
   onAdded?: () => void;
   // Hide the whole section while nothing is Konnected (a projekt's albums).
@@ -119,6 +123,8 @@ export const SpaceShelf: React.FC<{
   id,
   cards,
   newSearch,
+  onNew,
+  children,
   onAdded,
   hideWhenEmpty,
   className,
@@ -159,12 +165,16 @@ export const SpaceShelf: React.FC<{
 
   const makeRoute = manifest?.konnect?.route ?? manifest?.compose?.route;
   const handleNew = useCallback(() => {
+    if (onNew) {
+      onNew();
+      return;
+    }
     if (!makeRoute) return;
     history.push({
       pathname: makeRoute,
       search: newSearch ?? konnectSearch(homeSlug, homeId),
     });
-  }, [history, makeRoute, newSearch, homeSlug, homeId]);
+  }, [onNew, history, makeRoute, newSearch, homeSlug, homeId]);
   const openPicker = useCallback(() => {
     setPicking(true);
   }, []);
@@ -204,7 +214,7 @@ export const SpaceShelf: React.FC<{
               meta={card.meta}
             />
           ))}
-          {canAdd && makeRoute && (
+          {canAdd && (!!makeRoute || !!onNew) && (
             <ActionCard
               glyph={<Icon id='add' icon={AddIcon} />}
               label={intl.formatMessage(messages.newThing)}
@@ -212,7 +222,7 @@ export const SpaceShelf: React.FC<{
               onClick={handleNew}
             />
           )}
-          {canAdd && !makeRoute && (
+          {canAdd && !makeRoute && !onNew && (
             <ActionCard
               glyph={<Icon id='link' icon={LinkIcon} />}
               label={intl.formatMessage(messages.addExisting)}
@@ -222,6 +232,8 @@ export const SpaceShelf: React.FC<{
           )}
         </SpaceGrid>
       )}
+
+      {children}
 
       {picking && (
         <AttachmentPicker

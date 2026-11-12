@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 import type { IntlShape } from 'react-intl';
@@ -8,6 +8,8 @@ import { SpaceShelf } from 'mastodon/components/space_shelf';
 import type { ShelfCard } from 'mastodon/components/space_shelf';
 import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 
+import { audienceSearch, ScheduleCall } from './schedule_call';
+
 // A projekt's Events, the same section as a Krew's (Tal, 2026-11-09: "i
 // want it aligned so people don't have to recognise the same
 // functionality with different names"): the Kalendar events made for the
@@ -15,7 +17,8 @@ import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 // as the standard row of cards, each its picture, title and when (and the
 // Komponent it's for). New makes one for this page (the whole projekt on
 // its page, a Komponent on the Komponent's), and its composer offers Add
-// existing (Kronk::EventLinks). Going is on the event's own page. The
+// existing (Kronk::EventLinks). On a Komponent, New is Schedule a call
+// instead (schedule_call.tsx). Going is on the event's own page. The
 // events themselves live in Kalendar; this reads them.
 
 const messages = defineMessages({
@@ -85,6 +88,17 @@ export const ProjectEvents: React.FC<{
       }),
     [project.events, intl],
   );
+  const [scheduling, setScheduling] = useState(false);
+  const handleNew = useCallback(() => {
+    setScheduling(true);
+  }, []);
+  const handleCancel = useCallback(() => {
+    setScheduling(false);
+  }, []);
+  const handleDone = useCallback(() => {
+    setScheduling(false);
+    refresh();
+  }, [refresh]);
 
   return (
     <SpaceShelf
@@ -96,6 +110,16 @@ export const ProjectEvents: React.FC<{
       canAdd={project.can.link_event}
       cards={cards}
       onAdded={refresh}
-    />
+      newSearch={audienceSearch(project)}
+      onNew={project.top ? undefined : handleNew}
+    >
+      {scheduling && (
+        <ScheduleCall
+          project={project}
+          onDone={handleDone}
+          onCancel={handleCancel}
+        />
+      )}
+    </SpaceShelf>
   );
 };

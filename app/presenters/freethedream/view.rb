@@ -67,6 +67,8 @@ module Freethedream
         slug: project.slug,
         title: project.title,
         description: project.description,
+        # The projekt's kind; a Komponent shows its projekt's.
+        kind: top.kind,
         owner: account(project.owner),
         top: project.top?,
         root: { id: top.id.to_s, slug: top.slug, title: top.title },
@@ -381,6 +383,9 @@ module Freethedream
         row[:contributors] = item.offers.map { |o| { account: account(o.owner), quantity: o.quantity, offer_id: o.id.to_s } }
         row[:my_quantity] = @viewer ? item.offers.select { |o| o.owner_id == @viewer.id }.sum(&:quantity) : 0
       when 'job'
+        row[:task] = item.task
+        row[:decide] = decide(item) if item.task_decide?
+        row[:done] = item.done?
         row[:claimed] = item.claims.size
         row[:claimers] = item.claims.map { |c| account(c.account) }
         row[:claimed_by_me] = @viewer.present? && item.claims.any? { |c| c.account_id == @viewer.id }
@@ -389,6 +394,22 @@ module Freethedream
         row[:mycelium] = item.mycelium_item_id.present?
       end
       row
+    end
+
+    # A Decide's choices, with how many picked each and the viewer's pick.
+    # A Kuestion in a projekt is open to whoever can see it.
+    def decide(item)
+      question = item.question
+      return if question.nil?
+
+      answers = question.answers.to_a
+      {
+        kuestion_id: question.id.to_s,
+        options: Array(question.mc_options).each_with_index.map do |option, index|
+          { label: option['label'].to_s, count: answers.count { |a| a.choice_index == index } }
+        end,
+        mine: @viewer && answers.find { |a| a.account_id == @viewer.id }&.choice_index,
+      }
     end
 
     def item(item)
@@ -525,7 +546,7 @@ module Freethedream
         @parts = Project.where(root_id: top.id).includes(:owner).order(:created_at, :id).to_a
         @by_parent = @parts.group_by(&:parent_id)
         @by_id = ([top] + @parts).index_by(&:id)
-        @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account).to_a
+        @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account, question: :answers).to_a
         @joined = GangMember.where(project_id: @parts.map(&:id)).pluck(:project_id, :account_id).group_by(&:first).transform_values { |rows| rows.map(&:last) }
       end
 
@@ -586,7 +607,7 @@ module Freethedream
       def progress(id)
         counted = items_in(subtree_ids(id)).select { |i| i.need_kind? || i.job_kind? }
         sorted = counted.count(&:sorted?)
-        open_jobs = counted.count { |i| i.job_kind? && !i.actualised? }
+        open_jobs = counted.count { |i| i.job_kind? && !i.done? && !i.actualised? }
         { sorted: sorted, total: counted.size, open_jobs: open_jobs }
       end
 

@@ -17,6 +17,63 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-11 — The feed opens on Kronkverse
+
+**Decision (Tal):** everyone's Home feed opens on Kronkverse. Feed settings
+has an **Opens on** choice (Kronkverse, Orbit, Mates or Me) for anyone who
+wants another. Turning the title on Home moves between widths for that visit
+only.
+
+**Why:** the feed opened on whatever width it was last turned to, because
+every turn of the barrel was saved, and new members started on Orbit.
+
+**How:** a new setting, `kronk.feed_opens_on` (default `kommunity`), so
+everyone starts on Kronkverse rather than on their last turn. The old
+`kronk.feed_scope` is no longer read. Supersedes the Orbit default in
+docs/spaces/feed.md (What the feed shows).
+
+---
+
+## 2026-11-11 — An event's call is in its space's Kuddle
+
+The step left from 2026-11-10 ("Kuddles stay dateless: a scheduled call is
+an event that uses its space's Kuddle (next)").
+
+**Decision:** an event made from a Krew, projekt or Komponent can say its
+call is in that space's own Kuddle: a tick in the composer, which Konnects
+the event to the Kuddle. No new kind of event and no dates on Kuddles. The
+event's page offers Join the call around its time, to the people who may
+get into the Kuddle (its space's members), and the Kuddle is in its
+Konnected for anyone to see. docs/spaces/kalendar.md, A call in the
+space's Kuddle.
+
+## 2026-11-11 — Decide on the checklist
+
+The last of the checklist's entry kinds Tal chose on 2026-11-10: "Decide
+(a quick Kuestion, ticked when decided)".
+
+**Decision:** a Decide is a To do (`items.task` `decide`) that asks a
+Kuestion in its Komponent when it's added, with two to four choices or Yes
+or No. The Kuestion is an ordinary projekt Kuestion, open to the projekt,
+so it also shows with the Komponent's Kuestions; the checklist entry is
+where people pick, with each choice's count beside it. Ticking it is
+saying it's decided, and it reads as the choice most picked (just
+"Decided" on a tie). The entry and its Kuestion go together.
+
+## 2026-11-11 — Pay and Book on the checklist
+
+The second of the checklist's entry kinds Tal chose on 2026-11-10 ("To do
+
+- Bring, Decide, Pay and Book").
+
+**Decision:** Pay and Book are **kinds of To do** (`items.task`), not new
+kinds of item, so ticking, claiming, progress and the activity log work as
+for any To do. Each says what it is: "I'll pay it" and Paid, "I'll book it"
+and Booked. A Pay can carry an amount in dollars, kept as the item's
+quantity and unit `$` as a Bring's money is, and the checklist totals what
+there is to pay and what's paid. Kronk doesn't move the money. A Pay is one
+person settling a bill; chipping in stays a Bring.
+
 ## 2026-11-11 — An album can be shared with people you choose
 
 Tal: "I want to be able to create an album and it be accessible only to
