@@ -7,6 +7,29 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.13 "Rose"] - 2026-11-12
+
+- Barrel swipe (#2532)
+- Barrel swipe anywhere (#2541)
+- Komponent checklist (#2540)
+- Pay and Book (#2546)
+- Rose icon (#2549)
+- Decide on the checklist (#2548)
+- Back to the Krew (#2550)
+- Checklist without pills (#2551)
+- Kronikles fit the screen (#2553)
+- Floating player clear of the rail (#2554)
+- Event calls in the space's Kuddle (#2552)
+- Feed opens on Kronkverse (#2556)
+- Krew faces on PeopleRow (#2555)
+- Checklist kind menu (#2557)
+- Komponent calls, members only (#2561)
+- Checklist tick in the palette (#2559)
+- Checklist keeps typed text (#2565)
+- Krew list faces (#2566)
+- Event card type (#2567)
+- Message the poster with the listing (#2568)
+
 ### [2.1.12 "Rose"] - 2026-11-11
 
 - Albums for chosen people (#2543)
