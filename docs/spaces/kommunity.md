@@ -38,8 +38,8 @@ viewer's Mates, newest `last_status_at` first, Mates who have never posted
 last by name. It is plain time, not a ranking. Every Mate is listed whatever
 their findability (findability is about being come across, and a Mate
 already has been); suspended, unapproved and moved accounts, and anyone the
-viewer has muted or blocked, are left out. Search and offset paging are
-Everyone's, and so is the client: `KommunityPeopleList` in
+viewer has muted or blocked, are left out. Offset paging is Everyone's
+(the endpoints still take `q`, but no view sends it), and so is the client: `KommunityPeopleList` in
 `features/kommunity/everyone.tsx` draws both, with the shared `<Account>`
 row.
 
@@ -139,8 +139,9 @@ The middle view, at `/hub/kommunity/everyone`
 (`features/kommunity/everyone.tsx`): "a full list of 'Visible' Users (if
 they choose to be visible)" (proposal "Landing Page", above). A plain
 vertical list of the shared `<Account>` rows, the same row the Mates tab
-uses: tap one for the profile, and it carries its own Mate button. A
-search field at the top filters by name or handle; "Load more"
+uses: tap one for the profile, and it carries its own Mate button. There
+is no search field of its own: the search at the top (Search in the Ж menu
+on a phone) finds people, Kommunity's first (Tal, 2026-11-12). "Load more"
 (`<KornerPill>`) at the foot fetches the next page. Nothing found is an
 `<EmptyState>`.
 
