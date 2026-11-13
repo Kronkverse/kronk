@@ -1289,67 +1289,108 @@
   display: contents;
 }
 
-// Film look picker: Original plus the five looks, under the hero.
-// The body is a height-limited flex column, and a scroll container's
-// automatic minimum height is 0, so without `flex: 0 0 auto` the row was
-// squashed and the labels clipped. The vertical padding leaves room for the
-// chips' borders and focus rings, which `overflow-x: auto` would clip.
-.moments-composer__films {
-  flex: 0 0 auto;
-  min-width: 0;
-  display: flex;
-  gap: 6px;
-  padding: 4px 2px;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  scroll-padding-inline: 2px;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  // More chips off the right edge: fade it so the row reads as sliding.
-  &[data-more='true'] {
-    mask-image: linear-gradient(to right, black calc(100% - 40px), transparent);
-  }
+// Filters (Tal, 2026-11-12): a labelled Filter button with the photo tools;
+// tapped, the photo shows each filter in turn as you swipe across it, with
+// its name, a plain line about it and a dot per filter along the bottom.
+.moments-composer__hero--filtering {
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
 }
 
-.moments-composer__film {
-  flex: 0 0 auto;
+.moments-composer__hero-tool--labelled {
+  width: auto;
+  gap: 5px;
+  padding: 0 11px 0 9px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-round);
-  background: var(--surface-elevated);
-  color: var(--text-secondary);
   font-size: 13px;
-  line-height: 1.2;
-  white-space: nowrap;
-  text-transform: capitalize;
-  scroll-snap-align: start;
-  cursor: pointer;
+  font-weight: 600;
+}
 
-  @media (pointer: coarse) {
-    min-height: 44px;
-  }
+.moments-composer__filter {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 28px 10px 12px;
+  background: linear-gradient(to top, rgb(0 0 0 / 60%), transparent);
+  color: var(--semantic-text-on-accent);
+  pointer-events: none;
+}
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
+.moments-composer__filter-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+}
+
+.moments-composer__filter-name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.moments-composer__filter-line {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.moments-composer__filter-dots {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.moments-composer__filter-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-round);
+  background: rgb(255 255 255 / 45%);
+
+  &--on {
+    background: var(--semantic-text-on-accent);
   }
 }
 
-// Selected: tinted fill, accent border and text, plus a second ring so it
-// reads apart from the others without a change in width.
-.moments-composer__film--active {
-  border-color: var(--accent);
-  color: var(--accent-text);
-  background: color-mix(in oklab, var(--accent) 18%, var(--surface-elevated));
-  box-shadow: 0 0 0 1px var(--accent);
+.moments-composer__filter-step {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: rgb(0 0 0 / 40%);
+  color: var(--semantic-text-on-accent);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+  }
+}
+
+.moments-composer__filter-done {
+  min-height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .moments-composer__strip {
