@@ -163,4 +163,15 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_no_button('Close proposal')
     expect(proposal.reload).to be_closed
   end
+
+  # Tal, 2026-11-12: proposals have no steps; old ones don't show theirs.
+  it "shows a proposal's page without its old steps" do
+    proposal = Fabricate(:proposal, created_by_account: bob.account, title: 'Longer days')
+    proposal.tasks.create!(title: 'Measure the sun')
+
+    visit "/hub/kommons/p/#{proposal.id}"
+
+    expect(page).to have_css('h1, h2', text: 'Longer days')
+    expect(page).to have_no_text('Measure the sun')
+  end
 end

@@ -60,8 +60,8 @@ Other routes (all in `features/ui/index.jsx`, signed-in only):
 - `/hub/kommons/composer` (and the older `/hub/kommons/propose`): the
   composer overlay over Kommons, for links and the Konnect picker's New
   proposal. It takes `?node=<id>`, `?space=<slug>` or `?kind=new_korner`.
-  It has no Steps section (Tal, 2026-11-12, "Proposer Composer"), so a
-  new proposal starts without tasks; staged files upload as attachments. It has
+  It has no Steps section (see No steps, below); staged files upload as
+  attachments. It has
   no Konnect row: a proposal is Konnected from its page (2026-10-29).
 - `/hub/kommons/settings`: per-user settings (below).
 - Redirects: `/governance` and `/governance/*` → `/hub/kommons` (Rails,
@@ -363,19 +363,21 @@ not every proposal.
    "Closed"). Open goes unsaid. Size is not shown here.
 4. **Backing** (`proposal_backing.tsx`): one line — `₭total · N backers`
    (and your stake), an amount field, **Back**, and your available ₭.
-5. **Steps** (`proposal_steps.tsx`), only when there are any: `N of M done`
-   and the checklist. The proposer or a steward can tick a step.
-6. **Comments** (`proposal_comments.tsx`): threaded, one level, behind one
+5. **Comments** (`proposal_comments.tsx`): threaded, one level, behind one
    thin divider.
-7. **Builder row** at the foot: "Building this? Claim", or **Mark
+6. **Builder row** at the foot: "Building this? Claim", or **Mark
    actioned** / **Unclaim** for the claimant, then **Attach a file**, which
    unfolds the upload form (`proposal_attachments.tsx`). Files list under it.
 
 Edit is the Ж menu's **Edit proposal** moon (proposer, until actioned). Once
 actioned, the proposer gets **Close proposal** beside the title.
 
-Colours come from `tokens.yaml`, including the `decision-*` tokens
-(`decision-agree` for done steps). Both themes are first-class.
+Colours come from `tokens.yaml`, including the `decision-*` tokens.
+Both themes are first-class.
+
+**No steps** (Tal, 2026-11-12: "just remove them"). Proposals had steps
+(`tasks`), added in the composer and ticked on the page. Neither shows any
+more; the `tasks` rows and endpoints are still there, unused by the app.
 
 ## Lattice
 

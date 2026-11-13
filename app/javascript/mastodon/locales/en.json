@@ -3358,8 +3358,6 @@
   "profile_view_as.kronkverse": "Kronkverse",
   "profile_view_as.mates": "Mates",
   "profile_view_as.orbit": "Orbit",
-  "proposal.steps.count": "{done} of {total} done",
-  "proposal.steps.heading": "Steps",
   "propose.add_doc": "+ Attach a document",
   "propose.body_label": "Description",
   "propose.body_placeholder": "What should change, and why?",
