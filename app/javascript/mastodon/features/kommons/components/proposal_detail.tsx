@@ -22,7 +22,6 @@ import type { Proposal } from '../types';
 import { ProposalAttachments } from './proposal_attachments';
 import { ProposalBacking } from './proposal_backing';
 import { ProposalComments } from './proposal_comments';
-import { ProposalSteps } from './proposal_steps';
 
 const messages = defineMessages({
   editFromMenu: {
@@ -548,8 +547,6 @@ export const ProposalDetail: React.FC<{
             </p>
 
             <ProposalBacking proposal={proposal} onUpdate={onVoteUpdate} />
-
-            <ProposalSteps proposalId={proposal.id} />
 
             <AttachmentSection
               korner='kommons'
