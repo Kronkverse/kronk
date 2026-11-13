@@ -548,14 +548,16 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/@:acct/mates' exact component={ProfileSpace} content={children} />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
-            <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />
+            {/* Who frothed a post: /froths, Kronk's word (Tal, 2026-11-12,
+                Kommons "Froths"); /favourites still opens it for old links. */}
+            <WrappedRoute path={['/@:acct/:statusId/froths', '/@:acct/:statusId/favourites']} component={Favourites} content={children} />
             <WrappedRoute path='/@:acct/:statusId/quotes' component={Quotes} content={children} />
 
             {/* Legacy routes, cannot be easily factored with other routes because they share a param name */}
             <WrappedRoute path='/timelines/tag/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/statuses/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/statuses/:statusId/reblogs' component={Reblogs} content={children} />
-            <WrappedRoute path='/statuses/:statusId/favourites' component={Favourites} content={children} />
+            <WrappedRoute path={['/statuses/:statusId/froths', '/statuses/:statusId/favourites']} component={Favourites} content={children} />
 
             <WrappedRoute path='/follow_requests' component={FollowRequests} content={children} />
             <WrappedRoute path='/mate_requests' component={MateRequests} content={children} />

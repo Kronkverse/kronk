@@ -297,7 +297,7 @@ class StatusActionBar extends ImmutablePureComponent {
           {withCounters && (
             <Link
               className='icon-button__counter status__action-bar__froths'
-              to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/favourites`}
+              to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/froths`}
               title={intl.formatMessage(messages.frothedBy)}
             >
               <AnimatedNumber value={status.get('favourites_count')} />

@@ -389,7 +389,7 @@ export const DetailedStatus: React.FC<{
 
   const favouriteLink = (
     <Link
-      to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/favourites`}
+      to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/froths`}
       className='detailed-status__link'
     >
       <span className='detailed-status__favorites'>
