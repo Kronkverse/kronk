@@ -22,12 +22,10 @@ import { initMuteModal } from 'mastodon/actions/mutes';
 import { apiFollowAccount } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
-import { FollowersCounter } from 'mastodon/components/counters';
 import { DisplayName } from 'mastodon/components/display_name';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
-import { ShortNumber } from 'mastodon/components/short_number';
 import { Skeleton } from 'mastodon/components/skeleton';
 import { VerifiedBadge } from 'mastodon/components/verified_badge';
 import { useIdentity } from 'mastodon/identity_context';
@@ -319,19 +317,18 @@ export const Account: React.FC<AccountProps> = ({
             <div className='account__contents'>
               <DisplayName account={account} />
 
-              {!minimal && (
+              {/* No follower or Mate count: how many Mates someone has
+                  isn't something to show (Tal, 2026-11-12, Kommons
+                  "Froths"). The line holds a verified link or a mute's time
+                  left, when there is one. */}
+              {!minimal && !account && (
                 <div className='account__details'>
-                  {account ? (
-                    <>
-                      <ShortNumber
-                        value={account.followers_count}
-                        renderer={FollowersCounter}
-                      />{' '}
-                      {verification} {muteTimeRemaining}
-                    </>
-                  ) : (
-                    <Skeleton width='7ch' />
-                  )}
+                  <Skeleton width='7ch' />
+                </div>
+              )}
+              {!minimal && account && (verification || muteTimeRemaining) && (
+                <div className='account__details'>
+                  {verification} {muteTimeRemaining}
                 </div>
               )}
             </div>

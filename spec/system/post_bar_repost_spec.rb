@@ -64,7 +64,9 @@ RSpec.describe 'Post bar and Repost', :inline_jobs, :js, :streaming do
       find('.status__action-bar__froths', text: '1').click
     end
 
-    expect(page).to have_current_path("/@ana/#{post.id}/favourites")
+    expect(page).to have_current_path("/@ana/#{post.id}/froths")
     expect(page).to have_content('Cleo')
+    # Who frothed, without a follower count.
+    expect(page).to have_no_text(/follower/i)
   end
 end
