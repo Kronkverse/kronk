@@ -335,7 +335,13 @@ no Invite.
 - **A post's action bar is Reply · Froth · Nudge · Repost** (Edit where
   Nudge is, on your own posts). There is no … menu (2026-11-08): deleting a
   post, pinning it and who can see it live inside Edit, at the top of the
-  composer (`features/compose/components/edit_indicator.jsx`).
+  composer (`features/compose/components/edit_indicator.jsx`). The froth
+  count opens who frothed it at `/@<acct>/<id>/froths` (`/favourites`
+  still works for old links).
+- **A person's row shows no follower or Mate count** (Tal, 2026-11-12,
+  Kommons "Froths": how many Mates someone has isn't something to show).
+  The shared `<Account>` row keeps its second line for a verified link or
+  a mute's time left.
 - **The moons always open on screen.** The Ж can sit anywhere along either
   side and a page can add moons, so the fan isn't fixed per corner:
   `layoutMoons` (`kronk_menu_layout.ts`) measures where the Ж is when the
