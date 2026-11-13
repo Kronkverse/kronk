@@ -110,6 +110,8 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
 
     expect(page).to have_css('.compose-shell', text: 'Open a Proposal')
     expect(page).to have_no_css('.compose-shell .konnect-row')
+    # Nor Steps (Kommons "Proposer Composer", 2026-11-12).
+    expect(page).to have_no_button('+ Add step')
   end
 
   it 'proposes a new korner from the Hub without leaving it' do
