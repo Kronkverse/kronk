@@ -53,7 +53,9 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
 
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
     within('.krew-detail__kuestions') { expect(page).to have_css('.home-kuestions__card', text: 'Which weekend for the harvest?') }
-    expect(Question.find_by(title: 'Which weekend for the harvest?')).to have_attributes(krew_id: krew.id, status_id: nil)
+    question = Question.find_by(title: 'Which weekend for the harvest?')
+    expect(question.krew_id).to eq krew.id
+    expect(question.status.krews).to eq [krew]
   end
 
   # Tal, 2026-11-09: the standard pop-up, every member sees the answers

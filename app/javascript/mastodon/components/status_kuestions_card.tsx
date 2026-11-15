@@ -19,6 +19,10 @@ const messages = defineMessages({
     id: 'status_kuestions_card.see_answers',
     defaultMessage: 'See answers',
   },
+  askedIn: {
+    id: 'status_kuestions_card.asked_in',
+    defaultMessage: 'In {name}',
+  },
 });
 
 interface AnswererAvatar {
@@ -35,6 +39,7 @@ interface QuestionSummary {
   answers_count: number;
   has_answered: boolean;
   recent_answerer_avatars: AnswererAvatar[];
+  home?: { kind: 'krew' | 'projekt'; name: string };
 }
 
 export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
@@ -59,6 +64,14 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
       }}
     >
       <div className='status-korner-card__body status-kuestions-card__body'>
+        {/* Asked in a Krew or projekt: only its people see this card. */}
+        {question.home && (
+          <CardMeta className='status-kuestions-card__home'>
+            {intl.formatMessage(messages.askedIn, {
+              name: question.home.name,
+            })}
+          </CardMeta>
+        )}
         <CardTitle className='status-kuestions-card__title'>
           {question.title}
         </CardTitle>
