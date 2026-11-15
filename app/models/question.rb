@@ -19,8 +19,9 @@
 # A home (2026-11-08): a community Kuestion asked in a Krew (`krew_id`) or
 # a projekt (`freethedream_project_id`) belongs there. Only the Krew's
 # members, or whoever can see the projekt, see and answer it; it stays out
-# of the Deck and makes no feed post, and shows on its Krew's or projekt's
-# page instead (docs/spaces/kuestions.md, Kuestions in a Krew).
+# of the Deck and shows on its Krew's or projekt's page. Its feed post goes
+# only to the Krew's members or the projekt's (Kuestions::PublishQuestion;
+# docs/spaces/kuestions.md, Kuestions in a Krew).
 class Question < ApplicationRecord
   include Kronk::AttachmentSource
 
