@@ -24,7 +24,7 @@ about:
     - 'Browse everything on one page: shops along the top, then what is offered and what people want. Narrow it to Offered or Wanted.'
     - 'List something from the Ж menu, or post a wanted ad.'
     - 'Message the poster in Nudges to sort it out. Kronk handles no payment; you agree that between you.'
-    - 'Under Mine: your shop, the requests asked of you and by you, and your listings. If you sell what you make, open a shop there.'
+    - 'Under Mine: what is waiting on you, work you are doing, your wanted ads, what you sell (and your shop), and what you bought. If you sell what you make, open a shop there.'
     - 'Under Brands, back the brands whose mission you respect, or propose one.'
     - "Take a listing down once it's gone."
 icon:
@@ -170,7 +170,8 @@ hub_teaser:
 #                                       offered and wanted in one grid,
 #                                       ?show=offered|wanted narrows it)
 #   /hub/wachuneed/brands  → brands  (brands members back; Proposed ones too)
-#   /hub/wachuneed/mine    → mine    (your shop, requests, your listings)
+#   /hub/wachuneed/mine    → mine    (your jobs, what you sell and buy,
+#                                       your shop)
 views:
   - {
       key: home,
@@ -185,7 +186,7 @@ views:
   - {
       key: mine,
       label: Mine,
-      tagline: 'Your shop, your requests and your listings.',
+      tagline: 'Your jobs, what you sell and buy, and your shop.',
     }
 
 header:
