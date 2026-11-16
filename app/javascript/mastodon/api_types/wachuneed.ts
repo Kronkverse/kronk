@@ -115,6 +115,8 @@ export type ListingWhereMode = 'online' | 'in_person' | 'either';
 
 export interface ApiListingJSON {
   id: string;
+  // Whose it is (the tile says Mine on your own).
+  account_id?: string;
   slug?: string;
   title: string;
   description?: string | null;

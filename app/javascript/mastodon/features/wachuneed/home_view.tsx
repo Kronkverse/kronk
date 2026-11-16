@@ -8,8 +8,8 @@ import { apiGetAllListings } from 'mastodon/api/wachuneed';
 import { apiGetWachuneedShops } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
+import { ComposeSelect } from 'mastodon/components/compose_fields';
 import { EmptyState } from 'mastodon/components/empty_state';
-import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceGrid } from 'mastodon/components/space_grid';
@@ -19,9 +19,10 @@ import { ShopCard } from './shop_card';
 
 // /hub/wachuneed — Wachuneed on one page (Tal, 2026-11-16): the shops in a
 // row that scrolls sideways along the top, then one grid of everything
-// live, offered and wanted together, newest first. Pills above the grid
-// narrow it to what is Offered or Wanted (`?show=offered|wanted`); each
-// wanted tile carries a Wanted tag, so a mixed grid still reads.
+// live, offered and wanted together, newest first. A Show dropdown above
+// the grid narrows it to what is Offered or Wanted (`?show=offered|wanted`;
+// pills until 2026-11-16, Tal). Each tile says Offered, Wanted or Mine
+// (listing_card.tsx), so a mixed grid still reads.
 //
 // Until then the landing was a row each of Offered, Desired and Shops,
 // each with See all to a section of its own (2026-10-29); those
@@ -63,9 +64,12 @@ const HOME_PATH = '/hub/wachuneed';
 
 type Show = 'all' | 'offered' | 'wanted';
 
+const isShow = (value: unknown): value is Show =>
+  value === 'all' || value === 'offered' || value === 'wanted';
+
 const showFrom = (search: string): Show => {
   const show = new URLSearchParams(search).get('show');
-  return show === 'offered' || show === 'wanted' ? show : 'all';
+  return isShow(show) ? show : 'all';
 };
 
 export const WachuneedHome: React.FC = () => {
@@ -77,7 +81,7 @@ export const WachuneedHome: React.FC = () => {
   const [listings, setListings] = useState<ApiListingJSON[] | null>(null);
   const [shops, setShops] = useState<ApiShopJSON[]>([]);
 
-  // Everything comes once; the pills only narrow what is already here.
+  // Everything comes once; Show only narrows what is already here.
   useEffect(() => {
     let cancelled = false;
 
@@ -98,8 +102,10 @@ export const WachuneedHome: React.FC = () => {
 
   // A location object, not a string: this app's history.push drops a
   // `?query` given as a string.
-  const showOnly = useCallback(
-    (next: Show) => {
+  const handleShow = useCallback<React.ChangeEventHandler<HTMLSelectElement>>(
+    (e) => {
+      const next = e.currentTarget.value;
+      if (!isShow(next)) return;
       history.replace({
         pathname: HOME_PATH,
         search: next === 'all' ? '' : `?show=${next}`,
@@ -107,15 +113,6 @@ export const WachuneedHome: React.FC = () => {
     },
     [history],
   );
-  const handleAll = useCallback(() => {
-    showOnly('all');
-  }, [showOnly]);
-  const handleOffered = useCallback(() => {
-    showOnly('offered');
-  }, [showOnly]);
-  const handleWanted = useCallback(() => {
-    showOnly('wanted');
-  }, [showOnly]);
 
   const wantedOnly = show === 'wanted';
   const handleNew = useCallback(() => {
@@ -161,28 +158,18 @@ export const WachuneedHome: React.FC = () => {
         </section>
       )}
 
-      <nav
-        className='wachuneed-home__show'
-        aria-label={intl.formatMessage(messages.show)}
-      >
-        <KornerActionBar align='center'>
-          <KornerPill
-            label={intl.formatMessage(messages.all)}
-            active={show === 'all'}
-            onClick={handleAll}
-          />
-          <KornerPill
-            label={intl.formatMessage(messages.offered)}
-            active={show === 'offered'}
-            onClick={handleOffered}
-          />
-          <KornerPill
-            label={intl.formatMessage(messages.wanted)}
-            active={wantedOnly}
-            onClick={handleWanted}
-          />
-        </KornerActionBar>
-      </nav>
+      <label className='wachuneed-home__show'>
+        <span className='wachuneed-home__show-label'>
+          {intl.formatMessage(messages.show)}
+        </span>
+        <ComposeSelect value={show} onChange={handleShow}>
+          <option value='all'>{intl.formatMessage(messages.all)}</option>
+          <option value='offered'>
+            {intl.formatMessage(messages.offered)}
+          </option>
+          <option value='wanted'>{intl.formatMessage(messages.wanted)}</option>
+        </ComposeSelect>
+      </label>
 
       {shown.length === 0 ? (
         <EmptyState

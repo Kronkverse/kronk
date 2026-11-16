@@ -555,8 +555,23 @@
     }
   }
 
+  // Show: a label and the kit's select, at the grid's start edge.
   &__show {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin: 1.25rem 0 1rem;
+
+    .compose-input--select {
+      inline-size: auto;
+      min-inline-size: 9rem;
+    }
+  }
+
+  &__show-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
   }
 
   &__row + &__show {
@@ -831,4 +846,18 @@
     color: var(--warning-red);
     font-size: 0.875rem;
   }
+}
+
+// What kind of listing a tile is (listing_card.tsx): Offered stays the
+// plain chip; Wanted is outlined in the space's accent, and Mine filled
+// with a tint of it, so your own stand out in the one page's mixed grid.
+.space-card__tag--wanted {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.space-card__tag--mine {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent-text);
 }
