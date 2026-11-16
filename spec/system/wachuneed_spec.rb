@@ -165,6 +165,42 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_no_css('.space-card', text: 'A ladder')
   end
 
+  # docs/spaces/wachuneed.md, Answering a wanted ad.
+  it 'answers a wanted ad with a price, and the poster sees the count' do
+    ana = Fabricate(:account, username: 'ana')
+    job = Listing.create!(account: ana, title: 'A gardener', category: 'service', kind: 'wanted', state: 'live',
+                          looking_for: 'job', price_cents: 3800, price_currency: 'AUD', price_unit: 'hour')
+
+    visit "/hub/wachuneed/listings/#{job.slug}"
+    click_on 'I can do this'
+    fill_in 'What you would do, and when', with: 'Ten years of veggie gardens, Saturdays'
+    expect(page).to have_field('Your price an hour (in AUD)', with: '38.00')
+    fill_in 'Your price an hour (in AUD)', with: '40'
+    click_on 'Send'
+
+    expect(page).to have_content('You will hear if they choose you.')
+    expect(ListingOffer.last).to have_attributes(offerer: bob.account, amount_cents: 4000, state: 'pending')
+
+    visit "/hub/wachuneed/listings/#{job.slug}"
+    expect(page).to have_css('.wachuneed-detail__fact', text: '1 answer')
+  end
+
+  it 'lets the poster choose an answer on the ad, which takes it' do
+    job = Listing.create!(account: bob.account, title: 'A gardener', category: 'service', kind: 'wanted', state: 'live',
+                          looking_for: 'job', price_cents: 3800, price_currency: 'AUD', price_unit: 'hour')
+    ListingOffer.pitch(job, offerer: Fabricate(:account, username: 'cal'), amount_cents: 4000, message: 'Ten years of veggie gardens').save!
+
+    visit "/hub/wachuneed/listings/#{job.slug}"
+
+    within('section[aria-label="Answers (1)"]') do
+      expect(page).to have_content('A$40.00 / hour')
+      expect(page).to have_content('Ten years of veggie gardens')
+      click_on 'Choose'
+      expect(page).to have_content(/chosen/i)
+    end
+    expect(job.reload.state).to eq 'reserved'
+  end
+
   it 'takes the old section addresses to the new ones' do
     visit '/hub/wachuneed/wachugot'
 

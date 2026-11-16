@@ -70,6 +70,18 @@ const sentences = defineMessages({
     id: 'nudges.notification.wachuneed.offer_cancelled',
     defaultMessage: '{who} called off a booking',
   },
+  wachuneedPitched: {
+    id: 'nudges.notification.wachuneed.pitched',
+    defaultMessage: '{who} answered your wanted ad',
+  },
+  wachuneedPitchChosen: {
+    id: 'nudges.notification.wachuneed.pitch_chosen',
+    defaultMessage: '{who} chose you for their wanted ad',
+  },
+  wachuneedPitchPassed: {
+    id: 'nudges.notification.wachuneed.pitch_passed',
+    defaultMessage: "{who} didn't choose your answer",
+  },
   wachuneedBrandListed: {
     id: 'nudges.notification.wachuneed.brand_listed',
     defaultMessage: '{who} backed your brand, and it is in Brands now',
@@ -223,6 +235,9 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,
   'wachuneed.offer_cancelled': sentences.wachuneedOfferCancelled,
+  'wachuneed.pitched': sentences.wachuneedPitched,
+  'wachuneed.pitch_chosen': sentences.wachuneedPitchChosen,
+  'wachuneed.pitch_passed': sentences.wachuneedPitchPassed,
   'wachuneed.brand_listed': sentences.wachuneedBrandListed,
   // No longer sent (the invite went, 2026-10-19); kept so old nudges read.
   'freethedream.invited': sentences.freethedreamInvited,

@@ -250,6 +250,9 @@ en:
         offer_cancelled: "%{who} called off a booking"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
+        pitch_chosen: "%{who} chose you for their wanted ad"
+        pitch_passed: "%{who} didn't choose your answer"
+        pitched: "%{who} answered your wanted ad"
     subjects:
       huddle_now:
         one: 1 in the Huddle now
@@ -527,6 +530,9 @@ en-GB:
         offer_cancelled: "%{who} called off a booking"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
+        pitch_chosen: "%{who} chose you for their wanted ad"
+        pitch_passed: "%{who} didn't choose your answer"
+        pitched: "%{who} answered your wanted ad"
     subjects:
       huddle_now:
         one: 1 in the Huddle now

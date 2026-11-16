@@ -21,6 +21,7 @@ import { writeComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { me } from 'mastodon/initial_state';
 
+import { AnswerWanted } from './answer_wanted';
 import { AskForListing } from './ask_for_listing';
 import { ListingBookingSummary } from './listing_booking_summary';
 import {
@@ -34,6 +35,7 @@ import {
   selectedVariant,
 } from './listing_variant_chooser';
 import type { ChosenVariant } from './listing_variant_chooser';
+import { WachuneedRequests } from './requests_view';
 import { wantedFactsOf } from './wanted';
 
 // /hub/wachuneed/listings/:id — the listing detail page. Before this
@@ -72,6 +74,12 @@ const messages = defineMessages({
   reservedNotice: {
     id: 'wachuneed.detail.reserved',
     defaultMessage: 'This listing is on hold for another Kronker.',
+  },
+  // A wanted ad with the people it wants (docs/spaces/wachuneed.md,
+  // Answering a wanted ad).
+  takenNotice: {
+    id: 'wachuneed.detail.taken',
+    defaultMessage: 'Someone has been chosen for this.',
   },
   closedNotice: {
     id: 'wachuneed.detail.closed',
@@ -321,7 +329,9 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
 
   const stateNotice =
     listing.state === 'reserved'
-      ? messages.reservedNotice
+      ? listing.kind === 'wanted'
+        ? messages.takenNotice
+        : messages.reservedNotice
       : listing.state === 'closed'
         ? messages.closedNotice
         : null;
@@ -466,6 +476,19 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
           chosen={chosen}
           quantity={quantity}
         />
+      ) : null}
+
+      {/* A wanted ad: anyone who can see it may answer; its poster sees
+          the answers here and chooses (docs/spaces/wachuneed.md,
+          Answering a wanted ad). */}
+      {listing.kind === 'wanted' &&
+      !isOwner &&
+      !!me &&
+      listing.can_message !== false ? (
+        <AnswerWanted listing={listing} />
+      ) : null}
+      {listing.kind === 'wanted' && isOwner ? (
+        <WachuneedRequests listingId={listing.id} />
       ) : null}
 
       {listing.kind !== 'wanted' &&

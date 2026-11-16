@@ -203,6 +203,33 @@ listens:
     interaction: interactive
     cta_label: 'See requests'
     cta_route: '/hub/wachuneed/mine'
+  # Answers to a wanted ad (docs/spaces/wachuneed.md, Answering a wanted
+  # ad): directed, since whoever answers can be anyone who can see the ad.
+  - event: wachuneed.pitch.made
+    source_korner: wachuneed
+    verb: pitched
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'See answers'
+    cta_route: '/hub/wachuneed/listings/{listing_id}'
+  - event: wachuneed.pitch.chosen
+    source_korner: wachuneed
+    verb: pitch_chosen
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'View wanted ad'
+    cta_route: '/hub/wachuneed/listings/{listing_id}'
+  - event: wachuneed.pitch.passed
+    source_korner: wachuneed
+    verb: pitch_passed
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: passive
   # A brand you proposed has the backers it needs and is in Brands now
   # (docs/spaces/wachuneed.md, Brands). Once per brand. Directed: the
   # backer who brought it there needn't be your Mate.

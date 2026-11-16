@@ -79,6 +79,10 @@ export const wantedMessages = defineMessages({
   },
   by: { id: 'wachuneed.wanted.by', defaultMessage: 'By {date}' },
   on: { id: 'wachuneed.wanted.on', defaultMessage: 'On {date}' },
+  answers: {
+    id: 'wachuneed.wanted.answers',
+    defaultMessage: '{count, plural, one {# answer} other {# answers}}',
+  },
   people: {
     id: 'wachuneed.wanted.people',
     defaultMessage: '{count, plural, one {# person} other {# people}}',
@@ -177,11 +181,19 @@ export const wantedFactsOf = (
   intl: IntlShape,
   listing: ApiListingJSON,
 ): string[] => {
-  const lookingFor = listing.looking_for;
-  if (listing.kind !== 'wanted' || !lookingFor) return [];
+  if (listing.kind !== 'wanted') return [];
+  // Older wanted ads say nothing of what they are after: a thing.
+  const lookingFor = listing.looking_for ?? 'thing';
 
   const facts = [intl.formatMessage(LOOKING_FOR_LABEL[lookingFor].label)];
-  if (lookingFor === 'thing') return facts;
+  const answered = listing.answers_count
+    ? [
+        intl.formatMessage(wantedMessages.answers, {
+          count: listing.answers_count,
+        }),
+      ]
+    : [];
+  if (lookingFor === 'thing') return [...facts, ...answered];
 
   if (listing.where_mode === 'online') {
     facts.push(intl.formatMessage(wantedMessages.online));
@@ -205,5 +217,5 @@ export const wantedFactsOf = (
       intl.formatMessage(wantedMessages.people, { count: listing.spots }),
     );
   }
-  return facts;
+  return [...facts, ...answered];
 };

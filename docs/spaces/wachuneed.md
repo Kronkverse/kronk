@@ -84,6 +84,43 @@ wanted ads (`Listing#wanted_details_fit`): something on offer has none,
 and a thing has no where and one taker. Wanted ads from before have no
 `looking_for` and read as a thing; editing one keeps it that way.
 
+## Answering a wanted ad
+
+A wanted ad is answered, not asked for (Tal, 2026-11-16: "people can come
+along and be like, oh, I can deliver on this and earn some money").
+Underneath an answer is a request (`listing_offers`, see Requests) on a
+wanted listing (`ListingOffer#pitch?`), running the other way: the
+offerer is whoever answered, and the poster chooses.
+
+- **Answering** (`answer_wanted.tsx`): on a live wanted ad, anyone who can
+  see it (and so message about it) but its poster gets **I can do this**
+  (**I have this** for a thing). It opens **What you would do, and when**
+  (at least `ListingOffer::MIN_PITCH` characters; "Links to work you have
+  done help them choose") and, when the ad has an amount or asks for
+  quotes or offers, **Your price** for what the ad's price is for ("Your
+  price an hour"), filled in with the ad's set amount. It is
+  `POST /api/v1/wachuneed/listings/:id/requests` with `message` and
+  `amount_cents` (`ListingOffer.pitch`). One answer each while it waits or
+  once chosen. Only the poster sees it. The page then says where yours
+  stands: waiting, chosen ("Sort out the rest in your chat"), or not.
+- **Everyone sees the count**: the listing's facts line ends with
+  **3 answers** (`answers_count`, waiting or chosen); the viewer's own is
+  `my_answer`.
+- **Choosing**: the poster sees **Answers (N)** on the ad's own page (the
+  request cards, led by each person's name, with their price and what
+  they said; `GET /api/v1/wachuneed/requests?as=seller&listing_id=`), and
+  the same cards on Mine. **Choose** (accept) or **No thanks** (decline,
+  which asks first). When as many are chosen as the ad wants people
+  (`spots`), the ad is taken: it becomes `reserved`, leaves browse, says
+  "Someone has been chosen for this", and every answer still waiting is
+  declined (`ListingOffer#choose!`).
+- **Nudges** (directed, like requests): `wachuneed.pitch.made` to the
+  poster ("answered your wanted ad", to the ad), `wachuneed.pitch.chosen`
+  to whoever was chosen, and `wachuneed.pitch.passed` to whoever was not,
+  by No thanks or because the ad was taken ("didn't choose your answer").
+- Unpaid samples are not asked for: an answer says what you would do, not
+  the work itself (Tal, 2026-11-16).
+
 ## Prices
 
 Tal, 2026-11-16: a job can be ongoing ("I need a gardener, $38 an hour"),
