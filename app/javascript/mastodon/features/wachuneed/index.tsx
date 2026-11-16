@@ -14,8 +14,9 @@ import { WachugotListings } from './wachugot_view';
 //
 //   /hub/wachuneed        → home   (shops along the top, then everything
 //                                   offered and wanted in one grid)
+//   /hub/wachuneed/mine   → mine   (your jobs, what you sell and buy, your
+//                                   shop)
 //   /hub/wachuneed/brands → brands (brands members back; ?show=proposed)
-//   /hub/wachuneed/mine   → mine   (your shop, requests, your listings)
 //
 // The view keys agree with `views:` in config/korners/wachuneed.yaml;
 // the rotator (manifest header.rotator) drives the h1 + tagline.
@@ -61,8 +62,8 @@ const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
       defaultView='home'
       views={{
         home: renderHome,
-        brands: renderBrands,
         mine: renderMine,
+        brands: renderBrands,
       }}
     />
   );

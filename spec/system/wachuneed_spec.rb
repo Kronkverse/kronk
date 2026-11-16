@@ -151,18 +151,34 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
     expect(page).to have_css('.space-grid .space-card', text: 'Clay mug')
     expect(page).to have_css('.space-grid .space-card', text: 'A ladder')
-    expect(page).to have_css('.space-card__tag--wanted', text: /wanted/i, count: 1)
     # No shop yet, so no Shops row.
     expect(page).to have_no_css('section[aria-label="Shops"]')
 
-    click_button 'Wanted'
+    select 'Wanted', from: 'Show'
     expect(page).to have_current_path('/hub/wachuneed?show=wanted')
     expect(page).to have_css('.space-card', text: 'A ladder')
     expect(page).to have_no_css('.space-card', text: 'Clay mug')
 
-    click_button 'Offered'
+    select 'Offered', from: 'Show'
     expect(page).to have_css('.space-card', text: 'Clay mug')
     expect(page).to have_no_css('.space-card', text: 'A ladder')
+  end
+
+  it 'says on every tile what kind of listing it is, and Mine on your own' do
+    ana = Fabricate(:account, username: 'ana')
+    Listing.create!(account: ana, title: 'Clay mug', category: 'creation', state: 'live')
+    Listing.create!(account: ana, title: 'A ladder', category: 'goods', kind: 'wanted', state: 'live')
+    Listing.create!(account: bob.account, title: 'Old bike', category: 'goods', state: 'live')
+
+    visit '/hub/wachuneed'
+
+    expect(page).to have_css('.space-card__tag--wanted', text: /wanted/i, count: 1)
+    expect(page).to have_css('.space-card__tag--offered', text: /offered/i, count: 1)
+    expect(page).to have_css('.space-card__tag--mine', text: /mine/i, count: 1)
+
+    visit '/hub/wachuneed/mine'
+    expect(page).to have_css('.space-card', text: 'Old bike')
+    expect(page).to have_no_css('.space-card__tag--mine')
   end
 
   # docs/spaces/wachuneed.md, Answering a wanted ad.
@@ -215,10 +231,8 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     within('section[aria-label="Waiting on you"]') { expect(page).to have_content('I can film it this weekend') }
     within('section[aria-label="Work you\'re doing"]') { expect(page).to have_content('A gardener') }
     within('section[aria-label="Your wanted ads"]') { expect(page).to have_css('.space-card', text: 'Guitar lesson video') }
-    within('section[aria-label="Selling"]') do
-      expect(page).to have_css('.space-card', text: 'Clay mug')
-      expect(page).to have_button('Open a shop')
-    end
+    within('section[aria-label="Selling"]') { expect(page).to have_css('.space-card', text: 'Clay mug') }
+    within('section[aria-label="My shop"]') { expect(page).to have_button('Open a shop') }
   end
 
   it 'carries chosen work through: delivered by whoever does it, done by the poster' do
@@ -299,12 +313,12 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         expect(page).to have_no_button('Message the seller')
       end
 
-      it 'shows your shop as a card at the top of Mine, and + in the shop adds an item to it' do
+      it 'shows your shop as a card under My shop on Mine, and + in the shop adds an item to it' do
         visit '/hub/wachuneed/mine'
 
-        expect(page).to have_css('.wachuneed-shops .space-card', text: 'Bob Aromas')
+        expect(page).to have_css('section[aria-label="My shop"] .space-card', text: 'Bob Aromas')
         expect(page).to have_no_button('See my shop')
-        within('.wachuneed-shops') { click_on 'Bob Aromas' }
+        within('section[aria-label="My shop"]') { click_on 'Bob Aromas' }
 
         expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
         find('.kronk-menu__trigger').click

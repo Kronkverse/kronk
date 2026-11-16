@@ -43,7 +43,7 @@ wanted-ad proposals (Kommons #117396143164043201 and #116512978534279538):
 
 Rows from before the column read as `offer`. A wanted listing has a category
 like any other, carries a "Wanted" chip on its tile and detail page (it read
-"Looking for" until 2026-11-16), and
+"Looking for" until 2026-11-16; something on offer says "Offered"), and
 its feed card badge reads WANTED instead of LISTING (LOOKING FOR until
 2026-11-16). Answering one works
 the same way: "Message the poster".
@@ -167,21 +167,23 @@ an amount. The shop item composer keeps its own plain price for now.
 ## What you can do
 
 **Browse.** `/hub/wachuneed` has three sections (manifest `views`,
-rotator header; Tal, 2026-11-16: everything on one page, Brands, and your
-own):
+rotator header; Tal, 2026-11-16: everything on one page, your own, and
+Brands):
 
 - **All** (default, `/hub/wachuneed`, `home_view.tsx`): one page that
   scrolls down. Along the top, **Shops**: every shop with something on
   offer, in a row that scrolls sideways, the next tile peeking in
-  (`<SpaceGrid layout='row'>`; left out when there are none). Under it, the
-  **All · Offered · Wanted** pills (`?show=offered|wanted`), then one grid
+  (`<SpaceGrid layout='row'>`; left out when there are none). Under it,
+  **Show**: a dropdown of All, Offered and Wanted (`?show=offered|wanted`;
+  it was pills until Tal asked for a dropdown, 2026-11-16), then one grid
   of everyone's `live` listings, offered and wanted together, newest first
-  (up to 60, `INDEX_LIMIT`). A wanted tile carries a **Wanted** tag, so the
-  two read apart in a mixed grid. With **Wanted** chosen, **Post a wanted
-  ad** sits above the grid. With nothing to show, the page says so and
+  (up to 60, `INDEX_LIMIT`). Every tile says what kind of listing it is
+  (`listing_card.tsx`): **Offered** (a plain chip), **Wanted** (outlined in
+  the accent), **Sold out**, or **Mine** (tinted) on your own, from the
+  listing's `account_id`. Mine and a shop page, where every tile has one
+  owner, keep the kind instead (`markMine={false}`). With **Wanted**
+  chosen, **Post a wanted ad** sits above the grid. With nothing to show, the page says so and
   offers **List something** (or **Post a wanted ad** under Wanted).
-- **Brands** (`/hub/wachuneed/brands`): brands members back (see Brands
-  below).
 - **Mine** (`/hub/wachuneed/mine`, `wachugot_view.tsx`; Tal, 2026-11-16:
   "the jobs that I have going on, the things that I'm selling, the things
   that I've bought, as well as my shop front"). Top to bottom, each left
@@ -191,15 +193,19 @@ own):
   - **Work you're doing**: your answers that were chosen; then **Answered
     by you**, the rest of them.
   - **Your wanted ads**, in every state; then **People you chose**.
-  - **Selling**: your shop's card first (or **Open a shop**), then what
-    you offer, in every state; then **Sold and booked**, the requests you
-    accepted.
+  - **My shop**: your shop's card, or **Open a shop** (a section of its
+    own since 2026-11-16, Tal: the shop apart from the listings).
+  - **Selling**: what you offer, in every state; then **Sold and
+    booked**, the requests you accepted.
   - **Bought and booked**: what you asked for on other people's listings.
 
   With nothing at all, Mine offers **List something**, **Post a wanted
   ad** and **Open a shop**. The requests are the request cards
   (`requests_view.tsx`, `useWachuneedRequests` + `RequestSection`), the
   listings the one page's tiles.
+
+- **Brands** (`/hub/wachuneed/brands`): brands members back (see Brands
+  below). Last of the three since 2026-11-16 (Tal).
 
 Until 2026-11-16 there were also **Offered**, **Desired**, **Shops** and
 **Requests** sections, and the landing was a row each of Offered, Desired

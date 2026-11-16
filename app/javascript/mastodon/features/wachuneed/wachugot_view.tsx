@@ -29,8 +29,10 @@ import { ShopCard } from './shop_card';
 //                      your answers (Answered by you)
 //   Your wanted ads    what you are looking for, in every state; then the
 //                      people you chose for them
-//   Selling            your shop (or Open a shop), then what you offer;
-//                      then the requests you accepted (Sold and booked)
+//   My shop            your shop's card, or Open a shop (its own section
+//                      since 2026-11-16, Tal)
+//   Selling            what you offer; then the requests you accepted
+//                      (Sold and booked)
 //   Bought and booked  what you asked for on other people's listings
 //
 // The requests are the same cards as before (requests_view.tsx), and the
@@ -47,6 +49,7 @@ const messages = defineMessages({
     defaultMessage: "Work you're doing",
   },
   wanted: { id: 'wachuneed.mine.wanted', defaultMessage: 'Your wanted ads' },
+  shop: { id: 'wachuneed.mine.my_shop', defaultMessage: 'My shop' },
   selling: { id: 'wachuneed.mine.selling', defaultMessage: 'Selling' },
   bought: { id: 'wachuneed.mine.bought', defaultMessage: 'Bought and booked' },
   answered: {
@@ -198,7 +201,11 @@ export const WachugotListings: React.FC = () => {
         <Section heading={intl.formatMessage(messages.wanted)}>
           <SpaceGrid>
             {wanted.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                markMine={false}
+              />
             ))}
           </SpaceGrid>
         </Section>
@@ -211,32 +218,34 @@ export const WachugotListings: React.FC = () => {
         onAnswer={handleAnswer}
       />
 
-      <Section heading={intl.formatMessage(messages.selling)}>
+      <Section heading={intl.formatMessage(messages.shop)}>
         {shop ? (
           <SpaceGrid>
             <ShopCard shop={shop} />
-            {selling.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
           </SpaceGrid>
         ) : (
-          <>
-            <KornerActionBar>
-              <KornerPill
-                label={intl.formatMessage(messages.open)}
-                onClick={handleOpenShop}
-              />
-            </KornerActionBar>
-            {selling.length > 0 && (
-              <SpaceGrid>
-                {selling.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </SpaceGrid>
-            )}
-          </>
+          <KornerActionBar>
+            <KornerPill
+              label={intl.formatMessage(messages.open)}
+              onClick={handleOpenShop}
+            />
+          </KornerActionBar>
         )}
       </Section>
+
+      {selling.length > 0 && (
+        <Section heading={intl.formatMessage(messages.selling)}>
+          <SpaceGrid>
+            {selling.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                markMine={false}
+              />
+            ))}
+          </SpaceGrid>
+        </Section>
+      )}
       <RequestSection
         heading={intl.formatMessage(messages.sold)}
         requests={sold}

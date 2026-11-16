@@ -8,7 +8,13 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :slug, :title, :description, :category, :subcategory, :offering,
              :price_display, :price_type, :price_unit, :location, :state, :photo_url, :photos, :kind,
              :shop_section_id, :shop_position, :ongoing, :availability,
-             :looking_for, :where_mode, :due_on, :spots
+             :looking_for, :where_mode, :due_on, :spots, :account_id
+
+  # Whose it is, so a tile can say Mine (docs/spaces/wachuneed.md, The one
+  # page). The poster is public on the listing's page already.
+  def account_id
+    object.account_id.to_s
+  end
 
   # Detail endpoint only (`include_account: true`): the raw price so the
   # owner's edit form can prefill it, and the full-size photo for the
