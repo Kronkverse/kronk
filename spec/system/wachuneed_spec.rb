@@ -201,6 +201,26 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(job.reload.state).to eq 'reserved'
   end
 
+  # Tal, 2026-11-16: Mine shows your jobs, what you sell and buy, and your shop.
+  it 'lays out Mine: answers waiting on you, work you are doing, your wanted ads and what you sell' do
+    ana = Fabricate(:account, username: 'ana')
+    mine = Listing.create!(account: bob.account, title: 'Guitar lesson video', category: 'service', kind: 'wanted', state: 'live', looking_for: 'made')
+    ListingOffer.pitch(mine, offerer: ana, amount_cents: 8000, message: 'I can film it this weekend').save!
+    theirs = Listing.create!(account: ana, title: 'A gardener', category: 'service', kind: 'wanted', state: 'live', looking_for: 'job')
+    ListingOffer.pitch(theirs, offerer: bob.account, message: 'Ten years of veggie gardens').tap(&:save!).accept!
+    Listing.create!(account: bob.account, title: 'Clay mug', category: 'creation', state: 'live')
+
+    visit '/hub/wachuneed/mine'
+
+    within('section[aria-label="Waiting on you"]') { expect(page).to have_content('I can film it this weekend') }
+    within('section[aria-label="Work you\'re doing"]') { expect(page).to have_content('A gardener') }
+    within('section[aria-label="Your wanted ads"]') { expect(page).to have_css('.space-card', text: 'Guitar lesson video') }
+    within('section[aria-label="Selling"]') do
+      expect(page).to have_css('.space-card', text: 'Clay mug')
+      expect(page).to have_button('Open a shop')
+    end
+  end
+
   it 'takes the old section addresses to the new ones' do
     visit '/hub/wachuneed/wachugot'
 

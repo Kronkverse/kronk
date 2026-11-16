@@ -35,7 +35,7 @@ import {
   selectedVariant,
 } from './listing_variant_chooser';
 import type { ChosenVariant } from './listing_variant_chooser';
-import { WachuneedRequests } from './requests_view';
+import { ListingAnswers } from './requests_view';
 import { wantedFactsOf } from './wanted';
 
 // /hub/wachuneed/listings/:id — the listing detail page. Before this
@@ -488,7 +488,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         <AnswerWanted listing={listing} />
       ) : null}
       {listing.kind === 'wanted' && isOwner ? (
-        <WachuneedRequests listingId={listing.id} />
+        <ListingAnswers listingId={listing.id} />
       ) : null}
 
       {listing.kind !== 'wanted' &&

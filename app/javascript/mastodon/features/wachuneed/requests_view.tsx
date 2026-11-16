@@ -27,22 +27,18 @@ import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { formatListingAmount } from './listing_options_chooser';
 import { formatListingPrice } from './listing_price';
 
-// Requests for listings, on Mine (docs/spaces/wachuneed.md, Requests;
-// their own section until 2026-11-16). Asked of you first, each with
-// Accept and Decline while it waits; then what you asked for, which you can take back while it waits.
-// One flow card each (<StandardCard>): where it stands, the listing, who
-// and how much, what was chosen and said, and the actions.
+// Requests for listings and answers to wanted ads (docs/spaces/
+// wachuneed.md, Requests and Answering a wanted ad), as Mine lays them out
+// (their own section until 2026-11-16) and on a wanted ad's own page. One
+// flow card each (<StandardCard>): where it stands, the listing (or, on
+// its own page, the person), who and how much, what was chosen and said,
+// and the actions: Accept or Decline, Choose or No thanks, Take it back.
 //
 // A booking (docs/spaces/wachuneed.md, Booking) also shows when, the from
 // and the to, and what they need; once accepted, either of the two can
 // call it off.
 
 const messages = defineMessages({
-  askedOfYou: {
-    id: 'wachuneed.requests.asked_of_you',
-    defaultMessage: 'Asked of you',
-  },
-  youAsked: { id: 'wachuneed.requests.you_asked', defaultMessage: 'You asked' },
   from: { id: 'wachuneed.requests.from', defaultMessage: 'From {name}' },
   to: { id: 'wachuneed.requests.to', defaultMessage: 'To {name}' },
   quantity: { id: 'wachuneed.requests.quantity', defaultMessage: '{count} of' },
@@ -136,7 +132,7 @@ const STATE_LABELS: Record<ApiRequestState, typeof messages.pending> = {
   cancelled: messages.cancelled,
 };
 
-type Answer = 'accept' | 'decline' | 'withdraw' | 'cancel';
+export type Answer = 'accept' | 'decline' | 'withdraw' | 'cancel';
 
 // A pinned end of a booking: its name, or where it is.
 const placeName = (point: { lat: number; lng: number; name?: string }) =>
@@ -307,11 +303,10 @@ const RequestCard: React.FC<{
   );
 };
 
-// On Mine, everything asked of you and by you. On a wanted ad's own page
-// (`listingId`), its answers, for the poster to choose from.
-export const WachuneedRequests: React.FC<{ listingId?: string }> = ({
-  listingId,
-}) => {
+// Requests asked of you (`asked`) and by you (`mine`), with the way to
+// answer them: Mine lays them out in its sections, and a wanted ad's own
+// page (`listingId`) shows just its answers.
+export const useWachuneedRequests = (listingId?: string) => {
   const intl = useIntl();
   const [confirmDialog, confirm] = useConfirmDialog();
   const [asked, setAsked] = useState<ApiRequestJSON[]>([]);
@@ -406,51 +401,55 @@ export const WachuneedRequests: React.FC<{ listingId?: string }> = ({
     [confirm, intl],
   );
 
-  // On Mine, nothing until there is something: the listings below say
-  // what Mine is for.
-  if (loading || (asked.length === 0 && mine.length === 0)) return null;
+  return { asked, mine, loading, busy, confirmDialog, handleAnswer };
+};
 
-  const section = (
-    heading: string,
-    list: ApiRequestJSON[],
-    side: 'seller' | 'buyer',
-  ) =>
-    list.length > 0 && (
-      <section className='wachuneed-shops' aria-label={heading}>
-        <h2 className='wachuneed-shops__heading'>{heading}</h2>
-        <ul className='wachuneed-requests'>
-          {list.map((request) => (
-            <RequestCard
-              key={request.id}
-              request={request}
-              side={side}
-              busy={busy}
-              onAnswer={handleAnswer}
-              onListing={!!listingId}
-            />
-          ))}
-        </ul>
-      </section>
-    );
+// A run of request cards under a heading; nothing when it is empty.
+export const RequestSection: React.FC<{
+  heading: string;
+  requests: ApiRequestJSON[];
+  side: 'seller' | 'buyer';
+  busy: boolean;
+  onAnswer: (request: ApiRequestJSON, answer: Answer) => void;
+  onListing?: boolean;
+}> = ({ heading, requests, side, busy, onAnswer, onListing }) =>
+  requests.length > 0 ? (
+    <section className='wachuneed-shops' aria-label={heading}>
+      <h2 className='wachuneed-shops__heading'>{heading}</h2>
+      <ul className='wachuneed-requests'>
+        {requests.map((request) => (
+          <RequestCard
+            key={request.id}
+            request={request}
+            side={side}
+            busy={busy}
+            onAnswer={onAnswer}
+            onListing={onListing}
+          />
+        ))}
+      </ul>
+    </section>
+  ) : null;
 
-  if (listingId) {
-    return (
-      <>
-        {confirmDialog}
-        {section(
-          intl.formatMessage(messages.answers, { count: asked.length }),
-          asked,
-          'seller',
-        )}
-      </>
-    );
-  }
+// A wanted ad's answers, on its own page, for its poster to choose from.
+export const ListingAnswers: React.FC<{ listingId: string }> = ({
+  listingId,
+}) => {
+  const intl = useIntl();
+  const { asked, busy, confirmDialog, handleAnswer } =
+    useWachuneedRequests(listingId);
 
   return (
     <>
       {confirmDialog}
-      {section(intl.formatMessage(messages.askedOfYou), asked, 'seller')}
-      {section(intl.formatMessage(messages.youAsked), mine, 'buyer')}
+      <RequestSection
+        heading={intl.formatMessage(messages.answers, { count: asked.length })}
+        requests={asked}
+        side='seller'
+        busy={busy}
+        onAnswer={handleAnswer}
+        onListing
+      />
     </>
   );
 };
