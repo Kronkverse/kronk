@@ -151,6 +151,34 @@ RSpec.describe Listing do
     end
   end
 
+  # docs/spaces/wachuneed.md, Wanted ads.
+  describe 'what a wanted ad is after' do
+    it 'keeps where, by when and how many on a job' do
+      listing = build(kind: 'wanted', looking_for: 'job', where_mode: 'in_person', due_on: Date.new(2026, 12, 3), spots: 3)
+
+      expect(listing).to be_valid
+      expect(listing).to have_attributes(where_mode: 'in_person', spots: 3)
+    end
+
+    it 'keeps a thing to one taker and no where' do
+      listing = build(kind: 'wanted', looking_for: 'thing', where_mode: 'online', spots: 4)
+
+      expect(listing).to be_valid
+      expect(listing).to have_attributes(where_mode: nil, spots: 1)
+    end
+
+    it 'drops it all from something on offer' do
+      listing = build(kind: 'offer', looking_for: 'job', due_on: Date.new(2026, 12, 3), spots: 3)
+
+      expect(listing).to be_valid
+      expect(listing).to have_attributes(looking_for: nil, due_on: nil, spots: 1)
+    end
+
+    it 'refuses more people than an open call can take' do
+      expect(build(kind: 'wanted', looking_for: 'job', spots: 21)).to_not be_valid
+    end
+  end
+
   describe '.clean_variants' do
     it 'makes one variation of two with the same name, keeping what was sent' do
       cleaned = described_class.clean_variants(

@@ -10,9 +10,11 @@ import type {
   ApiListingOptionJSON,
   ApiListingVariantsJSON,
   ListingAvailability,
+  ListingLookingFor,
   ListingPriceType,
   ListingPriceUnit,
   ListingVisibility,
+  ListingWhereMode,
 } from 'mastodon/api_types/wachuneed';
 
 // Wachuneed listings. Browse is one list, offered and wanted together
@@ -49,6 +51,10 @@ export interface CreateListingParams {
   price_currency?: string;
   price_type?: ListingPriceType;
   price_unit?: ListingPriceUnit | null;
+  looking_for?: ListingLookingFor;
+  where_mode?: ListingWhereMode | null;
+  due_on?: string | null;
+  spots?: number;
   location?: string;
   state?: 'draft' | 'live';
   // One of your own shop's sections, or null for none.

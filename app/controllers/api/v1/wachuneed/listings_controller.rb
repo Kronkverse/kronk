@@ -197,7 +197,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   end
 
   def listing_params
-    params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :price_type, :price_unit, :location, :state, :kind,
+    params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :price_type, :price_unit, :looking_for, :where_mode, :due_on, :spots, :location, :state, :kind,
                   :listing_shop_section_id, :ongoing, :availability, :announced, :visibility, :offering, :ticket_url)
   end
 

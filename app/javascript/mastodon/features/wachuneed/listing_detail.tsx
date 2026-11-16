@@ -34,6 +34,7 @@ import {
   selectedVariant,
 } from './listing_variant_chooser';
 import type { ChosenVariant } from './listing_variant_chooser';
+import { wantedFactsOf } from './wanted';
 
 // /hub/wachuneed/listings/:id — the listing detail page. Before this
 // existed the grid tiles on /hub/wachuneed rendered as inert divs
@@ -312,6 +313,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
   }
 
   const price = formatListingPrice(intl, listing);
+  const wantedFacts = wantedFactsOf(intl, listing);
 
   // The poster edits from the Ж menu; everyone else gets "Message the
   // poster" here.
@@ -358,6 +360,11 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
                 : price}
             </span>
           ) : null}
+          {wantedFacts.map((fact) => (
+            <span key={fact} className='wachuneed-detail__fact'>
+              {fact}
+            </span>
+          ))}
           {/* Where it is shows once: as its Place's card in Konnected
               when it has one (decisions.md, 2026-10-27). */}
           {listing.location && !listing.place_id ? (

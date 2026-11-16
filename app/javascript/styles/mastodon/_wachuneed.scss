@@ -325,6 +325,22 @@
     font-weight: 600;
   }
 
+  // A wanted ad's facts and where it is, after the price, each set off
+  // by a middle dot.
+  &__fact,
+  &__location {
+    &::before {
+      content: '·';
+      margin-inline-end: 0.5rem;
+      color: var(--text-muted);
+    }
+  }
+
+  &__meta > &__fact:first-child::before,
+  &__meta > &__location:first-child::before {
+    content: none;
+  }
+
   &__notice {
     margin: 0;
     padding: 0.75rem 1rem;
