@@ -431,12 +431,16 @@ appearing on the one page and in the feed exactly as before.
   empty state.
 - **Finding shops.** The **Shops** row along the top of the one page lists
   every shop with something on offer as a tile (`shop_card.tsx`, a
-  `<SpaceCard>`): the shop's picture (the cover of its newest item when it
-  has none, then the seller's avatar), its name, how many listings, and the
-  place as the chip. (It was a section of its own until 2026-11-16.) Mine
-  opens with your own shop as the same card under **My
-  shop** (`shop_row.tsx`; Tal, 2026-10-13: a card in place of the See my
-  shop / Edit shop buttons); with no shop Mine shows just your listings.
+  `<SpaceCard>`). A shop's tile is made to look unlike a listing's (Tal,
+  2026-11-16): Kronk purple rather than the card grey, wider with a
+  landscape image (`<SpaceGrid wide>`), up to three pictures side by side
+  (the shop's own, then the covers of its newest items) with the seller's
+  avatar in the corner, its name, the place and how many listings, and a
+  **Shop** chip where a listing says Offered or Wanted. A shop with no
+  pictures shows the seller's avatar. (The row was a section of its own
+  until 2026-11-16.) Mine has your own shop as the same card under **My
+  shop** (Tal, 2026-10-13: a card in place of the See my shop / Edit shop
+  buttons), two columns wide.
   Order in the row: your Mates' shops first, then the
   oldest shop first, up to 60. Search and paging are not built.
 - **Who can see the shop** (`visibility`, the reach ladder, default

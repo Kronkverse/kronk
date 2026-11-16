@@ -220,7 +220,7 @@ export const WachugotListings: React.FC = () => {
 
       <Section heading={intl.formatMessage(messages.shop)}>
         {shop ? (
-          <SpaceGrid>
+          <SpaceGrid wide>
             <ShopCard shop={shop} />
           </SpaceGrid>
         ) : (

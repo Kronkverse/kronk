@@ -288,9 +288,11 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       it 'shows the shop in the Shops row along the top and its listings under their sections' do
         visit '/hub/wachuneed'
 
-        # A card, as in Shops, not a pill.
+        # A card, as in Shops, not a pill: wide, purple and tagged a shop,
+        # so it never reads as one more listing (Tal, 2026-11-16).
         within('section[aria-label="Shops"]') do
-          expect(page).to have_css('.space-grid--row .space-card', text: '2 listings')
+          expect(page).to have_css('.space-grid--row.space-grid--wide .space-card--accent', text: '2 listings')
+          expect(page).to have_css('.space-card__tag--shop', text: /shop/i)
           click_on 'Bob Aromas'
         end
 

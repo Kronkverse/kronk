@@ -740,7 +740,12 @@ The same card three ways (`variant`):
   four from 720px (`<SpaceGrid>` / `<SpaceCard>` in `space_grid.tsx`). Used by
   Albutts, Booth, Kalendar events and Wachuneed. `<SpaceGrid layout='row'>`
   is one line of the same tiles scrolling sideways, for a shelf among
-  others down a page (the Booth's By artist / By kind). `<SpaceGrid layout='masonry'>`
+  others down a page (the Booth's By artist / By kind). `<SpaceGrid wide>`
+  makes the tiles half as wide again with a landscape image (two columns in
+  the grid), for things that hold other things; with it a `<SpaceCard>` can
+  take `images` (up to three, one large and two stacked), an `avatar` in the
+  image's corner, and `tone='accent'` for a Kronk purple fill: Wachuneed's
+  shops among its listings. `<SpaceGrid layout='masonry'>`
   is the same cards with each image in its own shape, stacked down columns
   (two on a phone, three from 720px), for a collection whose images are the
   work itself and a square crop would cut it: an Art portfolio (@mangobee,
