@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 # Wachuneed listings API (korner: wachuneed). Reads the live listings
-# for the /hub/wachuneed browse pages (Offered, and wanted for
-# Desired); creates a listing; lets the owner edit one (update,
+# for /hub/wachuneed, offered and wanted together; creates a listing; lets the owner edit one (update,
 # owner-only). Detail/browse
 # render via REST::WachuneedListingSummarySerializer (the same shape
 # the feed card embeds). Mirrors the Events/Proposals korner
@@ -12,6 +11,9 @@
 # mARTketplace/martketplace (2026-07-24) → wachuneed (2026-09-07).
 class Api::V1::Wachuneed::ListingsController < Api::BaseController
   include KrewAudienceParams
+
+  # Browse shows both kinds on one page, so it takes more than a section did.
+  INDEX_LIMIT = 60
 
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show, :times]
 
@@ -36,15 +38,15 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
               scope.live.visible_to(current_account)
             end
 
-    # `?kind=offer` — the Offered section (what's on offer); `?kind=wanted`
-    # — the Desired section (what people are looking for). Absent, or
-    # unknown, returns both, which is what older clients expect.
+    # `?kind=offer` (what's on offer) or `?kind=wanted` (what people are
+    # looking for). Absent, or unknown, returns both: the one page shows
+    # them together and narrows them itself.
     scope = scope.where(kind: params[:kind]) if Listing::KINDS.include?(params[:kind])
     scope = scope.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id))
 
     # Where each one is, for listings with no location of their own: two
     # queries for the page (Kronk::RecordPlace).
-    @listings = Kronk::RecordPlace.preload(scope.limit(40).to_a)
+    @listings = Kronk::RecordPlace.preload(scope.limit(INDEX_LIMIT).to_a)
     render json: @listings, each_serializer: REST::WachuneedListingSummarySerializer
   end
 

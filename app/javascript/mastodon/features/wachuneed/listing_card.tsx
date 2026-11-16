@@ -10,7 +10,7 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // page all draw it the same way.
 
 const messages = defineMessages({
-  wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
+  wanted: { id: 'wachuneed.card.wanted', defaultMessage: 'Wanted' },
   soldOut: {
     id: 'wachuneed.availability.sold_out',
     defaultMessage: 'Sold out',
@@ -23,8 +23,8 @@ export const ListingCard: React.FC<{ listing: ApiListingJSON }> = ({
   const intl = useIntl();
   const glyph = useKornerIcon('wachuneed');
   const wanted = listing.kind === 'wanted';
-  // A wanted listing says so on its tile, which matters in Mine where
-  // both kinds sit side by side.
+  // A wanted listing says so on its tile: the one page and Mine show both
+  // kinds side by side.
   const soldOut = !wanted && listing.availability === 'sold_out';
   const tag = wanted
     ? intl.formatMessage(messages.wanted)
