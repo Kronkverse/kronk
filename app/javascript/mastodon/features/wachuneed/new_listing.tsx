@@ -16,13 +16,12 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
   ListingVisibility,
   ListingOffering,
+  ListingPriceType,
+  ListingPriceUnit,
 } from 'mastodon/api_types/wachuneed';
 import {
   ComposeBody,
-  ComposeField,
   ComposeHint,
-  ComposeInput,
-  ComposeRow,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
@@ -38,6 +37,12 @@ import { useSameAs } from 'mastodon/hooks/useSameAs';
 import Wachuneed from './index';
 import ListingDetail from './listing_detail';
 import { ListingPhotoField, useListingPhotos } from './listing_photo_field';
+import {
+  ListingPriceField,
+  isPriceType,
+  isPriceUnit,
+  priceHasAmount,
+} from './listing_price_field';
 import {
   hasVariants,
   variantStateFrom,
@@ -57,8 +62,9 @@ import { OfferingComposer } from './offering_composer';
 //                                       the listing's page (the server
 //                                       refuses anyone but its poster)
 //
-// It asks for photos, name, description and price (a budget, when wanted),
-// and nothing else (Tal, 2026-11-08: "keep things basic and simple"). Who
+// It asks for photos, name, description and price (what kind of price,
+// and the amount and what it is for when it has one: what the poster
+// pays, when wanted), and nothing else (Tal, 2026-11-08: "keep things basic and simple"). Who
 // can see it is the reach control in the header. Shop sections,
 // availability, variations, options and booking are not asked here: a
 // listing that already has them keeps them when edited, because the edit
@@ -72,18 +78,10 @@ const messages = defineMessages({
     id: 'wachuneed.new.title_wanted',
     defaultMessage: 'Wanted ad',
   },
-  labelBudget: {
-    id: 'wachuneed.new.field.budget',
-    defaultMessage: 'Budget (in AUD)',
-  },
   labelTitle: { id: 'wachuneed.new.field.title', defaultMessage: 'Title' },
   labelDescription: {
     id: 'wachuneed.new.field.description',
     defaultMessage: 'Description',
-  },
-  labelPrice: {
-    id: 'wachuneed.new.field.price',
-    defaultMessage: 'Price (in AUD)',
   },
   submit: { id: 'wachuneed.new.submit', defaultMessage: 'Publish listing' },
   submitting: {
@@ -142,6 +140,8 @@ interface ListingDraftParams {
   title?: string;
   description?: string;
   price?: string;
+  priceType?: ListingPriceType;
+  priceUnit?: ListingPriceUnit | null;
   visibility?: ListingVisibility;
   krewIds?: string[];
 }
@@ -175,6 +175,8 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [priceType, setPriceType] = useState<ListingPriceType>('fixed');
+  const [priceUnit, setPriceUnit] = useState<ListingPriceUnit | null>(null);
   // Edit only: the choices a listing that comes in kinds already has. It
   // has a price per kind, so there is no single price to edit, and its
   // photos keep the choice each one shows.
@@ -216,6 +218,8 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             ? (listing.price_cents / 100).toFixed(2)
             : '',
         );
+        setPriceType(listing.price_type ?? 'fixed');
+        setPriceUnit(listing.price_unit ?? null);
         setVisibility(listing.visibility ?? 'public');
         setKrewIds(listing.krews?.map((k) => k.id) ?? []);
         loadPhotos(listing.photos ?? []);
@@ -291,6 +295,8 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
       setPrice(p.price ?? '');
+      setPriceType(isPriceType(p.priceType) ? p.priceType : 'fixed');
+      setPriceUnit(isPriceUnit(p.priceUnit) ? p.priceUnit : null);
       setVisibility(p.visibility ?? shopVisibility.current);
       visibilityPicked.current = !!p.visibility;
       setKrewIds(p.krewIds ?? []);
@@ -312,7 +318,15 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
     kind: initialKind === 'wanted' ? 'wanted_listing' : 'listing',
     context: null,
     snapshot: {
-      params: { title, description, price, visibility, krewIds },
+      params: {
+        title,
+        description,
+        price,
+        priceType,
+        priceUnit,
+        visibility,
+        krewIds,
+      },
       mediaIds: photoState.ids,
     },
     hasContent:
@@ -337,11 +351,6 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
   >((e) => {
     setDescription(e.currentTarget.value);
   }, []);
-  const handlePriceChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setPrice(e.currentTarget.value);
-  }, []);
 
   const canSubmit =
     !loadingListing &&
@@ -356,14 +365,19 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
     setSubmitting(true);
     setError(null);
 
-    const parsedPrice = price.trim();
+    // An amount only for a price that has one (docs/spaces/wachuneed.md,
+    // Prices); the server drops it from any other.
+    const parsedPrice = priceHasAmount(priceType) ? price.trim() : '';
     const priceCents = parsedPrice
       ? Math.round(parseFloat(parsedPrice) * 100)
       : null;
-    const priceFields =
-      priceCents !== null && Number.isFinite(priceCents)
+    const priceFields = {
+      price_type: priceType,
+      price_unit: priceHasAmount(priceType) ? priceUnit : null,
+      ...(priceCents !== null && Number.isFinite(priceCents)
         ? { price_cents: priceCents, price_currency: 'AUD' }
-        : { price_cents: null };
+        : { price_cents: null }),
+    };
 
     void (async () => {
       try {
@@ -420,6 +434,8 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
     description,
     kind,
     price,
+    priceType,
+    priceUnit,
     comesInKinds,
     kindChoices,
     visibility,
@@ -536,25 +552,15 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
           />
 
           {!comesInKinds && (
-            <ComposeRow>
-              <ComposeField
-                label={
-                  <FormattedMessage
-                    {...(kind === 'wanted'
-                      ? messages.labelBudget
-                      : messages.labelPrice)}
-                  />
-                }
-              >
-                <ComposeInput
-                  type='number'
-                  min={0}
-                  step={0.01}
-                  value={price}
-                  onChange={handlePriceChange}
-                />
-              </ComposeField>
-            </ComposeRow>
+            <ListingPriceField
+              wanted={kind === 'wanted'}
+              type={priceType}
+              amount={price}
+              unit={priceUnit}
+              onType={setPriceType}
+              onAmount={setPrice}
+              onUnit={setPriceUnit}
+            />
           )}
 
           {error && <ComposeHint error>{error}</ComposeHint>}

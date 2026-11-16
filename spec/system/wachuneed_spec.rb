@@ -48,12 +48,40 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
       find('input[aria-label="Title"]').fill_in with: 'A ladder'
       find('textarea[aria-label="Description"]').fill_in with: 'Six rungs is plenty'
-      fill_in 'Budget (in AUD)', with: '40'
+      select 'Up to', from: "What you'll pay"
+      fill_in 'Amount (in AUD)', with: '40'
       click_on 'Publish listing'
     end
 
     expect(page).to have_current_path('/hub/wachuneed/mine')
-    expect(Listing.last).to have_attributes(title: 'A ladder', description: 'Six rungs is plenty', kind: 'wanted', price_cents: 4000, booking: {})
+    expect(Listing.last).to have_attributes(title: 'A ladder', description: 'Six rungs is plenty', kind: 'wanted', price_cents: 4000, price_type: 'up_to', booking: {})
+    expect(page).to have_css('.space-card', text: 'Up to A$40.00')
+  end
+
+  # docs/spaces/wachuneed.md, Prices: what an amount is for shows on the tile.
+  it 'posts a wanted ad paying by the hour, and one asking for quotes' do
+    visit '/hub/wachuneed/new?kind=wanted'
+
+    within('.compose-shell') do
+      find('input[aria-label="Title"]').fill_in with: 'A gardener'
+      fill_in 'Amount (in AUD)', with: '38'
+      select 'An hour', from: 'For'
+      click_on 'Publish listing'
+    end
+
+    expect(page).to have_css('.space-card', text: 'A$38.00 / hour')
+    expect(Listing.last).to have_attributes(price_cents: 3800, price_type: 'fixed', price_unit: 'hour')
+
+    visit '/hub/wachuneed/new?kind=wanted'
+    within('.compose-shell') do
+      find('input[aria-label="Title"]').fill_in with: 'House plans'
+      select 'Ask for quotes', from: "What you'll pay"
+      expect(page).to have_no_field('Amount (in AUD)')
+      click_on 'Publish listing'
+    end
+
+    expect(page).to have_css('.space-card', text: 'Quote')
+    expect(Listing.last).to have_attributes(price_cents: nil, price_type: 'quote', price_unit: nil)
   end
 
   it 'posts an offering with just a name and price, and asks for nothing else' do
@@ -72,7 +100,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(page).to have_no_content('Options')
 
       find('input[aria-label="Title"]').fill_in with: 'Clay mug'
-      fill_in 'Price (in AUD)', with: '25'
+      fill_in 'Amount (in AUD)', with: '25'
       click_on 'Publish listing'
     end
 

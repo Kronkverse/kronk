@@ -88,6 +88,16 @@ RSpec.describe 'Wachuneed listings API' do
       expect(listing.reload).to have_attributes(title: 'Blue bike', description: 'Resprayed', price_cents: 4000)
     end
 
+    it 'sets how the price reads, and drops the amount from a price that has none' do
+      patch "/api/v1/wachuneed/listings/#{listing.id}", headers: headers, params: { price_type: 'fixed', price_cents: 3800, price_unit: 'hour' }
+
+      expect(response.parsed_body).to include('price_type' => 'fixed', 'price_unit' => 'hour', 'price_display' => 'A$38.00')
+
+      patch "/api/v1/wachuneed/listings/#{listing.id}", headers: headers, params: { price_type: 'offers' }
+
+      expect(listing.reload).to have_attributes(price_type: 'offers', price_cents: nil, price_unit: nil)
+    end
+
     it 'keeps the feed card text in step with the title' do
       Wachuneed::PublishListing.new(listing).call
 
