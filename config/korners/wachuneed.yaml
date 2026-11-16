@@ -80,6 +80,8 @@ emits:
   - wachuneed.pitch.made # someone answers a wanted ad; Nudges routes to its poster
   - wachuneed.pitch.chosen # the poster chooses an answer; Nudges routes to whoever answered
   - wachuneed.pitch.passed # an answer not chosen (no thanks, or the ad was taken); to whoever answered
+  - wachuneed.pitch.delivered # whoever was chosen marks it delivered; to the poster
+  - wachuneed.pitch.done # the poster marks it done; to whoever did it
   - wachuneed.brand.listed # a proposed brand reached its backers; Nudges routes to the proposer
 
 listens: []

@@ -42,6 +42,23 @@ RSpec.describe 'Kalendar bookings' do
     expect(response.parsed_body).to contain_exactly(hash_including('side' => 'seller', 'with' => hash_including('id' => buyer.id.to_s)))
   end
 
+  # docs/spaces/wachuneed.md, Answering a wanted ad.
+  it 'shows a chosen answer to a wanted ad on its day, until it is done' do
+    job = Listing.create!(account: seller, title: 'House plans', category: 'service', kind: 'wanted', state: 'live',
+                          looking_for: 'job', due_on: 10.days.from_now.to_date)
+    answer = ListingOffer.pitch(job, offerer: buyer, message: 'Registered architect').tap(&:save!)
+    answer.accept!
+
+    get '/api/v1/kalendar/bookings', headers: headers_for(buyer_user)
+    expect(response.parsed_body).to contain_exactly(
+      hash_including('title' => 'House plans', 'due' => true, 'starts_at' => job.due_on.iso8601, 'side' => 'buyer')
+    )
+
+    answer.complete!
+    get '/api/v1/kalendar/bookings', headers: headers_for(seller_user)
+    expect(response.parsed_body).to be_empty
+  end
+
   it 'leaves out bookings still waiting, called off, or long past, and other people\'s' do
     booking_at(starts_at)
     booking_at(starts_at + 1.day).tap(&:accept!).cancel!(by: buyer)
