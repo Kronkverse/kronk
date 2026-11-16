@@ -34,9 +34,18 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     click_on 'Post a wanted ad'
 
     expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted')
+    # What are you looking for? first (2026-11-16).
+    within('.compose-shell') do
+      expect(page).to have_content('What are you looking for?')
+      click_on 'A job done'
+    end
+    expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted&looking=job')
     within('.compose-shell') do
       expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
+      expect(page).to have_field('By when')
+      click_on 'Change what you are looking for'
     end
+    expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted')
   end
 
   # The listing composer is photos, name, description and price, nothing
@@ -44,8 +53,11 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
   it 'posts a wanted ad from the composer overlay' do
     visit '/hub/wachuneed/new?kind=wanted'
 
+    within('.compose-shell') { click_on 'Something to buy' }
     within('.compose-shell') do
       expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
+      # A thing asks nothing about where or when.
+      expect(page).to have_no_field('Where')
       find('input[aria-label="Title"]').fill_in with: 'A ladder'
       find('textarea[aria-label="Description"]').fill_in with: 'Six rungs is plenty'
       select 'Up to', from: "What you'll pay"
@@ -54,25 +66,37 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     end
 
     expect(page).to have_current_path('/hub/wachuneed/mine')
-    expect(Listing.last).to have_attributes(title: 'A ladder', description: 'Six rungs is plenty', kind: 'wanted', price_cents: 4000, price_type: 'up_to', booking: {})
+    expect(Listing.last).to have_attributes(title: 'A ladder', description: 'Six rungs is plenty', kind: 'wanted', looking_for: 'thing', price_cents: 4000, price_type: 'up_to', booking: {})
     expect(page).to have_css('.space-card', text: 'Up to A$40.00')
   end
 
   # docs/spaces/wachuneed.md, Prices: what an amount is for shows on the tile.
-  it 'posts a wanted ad paying by the hour, and one asking for quotes' do
-    visit '/hub/wachuneed/new?kind=wanted'
+  it 'posts a job paying by the hour, in person, for two people' do
+    visit '/hub/wachuneed/new?kind=wanted&looking=job'
 
     within('.compose-shell') do
       find('input[aria-label="Title"]').fill_in with: 'A gardener'
       fill_in 'Amount (in AUD)', with: '38'
       select 'An hour', from: 'For'
+      select 'In person', from: 'Where'
+      fill_in 'Area (suburb or town)', with: 'Fitzroy'
+      fill_in 'How many people', with: '2'
       click_on 'Publish listing'
     end
 
     expect(page).to have_css('.space-card', text: 'A$38.00 / hour')
-    expect(Listing.last).to have_attributes(price_cents: 3800, price_type: 'fixed', price_unit: 'hour')
+    expect(Listing.last).to have_attributes(price_cents: 3800, price_type: 'fixed', price_unit: 'hour',
+                                            looking_for: 'job', where_mode: 'in_person', location: 'Fitzroy', spots: 2)
 
-    visit '/hub/wachuneed/new?kind=wanted'
+    click_on 'A gardener'
+    expect(page).to have_css('.wachuneed-detail__price', text: 'Paying A$38.00 / hour')
+    expect(page).to have_css('.wachuneed-detail__fact', text: 'A job done')
+    expect(page).to have_css('.wachuneed-detail__fact', text: '2 people')
+    expect(page).to have_content('Fitzroy')
+  end
+
+  it 'posts a wanted ad asking for quotes, with no amount' do
+    visit '/hub/wachuneed/new?kind=wanted&looking=made'
     within('.compose-shell') do
       find('input[aria-label="Title"]').fill_in with: 'House plans'
       select 'Ask for quotes', from: "What you'll pay"
