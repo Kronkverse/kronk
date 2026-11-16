@@ -84,6 +84,8 @@ wanted ads (`Listing#wanted_details_fit`): something on offer has none,
 and a thing has no where and one taker. Wanted ads from before have no
 `looking_for` and read as a thing; editing one keeps it that way.
 
+## Prices
+
 Tal, 2026-11-16: a job can be ongoing ("I need a gardener, $38 an hour"),
 and that should show on the card. So a listing's price has a kind
 (`listings.price_type`, `Listing::PRICE_TYPES`) and, when it has an amount,
