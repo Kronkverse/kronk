@@ -171,9 +171,10 @@ hub_teaser:
 #   /hub/wachuneed         → home    (shops along the top, then everything
 #                                       offered and wanted in one grid,
 #                                       ?show=offered|wanted narrows it)
-#   /hub/wachuneed/brands  → brands  (brands members back; Proposed ones too)
 #   /hub/wachuneed/mine    → mine    (your jobs, what you sell and buy,
 #                                       your shop)
+#   /hub/wachuneed/brands  → brands  (brands members back; Proposed ones
+#                                       too; last since 2026-11-16, Tal)
 views:
   - {
       key: home,
@@ -181,14 +182,14 @@ views:
       tagline: 'Shops, and everything offered and wanted.',
     }
   - {
-      key: brands,
-      label: Brands,
-      tagline: 'Brands whose mission members back.',
-    }
-  - {
       key: mine,
       label: Mine,
       tagline: 'Your jobs, what you sell and buy, and your shop.',
+    }
+  - {
+      key: brands,
+      label: Brands,
+      tagline: 'Brands whose mission members back.',
     }
 
 header:
