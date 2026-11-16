@@ -319,6 +319,8 @@ namespace :api, format: false do
           post :decline
           post :withdraw
           post :cancel
+          post :deliver
+          post :complete
         end
       end
       resources :shops, only: [:index, :show] do

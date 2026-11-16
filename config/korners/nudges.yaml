@@ -230,6 +230,22 @@ listens:
     source_type: Listing
     source_id_key: listing_id
     interaction: passive
+  - event: wachuneed.pitch.delivered
+    source_korner: wachuneed
+    verb: pitch_delivered
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'Mark it done'
+    cta_route: '/hub/wachuneed/mine'
+  - event: wachuneed.pitch.done
+    source_korner: wachuneed
+    verb: pitch_done
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: passive
   # A brand you proposed has the backers it needs and is in Brands now
   # (docs/spaces/wachuneed.md, Brands). Once per brand. Directed: the
   # backer who brought it there needn't be your Mate.

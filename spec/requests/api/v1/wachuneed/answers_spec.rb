@@ -99,6 +99,33 @@ RSpec.describe 'Wachuneed answers' do
         .with('wachuneed.pitch.passed', hash_including(recipient_account_id: second_helper.account.id))
     end
 
+    it 'is marked delivered by whoever was chosen, then done by the poster' do
+      allow(Kronk::KornerEvents).to receive(:publish)
+      chosen = ListingOffer.find_by(offerer: first_helper.account)
+      chosen.accept!
+
+      post "/api/v1/wachuneed/requests/#{chosen.id}/complete", headers: headers_for(first_helper)
+      expect(response).to have_http_status(403)
+
+      post "/api/v1/wachuneed/requests/#{chosen.id}/deliver", headers: headers_for(first_helper)
+      expect(response.parsed_body['delivered_at']).to be_present
+      expect(Kronk::KornerEvents).to have_received(:publish)
+        .with('wachuneed.pitch.delivered', hash_including(recipient_account_id: poster.id))
+
+      post "/api/v1/wachuneed/requests/#{chosen.id}/complete", headers: headers_for(poster_user)
+      expect(response.parsed_body['completed_at']).to be_present
+      expect(Kronk::KornerEvents).to have_received(:publish)
+        .with('wachuneed.pitch.done', hash_including(recipient_account_id: first_helper.account.id))
+    end
+
+    it 'carries through only a chosen answer' do
+      waiting = ListingOffer.find_by(offerer: second_helper.account)
+
+      post "/api/v1/wachuneed/requests/#{waiting.id}/deliver", headers: headers_for(second_helper)
+
+      expect(response).to have_http_status(422)
+    end
+
     it 'keeps an open call up until it has the people it wants' do
       job.update!(spots: 2)
 

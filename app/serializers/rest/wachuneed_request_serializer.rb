@@ -6,7 +6,7 @@ class REST::WachuneedRequestSerializer < ActiveModel::Serializer
   attributes :id, :state, :quantity, :choices, :total_cents, :price_currency,
              :message, :created_at, :responded_at, :listing,
              :starts_at, :ends_at, :route, :details, :cancelled_at, :cancelled_by_seller,
-             :pitch, :amount_cents
+             :pitch, :amount_cents, :delivered_at, :completed_at
 
   # An answer to a wanted ad (docs/spaces/wachuneed.md, Answering a wanted
   # ad): `amount_cents` is the price they gave, for what the ad's price is

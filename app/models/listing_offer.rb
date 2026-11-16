@@ -14,7 +14,8 @@
 # it or has it, with their price (`amount_cents`, for what the ad's price
 # is for) and what they would do (`message`). The poster chooses one, or
 # up to the ad's `spots`, or says no thanks; once enough are chosen the ad
-# is taken and the rest hear it went elsewhere.
+# is taken and the rest hear it went elsewhere. Whoever was chosen marks it
+# delivered (`delivered_at`) and the poster marks it done (`completed_at`).
 #
 # For a listing that is booked (Listing::BOOKING_PARTS) the request is a
 # booking: it also carries what the parts ask for, a time (`starts_at`,
@@ -171,6 +172,19 @@ class ListingOffer < ApplicationRecord
       listing_id: listing_id,
       offer_id: id
     )
+  end
+
+  # Whoever was chosen says it is delivered; the poster hears.
+  def deliver!
+    update!(delivered_at: Time.current)
+    Kronk::KornerEvents.publish('wachuneed.pitch.delivered', actor_account_id: offerer_id,
+                                                             recipient_account_id: listing.account_id, listing_id: listing_id, offer_id: id)
+  end
+
+  # The poster says it is done; whoever did it hears.
+  def complete!
+    update!(completed_at: Time.current, delivered_at: delivered_at || Time.current)
+    publish_offer_response('wachuneed.pitch.done')
   end
 
   def seats_error!
