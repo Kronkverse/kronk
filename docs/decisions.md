@@ -17,6 +17,29 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-16 — Wachuneed is one page, Brands, and Mine
+
+**Decision.** Wachuneed has three sections: **All**, one page with the
+shops in a sideways row along the top and then one grid of everything
+live, offered and wanted together, with **All · Offered · Wanted** pills to
+narrow it; **Brands**; and **Mine**, which holds your shop, the requests
+asked of you and by you, and your own listings. Offered, Desired, Shops and
+Requests stop being sections and their addresses redirect. A wanted tile
+says **Wanted** (it said "Looking for").
+
+**Why.** Tal: someone scrolling Wachuneed should see everything for sale
+and every job on offer in one feed, told apart on the card, with shops
+along the top; the only other page is your own, with your jobs, what you
+are selling and buying, and your shop. Seven sections split one browse
+across four of them. Brands stays a section of its own (Tal's choice).
+
+**Supersedes** the landing of rows with See all (2026-10-29, Kommons "Home
+Page") and the Open a shop action on the Shops section (2026-10-21), which
+is now on Mine. Further steps (prices per hour and the like, the wanted-ad
+composer, answering a job) are in docs/spaces/wachuneed.md as they land.
+
+---
+
 ## 2026-11-11 — The feed opens on Kronkverse
 
 **Decision (Tal):** everyone's Home feed opens on Kronkverse. Feed settings

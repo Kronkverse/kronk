@@ -26,9 +26,10 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/wachuneed/new')
   end
 
-  it 'names its sections Offered, Desired and Mine, and posts a wanted ad from Desired' do
+  it 'narrows the one page to Wanted, and posts a wanted ad from there' do
     visit '/hub/wachuneed/desired'
 
+    expect(page).to have_current_path('/hub/wachuneed?show=wanted')
     expect(page).to have_css('.empty-state__title', text: 'Nobody is looking for anything yet')
     click_on 'Post a wanted ad'
 
@@ -88,25 +89,28 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/wachuneed')
   end
 
-  # Kommons "Home Page" (117522482475089755).
-  it 'opens on a row each of Offered, Desired and Shops, each with See all' do
+  # Tal, 2026-11-16: everything on one page, offered and wanted together.
+  it 'shows everything offered and wanted in one grid, and narrows it to Offered or Wanted' do
     ana = Fabricate(:account, username: 'ana')
     Listing.create!(account: ana, title: 'Clay mug', category: 'creation', state: 'live')
     Listing.create!(account: ana, title: 'A ladder', category: 'goods', kind: 'wanted', state: 'live')
 
     visit '/hub/wachuneed'
 
-    within('section[aria-label="Offered"]') { expect(page).to have_css('.space-grid--row .space-card', text: 'Clay mug') }
-    within('section[aria-label="Desired"]') do
-      expect(page).to have_css('.space-grid--row .space-card', text: 'A ladder')
-      expect(page).to have_no_content('Clay mug')
-    end
+    expect(page).to have_css('.space-grid .space-card', text: 'Clay mug')
+    expect(page).to have_css('.space-grid .space-card', text: 'A ladder')
+    expect(page).to have_css('.space-card__tag--wanted', text: /wanted/i, count: 1)
     # No shop yet, so no Shops row.
     expect(page).to have_no_css('section[aria-label="Shops"]')
 
-    within('section[aria-label="Offered"]') { click_on 'See all' }
-    expect(page).to have_current_path('/hub/wachuneed/offered')
-    expect(page).to have_css('.space-grid .space-card', text: 'Clay mug')
+    click_button 'Wanted'
+    expect(page).to have_current_path('/hub/wachuneed?show=wanted')
+    expect(page).to have_css('.space-card', text: 'A ladder')
+    expect(page).to have_no_css('.space-card', text: 'Clay mug')
+
+    click_button 'Offered'
+    expect(page).to have_css('.space-card', text: 'Clay mug')
+    expect(page).to have_no_css('.space-card', text: 'A ladder')
   end
 
   it 'takes the old section addresses to the new ones' do
@@ -118,11 +122,10 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
   # docs/spaces/wachuneed.md, Shops.
   describe 'shops' do
-    it 'opens a shop from the Ж menu on Shops, with a Kollection, and lands on its page' do
-      visit '/hub/wachuneed/shops'
+    it 'opens a shop from Mine, with a Kollection, and lands on its page' do
+      visit '/hub/wachuneed/mine'
 
-      find('.kronk-menu__trigger').click
-      find('.kronk-menu__moon[title="Open a shop"]').click
+      click_on 'Open a shop'
       fill_in 'Shop name', with: 'Bob Aromas'
       click_on 'Add a Kollection'
       fill_in 'Kollection name', with: 'Skin Care'
@@ -141,7 +144,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         Listing.create!(account: bob.account, title: 'Loose candle', category: 'goods', state: 'live')
       end
 
-      it 'shows the shop in the Shops row of the landing and its listings under their sections' do
+      it 'shows the shop in the Shops row along the top and its listings under their sections' do
         visit '/hub/wachuneed'
 
         # A card, as in Shops, not a pill.
@@ -157,10 +160,10 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         within('.wachuneed-shop__section', text: 'Everything else') { expect(page).to have_content('Loose candle') }
       end
 
-      it 'lists the shop in Shops, and its front is the standard detail page with its sections to jump to' do
-        visit '/hub/wachuneed/shops'
+      it 'opens the shop from the Shops row, and its front is the standard detail page with its sections to jump to' do
+        visit '/hub/wachuneed'
 
-        within('.space-grid') { click_on 'Bob Aromas' }
+        within('section[aria-label="Shops"]') { click_on 'Bob Aromas' }
 
         expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
         expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
@@ -436,7 +439,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
                                 booking: { parts: %w(time), minutes: 60 })
       ListingOffer.ask(listing, offerer: bob.account, starts_at: 3.days.from_now.utc.change(hour: 9)).tap(&:save!).accept!
 
-      visit '/hub/wachuneed/requests'
+      visit '/hub/wachuneed/mine'
 
       click_on 'Call it off'
       within('.confirm-dialog__panel') { click_on 'Call it off' }

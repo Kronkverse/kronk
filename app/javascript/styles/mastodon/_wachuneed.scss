@@ -525,17 +525,12 @@
   }
 }
 
-// The landing (home_view.tsx): a sideways row each of Offered, Desired and
-// Shops, each under the korner section heading with See all beside it.
+// The one page (home_view.tsx): the shops in a sideways row under the
+// korner section heading, then the Show pills and one grid of everything.
 .wachuneed-home {
-  &__row + &__row {
-    margin-top: 1.25rem;
-  }
-
   &__head {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
     gap: 0.75rem;
     margin: 0 0 0.5rem;
 
@@ -544,17 +539,12 @@
     }
   }
 
-  &__all {
-    flex: 0 0 auto;
-    color: var(--accent-text);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
+  &__show {
+    margin: 1.25rem 0 1rem;
+  }
 
-    &:hover,
-    &:focus-visible {
-      text-decoration: underline;
-    }
+  &__row + &__show {
+    margin-top: 1.5rem;
   }
 }
 

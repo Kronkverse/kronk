@@ -42,42 +42,41 @@ wanted-ad proposals (Kommons #117396143164043201 and #116512978534279538):
 | `wanted` | Something the poster is looking for | Budget         |
 
 Rows from before the column read as `offer`. A wanted listing has a category
-like any other, carries a "Looking for" chip on its tile and detail page, and
+like any other, carries a "Wanted" chip on its tile and detail page (it read
+"Looking for" until 2026-11-16), and
 its feed card badge reads LOOKING FOR instead of LISTING. Answering one works
 the same way: "Message the poster".
 
 ## What you can do
 
-**Browse.** `/hub/wachuneed` has seven sections (manifest `views`, rotator
-header). The space is Wachuneed; the sections have plain names (Tal,
-2026-10-12; they were Wachuneed, Wachumissing and Wachugot, and the old
-addresses redirect):
+**Browse.** `/hub/wachuneed` has three sections (manifest `views`,
+rotator header; Tal, 2026-11-16: everything on one page, Brands, and your
+own):
 
-- **All** (default, `/hub/wachuneed`; Tal, 2026-10-29, Kommons "Home
-  Page", https://kronk.info/hub/kommons/p/117522482475089755): one page
-  that scrolls down, with a row that scrolls sideways, the next tile
-  peeking in (`<SpaceGrid layout='row'>`), for each of **Offered**,
-  **Desired** and **Shops**, in that order (`home_view.tsx`). Each row
-  shows the first 12 (listings newest first, shops in the Shops order)
-  and has **See all**, which opens that section. A row with nothing in it
-  is left out; with nothing anywhere the page says "Nothing on offer yet"
-  and offers **List something**.
-- **Offered** (`/hub/wachuneed/offered`; the default until 2026-10-29):
-  everyone's `live` listings on offer (`?kind=offer`), newest first, in the
-  shared `SpaceGrid` (`features/wachuneed/wachuneed_view.tsx`).
-- **Desired** (`/hub/wachuneed/desired`): everyone's `live` wanted
-  listings (`?kind=wanted`), with a **Post a wanted ad** button above the
-  grid.
-- **Shops** (`/hub/wachuneed/shops`): every shop with something on offer
-  (see Shops below).
+- **All** (default, `/hub/wachuneed`, `home_view.tsx`): one page that
+  scrolls down. Along the top, **Shops**: every shop with something on
+  offer, in a row that scrolls sideways, the next tile peeking in
+  (`<SpaceGrid layout='row'>`; left out when there are none). Under it, the
+  **All · Offered · Wanted** pills (`?show=offered|wanted`), then one grid
+  of everyone's `live` listings, offered and wanted together, newest first
+  (up to 60, `INDEX_LIMIT`). A wanted tile carries a **Wanted** tag, so the
+  two read apart in a mixed grid. With **Wanted** chosen, **Post a wanted
+  ad** sits above the grid. With nothing to show, the page says so and
+  offers **List something** (or **Post a wanted ad** under Wanted).
 - **Brands** (`/hub/wachuneed/brands`): brands members back (see Brands
   below).
-- **Mine** (`/hub/wachuneed/mine`): your own listings of both kinds in
-  every state (`?mine=true`).
-- **Requests** (`/hub/wachuneed/requests`): see Requests below.
+- **Mine** (`/hub/wachuneed/mine`, `wachugot_view.tsx`): your shop as a
+  card (or **Open a shop** until you have one), then the requests asked of
+  you and by you (see Requests; nothing shows when there are none), then
+  your own listings of both kinds in every state (`?mine=true`).
 
-An empty section says what belongs there and carries the one button that
-fixes it: **List something**, or **Post a wanted ad** in Desired.
+Until 2026-11-16 there were also **Offered**, **Desired**, **Shops** and
+**Requests** sections, and the landing was a row each of Offered, Desired
+and Shops with See all (Kommons "Home Page", 2026-10-29). Their addresses
+redirect: `/offered` and `/desired` to the pills, `/shops` to the one page,
+`/requests` to Mine (`config/routes.rb`, and `index.tsx` for links followed
+in the app). The sections were called Wachuneed, Wachumissing and Wachugot
+until 2026-10-12, and those addresses redirect too.
 
 **List something.** The Ж-menu "New listing" action opens `/hub/wachuneed/new`
 (`ListingComposer` in `features/wachuneed/new_listing.tsx`). It is the
@@ -91,9 +90,9 @@ description boxes show just "Title" and "Description" as hint text, no
 examples. The reach control in its header is who can see it (see Who can
 see it). There is no switcher, Konnect row, shop section, availability,
 variations, options or booking here: whether it is on offer or wanted comes
-from where it was opened (the Ж menu's New listing is an offering; Desired's
-**Post a wanted ad**, `?kind=wanted`, is titled **Wanted ad**; Cancel goes
-back to Desired from there, to Wachuneed's home otherwise). Opened from a
+from where it was opened (the Ж menu's New listing is an offering; **Post a
+wanted ad**, `?kind=wanted`, is titled **Wanted ad**; Cancel goes back to
+the one page, narrowed to Wanted from there). Opened from a
 record (`?konnect=`), the new listing is still Konnected to it, with no row
 showing. A new listing keeps a draft as you write (`useDraft`, kind
 `listing`, or `wanted_listing` for a wanted ad; docs/design.md, Drafts).
@@ -202,7 +201,7 @@ stored on the listing (`listings.offering`: `product`, `appointment`,
   how many seats), and ticket types with prices (a **Ticket** variation).
 
 All of them are ordinary listings underneath (category Offerings), so they
-show in Offered, the shop, search and the feed as before, and are asked for
+show on the one page, the shop, search and the feed as before, and are asked for
 or booked through Requests. Kronk takes no payment: the seller says how to
 pay in the shop, and accepting is the agreement.
 
@@ -242,12 +241,12 @@ A shop is one seller's live offers on a page of their own, in Kollections
 they name (Tal, 2026-10-12; Kommons "Market Layout"; named Kollections
 2026-10-29). It is a view of
 listings the seller already has, not a second thing to fill: a listing keeps
-appearing in Offered and the feed exactly as before.
+appearing on the one page and in the feed exactly as before.
 
-- **Opening one** is a choice. In Shops, until you have a shop, **+** on
-  the Ж menu is **Open a shop** (Kommons "Open a shop button", 2026-10-21:
-  it was a button on Mine, out of place beside Shops)
-  (`/hub/wachuneed/my-shop`, `features/wachuneed/shop_edit.tsx`): a name, an
+- **Opening one** is a choice. Until you have a shop, Mine opens with
+  **Open a shop** (it was **+** on the Ж menu in the Shops section from
+  2026-10-21, Kommons "Open a shop button", until Shops became the one
+  page's top row on 2026-11-16) (`/hub/wachuneed/my-shop`, `features/wachuneed/shop_edit.tsx`): a name, an
   optional line and picture (your avatar until you add one), your
   Kollections in the order you want (up to `ListingShop::MAX_SECTIONS`), and two
   settings. One shop per account. **Close shop** removes the page and its
@@ -292,20 +291,19 @@ appearing in Offered and the feed exactly as before.
   keyed `post`, which takes the + moon over; `page_action_context.tsx`).
   The page carries no Edit or Add button, except **Add an item** in the
   empty state.
-- **Finding shops.** The **Shops** section (`shops_view.tsx`) lists every
-  shop with something on offer as a tile in the standard grid
-  (`shop_card.tsx`, a `<SpaceCard>`): the shop's picture (the cover of its
-  newest item when it has none, then the seller's avatar), its name, how
-  many listings, and the place as the chip. The landing's **Shops** row
-  shows the same cards (Offered opened with the first four until
-  2026-10-29). Mine opens with your own shop as the same card under **My
+- **Finding shops.** The **Shops** row along the top of the one page lists
+  every shop with something on offer as a tile (`shop_card.tsx`, a
+  `<SpaceCard>`): the shop's picture (the cover of its newest item when it
+  has none, then the seller's avatar), its name, how many listings, and the
+  place as the chip. (It was a section of its own until 2026-11-16.) Mine
+  opens with your own shop as the same card under **My
   shop** (`shop_row.tsx`; Tal, 2026-10-13: a card in place of the See my
   shop / Edit shop buttons); with no shop Mine shows just your listings.
-  Order in Shops and the landing: your Mates' shops first, then the
+  Order in the row: your Mates' shops first, then the
   oldest shop first, up to 60. Search and paging are not built.
 - **Who can see the shop** (`visibility`, the reach ladder, default
   everyone on Kronk; see Who can see it). Whoever can see it finds it in
-  Shops and Offered, opens its page, and can message the seller from it,
+  the Shops row and the one page, opens its page, and can message the seller from it,
   even without a listing (`ListingShop.messageable?`, read by the two
   Nudges gates). It is where a new item in the shop builder starts. The
   page lists only the items the visitor can see.
@@ -345,7 +343,7 @@ it, whatever its reach. Shops have no Krews.
   listing and shop made before this is.
 
 Each is its own. An item's reach decides who sees it wherever it shows
-(Offered, Desired, its page, search, the feed card, the profile shelf) and
+(the one page, its page, search, the feed card, the profile shelf) and
 who can message about it. The shop's decides who sees the shop page and can
 message the seller from it, and is where a new item in the shop builder
 starts; the item can then be set wider or narrower. A shop page lists only
@@ -417,7 +415,7 @@ The listing form (`/hub/wachuneed/new`, and **Edit listing** on an item's own
 page) still opens a shop item, since it is a listing; it no longer has a
 shop mode.
 
-A shop item is an ordinary listing underneath, so it shows in Offered and in
+A shop item is an ordinary listing underneath, so it shows on the one page and in
 search like any other, and a shop can hold one-offs too. What the builder
 adds to a listing:
 
@@ -504,12 +502,12 @@ accepted request is the two of them agreeing, and the rest is in their chat.
   added, and the total at the time (`ListingOffer.ask`), so a later edit to
   the listing doesn't change it. The server works the total out; the page's
   own total is only shown.
-- **Answering.** **Requests** (`/hub/wachuneed/requests`, a view of the
-  korner, `requests_view.tsx`) lists what was asked of you, with **Accept**
+- **Answering.** Mine (`requests_view.tsx`; a section of its own,
+  `/hub/wachuneed/requests`, until 2026-11-16) lists what was asked of you, with **Accept**
   and **Decline** (which asks first) while it waits, then what you asked
   for, with **Take it back**. One flow card each. Accepting a one-off
   reserves it; an ongoing item stays up for the next buyer.
-- **Nudges.** The seller is nudged that someone asked (to Requests), and
+- **Nudges.** The seller is nudged that someone asked (to Mine), and
   the buyer when it is accepted or declined. All three are directed, since
   the buyer can be anyone who can see the listing.
 
@@ -537,7 +535,7 @@ accepted booking goes into both people's Kalendars; bookings and jobs are
 built together.
 
 Built: the parts and the seller's availability, booking against them,
-accepted or declined in Requests, and accepted bookings in both people's
+accepted or declined on Mine, and accepted bookings in both people's
 Kalendars.
 
 - **Parts** (`Listing::BOOKING_PARTS`), each something the person booking
@@ -578,7 +576,7 @@ Kalendars.
   free (`ListingOffer#booking_given`). Unlike a plain request, one person
   can have several bookings of a listing waiting, and accepting one
   leaves the listing up for the next.
-- **In Requests** a booking shows when, the from and the to, and what was
+- **On Mine** a booking shows when, the from and the to, and what was
   asked; the seller accepts or declines as with any request. Once
   accepted, either of the two can **Call it off** (`POST
 /api/v1/wachuneed/requests/:id/cancel`, which asks first): it becomes
