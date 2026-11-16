@@ -44,8 +44,41 @@ wanted-ad proposals (Kommons #117396143164043201 and #116512978534279538):
 Rows from before the column read as `offer`. A wanted listing has a category
 like any other, carries a "Wanted" chip on its tile and detail page (it read
 "Looking for" until 2026-11-16), and
-its feed card badge reads LOOKING FOR instead of LISTING. Answering one works
+its feed card badge reads WANTED instead of LISTING (LOOKING FOR until
+2026-11-16). Answering one works
 the same way: "Message the poster".
+
+## Prices
+
+Tal, 2026-11-16: a job can be ongoing ("I need a gardener, $38 an hour"),
+and that should show on the card. So a listing's price has a kind
+(`listings.price_type`, `Listing::PRICE_TYPES`) and, when it has an amount,
+what the amount is for (`listings.price_unit`, `Listing::PRICE_UNITS`:
+`hour`, `day`, `week`, `month`, `session`; null is the whole thing).
+
+| `price_type` | Composer says (offer / wanted)    | Card says      |
+| ------------ | --------------------------------- | -------------- |
+| `fixed`      | A set price / A set amount        | A$38.00 / hour |
+| `up_to`      | (wanted only) Up to               | Up to A$500.00 |
+| `offers`     | Open to offers                    | Open to offers |
+| `quote`      | Quote on request / Ask for quotes | Quote          |
+| `trade`      | Trade or swap                     | Trade          |
+| `free`       | Free                              | Free           |
+
+Null reads as `fixed`, as every older listing does; a `fixed` listing
+with no amount is still free or by arrangement and shows no price. Only
+`fixed` and `up_to` keep an amount and a unit: the model drops both from
+any other kind (`Listing#price_fits_type`), and a listing that comes in
+kinds has a price per kind and no type of its own. `up_to` is refused on
+something on offer. On the listing page a wanted ad's set amount reads
+**Paying A$38.00 / hour**.
+
+The server still formats the amount (`price_display`); the client says
+the rest, in one place (`features/wachuneed/listing_price.ts`), for the
+tile, the listing page, the feed card and the shop builder. The composer
+field is `listing_price_field.tsx`: the kind, then **Amount (in AUD)** and
+**For** (The lot, An hour, A day, A week, A month, A session) when it has
+an amount. The shop item composer keeps its own plain price for now.
 
 ## What you can do
 
@@ -85,7 +118,8 @@ every other composer (Kommons "Market Composer", 2026-11-08; until then it
 was a page of its own). **It asks for four things and nothing else** (Tal,
 2026-11-08, decisions.md "The listing composer is photos, name, description,
 price"): up to ten photos (`Listing::MAX_PHOTOS`), the name, a description,
-and an optional price (a budget, when wanted) in AUD. The name and
+and the price (see Prices: what kind, then the amount in AUD and what it
+is for when it has one). The name and
 description boxes show just "Title" and "Description" as hint text, no
 examples. The reach control in its header is who can see it (see Who can
 see it). There is no switcher, Konnect row, shop section, availability,

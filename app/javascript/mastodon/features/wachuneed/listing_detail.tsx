@@ -28,6 +28,7 @@ import {
   chosenExtraCents,
   formatListingAmount,
 } from './listing_options_chooser';
+import { formatListingPrice } from './listing_price';
 import {
   ListingVariantChooser,
   selectedVariant,
@@ -113,7 +114,8 @@ const messages = defineMessages({
     defaultMessage: 'See everything from {shop}',
   },
   wanted: { id: 'wachuneed.card.wanted', defaultMessage: 'Wanted' },
-  budget: { id: 'wachuneed.detail.budget', defaultMessage: 'Budget' },
+  // A wanted ad's set price is what the poster pays.
+  paying: { id: 'wachuneed.detail.paying', defaultMessage: 'Paying {price}' },
 });
 
 const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
@@ -309,6 +311,8 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
     );
   }
 
+  const price = formatListingPrice(intl, listing);
+
   // The poster edits from the Ж menu; everyone else gets "Message the
   // poster" here.
   const isOwner = !!me && listing.account?.id === me;
@@ -346,11 +350,12 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
               {intl.formatMessage(messages.wanted)}
             </span>
           ) : null}
-          {listing.price_display ? (
+          {price ? (
             <span className='wachuneed-detail__price'>
-              {listing.kind === 'wanted'
-                ? `${intl.formatMessage(messages.budget)} ${listing.price_display}`
-                : listing.price_display}
+              {listing.kind === 'wanted' &&
+              (listing.price_type ?? 'fixed') === 'fixed'
+                ? intl.formatMessage(messages.paying, { price })
+                : price}
             </span>
           ) : null}
           {/* Where it is shows once: as its Place's card in Konnected

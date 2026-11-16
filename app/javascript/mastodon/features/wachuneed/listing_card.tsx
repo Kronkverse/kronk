@@ -6,6 +6,8 @@ import { Icon } from 'mastodon/components/icon';
 import { SpaceCard } from 'mastodon/components/space_grid';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
+import { useListingPrice } from './listing_price';
+
 // One listing as a tile in a `<SpaceGrid>`: the three sections and a shop
 // page all draw it the same way.
 
@@ -22,6 +24,7 @@ export const ListingCard: React.FC<{ listing: ApiListingJSON }> = ({
 }) => {
   const intl = useIntl();
   const glyph = useKornerIcon('wachuneed');
+  const price = useListingPrice(listing);
   const wanted = listing.kind === 'wanted';
   // A wanted listing says so on its tile: the one page and Mine show both
   // kinds side by side.
@@ -42,7 +45,7 @@ export const ListingCard: React.FC<{ listing: ApiListingJSON }> = ({
       // No photo: Wachuneed's own glyph (no emoji, site-wide).
       placeholder={<Icon id='korner-wachuneed' icon={glyph} />}
       title={listing.title}
-      meta={listing.price_display}
+      meta={price}
       tag={tag}
       tagKind={wanted ? 'wanted' : undefined}
     />

@@ -10,6 +10,8 @@ import type {
   ApiListingOptionJSON,
   ApiListingVariantsJSON,
   ListingAvailability,
+  ListingPriceType,
+  ListingPriceUnit,
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
 
@@ -45,6 +47,8 @@ export interface CreateListingParams {
   subcategory?: string;
   price_cents?: number | null;
   price_currency?: string;
+  price_type?: ListingPriceType;
+  price_unit?: ListingPriceUnit | null;
   location?: string;
   state?: 'draft' | 'live';
   // One of your own shop's sections, or null for none.
