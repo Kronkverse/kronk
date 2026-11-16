@@ -129,6 +129,9 @@ export interface ApiListingJSON {
   where_mode?: ListingWhereMode | null;
   due_on?: string | null;
   spots?: number;
+  // A wanted ad's page: how many have answered, and the viewer's answer.
+  answers_count?: number;
+  my_answer?: { id: string; state: string } | null;
   location?: string | null;
   // The Place it is Konnected to, if any (detail only). Its card in
   // Konnected then says where the listing is.

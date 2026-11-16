@@ -817,3 +817,18 @@
     font-size: 0.8125rem;
   }
 }
+
+// Answering a wanted ad (answer_wanted.tsx): what you would do and your
+// price, under the listing.
+.wachuneed-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+
+  &__error {
+    margin: 0;
+    color: var(--warning-red);
+    font-size: 0.875rem;
+  }
+}
