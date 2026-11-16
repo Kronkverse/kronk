@@ -59,6 +59,17 @@ class Listing < ApplicationRecord
   # thing.
   PRICE_UNITS   = %w(hour day week month session).freeze
 
+  # What a wanted ad is after (docs/spaces/wachuneed.md, Wanted ads),
+  # picked first in its composer: a `thing` someone has, something `made`
+  # for the poster, a `job` done, or someone to `help` for a time. Null on
+  # anything on offer, and on older wanted ads (read as a thing).
+  LOOKING_FOR = %w(thing made job help).freeze
+  # Where the work happens, for anything but a thing. In person or either
+  # says where in `location`.
+  WHERE_MODES = %w(online in_person either).freeze
+  # How many people a wanted ad can take on (an open call).
+  MAX_SPOTS   = 20
+
   # Options (docs/spaces/wachuneed.md, Options): up to MAX_OPTIONS named
   # groups, each of up to MAX_OPTION_CHOICES choices that may add to the
   # price. Stored as JSON on the listing.
@@ -120,6 +131,9 @@ class Listing < ApplicationRecord
   # Sold on another platform: where to get the tickets.
   validates :ticket_url, length: { maximum: 400 }, format: { with: %r{\Ahttps?://\S+\z} }, allow_blank: true
   validates :availability, inclusion: { in: AVAILABILITIES }
+  validates :looking_for, inclusion: { in: LOOKING_FOR }, allow_nil: true
+  validates :where_mode, inclusion: { in: WHERE_MODES }, allow_nil: true
+  validates :spots, numericality: { only_integer: true, in: 1..MAX_SPOTS }
   validates :price_type, inclusion: { in: PRICE_TYPES }, allow_nil: true
   validates :price_unit, inclusion: { in: PRICE_UNITS }, allow_nil: true
   validate  :up_to_is_wanted
@@ -150,6 +164,7 @@ class Listing < ApplicationRecord
        suffix: :reach, validate: true
 
   before_validation :drop_options_when_wanted
+  before_validation :wanted_details_fit
   before_validation :price_from_variants
   before_validation :price_fits_type
   before_save :stamp_closed_at
@@ -453,6 +468,19 @@ class Listing < ApplicationRecord
 
     self.price_cents = nil
     self.price_unit  = nil
+  end
+
+  # What a wanted ad is after belongs to wanted ads alone, and a thing is
+  # one thing, handed over: no where, no more than one taker.
+  def wanted_details_fit
+    unless wanted?
+      self.looking_for = nil
+      self.due_on      = nil
+    end
+    return unless looking_for.nil? || looking_for == 'thing'
+
+    self.where_mode = nil
+    self.spots      = 1
   end
 
   # "Up to" is a budget's ceiling: only something wanted has one.

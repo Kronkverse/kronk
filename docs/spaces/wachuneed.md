@@ -48,6 +48,42 @@ its feed card badge reads WANTED instead of LISTING (LOOKING FOR until
 2026-11-16). Answering one works
 the same way: "Message the poster".
 
+## Wanted ads
+
+Tal, 2026-11-16: members post jobs and things they want to buy, with money
+attached, for others in the community to take on ("record how to play a
+song on guitar", design work, architecture, a gardener at $38 an hour). A
+new wanted ad (**Post a wanted ad**, `/hub/wachuneed/new?kind=wanted`)
+asks **What are you looking for?** first (`wanted.tsx`, the same large
+choices as What are you offering?, `KindChooser` in
+`offering_chooser.tsx`), and the choice goes in the address
+(`&looking=`):
+
+| `looking_for` | Shown as           | For                                             |
+| ------------- | ------------------ | ----------------------------------------------- |
+| `thing`       | Something to buy   | A thing someone has: a bike, a table, a tent    |
+| `made`        | Something made     | Made for you: a video, a design, a painting     |
+| `job`         | A job done         | Work or a service: gardening, plans, repairs    |
+| `help`        | Someone for a time | On a day: a photographer, a band, a hand moving |
+
+The composer is then the listing composer (photos, name, description, the
+price; see Prices), with **Change what you are looking for** under its
+title. For anything but a thing it also asks (`wanted_details_field.tsx`):
+
+- **Where** (`listings.where_mode`): Online, In person, or Online or in
+  person; with in person, **Area (suburb or town)**, kept as the listing's
+  `location`.
+- **By when** (`listings.due_on`), or **What day** for someone for a
+  time. Optional.
+- **How many people** (`listings.spots`, 1 to `Listing::MAX_SPOTS`, 20):
+  more than one is an open call.
+
+The listing page shows them after the price: **Paying A$38.00 / hour ·
+A job done · By 3 Dec · 2 people · Fitzroy**. The model keeps them to
+wanted ads (`Listing#wanted_details_fit`): something on offer has none,
+and a thing has no where and one taker. Wanted ads from before have no
+`looking_for` and read as a thing; editing one keeps it that way.
+
 ## Prices
 
 Tal, 2026-11-16: a job can be ongoing ("I need a gardener, $38 an hour"),

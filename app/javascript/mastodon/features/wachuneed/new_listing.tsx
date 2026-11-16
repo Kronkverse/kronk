@@ -16,8 +16,10 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
   ListingVisibility,
   ListingOffering,
+  ListingLookingFor,
   ListingPriceType,
   ListingPriceUnit,
+  ListingWhereMode,
 } from 'mastodon/api_types/wachuneed';
 import {
   ComposeBody,
@@ -51,6 +53,14 @@ import {
 import { offeringMessages, isOffering } from './offering';
 import { OfferingChooser } from './offering_chooser';
 import { OfferingComposer } from './offering_composer';
+import {
+  MAX_SPOTS,
+  WantedChooser,
+  isLookingFor,
+  isWhereMode,
+  wantedMessages,
+} from './wanted';
+import { WantedDetailsField } from './wanted_details_field';
 
 // The listing composer (docs/spaces/wachuneed.md, Listing): a new listing,
 // on offer or wanted (Desired), or one of yours to change. It is the
@@ -142,6 +152,10 @@ interface ListingDraftParams {
   price?: string;
   priceType?: ListingPriceType;
   priceUnit?: ListingPriceUnit | null;
+  whereMode?: ListingWhereMode;
+  area?: string;
+  dueOn?: string;
+  spots?: string;
   visibility?: ListingVisibility;
   krewIds?: string[];
 }
@@ -157,6 +171,10 @@ interface ListingComposerProps {
   // Offering something other than a thing to buy (a new offer only): back
   // to What are you offering? (Tal, 2026-11-09).
   onChangeOffering?: () => void;
+  // A new wanted ad: what it is after, picked first (wanted.tsx), and the
+  // way back to that choice.
+  lookingFor?: ListingLookingFor;
+  onChangeLookingFor?: () => void;
 }
 
 export const ListingComposer: React.FC<ListingComposerProps> = ({
@@ -165,6 +183,8 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
   onCancel,
   onDone,
   onChangeOffering,
+  lookingFor: initialLookingFor,
+  onChangeLookingFor,
 }) => {
   const intl = useIntl();
   const editing = !!editId;
@@ -172,6 +192,15 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
 
   // Fixed by where it was opened from; an edited listing keeps its own.
   const [kind, setKind] = useState<Kind>(initialKind);
+  // A wanted ad's details (docs/spaces/wachuneed.md, Wanted ads). Older
+  // wanted ads have none and read as a thing.
+  const [lookingFor, setLookingFor] = useState<ListingLookingFor | null>(
+    initialLookingFor ?? null,
+  );
+  const [whereMode, setWhereMode] = useState<ListingWhereMode>('online');
+  const [area, setArea] = useState('');
+  const [dueOn, setDueOn] = useState('');
+  const [spots, setSpots] = useState('1');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -219,6 +248,11 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             : '',
         );
         setPriceType(listing.price_type ?? 'fixed');
+        setLookingFor(listing.looking_for ?? null);
+        setWhereMode(listing.where_mode ?? 'online');
+        setArea(listing.location ?? '');
+        setDueOn(listing.due_on ?? '');
+        setSpots(String(listing.spots ?? 1));
         setPriceUnit(listing.price_unit ?? null);
         setVisibility(listing.visibility ?? 'public');
         setKrewIds(listing.krews?.map((k) => k.id) ?? []);
@@ -297,6 +331,10 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
       setPrice(p.price ?? '');
       setPriceType(isPriceType(p.priceType) ? p.priceType : 'fixed');
       setPriceUnit(isPriceUnit(p.priceUnit) ? p.priceUnit : null);
+      setWhereMode(isWhereMode(p.whereMode) ? p.whereMode : 'online');
+      setArea(p.area ?? '');
+      setDueOn(p.dueOn ?? '');
+      setSpots(p.spots ?? '1');
       setVisibility(p.visibility ?? shopVisibility.current);
       visibilityPicked.current = !!p.visibility;
       setKrewIds(p.krewIds ?? []);
@@ -324,6 +362,10 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
         price,
         priceType,
         priceUnit,
+        whereMode,
+        area,
+        dueOn,
+        spots,
         visibility,
         krewIds,
       },
@@ -379,6 +421,26 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
         : { price_cents: null }),
     };
 
+    // What a wanted ad is after, and for anything but a thing, where, by
+    // when and how many people (docs/spaces/wachuneed.md, Wanted ads).
+    const wantedFields =
+      kind === 'wanted' && lookingFor
+        ? {
+            looking_for: lookingFor,
+            ...(lookingFor === 'thing'
+              ? {}
+              : {
+                  where_mode: whereMode,
+                  location: whereMode === 'online' ? '' : area.trim(),
+                  due_on: dueOn || null,
+                  spots: Math.min(
+                    MAX_SPOTS,
+                    Math.max(1, parseInt(spots, 10) || 1),
+                  ),
+                }),
+          }
+        : {};
+
     void (async () => {
       try {
         if (editId) {
@@ -390,6 +452,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             title: title.trim(),
             description: description.trim(),
             ...(comesInKinds ? {} : priceFields),
+            ...wantedFields,
             visibility,
             krew_ids: krewIds,
             ...(photoState.touched
@@ -411,6 +474,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
           kind,
           state: 'live',
           ...priceFields,
+          ...wantedFields,
           ...(photoState.ids.length > 0
             ? { media_attachment_ids: photoState.ids }
             : {}),
@@ -436,6 +500,11 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
     price,
     priceType,
     priceUnit,
+    lookingFor,
+    whereMode,
+    area,
+    dueOn,
+    spots,
     comesInKinds,
     kindChoices,
     visibility,
@@ -492,6 +561,14 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             onClick={onChangeOffering}
           >
             {intl.formatMessage(offeringMessages.change)}
+          </button>
+        ) : onChangeLookingFor ? (
+          <button
+            type='button'
+            className='wachuneed-offering-change'
+            onClick={onChangeLookingFor}
+          >
+            {intl.formatMessage(wantedMessages.change)}
           </button>
         ) : undefined
       }
@@ -563,6 +640,20 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             />
           )}
 
+          {kind === 'wanted' && lookingFor && lookingFor !== 'thing' && (
+            <WantedDetailsField
+              lookingFor={lookingFor}
+              whereMode={whereMode}
+              area={area}
+              dueOn={dueOn}
+              spots={spots}
+              onWhereMode={setWhereMode}
+              onArea={setArea}
+              onDueOn={setDueOn}
+              onSpots={setSpots}
+            />
+          )}
+
           {error && <ComposeHint error>{error}</ComposeHint>}
 
           {editing && loadedState !== null && loadedState !== 'closed' && (
@@ -597,9 +688,12 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const initialKind: Kind = query.get('kind') === 'wanted' ? 'wanted' : 'offer';
   // What it offers (docs/spaces/wachuneed.md, What are you offering?): a
   // new one says so in the address (`?offering=`) and opens on the picker
-  // until it does (Tal, 2026-11-09); a wanted ad is never asked, and one
-  // being changed says it itself.
+  // until it does (Tal, 2026-11-09); one being changed says it itself. A
+  // new wanted ad is asked what it is looking for instead (`?looking=`,
+  // 2026-11-16), and opens on that picker until it says.
   const asked = query.get('offering');
+  const looking = query.get('looking');
+  const lookingFor = isLookingFor(looking) ? looking : null;
   const [editOffering, setEditOffering] = useState<ListingOffering | null>(
     null,
   );
@@ -658,6 +752,18 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const handleChoose = useCallback(() => {
     goOffering('choose');
   }, [goOffering]);
+  const goLooking = useCallback(
+    (next: ListingLookingFor | null) => {
+      const params = new URLSearchParams(search);
+      if (next) params.set('looking', next);
+      else params.delete('looking');
+      history.replace({ pathname, search: `?${params.toString()}` });
+    },
+    [history, pathname, search],
+  );
+  const handleChooseLooking = useCallback(() => {
+    goLooking(null);
+  }, [goLooking]);
   const handleSaved = useCallback(
     (savedId: string | null) => {
       history.push(
@@ -669,6 +775,19 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
 
   const page = editId ? <ListingDetail /> : <Wachuneed />;
   if (offering === null) return page;
+
+  if (!editId && initialKind === 'wanted' && !lookingFor) {
+    return (
+      <>
+        {page}
+        <WantedChooser
+          label={intl.formatMessage(messages.titleWanted)}
+          onPick={goLooking}
+          onCancel={handleCancel}
+        />
+      </>
+    );
+  }
 
   if (offering === 'choose') {
     return (
@@ -704,13 +823,17 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     <>
       {page}
       <ListingComposer
-        key={editId ?? `new-${initialKind}`}
+        key={editId ?? `new-${initialKind}-${lookingFor ?? ''}`}
         editId={editId}
         initialKind={initialKind}
         onCancel={handleCancel}
         onDone={handleDone}
         onChangeOffering={
           !editId && initialKind === 'offer' ? handleChoose : undefined
+        }
+        lookingFor={editId ? undefined : (lookingFor ?? undefined)}
+        onChangeLookingFor={
+          !editId && initialKind === 'wanted' ? handleChooseLooking : undefined
         }
       />
     </>

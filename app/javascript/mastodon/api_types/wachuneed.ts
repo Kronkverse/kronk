@@ -108,6 +108,11 @@ export type ListingPriceType =
 // What an amount is for; null is the whole thing.
 export type ListingPriceUnit = 'hour' | 'day' | 'week' | 'month' | 'session';
 
+// What a wanted ad is after (docs/spaces/wachuneed.md, Wanted ads), and
+// where the work happens.
+export type ListingLookingFor = 'thing' | 'made' | 'job' | 'help';
+export type ListingWhereMode = 'online' | 'in_person' | 'either';
+
 export interface ApiListingJSON {
   id: string;
   slug?: string;
@@ -118,6 +123,12 @@ export interface ApiListingJSON {
   price_display?: string | null;
   price_type?: ListingPriceType | null;
   price_unit?: ListingPriceUnit | null;
+  // Wanted ads only: what it is after, where, by when (an ISO date; for
+  // `help`, the day), and how many people it wants.
+  looking_for?: ListingLookingFor | null;
+  where_mode?: ListingWhereMode | null;
+  due_on?: string | null;
+  spots?: number;
   location?: string | null;
   // The Place it is Konnected to, if any (detail only). Its card in
   // Konnected then says where the listing is.
