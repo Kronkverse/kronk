@@ -442,7 +442,7 @@ class SwitchingColumnsArea extends PureComponent {
             {/* One brand (docs/spaces/wachuneed.md, Brands); the list is
                 the brands view of the route below. */}
             <WrappedRoute path='/hub/wachuneed/brands/:id' exact component={WachuneedBrand} content={children} />
-            <WrappedRoute path={['/hub/wachuneed/requests', '/hub/wachuneed']} component={Wachuneed} content={children} />
+            <WrappedRoute path={['/hub/wachuneed/mine', '/hub/wachuneed']} component={Wachuneed} content={children} />
             {/* Connections retired with them — it listed follow requests
                 alongside followers and following. Requests keep their own
                 page at /follow_requests; the rest is now just Mates. */}

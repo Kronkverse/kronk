@@ -1,29 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { apiGetWachugotListings } from 'mastodon/api/wachuneed';
+import { useHistory } from 'react-router-dom';
+
 import { apiGetMyWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
+import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerPill } from 'mastodon/components/korner_pill';
 
+import { WachuneedRequests } from './requests_view';
 import { ShopCards } from './shop_row';
-import { WachuneedListings } from './wachuneed_view';
+import { MyListings } from './wachuneed_view';
 
-// Mine — the caller's own listings, across every state (live /
-// reserved / closed). Reuses the shared WachuneedListings surface;
-// only the loader differs. Above them, your shop as the same card Offered
-// shows (it opens the shop, which you change from the Ж menu there). With
-// no shop there is nothing here: Shops is where you open one.
+// Mine — your own corner of Wachuneed (Tal, 2026-11-16): your shop as the
+// same card the one page shows (it opens the shop, which you change from
+// the Ж menu there), or Open a shop until you have one; then the requests
+// asked of you and by you (their own section until then); then your own
+// listings in every state (live / reserved / closed).
 
 const messages = defineMessages({
   shop: { id: 'wachuneed.mine.shop', defaultMessage: 'My shop' },
   listings: { id: 'wachuneed.mine.listings', defaultMessage: 'My listings' },
+  open: { id: 'wachuneed.shop_edit.title_open', defaultMessage: 'Open a shop' },
 });
 
 const MyShop: React.FC = () => {
   const intl = useIntl();
-  // null while asking, and when you have no shop.
-  const [shop, setShop] = useState<ApiShopJSON | null>(null);
+  const history = useHistory();
+  // undefined while asking, null when you have no shop.
+  const [shop, setShop] = useState<ApiShopJSON | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +40,7 @@ const MyShop: React.FC = () => {
         return undefined;
       })
       .catch(() => {
-        // Left empty; Mine shows your listings alone.
+        // Left unknown; Mine shows the rest without it.
       });
 
     return () => {
@@ -42,7 +48,22 @@ const MyShop: React.FC = () => {
     };
   }, []);
 
-  if (!shop) return null;
+  const handleOpen = useCallback(() => {
+    history.push('/hub/wachuneed/my-shop');
+  }, [history]);
+
+  if (shop === undefined) return null;
+
+  if (shop === null) {
+    return (
+      <KornerActionBar>
+        <KornerPill
+          label={intl.formatMessage(messages.open)}
+          onClick={handleOpen}
+        />
+      </KornerActionBar>
+    );
+  }
 
   return (
     <ShopCards
@@ -56,6 +77,7 @@ const MyShop: React.FC = () => {
 export const WachugotListings: React.FC = () => (
   <>
     <MyShop />
-    <WachuneedListings loader={apiGetWachugotListings} scope='mine' />
+    <WachuneedRequests />
+    <MyListings />
   </>
 );

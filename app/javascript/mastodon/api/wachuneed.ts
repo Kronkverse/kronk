@@ -13,20 +13,11 @@ import type {
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
 
-// Wachuneed listings — split by scope so the sub-views share a client
-// but hit the same server endpoint with different params.
-//
-//   offered → live listings on offer.
-//   desired → live listings someone is looking for (wanted).
-//   mine    → the caller's own listings (all states, both kinds).
+// Wachuneed listings. Browse is one list, offered and wanted together
+// (the one page, home_view.tsx); Mine is the caller's own, in every state.
 
-export const apiGetWachuneedListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', { kind: 'offer' });
-
-export const apiGetWachumissingListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', {
-    kind: 'wanted',
-  });
+export const apiGetAllListings = () =>
+  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings');
 
 export const apiGetWachugotListings = () =>
   apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', {

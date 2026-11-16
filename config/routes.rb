@@ -383,8 +383,14 @@ Rails.application.routes.draw do
   # Singular `listing` is what the older /market and /hub/marketplace
   # redirects produce; the detail route is `listings`.
   get '/hub/wachuneed/listing/:id', to: redirect('/hub/wachuneed/listings/%{id}', status: 301)
-  # The sections were Wachumissing and Wachugot until 2026-10-12.
-  get '/hub/wachuneed/wachumissing', to: redirect('/hub/wachuneed/desired', status: 301)
+  # Sections folded into another page: Offered and Desired are the one
+  # page's pills, Shops its top row, Requests part of Mine (2026-11-16).
+  # Wachumissing and Wachugot were Desired and Mine until 2026-10-12.
+  get '/hub/wachuneed/offered', to: redirect('/hub/wachuneed?show=offered', status: 301)
+  get '/hub/wachuneed/desired', to: redirect('/hub/wachuneed?show=wanted', status: 301)
+  get '/hub/wachuneed/wachumissing', to: redirect('/hub/wachuneed?show=wanted', status: 301)
+  get '/hub/wachuneed/shops', to: redirect('/hub/wachuneed', status: 301)
+  get '/hub/wachuneed/requests', to: redirect('/hub/wachuneed/mine', status: 301)
   get '/hub/wachuneed/wachugot', to: redirect('/hub/wachuneed/mine', status: 301)
   get '/hub/wachuneed/*path', to: 'home#index', format: false
   get '/hub/inflow', to: 'home#index'

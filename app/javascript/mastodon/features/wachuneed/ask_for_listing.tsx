@@ -148,7 +148,7 @@ export const AskForListing: React.FC<{
     return (
       <p className='wachuneed-detail__asked' role='status'>
         {intl.formatMessage(booked ? messages.booked : messages.asked)}{' '}
-        <Link to='/hub/wachuneed/requests'>
+        <Link to='/hub/wachuneed/mine'>
           {intl.formatMessage(messages.seeRequests)}
         </Link>
       </p>

@@ -13,9 +13,7 @@ import type {
   ApiRequestJSON,
   ApiRequestState,
 } from 'mastodon/api/wachuneed_requests';
-import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerPill } from 'mastodon/components/korner_pill';
-import { LoadingState } from 'mastodon/components/loading_state';
 import {
   CardActions,
   CardBadge,
@@ -28,9 +26,9 @@ import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { formatListingAmount } from './listing_options_chooser';
 
-// /hub/wachuneed/requests — requests for listings (docs/spaces/wachuneed.md,
-// Requests). Asked of you first, each with Accept and Decline while it
-// waits; then what you asked for, which you can take back while it waits.
+// Requests for listings, on Mine (docs/spaces/wachuneed.md, Requests;
+// their own section until 2026-11-16). Asked of you first, each with
+// Accept and Decline while it waits; then what you asked for, which you can take back while it waits.
 // One flow card each (<StandardCard>): where it stands, the listing, who
 // and how much, what was chosen and said, and the actions.
 //
@@ -39,19 +37,6 @@ import { formatListingAmount } from './listing_options_chooser';
 // call it off.
 
 const messages = defineMessages({
-  loading: {
-    id: 'wachuneed.requests.loading',
-    defaultMessage: 'Loading requests…',
-  },
-  empty: {
-    id: 'wachuneed.requests.empty',
-    defaultMessage: 'No requests yet',
-  },
-  emptyBody: {
-    id: 'wachuneed.requests.empty.body',
-    defaultMessage:
-      'Choose what you want on a listing and tap Ask for this. What people ask of you shows here too.',
-  },
   askedOfYou: {
     id: 'wachuneed.requests.asked_of_you',
     defaultMessage: 'Asked of you',
@@ -343,18 +328,9 @@ export const WachuneedRequests: React.FC = () => {
     [confirm, intl],
   );
 
-  if (loading) {
-    return <LoadingState label={intl.formatMessage(messages.loading)} />;
-  }
-
-  if (asked.length === 0 && mine.length === 0) {
-    return (
-      <EmptyState
-        title={intl.formatMessage(messages.empty)}
-        body={intl.formatMessage(messages.emptyBody)}
-      />
-    );
-  }
+  // On Mine, nothing until there is something: the listings below say
+  // what Mine is for.
+  if (loading || (asked.length === 0 && mine.length === 0)) return null;
 
   const section = (
     heading: string,

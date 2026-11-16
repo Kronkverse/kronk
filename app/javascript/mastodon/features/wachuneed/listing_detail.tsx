@@ -112,7 +112,7 @@ const messages = defineMessages({
     id: 'wachuneed.detail.see_shop',
     defaultMessage: 'See everything from {shop}',
   },
-  wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
+  wanted: { id: 'wachuneed.card.wanted', defaultMessage: 'Wanted' },
   budget: { id: 'wachuneed.detail.budget', defaultMessage: 'Budget' },
 });
 

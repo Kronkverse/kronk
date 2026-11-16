@@ -2,64 +2,49 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Redirect, useLocation } from 'react-router-dom';
 
-import {
-  apiGetWachumissingListings,
-  apiGetWachuneedListings,
-} from 'mastodon/api/wachuneed';
 import { KornerShell } from 'mastodon/components/korner_shell';
 
 import { WachuneedBrands } from './brands_view';
 import { WachuneedHome } from './home_view';
-import { WachuneedRequests } from './requests_view';
-import { WachuneedShops } from './shops_view';
 import { WachugotListings } from './wachugot_view';
-import { WachuneedListings } from './wachuneed_view';
 
-// /hub/wachuneed — Wachuneed landing. Seven views, all rendered
-// through the shared KornerShell:
+// /hub/wachuneed — Wachuneed. Three views, all rendered through the
+// shared KornerShell (Tal, 2026-11-16: one page for everything, Brands, and
+// your own):
 //
-//   /hub/wachuneed         → home    (rows of Offered, Desired and Shops)
-//   /hub/wachuneed/offered → offered (live listings on offer)
-//   /hub/wachuneed/desired → desired (what people are looking for)
-//   /hub/wachuneed/shops   → shops   (every shop with something on offer)
-//   /hub/wachuneed/brands  → brands  (brands members back; ?show=proposed)
-//   /hub/wachuneed/mine    → mine    (the caller's own listings)
-//   /hub/wachuneed/requests → requests (asked of you, and by you)
+//   /hub/wachuneed        → home   (shops along the top, then everything
+//                                   offered and wanted in one grid)
+//   /hub/wachuneed/brands → brands (brands members back; ?show=proposed)
+//   /hub/wachuneed/mine   → mine   (your shop, requests, your listings)
 //
 // The view keys agree with `views:` in config/korners/wachuneed.yaml;
-// the rotator (manifest header.rotator) drives the h1 + tagline. No
-// per-view category filters — the standard view is a plain listings
-// grid (2 wide phone / 4 wide desktop), category surfacing can come
-// back once the manifest has real category counts.
+// the rotator (manifest header.rotator) drives the h1 + tagline.
 
 const messages = defineMessages({
   title: { id: 'wachuneed.title', defaultMessage: 'Wachuneed' },
 });
 
-// The sections' names until 2026-10-12. The server 301s these on a full
-// page load; this covers a link followed inside the app.
-const OLD_SECTIONS: Record<string, string> = {
-  '/hub/wachuneed/wachumissing': '/hub/wachuneed/desired',
-  '/hub/wachuneed/wachugot': '/hub/wachuneed/mine',
+// Sections that are now part of another page. The server 301s these on a
+// full page load; this covers a link followed inside the app. Offered and
+// Desired became the one page's pills, Shops its top row, and Requests
+// part of Mine (2026-11-16); Wachumissing and Wachugot were Desired and
+// Mine until 2026-10-12.
+const HOME = '/hub/wachuneed';
+const MINE = '/hub/wachuneed/mine';
+const OLD_SECTIONS: Record<string, { pathname: string; search?: string }> = {
+  '/hub/wachuneed/offered': { pathname: HOME, search: '?show=offered' },
+  '/hub/wachuneed/desired': { pathname: HOME, search: '?show=wanted' },
+  '/hub/wachuneed/wachumissing': { pathname: HOME, search: '?show=wanted' },
+  '/hub/wachuneed/shops': { pathname: HOME },
+  '/hub/wachuneed/requests': { pathname: MINE },
+  '/hub/wachuneed/wachugot': { pathname: MINE },
 };
 
 const renderHome = () => <WachuneedHome />;
 
-const renderOffered = () => (
-  <WachuneedListings loader={apiGetWachuneedListings} scope='offered' />
-);
-
-const renderDesired = () => (
-  <WachuneedListings loader={apiGetWachumissingListings} scope='desired' />
-);
-
-const renderShops = () => <WachuneedShops />;
-
 const renderBrands = () => <WachuneedBrands />;
 
 const renderMine = () => <WachugotListings />;
-
-const renderRequests = () => <WachuneedRequests />;
 
 const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
@@ -76,12 +61,8 @@ const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
       defaultView='home'
       views={{
         home: renderHome,
-        offered: renderOffered,
-        desired: renderDesired,
-        shops: renderShops,
         brands: renderBrands,
         mine: renderMine,
-        requests: renderRequests,
       }}
     />
   );

@@ -625,9 +625,10 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     }
     // Opened from a record (`?konnect=`): back to it.
     if (returnToSource('/hub/wachuneed')) return;
-    history.replace(
-      initialKind === 'wanted' ? '/hub/wachuneed/desired' : '/hub/wachuneed',
-    );
+    history.replace({
+      pathname: '/hub/wachuneed',
+      search: initialKind === 'wanted' ? '?show=wanted' : '',
+    });
   }, [editId, history, initialKind, returnToSource]);
 
   const handleDone = useCallback(
