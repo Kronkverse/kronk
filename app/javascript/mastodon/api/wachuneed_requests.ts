@@ -60,6 +60,10 @@ export interface ApiRequestJSON {
   // then whoever answered, and `seller` the poster.
   pitch: boolean;
   amount_cents: number | null;
+  // A chosen answer carried through: delivered by whoever answered, then
+  // done by the poster.
+  delivered_at: string | null;
+  completed_at: string | null;
   buyer: ApiRequestAccountJSON;
   listing: {
     id: string;
@@ -111,7 +115,7 @@ export const apiGetRequests = (as: 'seller' | 'buyer', listingId?: string) =>
 
 export const apiAnswerRequest = (
   id: string,
-  answer: 'accept' | 'decline' | 'withdraw' | 'cancel',
+  answer: 'accept' | 'decline' | 'withdraw' | 'cancel' | 'deliver' | 'complete',
 ) => apiRequestPost<ApiRequestJSON>(`v1/wachuneed/requests/${id}/${answer}`);
 
 // A booked listing's free times for two weeks from `from`; `suggest` when

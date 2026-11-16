@@ -114,10 +114,21 @@ offerer is whoever answered, and the poster chooses.
   (`spots`), the ad is taken: it becomes `reserved`, leaves browse, says
   "Someone has been chosen for this", and every answer still waiting is
   declined (`ListingOffer#choose!`).
+- **Carrying it through**: on a chosen answer's card (Mine), whoever
+  answered has **Mark delivered** (`POST …/requests/:id/deliver`,
+  `delivered_at`) and the poster **Mark done** (`POST …/requests/:id/
+complete`, `completed_at`; it can be done without being delivered).
+  The card's state reads Chosen, Delivered, then Done. The ad stays taken;
+  its poster takes it down when they like. A chosen answer with a date
+  (`due_on`) shows in both people's Kalendars under Me on that day, marked
+  Due, until it is done ([`kalendar.md`](kalendar.md), Bookings).
 - **Nudges** (directed, like requests): `wachuneed.pitch.made` to the
   poster ("answered your wanted ad", to the ad), `wachuneed.pitch.chosen`
-  to whoever was chosen, and `wachuneed.pitch.passed` to whoever was not,
-  by No thanks or because the ad was taken ("didn't choose your answer").
+  to whoever was chosen, `wachuneed.pitch.passed` to whoever was not, by
+  No thanks or because the ad was taken ("didn't choose your answer"),
+  `wachuneed.pitch.delivered` to the poster ("delivered your wanted ad",
+  to Mine), and `wachuneed.pitch.done` to whoever did it ("marked your
+  work done").
 - Unpaid samples are not asked for: an answer says what you would do, not
   the work itself (Tal, 2026-11-16).
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_16_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1559,6 +1559,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_110000) do
     t.bigint "ticket_date_id"
     t.integer "total_cents"
     t.datetime "updated_at", null: false
+    t.datetime "delivered_at"
+    t.datetime "completed_at"
     t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
     t.index ["listing_id", "starts_at"], name: "index_listing_offers_on_listing_id_and_starts_at", where: "((starts_at IS NOT NULL) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[])))"
     t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"

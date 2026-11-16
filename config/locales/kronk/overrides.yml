@@ -251,6 +251,8 @@ en:
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
         pitch_chosen: "%{who} chose you for their wanted ad"
+        pitch_delivered: "%{who} delivered your wanted ad"
+        pitch_done: "%{who} marked your work done"
         pitch_passed: "%{who} didn't choose your answer"
         pitched: "%{who} answered your wanted ad"
     subjects:
@@ -531,6 +533,8 @@ en-GB:
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
         pitch_chosen: "%{who} chose you for their wanted ad"
+        pitch_delivered: "%{who} delivered your wanted ad"
+        pitch_done: "%{who} marked your work done"
         pitch_passed: "%{who} didn't choose your answer"
         pitched: "%{who} answered your wanted ad"
     subjects:

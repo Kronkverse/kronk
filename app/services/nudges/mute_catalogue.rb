@@ -60,6 +60,8 @@ module Nudges
       'wachuneed.pitched' => { korner: 'wachuneed', label: 'Someone answers your wanted ad' },
       'wachuneed.pitch_chosen' => { korner: 'wachuneed', label: 'You are chosen for a wanted ad' },
       'wachuneed.pitch_passed' => { korner: 'wachuneed', label: 'Your answer to a wanted ad is not chosen' },
+      'wachuneed.pitch_delivered' => { korner: 'wachuneed', label: 'Your wanted ad is delivered' },
+      'wachuneed.pitch_done' => { korner: 'wachuneed', label: 'Your work on a wanted ad is marked done' },
       'wachuneed.brand_listed' => { korner: 'wachuneed', label: 'A brand you proposed is in Brands' },
       'freethedream.mentioned' => { korner: 'freethedream', label: 'Someone tags you in a projekt’s talk' },
       'freethedream.gang_talked' => { korner: 'freethedream', label: 'Someone talks in a Komponent you joined' },

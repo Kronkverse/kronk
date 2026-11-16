@@ -11,6 +11,8 @@
 #   POST /api/v1/wachuneed/requests/:id/accept|decline (the seller)
 #   POST /api/v1/wachuneed/requests/:id/withdraw       (the buyer)
 #   POST /api/v1/wachuneed/requests/:id/cancel         (either, once accepted)
+#   POST /api/v1/wachuneed/requests/:id/deliver        (whoever answered, once chosen)
+#   POST /api/v1/wachuneed/requests/:id/complete       (the poster, once chosen)
 #
 # A request for a booked listing is a booking: it also takes `starts_at`,
 # `route` ({ from: { lat, lng, name }, to: … }) and `details`, as the
@@ -21,7 +23,7 @@ class Api::V1::Wachuneed::RequestsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, except: [:index]
   before_action :require_user!
-  before_action :set_request, only: [:accept, :decline, :withdraw, :cancel]
+  before_action :set_request, only: [:accept, :decline, :withdraw, :cancel, :deliver, :complete]
 
   def index
     scope = ListingOffer.includes(:offerer, :cancelled_by, listing: [:account, :listing_photos]).recent
@@ -69,7 +71,27 @@ class Api::V1::Wachuneed::RequestsController < Api::BaseController
     render json: @request.reload, serializer: REST::WachuneedRequestSerializer
   end
 
+  # A chosen answer to a wanted ad, carried through: delivered by whoever
+  # answered, then done by the poster (docs/spaces/wachuneed.md, Answering
+  # a wanted ad).
+  def deliver
+    carry_through(:buyer) { @request.deliver! unless @request.delivered_at }
+  end
+
+  def complete
+    carry_through(:seller) { @request.complete! unless @request.completed_at }
+  end
+
   private
+
+  def carry_through(side)
+    owner = side == :seller ? @request.listing.account_id : @request.offerer_id
+    raise Mastodon::NotPermittedError unless owner == current_account.id
+    return render(json: { error: 'Only a chosen answer is carried through' }, status: 422) unless @request.pitch? && @request.state == 'accepted'
+
+    yield
+    render json: @request.reload, serializer: REST::WachuneedRequestSerializer
+  end
 
   def ask(listing)
     ListingOffer.ask(listing, offerer: current_account,

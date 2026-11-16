@@ -117,6 +117,16 @@ const messages = defineMessages({
     id: 'wachuneed.answers.state.not_chosen',
     defaultMessage: 'Not chosen',
   },
+  deliver: {
+    id: 'wachuneed.answers.deliver',
+    defaultMessage: 'Mark delivered',
+  },
+  complete: { id: 'wachuneed.answers.complete', defaultMessage: 'Mark done' },
+  delivered: {
+    id: 'wachuneed.answers.state.delivered',
+    defaultMessage: 'Delivered',
+  },
+  done: { id: 'wachuneed.answers.state.done', defaultMessage: 'Done' },
   answers: {
     id: 'wachuneed.answers.heading',
     defaultMessage: 'Answers ({count})',
@@ -132,7 +142,13 @@ const STATE_LABELS: Record<ApiRequestState, typeof messages.pending> = {
   cancelled: messages.cancelled,
 };
 
-export type Answer = 'accept' | 'decline' | 'withdraw' | 'cancel';
+export type Answer =
+  | 'accept'
+  | 'decline'
+  | 'withdraw'
+  | 'cancel'
+  | 'deliver'
+  | 'complete';
 
 // A pinned end of a booking: its name, or where it is.
 const placeName = (point: { lat: number; lng: number; name?: string }) =>
@@ -163,6 +179,12 @@ const RequestCard: React.FC<{
   }, [onAnswer, request]);
   const handleCancel = useCallback(() => {
     onAnswer(request, 'cancel');
+  }, [onAnswer, request]);
+  const handleDeliver = useCallback(() => {
+    onAnswer(request, 'deliver');
+  }, [onAnswer, request]);
+  const handleComplete = useCallback(() => {
+    onAnswer(request, 'complete');
   }, [onAnswer, request]);
 
   const when = request.starts_at
@@ -220,12 +242,17 @@ const RequestCard: React.FC<{
         })
       : null,
   ].filter((part): part is string => part !== null);
+  const carried = pitch && request.state === 'accepted';
   const stateLabel =
-    pitch && request.state === 'accepted'
-      ? messages.chosen
-      : pitch && request.state === 'declined'
-        ? messages.notChosen
-        : STATE_LABELS[request.state];
+    carried && request.completed_at
+      ? messages.done
+      : carried && request.delivered_at
+        ? messages.delivered
+        : carried
+          ? messages.chosen
+          : pitch && request.state === 'declined'
+            ? messages.notChosen
+            : STATE_LABELS[request.state];
 
   return (
     <StandardCard as='li' variant='flow'>
@@ -289,7 +316,29 @@ const RequestCard: React.FC<{
           )}
         </CardActions>
       )}
-      {request.state === 'accepted' && request.starts_at && (
+      {/* A chosen answer carried through: whoever answered marks it
+          delivered, the poster marks it done. */}
+      {carried && !request.completed_at && (
+        <CardActions>
+          {side === 'buyer' && !request.delivered_at && (
+            <KornerPill
+              label={intl.formatMessage(messages.deliver)}
+              variant='primary'
+              onClick={handleDeliver}
+              disabled={busy}
+            />
+          )}
+          {side === 'seller' && (
+            <KornerPill
+              label={intl.formatMessage(messages.complete)}
+              variant={request.delivered_at ? 'primary' : 'default'}
+              onClick={handleComplete}
+              disabled={busy}
+            />
+          )}
+        </CardActions>
+      )}
+      {!pitch && request.state === 'accepted' && request.starts_at && (
         <CardActions>
           <KornerPill
             label={intl.formatMessage(messages.cancel)}

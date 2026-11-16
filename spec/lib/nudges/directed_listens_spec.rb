@@ -114,6 +114,8 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
         'wachuneed.pitch.made',
         'wachuneed.pitch.chosen',
         'wachuneed.pitch.passed',
+        'wachuneed.pitch.delivered',
+        'wachuneed.pitch.done',
         'wachuneed.brand.listed',
         'albutts.contribution.granted',
         'albutts.album.shared'

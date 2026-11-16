@@ -221,6 +221,25 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     end
   end
 
+  it 'carries chosen work through: delivered by whoever does it, done by the poster' do
+    ana = Fabricate(:account, username: 'ana')
+    theirs = Listing.create!(account: ana, title: 'A gardener', category: 'service', kind: 'wanted', state: 'live', looking_for: 'job')
+    answer = ListingOffer.pitch(theirs, offerer: bob.account, message: 'Ten years of veggie gardens').tap(&:save!)
+    answer.accept!
+
+    visit '/hub/wachuneed/mine'
+    within('section[aria-label="Work you\'re doing"]') do
+      click_on 'Mark delivered'
+      expect(page).to have_content(/delivered/i)
+      expect(page).to have_no_button('Mark delivered')
+    end
+    expect(answer.reload.delivered_at).to be_present
+
+    answer.complete!
+    visit '/hub/wachuneed/mine'
+    within('section[aria-label="Work you\'re doing"]') { expect(page).to have_content(/done/i) }
+  end
+
   it 'takes the old section addresses to the new ones' do
     visit '/hub/wachuneed/wachugot'
 
