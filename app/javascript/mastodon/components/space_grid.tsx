@@ -46,21 +46,29 @@ import {
 // `row` is one line of the same tiles that scrolls sideways, the next tile
 // peeking in at the edge: for a shelf among others down a page, like the
 // Booth's By artist and By kind (2026-10-29).
+//
+// `wide` makes every tile about half as wide again, with a landscape image:
+// for things that hold other things, so a row of them reads as a different
+// shape from the items below (Wachuneed's shops, 2026-11-16). In the grid a
+// wide tile takes two columns.
 interface SpaceGridProps {
   children: React.ReactNode;
   className?: string;
   layout?: 'grid' | 'masonry' | 'row';
+  wide?: boolean;
 }
 
 export const SpaceGrid: React.FC<SpaceGridProps> = ({
   children,
   className,
   layout = 'grid',
+  wide = false,
 }) => (
   <ul
     className={[
       'space-grid',
       layout === 'grid' ? null : `space-grid--${layout}`,
+      wide ? 'space-grid--wide' : null,
       className,
     ]
       .filter(Boolean)
@@ -74,6 +82,15 @@ interface SpaceCardProps {
   // Where tapping the card goes. Omit for a card that isn't a link.
   to?: string;
   image?: string | null;
+  // Several pictures instead of one: the first large, the next two stacked
+  // beside it, for a card that stands for a collection. Fewer than two falls
+  // back to `image`.
+  images?: string[];
+  // A round picture of whose it is, over the image's lower edge.
+  avatar?: string | null;
+  // `accent` fills the card with Kronk purple, for a card that is a
+  // different kind of thing from the tiles around it (a shop among listings).
+  tone?: 'accent';
   // Shown when there is no image — a glyph or emoji that hints at the kind of
   // thing this is. The tile keeps its square either way, so a grid of
   // image-less items still lines up.
@@ -89,49 +106,70 @@ interface SpaceCardProps {
 export const SpaceCard: React.FC<SpaceCardProps> = ({
   to,
   image,
+  images,
+  avatar,
+  tone,
   placeholder,
   title,
   meta,
   tag,
   tagKind,
-}) => (
-  // The <li> is the grid cell and the card is what sits in it, so the card
-  // can be a link without the list losing its semantics.
-  <li className='space-grid__cell'>
-    <StandardCard
-      as={to ? Link : 'div'}
-      to={to}
-      variant='grid'
-      className='space-card'
-    >
-      <CardMedia
-        className={image ? undefined : 'space-card__photo--placeholder'}
+}) => {
+  const pictures = [...new Set(images)];
+  const mosaic = pictures.length > 1 ? pictures.slice(0, 3) : null;
+  const cover = mosaic ? null : (image ?? pictures[0]);
+
+  return (
+    // The <li> is the grid cell and the card is what sits in it, so the card
+    // can be a link without the list losing its semantics.
+    <li className='space-grid__cell'>
+      <StandardCard
+        as={to ? Link : 'div'}
+        to={to}
+        variant='grid'
+        className={tone ? `space-card space-card--${tone}` : 'space-card'}
       >
-        {image ? (
-          <img src={image} alt='' />
-        ) : (
-          <span aria-hidden='true'>{placeholder}</span>
-        )}
-      </CardMedia>
-
-      <CardTitle className='space-card__title'>{title}</CardTitle>
-
-      {(meta ?? tag) ? (
-        <CardMeta className='space-card__meta'>
-          {meta && <span className='space-card__meta-text'>{meta}</span>}
-          {tag && (
-            <span
-              className={
-                tagKind
-                  ? `space-card__tag space-card__tag--${tagKind}`
-                  : 'space-card__tag'
-              }
-            >
-              {tag}
+        <CardMedia
+          className={[
+            mosaic ? 'space-card__mosaic' : null,
+            mosaic || cover ? null : 'space-card__photo--placeholder',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {mosaic ? (
+            mosaic.map((src) => <img key={src} src={src} alt='' />)
+          ) : cover ? (
+            <img src={cover} alt='' />
+          ) : (
+            <span aria-hidden='true'>{placeholder}</span>
+          )}
+          {avatar && (
+            <span className='space-card__avatar'>
+              <img src={avatar} alt='' />
             </span>
           )}
-        </CardMeta>
-      ) : null}
-    </StandardCard>
-  </li>
-);
+        </CardMedia>
+
+        <CardTitle className='space-card__title'>{title}</CardTitle>
+
+        {(meta ?? tag) ? (
+          <CardMeta className='space-card__meta'>
+            {meta && <span className='space-card__meta-text'>{meta}</span>}
+            {tag && (
+              <span
+                className={
+                  tagKind
+                    ? `space-card__tag space-card__tag--${tagKind}`
+                    : 'space-card__tag'
+                }
+              >
+                {tag}
+              </span>
+            )}
+          </CardMeta>
+        ) : null}
+      </StandardCard>
+    </li>
+  );
+};
