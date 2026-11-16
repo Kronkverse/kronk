@@ -1,4 +1,5 @@
 import { apiRequestGet, apiRequestPost } from 'mastodon/api';
+import type { ListingPriceUnit } from 'mastodon/api_types/wachuneed';
 
 // Requests for Wachuneed listings (docs/spaces/wachuneed.md, Requests): a
 // buyer asks with the kind, extras and quantity they chose; the seller
@@ -54,12 +55,19 @@ export interface ApiRequestJSON {
   details: string | null;
   cancelled_at: string | null;
   cancelled_by_seller: boolean;
+  // An answer to a wanted ad (docs/spaces/wachuneed.md, Answering a wanted
+  // ad): the price they gave, for what the ad's price is for. `buyer` is
+  // then whoever answered, and `seller` the poster.
+  pitch: boolean;
+  amount_cents: number | null;
   buyer: ApiRequestAccountJSON;
   listing: {
     id: string;
     slug: string;
     title: string;
     state: string;
+    kind: 'offer' | 'wanted';
+    price_unit: ListingPriceUnit | null;
     cover_url: string | null;
     seller: ApiRequestAccountJSON;
   };
@@ -83,9 +91,23 @@ export const apiAskForListing = (listingId: string, params: AskParams) =>
     { ...params },
   );
 
-// `seller`: asked of you. `buyer`: what you asked for.
-export const apiGetRequests = (as: 'seller' | 'buyer') =>
-  apiRequestGet<ApiRequestJSON[]>('v1/wachuneed/requests', { as });
+// Answer a wanted ad: what you would do, and your price in cents.
+export const apiAnswerWanted = (
+  listingId: string,
+  params: { message: string; amount_cents?: number | null },
+) =>
+  apiRequestPost<ApiRequestJSON>(
+    `v1/wachuneed/listings/${listingId}/requests`,
+    { ...params },
+  );
+
+// `seller`: asked of you. `buyer`: what you asked for. `listingId`: only
+// those on one of your own listings (its answers, on its page).
+export const apiGetRequests = (as: 'seller' | 'buyer', listingId?: string) =>
+  apiRequestGet<ApiRequestJSON[]>('v1/wachuneed/requests', {
+    as,
+    ...(listingId ? { listing_id: listingId } : {}),
+  });
 
 export const apiAnswerRequest = (
   id: string,

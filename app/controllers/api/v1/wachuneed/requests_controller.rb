@@ -6,6 +6,7 @@
 # order or payment beyond that. The model is ListingOffer.
 #
 #   GET  /api/v1/wachuneed/requests?as=seller|buyer   asked of you / by you
+#        (&listing_id= for one of your own listings' requests or answers)
 #   POST /api/v1/wachuneed/listings/:listing_id/requests
 #   POST /api/v1/wachuneed/requests/:id/accept|decline (the seller)
 #   POST /api/v1/wachuneed/requests/:id/withdraw       (the buyer)
@@ -13,7 +14,9 @@
 #
 # A request for a booked listing is a booking: it also takes `starts_at`,
 # `route` ({ from: { lat, lng, name }, to: … }) and `details`, as the
-# listing's parts ask (docs/spaces/wachuneed.md, Booking).
+# listing's parts ask (docs/spaces/wachuneed.md, Booking). On a wanted ad
+# it is an answer instead: `amount_cents` and `message` (docs/spaces/
+# wachuneed.md, Answering a wanted ad); accept chooses it.
 class Api::V1::Wachuneed::RequestsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, except: [:index]
@@ -27,17 +30,18 @@ class Api::V1::Wachuneed::RequestsController < Api::BaseController
             else
               scope.where(listing: Listing.where(account: current_account))
             end
+    scope = scope.where(listing_id: Listing.by_link!(params[:listing_id]).id) if params[:listing_id].present?
 
     render json: scope.limit(100), each_serializer: REST::WachuneedRequestSerializer
   end
 
   def create
     listing = Listing.by_link!(params[:listing_id])
-    request = ListingOffer.ask(listing, offerer: current_account,
-                                        variant: params[:variant], options: params[:options],
-                                        quantity: params.fetch(:quantity, 1), message: params[:message],
-                                        starts_at: params[:starts_at], route: params[:route], details: params[:details],
-                                        ticket_date_id: params[:ticket_date_id])
+    request = if listing.wanted?
+                ListingOffer.pitch(listing, offerer: current_account, amount_cents: params[:amount_cents], message: params[:message])
+              else
+                ask(listing)
+              end
     request.save!
 
     render json: request, serializer: REST::WachuneedRequestSerializer
@@ -66,6 +70,14 @@ class Api::V1::Wachuneed::RequestsController < Api::BaseController
   end
 
   private
+
+  def ask(listing)
+    ListingOffer.ask(listing, offerer: current_account,
+                              variant: params[:variant], options: params[:options],
+                              quantity: params.fetch(:quantity, 1), message: params[:message],
+                              starts_at: params[:starts_at], route: params[:route], details: params[:details],
+                              ticket_date_id: params[:ticket_date_id])
+  end
 
   # Only someone party to it finds it at all.
   def set_request
