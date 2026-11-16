@@ -97,6 +97,17 @@ export interface ApiTicketDateJSON {
   event_slug: string | null;
 }
 
+// How the price reads (docs/spaces/wachuneed.md, Prices); null is `fixed`.
+export type ListingPriceType =
+  | 'fixed'
+  | 'up_to'
+  | 'offers'
+  | 'quote'
+  | 'trade'
+  | 'free';
+// What an amount is for; null is the whole thing.
+export type ListingPriceUnit = 'hour' | 'day' | 'week' | 'month' | 'session';
+
 export interface ApiListingJSON {
   id: string;
   slug?: string;
@@ -105,13 +116,15 @@ export interface ApiListingJSON {
   category: string;
   subcategory?: string | null;
   price_display?: string | null;
+  price_type?: ListingPriceType | null;
+  price_unit?: ListingPriceUnit | null;
   location?: string | null;
   // The Place it is Konnected to, if any (detail only). Its card in
   // Konnected then says where the listing is.
   place_id?: string | null;
   state: string;
-  // `offer` (on offer, the Offered section) or `wanted` (looking for, the
-  // Desired section). Older servers omit it: treat absent as `offer`.
+  // `offer` (on offer) or `wanted` (looking for). Older servers omit it:
+  // treat absent as `offer`.
   kind?: 'offer' | 'wanted';
   // The section of the seller's shop it sits in, if any.
   shop_section_id?: string | null;

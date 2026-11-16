@@ -22,6 +22,7 @@ import { EmptyState } from 'mastodon/components/empty_state';
 import { Icon } from 'mastodon/components/icon';
 import { LoadingState } from 'mastodon/components/loading_state';
 
+import { formatListingPrice } from './listing_price';
 import { isOffering } from './offering';
 import { OfferingChooser } from './offering_chooser';
 import { OfferingComposer } from './offering_composer';
@@ -371,7 +372,7 @@ export const ShopItems: React.FC<{
                 </Link>
                 <span className='wachuneed-shop-items__meta'>
                   {[
-                    item.price_display,
+                    formatListingPrice(intl, item),
                     sectionName(item.shop_section_id),
                     intl.formatMessage(
                       item.ongoing ? messages.ongoing : messages.oneOff,

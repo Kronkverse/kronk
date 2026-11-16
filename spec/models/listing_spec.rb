@@ -124,6 +124,33 @@ RSpec.describe Listing do
     end
   end
 
+  # docs/spaces/wachuneed.md, Prices.
+  describe 'price types' do
+    it 'keeps an amount and what it is for on a set price' do
+      listing = build(kind: 'wanted', price_type: 'fixed', price_cents: 3800, price_unit: 'hour')
+
+      expect(listing).to be_valid
+      expect(listing).to have_attributes(price_cents: 3800, price_unit: 'hour')
+    end
+
+    it 'drops the amount and unit from a price that has none' do
+      listing = build(price_type: 'quote', price_cents: 3800, price_unit: 'hour')
+
+      expect(listing).to be_valid
+      expect(listing).to have_attributes(price_cents: nil, price_unit: nil)
+    end
+
+    it 'allows up to only on something wanted' do
+      expect(build(kind: 'wanted', price_type: 'up_to', price_cents: 50_000)).to be_valid
+      expect(build(kind: 'offer', price_type: 'up_to', price_cents: 50_000)).to_not be_valid
+    end
+
+    it 'refuses an unknown type or unit' do
+      expect(build(price_type: 'barter')).to_not be_valid
+      expect(build(price_unit: 'fortnight')).to_not be_valid
+    end
+  end
+
   describe '.clean_variants' do
     it 'makes one variation of two with the same name, keeping what was sent' do
       cleaned = described_class.clean_variants(

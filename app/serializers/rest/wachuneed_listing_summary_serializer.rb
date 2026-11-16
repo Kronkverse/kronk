@@ -6,7 +6,7 @@
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :slug, :title, :description, :category, :subcategory, :offering,
-             :price_display, :location, :state, :photo_url, :photos, :kind,
+             :price_display, :price_type, :price_unit, :location, :state, :photo_url, :photos, :kind,
              :shop_section_id, :shop_position, :ongoing, :availability
 
   # Detail endpoint only (`include_account: true`): the raw price so the

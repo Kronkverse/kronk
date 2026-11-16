@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1648,6 +1648,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.datetime "updated_at", null: false
     t.jsonb "variants", default: {}, null: false
     t.integer "visibility", default: 0, null: false
+    t.string "price_type"
+    t.string "price_unit"
     t.index ["account_id"], name: "index_listings_on_account_id"
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"

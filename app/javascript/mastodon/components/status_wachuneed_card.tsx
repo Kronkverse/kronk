@@ -2,7 +2,12 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import { listingPath } from 'mastodon/api/wachuneed';
-import type { ApiListingPhotoJSON } from 'mastodon/api_types/wachuneed';
+import type {
+  ApiListingPhotoJSON,
+  ListingPriceType,
+  ListingPriceUnit,
+} from 'mastodon/api_types/wachuneed';
+import { formatListingPrice } from 'mastodon/features/wachuneed/listing_price';
 
 import { ListingPhotos } from './listing_photos';
 import { CardTitle, CardMeta, CardBody } from './standard_card';
@@ -14,8 +19,8 @@ const messages = defineMessages({
     defaultMessage: 'LISTING',
   },
   badgeWanted: {
-    id: 'status_wachuneed_card.badge_wanted',
-    defaultMessage: 'LOOKING FOR',
+    id: 'status_wachuneed_card.wanted',
+    defaultMessage: 'WANTED',
   },
 });
 
@@ -35,6 +40,8 @@ interface Listing {
   kind?: 'offer' | 'wanted';
   subcategory?: string | null;
   price_display?: string | null;
+  price_type?: ListingPriceType | null;
+  price_unit?: ListingPriceUnit | null;
   location?: string | null;
   photo_url?: string | null;
   photos?: ApiListingPhotoJSON[];
@@ -49,6 +56,7 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
   listing,
 }) => {
   const intl = useIntl();
+  const price = formatListingPrice(intl, listing);
 
   return (
     <StatusKornerCard
@@ -84,10 +92,8 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
 
       <div className='status-korner-card__footer status-wachuneed-card__footer'>
         <CardMeta className='status-korner-card__meta'>
-          {listing.price_display && (
-            <span className='status-wachuneed-card__price'>
-              {listing.price_display}
-            </span>
+          {price && (
+            <span className='status-wachuneed-card__price'>{price}</span>
           )}
           {listing.location && (
             <span className='status-wachuneed-card__location'>
