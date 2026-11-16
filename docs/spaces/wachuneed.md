@@ -171,10 +171,24 @@ own):
   offers **List something** (or **Post a wanted ad** under Wanted).
 - **Brands** (`/hub/wachuneed/brands`): brands members back (see Brands
   below).
-- **Mine** (`/hub/wachuneed/mine`, `wachugot_view.tsx`): your shop as a
-  card (or **Open a shop** until you have one), then the requests asked of
-  you and by you (see Requests; nothing shows when there are none), then
-  your own listings of both kinds in every state (`?mine=true`).
+- **Mine** (`/hub/wachuneed/mine`, `wachugot_view.tsx`; Tal, 2026-11-16:
+  "the jobs that I have going on, the things that I'm selling, the things
+  that I've bought, as well as my shop front"). Top to bottom, each left
+  out when empty:
+  - **Waiting on you**: requests for your listings and answers to your
+    wanted ads, still to accept or choose.
+  - **Work you're doing**: your answers that were chosen; then **Answered
+    by you**, the rest of them.
+  - **Your wanted ads**, in every state; then **People you chose**.
+  - **Selling**: your shop's card first (or **Open a shop**), then what
+    you offer, in every state; then **Sold and booked**, the requests you
+    accepted.
+  - **Bought and booked**: what you asked for on other people's listings.
+
+  With nothing at all, Mine offers **List something**, **Post a wanted
+  ad** and **Open a shop**. The requests are the request cards
+  (`requests_view.tsx`, `useWachuneedRequests` + `RequestSection`), the
+  listings the one page's tiles.
 
 Until 2026-11-16 there were also **Offered**, **Desired**, **Shops** and
 **Requests** sections, and the landing was a row each of Offered, Desired
