@@ -150,7 +150,7 @@ export const WachuneedHome: React.FC = () => {
               {intl.formatMessage(messages.shops)}
             </h2>
           </div>
-          <SpaceGrid layout='row'>
+          <SpaceGrid layout='row' wide>
             {shops.map((shop) => (
               <ShopCard key={shop.id} shop={shop} />
             ))}
