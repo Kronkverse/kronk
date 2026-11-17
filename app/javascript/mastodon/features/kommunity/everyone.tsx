@@ -14,11 +14,13 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { useAppDispatch } from 'mastodon/store';
 
-// Kommunity Everyone, the middle view (Tal's Kommons proposal "Landing
-// Page", #117483791865274639: "a full list of 'Visible' Users (if they
-// choose to be visible)"). The whole directory, alphabetical, one shared
+// Kommunity's list of everyone (Tal's Kommons proposal "Landing Page",
+// #117483791865274639: "a full list of 'Visible' Users (if they choose to
+// be visible)"), under the Discover row on the first page since
+// 2026-11-17 (home.tsx). The whole directory, alphabetical, one shared
 // `<Account>` row each — the same row the Mates tab uses, so a tap opens
-// the profile and the row carries its own Mate button.
+// the profile and the row says where you stand: Mate?, Mating…, Accept,
+// or Mates (`markMates`).
 //
 // Who is on it is decided by the server (Api::V1::Kommunity::
 // EveryoneController): findable by everyone, or by Orbit when you are in
@@ -55,9 +57,9 @@ const messages = defineMessages({
     defaultMessage: 'No Mates yet.',
   },
   matesEmptyBody: {
-    id: 'kommunity.mates.empty_body',
+    id: 'kommunity.mates.empty_body_home',
     defaultMessage:
-      'Turn to Discover or Everyone to find people, and send a Mate request from their card.',
+      'Find people on the Kommunity page, and send a Mate request from their card.',
   },
 });
 
@@ -71,10 +73,14 @@ interface ListText {
 // One list, two sources: Everyone (the directory, A to Z) and Mates (the
 // landing view: your Mates, most recent poster first; Kommons "Kommunity
 // Page", #117596933443323274). Same row and paging.
-const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
-  fetch,
-  text,
-}) => {
+const KommunityPeopleList: React.FC<{
+  fetch: Fetcher;
+  text: ListText;
+  markMates?: boolean;
+  // Above the list, in the same scrolling column (Kommunity's first page
+  // puts the Discover row here).
+  header?: React.ReactNode;
+}> = ({ fetch, text, markMates = false, header }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [accountIds, setAccountIds] = useState<string[]>([]);
@@ -146,7 +152,7 @@ const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
       <>
         <div className='kommunity-everyone__list'>
           {accountIds.map((id) => (
-            <Account key={id} id={id} withMenu={false} />
+            <Account key={id} id={id} withMenu={false} markMates={markMates} />
           ))}
         </div>
         {nextOffset !== null &&
@@ -167,17 +173,24 @@ const KommunityPeopleList: React.FC<{ fetch: Fetcher; text: ListText }> = ({
   return (
     <div className='kommunity-everyone'>
       <div className='stage-column'>
-        <div className='stage-column__inner'>{body}</div>
+        <div className='stage-column__inner'>
+          {header}
+          {body}
+        </div>
       </div>
     </div>
   );
 };
 
-export const KommunityEveryone: React.FC = () => {
+export const KommunityEveryone: React.FC<{ header?: React.ReactNode }> = ({
+  header,
+}) => {
   const intl = useIntl();
   return (
     <KommunityPeopleList
       fetch={apiGetKommunityEveryone}
+      markMates
+      header={header}
       text={{
         empty: intl.formatMessage(messages.empty),
         emptyBody: intl.formatMessage(messages.emptyBody),

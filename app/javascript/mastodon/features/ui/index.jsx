@@ -273,13 +273,13 @@ class SwitchingColumnsArea extends PureComponent {
                 inviter automatically (AutoGrooveInviterWorker).
                 Onboarding now ends at /start/profile → /home. */}
             {/* Legacy Mastodon `/directory` — retired 2026-08-05 in
-                favour of `/hub/kommunity/discover`, the Kronk-native
-                Discover list (docs/decisions.md). Any inbound
-                link — federation mail, third-party embed, cached
-                bookmark — lands at Discover instead of a dead SPA
-                route. The `/api/v1/directory` endpoint stays intact
+                favour of Kommunity (its first page has the Discover
+                row and the A to Z list since 2026-11-17;
+                docs/decisions.md). Any inbound link — federation
+                mail, third-party embed, cached bookmark — lands there
+                instead of a dead SPA route. The `/api/v1/directory` endpoint stays intact
                 for federation-facing external consumers. */}
-            <Redirect from='/directory' to='/hub/kommunity/discover' />
+            <Redirect from='/directory' to='/hub/kommunity' />
             <WrappedRoute path='/explore' component={Explore} content={children} />
             {/* /me — signed-in radial hub of self actions (Profile
                 / Timeline / Mates / Switch / Invite / Sign out).
