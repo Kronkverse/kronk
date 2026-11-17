@@ -341,7 +341,9 @@ no Invite.
 - **A person's row shows no follower or Mate count** (Tal, 2026-11-12,
   Kommons "Froths": how many Mates someone has isn't something to show).
   The shared `<Account>` row keeps its second line for a verified link or
-  a mute's time left.
+  a mute's time left. The hover card over a name and a new-Mate
+  notification show no count either; the hover card keeps who you both
+  know, or that you're Mates.
 - **The moons always open on screen.** The Ж can sit anywhere along either
   side and a page can add moons, so the fan isn't fixed per corner:
   `layoutMoons` (`kronk_menu_layout.ts`) measures where the Ж is when the
