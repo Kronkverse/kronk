@@ -356,6 +356,44 @@ listens:
     interaction: interactive
     cta_label: 'View set'
     cta_route: '/hub/booth/sets/{booth_set_id}'
+  # Samples (docs/spaces/booth.md, Samples). Someone asked to use your
+  # ask-first sample; the maker said yes or no; a set lists your sample
+  # under Samples used. About your work or your own request, and the other
+  # person need not be a Mate, so directed (like a Wachuneed offer).
+  - event: booth.sample.asked
+    source_korner: booth
+    verb: sample_asked
+    directed: true
+    source_type: BoothSample
+    source_id_key: booth_sample_id
+    interaction: interactive
+    cta_label: 'View sample'
+    cta_route: '/hub/booth/samples/{booth_sample_id}'
+  - event: booth.sample.granted
+    source_korner: booth
+    verb: sample_granted
+    directed: true
+    source_type: BoothSample
+    source_id_key: booth_sample_id
+    interaction: interactive
+    cta_label: 'View sample'
+    cta_route: '/hub/booth/samples/{booth_sample_id}'
+  - event: booth.sample.declined
+    source_korner: booth
+    verb: sample_declined
+    directed: true
+    source_type: BoothSample
+    source_id_key: booth_sample_id
+    interaction: passive
+  - event: booth.sample.used
+    source_korner: booth
+    verb: sample_used
+    directed: true
+    source_type: BoothSet
+    source_id_key: booth_set_id
+    interaction: interactive
+    cta_label: 'View set'
+    cta_route: '/hub/booth/sets/{booth_set_id}'
   # ── Own-content nudges (decisions.md 2026-08-12) ──────────────────
   # Something happened to YOUR post. One recipient — the author — so these are
   # Tier-1 DIRECTED: they fire regardless of Mate status, because a stranger

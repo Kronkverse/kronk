@@ -236,6 +236,14 @@ namespace :api, format: false do
     resources :link_previews, only: [:index]
     resources :booth_shoutouts, only: [:destroy]
 
+    # Samples and sample packs (docs/spaces/booth.md, Samples). Asking to use
+    # an ask-first sample is a request its maker answers.
+    resources :booth_samples, only: [:index, :show, :create, :update, :destroy] do
+      resources :requests, controller: 'booth_sample_requests', only: [:index, :create]
+    end
+    resources :booth_sample_requests, only: [:update]
+    resources :booth_sample_packs, only: [:index, :show, :create, :update, :destroy]
+
     # KornerAttachment REST surface (docs/korners/adding_a_korner.md (Korner attachments) §3.1).
     # Distinct from the proposal-nested `attachments` resource below — this
     # is the cross-korner join primitive, keyed by manifest slug + id.

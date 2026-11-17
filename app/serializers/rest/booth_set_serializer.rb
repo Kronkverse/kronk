@@ -9,7 +9,8 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :artist_name, :event_name, :event_date,
              :genres, :duration_seconds, :audio_url, :cover_url,
              :cover_offset_y, :published, :created_at, :updated_at,
-             :tracklist, :tracklist_text, :artists, :kind, :tracks, :vibes
+             :tracklist, :tracklist_text, :artists, :kind, :tracks, :vibes,
+             :samples_used
 
   belongs_to :account, serializer: REST::AccountSerializer
 
@@ -59,6 +60,20 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
   def tracks
     object.tracks.map do |track|
       { id: track.id.to_s, title: track.title, duration_seconds: track.duration_seconds, audio_url: track.audio_url }
+    end
+  end
+
+  # Samples used (docs/spaces/booth.md, Samples), each with its maker, so
+  # the set credits them.
+  def samples_used
+    object.set_samples.map(&:booth_sample).map do |sample|
+      maker = sample.account
+      {
+        id: sample.id.to_s,
+        title: sample.title,
+        sample_type: sample.sample_type,
+        account: { id: maker.id.to_s, acct: maker.acct, display_name: maker.display_name.presence || maker.username, avatar: full_asset_url(maker.avatar_static_url) },
+      }
     end
   end
 

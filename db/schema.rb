@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -539,6 +539,47 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
     t.index ["starts_at"], name: "index_booth_lives_on_starts_at"
   end
 
+  create_table "booth_sample_packs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "cover_attachment_id"
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_sample_packs_on_account_id"
+    t.index ["cover_attachment_id"], name: "index_booth_sample_packs_on_cover_attachment_id"
+  end
+
+  create_table "booth_sample_requests", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "booth_sample_id", null: false
+    t.datetime "created_at", null: false
+    t.string "state", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_sample_requests_on_account_id"
+    t.index ["booth_sample_id", "account_id"], name: "index_booth_sample_requests_on_booth_sample_id_and_account_id", unique: true
+  end
+
+  create_table "booth_samples", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "audio_attachment_id", null: false
+    t.bigint "booth_sample_pack_id"
+    t.integer "bpm"
+    t.datetime "created_at", null: false
+    t.integer "duration_seconds", null: false
+    t.string "genre"
+    t.string "musical_key"
+    t.integer "position", default: 0, null: false
+    t.string "sample_type", null: false
+    t.string "terms", default: "free", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "vibes", default: [], null: false, array: true
+    t.index ["account_id"], name: "index_booth_samples_on_account_id"
+    t.index ["audio_attachment_id"], name: "index_booth_samples_on_audio_attachment_id"
+    t.index ["booth_sample_pack_id"], name: "index_booth_samples_on_booth_sample_pack_id"
+  end
+
   create_table "booth_set_artists", force: :cascade do |t|
     t.bigint "account_id"
     t.bigint "booth_set_id", null: false
@@ -550,6 +591,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
     t.index ["account_id"], name: "index_booth_set_artists_on_account_id"
     t.index ["booth_set_id", "account_id"], name: "index_booth_set_artists_on_booth_set_id_and_account_id", unique: true, where: "(account_id IS NOT NULL)"
     t.index ["booth_set_id"], name: "index_booth_set_artists_on_booth_set_id"
+  end
+
+  create_table "booth_set_samples", force: :cascade do |t|
+    t.bigint "booth_sample_id", null: false
+    t.bigint "booth_set_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["booth_sample_id"], name: "index_booth_set_samples_on_booth_sample_id"
+    t.index ["booth_set_id", "booth_sample_id"], name: "index_booth_set_samples_on_booth_set_id_and_booth_sample_id", unique: true
   end
 
   create_table "booth_set_saves", force: :cascade do |t|
@@ -2991,8 +3042,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
   add_foreign_key "booth_live_reminders", "booth_lives", column: "booth_live_id", on_delete: :cascade
   add_foreign_key "booth_lives", "accounts", on_delete: :cascade
   add_foreign_key "booth_lives", "booth_sets", on_delete: :nullify, validate: false
+  add_foreign_key "booth_sample_packs", "accounts", on_delete: :cascade
+  add_foreign_key "booth_sample_packs", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
+  add_foreign_key "booth_sample_requests", "accounts", on_delete: :cascade
+  add_foreign_key "booth_sample_requests", "booth_samples", on_delete: :cascade
+  add_foreign_key "booth_samples", "accounts", on_delete: :cascade
+  add_foreign_key "booth_samples", "booth_sample_packs", on_delete: :cascade
+  add_foreign_key "booth_samples", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_set_artists", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "booth_sets", on_delete: :cascade
+  add_foreign_key "booth_set_samples", "booth_samples", on_delete: :cascade
+  add_foreign_key "booth_set_samples", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_set_saves", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_saves", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_set_tracks", "booth_sets", on_delete: :cascade
