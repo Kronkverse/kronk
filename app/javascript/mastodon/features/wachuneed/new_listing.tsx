@@ -51,15 +51,9 @@ import {
   variantValues,
 } from './listing_variants_editor';
 import { offeringMessages, isOffering } from './offering';
-import { OfferingChooser } from './offering_chooser';
 import { OfferingComposer } from './offering_composer';
-import {
-  MAX_SPOTS,
-  WantedChooser,
-  isLookingFor,
-  isWhereMode,
-  wantedMessages,
-} from './wanted';
+import { PostingChooser } from './posting_chooser';
+import { MAX_SPOTS, isLookingFor, isWhereMode, wantedMessages } from './wanted';
 import { WantedDetailsField } from './wanted_details_field';
 
 // The listing composer (docs/spaces/wachuneed.md, Listing): a new listing,
@@ -675,7 +669,6 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
 // The routes: the composer over what it belongs to, Wachuneed's home for a
 // new listing and the listing's own page when changing one.
 const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
-  const intl = useIntl();
   const history = useHistory();
   const { id } = useParams<{ id?: string }>();
   // The listing it opened on. The page underneath swaps a number in the
@@ -743,9 +736,14 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const goOffering = useCallback(
     (next: ListingOffering | 'choose') => {
       const params = new URLSearchParams(search);
+      params.delete('kind');
+      params.delete('looking');
       if (next === 'choose') params.delete('offering');
       else params.set('offering', next);
-      history.replace({ pathname, search: `?${params.toString()}` });
+      history.replace({
+        pathname,
+        search: params.size ? `?${params.toString()}` : '',
+      });
     },
     [history, pathname, search],
   );
@@ -754,10 +752,21 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   }, [goOffering]);
   const goLooking = useCallback(
     (next: ListingLookingFor | null) => {
+      // Picking what it's after makes it a wanted ad; changing it goes
+      // back to What are you posting?
       const params = new URLSearchParams(search);
-      if (next) params.set('looking', next);
-      else params.delete('looking');
-      history.replace({ pathname, search: `?${params.toString()}` });
+      params.delete('offering');
+      if (next) {
+        params.set('kind', 'wanted');
+        params.set('looking', next);
+      } else {
+        params.delete('kind');
+        params.delete('looking');
+      }
+      history.replace({
+        pathname,
+        search: params.size ? `?${params.toString()}` : '',
+      });
     },
     [history, pathname, search],
   );
@@ -776,31 +785,26 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const page = editId ? <ListingDetail /> : <Wachuneed />;
   if (offering === null) return page;
 
-  if (!editId && initialKind === 'wanted' && !lookingFor) {
+  // What are you posting? (posting_chooser.tsx): + opens on it, and so
+  // does a wanted ad that hasn't said what it is after.
+  if (
+    !editId &&
+    (initialKind === 'wanted' ? !lookingFor : offering === 'choose')
+  ) {
     return (
       <>
         {page}
-        <WantedChooser
-          label={intl.formatMessage(messages.titleWanted)}
-          onPick={goLooking}
+        <PostingChooser
+          onOffer={goOffering}
+          onLookFor={goLooking}
           onCancel={handleCancel}
         />
       </>
     );
   }
 
-  if (offering === 'choose') {
-    return (
-      <>
-        {page}
-        <OfferingChooser
-          label={intl.formatMessage(offeringMessages.question)}
-          onPick={goOffering}
-          onCancel={handleCancel}
-        />
-      </>
-    );
-  }
+  // Only a new offer chooses, and it has been asked above.
+  if (offering === 'choose') return page;
 
   if (offering !== 'product' && initialKind === 'offer') {
     return (

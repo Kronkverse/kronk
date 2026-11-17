@@ -873,3 +873,20 @@
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   color: var(--accent-text);
 }
+
+// What are you posting? (posting_chooser.tsx): the two kinds of wanted ad
+// under their own heading, after a rule, below the things on offer.
+.wachuneed-offering-group {
+  margin-block-start: 1.25rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--border-subtle);
+
+  &__heading {
+    margin: 0 0 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}

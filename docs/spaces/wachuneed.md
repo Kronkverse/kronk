@@ -53,21 +53,27 @@ the same way: "Message the poster".
 Tal, 2026-11-16: members post jobs and things they want to buy, with money
 attached, for others in the community to take on ("record how to play a
 song on guitar", design work, architecture, a gardener at $38 an hour). A
-new wanted ad (**Post a wanted ad**, `/hub/wachuneed/new?kind=wanted`)
-asks **What are you looking for?** first (`wanted.tsx`, the same large
-choices as What are you offering?, `KindChooser` in
-`offering_chooser.tsx`), and the choice goes in the address
-(`&looking=`):
+new listing, from **+** or **Post a wanted ad** (`/hub/wachuneed/new`,
+`?kind=wanted`), asks **What are you posting?** first
+(`posting_chooser.tsx`; Tal, 2026-11-17: + only offered things, "maybe we
+can work that in so there's only one type though, like, post a 'job'").
+It is What are you offering?'s five choices, then, under a rule and a
+**Looking for** heading, the two kinds of wanted ad, the same large
+choices (`KindChooser` in `offering_chooser.tsx`). The choice goes in the
+address (`?kind=wanted&looking=`):
 
-| `looking_for` | Shown as           | For                                             |
-| ------------- | ------------------ | ----------------------------------------------- |
-| `thing`       | Something to buy   | A thing someone has: a bike, a table, a tent    |
-| `made`        | Something made     | Made for you: a video, a design, a painting     |
-| `job`         | A job done         | Work or a service: gardening, plans, repairs    |
-| `help`        | Someone for a time | On a day: a photographer, a band, a hand moving |
+| `looking_for` | In the chooser | Its line                                          | On the ad's page |
+| ------------- | -------------- | ------------------------------------------------- | ---------------- |
+| `job`         | A job          | Someone to do work: a gardener, a design, repairs | A job done       |
+| `thing`       | Something      | To buy or borrow: a bike, a trailer, a tent       | Something to buy |
+
+Two more kinds were asked for between 2026-11-16 and 2026-11-17 and are
+no longer offered: `made` (Something made: a video, a design, a painting)
+and `help` (Someone for a time: a photographer, a band, a hand moving).
+Ads that have them keep them, and their pages say so.
 
 The composer is then the listing composer (photos, name, description, the
-price; see Prices), with **Change what you are looking for** under its
+price; see Prices), with **Change what you are looking for** (back to What are you posting?) under its
 title. For anything but a thing it also asks (`wanted_details_field.tsx`):
 
 - **Where** (`listings.where_mode`): Online, In person, or Online or in
@@ -308,7 +314,9 @@ stored on the listing (`listings.offering`: `product`, `appointment`,
 `service`, `trip`, `tickets`; null is a product, as every older listing is), so
 **Edit** opens the same composer again.
 
-- **Where it is asked.** **Add an item** in a shop opens **What are you
+- **Where it is asked.** **+** opens **What are you posting?** (Wanted
+  ads, above), which starts with these five. **Add an item** in a shop
+  opens **What are you
   offering?** first: five large choices, each with a line saying what it is
   for (`/hub/wachuneed/my-shop?item=new`, then `&offering=`). The quick
   **New listing** (+ on the Ж menu, or **List something**) asks the same
