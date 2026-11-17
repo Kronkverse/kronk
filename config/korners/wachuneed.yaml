@@ -168,7 +168,9 @@ hub_teaser:
 # Brands, and your own). Offered, Desired, Shops and Requests were faces
 # of their own until then and redirect (config/routes.rb).
 #
-#   /hub/wachuneed         → home    (shops along the top, then everything
+#   /hub/wachuneed         → home    (titled Wachuneed, not All: Tal,
+#                                       2026-11-17; shops along the top,
+#                                       then everything
 #                                       offered and wanted in one grid,
 #                                       ?show=offered|wanted narrows it)
 #   /hub/wachuneed/mine    → mine    (your jobs, what you sell and buy,
@@ -178,7 +180,7 @@ hub_teaser:
 views:
   - {
       key: home,
-      label: All,
+      label: Wachuneed,
       tagline: 'Shops, and everything offered and wanted.',
     }
   - {

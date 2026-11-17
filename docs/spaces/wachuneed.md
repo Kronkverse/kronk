@@ -170,12 +170,14 @@ an amount. The shop item composer keeps its own plain price for now.
 rotator header; Tal, 2026-11-16: everything on one page, your own, and
 Brands):
 
-- **All** (default, `/hub/wachuneed`, `home_view.tsx`): one page that
-  scrolls down. Along the top, **Shops**: every shop with something on
+- **Wachuneed** (default, `/hub/wachuneed`, `home_view.tsx`; titled All
+  until Tal, 2026-11-17): one page that scrolls down. In its top right
+  corner, **Filter**: a dropdown of All, Offered and Wanted
+  (`?show=offered|wanted`; pills until Tal asked for a dropdown on
+  2026-11-16, called Show and sitting above the grid until 2026-11-17).
+  Along the top, **Shops**: every shop with something on
   offer, in a row that scrolls sideways, the next tile peeking in
-  (`<SpaceGrid layout='row'>`; left out when there are none). Under it,
-  **Show**: a dropdown of All, Offered and Wanted (`?show=offered|wanted`;
-  it was pills until Tal asked for a dropdown, 2026-11-16), then one grid
+  (`<SpaceGrid layout='row'>`; left out when there are none). Under it, one grid
   of everyone's `live` listings, offered and wanted together, newest first
   (up to 60, `INDEX_LIMIT`). Every tile says what kind of listing it is
   (`listing_card.tsx`): **Offered** (a plain chip), **Wanted** (outlined in

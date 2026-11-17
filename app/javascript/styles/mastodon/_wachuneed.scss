@@ -541,8 +541,9 @@
   }
 }
 
-// The one page (home_view.tsx): the shops in a sideways row under the
-// korner section heading, then the Show pills and one grid of everything.
+// The one page (home_view.tsx): Filter in the top right corner, the shops
+// in a sideways row under the korner section heading, then one grid of
+// everything.
 .wachuneed-home {
   &__head {
     display: flex;
@@ -555,12 +556,18 @@
     }
   }
 
-  // Show: a label and the kit's select, at the grid's start edge.
-  &__show {
+  // Filter: a label and the kit's select, alone at the end of a row above
+  // everything (Tal, 2026-11-17: top right, not above the grid).
+  &__bar {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 0.75rem;
+  }
+
+  &__filter {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin: 1.25rem 0 1rem;
 
     .compose-input--select {
       inline-size: auto;
@@ -568,13 +575,15 @@
     }
   }
 
-  &__show-label {
+  &__filter-label {
     color: var(--text-secondary);
     font-size: 0.875rem;
     font-weight: 600;
   }
 
-  &__row + &__show {
+  &__row + .space-grid,
+  &__row + .wachuneed__section-action,
+  &__row + .empty-state {
     margin-top: 1.5rem;
   }
 }
