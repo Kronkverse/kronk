@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_090100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1210,6 +1210,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_090100) do
   end
 
   create_table "freethedream_projects", force: :cascade do |t|
+    t.datetime "begun_at"
     t.bigint "cover_media_attachment_id"
     t.datetime "created_at", null: false
     t.text "description", default: "", null: false
@@ -1227,6 +1228,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_090100) do
     t.bigint "source_idea_id"
     t.string "spaces", default: [], null: false, array: true
     t.date "starts_on"
+    t.integer "threshold_people"
+    t.integer "threshold_things"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["cover_media_attachment_id"], name: "index_freethedream_projects_on_cover_media_attachment_id"

@@ -67,7 +67,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     permit!(@project.owned_by?(current_account))
 
     attrs = project_params.except(:done, :cover_media_attachment_id, :joining, :krew_id, :chat)
-    attrs = attrs.except(:kind) unless @project.top?
+    attrs = attrs.except(:kind, :threshold_people, :threshold_things) unless @project.top?
     attrs[:spaces] = chat_spaces(project_params[:chat]) if project_params.key?(:chat) && @project.top?
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params.key?(:cover_media_attachment_id)
     attrs[:done_at] = done_at(project_params[:done]) if project_params.key?(:done)
@@ -214,7 +214,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   end
 
   def project_params
-    params.expect(project: [:title, :description, :kind, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id, :chat, section_order: []])
+    params.expect(project: [:title, :description, :kind, :ends_on, :joining, :done, :cover_media_attachment_id, :krew_id, :chat, :threshold_people, :threshold_things, section_order: []])
   end
 
   def chat_spaces(on)

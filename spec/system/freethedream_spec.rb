@@ -371,6 +371,35 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(doof.reload.section_order).to eq %w(kalendar updates kronikles)
   end
 
+  # docs/spaces/freethedream.md, The threshold (Tomas's proposal
+  # "Threshold Meter", 2026-11-17): set in Edit, a meter on the page, and
+  # Begun once it's reached.
+  it 'sets a threshold in Edit and shows it as a meter', :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.korner-detail__title', text: 'Mini Doof')
+    expect(page).to have_no_css('.freethedream-threshold')
+    find('.kronk-menu__trigger').click
+    click_on 'Edit'
+    within('.compose-shell') do
+      fill_in 'People in it', with: '3'
+      click_on 'Save'
+    end
+
+    within('.freethedream-threshold') do
+      expect(page).to have_css('[role="meter"][aria-valuenow="1"][aria-valuemax="3"]')
+      expect(page).to have_text('1 of 3')
+    end
+
+    Freethedream::Membership.create!(project: doof, account: Fabricate(:account), state: :member)
+    Freethedream::Membership.create!(project: doof, account: Fabricate(:account), state: :member)
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    expect(page).to have_css('.freethedream-threshold--begun', text: /Begun/)
+  end
+
   # docs/spaces/freethedream.md, Chat (Tal, 2026-11-09): Talk becomes the
   # projekt's own Nudges chat, turned on in Edit as a Krew's is in Settings.
   it 'turns its chat on from Edit and chats on the page', :aggregate_failures do

@@ -52,6 +52,7 @@ import {
   useKrewAddress,
   useLoaded,
 } from './shared';
+import { ThresholdMeter } from './threshold_meter';
 import { Updates } from './updates';
 
 // A projekt, a Komponent (a gang in the code) or a fractal, on one page.
@@ -447,6 +448,11 @@ const ProjectView: React.FC<{
       actions={gangBar}
     >
       <>
+        {/* Its threshold, under the cover band: what it needs before it
+            begins (Tomas's proposal "Threshold Meter", 2026-11-17). */}
+        {project.top && project.threshold && (
+          <ThresholdMeter threshold={project.threshold} />
+        )}
         {project.top && <Yours project={project} />}
         {project.source_idea && (
           <div className='freethedream-intro'>
