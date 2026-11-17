@@ -177,14 +177,15 @@ Brands):
   2026-11-16, called Show and sitting above the grid until 2026-11-17).
   Along the top, **Shops**: every shop with something on
   offer, in a row that scrolls sideways, the next tile peeking in
-  (`<SpaceGrid layout='row'>`; left out when there are none). Under it, one grid
-  of everyone's `live` listings, offered and wanted together, newest first
+  (`<SpaceGrid layout='row'>`; left out when there are none). Under it, past
+  a hairline, **Listings** (headed Offered or Wanted when filtered;
+  2026-11-17): one grid of everyone's `live` listings, offered and wanted together, newest first
   (up to 60, `INDEX_LIMIT`). Every tile says what kind of listing it is
   (`listing_card.tsx`): **Offered** (a plain chip), **Wanted** (outlined in
   the accent), **Sold out**, or **Mine** (tinted) on your own, from the
   listing's `account_id`. Mine and a shop page, where every tile has one
   owner, keep the kind instead (`markMine={false}`). With **Wanted**
-  chosen, **Post a wanted ad** sits above the grid. With nothing to show, the page says so and
+  chosen, **Post a wanted ad** sits beside the heading. With nothing to show, the page says so and
   offers **List something** (or **Post a wanted ad** under Wanted).
 - **Mine** (`/hub/wachuneed/mine`, `wachugot_view.tsx`; Tal, 2026-11-16:
   "the jobs that I have going on, the things that I'm selling, the things

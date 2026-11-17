@@ -542,12 +542,13 @@
 }
 
 // The one page (home_view.tsx): Filter in the top right corner, the shops
-// in a sideways row under the korner section heading, then one grid of
-// everything.
+// in a sideways row, then the grid of listings, each under a korner
+// section heading.
 .wachuneed-home {
   &__head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
     margin: 0 0 0.5rem;
 
@@ -581,10 +582,12 @@
     font-weight: 600;
   }
 
-  &__row + .space-grid,
-  &__row + .wachuneed__section-action,
-  &__row + .empty-state {
-    margin-top: 1.5rem;
+  // Shops, then Listings: each section under its own heading, a hairline
+  // and some room between them (Tal, 2026-11-17).
+  &__row + &__row {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-default);
   }
 }
 

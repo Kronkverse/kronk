@@ -23,7 +23,9 @@ import { ShopCard } from './shop_card';
 // the page's top right corner narrows the grid to what is Offered or
 // Wanted (`?show=offered|wanted`; pills until 2026-11-16, then a Show
 // dropdown above the grid until 2026-11-17, Tal). Each tile says Offered,
-// Wanted or Mine (listing_card.tsx), so a mixed grid still reads.
+// Wanted or Mine (listing_card.tsx), so a mixed grid still reads. The grid
+// is a section of its own under the shops, headed Listings, or Offered or
+// Wanted when filtered (Tal, 2026-11-17).
 //
 // Until then the landing was a row each of Offered, Desired and Shops,
 // each with See all to a section of its own (2026-10-29); those
@@ -32,6 +34,7 @@ import { ShopCard } from './shop_card';
 const messages = defineMessages({
   loading: { id: 'wachuneed.loading', defaultMessage: 'Loading listings…' },
   shops: { id: 'wachuneed.home.shops', defaultMessage: 'Shops' },
+  listings: { id: 'wachuneed.home.listings', defaultMessage: 'Listings' },
   filter: { id: 'wachuneed.home.filter', defaultMessage: 'Filter' },
   all: { id: 'wachuneed.home.all', defaultMessage: 'All' },
   offered: { id: 'wachuneed.home.offered', defaultMessage: 'Offered' },
@@ -139,6 +142,14 @@ export const WachuneedHome: React.FC = () => {
     wantedOnly ? messages.postWanted : messages.listSomething,
   );
 
+  const listingsHeading = intl.formatMessage(
+    show === 'wanted'
+      ? messages.wanted
+      : show === 'offered'
+        ? messages.offered
+        : messages.listings,
+  );
+
   return (
     <div className='wachuneed-home'>
       <div className='wachuneed-home__bar'>
@@ -176,38 +187,39 @@ export const WachuneedHome: React.FC = () => {
         </section>
       )}
 
-      {shown.length === 0 ? (
-        <EmptyState
-          title={intl.formatMessage(
-            wantedOnly ? messages.emptyWanted : messages.empty,
-          )}
-          body={intl.formatMessage(
-            wantedOnly ? messages.emptyWantedBody : messages.emptyBody,
-          )}
-          action={
-            <KornerPill
-              label={newLabel}
-              variant='primary'
-              onClick={handleNew}
-            />
-          }
-        />
-      ) : (
-        <>
+      <section className='wachuneed-home__row' aria-label={listingsHeading}>
+        <div className='wachuneed-home__head'>
+          <h2 className='korner-section-heading'>{listingsHeading}</h2>
           {/* Wanted ads have their own way in: the Ж menu's New listing
               is for something on offer. */}
-          {wantedOnly && (
-            <div className='wachuneed__section-action'>
-              <KornerPill label={newLabel} onClick={handleNew} />
-            </div>
+          {wantedOnly && shown.length > 0 && (
+            <KornerPill label={newLabel} onClick={handleNew} />
           )}
+        </div>
+        {shown.length === 0 ? (
+          <EmptyState
+            title={intl.formatMessage(
+              wantedOnly ? messages.emptyWanted : messages.empty,
+            )}
+            body={intl.formatMessage(
+              wantedOnly ? messages.emptyWantedBody : messages.emptyBody,
+            )}
+            action={
+              <KornerPill
+                label={newLabel}
+                variant='primary'
+                onClick={handleNew}
+              />
+            }
+          />
+        ) : (
           <SpaceGrid>
             {shown.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
           </SpaceGrid>
-        </>
-      )}
+        )}
+      </section>
     </div>
   );
 };
