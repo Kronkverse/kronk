@@ -17,6 +17,33 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-17 — Kommunity's first page: a Discover row, then everyone
+
+**Decision.** Kommunity has three views: **Kommunity**, **Mates** and
+**Orb**. The first, Kommunity, is one page: a sideways row of people to
+meet, in three signed groups (Orbit, then your Krews, then Kronkers;
+someone in two groups shows in the first), and under it everyone who chose
+to be visible, A to Z, each row saying where you stand as Mates (Mate?,
+Mating…, Accept, or Mates). Discover and Everyone stop being views and
+their addresses redirect to it. The row is tiles (`SpaceCard`), not the
+drawer of tall profile cards it replaces.
+
+**Why.** Tal, designing Kommons "Kommunity Page": the home page of
+Kommunity should be labelled Kommunity, "show a horizontal scrollable list
+of 'discover' options, then under that the list of all (visible) kronkers,
+and a suggestion of whether you're mates with them or not"; the row
+"should begin with 'mates of mates', then krew members, followed by
+kronkers … maybe have a gap and sign between them". Four views split one
+question (who is here, and who could I meet) across pages. People nearest
+you come first because an introduction through a Mate or a Krew is the
+likeliest to mean something. The Mate wording is the button's own, so the
+journey reads the same everywhere.
+
+**Supersedes.** 2026-11-11 (Mates as the landing view) and the four-view
+order from Kommons "Landing Page" (2026-10-26).
+
+---
+
 ## 2026-11-16 — Wachuneed is one page, Brands, and Mine
 
 **Decision.** Wachuneed has three sections: **All**, one page with the

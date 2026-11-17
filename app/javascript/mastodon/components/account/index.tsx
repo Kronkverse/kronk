@@ -64,6 +64,9 @@ const messages = defineMessages({
   mute: { id: 'account.mute_short', defaultMessage: 'Mute' },
   block: { id: 'account.block_short', defaultMessage: 'Block' },
   more: { id: 'status.more', defaultMessage: 'More' },
+  // Where the Mate journey ends ("Mate? → Mating… → Mates",
+  // follow_button.tsx), said on a row that lists Mates among others.
+  mates: { id: 'account.mates_marker', defaultMessage: 'Mates' },
   addToLists: {
     id: 'account.add_or_remove_from_list',
     defaultMessage: 'Add or Remove from lists',
@@ -82,6 +85,10 @@ interface AccountProps {
   defaultAction?: 'block' | 'mute';
   withBio?: boolean;
   withMenu?: boolean;
+  // Say "Mates" where the Mate button would be, on someone you're Mates
+  // with (the button shows nothing for a Mate). For lists that mix Mates
+  // with everyone else, like Kommunity's.
+  markMates?: boolean;
 }
 
 export const Account: React.FC<AccountProps> = ({
@@ -92,6 +99,7 @@ export const Account: React.FC<AccountProps> = ({
   defaultAction,
   withBio,
   withMenu = true,
+  markMates = false,
 }) => {
   const intl = useIntl();
   const { signedIn } = useIdentity();
@@ -265,6 +273,17 @@ export const Account: React.FC<AccountProps> = ({
         )}
         onClick={handleMute}
       />
+    );
+  } else if (
+    markMates &&
+    relationship?.mate &&
+    !relationship.muting &&
+    !relationship.blocking
+  ) {
+    button = (
+      <span className='account__mates-marker'>
+        {intl.formatMessage(messages.mates)}
+      </span>
     );
   } else {
     button = <FollowButton accountId={id} />;

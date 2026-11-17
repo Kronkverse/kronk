@@ -369,6 +369,9 @@ Rails.application.routes.draw do
   # Kommunity — the whole-graph 3D orb view (docs/spaces/kommunity.md).
   # SPA-only, no controller. Direct/deep-link loads land on home#index
   # which boots the SPA; features/kommunity/index.tsx handles the rest.
+  # Discover and Everyone folded into Kommunity's first page (2026-11-17).
+  get '/hub/kommunity/discover', to: redirect('/hub/kommunity', status: 301)
+  get '/hub/kommunity/everyone', to: redirect('/hub/kommunity', status: 301)
   get '/hub/kommunity', to: 'home#index'
   get '/hub/kommunity/*path', to: 'home#index', format: false
   get '/hub/kuestions', to: 'home#index'
