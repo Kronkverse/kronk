@@ -86,8 +86,6 @@
     align-items: center;
     gap: 6px;
     color: var(--signal);
-    font-size: 0.6875rem;
-    font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
 
@@ -115,19 +113,21 @@
 
   :where(&__title) {
     margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.0625rem;
-    font-weight: 400;
-    line-height: 1.25;
     color: var(--text-primary);
     overflow-wrap: anywhere;
   }
 
-  // The title is an <h3>, and the global heading reset (`font: inherit`)
-  // is more specific than :where(), so the type is said with the class
-  // itself. Saying only the family left titles at whatever size the card
-  // inherited, smaller than the meta under them (Tal, 2026-11-17). A
+  // The reset gives the badge (<span>), title (<h3>), meta and body (<div>)
+  // `font: inherit`, which is more specific than :where(), so their type is
+  // said with the class itself. Inside :where() it was silently dropped and
+  // they took whatever size the card inherited: titles smaller than the meta
+  // under them (Tal, 2026-11-17). Colour and the rest stay in :where(). A
   // korner rule loaded later still wins.
+  &__badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+
   &__title {
     font-family: var(--font-display);
     font-size: 1.0625rem;
@@ -135,10 +135,18 @@
     line-height: 1.25;
   }
 
-  :where(&__meta) {
-    color: var(--text-secondary);
+  &__meta {
     font-size: 0.8125rem;
     line-height: 1.4;
+  }
+
+  &__body {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  :where(&__meta) {
+    color: var(--text-secondary);
   }
 
   // Prose: the couple of lines that help someone decide whether to open the
@@ -147,8 +155,6 @@
   // all because their rules pointed at a class their markup never carried.
   :where(&__body) {
     color: var(--text-secondary);
-    font-size: 0.875rem;
-    line-height: 1.5;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;

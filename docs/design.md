@@ -773,6 +773,15 @@ second card.
 it does not draw a card. Adding a korner should never mean editing a space that
 shows it.
 
+**Type goes on the class, not in `:where()`.** The kit keeps its defaults in
+`:where()` so any korner can override them, but the reset gives almost every
+element `font: inherit`, which beats a zero-specificity rule. A font size,
+weight or line height inside `:where()` is silently dropped. Until 2026-11-17
+the slots took whatever size the card inherited, and titles came out smaller
+than the meta under them. Say type with the slot's class, as
+`_standard_card.scss` does; colour and layout can stay in `:where()`. This
+applies to any kit component with the same pattern.
+
 ### What deliberately stays bespoke
 
 - **The Kuestions deck card.** A deck: stacked, drag-to-skip, sized by the
