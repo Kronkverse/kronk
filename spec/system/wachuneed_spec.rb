@@ -153,11 +153,11 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.space-grid .space-card', text: 'A ladder')
     # No shop yet, so no Shops row.
     expect(page).to have_no_css('section[aria-label="Shops"]')
-    expect(page).to have_css('h2', text: 'Listings')
+    expect(page).to have_css('section[aria-label="Listings"] h2')
 
     select 'Wanted', from: 'Filter'
     expect(page).to have_current_path('/hub/wachuneed?show=wanted')
-    expect(page).to have_css('h2', text: 'Wanted')
+    expect(page).to have_css('section[aria-label="Wanted"] h2')
     expect(page).to have_css('.space-card', text: 'A ladder')
     expect(page).to have_no_css('.space-card', text: 'Clay mug')
 
