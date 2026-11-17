@@ -123,11 +123,16 @@
     overflow-wrap: anywhere;
   }
 
-  // The title is an <h3>, and the global heading reset is more specific
-  // than :where(), so the serif is said with the class itself. A korner
-  // rule loaded later still wins.
+  // The title is an <h3>, and the global heading reset (`font: inherit`)
+  // is more specific than :where(), so the type is said with the class
+  // itself. Saying only the family left titles at whatever size the card
+  // inherited, smaller than the meta under them (Tal, 2026-11-17). A
+  // korner rule loaded later still wins.
   &__title {
     font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.25;
   }
 
   :where(&__meta) {
