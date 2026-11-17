@@ -120,6 +120,8 @@ RSpec.describe 'Hub routes' do
       '/hub/wachuneed/desired' => '/hub/wachuneed?show=wanted',
       '/hub/wachuneed/shops' => '/hub/wachuneed',
       '/hub/wachuneed/requests' => '/hub/wachuneed/mine',
+      '/hub/kommunity/discover' => '/hub/kommunity',
+      '/hub/kommunity/everyone' => '/hub/kommunity',
     }.each do |old_path, new_path|
       it "301 #{old_path} → #{new_path}" do
         get old_path
