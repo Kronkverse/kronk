@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 
 class Api::V1::ProposalsController < Api::BaseController
+  # Share to feed: the reaches a post can take, and the note's length.
+  SHARE_REACH = %w(public orbit mates self_only).freeze
+  SHARE_NOTE_MAX = 500
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close, :withdraw]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close, :withdraw, :share]
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close, :withdraw, :update]
+  before_action :set_proposal, only: [:show, :share, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close, :withdraw, :update]
   before_action :require_creator_or_steward!, only: [:update]
 
   def index
@@ -226,7 +230,35 @@ class Api::V1::ProposalsController < Api::BaseController
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
+  # Share to feed: a new post of your own, your note and the proposal's link,
+  # which the feed draws as the proposal's card under the note (Kommons
+  # "Add share function to proposals"). The proposal's own post stays its
+  # discussion, so sharing never moves it. Every member can see every
+  # proposal (Kronk::KornerRecords), so the reach is yours to pick.
+  def share
+    return forbidden if @proposal.annulled?
+
+    status = PostStatusService.new.call(
+      current_account,
+      text: share_text,
+      visibility: share_reach,
+      application: doorkeeper_token.application
+    )
+
+    render json: status, serializer: REST::StatusSerializer
+  end
+
   private
+
+  def share_text
+    note = params[:comment].to_s.strip.truncate(SHARE_NOTE_MAX, omission: '')
+    link = "#{Rails.configuration.x.use_https ? 'https' : 'http'}://#{Rails.configuration.x.web_domain}/hub/kommons/p/#{@proposal.id}"
+    [note.presence || @proposal.title, link].join("\n\n")
+  end
+
+  def share_reach
+    [params[:visibility], current_account.user&.setting_default_privacy].find { |value| SHARE_REACH.include?(value.to_s) } || 'public'
+  end
 
   # The proposer, claimant and joiners on every tile, loaded together.
   def preload_people!(proposals)
