@@ -15,7 +15,8 @@ import {
 // The first step of a listing: one large choice each, with a line saying
 // what it is for, and the choice opens the composer for that kind. What
 // are you offering? (Tal, 2026-11-09) for something on offer; What are
-// you looking for? (2026-11-16, wanted_chooser.tsx) for a wanted ad.
+// you posting? (posting_chooser.tsx, 2026-11-17) puts the two kinds of
+// wanted ad under it, so + reaches both.
 
 export interface KindChoice<K extends string> {
   key: K;
@@ -52,18 +53,35 @@ const Choice = <K extends string>({
   );
 };
 
+export const KindChoices = <K extends string>({
+  choices,
+  onPick,
+}: {
+  choices: KindChoice<K>[];
+  onPick: (key: K) => void;
+}) => (
+  <ul className='wachuneed-offering-choices'>
+    {choices.map((choice) => (
+      <Choice key={choice.key} choice={choice} onPick={onPick} />
+    ))}
+  </ul>
+);
+
+// `children` follow the choices: a second set under its own heading.
 export const KindChooser = <K extends string>({
   label,
   question,
   choices,
   onPick,
   onCancel,
+  children,
 }: {
   label: string;
   question: string;
   choices: KindChoice<K>[];
   onPick: (key: K) => void;
   onCancel: () => void;
+  children?: React.ReactNode;
 }) => (
   <ComposeShell
     korner='wachuneed'
@@ -75,11 +93,8 @@ export const KindChooser = <K extends string>({
     konnect={null}
   >
     <p className='wachuneed-offering-question'>{question}</p>
-    <ul className='wachuneed-offering-choices'>
-      {choices.map((choice) => (
-        <Choice key={choice.key} choice={choice} onPick={onPick} />
-      ))}
-    </ul>
+    <KindChoices choices={choices} onPick={onPick} />
+    {children}
   </ComposeShell>
 );
 

@@ -1,4 +1,4 @@
-import { defineMessages, useIntl } from 'react-intl';
+import { defineMessages } from 'react-intl';
 import type { IntlShape, MessageDescriptor } from 'react-intl';
 
 import type {
@@ -6,9 +6,6 @@ import type {
   ListingLookingFor,
   ListingWhereMode,
 } from 'mastodon/api_types/wachuneed';
-
-import type { KindChoice } from './offering_chooser';
-import { KindChooser } from './offering_chooser';
 
 // What a wanted ad is after, picked first (Tal, 2026-11-16; docs/spaces/
 // wachuneed.md, Wanted ads): a thing someone has, something made for you,
@@ -40,10 +37,6 @@ export const isWhereMode = (value: unknown): value is ListingWhereMode =>
   (WHERE_MODES as readonly string[]).includes(value);
 
 export const wantedMessages = defineMessages({
-  question: {
-    id: 'wachuneed.wanted.question',
-    defaultMessage: 'What are you looking for?',
-  },
   change: {
     id: 'wachuneed.wanted.change',
     defaultMessage: 'Change what you are looking for',
@@ -148,32 +141,6 @@ export const WantedGlyph: React.FC<{
     {GLYPHS[lookingFor]}
   </svg>
 );
-
-export const WantedChooser: React.FC<{
-  label: string;
-  onPick: (lookingFor: ListingLookingFor) => void;
-  onCancel: () => void;
-}> = ({ label, onPick, onCancel }) => {
-  const intl = useIntl();
-  const choices: KindChoice<ListingLookingFor>[] = LOOKING_FOR.map(
-    (lookingFor) => ({
-      key: lookingFor,
-      name: intl.formatMessage(LOOKING_FOR_LABEL[lookingFor].label),
-      hint: intl.formatMessage(LOOKING_FOR_LABEL[lookingFor].hint),
-      glyph: <WantedGlyph lookingFor={lookingFor} size={26} />,
-    }),
-  );
-
-  return (
-    <KindChooser
-      label={label}
-      question={intl.formatMessage(wantedMessages.question)}
-      choices={choices}
-      onPick={onPick}
-      onCancel={onCancel}
-    />
-  );
-};
 
 // What a wanted ad's page says of it beyond the price: what it is after,
 // where, by when (or on what day), and how many people, when more than one.

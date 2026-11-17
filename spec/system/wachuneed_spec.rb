@@ -34,10 +34,11 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     click_on 'Post a wanted ad'
 
     expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted')
-    # What are you looking for? first (2026-11-16).
+    # What are you posting? first, with A job and Something under Looking
+    # for (Tal, 2026-11-17).
     within('.compose-shell') do
-      expect(page).to have_content('What are you looking for?')
-      click_on 'A job done'
+      expect(page).to have_content('What are you posting?')
+      within('section[aria-label="Looking for"]') { click_on 'A job' }
     end
     expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted&looking=job')
     within('.compose-shell') do
@@ -45,7 +46,23 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(page).to have_field('By when')
       click_on 'Change what you are looking for'
     end
-    expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted')
+    expect(page).to have_current_path('/hub/wachuneed/new')
+  end
+
+  # + reaches wanted ads too: one chooser for everything (Tal, 2026-11-17).
+  it 'offers both things on offer and the two kinds of wanted ad from +' do
+    visit '/hub/wachuneed/new'
+
+    within('.compose-shell') do
+      expect(page).to have_content('What are you posting?')
+      expect(page).to have_button('Appointment')
+      within('section[aria-label="Looking for"]') do
+        expect(page).to have_button('A job')
+        click_on 'Something'
+      end
+    end
+    expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted&looking=thing')
+    expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
   end
 
   # The listing composer is photos, name, description and price, nothing
@@ -53,7 +70,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
   it 'posts a wanted ad from the composer overlay' do
     visit '/hub/wachuneed/new?kind=wanted'
 
-    within('.compose-shell') { click_on 'Something to buy' }
+    within('section[aria-label="Looking for"]') { click_on 'Something' }
     within('.compose-shell') do
       expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
       # A thing asks nothing about where or when.
