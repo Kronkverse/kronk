@@ -2,11 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import api from 'mastodon/api';
 
-import type { BoothKind, BoothSet } from './types';
+import type { BoothKind, BoothSet, BoothVibe } from './types';
 
 // Sets a page at a time (`GET /api/v1/booth_sets`, PAGE_SIZE in the
-// controller). `query` matches title, credit line and genres; `genre` and
-// `kind` are exact; `sort` is the listener's choice. `scope` picks whose
+// controller). `query` matches title, credit line and genres; `genre`,
+// `kind` and `vibe` are exact; `sort` is the listener's choice. `scope` picks whose
 // sets: everyone's published ones, your own (drafts included) or the ones
 // you saved; `firstListens` narrows to recent sets with few listens.
 // Changing any of these starts again from the first page.
@@ -20,6 +20,7 @@ interface Filters {
   query?: string;
   genre?: string | null;
   kind?: BoothKind | null;
+  vibe?: BoothVibe | null;
   sort?: BoothSort;
   scope?: 'all' | 'mine' | 'saved';
   // Recent sets that have barely been heard yet, not your own.
@@ -40,6 +41,7 @@ export function useBoothSets({
   query = '',
   genre = null,
   kind = null,
+  vibe = null,
   sort = 'newest',
   scope = 'all',
   firstListens = false,
@@ -60,6 +62,7 @@ export function useBoothSets({
             q: query || undefined,
             genre: genre ?? undefined,
             kind: kind ?? undefined,
+            vibe: vibe ?? undefined,
             sort: sort === 'newest' ? undefined : sort,
             mine: scope === 'mine' ? true : undefined,
             saved: scope === 'saved' ? true : undefined,
@@ -69,7 +72,7 @@ export function useBoothSets({
           },
         })
         .then((res) => res.data),
-    [query, genre, kind, sort, scope, firstListens],
+    [query, genre, kind, vibe, sort, scope, firstListens],
   );
 
   useEffect(() => {

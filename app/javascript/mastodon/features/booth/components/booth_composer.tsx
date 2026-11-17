@@ -24,7 +24,7 @@ import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useAppDispatch } from 'mastodon/store';
 
 import { ALBUM_KINDS, RECORDING_KINDS } from '../kinds';
-import type { BoothKind, BoothSet } from '../types';
+import type { BoothKind, BoothSet, BoothVibe } from '../types';
 
 import { AlbumTracksField, albumReady } from './album_tracks_field';
 import type { AlbumTrackDraft } from './album_tracks_field';
@@ -33,6 +33,7 @@ import { CreditsField, creditsPayload } from './credits_field';
 import type { CreditDraft } from './credits_field';
 import { GenreTagInput } from './genre_tag_input';
 import { KindSelect } from './kind_select';
+import { VibesField } from './vibes_field';
 
 // Booth — upload a set. The shared `<ComposeShell>` overlay opened
 // by the Ж bubble at /hub/booth/composer (legacy /hub/booth/new
@@ -167,6 +168,7 @@ interface BoothDraftParams {
   eventName?: string;
   eventDate?: string;
   genres?: string[];
+  vibes?: BoothVibe[];
   description?: string;
   tracklistText?: string;
   postToFeed?: boolean;
@@ -250,6 +252,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
+  const [vibes, setVibes] = useState<BoothVibe[]>([]);
   const [kind, setKind] = useState<BoothKind>('mix');
   const [description, setDescription] = useState('');
   const [tracklistText, setTracklistText] = useState('');
@@ -286,6 +289,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       setEventName(p.eventName ?? '');
       setEventDate(p.eventDate ?? '');
       setGenres(p.genres ?? []);
+      setVibes(p.vibes ?? []);
       setDescription(p.description ?? '');
       setTracklistText(p.tracklistText ?? '');
       setPostToFeed(p.postToFeed ?? true);
@@ -305,6 +309,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         eventName,
         eventDate,
         genres,
+        vibes,
         description,
         tracklistText,
         postToFeed,
@@ -318,6 +323,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       eventName.trim() !== '' ||
       eventDate !== '' ||
       genres.length > 0 ||
+      vibes.length > 0 ||
       description.trim() !== '' ||
       tracklistText.trim() !== '',
     apply: applyDraft,
@@ -511,6 +517,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           title,
           collaborators: creditsPayload(credits),
           genres,
+          vibes,
           kind,
         };
         if (audioId) payload.audio_id = audioId;
@@ -575,6 +582,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     eventName,
     eventDate,
     genres,
+    vibes,
     kind,
     description,
     tracklistText,
@@ -752,6 +760,8 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             <span>{intl.formatMessage(messages.genre)}</span>
             <GenreTagInput value={genres} onChange={setGenres} />
           </div>
+
+          <VibesField value={vibes} onChange={setVibes} />
 
           <details
             className='booth-upload-form__more'

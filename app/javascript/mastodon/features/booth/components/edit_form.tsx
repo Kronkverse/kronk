@@ -19,7 +19,7 @@ import {
   albumTracks,
   isAlbumKind,
 } from '../kinds';
-import type { BoothSet } from '../types';
+import type { BoothSet, BoothVibe } from '../types';
 
 import {
   AlbumTracksField,
@@ -32,6 +32,7 @@ import { CreditsField, creditsPayload } from './credits_field';
 import type { CreditDraft } from './credits_field';
 import { GenreTagInput } from './genre_tag_input';
 import { KindSelect } from './kind_select';
+import { VibesField } from './vibes_field';
 
 const messages = defineMessages({
   title: { id: 'booth.upload.title', defaultMessage: 'Title' },
@@ -117,6 +118,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const [eventName, setEventName] = useState(set.event_name ?? '');
   const [eventDate, setEventDate] = useState(set.event_date ?? '');
   const [genres, setGenres] = useState<string[]>(set.genres);
+  const [vibes, setVibes] = useState<BoothVibe[]>(set.vibes ?? []);
   const [kind, setKind] = useState(set.kind);
   const [description, setDescription] = useState(set.description);
   const [tracklistText, setTracklistText] = useState(set.tracklist_text ?? '');
@@ -210,6 +212,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
           title,
           collaborators: creditsPayload(credits),
           genres,
+          vibes,
           kind,
           cover_offset_y: coverOffsetY,
           event_name: eventName,
@@ -260,6 +263,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
     eventName,
     eventDate,
     genres,
+    vibes,
     kind,
     description,
     tracklistText,
@@ -337,6 +341,8 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         <span>{intl.formatMessage(messages.genre)}</span>
         <GenreTagInput value={genres} onChange={setGenres} disabled={saving} />
       </div>
+
+      <VibesField value={vibes} onChange={setVibes} disabled={saving} />
 
       <ComposeBody
         value={description}

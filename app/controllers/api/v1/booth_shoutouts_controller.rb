@@ -11,7 +11,7 @@ class Api::V1::BoothShoutoutsController < Api::BaseController
   before_action :set_booth_set, only: [:index, :create]
 
   def index
-    shoutouts = @booth_set.shoutouts.includes(:account).recent.limit(LIMIT)
+    shoutouts = @booth_set.shoutouts.includes(:account, :booth_set).recent.limit(LIMIT)
     render json: shoutouts, each_serializer: REST::BoothShoutoutSerializer
   end
 
@@ -19,7 +19,8 @@ class Api::V1::BoothShoutoutsController < Api::BaseController
     shoutout = @booth_set.shoutouts.create!(
       account: current_account,
       body: params[:body].to_s.strip,
-      at_seconds: params[:at_seconds].presence&.to_i
+      at_seconds: params[:at_seconds].presence&.to_i,
+      booth_set_track: shoutout_track
     )
     announce
     render json: shoutout, serializer: REST::BoothShoutoutSerializer
@@ -39,6 +40,14 @@ class Api::V1::BoothShoutoutsController < Api::BaseController
   def set_booth_set
     @booth_set = BoothSet.find(params[:booth_set_id])
     raise ActiveRecord::RecordNotFound unless @booth_set.published? || @booth_set.account_id == current_account.id
+  end
+
+  # On an album, the track the moment is in. One that isn't this album's
+  # fails the shoutout's validation rather than being dropped quietly.
+  def shoutout_track
+    return if params[:booth_set_track_id].blank?
+
+    BoothSetTrack.find_by(id: params[:booth_set_track_id]) || BoothSetTrack.new
   end
 
   def removable?(shoutout)

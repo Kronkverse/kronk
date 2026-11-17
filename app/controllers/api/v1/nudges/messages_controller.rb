@@ -69,7 +69,9 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
   #
   # A non-Mate may send the first message when they can see the other's
   # shop, or, when the message carries a listing of theirs (`listing_id`),
-  # when they can see that listing (docs/spaces/wachuneed.md, Who can see it). That listing is kept in
+  # when they can see that listing (docs/spaces/wachuneed.md, Who can see it),
+  # or when the other is open to collab in the Booth (docs/spaces/booth.md,
+  # Open to collab). That listing is kept in
   # @enquiry_listing so the message can carry its link.
   def may_start?
     return true unless @conversation.mate?
@@ -80,7 +82,7 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     return true if @conversation.messages.exists?
     return false if other.nil?
     return true if current_account.mate?(other)
-    return ListingShop.messageable?(other, sender: current_account) if params[:listing_id].blank?
+    return ListingShop.messageable?(other, sender: current_account) || BoothCollab.messageable?(other, sender: current_account) if params[:listing_id].blank?
 
     # About a listing, who can see the listing decides, as when opening.
     @enquiry_listing = Listing.enquiry_from(params[:listing_id], sender: current_account, poster: other)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -594,6 +594,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
     t.string "title", null: false
     t.jsonb "tracklist", default: [], null: false
     t.datetime "updated_at", null: false
+    t.string "vibes", default: [], null: false, array: true
     t.index ["account_id"], name: "index_booth_sets_on_account_id"
     t.index ["audio_attachment_id"], name: "index_booth_sets_on_audio_attachment_id"
     t.index ["cover_attachment_id"], name: "index_booth_sets_on_cover_attachment_id"
@@ -608,9 +609,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
     t.bigint "booth_set_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "booth_set_track_id"
     t.index ["account_id"], name: "index_booth_shoutouts_on_account_id"
     t.index ["booth_set_id", "created_at"], name: "index_booth_shoutouts_on_booth_set_id_and_created_at"
     t.index ["booth_set_id"], name: "index_booth_shoutouts_on_booth_set_id"
+    t.index ["booth_set_track_id"], name: "index_booth_shoutouts_on_booth_set_track_id"
   end
 
   create_table "budget_items", force: :cascade do |t|
@@ -2995,6 +2998,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
   add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
   add_foreign_key "booth_shoutouts", "accounts", on_delete: :cascade
+  add_foreign_key "booth_shoutouts", "booth_set_tracks", on_delete: :nullify, validate: false
   add_foreign_key "booth_shoutouts", "booth_sets", on_delete: :cascade
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade

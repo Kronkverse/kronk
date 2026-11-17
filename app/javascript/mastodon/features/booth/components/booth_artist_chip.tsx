@@ -12,7 +12,10 @@ export interface BoothArtist {
   name: string;
   // Kronk accounts only.
   acct?: string;
+  accountId?: string;
   avatar?: string;
+  // They're open to collab (docs/spaces/booth.md, Open to collab).
+  openToCollab?: boolean;
   setCount: number;
 }
 

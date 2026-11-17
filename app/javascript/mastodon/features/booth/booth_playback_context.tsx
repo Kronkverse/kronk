@@ -32,8 +32,9 @@ interface BoothPlaybackContextValue {
 
   play: (set: BoothSet, queue?: BoothSet[]) => void;
   playFrom: (set: BoothSet, seconds: number) => void;
-  // Start an album or EP at one of its tracks.
-  playTrack: (set: BoothSet, index: number) => void;
+  // Start an album or EP at one of its tracks, from its start or from
+  // `seconds` into it (a shoutout pinned to a moment in that track).
+  playTrack: (set: BoothSet, index: number, seconds?: number) => void;
   toggle: () => void;
   seekPct: (pct: number) => void;
   skip: (delta: number) => void;
@@ -109,19 +110,22 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
   );
 
   const playTrack = useCallback(
-    (set: BoothSet, index: number) => {
+    (set: BoothSet, index: number, seconds?: number) => {
       const track = albumTracks(set)[index];
       if (!track) return;
       const audio = audioRef.current;
       if (activeSet?.id === set.id && activeTrackIndex === index) {
-        if (audio) void audio.play().catch(() => undefined);
+        if (audio) {
+          if (seconds !== undefined) audio.currentTime = seconds;
+          void audio.play().catch(() => undefined);
+        }
         return;
       }
       // Moving between tracks of the album that's already playing is not
       // a new listen; starting a different set is.
       if (activeSet?.id !== set.id) playCountedIdRef.current = null;
       playIntentRef.current = `${set.id}#${index}`;
-      pendingSeekRef.current = null;
+      pendingSeekRef.current = seconds ?? null;
       setCurrentTime(0);
       setDuration(track.duration_seconds ?? 0);
       setActiveTrackIndex(index);

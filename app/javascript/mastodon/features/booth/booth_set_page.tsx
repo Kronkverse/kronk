@@ -3,8 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
 
+import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import LinkIcon from '@/material-icons/400-24px/link.svg?react';
@@ -32,9 +33,10 @@ import { ShareForm } from './components/share_form';
 import { Shoutouts, useShoutouts } from './components/shoutouts';
 import { Tracklist } from './components/tracklist';
 import { formatDuration } from './format';
-import { isAlbumKind, kindLabel } from './kinds';
+import { albumTracks, isAlbumKind, kindLabel } from './kinds';
 import { toggleSave } from './save';
 import type { BoothSet } from './types';
+import { vibeName } from './vibes';
 
 // A set's page, on the shared detail shell (`<KornerDetail>`): cover,
 // title, who made it, the facts line, then the player, the people
@@ -86,6 +88,11 @@ const messages = defineMessages({
     id: 'booth.set_page.publish_failed',
     defaultMessage: 'Couldn’t publish it just now. Try again.',
   },
+  openToCollab: {
+    id: 'booth.collab.open',
+    defaultMessage: 'Open to collab',
+  },
+  collab: { id: 'booth.collab.ask', defaultMessage: 'Collab?' },
   justUploaded: {
     id: 'booth.set_page.just_uploaded',
     defaultMessage:
@@ -98,6 +105,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
   const dispatch = useAppDispatch();
   const { id } = useParams<{ id: string }>();
   const location = useLocation<LocationState | undefined>();
+  const history = useHistory();
   const [set, setSet] = useState<BoothSet | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -106,13 +114,20 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
     location.state?.justUploaded === true,
   );
   const { shoutouts, setShoutouts } = useShoutouts(id);
-  const { playFrom } = useBoothPlayback();
+  const { playFrom, playTrack, activeSet, activeTrackIndex } =
+    useBoothPlayback();
 
-  // Shoutouts pinned to a moment become pins on the player.
+  // Shoutouts pinned to a moment become pins on the player. On an album the
+  // player runs over one track, so it shows that track's: the one playing,
+  // or the first before it starts.
+  const tracks = useMemo(() => (set ? albumTracks(set) : []), [set]);
+  const shownTrack =
+    tracks[activeSet?.id === set?.id ? activeTrackIndex : 0] ?? null;
+  const shownTrackId = shownTrack?.id ?? null;
   const markers = useMemo<PlayerMarker[]>(
     () =>
       shoutouts.flatMap((s) =>
-        s.at_seconds === null
+        s.at_seconds === null || (s.booth_set_track_id ?? null) !== shownTrackId
           ? []
           : [
               {
@@ -123,13 +138,16 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
               },
             ],
       ),
-    [shoutouts],
+    [shoutouts, shownTrackId],
   );
   const handleMarker = useCallback(
     (marker: PlayerMarker) => {
-      if (set) playFrom(set, marker.at);
+      if (!set) return;
+      const index = tracks.findIndex((t) => t.id === shownTrackId);
+      if (index >= 0) playTrack(set, index, marker.at);
+      else playFrom(set, marker.at);
     },
-    [set, playFrom],
+    [set, tracks, shownTrackId, playFrom, playTrack],
   );
 
   // A late answer for a set you've moved away from is dropped.
@@ -244,6 +262,16 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
     });
   }, [set, dispatch]);
 
+  // Whoever put the set up, when they're open to collab: anyone may
+  // message them about making something together.
+  const uploader = set?.artists[0]?.account ?? null;
+  const collabWith =
+    uploader?.open_to_collab && uploader.id !== me ? uploader : null;
+  const collabId = collabWith?.id;
+  const handleCollab = useCallback(() => {
+    if (collabId) history.push(`/nudges/with/${collabId}`);
+  }, [history, collabId]);
+
   if (loading || !set) {
     return (
       <Stage label={intl.formatMessage(messages.heading)}>
@@ -318,6 +346,11 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
           <KornerMeta
             items={[
               kindLabel(set, intl),
+              set.vibes &&
+                set.vibes.length > 0 &&
+                set.vibes
+                  .map((vibe) => intl.formatMessage(vibeName(vibe)))
+                  .join(', '),
               set.genres.length > 0 && set.genres.join(', '),
               set.event_name &&
                 (set.event_date
@@ -360,19 +393,21 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
               label={intl.formatMessage(messages.shareLink)}
               onClick={handleCopyLink}
             />
+            {collabWith && (
+              <KornerPill
+                icon={ChatIcon}
+                iconId='chat'
+                label={intl.formatMessage(messages.collab)}
+                onClick={handleCollab}
+              />
+            )}
           </KornerActionBar>
         }
       >
-        {/* An album's time runs per track, so shoutouts aren't pins on
-            it; its tracks follow the player instead. */}
-        {isAlbumKind(set.kind) ? (
-          <>
-            <AudioPlayer set={set} />
-            <AlbumTracks set={set} />
-          </>
-        ) : (
-          <AudioPlayer set={set} markers={markers} onMarker={handleMarker} />
-        )}
+        {/* An album's time runs per track, so its pins are the track's
+            that's playing; its tracks follow the player. */}
+        <AudioPlayer set={set} markers={markers} onMarker={handleMarker} />
+        {isAlbumKind(set.kind) && <AlbumTracks set={set} />}
 
         {/* Who made it: the uploader, then everyone they credited. A
             tagged account is unverified until that person confirms it; a
@@ -392,6 +427,11 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
                   {!artist.verified && (
                     <span className='booth-credit__flag'>
                       {intl.formatMessage(messages.unverified)}
+                    </span>
+                  )}
+                  {artist.account.open_to_collab && (
+                    <span className='booth-credit__flag booth-credit__flag--collab'>
+                      {intl.formatMessage(messages.openToCollab)}
                     </span>
                   )}
                 </li>

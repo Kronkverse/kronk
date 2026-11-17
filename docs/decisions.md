@@ -17,6 +17,33 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-17 — Booth: moments on album tracks, vibes, open to collab
+
+**Decision.** Three parts of Tal's Kommons proposal "Booth Revamp", in one
+change. A shoutout on an album can be pinned to a moment in one of its
+tracks (`booth_shoutouts.booth_set_track_id`). A set has up to two of four
+fixed **vibes** (Acoustic, Beats, Poetry, Organic), and Musik opens with
+the four as tiles that narrow the grid. A musician can say they're **open
+to collab** (a Booth setting), which marks them on their sets and artist
+page and lets anyone in the Booth message them, Mates or not, with a
+**Collab?** action.
+
+**Why.** Timed shoutouts already existed for one recording; only albums
+were left out, because their time runs per track, so the moment now names
+its track. Vibes are how a listener who doesn't know genre names finds
+what they're after; a fixed few keeps them tiles to tap, and they sit at
+the top of Musik because they're where listening starts, not one more
+filter pill. Collab needs a way to reach someone who isn't your Mate, and
+Kronk only allows that with consent: saying "open to collab" is that
+consent, the same shape as a shop inviting enquiries, so it can't become a
+way to reach people who didn't ask for it.
+
+**Not yet.** Samples (loops, vocals and beats to share, with key, BPM and
+credit when used) are the proposal's next part, planned with Tal on their
+own.
+
+---
+
 ## 2026-11-17 — Kommunity's first page: a Discover row, then everyone
 
 **Decision.** Kommunity has three views: **Kommunity**, **Mates** and

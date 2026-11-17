@@ -155,4 +155,42 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
       expect(album.tracks.map(&:title)).to eq ['boop', 'Boop again']
     end
   end
+
+  # docs/spaces/booth.md, Vibes.
+  it 'narrows Musik to a vibe from its tile, and back' do
+    set.update!(vibes: %w(acoustic))
+    Fabricate(:booth_set, account: ash, title: 'Warehouse', published: true, vibes: %w(beats),
+                          audio_attachment: Fabricate(:media_attachment, account: ash))
+
+    visit '/hub/booth'
+    expect(page).to have_content('Warehouse')
+
+    within('.booth-vibes') { click_on 'Acoustic' }
+    expect(page).to have_current_path('/hub/booth?vibe=acoustic')
+    expect(page).to have_css('.booth-vibes .space-card', text: /Acoustic.*Showing/im)
+    expect(page).to have_no_content('Warehouse')
+    expect(page).to have_content('Dawn at the point')
+  end
+
+  # docs/spaces/booth.md, Open to collab.
+  describe 'open to collab' do
+    it 'says so on the set page and opens a message to the artist' do
+      UserKornerSetting.create!(user: Fabricate(:user, account: ash), korner_slug: 'booth', values: { 'open_to_collab' => true })
+
+      visit "/hub/booth/sets/#{set.id}"
+      expect(page).to have_css('.booth-credit', text: /@ash\s*Open to collab/)
+
+      click_on 'Collab?'
+      expect(page).to have_current_path("/nudges/with/#{ash.id}")
+    end
+
+    it 'is said from My sets' do
+      visit '/hub/booth/mine'
+      expect(page).to have_content('Say you’re open to collab')
+
+      click_on 'Open to collab'
+      expect(page).to have_content('anyone in the Booth can message you')
+      expect(UserKornerSetting.find_by(user: bob, korner_slug: 'booth').values).to include('open_to_collab' => true)
+    end
+  end
 end
