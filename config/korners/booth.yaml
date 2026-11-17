@@ -103,7 +103,16 @@ subscription:
 # them (and `default_mix_visibility` must land with the Kronk
 # reach ladder [public, orbit, mates, self_only], not the pre-2.0
 # Mastodon terms [public, unlisted, followers] it carried).
-settings: []
+# `open_to_collab` (2026-11-17, Kommons "Booth Revamp"): read by
+# BoothCollab, which marks you on your sets and artist page and lets anyone
+# in the Booth message you, Mates or not. Also toggled from My sets.
+settings:
+  - name: open_to_collab
+    kind: boolean
+    default: false
+    scope: user
+    label: Open to collab
+    description: Anyone in the Booth can message you about making something together, Mates or not, and your sets and artist page say so.
 
 # Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
 # Korner attachments §2.6): this korner's Konnections and how they work.

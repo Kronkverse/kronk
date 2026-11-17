@@ -38,9 +38,10 @@ class Api::V1::BoothSetsController < Api::BaseController
     @booth_sets = page(@booth_sets)
     @booth_sets = @booth_sets.where('? = ANY (booth_sets.genres)', params[:genre].to_s) if params[:genre].present?
     @booth_sets = @booth_sets.where(kind: params[:kind].to_s) if params[:kind].present?
+    @booth_sets = @booth_sets.where('? = ANY (booth_sets.vibes)', params[:vibe].to_s) if params[:vibe].present?
     @booth_sets = first_listens(@booth_sets) if truthy?(params[:first_listens])
     @booth_sets = search(@booth_sets, params[:q]) if params[:q].present?
-    render json: @booth_sets, each_serializer: REST::BoothSetSerializer, saved_ids: saved_ids(@booth_sets)
+    render json: @booth_sets, each_serializer: REST::BoothSetSerializer, saved_ids: saved_ids(@booth_sets), collab_ids: collab_ids(@booth_sets)
   end
 
   def show
@@ -184,6 +185,11 @@ class Api::V1::BoothSetsController < Api::BaseController
     return Set.new unless current_account
 
     BoothSetSave.where(account: current_account, booth_set_id: sets.map(&:id)).pluck(:booth_set_id).to_set
+  end
+
+  # Who, of everyone on the page's sets, is open to collab. One query.
+  def collab_ids(sets)
+    BoothCollab.open_account_ids(sets.flat_map { |set| [set.account_id] + set.credits.filter_map(&:account_id) })
   end
 
   def truthy?(value)
@@ -335,6 +341,6 @@ class Api::V1::BoothSetsController < Api::BaseController
     # context on the set itself. `artist_name` is not accepted: it is the
     # credit line, built from the uploader and `collaborators`.
     params.permit(:title, :description, :event_name, :event_date, :kind,
-                  :duration_seconds, :published, :cover_offset_y, :tracklist_text, genres: [])
+                  :duration_seconds, :published, :cover_offset_y, :tracklist_text, genres: [], vibes: [])
   end
 end
