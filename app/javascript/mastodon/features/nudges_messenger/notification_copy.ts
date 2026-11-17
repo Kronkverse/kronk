@@ -152,6 +152,22 @@ const sentences = defineMessages({
     id: 'nudges.notification.booth.shouted',
     defaultMessage: '{who} gave your set a shoutout',
   },
+  boothSampleAsked: {
+    id: 'nudges.notification.booth.sample_asked',
+    defaultMessage: '{who} asked to use your sample',
+  },
+  boothSampleGranted: {
+    id: 'nudges.notification.booth.sample_granted',
+    defaultMessage: '{who} said yes: you can use their sample',
+  },
+  boothSampleDeclined: {
+    id: 'nudges.notification.booth.sample_declined',
+    defaultMessage: '{who} said no to using their sample',
+  },
+  boothSampleUsed: {
+    id: 'nudges.notification.booth.sample_used',
+    defaultMessage: '{who} used your sample in a set',
+  },
   boothWentLive: {
     id: 'nudges.notification.booth.went_live',
     defaultMessage: '{who} is live in the Booth now',
@@ -239,6 +255,10 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'booth.went_live': sentences.boothWentLive,
   'booth.shouted': sentences.boothShouted,
   'booth.set_ready': sentences.boothSetReady,
+  'booth.sample_asked': sentences.boothSampleAsked,
+  'booth.sample_granted': sentences.boothSampleGranted,
+  'booth.sample_declined': sentences.boothSampleDeclined,
+  'booth.sample_used': sentences.boothSampleUsed,
   'map.challenged': sentences.mapChallenged,
   'rose.received': sentences.roseReceived,
   'huddle.gathering': sentences.huddleGathering,

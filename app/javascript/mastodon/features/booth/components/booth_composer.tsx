@@ -24,7 +24,7 @@ import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useAppDispatch } from 'mastodon/store';
 
 import { ALBUM_KINDS, RECORDING_KINDS } from '../kinds';
-import type { BoothKind, BoothSet, BoothVibe } from '../types';
+import type { BoothKind, BoothSampleUsed, BoothSet, BoothVibe } from '../types';
 
 import { AlbumTracksField, albumReady } from './album_tracks_field';
 import type { AlbumTrackDraft } from './album_tracks_field';
@@ -33,6 +33,7 @@ import { CreditsField, creditsPayload } from './credits_field';
 import type { CreditDraft } from './credits_field';
 import { GenreTagInput } from './genre_tag_input';
 import { KindSelect } from './kind_select';
+import { SamplesUsedField, samplesPayload } from './samples_used_field';
 import { VibesField } from './vibes_field';
 
 // Booth — upload a set. The shared `<ComposeShell>` overlay opened
@@ -104,7 +105,7 @@ const messages = defineMessages({
   },
   moreDetails: {
     id: 'booth.upload.more_details',
-    defaultMessage: 'More details: who played, where, track list',
+    defaultMessage: 'More details: who played, samples used, where, track list',
   },
   postToFeed: {
     id: 'booth.upload.post_to_feed',
@@ -165,6 +166,7 @@ const messages = defineMessages({
 interface BoothDraftParams {
   title?: string;
   credits?: CreditDraft[];
+  samplesUsed?: BoothSampleUsed[];
   eventName?: string;
   eventDate?: string;
   genres?: string[];
@@ -245,6 +247,8 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [title, setTitle] = useState('');
   // The uploader is the artist; these are the people they made it with.
   const [credits, setCredits] = useState<CreditDraft[]>([]);
+  // The samples it was made with, credited on the set.
+  const [samplesUsed, setSamplesUsed] = useState<BoothSampleUsed[]>([]);
   // event_id retired 2026-08-15 (Phase 5b). Booth uploaders keep the
   // free-text event_name + event_date fields for context ("played at
   // Bob's Birthday, 2026-06-15"). Linking to a real Kalendar event
@@ -286,6 +290,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       const p = d?.params ?? {};
       setTitle(p.title ?? '');
       setCredits(p.credits ?? []);
+      setSamplesUsed(p.samplesUsed ?? []);
       setEventName(p.eventName ?? '');
       setEventDate(p.eventDate ?? '');
       setGenres(p.genres ?? []);
@@ -306,6 +311,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       params: {
         title,
         credits,
+        samplesUsed,
         eventName,
         eventDate,
         genres,
@@ -320,6 +326,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     hasContent:
       title.trim() !== '' ||
       credits.length > 0 ||
+      samplesUsed.length > 0 ||
       eventName.trim() !== '' ||
       eventDate !== '' ||
       genres.length > 0 ||
@@ -516,6 +523,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         const payload: Record<string, unknown> = {
           title,
           collaborators: creditsPayload(credits),
+          sample_ids: samplesPayload(samplesUsed),
           genres,
           vibes,
           kind,
@@ -579,6 +587,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   }, [
     title,
     credits,
+    samplesUsed,
     eventName,
     eventDate,
     genres,
@@ -765,11 +774,17 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
           <details
             className='booth-upload-form__more'
-            open={credits.length > 0 || tracklistText !== ''}
+            open={
+              credits.length > 0 ||
+              samplesUsed.length > 0 ||
+              tracklistText !== ''
+            }
           >
             <summary>{intl.formatMessage(messages.moreDetails)}</summary>
 
             <CreditsField value={credits} onChange={setCredits} />
+
+            <SamplesUsedField value={samplesUsed} onChange={setSamplesUsed} />
 
             <ComposeField label={intl.formatMessage(messages.event)}>
               <ComposeInput

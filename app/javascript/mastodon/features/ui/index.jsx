@@ -105,6 +105,8 @@ import {
   YouPortal,
   Questions,
   BoothSetPage,
+  BoothSamplePage,
+  BoothSamplePackPage,
   ProfileSectionsSettings,
   ProfileSpace,
   ProfileSettingsPer,
@@ -325,6 +327,9 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/hub/huddle/composer' exact component={Live} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle' exact component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
+            {/* A sample's page and a sample pack's (docs/spaces/booth.md, Samples). */}
+            <WrappedRoute path='/hub/booth/samples/:id(\d+)' exact component={BoothSamplePage} content={children} />
+            <WrappedRoute path='/hub/booth/packs/:id(\d+)' exact component={BoothSamplePackPage} content={children} />
             {/* Native Booth. The non-exact /hub/booth match also catches the
                 lens sub-paths (/hub/booth/musik, /artists, …); the component
                 reads the lens from the URL. Set detail is matched above. */}
