@@ -15,6 +15,7 @@ import {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { PhotoDropZone } from 'mastodon/components/media';
 
 import { formatDuration } from '../format';
 import { SAMPLE_SECONDS_MAX } from '../samples';
@@ -282,8 +283,8 @@ export const SampleComposer: React.FC<Props> = ({ onCancel, onShared }) => {
     },
     [],
   );
-  const handleCover = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setCover(e.target.files?.[0] ?? null);
+  const handleCover = useCallback((picked: File[]) => {
+    setCover(picked[0] ?? null);
   }, []);
 
   // One file picked: its name starts the title.
@@ -427,19 +428,14 @@ export const SampleComposer: React.FC<Props> = ({ onCancel, onShared }) => {
           />
           <div className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.cover)}</span>
-            <label className='booth-upload-form__file-picker'>
-              <input
-                type='file'
-                accept='image/*'
-                onChange={handleCover}
-                disabled={submitting}
-              />
-              <span className='booth-upload-form__file-picker-label'>
-                {intl.formatMessage(
-                  cover ? messages.replace : messages.pickCover,
-                )}
-              </span>
-            </label>
+            <PhotoDropZone
+              onFiles={handleCover}
+              multiple={false}
+              disabled={submitting}
+              label={intl.formatMessage(
+                cover ? messages.replace : messages.pickCover,
+              )}
+            />
             {cover && (
               <span className='booth-upload-form__file-info'>{cover.name}</span>
             )}
