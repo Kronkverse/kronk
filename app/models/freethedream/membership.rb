@@ -21,6 +21,8 @@ module Freethedream
     after_destroy :leave_chat
     after_save :join_krew, if: :member?
     after_save :join_chat, if: :member?
+    # Someone joining can tip it over its threshold.
+    after_save_commit -> { project.check_begun!(account_id) }, if: :member?
 
     private
 

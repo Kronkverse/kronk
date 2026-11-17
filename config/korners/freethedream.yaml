@@ -81,6 +81,14 @@ emits:
       - actor_account_id
       - recipient_account_id
       - project_id
+  # A projekt reached its threshold and has begun (docs/spaces/
+  # freethedream.md, The threshold). Everyone in it hears, but whoever
+  # tipped it over.
+  - name: freethedream.projekt.begun
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - project_id
   # A need or Actualise item was added that something you've shared into
   # that emergence from your Mycelium could cover. Only you hear of it.
   - name: freethedream.mycelium.matched

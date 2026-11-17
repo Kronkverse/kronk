@@ -69,6 +69,8 @@ module Freethedream
         description: project.description,
         # The projekt's kind; a Komponent shows its projekt's.
         kind: top.kind,
+        # Its threshold and how far along it is (a projekt's own), or nil.
+        threshold: project.top? ? threshold(project) : nil,
         owner: account(project.owner),
         top: project.top?,
         root: { id: top.id.to_s, slug: top.slug, title: top.title },
@@ -173,6 +175,21 @@ module Freethedream
              .pluck(:subject_id, :created_at)
              .each { |id, at| counts[id] += 1 if at > (seen[id] || joined) }
       counts
+    end
+
+    # A projekt's threshold for its meter: what it asks for (nil for a
+    # measure it doesn't use), where it stands, and when it began.
+    def threshold(project)
+      return nil unless project.threshold?
+
+      counts = project.threshold_counts
+      {
+        people: project.threshold_people,
+        things: project.threshold_things,
+        people_count: counts[:people],
+        things_sorted: counts[:things],
+        begun_at: project.begun_at&.iso8601,
+      }
     end
 
     def cover(project)

@@ -21,6 +21,7 @@ import {
   ComposeField,
   ComposeHint,
   ComposeInput,
+  ComposeRow,
   ComposeSection,
   ComposeTitle,
   ComposeCheck,
@@ -133,6 +134,23 @@ const messages = defineMessages({
     defaultMessage:
       "A day it happens or is due. Leave it empty if it's ongoing.",
   },
+  threshold: {
+    id: 'freethedream.compose.threshold',
+    defaultMessage: 'Begins when (optional)',
+  },
+  thresholdHint: {
+    id: 'freethedream.compose.threshold_hint',
+    defaultMessage:
+      'What it needs before it begins, shown as a meter on its page. Leave a box empty to not count it. Money is a Bring like anything else.',
+  },
+  thresholdPeople: {
+    id: 'freethedream.compose.threshold_people',
+    defaultMessage: 'People in it',
+  },
+  thresholdThings: {
+    id: 'freethedream.compose.threshold_things',
+    defaultMessage: 'Things sorted',
+  },
   newFractal: {
     id: 'freethedream.compose.fractal',
     defaultMessage: 'Add a fractal',
@@ -145,6 +163,12 @@ const messages = defineMessages({
       'A projekt lives in a Krew. Seed it from the Krew page, from Konnect.',
   },
 });
+
+// A threshold box's count, or null for an empty (or nonsense) one.
+const countOrNull = (value: string) => {
+  const n = Number.parseInt(value, 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
 
 // What a project draft keeps (docs/design.md, Drafts). The cover photo
 // goes as an upload id alongside.
@@ -186,6 +210,14 @@ export const ProjectComposer: React.FC<Props> = ({
   const [description, setDescription] = useState(editing?.description ?? '');
   const [endsOn, setEndsOn] = useState(editing?.ends_on ?? '');
   const [cover, setCover] = useState<FtdCover | null>(editing?.cover ?? null);
+  // Its threshold (Edit only): how many people, how many things sorted.
+  // Empty is a measure it doesn't use.
+  const [thresholdPeople, setThresholdPeople] = useState(
+    editing?.threshold?.people?.toString() ?? '',
+  );
+  const [thresholdThings, setThresholdThings] = useState(
+    editing?.threshold?.things?.toString() ?? '',
+  );
   const [uploading, setUploading] = useState(false);
   // The Krew a new projekt lives in: the one whose page it was seeded from
   // (New projekt, or Konnect's New projekt), so there is nothing to pick.
@@ -314,6 +346,18 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleEnds = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEndsOn(e.target.value);
   }, []);
+  const handleThresholdPeople = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setThresholdPeople(e.target.value);
+    },
+    [],
+  );
+  const handleThresholdThings = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setThresholdThings(e.target.value);
+    },
+    [],
+  );
   const handleCoverFile = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -347,7 +391,13 @@ export const ProjectComposer: React.FC<Props> = ({
             kind,
             cover_media_attachment_id: cover?.id ?? null,
             ...(editing
-              ? { ends_on: endsOn || null, section_order: order, chat }
+              ? {
+                  ends_on: endsOn || null,
+                  section_order: order,
+                  chat,
+                  threshold_people: countOrNull(thresholdPeople),
+                  threshold_things: countOrNull(thresholdThings),
+                }
               : { krew_id: krewId }),
           }
         : {}),
@@ -376,6 +426,8 @@ export const ProjectComposer: React.FC<Props> = ({
     endsOn,
     order,
     chat,
+    thresholdPeople,
+    thresholdThings,
     cover,
     krewId,
     top,
@@ -529,6 +581,38 @@ export const ProjectComposer: React.FC<Props> = ({
         >
           <ComposeInput type='date' value={endsOn} onChange={handleEnds} />
         </ComposeField>
+      )}
+      {top && editing && (
+        <ComposeSection
+          className='freethedream-form__threshold'
+          title={intl.formatMessage(messages.threshold)}
+        >
+          <ComposeHint>
+            {intl.formatMessage(messages.thresholdHint)}
+          </ComposeHint>
+          <ComposeRow>
+            <ComposeField label={intl.formatMessage(messages.thresholdPeople)}>
+              <ComposeInput
+                type='number'
+                inputMode='numeric'
+                min={1}
+                max={10000}
+                value={thresholdPeople}
+                onChange={handleThresholdPeople}
+              />
+            </ComposeField>
+            <ComposeField label={intl.formatMessage(messages.thresholdThings)}>
+              <ComposeInput
+                type='number'
+                inputMode='numeric'
+                min={1}
+                max={10000}
+                value={thresholdThings}
+                onChange={handleThresholdThings}
+              />
+            </ComposeField>
+          </ComposeRow>
+        </ComposeSection>
       )}
       {top && editing && (
         <ComposeField label={intl.formatMessage(kindMessages.label)}>
