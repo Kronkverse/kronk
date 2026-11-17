@@ -23,6 +23,52 @@
         22
       ],
       "note": "False positive: params[:id] only looks up the MediaAttachment record (after StatusPolicy#show?); the path is the stored attachment file path, not user input. Local-storage branch only; S3 redirects to a signed URL."
+    },
+    {
+      "warning_type": "File Access",
+      "warning_code": 16,
+      "fingerprint": "0db62538c6f966e25e1ce2806265402c3dbdb5a285599f296af9c0b34aa34f0e",
+      "check_name": "SendFile",
+      "message": "Model attribute used in file name",
+      "file": "app/controllers/booth_controller.rb",
+      "line": 56,
+      "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
+      "code": "send_file(BoothSample.find(params[:id]).audio_attachment.file.path(:original), :filename => (\"#{(BoothSample.find(params[:id]).title.parameterize or \"sample-#{BoothSample.find(params[:id]).id}\")}#{File.extname(BoothSample.find(params[:id]).audio_attachment.file_file_name.to_s).downcase}\"), :disposition => \"attachment\", :type => BoothSample.find(params[:id]).audio_attachment.file_content_type)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "BoothController",
+        "method": "download_sample"
+      },
+      "user_input": "BoothSample.find(params[:id]).audio_attachment.file.path(:original)",
+      "confidence": "Medium",
+      "cwe_id": [
+        22
+      ],
+      "note": "False positive: params[:id] only looks up the BoothSample (after its terms and blocks are checked); the path is the stored attachment file path, and the filename is the sample's title parameterized. Local-storage branch only; S3 redirects to a signed URL, as MediaController#download does."
+    },
+    {
+      "warning_type": "Redirect",
+      "warning_code": 18,
+      "fingerprint": "cebd5b303442ab1602e94839b783b99cbd885ef6c15e1ade6261c082cd8a5649",
+      "check_name": "Redirect",
+      "message": "Possible unprotected redirect",
+      "file": "app/controllers/booth_controller.rb",
+      "line": 54,
+      "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
+      "code": "redirect_to(BoothSample.find(params[:id]).audio_attachment.file.s3_object(:original).presigned_url(:get, :expires_in => 5.minutes.to_i, :response_content_disposition => ActionDispatch::Http::ContentDisposition.format(:disposition => \"attachment\", :filename => (\"#{(BoothSample.find(params[:id]).title.parameterize or \"sample-#{BoothSample.find(params[:id]).id}\")}#{File.extname(BoothSample.find(params[:id]).audio_attachment.file_file_name.to_s).downcase}\"))), :allow_other_host => true)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "BoothController",
+        "method": "download_sample"
+      },
+      "user_input": "BoothSample.find(params[:id]).audio_attachment.file.s3_object(:original).presigned_url(:get, :expires_in => 5.minutes.to_i, :response_content_disposition => ActionDispatch::Http::ContentDisposition.format(:disposition => \"attachment\", :filename => (\"#{(BoothSample.find(params[:id]).title.parameterize or \"sample-#{BoothSample.find(params[:id]).id}\")}#{File.extname(BoothSample.find(params[:id]).audio_attachment.file_file_name.to_s).downcase}\")))",
+      "confidence": "Weak",
+      "cwe_id": [
+        601
+      ],
+      "note": "False positive: the redirect target is a presigned URL for the sample's own stored file on our object storage, built server-side; no user input reaches the host. Same pattern as MediaController#download."
     }
   ],
   "updated": "2026-08-09"

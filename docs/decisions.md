@@ -17,6 +17,26 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-17 — Booth samples: terms are trust, not locks
+
+The last part of Tal's Kommons proposal "Booth Revamp": a place to share
+loops, vocals and beats for others to use, with credit, and their key.
+
+**Decision.** Samples are their own thing in the Booth (a Samples view,
+`BoothSample`), up to two minutes, alone or in packs. Each has terms:
+**Free with credit** or **Ask first**, where the maker says yes or no to
+each request (Tal: free with credit and ask first; anyone who can see it may
+download; packs like albums). A set credits what it used under **Samples
+used**, and the maker is told.
+
+Ask first gates the app's Download and Samples used, not the file. Anyone
+who can see a sample can listen, and listening needs the file's URL, so a
+determined person could save it; holding the audio back until a yes would
+mean no preview, which defeats choosing a sample by ear. Kronk's media is
+not secret anywhere else either. So the terms are an agreement between
+musicians, made visible: who asked, who said yes, and who credited whom.
+docs/spaces/booth.md, Samples.
+
 ## 2026-11-17 — A projekt can have a threshold before it begins
 
 Tomas's proposal "Threshold Meter": "Projects that need foundational items,

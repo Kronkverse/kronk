@@ -235,6 +235,8 @@ class DeleteAccountService < BaseService
   def purge_korner_media_owners!
     @account.moments.find_each(&:destroy)
     @account.booth_sets.find_each(&:destroy)
+    @account.booth_sample_packs.find_each(&:destroy)
+    @account.booth_samples.find_each(&:destroy)
   end
 
   def purge_media_attachments!

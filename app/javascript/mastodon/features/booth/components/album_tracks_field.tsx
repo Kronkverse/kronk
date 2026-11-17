@@ -68,7 +68,7 @@ export function trackTitleFromFile(name: string): string {
 
 // How long a picked file plays, read by the browser before it uploads.
 // Null if the browser can't tell.
-function readDuration(file: File): Promise<number | null> {
+export function readDuration(file: File): Promise<number | null> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
     const audio = new Audio();

@@ -92,6 +92,8 @@ module Account::Associations
     # a delete that would leave them dangling. `destroy`, not `delete_all`, so
     # each row's own cleanup runs.
     has_many :booth_sets, inverse_of: :account, dependent: :destroy
+    has_many :booth_samples, inverse_of: :account, dependent: :destroy
+    has_many :booth_sample_packs, inverse_of: :account, dependent: :destroy
     has_many :moments, inverse_of: :account, dependent: :destroy
 
     # Per-account Hub grid ordering — absence of rows falls back to the

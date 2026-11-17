@@ -58,9 +58,9 @@ which opens the same form as the grid card's menu.
 
 ## Browsing and listening
 
-- **`/hub/booth`** sits on `<KornerShell>` with a title rotator over four
-  views (manifest `views:`): Musik, Live (see [Live sets](#live-sets)), My
-  sets and Artists.
+- **`/hub/booth`** sits on `<KornerShell>` with a title rotator over five
+  views (manifest `views:`): Musik, Samples (see [Samples](#samples)), Live
+  (see [Live sets](#live-sets)), My sets and Artists.
   - **Musik**: published sets, 40 at a time with **Load more sets**. A
     search box matches title, credit line and genres (`q`). Under it, **Sort**, **Kind** and **Genre** sit on one
     row of pills, closed to start; each names its choice ("Sort: Newest",
@@ -248,6 +248,99 @@ avenues (message people to collab etc)").
   (`/nudges/with/:id`). An artist's page says it under their name, with
   the same **Collab?**.
 
+## Samples
+
+Added 2026-11-17 (Tal's Kommons proposal "Booth Revamp": "a space to share
+4 beat loops, short vocals etc … separate to finished songs … for community
+to use (and give credit to upon posted finished product)", with "details
+about the key"). The last part of that proposal.
+
+A sample is something to make music with, not something to listen to on
+its own: a loop, a vocal, a beat, a one-shot or a stem, up to two minutes.
+
+- **`BoothSample`** (`booth_samples`): `title`, `sample_type` (`loop`,
+  `vocal`, `beat`, `one_shot`, `stem`; `BoothSample::TYPES`), optional
+  `musical_key` (free text, "A minor"), `bpm` (20 to 400) and `genre`,
+  `vibes` (the sets' four, up to two; see [Vibes](#vibes)), `terms` and
+  `audio_attachment` (an ordinary `MediaAttachment`; `on_delete:
+:restrict` and a `MediaAttachmentsVacuum` keeper, like a set's audio).
+- **Two minutes at most** (`DURATION_MAX`), checked on the server. The
+  composer uploads through `POST /api/v1/media`, which processes the file
+  before answering, so the length the server checks is the one media
+  processing read from the file; the browser's own reading is used only
+  when processing couldn't tell. The composer also refuses a longer file
+  before it uploads.
+- **Terms.** Each sample is **Free with credit** (`free`) or **Ask first**
+  (`ask`). Free: anyone in the Booth may download and use it, crediting the
+  maker under Samples used. Ask first: anyone can listen, but to download
+  it they **Ask to use** (`BoothSampleRequest`, one per person and sample,
+  `pending` / `yes` / `no`), and the maker answers Yes or No on the
+  sample's page. Asking again after a no reopens the request.
+  `BoothSample#usable_by?` is the one check: the maker, anyone on a free
+  sample, and whoever got a yes.
+- **Who sees them.** As with sets, every signed-in member sees every
+  sample, except someone the maker has blocked. Listening is open to
+  everyone who can see it: the player needs the file's URL, so the file
+  itself isn't secret (no Kronk media is). The terms gate the app's
+  Download and Samples used, which is a matter of trust between musicians,
+  not of hiding files.
+- **Download** is the web route `GET /hub/booth/samples/:id/download`
+  (`BoothController#download_sample`), not the API, so a plain link carries
+  the session. It checks `usable_by?`, then saves the file under the
+  sample's title, through a short-lived signed URL on object storage as
+  the lightbox's Download does (`MediaController#download`).
+- **Packs.** `BoothSamplePack` (`booth_sample_packs`): a `title`,
+  `description` and optional `cover_attachment` grouping samples the way an
+  album groups tracks. Each sample keeps its own details and terms; the
+  composer sets them for the whole pack and each can be changed on its own
+  page. Deleting a pack deletes its samples. A pack with no samples isn't
+  listed.
+- **Samples used.** A set's upload and edit forms have **Samples used**
+  (under More details), offering only samples the uploader may use
+  (`GET /api/v1/booth_samples?usable=true`). The API takes `sample_ids`,
+  which replaces the list in order, keeping only usable ones; the set's
+  serializer returns `samples_used`, each with its maker. The set page lists
+  them, and the sample's page lists the published sets that use it under
+  **Used in**.
+- **Nudges** (all directed, since musicians needn't be Mates):
+  `booth.sample.asked` to the maker, `booth.sample.granted` /
+  `booth.sample.declined` to the asker, and `booth.sample.used` to the
+  maker when a published set newly lists their sample (not their own set).
+  A draft that lists a sample doesn't nudge, and publishing it later
+  doesn't either.
+
+**Where it shows.**
+
+- **Samples** (`/hub/booth/samples`, `components/samples_view.tsx`), between
+  Musik and Live: packs as a row of wide tiles, then a search (title and
+  genre), type pills (All, the five types, Yours) and every sample as a
+  tile: the type's glyph, title, maker and facts, its terms as the chip.
+  Forty at a time.
+- **Sharing** is the third face of the Ж composer, **Share samples**
+  (`/hub/booth/composer/sample`, `components/sample_composer.tsx`): **One
+  sample** or **A pack** (a pack's title, notes and cover, then several
+  files at once, each named after its file). `?pack=<id>` adds to a pack
+  you already have (the pack page's **Add samples**).
+- **A sample's page** (`/hub/booth/samples/:id`, `sample_page.tsx`) on
+  `<KornerDetail>`: the type's glyph, title, maker, a facts line (type, BPM,
+  key, length, genre, vibes, its pack), the terms in the banner, then
+  **Download**, **Ask to use** / Asked / **Ask again**, and the maker's
+  Delete. Its own player (`components/sample_player.tsx`) plays here, not
+  in the dock (which pauses), with **Loop** on to start for a loop. The
+  maker answers requests here and edits it from the Ж menu's Edit sample.
+- **A pack's page** (`/hub/booth/packs/:id`, `sample_pack_page.tsx`): its
+  cover, title, maker, count and types, notes, and its samples as tiles.
+
+API: `GET/POST /api/v1/booth_samples` (`type`, `vibe`, `q`, `account_id`,
+`usable`, `max_id`), `GET/PATCH/DELETE /api/v1/booth_samples/:id`,
+`GET/POST /api/v1/booth_samples/:id/requests`,
+`PATCH /api/v1/booth_sample_requests/:id` (`state`: `yes` or `no`), and
+`/api/v1/booth_sample_packs` (index, show, create, update, destroy).
+
+**Not built:** a sample's audio can't be replaced (share a new one);
+samples don't project to the feed; there is no "Samples" row on an
+artist's page; Used in shows sets only, not posts or other korners.
+
 ## Saving and Play next
 
 - **Save** (the ♡ on a card, Save on a set page) keeps a set in My sets.
@@ -343,8 +436,8 @@ software for every artist; it stays an option if rooms outgrow Jitsi.
   room at a reach-ladder `visibility`: "Live now…" once live, "Playing
   live in the Booth soon…" before). The room page shows the start time
   in each reader's own time zone, so the post doesn't print one.
-- **Going live.** The Ж menu's **Upload or go live** opens the composer,
-  and so does the big filled **Go live** button at the top of the Live
+- **Going live.** The Ж menu's **Upload, go live or share samples** opens
+  the composer, and so does the big filled **Go live** button at the top of the Live
   view and in Mine's empty live sets (`<GoLiveButton>`). The composer
   switches between Upload a set and **Go live**
   (`/hub/booth/composer/live`, `components/live_composer.tsx`). **Now**
