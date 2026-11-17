@@ -10,7 +10,14 @@ export interface BoothArtistAccount {
   acct: string;
   display_name: string;
   avatar: string;
+  // They've said in their Booth settings they're open to collab, so
+  // anyone may message them about it (docs/spaces/booth.md, Open to
+  // collab).
+  open_to_collab?: boolean;
 }
+
+// How a set feels (`BoothSet::VIBES`).
+export type BoothVibe = 'acoustic' | 'beats' | 'poetry' | 'organic';
 
 // What a set is (`BoothSet::KINDS`).
 export type BoothKind =
@@ -52,6 +59,7 @@ export interface BoothSet {
   event_name: string | null;
   event_date: string | null;
   genres: string[];
+  vibes?: BoothVibe[];
   cover_offset_y: number | null;
   duration_seconds: number | null;
   // Only for the set's owner (or a steward): plays are for the artist,
@@ -137,6 +145,8 @@ export interface BoothShoutout {
   id: string;
   body: string;
   at_seconds: number | null;
+  // On an album, the track the moment is in.
+  booth_set_track_id?: string | null;
   created_at: string;
   can_remove: boolean;
   account: {

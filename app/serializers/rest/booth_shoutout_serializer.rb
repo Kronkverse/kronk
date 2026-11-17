@@ -3,10 +3,22 @@
 class REST::BoothShoutoutSerializer < ActiveModel::Serializer
   include RoutingHelper
 
-  attributes :id, :body, :at_seconds, :created_at, :account, :can_remove
+  attributes :id, :body, :at_seconds, :booth_set_track_id, :created_at, :account, :can_remove
 
   def id
     object.id.to_s
+  end
+
+  # On an album the moment is in one of its tracks. A shoutout whose track
+  # has since come off the album is no longer pinned anywhere.
+  def at_seconds
+    return nil if object.booth_set.album? && object.booth_set_track_id.nil?
+
+    object.at_seconds
+  end
+
+  def booth_set_track_id
+    object.booth_set_track_id&.to_s
   end
 
   def account

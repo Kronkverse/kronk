@@ -54,6 +54,14 @@ class BoothSet < ApplicationRecord
   # How many people an uploader can credit on one set.
   MAX_CREDITS = 10
 
+  # How a set feels, beside its genres, for listeners who browse by what
+  # they're after rather than by name (Tal's Kommons proposal "Booth
+  # Revamp"): a fixed few, so they stay something to tap, never a tag
+  # cloud. Two at most: a set is usually one, and sometimes two at once
+  # (poetry over a guitar).
+  VIBES = %w(acoustic beats poetry organic).freeze
+  VIBES_MAX = 2
+
   # The one-line credit shown on cards and players: the uploader, then
   # everyone they credited. `artist_name` holds it. On sets from before
   # credits existed, `artist_name` is whatever the uploader typed, and stays
@@ -101,6 +109,8 @@ class BoothSet < ApplicationRecord
   validates :description, length: { maximum: 5000 }
   validates :event_name, length: { maximum: 200 }
   validates :genres, length: { maximum: 10 }
+  validates :vibes, length: { maximum: VIBES_MAX }
+  validate :vibes_must_be_known
   validates :kind, inclusion: { in: KINDS }
   validate :tracklist_must_be_well_formed
   validate :tracks_must_fit_kind
@@ -185,6 +195,10 @@ class BoothSet < ApplicationRecord
 
   # An album or EP is its tracks: at least two and no single file. Any other
   # kind is one recording and has no tracks.
+  def vibes_must_be_known
+    errors.add(:vibes, :inclusion) unless (Array(vibes) - VIBES).empty?
+  end
+
   def tracks_must_fit_kind
     count = kept_tracks.size
     if album?

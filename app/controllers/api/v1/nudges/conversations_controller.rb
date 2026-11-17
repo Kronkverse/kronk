@@ -135,11 +135,13 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   # Nudges privacy stance per docs/spaces/nudges.md (Nudges spec) § Concept.
   # An enquiry about a listing goes by who can see that listing, whatever
   # the shop's reach: each is its own.
+  # A musician open to collab in the Booth has invited a first message from
+  # anyone (docs/spaces/booth.md, Open to collab).
   def may_open_with?(target)
     return true if mates?(current_account, target)
     return Listing.enquiry_from(params[:listing_id], sender: current_account, poster: target).present? if params[:listing_id].present?
 
-    ListingShop.messageable?(target, sender: current_account)
+    ListingShop.messageable?(target, sender: current_account) || BoothCollab.messageable?(target, sender: current_account)
   end
 
   def mates?(one, two)

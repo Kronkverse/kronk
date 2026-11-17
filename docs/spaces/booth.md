@@ -8,7 +8,7 @@ DJ sets and mixes first, and also tracks, spoken word, readings and
 podcasts. Voice messages are not Booth. They belong in Nudges or as media
 on a post.
 
-This doc describes what is built as of 2026-10-27. Earlier designs are in
+This doc describes what is built as of 2026-11-17. Earlier designs are in
 git history (see [History](#history)).
 
 ## What a set is
@@ -196,10 +196,57 @@ to be confused with Albutts' photo albums.
 - **Cards** show "Album · 9 tracks"; the feed card is badged ALBUM or EP
   with its track count.
 - **Kept at the album level:** plays (one per album started, not per
-  track), saves and the Kind filter. Shoutouts on an album aren't pinned
-  to a moment, since its time runs per track.
+  track), saves and the Kind filter. Shoutouts on an album are pinned to a
+  moment in one of its tracks (see [Shoutouts](#shoutouts)).
 - **Not built:** the embeddable player plays only the first track; track
   names aren't searchable; there is no per-track artist (a compilation).
+
+## Vibes
+
+Added 2026-11-17 (Tal's Kommons proposal "Booth Revamp": "vibe focused UI
+… consumer approach to figure out what they want to listen to").
+`booth_sets.vibes` holds up to two of four fixed vibes (`BoothSet::VIBES`,
+`vibes.ts`): **Acoustic** (voices and instruments, unplugged), **Beats**
+(made to move to), **Poetry** (words first: spoken, sung or read) and
+**Organic** (minimal electronics). Genres stay free tags; vibes are a fixed
+few so they stay something to tap, never a tag cloud. Two at most because
+a set is usually one, sometimes two at once (poetry over a guitar).
+
+- **Choosing.** The upload and edit forms ask "What's the vibe? Up to two"
+  (`components/vibes_field.tsx`, four `<ComposeCheck>`s with their lines);
+  once two are ticked the others wait. The API takes `vibes`, an array,
+  which replaces them (`[]` clears).
+- **Listening.** The four vibes are tiles at the top of Musik (`VibeRow`,
+  a `<SpaceGrid>` of `<SpaceCard>`s with each vibe's glyph and line, two
+  by two on a phone). A tile links to `?vibe=<vibe>`, so a vibe can be
+  shared; the grid narrows to that vibe (`GET /api/v1/booth_sets?vibe=`),
+  the tile says **Showing**, and tapping it again shows everything. Tiles
+  rather than another pill on the Sort / Kind / Genre row: the vibe is
+  where a listener starts, not a filter to refine with.
+- **The set page** lists a set's vibes in its facts line, before its
+  genres.
+
+## Open to collab
+
+Added 2026-11-17 (Tal's Kommons proposal "Booth Revamp": "collaborator
+avenues (message people to collab etc)").
+
+- **Saying so.** A musician says they're open to collab from **My sets**
+  (a line and an **Open to collab** toggle) or the Booth's settings page;
+  both are the manifest setting `open_to_collab` (`UserKornerSetting`),
+  off by default.
+- **What it means.** It's an invitation, the way a shop invites
+  enquiries (docs/spaces/wachuneed.md): anyone in the Booth may send them a
+  first message, Mates or not (`BoothCollab.messageable?`, checked by
+  Nudges where a chat opens and where its first message is sent), never
+  across a block either way. Off, Nudges' Mates-only rule stands.
+- **Where it shows.** Each artist account on a set carries
+  `open_to_collab` (`artists[].account`; the index looks the page's
+  artists up in one query, `collab_ids`). The set page says **Open to
+  collab** beside that person under Who played and, when the uploader is
+  open and isn't you, offers **Collab?**, which opens a message to them
+  (`/nudges/with/:id`). An artist's page says it under their name, with
+  the same **Collab?**.
 
 ## Saving and Play next
 
@@ -221,17 +268,25 @@ Booth tells an artist what landed, which a play count can't (the design
 brief behind this: lift new voices, feedback over metrics).
 
 - **`BoothShoutout`** (`booth_shoutouts`): `account`, `booth_set`, `body`
-  (up to 500 characters) and `at_seconds` (within the set's length when
-  it's known).
+  (up to 500 characters), `at_seconds` (within the set's length when
+  it's known) and, on an album or EP, `booth_set_track` (2026-11-17): an
+  album's time runs per track, so its moment is in one of its tracks and
+  `at_seconds` is within that track. A moment on an album needs its track;
+  one recording takes none. Taking a track off the album keeps its
+  shoutouts, no longer pinned (the foreign key nullifies; the serializer
+  sends no `at_seconds` for an album shoutout with no track).
 - **API** (`Api::V1::BoothShoutoutsController`, members only):
   `GET` / `POST /api/v1/booth_sets/:id/shoutouts` (newest first, up to 200) and `DELETE /api/v1/booth_shoutouts/:id`. Anyone who can see the
   set can read and post; the author, the set's owner or a steward can
   remove one (`can_remove`).
 - **On the set page** (`components/shoutouts.tsx`): a one-line composer
   ("Shout out …"). While the set is playing, "at 12:34" pins it to the
-  current moment (on by default). Each shoutout shows its time as a chip
-  that plays from there, and pinned ones are avatar pins on the player's
-  progress bar (`AudioPlayer` `markers`).
+  current moment (on by default); on an album it reads "track 2 at 1:23".
+  Each shoutout shows its time as a chip that plays from there ("Track 2,
+  1:23" on an album, through `playTrack(set, index, seconds)`), and pinned
+  ones are avatar pins on the player's progress bar (`AudioPlayer`
+  `markers`); on an album, the pins of the track that's playing, or the
+  first before it starts.
 - **Nudge.** Posting publishes `booth.set.shouted` to the set's owner,
   unless it's their own set, routed by Nudges as a directed nudge ("{who}
   gave your set a shoutout", View set).

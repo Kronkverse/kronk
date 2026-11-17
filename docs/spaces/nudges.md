@@ -26,9 +26,11 @@ Two kinds of conversation share one surface (`Nudges::Conversation`, `kind`):
 
 - **Mate**: a 1:1 chat between two accounts. Only Mates can start one
   (`POST /api/v1/nudges/conversations` returns 403 otherwise). The pair is
-  stored sorted, so there is one row per pair. One exception: a Wachuneed
-  seller whose shop takes enquiries from anyone can be written to by a
-  non-Mate (`docs/spaces/wachuneed.md`, Shops).
+  stored sorted, so there is one row per pair. Two exceptions, each an
+  invitation the person gave: a Wachuneed seller whose shop takes
+  enquiries from anyone (`docs/spaces/wachuneed.md`, Shops), and a
+  musician open to collab in the Booth (`docs/spaces/booth.md`, Open to
+  collab), can be written to by a non-Mate.
 - **Krew**: the group chat of a Krew (`krew_id`). Membership, per-person read
   state and mute live on `Nudges::ConversationMembership`. Members can be
   invited, accept or decline, leave, and mute the chat. A Mate chat can't be
