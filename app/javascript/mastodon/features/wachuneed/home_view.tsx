@@ -19,10 +19,11 @@ import { ShopCard } from './shop_card';
 
 // /hub/wachuneed — Wachuneed on one page (Tal, 2026-11-16): the shops in a
 // row that scrolls sideways along the top, then one grid of everything
-// live, offered and wanted together, newest first. A Show dropdown above
-// the grid narrows it to what is Offered or Wanted (`?show=offered|wanted`;
-// pills until 2026-11-16, Tal). Each tile says Offered, Wanted or Mine
-// (listing_card.tsx), so a mixed grid still reads.
+// live, offered and wanted together, newest first. A Filter dropdown in
+// the page's top right corner narrows the grid to what is Offered or
+// Wanted (`?show=offered|wanted`; pills until 2026-11-16, then a Show
+// dropdown above the grid until 2026-11-17, Tal). Each tile says Offered,
+// Wanted or Mine (listing_card.tsx), so a mixed grid still reads.
 //
 // Until then the landing was a row each of Offered, Desired and Shops,
 // each with See all to a section of its own (2026-10-29); those
@@ -31,7 +32,7 @@ import { ShopCard } from './shop_card';
 const messages = defineMessages({
   loading: { id: 'wachuneed.loading', defaultMessage: 'Loading listings…' },
   shops: { id: 'wachuneed.home.shops', defaultMessage: 'Shops' },
-  show: { id: 'wachuneed.home.show', defaultMessage: 'Show' },
+  filter: { id: 'wachuneed.home.filter', defaultMessage: 'Filter' },
   all: { id: 'wachuneed.home.all', defaultMessage: 'All' },
   offered: { id: 'wachuneed.home.offered', defaultMessage: 'Offered' },
   wanted: { id: 'wachuneed.home.wanted', defaultMessage: 'Wanted' },
@@ -81,7 +82,7 @@ export const WachuneedHome: React.FC = () => {
   const [listings, setListings] = useState<ApiListingJSON[] | null>(null);
   const [shops, setShops] = useState<ApiShopJSON[]>([]);
 
-  // Everything comes once; Show only narrows what is already here.
+  // Everything comes once; Filter only narrows what is already here.
   useEffect(() => {
     let cancelled = false;
 
@@ -140,6 +141,23 @@ export const WachuneedHome: React.FC = () => {
 
   return (
     <div className='wachuneed-home'>
+      <div className='wachuneed-home__bar'>
+        <label className='wachuneed-home__filter'>
+          <span className='wachuneed-home__filter-label'>
+            {intl.formatMessage(messages.filter)}
+          </span>
+          <ComposeSelect value={show} onChange={handleShow}>
+            <option value='all'>{intl.formatMessage(messages.all)}</option>
+            <option value='offered'>
+              {intl.formatMessage(messages.offered)}
+            </option>
+            <option value='wanted'>
+              {intl.formatMessage(messages.wanted)}
+            </option>
+          </ComposeSelect>
+        </label>
+      </div>
+
       {shops.length > 0 && (
         <section
           className='wachuneed-home__row'
@@ -157,19 +175,6 @@ export const WachuneedHome: React.FC = () => {
           </SpaceGrid>
         </section>
       )}
-
-      <label className='wachuneed-home__show'>
-        <span className='wachuneed-home__show-label'>
-          {intl.formatMessage(messages.show)}
-        </span>
-        <ComposeSelect value={show} onChange={handleShow}>
-          <option value='all'>{intl.formatMessage(messages.all)}</option>
-          <option value='offered'>
-            {intl.formatMessage(messages.offered)}
-          </option>
-          <option value='wanted'>{intl.formatMessage(messages.wanted)}</option>
-        </ComposeSelect>
-      </label>
 
       {shown.length === 0 ? (
         <EmptyState
