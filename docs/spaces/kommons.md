@@ -372,6 +372,17 @@ not every proposal.
 Edit is the Ж menu's **Edit proposal** moon (proposer, until actioned). Once
 actioned, the proposer gets **Close proposal** beside the title.
 
+**Share to feed** is a Ж menu moon (a megaphone, so it isn't mistaken for the
+menu's own Share) for anyone signed in, on any proposal but a withdrawn one
+(Kommons "Add share function to proposals", 2026-11-17). It opens a composer
+with a note (up to 500 characters, optional) and the reach, and posts **your
+own** post: the note, or the proposal's title without one, then the
+proposal's link, which the feed draws as the proposal's card under the note
+(`<KronkLinkCards>`). The proposal's own post, its discussion, never moves
+(`POST /api/v1/proposals/:id/share`, `proposal_share_form.tsx`; the same
+shape as the Booth's Share to feed). Every member can see every proposal, so
+any reach is allowed. A toast says it's shared and you stay on the page.
+
 Colours come from `tokens.yaml`, including the `decision-*` tokens.
 Both themes are first-class.
 

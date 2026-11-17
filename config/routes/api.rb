@@ -288,6 +288,7 @@ namespace :api, format: false do
         post :action, action: :mark_actioned
         post :close
         post :withdraw
+        post :share
         post :complete, action: :close # pre-rename name, kept for cached clients
       end
       resources :tasks, only: [:index, :create, :update], shallow: true
