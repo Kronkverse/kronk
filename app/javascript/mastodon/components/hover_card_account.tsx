@@ -10,10 +10,7 @@ import { AccountBio } from 'mastodon/components/account_bio';
 import { AccountFields } from 'mastodon/components/account_fields';
 import { Avatar } from 'mastodon/components/avatar';
 import { AvatarGroup } from 'mastodon/components/avatar_group';
-import {
-  FollowersCounter,
-  FollowersYouKnowCounter,
-} from 'mastodon/components/counters';
+import { FollowersYouKnowCounter } from 'mastodon/components/counters';
 import { DisplayName } from 'mastodon/components/display_name';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
@@ -126,14 +123,12 @@ export const HoverCardAccount = forwardRef<
                 )}
               </div>
 
-              <div className='hover-card__numbers'>
-                <ShortNumber
-                  value={account.followers_count}
-                  renderer={FollowersCounter}
-                />
-                {shouldDisplayFamiliarFollowers && (
-                  <>
-                    &middot;
+              {/* No follower or Mate count: how many Mates someone has isn't
+                  something to show (Tal, 2026-11-12, Kommons "Froths").
+                  Who you both know, or that you're Mates, stays. */}
+              {(shouldDisplayFamiliarFollowers || isMutual) && (
+                <div className='hover-card__numbers'>
+                  {shouldDisplayFamiliarFollowers && (
                     <div className='hover-card__familiar-followers'>
                       <ShortNumber
                         value={familiarFollowers.length}
@@ -149,18 +144,15 @@ export const HoverCardAccount = forwardRef<
                         ))}
                       </AvatarGroup>
                     </div>
-                  </>
-                )}
-                {isMutual && (
-                  <>
-                    &middot;
+                  )}
+                  {isMutual && (
                     <FormattedMessage
                       id='account.mutual'
                       defaultMessage="You're Mates"
                     />
-                  </>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               <FollowButton accountId={accountId} />
             </>
