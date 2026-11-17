@@ -381,6 +381,7 @@ Rails.application.routes.draw do
   get '/hub/booth/sets/:id/embed', to: 'booth#embed'
   get '/hub/booth/sets/:id', to: 'booth#show', constraints: { id: /\d+/ }
   get '/hub/booth', to: 'booth#index'
+  get '/hub/booth/samples/:id/download', to: 'booth#download_sample', constraints: { id: /\d+/ }, as: :download_booth_sample
   get '/hub/booth/*path', to: 'booth#index', format: false
   get '/hub/wachuneed', to: 'home#index'
   # Singular `listing` is what the older /market and /hub/marketplace

@@ -77,6 +77,9 @@ export interface BoothSet {
   tracks?: BoothAlbumTrack[];
   is_owner?: boolean;
   can_moderate?: boolean;
+  // The samples it was made with, each crediting its maker
+  // (docs/spaces/booth.md, Samples).
+  samples_used?: BoothSampleUsed[];
   account: {
     id: string;
     username: string;
@@ -86,6 +89,81 @@ export interface BoothSet {
   };
   created_at: string;
   updated_at: string;
+}
+
+// What a sample is (`BoothSample::TYPES`).
+export type BoothSampleType = 'loop' | 'vocal' | 'beat' | 'one_shot' | 'stem';
+
+// How a sample may be used: free as long as its maker is credited, or
+// ask first (`BoothSample::TERMS`).
+export type BoothSampleTerms = 'free' | 'ask';
+
+interface BoothSampleMaker {
+  id: string;
+  acct: string;
+  display_name: string;
+  avatar: string;
+}
+
+// A sample on a set's Samples used.
+export interface BoothSampleUsed {
+  id: string;
+  title: string;
+  sample_type: BoothSampleType;
+  account: BoothSampleMaker;
+}
+
+// A short loop, vocal, beat, one-shot or stem shared for others to make
+// things with (docs/spaces/booth.md, Samples).
+export interface BoothSample {
+  id: string;
+  title: string;
+  sample_type: BoothSampleType;
+  musical_key: string | null;
+  bpm: number | null;
+  genre: string | null;
+  vibes: BoothVibe[];
+  terms: BoothSampleTerms;
+  duration_seconds: number;
+  audio_url: string | null;
+  created_at: string;
+  pack: { id: string; title: string } | null;
+  is_owner: boolean;
+  // Whether you may download it and list it as used.
+  can_download: boolean;
+  account: BoothSampleMaker & { username: string };
+  // On its own page only: your request, if you asked; how many are
+  // waiting (its maker only); the sets that use it.
+  request_state?: 'pending' | 'yes' | 'no' | null;
+  pending_requests?: number;
+  used_in?: {
+    id: string;
+    title: string;
+    artist_name: string;
+    cover_url: string | null;
+  }[];
+}
+
+// Someone asking to use an ask-first sample, as its maker sees it.
+export interface BoothSampleRequest {
+  id: string;
+  state: 'pending' | 'yes' | 'no';
+  created_at: string;
+  account: BoothSampleMaker & { username: string };
+}
+
+// Samples under one title and cover, like an album's tracks.
+export interface BoothSamplePack {
+  id: string;
+  title: string;
+  description: string;
+  cover_url: string | null;
+  created_at: string;
+  sample_count: number;
+  sample_types: BoothSampleType[];
+  is_owner: boolean;
+  account: BoothSampleMaker & { username: string };
+  samples?: BoothSample[];
 }
 
 // A live set (docs/spaces/booth.md, Live sets). `room_key` is the Jitsi

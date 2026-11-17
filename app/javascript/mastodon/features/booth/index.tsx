@@ -42,6 +42,8 @@ import {
   LiveNowStrip,
   LiveView,
 } from './components/live_view';
+import { SampleComposer } from './components/sample_composer';
+import { SamplesView } from './components/samples_view';
 import { ShareForm } from './components/share_form';
 import { KINDS, kindMessage } from './kinds';
 import type { BoothCredit, BoothKind, BoothSet, BoothVibe } from './types';
@@ -51,15 +53,17 @@ import type { BoothSort } from './use_booth_sets';
 import { useBoothShelves } from './use_booth_shelves';
 import { VIBES, VIBE_ICONS, isVibe, vibeHint, vibeName } from './vibes';
 
-// The Booth — Musik (every set, searchable and sortable), Live (sets
+// The Booth — Musik (every set, searchable and sortable), Samples (loops,
+// vocals, beats, one-shots and stems to make things with), Live (sets
 // played live on Huddle's Jitsi server, now and coming up), My sets (your
 // own sets, live sets and saved sets) and Artists (the people behind
 // them). Both are views of the manifest
 // (`config/korners/booth.yaml`), routed by `<KornerShell>` from the URL
 // segment after `/hub/booth`; the Frame draws the title rotator.
 //
-// Uploading and going live are the Ж menu's "Upload or go live"
-// (`/hub/booth/composer`, `/composer/live` for Go live); the
+// Uploading, going live and sharing samples are the Ж menu's "Upload, go
+// live or share samples" (`/hub/booth/composer`, `/composer/live` for Go
+// live, `/composer/sample` for samples); the
 // how-it-works strip and the empty state point at it too, because a
 // musician arriving for the first time shouldn't have to find the Ж
 // before they know what the Booth is for.
@@ -1153,6 +1157,8 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
       location.pathname.startsWith('/hub/booth/new'));
   const goingLive =
     composing && location.pathname.startsWith('/hub/booth/composer/live');
+  const sharingSamples =
+    composing && location.pathname.startsWith('/hub/booth/composer/sample');
 
   // A new set lands on its own page. If it went out to the feed, say so;
   // if not, the page offers to share it.
@@ -1169,6 +1175,14 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     if (returnToSource('/hub/booth')) return;
     history.push('/hub/booth');
   }, [history, returnToSource]);
+
+  // Shared samples open on their page, or their pack's.
+  const handleSamplesShared = useCallback(
+    (to: string) => {
+      history.push(to);
+    },
+    [history],
+  );
 
   // A live set opens its room: the host's get-ready panel for "now", the
   // scheduled page for "later".
@@ -1187,6 +1201,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
       defaultView='musik'
       views={{
         musik: () => <MusikView />,
+        samples: () => <SamplesView />,
         live: () => <LiveView />,
         mine: () => <MySetsView />,
         artists: () => <ArtistsView />,
@@ -1203,7 +1218,13 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
           onCancel={handleCancelUpload}
         />
       )}
-      {composing && !goingLive && (
+      {sharingSamples && (
+        <SampleComposer
+          onShared={handleSamplesShared}
+          onCancel={handleCancelUpload}
+        />
+      )}
+      {composing && !goingLive && !sharingSamples && (
         <BoothComposer
           onCreated={handleCreated}
           onCancel={handleCancelUpload}

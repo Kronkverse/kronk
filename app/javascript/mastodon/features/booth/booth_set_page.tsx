@@ -60,6 +60,11 @@ const messages = defineMessages({
   confirmCredit: { id: 'booth.credit.confirm', defaultMessage: 'That’s me' },
   removeCredit: { id: 'booth.credit.remove', defaultMessage: 'Take me off' },
   creditsHeading: { id: 'booth.credit.heading', defaultMessage: 'Who played' },
+  samplesUsed: {
+    id: 'booth.samples_used.label',
+    defaultMessage: 'Samples used',
+  },
+  sampleBy: { id: 'booth.sample.by', defaultMessage: 'by {name}' },
   heading: { id: 'booth.title', defaultMessage: 'The Booth' },
   loading: { id: 'booth.set_page.loading', defaultMessage: 'Loading…' },
   notFound: { id: 'booth.not_found', defaultMessage: 'Set not found.' },
@@ -466,6 +471,33 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         )}
 
         <Tracklist set={set} />
+
+        {/* Samples used: what it was made with, crediting each maker
+            (docs/spaces/booth.md, Samples). */}
+        {set.samples_used && set.samples_used.length > 0 && (
+          <section className='booth-set__section'>
+            <h2 className='booth-set__section-title'>
+              {intl.formatMessage(messages.samplesUsed)}
+            </h2>
+            <ul className='booth-sample-used-in'>
+              {set.samples_used.map((sample) => (
+                <li key={sample.id}>
+                  <Link to={`/hub/booth/samples/${sample.id}`}>
+                    {sample.title}
+                  </Link>{' '}
+                  <Link
+                    to={`/@${sample.account.acct}`}
+                    className='booth-sample-used-in__maker'
+                  >
+                    {intl.formatMessage(messages.sampleBy, {
+                      name: sample.account.display_name,
+                    })}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <Shoutouts
           set={set}

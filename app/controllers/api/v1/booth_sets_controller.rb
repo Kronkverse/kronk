@@ -31,7 +31,7 @@ class Api::V1::BoothSetsController < Api::BaseController
     # `ActiveRecord::AssociationNotFoundError` and 500'd — which showed
     # up as an empty Booth for everyone, since the grid is this one call.
     @booth_sets = listing_scope
-                  .includes(:account, :audio_attachment, :cover_attachment, credits: :account, tracks: :audio_attachment)
+                  .includes(:account, :audio_attachment, :cover_attachment, credits: :account, tracks: :audio_attachment, set_samples: { booth_sample: :account })
                   .order(SORTS.fetch(sort_param))
                   .limit(page_size)
     @booth_sets = @booth_sets.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id)) if current_account
@@ -60,11 +60,12 @@ class Api::V1::BoothSetsController < Api::BaseController
     set_audio! if params[:audio_id].present?
     set_cover! if params[:cover_id].present?
     assign_tracks!
-    tagged = BoothSet.transaction do
+    tagged, used = BoothSet.transaction do
       @booth_set.save!
-      replace_credits!
+      [replace_credits!, replace_samples!]
     end
     announce_tags(tagged)
+    announce_samples(used)
     render json: @booth_set.reload, serializer: REST::BoothSetSerializer
   end
 
@@ -78,11 +79,12 @@ class Api::V1::BoothSetsController < Api::BaseController
     end
     @booth_set.assign_attributes(booth_set_params)
     assign_tracks!
-    tagged = BoothSet.transaction do
+    tagged, used = BoothSet.transaction do
       @booth_set.save!
-      replace_credits!
+      [replace_credits!, replace_samples!]
     end
     announce_tags(tagged)
+    announce_samples(used)
     render json: @booth_set.reload, serializer: REST::BoothSetSerializer
   end
 
@@ -257,6 +259,46 @@ class Api::V1::BoothSetsController < Api::BaseController
     else
       name = entry[:name].to_s.squish.first(BoothSetArtist::NAME_MAX)
       name.present? ? { name: name } : nil
+    end
+  end
+
+  # `sample_ids` replaces the set's Samples used (docs/spaces/booth.md,
+  # Samples), in order. Only samples the uploader may use count: their own,
+  # free ones, and ask-first ones they were given. Absent leaves them alone.
+  # Returns the samples newly listed.
+  def replace_samples!
+    return [] unless params.key?(:sample_ids)
+
+    ids = Array(params[:sample_ids]).map(&:to_i).uniq.first(BoothSet::MAX_SAMPLES)
+    wanted = BoothSample.where(id: ids).index_by(&:id)
+    usable = ids.filter_map { |id| wanted[id] }.select { |sample| sample.usable_by?(current_account) }
+    existing = @booth_set.set_samples.index_by(&:booth_sample_id)
+
+    added = []
+    usable.each_with_index do |sample, position|
+      if (row = existing.delete(sample.id))
+        row.update!(position: position)
+      else
+        @booth_set.set_samples.create!(booth_sample: sample, position: position)
+        added << sample
+      end
+    end
+    BoothSetSample.where(id: existing.values.map(&:id)).delete_all
+    added
+  end
+
+  # A sample's maker hears that a set they can see uses it.
+  def announce_samples(samples)
+    return unless @booth_set.published?
+
+    samples.reject { |sample| sample.account_id == @booth_set.account_id }.each do |sample|
+      Kronk::KornerEvents.publish(
+        'booth.sample.used',
+        actor_account_id: @booth_set.account_id,
+        recipient_account_id: sample.account_id,
+        booth_set_id: @booth_set.id,
+        booth_sample_id: sample.id
+      )
     end
   end
 

@@ -43,6 +43,10 @@ class BoothSet < ApplicationRecord
   # An album's or EP's tracks, each its own audio file, in running order
   # (docs/spaces/booth.md, Albums). Every other kind has none.
   has_many :tracks, -> { order(:position, :id) }, class_name: 'BoothSetTrack', inverse_of: :booth_set, dependent: :delete_all, autosave: true
+  # Samples used (docs/spaces/booth.md, Samples): the samples it was made
+  # with, which credits them and their makers.
+  has_many :set_samples, -> { order(:position, :id) }, class_name: 'BoothSetSample', inverse_of: :booth_set, dependent: :delete_all
+  has_many :samples, through: :set_samples, source: :booth_sample
 
   # What a set is. Filterable in Musik; existing sets are mixes.
   KINDS = %w(mix live_recording track podcast spoken_word album ep).freeze
@@ -53,6 +57,8 @@ class BoothSet < ApplicationRecord
 
   # How many people an uploader can credit on one set.
   MAX_CREDITS = 10
+  # How many samples a set can list as used.
+  MAX_SAMPLES = 30
 
   # How a set feels, beside its genres, for listeners who browse by what
   # they're after rather than by name (Tal's Kommons proposal "Booth
