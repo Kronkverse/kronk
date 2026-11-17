@@ -255,6 +255,16 @@ export type FtdProjektKind =
   | 'learning'
   | 'campaign';
 
+// What a projekt's threshold asks for (null for a measure it doesn't use),
+// where it stands, and when it began (null until it has).
+export interface FtdThreshold {
+  people: number | null;
+  things: number | null;
+  people_count: number;
+  things_sorted: number;
+  begun_at: string | null;
+}
+
 export interface FtdProject {
   id: string;
   slug: string;
@@ -263,6 +273,9 @@ export interface FtdProject {
   // The projekt's kind (a Komponent carries its projekt's); none on older
   // projekts.
   kind: FtdProjektKind | null;
+  // A projekt's threshold for its meter, or null when it has none
+  // (docs/spaces/freethedream.md, The threshold).
+  threshold?: FtdThreshold | null;
   owner: FtdAccount | null;
   top: boolean;
   root: FtdRef;

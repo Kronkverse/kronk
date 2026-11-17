@@ -37,6 +37,14 @@ module Freethedream
     SPACES = %w(kalendar albutts kronikles kuestions nudges).freeze
     SECTION_KEYS = (SPACES + %w(updates)).freeze
 
+    # A projekt's threshold (Tomas's proposal "Threshold Meter",
+    # docs/spaces/freethedream.md, The threshold): it begins once at least
+    # `threshold_people` are in it and `threshold_things` things on its
+    # checklists are sorted, either or both. No money measure: money moves
+    # outside Kronk, and chipping in is a Bring like any other.
+    THRESHOLD_MAX = 10_000
+    BEGUN = 'freethedream.projekt.begun'
+
     belongs_to :parent, class_name: 'Freethedream::Project', optional: true
     belongs_to :root, class_name: 'Freethedream::Project', optional: true
     belongs_to :owner, class_name: 'Account', optional: true
@@ -71,9 +79,16 @@ module Freethedream
     validates :description, length: { maximum: DESCRIPTION_MAX }
     validate :parent_is_fixed, on: :update
     validate :gangs_and_fractals_only, on: :create
+    validates :threshold_people, :threshold_things,
+              numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: THRESHOLD_MAX }, allow_nil: true
+    validate :threshold_is_a_projekts
 
     before_validation :set_root, on: :create
     before_validation :tidy_spaces
+    # Taking the threshold away takes its Begun with it; changing it once
+    # begun doesn't un-begin it.
+    before_save -> { self.begun_at = nil }, unless: :threshold?
+    after_update_commit -> { check_begun!(owner_id) }, if: -> { saved_change_to_threshold_people? || saved_change_to_threshold_things? }
     after_create :join_owner!, if: :top?
     after_create :join_gang_owner!, if: :gang?
     after_create :join_krew_members!, if: -> { top? && krew_id.present? }
@@ -112,6 +127,43 @@ module Freethedream
 
     def done?
       done_at.present?
+    end
+
+    def threshold?
+      threshold_people.present? || threshold_things.present?
+    end
+
+    def begun?
+      begun_at.present?
+    end
+
+    # Where its threshold stands: who's in it, and how many things on its
+    # checklists (to bring, to do) are sorted.
+    def threshold_counts
+      items = Item.where(root_id: top_id, kind: %i(need job)).includes(:offers).to_a
+      { people: Membership.member.where(project_id: top_id).count, things: items.count(&:sorted?) }
+    end
+
+    def threshold_met?(counts = threshold_counts)
+      threshold? &&
+        (threshold_people.nil? || counts[:people] >= threshold_people) &&
+        (threshold_things.nil? || counts[:things] >= threshold_things)
+    end
+
+    # Begun the first time its threshold holds, with whatever `actor_id`
+    # did tipping it over: someone joining (Membership), adding, bringing or
+    # ticking something (Activity), or its owner setting it (Edit). Once
+    # begun it stays begun, whoever leaves. Everyone else in it is told.
+    def check_begun!(actor_id)
+      return unless top? && threshold? && !begun? && threshold_met?
+      return unless Project.where(id: id, begun_at: nil).update_all(begun_at: Time.current, updated_at: Time.current) == 1
+
+      reload
+      return if actor_id.nil?
+
+      Membership.member.where(project_id: id).where.not(account_id: actor_id).pluck(:account_id).each do |recipient|
+        Kronk::KornerEvents.publish(BEGUN, actor_account_id: actor_id, recipient_account_id: recipient, project_id: id)
+      end
     end
 
     # Any signed-in person can open a project and see what it's about; only
@@ -373,6 +425,10 @@ module Freethedream
         memberships.find_or_create_by!(account_id: account_id) { |m| m.state = :member }
       end
       Kronk::AttachmentEffects.link!('freethedream', id, 'krew', krew_id, owner || krew.seeded_by)
+    end
+
+    def threshold_is_a_projekts
+      errors.add(:threshold_people, :invalid) if !top? && threshold?
     end
 
     def parent_is_fixed

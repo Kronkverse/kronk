@@ -208,6 +208,7 @@ en:
         gang_updated: "%{who} added to a Komponent you joined"
         mentioned: "%{who} tagged you in a projekt’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
+        projekt_begun: A projekt you’re in has begun
       generic: "%{who} has something for you in %{korner}"
       huddle:
         gathering: People are huddling
@@ -490,6 +491,7 @@ en-GB:
         gang_updated: "%{who} added to a Komponent you joined"
         mentioned: "%{who} tagged you in a projekt’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
+        projekt_begun: A projekt you’re in has begun
       generic: "%{who} has something for you in %{korner}"
       huddle:
         gathering: People are huddling

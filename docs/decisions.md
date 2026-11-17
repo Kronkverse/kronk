@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-17 — A projekt can have a threshold before it begins
+
+Tomas's proposal "Threshold Meter": "Projects that need foundational items,
+people, money, etc, can add a threshold meter that once it hits the project
+begins. Visualised through an actual meter of sorts." Tal: build a first
+version.
+
+**Decision:** a projekt's owner can set, in Edit, how many people it needs
+and how many things on its checklists sorted, either or both. Its page
+shows a meter for each, and it is **begun** (recorded, with the date, and
+its members told) the first time what it asks for is reached; it stays begun if
+someone leaves. There is no money measure: money moves outside Kronk, and
+chipping in is already a Bring, which counts once covered. Begun is a
+marker, not a gate: nothing is locked before it. docs/spaces/freethedream.md,
+The threshold.
+
 ## 2026-11-17 — Booth: moments on album tracks, vibes, open to collab
 
 **Decision.** Three parts of Tal's Kommons proposal "Booth Revamp", in one
