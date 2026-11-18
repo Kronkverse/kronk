@@ -409,6 +409,14 @@ getting involved, not for doing the work itself:
   members** (Tal, 2026-11-11): the call is the projekt's Krew only, and the
   full composer opened from a projekt starts with that Krew as its audience
   (`?audience=krew:<id>`), which its maker can widen.
+- **Schedule** (Tal, 2026-11-18, Kommons "Schedule"): under Events, the
+  schedule of each of its events, as the event's page shows it (a grid
+  with a column for each day), headed with the event's name and date.
+  Anyone in the projekt keeps it here, **Add a schedule** for an event
+  with none; the lines are the event's own, so a change shows on the
+  event straight away (docs/spaces/kalendar.md, Schedule;
+  `project_schedules.tsx`). Nothing shows when no event has one and
+  nobody here can start one.
 - **Activity**: the latest four things that happened in the last
   fortnight (Tal, 2026-11-09: "only the latest 3 or 4, maybe only recent
   ones too"), with who did them
