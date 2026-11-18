@@ -328,7 +328,9 @@ appear in `/api/v2/search` results.
   yours), or no scope (listed only).
 - `GET`, `POST`, `PATCH`, `DELETE` (archive) on a Krew. Any member can
   `PATCH`; `DELETE` needs a sole member.
-- Members: `GET :id/members`, `POST :id/join`, `POST :id/leave`, `GET :id/chat`.
+- Members: `GET :id/members` (`q` narrows it by name, for picking people
+  from the Krew; docs/spaces/kalendar.md, Invitations), `POST :id/join`,
+  `POST :id/leave`, `GET :id/chat`.
 - Asking to join (`Api::V1::Krews::JoinRequestsController`):
   `GET :id/join_requests`, `POST :id/join_requests/:request_id/accept` and
   `/decline` (members), `DELETE :id/join_request` (the asker).

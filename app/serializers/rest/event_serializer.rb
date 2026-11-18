@@ -16,6 +16,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   attribute :status_id
   attribute :visibility
   attribute :krews
+  attribute :krew_only
   attribute :going_preview
   attribute :place_id
   attribute :own_location
@@ -61,6 +62,12 @@ class REST::EventSerializer < ActiveModel::Serializer
     return [] if object.status.nil?
 
     Kronk::VisibleKrews.filter(object.status.krews.sort_by(&:id), current_user&.account).map { |krew| { id: krew.id.to_s, name: krew.name } }
+  end
+
+  # For its Krews alone: only their members can be invited (decisions.md,
+  # 2026-11-18).
+  def krew_only
+    object.krew_only?
   end
 
   def visibility

@@ -18,6 +18,7 @@ import {
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
@@ -25,6 +26,9 @@ import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 import { useAppDispatch } from 'mastodon/store';
+
+import { searchInvitees } from './invitee_search';
+import type { InviteeHit } from './invitee_search';
 
 // Kalendar — event composer, for a new event and for editing one (the
 // event's page opens it with `event`, as the album, film and kar pages
@@ -56,6 +60,48 @@ import { useAppDispatch } from 'mastodon/store';
 // it be removed, the only location there is here.
 
 const messages = defineMessages({
+  audience: {
+    id: 'kalendar.composer.audience',
+    defaultMessage: 'Who is it for?',
+  },
+  audienceKrew: {
+    id: 'kalendar.composer.audience_krew',
+    defaultMessage: 'Just the Krew',
+  },
+  audienceOpen: {
+    id: 'kalendar.composer.audience_open',
+    defaultMessage: 'Open, hosted by the Krew',
+  },
+  audienceOpenHint: {
+    id: 'kalendar.composer.audience_open_hint',
+    defaultMessage:
+      'Anyone on Kronk can see it, and it shows on the Krew’s page.',
+  },
+  invited: {
+    id: 'kalendar.composer.invited',
+    defaultMessage: 'Who is invited?',
+  },
+  invitedPick: {
+    id: 'kalendar.composer.invited_pick',
+    defaultMessage: 'Pick people',
+  },
+  invitedEveryone: {
+    id: 'kalendar.composer.invited_everyone',
+    defaultMessage:
+      'Everyone in {count, plural, one {the Krew} other {the Krews}}',
+  },
+  invitedPickHint: {
+    id: 'kalendar.composer.invited_pick_hint',
+    defaultMessage: 'Nobody is invited until you pick them.',
+  },
+  invitedEveryoneHint: {
+    id: 'kalendar.composer.invited_everyone_hint',
+    defaultMessage: 'Each member gets an invitation in their Nudges.',
+  },
+  inviteeSearchKrew: {
+    id: 'kalendar.new.invitee_search_krew',
+    defaultMessage: 'Search the Krew’s members…',
+  },
   kuddleKrew: {
     id: 'kalendar.composer.kuddle_krew',
     defaultMessage: 'Call in the Krew’s Kuddle',
@@ -226,6 +272,7 @@ interface CreatePayload {
   visibility: ReachValue;
   image_id?: string;
   krew_ids?: string[];
+  invite_krew_members?: boolean;
   kuddle_space?: string;
 }
 
@@ -243,12 +290,10 @@ interface MediaResponse {
 // Kept in the composer scope (rather than pulled from a shared
 // AccountSerializer type) because we only need the four fields for
 // the picker chip + dropdown row.
-interface InviteeAccount {
-  id: string;
-  username: string;
-  display_name: string;
-  avatar: string;
-  acct: string;
+interface InviteeAccount extends InviteeHit {
+  // Picked from the Krew's members, so still invitable when the event is
+  // for the Krew alone.
+  fromKrew?: boolean;
 }
 
 // Combine a date input ("YYYY-MM-DD") + time input ("HH:MM") into an
@@ -351,6 +396,7 @@ interface EventDraftParams {
   endTime?: string;
   reach?: ReachValue;
   krewIds?: string[];
+  inviteKrew?: boolean;
   invitees?: InviteeAccount[];
   konnections?: KonnectTarget[];
 }
@@ -479,6 +525,11 @@ export const EventComposer: React.FC<Props> = ({
   const [krewIds, setKrewIds] = useState<string[]>(
     audienceKrew ? [audienceKrew] : [],
   );
+  // Inviting everyone in the event's Krews is a choice, not automatic
+  // (decisions.md, 2026-11-18). Off, nobody is invited until picked.
+  const [inviteKrew, setInviteKrew] = useState(false);
+  // An event for its Krews alone: only their members can be invited.
+  const krewOnly = reach === 'self_only' && krewIds.length > 0;
   // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
   // user has picked from the search results. Stored as a Map keyed
   // by id so we can render chips with names/avatars (search results
@@ -509,6 +560,7 @@ export const EventComposer: React.FC<Props> = ({
       setEndTime(p.endTime ?? times.endTime);
       setReach(p.reach ?? (audienceKrew ? 'self_only' : 'public'));
       setKrewIds(p.krewIds ?? (audienceKrew ? [audienceKrew] : []));
+      setInviteKrew(p.inviteKrew ?? false);
       setInvitees(new Map((p.invitees ?? []).map((a) => [a.id, a])));
       restoreKonnect(p.konnections);
       const cover = d?.media_attachments[0];
@@ -535,6 +587,7 @@ export const EventComposer: React.FC<Props> = ({
         endTime,
         reach,
         krewIds,
+        inviteKrew,
         invitees: Array.from(invitees.values()),
         konnections: konnect.saved,
       },
@@ -634,10 +687,43 @@ export const EventComposer: React.FC<Props> = ({
     );
   }, []);
 
-  // Debounced account search for the invitee picker. Same endpoint
-  // the event-detail Invite panel already uses (`GET /api/v1/accounts/
-  // search`), 300ms debounce + 6-result cap, cancel-on-change via a
-  // scoped flag so late responses don't clobber the latest results.
+  // Made from a Krew: just the Krew, or open and hosted by it. Both keep
+  // the Krew in the audience; the reach menu says the same thing.
+  const chooseKrewOnly = useCallback(() => {
+    setReach('self_only');
+    if (audienceKrew)
+      setKrewIds((prev) =>
+        prev.includes(audienceKrew) ? prev : [...prev, audienceKrew],
+      );
+  }, [audienceKrew]);
+  const chooseOpen = useCallback(() => {
+    setReach('public');
+  }, []);
+  const choosePick = useCallback(() => {
+    setInviteKrew(false);
+  }, []);
+  const chooseEveryone = useCallback(() => {
+    setInviteKrew(true);
+  }, []);
+
+  // Turning an event into one for the Krew alone drops anyone picked from
+  // outside it (they were picked from all of Kronk).
+  useEffect(() => {
+    if (!krewOnly) return;
+    setInvitees((prev) => {
+      const kept = Array.from(prev.values()).filter((a) => a.fromKrew);
+      return kept.length === prev.size
+        ? prev
+        : new Map(kept.map((a) => [a.id, a]));
+    });
+  }, [krewOnly]);
+
+  // Debounced search for the invitee picker (`searchInvitees`, shared with
+  // the event page's Invite): the Krew's members for an event for the Krew
+  // alone, all of Kronk otherwise. 300ms debounce + 6-result cap,
+  // cancel-on-change via a scoped flag so late responses don't clobber
+  // the latest results.
+  const searchKrewIds = krewOnly ? krewIds.join(',') : null;
   useEffect(() => {
     const trimmed = inviteeQuery.trim();
     if (trimmed.length === 0) {
@@ -648,13 +734,12 @@ export const EventComposer: React.FC<Props> = ({
     let cancelled = false;
     const timer = window.setTimeout(() => {
       setInviteeSearching(true);
-      api()
-        .get<InviteeAccount[]>('/api/v1/accounts/search', {
-          params: { q: trimmed, limit: 6, resolve: false },
-        })
-        .then((res) => {
+      searchInvitees(trimmed, searchKrewIds ? searchKrewIds.split(',') : null)
+        .then((hits) => {
           if (cancelled) return;
-          setInviteeResults(res.data);
+          setInviteeResults(
+            hits.map((hit) => ({ ...hit, fromKrew: !!searchKrewIds })),
+          );
           setInviteeSearching(false);
         })
         .catch(() => {
@@ -667,7 +752,7 @@ export const EventComposer: React.FC<Props> = ({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [inviteeQuery]);
+  }, [inviteeQuery, searchKrewIds]);
 
   const onInviteeQueryChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
@@ -852,6 +937,7 @@ export const EventComposer: React.FC<Props> = ({
     if (endIso) payload.end_time = endIso;
     if (imageMediaId) payload.image_id = imageMediaId;
     if (krewIds.length > 0) payload.krew_ids = krewIds;
+    if (krewIds.length > 0 && inviteKrew) payload.invite_krew_members = true;
     if (kuddleSpace && inKuddle) payload.kuddle_space = kuddleSpace;
 
     const inviteeIds = Array.from(invitees.keys());
@@ -899,6 +985,7 @@ export const EventComposer: React.FC<Props> = ({
     imageMediaId,
     inKuddle,
     intl,
+    inviteKrew,
     invitees,
     krewIds,
     kuddleSpace,
@@ -1123,6 +1210,58 @@ export const EventComposer: React.FC<Props> = ({
         </div>
       )}
 
+      {!editing && audienceKrew && (
+        <ComposeSection title={intl.formatMessage(messages.audience)}>
+          <div className='event-composer__choice'>
+            <KornerPill
+              label={intl.formatMessage(messages.audienceKrew)}
+              active={reach === 'self_only'}
+              disabled={busy}
+              onClick={chooseKrewOnly}
+            />
+            <KornerPill
+              label={intl.formatMessage(messages.audienceOpen)}
+              active={reach !== 'self_only'}
+              disabled={busy}
+              onClick={chooseOpen}
+            />
+          </div>
+          {reach === 'public' && (
+            <ComposeHint>
+              {intl.formatMessage(messages.audienceOpenHint)}
+            </ComposeHint>
+          )}
+        </ComposeSection>
+      )}
+
+      {!editing && krewIds.length > 0 && (
+        <ComposeSection title={intl.formatMessage(messages.invited)}>
+          <div className='event-composer__choice'>
+            <KornerPill
+              label={intl.formatMessage(messages.invitedPick)}
+              active={!inviteKrew}
+              disabled={busy}
+              onClick={choosePick}
+            />
+            <KornerPill
+              label={intl.formatMessage(messages.invitedEveryone, {
+                count: krewIds.length,
+              })}
+              active={inviteKrew}
+              disabled={busy}
+              onClick={chooseEveryone}
+            />
+          </div>
+          <ComposeHint>
+            {intl.formatMessage(
+              inviteKrew
+                ? messages.invitedEveryoneHint
+                : messages.invitedPickHint,
+            )}
+          </ComposeHint>
+        </ComposeSection>
+      )}
+
       {!editing && kuddleSpace && (
         <ComposeCheck
           checked={inKuddle}
@@ -1144,7 +1283,7 @@ export const EventComposer: React.FC<Props> = ({
           around the chips' and results' buttons would press them
           when its text is clicked. Not while editing: the page's
           Invite asks people to an event that exists. */}
-      {!editing && (
+      {!editing && !(krewOnly && inviteKrew) && (
         <div className='compose-field'>
           <span className='compose-field__label'>
             {intl.formatMessage(messages.invitePeople)}
@@ -1187,7 +1326,9 @@ export const EventComposer: React.FC<Props> = ({
               value={inviteeQuery}
               onChange={onInviteeQueryChange}
               placeholder={intl.formatMessage(
-                messages.inviteeSearchPlaceholder,
+                krewOnly
+                  ? messages.inviteeSearchKrew
+                  : messages.inviteeSearchPlaceholder,
               )}
               aria-label={intl.formatMessage(messages.invitePeople)}
               autoComplete='off'

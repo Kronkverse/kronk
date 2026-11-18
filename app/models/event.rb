@@ -167,6 +167,21 @@ class Event < ApplicationRecord
     StatusPolicy.new(account, status).show?
   end
 
+  # An event for its Krews alone (docs/spaces/kalendar.md, Events for a
+  # Krew): its post reaches nobody but them. Only their members can be
+  # invited (decisions.md, 2026-11-18).
+  def krew_only?
+    return false if invite_only? || status.nil?
+
+    status.visibility.to_s == 'self_only' && status.krews.any?
+  end
+
+  def krew_member_ids
+    return KrewMembership.none.select(:account_id) if status.nil?
+
+    KrewMembership.where(krew_id: status.krews.select(:id)).select(:account_id)
+  end
+
   def recurring?
     recurrence_rule.present?
   end
