@@ -256,7 +256,7 @@ const pillMessages = defineMessages({
 // state.korners updates at once), fires the server call, and re-dispatches the
 // old value on failure. It's a sibling of the row's Link (not nested in the
 // anchor) and stops the click from also navigating into the korner's settings.
-const TuneToggle: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+export const TuneToggle: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const tunedIn = korner.tuned_in !== false;
