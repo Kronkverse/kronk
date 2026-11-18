@@ -266,6 +266,17 @@ Book or Decide picked from a dropdown beside the box (`QuickAdd`), each
 kind with its icon, which its entries show too. No pills: Tal, 2026-11-11,
 "i really really dont like the pill situation".
 
+**Changing an entry's kind** (Kommons "Checklist", 2026-11-18): whoever
+added an entry taps its kind and picks another from the same menu
+(`PUT /items/:id` with `kind` and `task`; `Item#retype!`). What still
+fits is kept: the title and notes, who is on a To do and its tick
+between To do, Pay and Book, and a Pay's dollars when it becomes a Bring
+of that much (and back). The rest goes: a plain To do, Book or Decide has
+no amount; something to Bring has nobody on it and no tick; a new Decide
+asks a Yes or No Kuestion and starts undecided, and one that stops being
+a Decide takes its Kuestion with it. Something people are already
+bringing stays a Bring, so nobody's offer is left against a To do.
+
 ### The kinds of item
 
 | List               | What it is                                                     | How people take part                                                                                                                                                                                                                                                  |
