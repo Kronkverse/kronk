@@ -79,7 +79,9 @@ Where each setting lives today. Code comments cite this section as
   server-update emails, and the list of muted nudge types. Nudges' own
   settings are in `docs/spaces/nudges.md` (Nudge settings).
 - **Account & security**: change email and password (in the page), signed-in
-  devices with revoke, and recent sign-ins.
+  devices with revoke, Connected apps (linked Anthemos phones with Unlink,
+  and their live location shares with Stop; `docs/spaces/map.md`, Live
+  location), and recent sign-ins.
 - **Korner settings**: tune-in, per-korner push toggles, and the manifest
   settings.
 

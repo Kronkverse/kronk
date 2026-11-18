@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -392,6 +392,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.index ["question_id", "account_id"], name: "index_answers_on_question_id_and_account_id", unique: true
     t.index ["question_id"], name: "index_answers_on_question_id"
     t.index ["status_id"], name: "index_answers_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "anthemos_links", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "device_name", null: false
+    t.datetime "last_used_at"
+    t.text "public_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_anthemos_links_on_account_id"
   end
 
   create_table "appeals", force: :cascade do |t|
@@ -1734,6 +1744,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.index ["account_id"], name: "index_lists_on_account_id"
   end
 
+  create_table "live_shares", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "anthemos_link_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "recipient_account_ids", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_live_shares_on_account_id"
+    t.index ["anthemos_link_id"], name: "index_live_shares_on_anthemos_link_id"
+    t.index ["recipient_account_ids"], name: "index_live_shares_on_recipient_account_ids", using: :gin
+  end
+
   create_table "login_activities", force: :cascade do |t|
     t.string "authentication_method"
     t.datetime "created_at", precision: nil
@@ -3021,6 +3043,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   add_foreign_key "announcement_reactions", "custom_emojis", on_delete: :cascade
   add_foreign_key "answers", "accounts", on_delete: :cascade
   add_foreign_key "answers", "questions", on_delete: :cascade
+  add_foreign_key "anthemos_links", "accounts", on_delete: :cascade
   add_foreign_key "appeals", "account_warnings", on_delete: :cascade
   add_foreign_key "appeals", "accounts", column: "approved_by_account_id", on_delete: :nullify
   add_foreign_key "appeals", "accounts", column: "rejected_by_account_id", on_delete: :nullify
@@ -3193,6 +3216,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   add_foreign_key "listing_ticket_dates", "listings", on_delete: :cascade
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
+  add_foreign_key "live_shares", "accounts", on_delete: :cascade
+  add_foreign_key "live_shares", "anthemos_links", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
   add_foreign_key "map_country_names", "accounts", column: "removed_by_account_id", on_delete: :nullify
   add_foreign_key "map_country_names", "accounts", on_delete: :nullify

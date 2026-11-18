@@ -2284,6 +2284,101 @@
   }
 }
 
+// ── Live location (docs/spaces/map.md, Live location) ───────────────
+// A face in a ring that breathes: exact, and moving, so it reads apart
+// from a pin's teardrop. Reduced motion keeps the ring still.
+.map-live {
+  position: relative;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0;
+  border: 3px solid var(--accent);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  cursor: pointer;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 45%));
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-round);
+    opacity: 0;
+    animation: map-live-ring 2s var(--ease-out, ease) infinite;
+  }
+
+  &__avatar {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: var(--radius-round);
+    background-position: center;
+    background-size: cover;
+  }
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    transform: scale(1.06);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+      opacity: 0.6;
+    }
+  }
+}
+
+@keyframes map-live-ring {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.9);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+// Shares the event card's frame (.map-event-card).
+.map-live-card {
+  &__dot {
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: var(--radius-round);
+    background: var(--accent);
+  }
+
+  &__live {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  &__line {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__anthemos {
+    margin-block-start: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent-text);
+      text-decoration: underline;
+    }
+  }
+}
+
 // The Place composer: its fields come from the composer kit; only the pin
 // buttons are its own.
 .place-composer {

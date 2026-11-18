@@ -432,6 +432,14 @@ namespace :api, format: false do
       # Ask a Mate to bring their pin up to date (once a week per person).
       post   'presence/:account_id/challenge', to: 'presence#challenge'
 
+      # Live location from a linked Anthemos phone: exact, to named Mates,
+      # until a set time; the latest point only, kept in Redis.
+      get    'live',           to: 'live#index'
+      get    'live/mine',      to: 'live#mine'
+      post   'live',           to: 'live#create'
+      put    'live/:id/point', to: 'live#point'
+      delete 'live/:id',       to: 'live#destroy'
+
       # Server-side proxy for OSM Nominatim — see
       # `Api::V1::Map::GeocodeController` for why we don't hit Nominatim
       # from the browser directly. Search box on the map's place
@@ -462,6 +470,11 @@ namespace :api, format: false do
       resources :country_names, only: [:index, :create, :destroy]
       # The Mates born on or living on a Country, for its card.
       get 'country_people', to: 'country_people#index'
+    end
+
+    # Anthemos phones linked to an account (docs/spaces/map.md, Live location).
+    namespace :anthemos do
+      resources :links, only: [:index, :create, :destroy]
     end
 
     namespace :klot do

@@ -30,6 +30,7 @@ import {
 import { CountryLayer } from './country_layer';
 import { CountryPrompt, useShouldOfferCountry } from './country_prompt';
 import { EventLayer } from './event_layer';
+import { LiveLayer } from './live_layer';
 import { NearMe } from './near_me';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
@@ -745,6 +746,11 @@ export const MatesView: React.FC = () => {
         {/* Places — exact spots with an address that things Konnect
             to (docs/spaces/map.md, Places). Reads `?map_place=<id>`. */}
         <PlaceLayer map={mapRef.current} ready={ready} />
+
+        {/* Live location — Mates sharing exactly where they are with you
+            from Anthemos (docs/spaces/map.md, Live location). Reads
+            `?live=<account id>`. */}
+        <LiveLayer map={mapRef.current} ready={ready} />
       </div>
     </div>
   );
