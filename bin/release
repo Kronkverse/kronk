@@ -271,8 +271,16 @@ def cut(version)
 
   sh('git', 'push', '--quiet', '--force-with-lease', '-u', 'origin', branch)
 
-  url = sh('gh', 'pr', 'create', '--repo', REPO, '--base', 'main', '--head', branch,
-           '--title', version, '--body', release_body(version, taken, blocked, waiting_prs, proposals)).strip
+  # Cutting the same version again (more PRs marked ready since) rebuilds the
+  # branch; the release PR is already open, so update its body instead.
+  body = release_body(version, taken, blocked, waiting_prs, proposals)
+  existing = gh_json('pr', 'list', '--repo', REPO, '--base', 'main', '--head', branch, '--state', 'open', '--json', 'url').first
+  url = if existing
+          sh('gh', 'pr', 'edit', existing['url'], '--repo', REPO, '--title', version, '--body', body)
+          existing['url']
+        else
+          sh('gh', 'pr', 'create', '--repo', REPO, '--base', 'main', '--head', branch, '--title', version, '--body', body).strip
+        end
 
   say "Release PR: #{url}"
   say "Took #{taken.size}: #{taken.map { |pr| "##{pr['number']}" }.join(', ')}"
