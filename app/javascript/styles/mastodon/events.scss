@@ -1330,6 +1330,14 @@ $ev-interested-color: #b8945f;
     }
   }
 
+  // Made from a Krew: who it's for, and who is invited. Pills side by
+  // side.
+  &__choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
   // Invitee picker — search + result rows + selected chips. Chip
   // pattern reuses the muted-purple treatment from other Kronk
   // pickers; sizing tighter so several stack cleanly.

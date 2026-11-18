@@ -143,6 +143,8 @@ en:
   # Jitsi's own words in a Booth live set's room, served to the Jitsi
   # server by Api::V1::Calls::BrandingsController. Keys follow Jitsi's
   # lang/main.json; {{…}} is Jitsi's placeholder, not Rails'.
+  kalendar:
+    krew_members_only: This event is for its Krew alone, so only its members can be invited.
   kronk_jitsi:
     booth_live:
       dialog:
@@ -426,6 +428,8 @@ en-GB:
   # Jitsi's own words in a Booth live set's room, served to the Jitsi
   # server by Api::V1::Calls::BrandingsController. Keys follow Jitsi's
   # lang/main.json; {{…}} is Jitsi's placeholder, not Rails'.
+  kalendar:
+    krew_members_only: This event is for its Krew alone, so only its members can be invited.
   kronk_jitsi:
     booth_live:
       dialog:

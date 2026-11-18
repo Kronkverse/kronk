@@ -4,6 +4,7 @@ import {
   useState,
   useCallback,
   useRef,
+  useMemo,
 } from 'react';
 
 import {
@@ -37,6 +38,7 @@ import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { Stage } from 'mastodon/components/stage';
 import { EventComposer } from 'mastodon/features/kalendar/event_composer';
+import { searchInvitees } from 'mastodon/features/kalendar/invitee_search';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
@@ -81,6 +83,10 @@ const messages = defineMessages({
   joinHuddle: {
     id: 'events.detail.join_huddle',
     defaultMessage: 'Join Huddle',
+  },
+  searchKrewPlaceholder: {
+    id: 'events.invite_search_krew',
+    defaultMessage: 'Search the Krew’s members…',
   },
   searchPlaceholder: {
     id: 'events.detail.search_placeholder',
@@ -140,6 +146,9 @@ interface Event {
   image_url: string | null;
   is_owner: boolean;
   visibility?: string | null;
+  krews?: { id: string; name: string }[];
+  // For its Krews alone: only their members can be invited.
+  krew_only?: boolean;
 }
 
 interface EventAccount {
@@ -304,31 +313,41 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     void fetchAll();
   }, [fetchAll]);
 
-  const handleInviteSearch = useCallback((query: string) => {
-    setInviteQuery(query);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+  // An event for a Krew alone asks its members only (decisions.md,
+  // 2026-11-18); any other event, anyone on Kronk.
+  const krewOnlyKey = event?.krew_only
+    ? (event.krews ?? []).map((krew) => krew.id).join(',')
+    : '';
+  const krewOnlyIds = useMemo(
+    () => (krewOnlyKey ? krewOnlyKey.split(',') : null),
+    [krewOnlyKey],
+  );
 
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  const handleInviteSearch = useCallback(
+    (query: string) => {
+      setInviteQuery(query);
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
 
-    searchTimeout.current = setTimeout(() => {
-      void (async () => {
-        setSearching(true);
-        try {
-          const response = await api().get('/api/v1/accounts/search', {
-            params: { q: query, limit: 6, resolve: false },
-          });
-          setSearchResults(response.data as SearchAccount[]);
-        } catch (err) {
-          console.error('Search failed:', err);
-        } finally {
-          setSearching(false);
-        }
-      })();
-    }, 300);
-  }, []);
+      if (!query.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      searchTimeout.current = setTimeout(() => {
+        void (async () => {
+          setSearching(true);
+          try {
+            setSearchResults(await searchInvitees(query, krewOnlyIds));
+          } catch (err) {
+            console.error('Search failed:', err);
+          } finally {
+            setSearching(false);
+          }
+        })();
+      }, 300);
+    },
+    [krewOnlyIds],
+  );
 
   const handleInvite = useCallback(
     async (accountId: string) => {
@@ -722,7 +741,11 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
                 type='text'
                 value={inviteQuery}
                 onChange={handleSearchChange}
-                placeholder={intl.formatMessage(messages.searchPlaceholder)}
+                placeholder={intl.formatMessage(
+                  krewOnlyIds
+                    ? messages.searchKrewPlaceholder
+                    : messages.searchPlaceholder,
+                )}
               />
             </div>
 
