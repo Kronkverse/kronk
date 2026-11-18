@@ -7,6 +7,34 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.15 "Rose"] - 2026-11-18
+
+- Froths list (#2576)
+- Proposal composer without Steps (#2577)
+- Proposals without steps (#2578)
+- Moment filters by swiping (#2579)
+- Krew Kuestions in the feed (#2582)
+- Wachuneed on one page (#2583)
+- Wachuneed price types (#2584)
+- Wachuneed wanted ads (#2585)
+- Answering wanted ads (#2586)
+- Wachuneed Mine (#2587)
+- Wachuneed jobs delivered and done (#2588)
+- Wachuneed card tags and Show dropdown (#2589)
+- Wachuneed shop cards (#2590)
+- No follower count on the hover card (#2591)
+- Wachuneed title and Filter (#2593)
+- Card text sizes (#2592)
+- Share a proposal to the feed (#2594)
+- Profile clear of the top bar (#2595)
+- Kommunity home page (#2597)
+- Wachuneed listings heading (#2596)
+- Booth moments, vibes and collab (#2599)
+- Wachuneed + asks what you are posting (#2600)
+- Projekt threshold meter (#2598)
+- Wachuneed heading spec (#2601)
+- Booth samples (#2602)
+
 ### [2.1.14 "Rose"] - 2026-11-12
 
 - Kuestions answer first, and share (#2569)
