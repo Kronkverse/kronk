@@ -12,9 +12,9 @@ RSpec.describe 'Map live location from Anthemos' do
     ana_user = Fabricate(:user, account: ana)
     { 'Authorization' => "Bearer #{Fabricate(:accessible_access_token, resource_owner_id: ana_user.id, scopes: 'read write').token}" }
   end
-  let(:key)     { OpenSSL::PKey::EC.generate('prime256v1') }
+  let(:key) { OpenSSL::PKey::EC.generate('prime256v1') }
   let(:public_key) { Base64.strict_encode64(key.public_to_der) }
-  let(:events)  { [] }
+  let(:events) { [] }
 
   def sign(*parts, with: key)
     Base64.strict_encode64(with.sign('SHA256', parts.map(&:to_s).join("\n")))
@@ -149,7 +149,7 @@ RSpec.describe 'Map live location from Anthemos' do
       share!(link_id, [ana.id])
       get '/api/v1/map/live/mine', headers: headers
 
-      expect(response.parsed_body.sole[:recipients].map { |r| r[:handle] }).to eq(['ana'])
+      expect(response.parsed_body.sole[:recipients].pluck(:handle)).to eq(['ana'])
     end
   end
 

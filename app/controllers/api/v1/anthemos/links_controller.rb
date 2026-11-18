@@ -21,9 +21,7 @@ class Api::V1::Anthemos::LinksController < Api::BaseController
 
   def create
     key = params.require(:public_key).to_s
-    unless Kronk::AnthemosSignature.valid?(key, params.require(:signature), 'anthemos-link-v1', current_account.id, key)
-      return render json: { error: 'bad_signature' }, status: 422
-    end
+    return render(json: { error: 'bad_signature' }, status: 422) unless Kronk::AnthemosSignature.valid?(key, params.require(:signature), 'anthemos-link-v1', current_account.id, key)
 
     link = AnthemosLink.find_or_initialize_by(account: current_account, public_key: key)
     link.update!(device_name: params.require(:device_name).to_s.strip.first(60), last_used_at: Time.current)

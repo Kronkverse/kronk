@@ -36,9 +36,7 @@ class Api::V1::Map::LiveController < Api::BaseController
     link = AnthemosLink.find_by!(account: current_account, id: params.require(:link_id))
     ids = Array(params.require(:recipient_ids)).map { |id| Integer(id.to_s, 10) }.uniq.sort
     expires = params.require(:expires_at).to_s
-    unless link.verify?(params.require(:signature), 'anthemos-share-v1', link.id, ids.join(','), expires)
-      return render json: { error: 'bad_signature' }, status: 422
-    end
+    return render(json: { error: 'bad_signature' }, status: 422) unless link.verify?(params.require(:signature), 'anthemos-share-v1', link.id, ids.join(','), expires)
 
     share = LiveShare.create!(account: current_account, anthemos_link: link,
                               recipient_account_ids: ids, expires_at: Time.zone.at(Integer(expires, 10)))
