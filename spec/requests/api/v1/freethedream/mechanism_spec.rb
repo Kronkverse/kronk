@@ -259,6 +259,72 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(response).to have_http_status(422)
     end
 
+    # Kommons "Checklist" (2026-11-18): tap an entry's kind to change it.
+    describe 'changing what kind of entry it is' do
+      def retype(user, item, **to)
+        api(user, :put, "/items/#{item['id']}", item: to)
+      end
+
+      it 'moves between the kinds of To do, keeping who is on it and a tick', :aggregate_failures do
+        sweep = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Hall deposit' })
+        api(bob, :post, "/items/#{sweep['id']}/claim")
+        api(bob, :post, "/items/#{sweep['id']}/done")
+
+        paid = retype(alice, sweep, task: 'pay')
+        expect(response).to have_http_status(200)
+        expect(paid).to include('kind' => 'job', 'task' => 'pay', 'done' => true, 'claimed' => 1, 'title' => 'Hall deposit')
+        expect(retype(alice, paid, task: 'book')['task']).to eq 'book'
+      end
+
+      it 'keeps a Pay amount as a Bring of that much, and drops it for a plain To do', :aggregate_failures do
+        hall = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', task: 'pay', title: 'Hall', quantity: 200, unit: '$' })
+        api(bob, :post, "/items/#{hall['id']}/claim")
+
+        bring = retype(alice, hall, kind: 'need')
+        expect(bring).to include('kind' => 'need', 'quantity' => 200, 'unit' => '$', 'left' => 200)
+        expect(Freethedream::Claim.where(item_id: bring['id'])).to be_empty
+
+        todo = retype(alice, bring, kind: 'job', task: 'todo')
+        expect(todo).to include('kind' => 'job', 'task' => 'todo', 'quantity' => 1, 'unit' => '')
+      end
+
+      it 'asks a Yes or No Kuestion for a new Decide, and takes it away again', :aggregate_failures do
+        day = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Go ahead if it rains?' })
+        api(alice, :post, "/items/#{day['id']}/done")
+
+        decide = retype(alice, day, task: 'decide')
+        expect(decide).to include('task' => 'decide', 'done' => false)
+        expect(decide['decide']['options'].pluck('label')).to eq %w(Yes No)
+        question = Question.find(decide['decide']['kuestion_id'])
+        expect(question.freethedream_project_id).to eq doof['id'].to_i
+
+        expect(retype(alice, decide, task: 'todo')['decide']).to be_nil
+        expect(Question.exists?(question.id)).to be false
+      end
+
+      it 'leaves something people are bringing as something to bring', :aggregate_failures do
+        gas = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Gas' })
+        api(bob, :post, "/items/#{gas['id']}/bring", quantity: 1)
+
+        retype(alice, gas, kind: 'job')
+        expect(response).to have_http_status(422)
+        expect(response.parsed_body['error']).to eq 'People are bringing it, so it stays something to bring'
+        expect(Freethedream::Item.find(gas['id']).kind).to eq 'need'
+      end
+
+      it 'is only for whoever added it, and only between checklist kinds', :aggregate_failures do
+        sweep = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sweep' })
+        retype(bob, sweep, task: 'pay')
+        expect(response).to have_http_status(403)
+
+        retype(alice, sweep, kind: 'offer')
+        expect(response).to have_http_status(422)
+        retype(alice, sweep, task: 'nonsense')
+        expect(response).to have_http_status(422)
+        expect(Freethedream::Item.find(sweep['id'])).to have_attributes(kind: 'job', task: 'todo')
+      end
+    end
+
     it 'ticks off only a To do, and only for people in the projekt', :aggregate_failures do
       gas = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Gas' })
       api(alice, :post, "/items/#{gas['id']}/done")

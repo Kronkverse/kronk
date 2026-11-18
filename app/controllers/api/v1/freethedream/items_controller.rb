@@ -39,11 +39,19 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     render_invalid(e.record.is_a?(Question) ? e.record : item)
   end
 
+  # Whoever added an entry can change it, and on a checklist that includes
+  # what kind of entry it is (`kind` and `task`; Kommons "Checklist",
+  # 2026-11-18): tap its kind and pick another.
   def update
     permit!(@item.owned_by?(current_account))
-    return render_invalid(@item) unless @item.update(item_params.except(:kind))
+    Freethedream::Item.transaction do
+      retype!
+      @item.update!(item_params.except(:kind, :task))
+    end
 
-    render json: view.item(@item)
+    render json: view.item(@item.reload)
+  rescue ActiveRecord::RecordInvalid => e
+    render_invalid(e.record)
   end
 
   def destroy
@@ -167,6 +175,22 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
       locked: true,
       freethedream_project: project
     )
+  end
+
+  # A checklist entry made into another kind. A Decide gets its Yes or No
+  # Kuestion, and one that stops being a Decide takes its Kuestion with it,
+  # as taking the entry off does.
+  def retype!
+    kind = params.dig(:item, :kind).presence
+    task = params.dig(:item, :task).presence
+    return if kind.nil? && task.nil?
+
+    was_decide = @item.job_kind? && @item.task_decide?
+    question = @item.question
+    @item.retype!(kind: kind || @item.kind, task: task || 'todo')
+    ask_decide!(@item, home) if @item.task_decide? && !was_decide
+    @item.save!
+    question&.destroy! if was_decide && !@item.task_decide?
   end
 
   def item_params
