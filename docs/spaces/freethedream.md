@@ -205,6 +205,34 @@ none. **+ Add a Komponent** offers names the kind suggests, to tap
 (Gathering: Site, Kitchen, Sound, On the day; Build: Materials, Stages,
 Tools; …). A Komponent's page reads its projekt's kind.
 
+### The threshold
+
+Tomas's proposal "Threshold Meter" (2026-10-30; built 2026-11-17): "projects
+that need foundational items, people, money, etc, can add a threshold meter
+that once it hits the project begins."
+
+- A projekt can set, in Edit, **Begins when (optional)**: **People in it**
+  (at least that many members) and **Things sorted** (at least that many
+  things on its checklists sorted, the same count as a Komponent's bar:
+  Brings covered and To dos ticked off). Either or both; an empty box isn't
+  counted (`threshold_people`, `threshold_things`). Only the projekt has
+  one, not its Komponents.
+- **No money measure.** Money moves outside Kronk; chipping in towards
+  something is a Bring ("$400 for permits") and counts as a thing once
+  covered.
+- Its page shows a **meter** under the cover band, above What's yours
+  (`threshold_meter.tsx`): a bar for each measure with "7 of 10", one bar
+  each rather than one combined so it's clear which is short, drawn in
+  segments (one per person or thing) up to 20 and as a smooth fill past
+  that. A projekt without a threshold shows nothing.
+- It **begins** the first time every measure it uses is reached
+  (`Project#check_begun!`, `begun_at`), checked when someone joins, adds,
+  brings or ticks something off, or its owner changes the threshold. The
+  meter becomes **Begun {date}**. It stays begun if someone leaves later;
+  taking the threshold off clears it. Everyone in the projekt but whoever
+  tipped it over gets a Nudge, "A projekt you're in has begun"
+  (`freethedream.projekt.begun`).
+
 ### The checklist
 
 A Komponent's page (and a fractal's) leads with its **checklist**

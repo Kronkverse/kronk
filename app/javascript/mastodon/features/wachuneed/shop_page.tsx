@@ -433,7 +433,11 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
           ) : null}
           <SpaceGrid layout={layout}>
             {shelf.listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                markMine={false}
+              />
             ))}
             {isOwner ? (
               <SpaceCard

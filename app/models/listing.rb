@@ -49,6 +49,27 @@ class Listing < ApplicationRecord
   # What are you offering?). Null is a product, as every older listing is.
   OFFERINGS  = %w(product appointment service trip tickets).freeze
 
+  # How the price reads (docs/spaces/wachuneed.md, Prices). `fixed`: the
+  # amount (a wanted ad's is what the poster pays). `up_to`: a wanted ad's
+  # most. `offers`, `quote`, `trade` and `free` carry no amount. Null reads
+  # as `fixed`, as every older listing does.
+  PRICE_TYPES   = %w(fixed up_to offers quote trade free).freeze
+  PRICE_AMOUNTS = %w(fixed up_to).freeze
+  # What the amount is for: an hour of work, a day... Null is the whole
+  # thing.
+  PRICE_UNITS   = %w(hour day week month session).freeze
+
+  # What a wanted ad is after (docs/spaces/wachuneed.md, Wanted ads),
+  # picked first in its composer: a `thing` someone has, something `made`
+  # for the poster, a `job` done, or someone to `help` for a time. Null on
+  # anything on offer, and on older wanted ads (read as a thing).
+  LOOKING_FOR = %w(thing made job help).freeze
+  # Where the work happens, for anything but a thing. In person or either
+  # says where in `location`.
+  WHERE_MODES = %w(online in_person either).freeze
+  # How many people a wanted ad can take on (an open call).
+  MAX_SPOTS   = 20
+
   # Options (docs/spaces/wachuneed.md, Options): up to MAX_OPTIONS named
   # groups, each of up to MAX_OPTION_CHOICES choices that may add to the
   # price. Stored as JSON on the listing.
@@ -110,6 +131,12 @@ class Listing < ApplicationRecord
   # Sold on another platform: where to get the tickets.
   validates :ticket_url, length: { maximum: 400 }, format: { with: %r{\Ahttps?://\S+\z} }, allow_blank: true
   validates :availability, inclusion: { in: AVAILABILITIES }
+  validates :looking_for, inclusion: { in: LOOKING_FOR }, allow_nil: true
+  validates :where_mode, inclusion: { in: WHERE_MODES }, allow_nil: true
+  validates :spots, numericality: { only_integer: true, in: 1..MAX_SPOTS }
+  validates :price_type, inclusion: { in: PRICE_TYPES }, allow_nil: true
+  validates :price_unit, inclusion: { in: PRICE_UNITS }, allow_nil: true
+  validate  :up_to_is_wanted
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
   validate  :shop_section_is_own
@@ -137,7 +164,9 @@ class Listing < ApplicationRecord
        suffix: :reach, validate: true
 
   before_validation :drop_options_when_wanted
+  before_validation :wanted_details_fit
   before_validation :price_from_variants
+  before_validation :price_fits_type
   before_save :stamp_closed_at
 
   # Stored whole and cut to shape here, like the options: the axes the
@@ -346,6 +375,11 @@ class Listing < ApplicationRecord
     price_cents.nil?
   end
 
+  # A price with an amount: a set one, or up to one.
+  def price_amount?
+    PRICE_AMOUNTS.include?(price_type || 'fixed')
+  end
+
   def close!
     update!(state: 'closed', closed_at: Time.current)
   end
@@ -423,6 +457,35 @@ class Listing < ApplicationRecord
     lowest = offered_variants.pluck('price_cents').compact.min
     self.price_cents    = lowest
     self.price_currency = price_currency.presence || 'AUD' if lowest
+  end
+
+  # A price with no amount (offers, a quote, a trade, free) keeps none, nor
+  # what an amount would be for; and a listing that comes in kinds has a
+  # price per kind, so it has no type of its own.
+  def price_fits_type
+    self.price_type = nil if variants?
+    return if price_amount?
+
+    self.price_cents = nil
+    self.price_unit  = nil
+  end
+
+  # What a wanted ad is after belongs to wanted ads alone, and a thing is
+  # one thing, handed over: no where, no more than one taker.
+  def wanted_details_fit
+    unless wanted?
+      self.looking_for = nil
+      self.due_on      = nil
+    end
+    return unless looking_for.nil? || looking_for == 'thing'
+
+    self.where_mode = nil
+    self.spots      = 1
+  end
+
+  # "Up to" is a budget's ceiling: only something wanted has one.
+  def up_to_is_wanted
+    errors.add(:price_type, :invalid) if price_type == 'up_to' && !wanted?
   end
 
   # Options are for something on offer; a wanted ad has nothing to choose.

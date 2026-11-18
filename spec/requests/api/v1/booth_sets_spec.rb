@@ -442,4 +442,81 @@ RSpec.describe 'API V1 Booth Sets' do
       expect(response).to have_http_status(422)
     end
   end
+
+  # docs/spaces/booth.md, Vibes: up to two of a fixed few, and Musik filters
+  # by one.
+  describe 'vibes' do
+    let(:write_token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
+    let(:write_headers) { { 'Authorization' => "Bearer #{write_token.token}" } }
+    let(:own_set)       { Fabricate(:booth_set, account: user.account, published: true) }
+
+    def save_vibes(vibes)
+      patch "/api/v1/booth_sets/#{own_set.id}", headers: write_headers, as: :json, params: { vibes: vibes }
+    end
+
+    it 'keeps up to two known vibes, and clears them', :aggregate_failures do
+      save_vibes(%w(acoustic poetry))
+      expect(response.parsed_body['vibes']).to eq %w(acoustic poetry)
+
+      save_vibes([])
+      expect(response.parsed_body['vibes']).to eq []
+    end
+
+    it 'refuses an unknown vibe or more than two', :aggregate_failures do
+      save_vibes(%w(jazz))
+      expect(response).to have_http_status(422)
+
+      save_vibes(%w(acoustic beats poetry))
+      expect(response).to have_http_status(422)
+    end
+
+    it 'filters Musik to one vibe' do
+      Fabricate(:booth_set, published: true, title: 'Campfire', vibes: %w(acoustic))
+      Fabricate(:booth_set, published: true, title: 'Warehouse', vibes: %w(beats))
+
+      get '/api/v1/booth_sets', headers: headers, params: { vibe: 'acoustic' }
+
+      expect(response.parsed_body.pluck('title')).to eq ['Campfire']
+    end
+  end
+
+  # docs/spaces/booth.md, Open to collab: the artist's own setting, shown on
+  # their sets.
+  describe 'open to collab' do
+    let(:artist) { Fabricate(:user) }
+
+    before do
+      Fabricate(:booth_set, account: artist.account, published: true, title: 'Open one')
+    end
+
+    it 'marks an artist who is open to collab, and not one who is not', :aggregate_failures do
+      get '/api/v1/booth_sets', headers: headers
+      expect(response.parsed_body.first['artists'].first['account']['open_to_collab']).to be false
+
+      UserKornerSetting.create!(user: artist, korner_slug: 'booth', values: { 'open_to_collab' => true })
+
+      get '/api/v1/booth_sets', headers: headers
+      expect(response.parsed_body.first['artists'].first['account']['open_to_collab']).to be true
+    end
+
+    # Saying yes invites a first message from anyone, Mates or not, the way a
+    # shop does; never across a block.
+    it 'lets anyone message an artist open to collab, and nobody else', :aggregate_failures do
+      chat_headers = { 'Authorization' => "Bearer #{Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read write').token}" }
+
+      post '/api/v1/nudges/conversations', headers: chat_headers, params: { account_id: artist.account_id }
+      expect(response).to have_http_status(403)
+
+      UserKornerSetting.create!(user: artist, korner_slug: 'booth', values: { 'open_to_collab' => true })
+
+      post '/api/v1/nudges/conversations', headers: chat_headers, params: { account_id: artist.account_id }
+      expect(response).to have_http_status(200)
+      post "/api/v1/nudges/conversations/#{response.parsed_body['id']}/messages", headers: chat_headers, params: { body: 'Want to make something?' }
+      expect(response).to have_http_status(201)
+
+      artist.account.block!(user.account)
+      post '/api/v1/nudges/conversations', headers: chat_headers, params: { account_id: artist.account_id }
+      expect(response).to have_http_status(403)
+    end
+  end
 end

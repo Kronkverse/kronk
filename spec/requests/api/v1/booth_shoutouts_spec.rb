@@ -74,4 +74,45 @@ RSpec.describe 'API V1 Booth Shoutouts' do
     expect(response).to have_http_status(200)
     expect(booth_set.shoutouts.reload).to be_empty
   end
+
+  # An album's time runs per track, so its moment is in one of its tracks.
+  describe 'on an album' do
+    let(:album) do
+      Fabricate.build(:booth_set, account: artist, published: true, kind: 'album').tap do |set|
+        2.times do |i|
+          set.tracks.build(position: i, title: "Track #{i + 1}", duration_seconds: 200,
+                           audio_attachment: Fabricate(:media_attachment, account: artist))
+        end
+        set.save!
+      end
+    end
+    let(:second) { album.tracks.second }
+
+    it 'pins a shoutout to a moment in one of its tracks', :aggregate_failures do
+      shout(album, body: 'The bridge', at_seconds: 90, booth_set_track_id: second.id)
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to include('at_seconds' => 90, 'booth_set_track_id' => second.id.to_s)
+    end
+
+    it 'refuses a moment with no track, past the track, or in another set\'s track', :aggregate_failures do
+      shout(album, body: 'Somewhere', at_seconds: 90)
+      expect(response).to have_http_status(422)
+
+      shout(album, body: 'Too far', at_seconds: 300, booth_set_track_id: second.id)
+      expect(response).to have_http_status(422)
+
+      shout(booth_set, body: 'Wrong set', at_seconds: 10, booth_set_track_id: second.id)
+      expect(response).to have_http_status(422)
+    end
+
+    it 'unpins a shoutout whose track came off the album' do
+      shoutout = album.shoutouts.create!(account: user.account, body: 'Gone', at_seconds: 10, booth_set_track: second)
+      second.destroy!
+
+      get "/api/v1/booth_sets/#{album.id}/shoutouts", headers: headers
+
+      expect(response.parsed_body.find { |row| row['id'] == shoutout.id.to_s }).to include('at_seconds' => nil, 'booth_set_track_id' => nil)
+    end
+  end
 end

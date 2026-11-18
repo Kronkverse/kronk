@@ -21,10 +21,10 @@ about:
   what: "Where members offer and ask for things: art they make, stuff they're passing on, and services they offer."
   why: 'Trust comes from being in the same community. Wachuneed helps you find what you need from the people around you.'
   how:
-    - "Browse what's Offered, and what people are looking for under Desired."
+    - 'Browse everything on one page: shops along the top, then what is offered and what people want. Narrow it to Offered or Wanted.'
     - 'List something from the Ж menu, or post a wanted ad.'
     - 'Message the poster in Nudges to sort it out. Kronk handles no payment; you agree that between you.'
-    - 'If you sell what you make, open a shop under Mine.'
+    - 'Under Mine: what is waiting on you, work you are doing, your wanted ads, what you sell (and your shop), and what you bought. If you sell what you make, open a shop there.'
     - 'Under Brands, back the brands whose mission you respect, or propose one.'
     - "Take a listing down once it's gone."
 icon:
@@ -77,6 +77,11 @@ emits:
   - wachuneed.offer.accepted
   - wachuneed.offer.declined # seller declines a buyer's offer; Nudges routes to buyer
   - wachuneed.offer.cancelled # either side calls an accepted booking off; Nudges routes to the other
+  - wachuneed.pitch.made # someone answers a wanted ad; Nudges routes to its poster
+  - wachuneed.pitch.chosen # the poster chooses an answer; Nudges routes to whoever answered
+  - wachuneed.pitch.passed # an answer not chosen (no thanks, or the ad was taken); to whoever answered
+  - wachuneed.pitch.delivered # whoever was chosen marks it delivered; to the poster
+  - wachuneed.pitch.done # the poster marks it done; to whoever did it
   - wachuneed.brand.listed # a proposed brand reached its backers; Nudges routes to the proposer
 
 listens: []
@@ -159,37 +164,34 @@ hub_teaser:
   static: 'Wachuneed — art, stuff, and offerings from the community.'
 
 # SpaceNav view switcher (first entry = default, bare /hub/wachuneed).
-# Four faces on the rotator. The space is Wachuneed; its sections carry
-# plain names (Tal 2026-10-12, Kommons #117425252942751004: the old
-# Wachuneed / Wachumissing / Wachugot did not say what each held).
+# Three faces on the rotator (Tal 2026-11-16: everything on one page,
+# Brands, and your own). Offered, Desired, Shops and Requests were faces
+# of their own until then and redirect (config/routes.rb).
 #
-#   /hub/wachuneed         → home    (a sideways row each of Offered,
-#                                       Desired and Shops; Tal 2026-10-29,
-#                                       Kommons "Home Page")
-#   /hub/wachuneed/offered → offered (live listings on offer)
-#   /hub/wachuneed/desired → desired (live wanted listings)
-#   /hub/wachuneed/shops   → shops   (every shop with something on offer)
-#   /hub/wachuneed/brands  → brands  (brands members back; Proposed ones too)
-#   /hub/wachuneed/mine    → mine    (the caller's own listings)
+#   /hub/wachuneed         → home    (titled Wachuneed, not All: Tal,
+#                                       2026-11-17; shops along the top,
+#                                       then everything
+#                                       offered and wanted in one grid,
+#                                       ?show=offered|wanted narrows it)
+#   /hub/wachuneed/mine    → mine    (your jobs, what you sell and buy,
+#                                       your shop)
+#   /hub/wachuneed/brands  → brands  (brands members back; Proposed ones
+#                                       too; last since 2026-11-16, Tal)
 views:
   - {
       key: home,
-      label: All,
-      tagline: 'Offered, Desired and Shops on one page.',
+      label: Wachuneed,
+      tagline: 'Shops, and everything offered and wanted.',
     }
-  - { key: offered, label: Offered, tagline: 'Things and services on offer.' }
-  - { key: desired, label: Desired, tagline: 'What people are looking for.' }
-  - { key: shops, label: Shops, tagline: 'Sellers with a page of their own.' }
+  - {
+      key: mine,
+      label: Mine,
+      tagline: 'Your jobs, what you sell and buy, and your shop.',
+    }
   - {
       key: brands,
       label: Brands,
       tagline: 'Brands whose mission members back.',
-    }
-  - { key: mine, label: Mine, tagline: 'Your own listings.' }
-  - {
-      key: requests,
-      label: Requests,
-      tagline: 'What people asked of you, and what you asked for.',
     }
 
 header:
@@ -214,18 +216,13 @@ nodes:
         kind: listens_to
         description: Event ticket listings originate in Kalendar.
   # Standard L6: a node for every page someone can navigate to.
-  - id: wachuneed.shops
-    label: Shops
-    url: /hub/wachuneed/shops
-    lifecycle: live
-    spa: true
   - id: wachuneed.brands
     label: Brands
     url: /hub/wachuneed/brands
     lifecycle: live
     spa: true
-  - id: wachuneed.requests
-    label: Requests
-    url: /hub/wachuneed/requests
+  - id: wachuneed.mine
+    label: Mine
+    url: /hub/wachuneed/mine
     lifecycle: live
     spa: true

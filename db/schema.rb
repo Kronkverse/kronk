@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -539,6 +539,47 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.index ["starts_at"], name: "index_booth_lives_on_starts_at"
   end
 
+  create_table "booth_sample_packs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "cover_attachment_id"
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_sample_packs_on_account_id"
+    t.index ["cover_attachment_id"], name: "index_booth_sample_packs_on_cover_attachment_id"
+  end
+
+  create_table "booth_sample_requests", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "booth_sample_id", null: false
+    t.datetime "created_at", null: false
+    t.string "state", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_booth_sample_requests_on_account_id"
+    t.index ["booth_sample_id", "account_id"], name: "index_booth_sample_requests_on_booth_sample_id_and_account_id", unique: true
+  end
+
+  create_table "booth_samples", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "audio_attachment_id", null: false
+    t.bigint "booth_sample_pack_id"
+    t.integer "bpm"
+    t.datetime "created_at", null: false
+    t.integer "duration_seconds", null: false
+    t.string "genre"
+    t.string "musical_key"
+    t.integer "position", default: 0, null: false
+    t.string "sample_type", null: false
+    t.string "terms", default: "free", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "vibes", default: [], null: false, array: true
+    t.index ["account_id"], name: "index_booth_samples_on_account_id"
+    t.index ["audio_attachment_id"], name: "index_booth_samples_on_audio_attachment_id"
+    t.index ["booth_sample_pack_id"], name: "index_booth_samples_on_booth_sample_pack_id"
+  end
+
   create_table "booth_set_artists", force: :cascade do |t|
     t.bigint "account_id"
     t.bigint "booth_set_id", null: false
@@ -550,6 +591,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.index ["account_id"], name: "index_booth_set_artists_on_account_id"
     t.index ["booth_set_id", "account_id"], name: "index_booth_set_artists_on_booth_set_id_and_account_id", unique: true, where: "(account_id IS NOT NULL)"
     t.index ["booth_set_id"], name: "index_booth_set_artists_on_booth_set_id"
+  end
+
+  create_table "booth_set_samples", force: :cascade do |t|
+    t.bigint "booth_sample_id", null: false
+    t.bigint "booth_set_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["booth_sample_id"], name: "index_booth_set_samples_on_booth_sample_id"
+    t.index ["booth_set_id", "booth_sample_id"], name: "index_booth_set_samples_on_booth_set_id_and_booth_sample_id", unique: true
   end
 
   create_table "booth_set_saves", force: :cascade do |t|
@@ -594,6 +645,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.string "title", null: false
     t.jsonb "tracklist", default: [], null: false
     t.datetime "updated_at", null: false
+    t.string "vibes", default: [], null: false, array: true
     t.index ["account_id"], name: "index_booth_sets_on_account_id"
     t.index ["audio_attachment_id"], name: "index_booth_sets_on_audio_attachment_id"
     t.index ["cover_attachment_id"], name: "index_booth_sets_on_cover_attachment_id"
@@ -608,9 +660,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.bigint "booth_set_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "booth_set_track_id"
     t.index ["account_id"], name: "index_booth_shoutouts_on_account_id"
     t.index ["booth_set_id", "created_at"], name: "index_booth_shoutouts_on_booth_set_id_and_created_at"
     t.index ["booth_set_id"], name: "index_booth_shoutouts_on_booth_set_id"
+    t.index ["booth_set_track_id"], name: "index_booth_shoutouts_on_booth_set_track_id"
   end
 
   create_table "budget_items", force: :cascade do |t|
@@ -1207,6 +1261,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
   end
 
   create_table "freethedream_projects", force: :cascade do |t|
+    t.datetime "begun_at"
     t.bigint "cover_media_attachment_id"
     t.datetime "created_at", null: false
     t.text "description", default: "", null: false
@@ -1224,6 +1279,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.bigint "source_idea_id"
     t.string "spaces", default: [], null: false, array: true
     t.date "starts_on"
+    t.integer "threshold_people"
+    t.integer "threshold_things"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["cover_media_attachment_id"], name: "index_freethedream_projects_on_cover_media_attachment_id"
@@ -1559,6 +1616,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.bigint "ticket_date_id"
     t.integer "total_cents"
     t.datetime "updated_at", null: false
+    t.datetime "delivered_at"
+    t.datetime "completed_at"
     t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
     t.index ["listing_id", "starts_at"], name: "index_listing_offers_on_listing_id_and_starts_at", where: "((starts_at IS NOT NULL) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[])))"
     t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"
@@ -1648,6 +1707,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.datetime "updated_at", null: false
     t.jsonb "variants", default: {}, null: false
     t.integer "visibility", default: 0, null: false
+    t.string "price_type"
+    t.string "price_unit"
+    t.string "looking_for"
+    t.string "where_mode"
+    t.date "due_on"
+    t.integer "spots", default: 1, null: false
     t.index ["account_id"], name: "index_listings_on_account_id"
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
@@ -2977,8 +3042,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
   add_foreign_key "booth_live_reminders", "booth_lives", column: "booth_live_id", on_delete: :cascade
   add_foreign_key "booth_lives", "accounts", on_delete: :cascade
   add_foreign_key "booth_lives", "booth_sets", on_delete: :nullify, validate: false
+  add_foreign_key "booth_sample_packs", "accounts", on_delete: :cascade
+  add_foreign_key "booth_sample_packs", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
+  add_foreign_key "booth_sample_requests", "accounts", on_delete: :cascade
+  add_foreign_key "booth_sample_requests", "booth_samples", on_delete: :cascade
+  add_foreign_key "booth_samples", "accounts", on_delete: :cascade
+  add_foreign_key "booth_samples", "booth_sample_packs", on_delete: :cascade
+  add_foreign_key "booth_samples", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_set_artists", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_artists", "booth_sets", on_delete: :cascade
+  add_foreign_key "booth_set_samples", "booth_samples", on_delete: :cascade
+  add_foreign_key "booth_set_samples", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_set_saves", "accounts", on_delete: :cascade
   add_foreign_key "booth_set_saves", "booth_sets", on_delete: :cascade
   add_foreign_key "booth_set_tracks", "booth_sets", on_delete: :cascade
@@ -2987,6 +3061,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
   add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
   add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
   add_foreign_key "booth_shoutouts", "accounts", on_delete: :cascade
+  add_foreign_key "booth_shoutouts", "booth_set_tracks", on_delete: :nullify, validate: false
   add_foreign_key "booth_shoutouts", "booth_sets", on_delete: :cascade
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade

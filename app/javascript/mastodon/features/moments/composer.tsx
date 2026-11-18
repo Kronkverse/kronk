@@ -19,6 +19,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
+import type { MessageDescriptor } from 'react-intl';
 
 import axios from 'axios';
 
@@ -32,6 +33,7 @@ import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import MovieIcon from '@/material-icons/400-24px/movie.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
+import PhotoFilterIcon from '@/material-icons/400-24px/photo_filter.svg?react';
 import api, { apiRequestGet, apiRequestPost } from 'mastodon/api';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
 import {
@@ -146,6 +148,17 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     };
   }, []);
   const [active, setActive] = useState(0);
+  // Trying filters on the active photo: swipe across it (Tal, 2026-11-12).
+  const [filtering, setFiltering] = useState(false);
+  useEffect(() => {
+    setFiltering(false);
+  }, [active]);
+  const openFilter = useCallback(() => {
+    setFiltering(true);
+  }, []);
+  const closeFilter = useCallback(() => {
+    setFiltering(false);
+  }, []);
   // Stage modes: the voice recorder takes over the hero while arming /
   // recording; `addMenu` is the little Camera/Upload/Voice popover the
   // strip's "+" opens.
@@ -601,33 +614,14 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
                 onRemove={removeActive}
                 onPrev={active > 0 ? goPrev : undefined}
                 onNext={active < items.length - 1 ? goNext : undefined}
+                filtering={filtering}
+                onFilter={openFilter}
+                onFilterDone={closeFilter}
+                onFilm={setFilmActive}
               />
             )
           )}
         </div>
-
-        {activeItem && isStill(activeItem) && (
-          <FilmRow label={intl.formatMessage(messages.filmLooks)}>
-            <FilmChip
-              id={null}
-              label={intl.formatMessage(messages.filmOriginal)}
-              selected={!activeItem.film}
-              disabled={posting}
-              onSelect={setFilmActive}
-            />
-            {FILM_LOOKS.map((look) => (
-              <FilmChip
-                key={look.id}
-                id={look.id}
-                label={look.id}
-                title={look.description}
-                selected={activeItem.film === look.id}
-                disabled={posting}
-                onSelect={setFilmActive}
-              />
-            ))}
-          </FilmRow>
-        )}
 
         {(items.length > 0 || live.length > 0) && (
           <div className='moments-composer__strip'>
@@ -761,76 +755,65 @@ const AddMenuItem: React.FC<{
   </button>
 );
 
-// ── the film look row ──────────────────────────────────────────────
-// Scrolls sideways when the chips don't fit (a phone). `data-more` is true
-// while there are chips off the right edge, which fades that edge as a hint
-// that the row slides.
-const FilmRow: React.FC<{ label: string; children: React.ReactNode }> = ({
-  label,
-  children,
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [more, setMore] = useState(false);
+// ── filters ──────────────────────────────────────────────────────
+// Original, then the film looks, in the order a swipe steps through them.
+const FILTERS: readonly (string | null)[] = [
+  null,
+  ...FILM_LOOKS.map((look) => look.id),
+];
+// How far a finger moves across the photo to count as a swipe.
+const SWIPE_PX = 40;
 
-  const measure = useCallback(() => {
-    const el = ref.current;
-    if (!el) return;
-    setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-  }, []);
-
-  useEffect(() => {
-    measure();
-    const el = ref.current;
-    if (!el || typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-    };
-  }, [measure]);
-
-  return (
-    <div
-      ref={ref}
-      className='moments-composer__films'
-      role='group'
-      aria-label={label}
-      data-more={more}
-      onScroll={measure}
-    >
-      {children}
-    </div>
-  );
+// What each filter is called and does, in plain words: the names are
+// plants, which say nothing about the look (Tal, 2026-11-12: "I dont
+// understand what they're about").
+const filterMessages = defineMessages({
+  original: { id: 'moments.filter.original', defaultMessage: 'Original' },
+  banksia: { id: 'moments.filter.banksia', defaultMessage: 'Banksia' },
+  saltbush: { id: 'moments.filter.saltbush', defaultMessage: 'Saltbush' },
+  bluegum: { id: 'moments.filter.bluegum', defaultMessage: 'Bluegum' },
+  wattle: { id: 'moments.filter.wattle', defaultMessage: 'Wattle' },
+  ironbark: { id: 'moments.filter.ironbark', defaultMessage: 'Ironbark' },
+  lineOriginal: {
+    id: 'moments.filter.line.original',
+    defaultMessage: 'As you took it',
+  },
+  lineBanksia: {
+    id: 'moments.filter.line.banksia',
+    defaultMessage: 'Warm and soft',
+  },
+  lineSaltbush: {
+    id: 'moments.filter.line.saltbush',
+    defaultMessage: 'Faded and cool',
+  },
+  lineBluegum: {
+    id: 'moments.filter.line.bluegum',
+    defaultMessage: 'Deep, rich colour',
+  },
+  lineWattle: {
+    id: 'moments.filter.line.wattle',
+    defaultMessage: 'Teal shadows, amber light',
+  },
+  lineIronbark: {
+    id: 'moments.filter.line.ironbark',
+    defaultMessage: 'Black and white',
+  },
+});
+const FILTER_NAMES: Record<string, MessageDescriptor> = {
+  original: filterMessages.original,
+  banksia: filterMessages.banksia,
+  saltbush: filterMessages.saltbush,
+  bluegum: filterMessages.bluegum,
+  wattle: filterMessages.wattle,
+  ironbark: filterMessages.ironbark,
 };
-
-// ── one film look in the picker row ────────────────────────────────
-const FilmChip: React.FC<{
-  id: string | null;
-  label: string;
-  title?: string;
-  selected: boolean;
-  disabled: boolean;
-  onSelect: (id: string | null) => void;
-}> = ({ id, label, title, selected, disabled, onSelect }) => {
-  const handleClick = useCallback(() => {
-    onSelect(id);
-  }, [onSelect, id]);
-  return (
-    <button
-      type='button'
-      className={
-        selected
-          ? 'moments-composer__film moments-composer__film--active'
-          : 'moments-composer__film'
-      }
-      onClick={handleClick}
-      disabled={disabled}
-      aria-pressed={selected}
-      title={title}
-    >
-      {label}
-    </button>
-  );
+const FILTER_LINES: Record<string, MessageDescriptor> = {
+  original: filterMessages.lineOriginal,
+  banksia: filterMessages.lineBanksia,
+  saltbush: filterMessages.lineSaltbush,
+  bluegum: filterMessages.lineBluegum,
+  wattle: filterMessages.lineWattle,
+  ironbark: filterMessages.lineIronbark,
 };
 
 // ── full-size hero of the active tile ──────────────────────────────
@@ -844,6 +827,10 @@ const Hero: React.FC<{
   onRemove: () => void;
   onPrev?: () => void;
   onNext?: () => void;
+  filtering: boolean;
+  onFilter: () => void;
+  onFilterDone: () => void;
+  onFilm: (film: string | null) => void;
 }> = ({
   item,
   index,
@@ -854,10 +841,58 @@ const Hero: React.FC<{
   onRemove,
   onPrev,
   onNext,
+  filtering,
+  onFilter,
+  onFilterDone,
+  onFilm,
 }) => {
   const intl = useIntl();
+  // Filters: swipe across the photo, or tap the arrows, to step through
+  // Original and the looks; the photo shows each as you land on it.
+  const film = item.kind === 'media' ? item.film : null;
+  const at = Math.max(0, FILTERS.indexOf(film ?? null));
+  const stepFilter = useCallback(
+    (by: number) => {
+      onFilm(FILTERS[(at + by + FILTERS.length) % FILTERS.length] ?? null);
+    },
+    [at, onFilm],
+  );
+  const filterPrev = useCallback(() => {
+    stepFilter(-1);
+  }, [stepFilter]);
+  const filterNext = useCallback(() => {
+    stepFilter(1);
+  }, [stepFilter]);
+  const swipeFrom = useRef<number | null>(null);
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      swipeFrom.current = e.clientX;
+    },
+    [],
+  );
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const from = swipeFrom.current;
+      swipeFrom.current = null;
+      if (from === null) return;
+      const dx = e.clientX - from;
+      if (Math.abs(dx) < SWIPE_PX) return;
+      stepFilter(dx < 0 ? 1 : -1);
+    },
+    [stepFilter],
+  );
+  const filterName = film ?? 'original';
+
   return (
-    <div className='moments-composer__hero'>
+    <div
+      className={
+        filtering
+          ? 'moments-composer__hero moments-composer__hero--filtering'
+          : 'moments-composer__hero'
+      }
+      onPointerDown={filtering ? handlePointerDown : undefined}
+      onPointerUp={filtering ? handlePointerUp : undefined}
+    >
       {item.kind === 'voice' ? (
         <div className='moments-composer__hero-voice'>
           <Icon id='mic' icon={MicIcon} />
@@ -904,52 +939,120 @@ const Hero: React.FC<{
           : `${(index + 1).toString()} / ${total.toString()}`}
       </span>
 
-      <div className='moments-composer__hero-tools'>
-        {isStill(item) && (
+      {filtering && (
+        <div className='moments-composer__filter' aria-live='polite'>
           <button
             type='button'
-            className='moments-composer__hero-tool'
-            onClick={onEdit}
-            disabled={disabled}
-            aria-label={intl.formatMessage(
-              item.overlays.length > 0 ? messages.editText : messages.addText,
-            )}
+            className='moments-composer__filter-step moments-composer__filter-step--prev'
+            onClick={filterPrev}
+            aria-label={intl.formatMessage(messages.filterPrev)}
           >
-            <EditIcon />
+            <ChevronLeftIcon />
           </button>
-        )}
-        {isStill(item) && (
+          <div className='moments-composer__filter-text'>
+            <span className='moments-composer__filter-name'>
+              {intl.formatMessage(
+                FILTER_NAMES[filterName] ?? filterMessages.original,
+              )}
+            </span>
+            <span className='moments-composer__filter-line'>
+              {intl.formatMessage(
+                FILTER_LINES[filterName] ?? filterMessages.lineOriginal,
+              )}
+            </span>
+            <span className='moments-composer__filter-dots' aria-hidden>
+              {FILTERS.map((f, i) => (
+                <span
+                  key={f ?? 'original'}
+                  className={
+                    i === at
+                      ? 'moments-composer__filter-dot moments-composer__filter-dot--on'
+                      : 'moments-composer__filter-dot'
+                  }
+                />
+              ))}
+            </span>
+          </div>
           <button
             type='button'
-            className='moments-composer__hero-tool'
-            onClick={onTagPeople}
-            disabled={disabled}
-            aria-label={intl.formatMessage(
-              item.taggedAccounts.length > 0
-                ? messages.editTags
-                : messages.addTags,
-            )}
+            className='moments-composer__filter-step moments-composer__filter-step--next'
+            onClick={filterNext}
+            aria-label={intl.formatMessage(messages.filterNext)}
           >
-            <PersonAddIcon />
-            {item.taggedAccounts.length > 0 && (
-              <span className='moments-composer__hero-tool-count'>
-                {item.taggedAccounts.length}
-              </span>
-            )}
+            <ChevronRightIcon />
           </button>
-        )}
-        <button
-          type='button'
-          className='moments-composer__hero-tool'
-          onClick={onRemove}
-          disabled={disabled}
-          aria-label={intl.formatMessage(messages.remove)}
-        >
-          <CloseIcon />
-        </button>
-      </div>
+        </div>
+      )}
 
-      {onPrev && (
+      {filtering ? (
+        <div className='moments-composer__hero-tools'>
+          <button
+            type='button'
+            className='moments-composer__filter-done'
+            onClick={onFilterDone}
+          >
+            {intl.formatMessage(messages.filterDone)}
+          </button>
+        </div>
+      ) : (
+        <div className='moments-composer__hero-tools'>
+          {isStill(item) && (
+            <button
+              type='button'
+              className='moments-composer__hero-tool moments-composer__hero-tool--labelled'
+              onClick={onFilter}
+              disabled={disabled}
+            >
+              <PhotoFilterIcon />
+              <span>{intl.formatMessage(messages.filter)}</span>
+            </button>
+          )}
+          {isStill(item) && (
+            <button
+              type='button'
+              className='moments-composer__hero-tool'
+              onClick={onEdit}
+              disabled={disabled}
+              aria-label={intl.formatMessage(
+                item.overlays.length > 0 ? messages.editText : messages.addText,
+              )}
+            >
+              <EditIcon />
+            </button>
+          )}
+          {isStill(item) && (
+            <button
+              type='button'
+              className='moments-composer__hero-tool'
+              onClick={onTagPeople}
+              disabled={disabled}
+              aria-label={intl.formatMessage(
+                item.taggedAccounts.length > 0
+                  ? messages.editTags
+                  : messages.addTags,
+              )}
+            >
+              <PersonAddIcon />
+              {item.taggedAccounts.length > 0 && (
+                <span className='moments-composer__hero-tool-count'>
+                  {item.taggedAccounts.length}
+                </span>
+              )}
+            </button>
+          )}
+          <button
+            type='button'
+            className='moments-composer__hero-tool'
+            onClick={onRemove}
+            disabled={disabled}
+            aria-label={intl.formatMessage(messages.remove)}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+      )}
+
+      {onPrev && !filtering && (
         <button
           type='button'
           className='moments-composer__hero-nav moments-composer__hero-nav--prev'
@@ -959,7 +1062,7 @@ const Hero: React.FC<{
           <ChevronLeftIcon />
         </button>
       )}
-      {onNext && (
+      {onNext && !filtering && (
         <button
           type='button'
           className='moments-composer__hero-nav moments-composer__hero-nav--next'
@@ -1115,13 +1218,15 @@ const messages = defineMessages({
     id: 'moments.composer.edit_tags',
     defaultMessage: 'Edit tagged people',
   },
-  filmLooks: {
-    id: 'moments.composer.film_looks',
-    defaultMessage: 'Film look',
+  filter: { id: 'moments.composer.filter', defaultMessage: 'Filter' },
+  filterDone: { id: 'moments.composer.filter_done', defaultMessage: 'Done' },
+  filterPrev: {
+    id: 'moments.composer.filter_prev',
+    defaultMessage: 'Previous filter',
   },
-  filmOriginal: {
-    id: 'moments.composer.film_original',
-    defaultMessage: 'Original',
+  filterNext: {
+    id: 'moments.composer.filter_next',
+    defaultMessage: 'Next filter',
   },
   remove: { id: 'moments.composer.remove', defaultMessage: 'Remove' },
   previous: { id: 'moments.composer.previous', defaultMessage: 'Previous' },

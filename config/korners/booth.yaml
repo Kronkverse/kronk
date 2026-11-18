@@ -8,16 +8,18 @@ tagline: 'Shared self expression through the magic of audial art.'
 # What the i moon's pop-up says (SpaceInfoDialog). A first draft
 # (2026-10-16), for Tal to edit on shadow.
 about:
-  what: "Kronk's stage for music: DJ sets, mixes, tracks, albums, readings and live sets, to be listened to."
+  what: "Kronk's stage for music: DJ sets, mixes, tracks, albums, readings and live sets, to be listened to, and samples to make music with."
   why: 'Music made by people on Kronk should be heard by the people around them. The Booth plays it and credits who made it.'
   how:
-    - 'Upload a set from the Ж menu (Upload or go live): the audio file, a title and a cover. That is all it needs.'
+    - 'Upload a set from the Ж menu (Upload, go live or share samples): the audio file, a title and a cover. That is all it needs.'
     - 'Putting out an album or EP? Choose Album or EP and pick all its files at once. Each one is a track, played in the order you set.'
     - 'Every member can find it under Musik. Post it to your feed as you upload, or later from its page, so your people hear it.'
     - 'Credit who you played with. Once they confirm, the set shows under their name in Artists too.'
     - 'Play live: choose Go live in the same menu, now or at a time you set. Members listen in from Live.'
     - 'Press play and keep listening as you move around Kronk. Tap a time in the track list to jump to it.'
     - 'Tap ♡ on a set to keep it in My sets. Only you see what you save.'
+    - 'Share samples from the same menu: loops, vocals, beats, one-shots and stems up to two minutes, alone or as a pack. Choose Free with credit, or Ask first to answer each request.'
+    - 'Made a set with someone’s sample? List it under Samples used, so the set credits them and they hear about it.'
 icon:
   material: headphones
 render_target: native
@@ -61,6 +63,12 @@ emits:
   - booth.set.tagged
   # Someone left a shoutout on a set; Nudges tells the set's owner.
   - booth.set.shouted
+  # Samples (docs/spaces/booth.md, Samples): someone asked to use an
+  # ask-first sample, its maker answered, or a set listed it as used.
+  - booth.sample.asked
+  - booth.sample.granted
+  - booth.sample.declined
+  - booth.sample.used
 listens: []
 
 # Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)). Booth
@@ -103,7 +111,16 @@ subscription:
 # them (and `default_mix_visibility` must land with the Kronk
 # reach ladder [public, orbit, mates, self_only], not the pre-2.0
 # Mastodon terms [public, unlisted, followers] it carried).
-settings: []
+# `open_to_collab` (2026-11-17, Kommons "Booth Revamp"): read by
+# BoothCollab, which marks you on your sets and artist page and lets anyone
+# in the Booth message you, Mates or not. Also toggled from My sets.
+settings:
+  - name: open_to_collab
+    kind: boolean
+    default: false
+    scope: user
+    label: Open to collab
+    description: Anyone in the Booth can message you about making something together, Mates or not, and your sets and artist page say so.
 
 # Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
 # Korner attachments §2.6): this korner's Konnections and how they work.
@@ -130,9 +147,10 @@ konnect:
   label: 'Upload a set'
 
 compose:
-  # One entry for both: the composer switches between Upload a set and
-  # Go live (`/hub/booth/composer/live`).
-  label: 'Upload or go live'
+  # One entry for all three: the composer switches between Upload a set,
+  # Go live (`/hub/booth/composer/live`) and Share samples
+  # (`/hub/booth/composer/sample`).
+  label: 'Upload, go live or share samples'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
   # the Booth landing (docs/decisions.md 2026-08-12).
   # `/hub/booth/new` still resolves to the same overlay as a legacy
@@ -150,6 +168,13 @@ views:
       key: musik,
       label: Musik,
       tagline: 'Sets and mixes shared as living sound',
+    }
+  # Samples (2026-11-17, Kommons "Booth Revamp"): loops, vocals and beats
+  # shared for others to make things with, credited where they're used.
+  - {
+      key: samples,
+      label: Samples,
+      tagline: 'Loops, vocals and beats to make something with',
     }
   - { key: live, label: Live, tagline: 'Sets played live, now and coming up' }
   - {

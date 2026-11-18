@@ -21,12 +21,12 @@ tagline: 'The community, seen from inside.'
 # What the i moon's pop-up says (SpaceInfoDialog). A first draft
 # (2026-10-16), for Tal to edit on shadow.
 about:
-  what: "Kronk's people, four ways: your Mates, whoever posted last at the top; Discover, for finding people you don't know yet; Everyone, the whole list of people who chose to be visible, A to Z; and the Orb, everyone and their connections drawn as a sphere you can spin and explore."
+  what: "Kronk's people, three ways: Kommunity, people you might meet in a row along the top and everyone who chose to be visible underneath, A to Z; your Mates, whoever posted last at the top; and the Orb, everyone and their connections drawn as a sphere you can spin and explore."
   why: 'A timeline only shows your own corner. Kommunity shows the whole community from inside, and helps you find your next Mate.'
   how:
-    - 'Mates is where you start: your Mates, whoever posted most recently first.'
-    - "Turn to Discover for people open to being found, your Mates' Mates, and people in your Krews."
-    - 'Turn to Everyone for the whole list of people who chose to be visible, A to Z, with search.'
+    - "Kommunity is where you start: swipe the row for your Mates' Mates, then people in your Krews, then anyone open to being found."
+    - 'Under it is everyone who chose to be visible, A to Z, each saying whether you are Mates.'
+    - 'Turn to Mates for your Mates, whoever posted most recently first.'
     - 'Turn to the Orb, then drag to spin it and pinch or scroll to zoom. Tap someone to light up their connections.'
     - "Send a Mate request from someone's card."
     - 'Choose who can find you in your privacy settings.'
@@ -82,35 +82,32 @@ launch:
 enforced: true
 
 # SpaceNav view switcher. First entry is the default (bare
-# /hub/kommunity). Icons are text labels for now; picks in a
-# follow-up per the pattern set with Kuestions (#1146).
+# /hub/kommunity).
 #
-#   discover the landing view: the three-layer drawer of people to
-#            meet, each account's own `kommunity_discoverability`
-#            (everyone/orbit/nobody) gating whether they appear.
-#   everyone the whole alphabetical directory of people who chose to
-#            be visible to the viewer, with search.
-#   orb      the 3D graph view, last.
+#   kommunity the first page: a sideways row of people to discover
+#             (Orbit, then your Krews, then Kronkers, each group signed;
+#             someone in two groups shows in the first), then everyone
+#             visible to the viewer, A to Z, each row saying where you
+#             stand as Mates.
+#   mates     your Mates, most recent poster first.
+#   orb       the 3D graph view, last.
 #
-# Order per Tal's Kommons proposal "Landing Page" (#117483791865274639,
-# 2026-10-26): "Kommunity landing page should be the 'Discover' page,
-# the Orb should be last. Also having a straight up list should be a
-# middle page". Was Orb first (the default) until then.
-# Mates leads since 2026-11-11 (Tal's Kommons proposal "Kommunity Page",
-# #117596933443323274: "The 'Discover' page shouldn't be the landing page.
-# Maybe a list of the users mates should be first page, ordered by most
-# recent posts made").
+# Tal, 2026-11-17 (Kommons "Kommunity Page", #117596933443323274): the
+# first page is "Kommunity", with Discover as a row along the top and the
+# list of all visible Kronkers under it. Discover and Everyone were views
+# of their own until then; /hub/kommunity/discover and /everyone 301 to
+# the first page. Mates led for a week before that (2026-11-11), and
+# Discover before that (Kommons "Landing Page", 2026-10-26).
 views:
-  - { key: mates, label: Mates, tagline: 'Your Mates, latest posts first' }
   - {
-      key: discover,
-      label: Discover,
-      tagline: 'People who chose to be findable',
+      key: kommunity,
+      label: Kommunity,
+      tagline: 'People to meet, and everyone A to Z',
     }
-  - { key: everyone, label: Everyone, tagline: 'Everyone you can find, A to Z' }
+  - { key: mates, label: Mates, tagline: 'Your Mates, latest posts first' }
   - { key: orb, label: Orb, tagline: 'Everyone, seen from inside' }
 header:
-  # Title itself cycles through Mates → Discover → Everyone → Orb with the shared
+  # Title itself cycles through Kommunity → Mates → Orb with the shared
   # ScopeTitle rotator (same as /home, Map, Kalendar, Albutts,
   # Kommons). Tal 2026-08-19: bring the title selector into Kommunity.
   # Was `picker: menu` before this — the dropdown didn't read as a
@@ -126,6 +123,6 @@ nodes:
     lifecycle: live
     spa: true
   # `kommunity.discover` was here. Discover is one of Kommunity's views
-  # (see `views:` above — Mates, Discover, Everyone and Orb), not a space of its own, and the
+  # (see `views:` above — Kommunity, Mates and Orb), not a space of its own, and the
   # Directory carries one node per space: a proposal about Discover is a
   # proposal about Kommunity (Tal 2026-09-10).

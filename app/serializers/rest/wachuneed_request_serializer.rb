@@ -5,7 +5,15 @@
 class REST::WachuneedRequestSerializer < ActiveModel::Serializer
   attributes :id, :state, :quantity, :choices, :total_cents, :price_currency,
              :message, :created_at, :responded_at, :listing,
-             :starts_at, :ends_at, :route, :details, :cancelled_at, :cancelled_by_seller
+             :starts_at, :ends_at, :route, :details, :cancelled_at, :cancelled_by_seller,
+             :pitch, :amount_cents, :delivered_at, :completed_at
+
+  # An answer to a wanted ad (docs/spaces/wachuneed.md, Answering a wanted
+  # ad): `amount_cents` is the price they gave, for what the ad's price is
+  # for (`listing.price_unit`).
+  def pitch
+    object.listing.wanted?
+  end
 
   # Who called an accepted booking off: the seller, or the person who
   # booked.
@@ -29,6 +37,8 @@ class REST::WachuneedRequestSerializer < ActiveModel::Serializer
       slug: listing.slug,
       title: listing.title,
       state: listing.state,
+      kind: listing.kind,
+      price_unit: listing.price_unit,
       cover_url: cover&.file&.url(:small),
       seller: REST::AccountSerializer.new(listing.account).as_json,
     }

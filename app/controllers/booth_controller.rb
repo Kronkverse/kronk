@@ -37,4 +37,25 @@ class BoothController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     not_found
   end
+
+  # A sample's file, saved rather than played (docs/spaces/booth.md,
+  # Samples), for whoever its terms allow: anyone when it's free with
+  # credit, on ask first whoever its maker said yes to. A web route, not the
+  # API, so a plain link carries the session. Saved as its title, through a
+  # short-lived signed URL as MediaController#download does.
+  def download_sample
+    sample = BoothSample.find(params[:id])
+    return not_found if sample.account.blocking?(current_account) || !sample.usable_by?(current_account)
+
+    media = sample.audio_attachment
+    filename = "#{sample.title.parameterize.presence || "sample-#{sample.id}"}#{File.extname(media.file_file_name.to_s).downcase}"
+    if media.file.respond_to?(:s3_object)
+      disposition = ActionDispatch::Http::ContentDisposition.format(disposition: 'attachment', filename: filename)
+      redirect_to media.file.s3_object(:original).presigned_url(:get, expires_in: 5.minutes.to_i, response_content_disposition: disposition), allow_other_host: true
+    else
+      send_file media.file.path(:original), filename: filename, disposition: 'attachment', type: media.file_content_type
+    end
+  rescue ActiveRecord::RecordNotFound
+    not_found
+  end
 end

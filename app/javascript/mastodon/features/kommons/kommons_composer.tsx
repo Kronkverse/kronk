@@ -8,7 +8,6 @@ import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import {
   apiCreateKommonsProposal,
-  apiCreateProposalTask,
   apiGetKommonsNodes,
 } from 'mastodon/api/kommons_nodes';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
@@ -67,11 +66,6 @@ const messages = defineMessages({
     id: 'propose.body_placeholder',
     defaultMessage: 'What should change, and why?',
   },
-  stepPlaceholder: {
-    id: 'propose.step_placeholder',
-    defaultMessage: 'A step to complete',
-  },
-  removeStep: { id: 'propose.remove_step', defaultMessage: 'Remove step' },
   removeDoc: { id: 'propose.remove_doc', defaultMessage: 'Remove document' },
   nodesError: {
     id: 'propose.nodes_error',
@@ -91,7 +85,6 @@ const messages = defineMessages({
 interface ProposalDraftParams {
   title?: string;
   body?: string;
-  steps?: string[];
   kornerName?: string;
   kornerSlug?: string;
   kornerGlyph?: string;
@@ -225,9 +218,8 @@ export const KommonsComposer: React.FC<Props> = ({
 
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  // The steps: an extendable list, each becomes a Task on the new proposal.
-  // Start with one empty row so the affordance is visible.
-  const [steps, setSteps] = useState<string[]>(['']);
+  // No Steps here (Tal, 2026-11-12, Kommons "Proposer Composer": "Let's
+  // remove the 'Steps' section"). A new proposal starts without steps.
   // Design docs staged locally; uploaded to the proposal once it's created.
   const [docs, setDocs] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -258,7 +250,6 @@ export const KommonsComposer: React.FC<Props> = ({
       const p = d?.params ?? {};
       setTitle(p.title ?? '');
       setBody(p.body ?? '');
-      setSteps(p.steps && p.steps.length > 0 ? p.steps : ['']);
       setKornerName(p.kornerName ?? '');
       setKornerSlug(p.kornerSlug ?? '');
       setKornerGlyph(p.kornerGlyph ?? '');
@@ -278,14 +269,13 @@ export const KommonsComposer: React.FC<Props> = ({
       params: isNewKorner
         ? {
             body,
-            steps,
             kornerName,
             kornerSlug,
             kornerGlyph,
             kornerIcon,
             kornerPurpose,
           }
-        : { title, body, steps },
+        : { title, body },
     },
     hasContent:
       (isNewKorner
@@ -294,9 +284,7 @@ export const KommonsComposer: React.FC<Props> = ({
           kornerGlyph !== '' ||
           kornerIcon.trim() !== '' ||
           kornerPurpose.trim() !== ''
-        : title.trim() !== '') ||
-      body.trim() !== '' ||
-      steps.some((s) => s.trim() !== ''),
+        : title.trim() !== '') || body.trim() !== '',
     apply: applyDraft,
     describe: (d) => (isNewKorner ? d.params.kornerName : d.params.title),
     paused: submitting,
@@ -354,22 +342,6 @@ export const KommonsComposer: React.FC<Props> = ({
       !submitting &&
       !resolving;
 
-  const handleStepChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const i = Number(e.currentTarget.dataset.index);
-      const value = e.target.value;
-      setSteps((prev) => prev.map((s, idx) => (idx === i ? value : s)));
-    },
-    [],
-  );
-  const addStep = useCallback(() => {
-    setSteps((prev) => [...prev, '']);
-  }, []);
-  const removeStep = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const i = Number(e.currentTarget.dataset.index);
-    setSteps((prev) => prev.filter((_, idx) => idx !== i));
-  }, []);
-
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setTitle(e.target.value);
@@ -396,7 +368,6 @@ export const KommonsComposer: React.FC<Props> = ({
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
-    const cleanSteps = steps.map((s) => s.trim()).filter(Boolean);
     // Korner Composer path — compose the structured fields into a
     // proposal title + summary + body so a shipped proposal has all
     // the manifest-shape hints the eventual `config/korners/<slug>.yaml`
@@ -439,20 +410,13 @@ export const KommonsComposer: React.FC<Props> = ({
       ...(targetNodeId ? { node_id: targetNodeId } : {}),
     })
       .then(async (created) => {
-        // Steps become Tasks; staged design docs upload as attachments. The
-        // attachment route is nested under a persisted proposal, so it must
-        // run after create. Best-effort: the proposal exists, so a step or
-        // a document that fails is named in an alert and the rest carries
-        // on. Throwing here would leave the composer open on a proposal
-        // already made, and pressing again would make it twice.
+        // Staged design docs upload as attachments. The attachment route
+        // is nested under a persisted proposal, so it must run after
+        // create. Best-effort: the proposal exists, so a document that
+        // fails is named in an alert and the rest carries on. Throwing
+        // here would leave the composer open on a proposal already made,
+        // and pressing again would make it twice.
         const unsaved: string[] = [];
-        for (const step of cleanSteps) {
-          try {
-            await apiCreateProposalTask(created.id, step);
-          } catch {
-            unsaved.push(`“${step}”`);
-          }
-        }
         for (const file of docs) {
           const form = new FormData();
           form.append('file', file);
@@ -492,7 +456,6 @@ export const KommonsComposer: React.FC<Props> = ({
     intl,
     title,
     body,
-    steps,
     docs,
     targetNodeId,
     finishDraft,
@@ -694,51 +657,6 @@ export const KommonsComposer: React.FC<Props> = ({
           rows={5}
         />
       )}
-
-      <ComposeSection
-        title={
-          <FormattedMessage id='propose.steps_label' defaultMessage='Steps' />
-        }
-      >
-        <ComposeHint>
-          <FormattedMessage
-            id='propose.steps_hint'
-            defaultMessage='Break the proposal into steps to tick off as each is done. Optional — add as many as you need.'
-          />
-        </ComposeHint>
-        <ol className='propose-page__steps'>
-          {steps.map((step, i) => (
-            <li key={i} className='propose-page__step'>
-              <span className='propose-page__step-num'>{i + 1}</span>
-              <ComposeInput
-                value={step}
-                data-index={i}
-                onChange={handleStepChange}
-                placeholder={intl.formatMessage(messages.stepPlaceholder)}
-                maxLength={240}
-              />
-              {steps.length > 1 && (
-                <button
-                  type='button'
-                  className='propose-page__step-remove'
-                  data-index={i}
-                  onClick={removeStep}
-                  aria-label={intl.formatMessage(messages.removeStep)}
-                >
-                  ×
-                </button>
-              )}
-            </li>
-          ))}
-        </ol>
-        <button
-          type='button'
-          className='propose-page__add-step'
-          onClick={addStep}
-        >
-          <FormattedMessage id='propose.add_step' defaultMessage='+ Add step' />
-        </button>
-      </ComposeSection>
 
       <ComposeSection
         title={

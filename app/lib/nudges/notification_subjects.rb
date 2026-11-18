@@ -20,6 +20,7 @@ module Nudges
       'Question' => '/hub/kuestions/answered?k=%<id>s',
       'BoothSet' => '/hub/booth/sets/%<id>s',
       'BoothLive' => '/hub/booth/live/%<id>s',
+      'BoothSample' => '/hub/booth/samples/%<id>s',
       'Album' => '/hub/albutts/albums/%<id>s',
       'Freethedream::Project' => '/hub/freethedream/p/%<id>s',
       'Freethedream::Item' => '/hub/freethedream/i/%<id>s',

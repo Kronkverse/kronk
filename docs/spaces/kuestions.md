@@ -107,6 +107,14 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
   people in the krew should be able to see answers, whether they've
   answered it themselves or not"): whoever can see it sees every answer
   (`Kuestions::VisibilityGate`, `Question#homed?`), locked or not.
+- **In the feed, for its people only** (Tal, 2026-11-15: "everyone who's in
+  it will see it pop up in their timeline and be able to answer it"): asking
+  makes a feed post like an everyone's Kuestion, but it reaches only the
+  Krew's members (`self_only` plus the Krew), or only the people who have
+  joined the projekt when it is asked (`self_only` plus each of them added
+  by name; a Krew's members are in its projekts), not everyone who can see
+  the projekt (`Kuestions::PublishQuestion`).
+  The card says where it was asked ("In <name>") and opens the answer sheet.
 - **Kuestions is a space a Krew turns on** (decisions.md, 2026-11-08, "Kuestions
   is a Krew space"): a `kuestions` row in `krew_korners`. On the Krew page,
   Konnect → Kuestions turns it on (manifest `konnect.space: true`; the
@@ -118,7 +126,7 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
 - **Where it shows:** with the space on, on its Krew's or projekt's page
   (`features/questions/home_kuestions.tsx`), a row of cards with Ask last
   (Ask alone when there are none yet), from `GET /api/v2/kuestions?krew_id=`
-  or `?project_id=`. Not in the Deck, and it makes no feed post. It is on
+  or `?project_id=`. Not in the Deck. It is on
   your Answered list once you've answered or asked it, while you can see it.
 - **Opening one** (Tal, 2026-11-09): a card opens the standard pop-up over
   the page (`home_kuestion_dialog.tsx`, the compose shell), not the

@@ -9,20 +9,23 @@ import {
 
 import { Link, useHistory } from 'react-router-dom';
 
+import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
+import { useAppDispatch } from 'mastodon/store';
 
 import type { Proposal } from '../types';
 
 import { ProposalAttachments } from './proposal_attachments';
 import { ProposalBacking } from './proposal_backing';
 import { ProposalComments } from './proposal_comments';
-import { ProposalSteps } from './proposal_steps';
+import { ProposalShareForm } from './proposal_share_form';
 
 const messages = defineMessages({
   editFromMenu: {
@@ -42,6 +45,11 @@ const messages = defineMessages({
     defaultMessage:
       'It comes off the board and anyone backing it gets their ₭ back. This can’t be undone.',
   },
+  shareToFeed: {
+    id: 'kommons.page_action.share_to_feed',
+    defaultMessage: 'Share to feed',
+  },
+  shared: { id: 'kommons.share.shared', defaultMessage: 'Shared to your feed' },
   withdrawFailed: {
     id: 'governance.withdraw.failed',
     defaultMessage: 'Couldn’t withdraw it. Refresh and try again.',
@@ -225,6 +233,34 @@ export const ProposalDetail: React.FC<{
     },
     askWithdraw,
     canWithdraw && !editing && !closing,
+  );
+
+  // Share to feed, in the Ж menu for anyone signed in (Kommons "Add share
+  // function to proposals"): a post with your note and the proposal's card.
+  // Not for a withdrawn proposal.
+  const dispatch = useAppDispatch();
+  const [sharing, setSharing] = useState(false);
+  const handleShareOpen = useCallback(() => {
+    setSharing(true);
+  }, []);
+  const handleShareCancel = useCallback(() => {
+    setSharing(false);
+  }, []);
+  const handleShared = useCallback(() => {
+    setSharing(false);
+    dispatch(showAlert({ message: messages.shared }));
+  }, [dispatch]);
+  useRegisterPageAction(
+    {
+      key: 'share-to-feed',
+      label: intl.formatMessage(messages.shareToFeed),
+      // A megaphone, not the share glyph: the Ж menu's own Share (send,
+      // copy link) already wears that.
+      icon: CampaignIcon,
+      iconId: 'campaign',
+    },
+    handleShareOpen,
+    !!me && proposal.status !== 'annulled' && !editing && !closing,
   );
 
   const handleEditCancel = useCallback(() => {
@@ -549,8 +585,6 @@ export const ProposalDetail: React.FC<{
 
             <ProposalBacking proposal={proposal} onUpdate={onVoteUpdate} />
 
-            <ProposalSteps proposalId={proposal.id} />
-
             <AttachmentSection
               korner='kommons'
               recordId={proposal.id}
@@ -701,6 +735,13 @@ export const ProposalDetail: React.FC<{
           </>
         )}
       </div>
+      {sharing && (
+        <ProposalShareForm
+          proposal={proposal}
+          onSuccess={handleShared}
+          onCancel={handleShareCancel}
+        />
+      )}
       {confirmingWithdraw && (
         <ConfirmDialog
           title={intl.formatMessage(messages.withdrawTitle, {

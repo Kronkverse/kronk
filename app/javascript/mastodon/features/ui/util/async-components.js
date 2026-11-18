@@ -261,6 +261,14 @@ export function BoothSetPage () {
   return import("../../booth/booth_set_page");
 }
 
+export function BoothSamplePage () {
+  return import("../../booth/sample_page");
+}
+
+export function BoothSamplePackPage () {
+  return import("../../booth/sample_pack_page");
+}
+
 export function ProfileSectionsSettings () {
   return import("../../profile_sections_settings").then(m => ({ default: m.ProfileSectionsSettings }));
 }

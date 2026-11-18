@@ -110,6 +110,8 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
 
     expect(page).to have_css('.compose-shell', text: 'Open a Proposal')
     expect(page).to have_no_css('.compose-shell .konnect-row')
+    # Nor Steps (Kommons "Proposer Composer", 2026-11-12).
+    expect(page).to have_no_button('+ Add step')
   end
 
   it 'proposes a new korner from the Hub without leaving it' do
@@ -160,5 +162,35 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.kommons-proposal--closed', text: 'Longer days')
     expect(page).to have_no_button('Close proposal')
     expect(proposal.reload).to be_closed
+  end
+
+  # Tal, 2026-11-12: proposals have no steps; old ones don't show theirs.
+  it "shows a proposal's page without its old steps" do
+    proposal = Fabricate(:proposal, created_by_account: bob.account, title: 'Longer days')
+    proposal.tasks.create!(title: 'Measure the sun')
+
+    visit "/hub/kommons/p/#{proposal.id}"
+
+    expect(page).to have_css('h1, h2', text: 'Longer days')
+    expect(page).to have_no_text('Measure the sun')
+  end
+
+  # Kommons "Add share function to proposals": share one to your feed with a
+  # note, from the Ж menu on its page.
+  it 'shares a proposal to the feed with a note, from the Ж menu on its page' do
+    proposal = Fabricate(:proposal, created_by_account: Fabricate(:account), title: 'Longer days')
+    # The post's link card is fetched from Kronk's own page (inline here).
+    stub_request(:get, %r{/hub/kommons/p/#{proposal.id}}).to_return(status: 200, body: '<html></html>')
+
+    visit "/hub/kommons/p/#{proposal.id}"
+    expect(page).to have_css('h1, h2', text: 'Longer days')
+    find('.kronk-menu__trigger').click
+    click_on 'Share to feed'
+    fill_in 'Say why it matters (optional)', with: 'Back this one'
+    within('.compose-shell') { click_on 'Share' }
+
+    expect(page).to have_text('Shared to your feed')
+    expect(page).to have_no_css('.compose-shell')
+    expect(bob.account.statuses.last.text).to start_with('Back this one').and include("/hub/kommons/p/#{proposal.id}")
   end
 end

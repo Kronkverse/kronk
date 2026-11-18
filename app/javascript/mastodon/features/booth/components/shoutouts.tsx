@@ -10,13 +10,14 @@ import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { useBoothPlayback } from '../booth_playback_context';
 import { formatDuration } from '../format';
-import { isAlbumKind } from '../kinds';
+import { albumTracks, isAlbumKind } from '../kinds';
 import type { BoothSet, BoothShoutout } from '../types';
 
 // Shoutouts on a set (docs/spaces/booth.md, Shoutouts): listeners' notes,
 // pinned to a moment when they're listening. A pinned shoutout shows on
-// the player's progress bar too, and its time jumps the set there. Each
-// one reaches the artist as a Nudge.
+// the player's progress bar too, and its time jumps the set there. On an
+// album the moment is in one of its tracks. Each one reaches the artist
+// as a Nudge.
 
 const BODY_MAX = 500;
 
@@ -27,6 +28,18 @@ const messages = defineMessages({
     defaultMessage: 'Shout out {name}…',
   },
   atTime: { id: 'booth.shoutouts.at_time', defaultMessage: 'at {time}' },
+  atTrackTime: {
+    id: 'booth.shoutouts.at_track_time',
+    defaultMessage: 'track {track} at {time}',
+  },
+  trackTime: {
+    id: 'booth.shoutouts.track_time',
+    defaultMessage: 'Track {track}, {time}',
+  },
+  jumpTrack: {
+    id: 'booth.shoutouts.jump_track',
+    defaultMessage: 'Play track {track} from {time}',
+  },
   send: { id: 'booth.shoutouts.send', defaultMessage: 'Send' },
   sending: { id: 'booth.shoutouts.sending', defaultMessage: 'Sending…' },
   hint: {
@@ -86,12 +99,20 @@ const ShoutoutItem: React.FC<{
   onRemove: (shoutout: BoothShoutout) => void;
 }> = ({ set, shoutout, onRemove }) => {
   const intl = useIntl();
-  const { playFrom } = useBoothPlayback();
+  const { playFrom, playTrack } = useBoothPlayback();
   const at = shoutout.at_seconds;
+  // On an album, which of its tracks the moment is in (1 for the first).
+  const trackIndex = isAlbumKind(set.kind)
+    ? albumTracks(set).findIndex((t) => t.id === shoutout.booth_set_track_id)
+    : -1;
+  const pinned = at !== null && (!isAlbumKind(set.kind) || trackIndex >= 0);
+  const time = formatDuration(at ?? 0) || '0:00';
 
   const handleJump = useCallback(() => {
-    if (at !== null) playFrom(set, at);
-  }, [playFrom, set, at]);
+    if (at === null) return;
+    if (trackIndex >= 0) playTrack(set, trackIndex, at);
+    else playFrom(set, at);
+  }, [playFrom, playTrack, set, at, trackIndex]);
   const handleRemove = useCallback(() => {
     onRemove(shoutout);
   }, [onRemove, shoutout]);
@@ -108,16 +129,26 @@ const ShoutoutItem: React.FC<{
           <Link to={`/@${shoutout.account.acct}`}>
             {shoutout.account.display_name}
           </Link>
-          {at !== null && (
+          {pinned && (
             <button
               type='button'
               className='booth-shoutout__at'
               onClick={handleJump}
-              aria-label={intl.formatMessage(messages.jump, {
-                time: formatDuration(at) || '0:00',
-              })}
+              aria-label={
+                trackIndex >= 0
+                  ? intl.formatMessage(messages.jumpTrack, {
+                      track: trackIndex + 1,
+                      time,
+                    })
+                  : intl.formatMessage(messages.jump, { time })
+              }
             >
-              {formatDuration(at) || '0:00'}
+              {trackIndex >= 0
+                ? intl.formatMessage(messages.trackTime, {
+                    track: trackIndex + 1,
+                    time,
+                  })
+                : time}
             </button>
           )}
           {shoutout.can_remove && (
@@ -148,7 +179,8 @@ export const Shoutouts: React.FC<Props> = ({
   setShoutouts,
 }) => {
   const intl = useIntl();
-  const { activeSet, currentTime } = useBoothPlayback();
+  const { activeSet, activeTrack, activeTrackIndex, currentTime } =
+    useBoothPlayback();
   const [confirmDialog, confirm] = useConfirmDialog();
   const [body, setBody] = useState('');
   const [pin, setPin] = useState(true);
@@ -156,9 +188,13 @@ export const Shoutouts: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Only a set that's playing (or paused mid-way) has a moment to pin to.
-  // An album's time is one track's, so its shoutouts aren't pinned.
+  // An album's time is one track's, so its moment is in that track.
+  const album = isAlbumKind(set.kind);
   const listening =
-    activeSet?.id === set.id && currentTime > 0 && !isAlbumKind(set.kind);
+    activeSet?.id === set.id &&
+    currentTime > 0 &&
+    (!album || activeTrack !== null);
+  const now = formatDuration(Math.floor(currentTime)) || '0:00';
   const artist = set.artists[0]?.account?.display_name ?? set.artist_name;
 
   const handleBody = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,6 +215,8 @@ export const Shoutouts: React.FC<Props> = ({
         .post<BoothShoutout>(`/api/v1/booth_sets/${set.id}/shoutouts`, {
           body: text,
           at_seconds: listening && pin ? Math.floor(currentTime) : undefined,
+          booth_set_track_id:
+            listening && pin && album ? activeTrack?.id : undefined,
         })
         .then((res) => {
           setShoutouts((prev) => [res.data, ...prev]);
@@ -191,7 +229,17 @@ export const Shoutouts: React.FC<Props> = ({
           setSending(false);
         });
     },
-    [body, set.id, listening, pin, currentTime, setShoutouts, intl],
+    [
+      body,
+      set.id,
+      listening,
+      pin,
+      album,
+      activeTrack,
+      currentTime,
+      setShoutouts,
+      intl,
+    ],
   );
 
   const handleRemove = useCallback(
@@ -236,9 +284,12 @@ export const Shoutouts: React.FC<Props> = ({
         {listening && (
           <label className='booth-shoutouts__pin'>
             <input type='checkbox' checked={pin} onChange={handlePin} />
-            {intl.formatMessage(messages.atTime, {
-              time: formatDuration(Math.floor(currentTime)) || '0:00',
-            })}
+            {album
+              ? intl.formatMessage(messages.atTrackTime, {
+                  track: activeTrackIndex + 1,
+                  time: now,
+                })
+              : intl.formatMessage(messages.atTime, { time: now })}
           </label>
         )}
         <button

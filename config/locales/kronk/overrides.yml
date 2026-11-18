@@ -208,6 +208,7 @@ en:
         gang_updated: "%{who} added to a Komponent you joined"
         mentioned: "%{who} tagged you in a projekt’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
+        projekt_begun: A projekt you’re in has begun
       generic: "%{who} has something for you in %{korner}"
       huddle:
         gathering: People are huddling
@@ -250,6 +251,11 @@ en:
         offer_cancelled: "%{who} called off a booking"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
+        pitch_chosen: "%{who} chose you for their wanted ad"
+        pitch_delivered: "%{who} delivered your wanted ad"
+        pitch_done: "%{who} marked your work done"
+        pitch_passed: "%{who} didn't choose your answer"
+        pitched: "%{who} answered your wanted ad"
     subjects:
       huddle_now:
         one: 1 in the Huddle now
@@ -485,6 +491,7 @@ en-GB:
         gang_updated: "%{who} added to a Komponent you joined"
         mentioned: "%{who} tagged you in a projekt’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
+        projekt_begun: A projekt you’re in has begun
       generic: "%{who} has something for you in %{korner}"
       huddle:
         gathering: People are huddling
@@ -527,6 +534,11 @@ en-GB:
         offer_cancelled: "%{who} called off a booking"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
+        pitch_chosen: "%{who} chose you for their wanted ad"
+        pitch_delivered: "%{who} delivered your wanted ad"
+        pitch_done: "%{who} marked your work done"
+        pitch_passed: "%{who} didn't choose your answer"
+        pitched: "%{who} answered your wanted ad"
     subjects:
       huddle_now:
         one: 1 in the Huddle now

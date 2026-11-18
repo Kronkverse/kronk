@@ -87,7 +87,7 @@ export const NotificationFavourite: React.FC<{
       count={notification.notifications_count}
       labelRenderer={isPrivateMention ? privateLabelRenderer : labelRenderer}
       labelSeeMoreHref={
-        statusAccount ? `/@${statusAccount}/${statusId}/favourites` : undefined
+        statusAccount ? `/@${statusAccount}/${statusId}/froths` : undefined
       }
       unread={unread}
     />

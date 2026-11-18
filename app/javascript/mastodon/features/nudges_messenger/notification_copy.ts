@@ -70,6 +70,26 @@ const sentences = defineMessages({
     id: 'nudges.notification.wachuneed.offer_cancelled',
     defaultMessage: '{who} called off a booking',
   },
+  wachuneedPitched: {
+    id: 'nudges.notification.wachuneed.pitched',
+    defaultMessage: '{who} answered your wanted ad',
+  },
+  wachuneedPitchChosen: {
+    id: 'nudges.notification.wachuneed.pitch_chosen',
+    defaultMessage: '{who} chose you for their wanted ad',
+  },
+  wachuneedPitchDelivered: {
+    id: 'nudges.notification.wachuneed.pitch_delivered',
+    defaultMessage: '{who} delivered your wanted ad',
+  },
+  wachuneedPitchDone: {
+    id: 'nudges.notification.wachuneed.pitch_done',
+    defaultMessage: '{who} marked your work done',
+  },
+  wachuneedPitchPassed: {
+    id: 'nudges.notification.wachuneed.pitch_passed',
+    defaultMessage: "{who} didn't choose your answer",
+  },
   wachuneedBrandListed: {
     id: 'nudges.notification.wachuneed.brand_listed',
     defaultMessage: '{who} backed your brand, and it is in Brands now',
@@ -132,6 +152,22 @@ const sentences = defineMessages({
     id: 'nudges.notification.booth.shouted',
     defaultMessage: '{who} gave your set a shoutout',
   },
+  boothSampleAsked: {
+    id: 'nudges.notification.booth.sample_asked',
+    defaultMessage: '{who} asked to use your sample',
+  },
+  boothSampleGranted: {
+    id: 'nudges.notification.booth.sample_granted',
+    defaultMessage: '{who} said yes: you can use their sample',
+  },
+  boothSampleDeclined: {
+    id: 'nudges.notification.booth.sample_declined',
+    defaultMessage: '{who} said no to using their sample',
+  },
+  boothSampleUsed: {
+    id: 'nudges.notification.booth.sample_used',
+    defaultMessage: '{who} used your sample in a set',
+  },
   boothWentLive: {
     id: 'nudges.notification.booth.went_live',
     defaultMessage: '{who} is live in the Booth now',
@@ -166,6 +202,10 @@ const sentences = defineMessages({
   freethedreamGangUpdated: {
     id: 'nudges.notification.freethedream.gang_updated',
     defaultMessage: '{who} added to a Komponent you joined',
+  },
+  freethedreamProjektBegun: {
+    id: 'nudges.notification.freethedream.projekt_begun',
+    defaultMessage: 'A projekt you’re in has begun',
   },
   freethedreamMyceliumMatched: {
     id: 'nudges.notification.freethedream.mycelium_matched',
@@ -215,6 +255,10 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'booth.went_live': sentences.boothWentLive,
   'booth.shouted': sentences.boothShouted,
   'booth.set_ready': sentences.boothSetReady,
+  'booth.sample_asked': sentences.boothSampleAsked,
+  'booth.sample_granted': sentences.boothSampleGranted,
+  'booth.sample_declined': sentences.boothSampleDeclined,
+  'booth.sample_used': sentences.boothSampleUsed,
   'map.challenged': sentences.mapChallenged,
   'rose.received': sentences.roseReceived,
   'huddle.gathering': sentences.huddleGathering,
@@ -223,6 +267,11 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,
   'wachuneed.offer_cancelled': sentences.wachuneedOfferCancelled,
+  'wachuneed.pitched': sentences.wachuneedPitched,
+  'wachuneed.pitch_chosen': sentences.wachuneedPitchChosen,
+  'wachuneed.pitch_passed': sentences.wachuneedPitchPassed,
+  'wachuneed.pitch_delivered': sentences.wachuneedPitchDelivered,
+  'wachuneed.pitch_done': sentences.wachuneedPitchDone,
   'wachuneed.brand_listed': sentences.wachuneedBrandListed,
   // No longer sent (the invite went, 2026-10-19); kept so old nudges read.
   'freethedream.invited': sentences.freethedreamInvited,
@@ -230,6 +279,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'freethedream.mycelium_matched': sentences.freethedreamMyceliumMatched,
   'freethedream.gang_talked': sentences.freethedreamGangTalked,
   'freethedream.gang_updated': sentences.freethedreamGangUpdated,
+  'freethedream.projekt_begun': sentences.freethedreamProjektBegun,
   'kuestions.answered': sentences.kuestionsAnswered,
   'kuestions.frothed': sentences.kuestionsFrothed,
   'booth.frothed': sentences.boothFrothed,

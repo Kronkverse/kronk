@@ -6,8 +6,15 @@
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :slug, :title, :description, :category, :subcategory, :offering,
-             :price_display, :location, :state, :photo_url, :photos, :kind,
-             :shop_section_id, :shop_position, :ongoing, :availability
+             :price_display, :price_type, :price_unit, :location, :state, :photo_url, :photos, :kind,
+             :shop_section_id, :shop_position, :ongoing, :availability,
+             :looking_for, :where_mode, :due_on, :spots, :account_id
+
+  # Whose it is, so a tile can say Mine (docs/spaces/wachuneed.md, The one
+  # page). The poster is public on the listing's page already.
+  def account_id
+    object.account_id.to_s
+  end
 
   # Detail endpoint only (`include_account: true`): the raw price so the
   # owner's edit form can prefill it, and the full-size photo for the
@@ -44,6 +51,23 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   # is to that Place's card in Konnected (decisions.md, 2026-10-27).
   attribute :place_id, if: :detail?
   attribute :can_message, if: :detail?
+  # A wanted ad's page (docs/spaces/wachuneed.md, Answering a wanted ad):
+  # how many have answered (waiting or chosen), which everyone sees, and
+  # where the viewer's own answer stands.
+  attribute :answers_count, if: -> { detail? && object.wanted? }
+  attribute :my_answer, if: -> { detail? && object.wanted? }
+
+  def answers_count
+    object.listing_offers.held.count
+  end
+
+  def my_answer
+    viewer = instance_options[:viewer]
+    return if viewer.nil?
+
+    answer = object.listing_offers.where(offerer_id: viewer.id).order(created_at: :desc).first
+    answer && { id: answer.id.to_s, state: answer.state }
+  end
 
   # The Krews it is for, on top of its reach (Kronk::KrewAudience), named
   # only where the viewer may see them; the same shape as an album's.

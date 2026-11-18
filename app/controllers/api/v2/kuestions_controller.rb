@@ -78,7 +78,7 @@ class Api::V2::KuestionsController < Api::BaseController
     )
 
     if question.save
-      Kuestions::PublishQuestion.new(question).call unless question.profile? || question.homed?
+      Kuestions::PublishQuestion.new(question).call unless question.profile?
       render json: question.reload, serializer: REST::Kuestions::QuestionSerializer, scope: current_account, status: 201
     else
       render json: { error: question.errors.full_messages.to_sentence }, status: :unprocessable_entity

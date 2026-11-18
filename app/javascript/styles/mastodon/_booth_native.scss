@@ -680,6 +680,22 @@
   font-size: 0.72rem;
 }
 
+// Open to collab (docs/spaces/booth.md): said in the accent, as an
+// invitation rather than a status.
+.booth-credit__flag--collab,
+.booth-artist-detail__collab {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.booth-artist-detail__collab {
+  margin-inline-start: 0.6rem;
+}
+
+.booth-artist-detail__actions {
+  margin-block-end: 1rem;
+}
+
 // "You are credited on this set": the tagged person's two buttons.
 .booth-credit-own {
   display: flex;
@@ -1327,6 +1343,56 @@
   }
 }
 
+// Open to collab, said from My sets: the line, then the toggle.
+.booth-mine__collab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+
+  p {
+    flex: 1 1 16rem;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+}
+
+// ── Vibes ───────────────────────────────────────────────────────────
+// Four tiles at the top of Musik (docs/spaces/booth.md, Vibes), the grid's
+// own cards with a short band for the glyph, so all four fit on a phone
+// two by two without pushing the music below the fold.
+.booth-vibes {
+  margin-block-end: 1.25rem;
+
+  .standard-card--grid .standard-card__media {
+    aspect-ratio: 5 / 2;
+  }
+
+  .space-card__photo--placeholder svg {
+    inline-size: 2rem;
+    block-size: 2rem;
+    fill: currentcolor;
+  }
+}
+
+.space-card__tag--vibe-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent-text);
+}
+
+// The vibes on the upload and edit forms: four ticks, each with its line.
+.booth-vibes-field {
+  display: grid;
+  gap: 0.5rem;
+}
+
 .booth-mine__stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
@@ -1703,4 +1769,112 @@
   &:focus-visible {
     text-decoration: underline;
   }
+}
+
+// ── Samples ─────────────────────────────────────────────────────────
+// docs/spaces/booth.md, Samples. The Samples view: packs as a row of wide
+// tiles, then the type pills and every sample as the grid's own cards with a
+// short band for the type's glyph, since a sample has no cover.
+.booth-samples {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.booth-samples__types {
+  flex-wrap: wrap;
+}
+
+.booth-samples__grid {
+  .standard-card--grid .standard-card__media {
+    aspect-ratio: 5 / 2;
+  }
+
+  .space-card__photo--placeholder svg {
+    inline-size: 2rem;
+    block-size: 2rem;
+    fill: currentcolor;
+  }
+}
+
+// Terms as the card's chip: Ask first in the accent, so it reads as
+// something to do before using it.
+.space-card__tag--sample-ask {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+// A sample's page: its type's glyph in a short band rather than a square,
+// the terms in the banner, and its own player.
+.booth-sample__glyph {
+  aspect-ratio: 5 / 2;
+}
+
+.booth-sample__terms {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+
+  strong {
+    color: var(--text-primary);
+  }
+}
+
+.booth-sample__note {
+  margin: 1rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.booth-sample-player {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.booth-sample-player__time {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.booth-sample-requests {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booth-sample-request {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+// Used in (on a sample) and Samples used (on a set): a plain list of
+// titles, each with who made it.
+.booth-sample-used-in {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    color: var(--text-primary);
+  }
+
+  span,
+  .booth-sample-used-in__maker {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+}
+
+.booth-samples-used__none {
+  padding: 0.5rem 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }

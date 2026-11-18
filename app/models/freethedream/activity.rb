@@ -16,6 +16,9 @@ module Freethedream
     validates :verb, inclusion: { in: VERBS }
 
     after_create_commit { Freethedream::GangNudges.activity_logged(self) }
+    # Bringing, ticking off and adding can tip a projekt over its
+    # threshold.
+    after_create_commit { root.check_begun!(account_id) }
 
     scope :latest, -> { order(created_at: :desc, id: :desc) }
 

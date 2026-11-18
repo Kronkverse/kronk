@@ -60,7 +60,8 @@ Other routes (all in `features/ui/index.jsx`, signed-in only):
 - `/hub/kommons/composer` (and the older `/hub/kommons/propose`): the
   composer overlay over Kommons, for links and the Konnect picker's New
   proposal. It takes `?node=<id>`, `?space=<slug>` or `?kind=new_korner`.
-  Steps you add become tasks; staged files upload as attachments. It has
+  It has no Steps section (see No steps, below); staged files upload as
+  attachments. It has
   no Konnect row: a proposal is Konnected from its page (2026-10-29).
 - `/hub/kommons/settings`: per-user settings (below).
 - Redirects: `/governance` and `/governance/*` → `/hub/kommons` (Rails,
@@ -362,19 +363,32 @@ not every proposal.
    "Closed"). Open goes unsaid. Size is not shown here.
 4. **Backing** (`proposal_backing.tsx`): one line — `₭total · N backers`
    (and your stake), an amount field, **Back**, and your available ₭.
-5. **Steps** (`proposal_steps.tsx`), only when there are any: `N of M done`
-   and the checklist. The proposer or a steward can tick a step.
-6. **Comments** (`proposal_comments.tsx`): threaded, one level, behind one
+5. **Comments** (`proposal_comments.tsx`): threaded, one level, behind one
    thin divider.
-7. **Builder row** at the foot: "Building this? Claim", or **Mark
+6. **Builder row** at the foot: "Building this? Claim", or **Mark
    actioned** / **Unclaim** for the claimant, then **Attach a file**, which
    unfolds the upload form (`proposal_attachments.tsx`). Files list under it.
 
 Edit is the Ж menu's **Edit proposal** moon (proposer, until actioned). Once
 actioned, the proposer gets **Close proposal** beside the title.
 
-Colours come from `tokens.yaml`, including the `decision-*` tokens
-(`decision-agree` for done steps). Both themes are first-class.
+**Share to feed** is a Ж menu moon (a megaphone, so it isn't mistaken for the
+menu's own Share) for anyone signed in, on any proposal but a withdrawn one
+(Kommons "Add share function to proposals", 2026-11-17). It opens a composer
+with a note (up to 500 characters, optional) and the reach, and posts **your
+own** post: the note, or the proposal's title without one, then the
+proposal's link, which the feed draws as the proposal's card under the note
+(`<KronkLinkCards>`). The proposal's own post, its discussion, never moves
+(`POST /api/v1/proposals/:id/share`, `proposal_share_form.tsx`; the same
+shape as the Booth's Share to feed). Every member can see every proposal, so
+any reach is allowed. A toast says it's shared and you stay on the page.
+
+Colours come from `tokens.yaml`, including the `decision-*` tokens.
+Both themes are first-class.
+
+**No steps** (Tal, 2026-11-12: "just remove them"). Proposals had steps
+(`tasks`), added in the composer and ticked on the page. Neither shows any
+more; the `tasks` rows and endpoints are still there, unused by the app.
 
 ## Lattice
 

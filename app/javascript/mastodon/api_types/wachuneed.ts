@@ -97,21 +97,50 @@ export interface ApiTicketDateJSON {
   event_slug: string | null;
 }
 
+// How the price reads (docs/spaces/wachuneed.md, Prices); null is `fixed`.
+export type ListingPriceType =
+  | 'fixed'
+  | 'up_to'
+  | 'offers'
+  | 'quote'
+  | 'trade'
+  | 'free';
+// What an amount is for; null is the whole thing.
+export type ListingPriceUnit = 'hour' | 'day' | 'week' | 'month' | 'session';
+
+// What a wanted ad is after (docs/spaces/wachuneed.md, Wanted ads), and
+// where the work happens.
+export type ListingLookingFor = 'thing' | 'made' | 'job' | 'help';
+export type ListingWhereMode = 'online' | 'in_person' | 'either';
+
 export interface ApiListingJSON {
   id: string;
+  // Whose it is (the tile says Mine on your own).
+  account_id?: string;
   slug?: string;
   title: string;
   description?: string | null;
   category: string;
   subcategory?: string | null;
   price_display?: string | null;
+  price_type?: ListingPriceType | null;
+  price_unit?: ListingPriceUnit | null;
+  // Wanted ads only: what it is after, where, by when (an ISO date; for
+  // `help`, the day), and how many people it wants.
+  looking_for?: ListingLookingFor | null;
+  where_mode?: ListingWhereMode | null;
+  due_on?: string | null;
+  spots?: number;
+  // A wanted ad's page: how many have answered, and the viewer's answer.
+  answers_count?: number;
+  my_answer?: { id: string; state: string } | null;
   location?: string | null;
   // The Place it is Konnected to, if any (detail only). Its card in
   // Konnected then says where the listing is.
   place_id?: string | null;
   state: string;
-  // `offer` (on offer, the Offered section) or `wanted` (looking for, the
-  // Desired section). Older servers omit it: treat absent as `offer`.
+  // `offer` (on offer) or `wanted` (looking for). Older servers omit it:
+  // treat absent as `offer`.
   kind?: 'offer' | 'wanted';
   // The section of the seller's shop it sits in, if any.
   shop_section_id?: string | null;

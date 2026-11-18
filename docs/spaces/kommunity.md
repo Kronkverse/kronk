@@ -9,17 +9,19 @@
 ## Purpose
 
 Kommunity lets a member see Kronk as a whole rather than as a timeline,
-and find people they don't know yet. It has four views, cycled by the
-header rotator, in this order: **Mates** (the landing view, bare
-`/hub/kommunity`), **Discover** (`/hub/kommunity/discover`), **Everyone**
-(`/hub/kommunity/everyone`) and **Orb** (`/hub/kommunity/orb`).
+and find people they don't know yet. It has three views, cycled by the
+header rotator, in this order: **Kommunity** (the first page, bare
+`/hub/kommunity`), **Mates** (`/hub/kommunity/mates`) and **Orb**
+(`/hub/kommunity/orb`).
 
-Mates leads since 2026-11-11, Tal's Kommons proposal "Kommunity Page"
-([#117596933443323274](https://kronk.info/hub/kommons/p/117596933443323274)):
-"The 'Discover' page shouldn't be the landing page. Maybe a list of the users
-mates should be first page, ordered by most recent posts made." The proposal
-adds "there's lots to do here, let's dive into design", so this is the first
-step, not the finished space. Before that, Discover led, from Tal's proposal
+The first page is **Kommunity** since 2026-11-17 (Tal, designing Kommons
+"Kommunity Page"): Discover as a sideways row along the top, then the
+list of all visible Kronkers, each saying whether you're Mates. Discover
+and Everyone were views of their own until then; `/hub/kommunity/discover`
+and `/hub/kommunity/everyone` 301 to the first page (`config/routes.rb`,
+and `index.tsx` for in-app links). For the week before, Mates led (Kommons
+"Kommunity Page", 2026-11-11: "The 'Discover' page shouldn't be the
+landing page"). Before that, Discover led, from Tal's proposal
 "Landing Page"
 ([#117483791865274639](https://kronk.info/hub/kommons/p/117483791865274639)):
 "Kommunity landing page should be the 'Discover' page, the Orb should be
@@ -104,28 +106,46 @@ changes, Kosmos follows. Kommunity is the interactive WebGL view; Kosmos
 is a slow 2D projection that turns once every ~10 minutes. See
 `docs/design.md` (Kosmos background canvas).
 
-## Discover
+## Kommunity (the first page)
 
-A drawer of profile cards, one layer per screen, swiping sideways within
-a layer (`features/kommunity/drawer.tsx`). Layers, top to bottom:
+`features/kommunity/home.tsx`, at bare `/hub/kommunity`: one scrolling
+column with the **Discover** row on top and **All Kronkers** under it.
 
-- **Kronkers** — `GET /api/v1/kommunity/kronkers`: people who set
-  themselves findable by everyone.
-- **Orbit** — `GET /api/v1/kommunity/orbit`: mates of your Mates, with
+### Discover, the row
+
+One sideways row of people to meet (`<SpaceGrid layout='row'>` of
+`<SpaceCard>`s: their picture, name and handle; a tap opens their
+profile). Three groups, in this order (Tal, 2026-11-17):
+
+- **Orbit**: `GET /api/v1/kommunity/orbit`, Mates of your Mates with
   findability `everyone` or `orbit`.
-- **Krews** — `GET /api/v1/kommunity/krews`: people who share a Krew with
+- **Krews**: `GET /api/v1/kommunity/krews`, people who share a Krew with
   you. No findability filter; sharing a Krew is already an introduction.
+- **Kronkers**: `GET /api/v1/kommunity/kronkers`, people who set themselves
+  findable by everyone.
 
-Every layer leaves out you, your existing Mates, and anyone you have a
-Mate request pending with (since 2026-10-12). Mates live on the profile's
-Mates tab (`/@user/mates`), not here. Someone who has asked _you_ still
-shows, so you can answer from their card.
+Each group is led by a **sign**: a purple tile (`<SpaceCard tone='accent'>`,
+the same purple as Wachuneed's shop tiles, saying "a different kind of
+tile") with the group's icon (the reach ladder's Orbit, Krew's groups, the
+Kronkverse Ж), its name and one line ("Mates of your Mates", "In your
+Krews", "Open to being found"). A wider gap comes before each sign than
+between people. Someone in more than one group shows once, in the first
+(a Mate of a Mate who is in your Krew is Orbit; `dedupeGroups`). A group
+with nobody in it is left out, sign and all, and with nobody in any group
+the row isn't drawn. The first page of each group (20) fills the row; the
+list below has everyone.
+
+Every group leaves out you, your existing Mates, and anyone you have a
+Mate request pending with (since 2026-10-12): there's nothing left to do on
+their tile. Someone who has asked _you_ still shows. The groups were a
+drawer of tall profile cards, one group per screen, until 2026-11-17
+(`drawer.tsx`, `profile_card_deck.tsx`, removed).
 
 Each account chooses its findability with `kommunity_discoverability`
 (`everyone`, `orbit` or `nobody`), set in privacy settings
 (`features/privacy_settings/`). The older flat list,
 `GET /api/v1/kommunity/discover`, is kept for external callers; the SPA
-doesn't use it. `/directory` redirects to `/hub/kommunity/discover`.
+doesn't use it. `/directory` redirects to `/hub/kommunity`.
 
 **New members.** Kommunity's badge (on its tile and in the side nav) counts
 people who joined since you last opened it and whom you could find here:
@@ -133,17 +153,20 @@ findable by everyone, or by your Orbit if you're in it. Opening Kommunity
 clears it. `KommunityStream` in `lib/kronk/korner_content_streams.rb`; the
 badge itself is the shared one (`hub.md`, Updates).
 
-## Everyone
+### All Kronkers, the list
 
-The middle view, at `/hub/kommunity/everyone`
-(`features/kommunity/everyone.tsx`): "a full list of 'Visible' Users (if
-they choose to be visible)" (proposal "Landing Page", above). A plain
-vertical list of the shared `<Account>` rows, the same row the Mates tab
-uses: tap one for the profile, and it carries its own Mate button. There
-is no search field of its own: the search at the top (Search in the Ж menu
-on a phone) finds people, Kommunity's first (Tal, 2026-11-12). "Load more"
-(`<KornerPill>`) at the foot fetches the next page. Nothing found is an
-`<EmptyState>`.
+Under the row (`features/kommunity/everyone.tsx`, `KommunityEveryone`):
+"a full list of 'Visible' Users (if they choose to be visible)" (proposal
+"Landing Page", above). A plain vertical list of the shared `<Account>`
+rows, the same row the Mates tab uses: tap one for the profile. Each row
+says where you stand in the Mate button's own words (`follow_button.tsx`):
+**Mate?** (ask), **Mating…** (you've asked; tap to withdraw), **Accept**
+(they've asked you), or, for a Mate, a quiet **Mates** marker where the
+button would be (`<Account markMates>`; the button itself shows nothing
+for a Mate). There is no search field of its own: the search at the top
+(Search in the Ж menu on a phone) finds people, Kommunity's first (Tal,
+2026-11-12). "Load more" (`<KornerPill>`) at the foot fetches the next
+page. Nothing found is an `<EmptyState>`.
 
 `GET /api/v1/kommunity/everyone?q=&limit=&offset=`
 (`Api::V1::Kommunity::EveryoneController`). Who is on it is exactly the
@@ -152,17 +175,17 @@ people who chose to be visible to the viewer,
 
 - findability `everyone`: listed for every signed-in member;
 - findability `orbit`: listed when the viewer is in their Orbit (a Mate,
-  or a Mate of one of their Mates), the same Orbit test Discover uses;
+  or a Mate of one of their Mates), the same Orbit test the row uses;
 - findability `nobody`: **never listed**, Mates and Krew members
   included. Being someone's Mate doesn't override their choice.
 
 It leaves out the viewer, anyone blocked or muted either way, and anyone
-who isn't an active member (the same guard as Discover: local, not
+who isn't an active member (the same guard as the row: local, not
 suspended, silenced, memorialised or moved, has signed in). Pending Mate
 requests stay in, both ways: it is a directory, not a to-do list.
 
-**The difference from Discover** is that Mates who chose to be visible
-are here. Discover is for meeting people; Everyone is the list.
+**The difference from the row** is that Mates who chose to be visible
+are here. The row is for meeting people; the list is everyone.
 
 Ordered by display name, falling back to the username when there is none,
 case-insensitive. No ranking: alphabetical is the one order a directory
@@ -174,7 +197,7 @@ page in the Link header (`rel="next"`).
 
 - `config/korners/kommunity.yaml` — manifest.
 - `app/javascript/mastodon/features/kommunity/` — `index.tsx` (mount),
-  `orb.tsx`, `drawer.tsx`, `profile_card_deck.tsx`, `everyone.tsx`.
+  `home.tsx` (the first page), `everyone.tsx` (the lists), `orb.tsx`.
 - `app/javascript/mastodon/features/kosmos/orb_geometry.ts` — shared with
   Kosmos.
 - `app/controllers/api/v1/kommunity/` — `orb`, `layers`, `everyone`,

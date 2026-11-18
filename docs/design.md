@@ -335,7 +335,15 @@ no Invite.
 - **A post's action bar is Reply · Froth · Nudge · Repost** (Edit where
   Nudge is, on your own posts). There is no … menu (2026-11-08): deleting a
   post, pinning it and who can see it live inside Edit, at the top of the
-  composer (`features/compose/components/edit_indicator.jsx`).
+  composer (`features/compose/components/edit_indicator.jsx`). The froth
+  count opens who frothed it at `/@<acct>/<id>/froths` (`/favourites`
+  still works for old links).
+- **A person's row shows no follower or Mate count** (Tal, 2026-11-12,
+  Kommons "Froths": how many Mates someone has isn't something to show).
+  The shared `<Account>` row keeps its second line for a verified link or
+  a mute's time left. The hover card over a name and a new-Mate
+  notification show no count either; the hover card keeps who you both
+  know, or that you're Mates.
 - **The moons always open on screen.** The Ж can sit anywhere along either
   side and a page can add moons, so the fan isn't fixed per corner:
   `layoutMoons` (`kronk_menu_layout.ts`) measures where the Ж is when the
@@ -734,7 +742,12 @@ The same card three ways (`variant`):
   four from 720px (`<SpaceGrid>` / `<SpaceCard>` in `space_grid.tsx`). Used by
   Albutts, Booth, Kalendar events and Wachuneed. `<SpaceGrid layout='row'>`
   is one line of the same tiles scrolling sideways, for a shelf among
-  others down a page (the Booth's By artist / By kind). `<SpaceGrid layout='masonry'>`
+  others down a page (the Booth's By artist / By kind). `<SpaceGrid wide>`
+  makes the tiles half as wide again with a landscape image (two columns in
+  the grid), for things that hold other things; with it a `<SpaceCard>` can
+  take `images` (up to three, one large and two stacked), an `avatar` in the
+  image's corner, and `tone='accent'` for a Kronk purple fill: Wachuneed's
+  shops among its listings. `<SpaceGrid layout='masonry'>`
   is the same cards with each image in its own shape, stacked down columns
   (two on a phone, three from 720px), for a collection whose images are the
   work itself and a square crop would cut it: an Art portfolio (@mangobee,
@@ -759,6 +772,15 @@ second card.
 **The korner describes its content once.** `feed_projection.card` fills slots;
 it does not draw a card. Adding a korner should never mean editing a space that
 shows it.
+
+**Type goes on the class, not in `:where()`.** The kit keeps its defaults in
+`:where()` so any korner can override them, but the reset gives almost every
+element `font: inherit`, which beats a zero-specificity rule. A font size,
+weight or line height inside `:where()` is silently dropped. Until 2026-11-17
+the slots took whatever size the card inherited, and titles came out smaller
+than the meta under them. Say type with the slot's class, as
+`_standard_card.scss` does; colour and layout can stay in `:where()`. This
+applies to any kit component with the same pattern.
 
 ### What deliberately stays bespoke
 

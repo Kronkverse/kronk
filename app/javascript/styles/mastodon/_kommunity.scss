@@ -274,192 +274,30 @@
   }
 }
 
-// Kommunity discover drawer (Tal 2026-08-28). Vertical scroll-snap
-// between layers; one layer per screen. Fills the space the rotator
-// hands us.
-.kommunity-drawer {
-  block-size: 100%;
-  inline-size: 100%;
-  overflow-y: auto;
-  scroll-snap-type: y mandatory;
+// Kommunity's first page (home.tsx, Tal 2026-11-17): the Discover row,
+// then everyone A to Z, in one scrolling column. Each group in the row
+// is led by a purple sign tile, with a wider gap before it than between
+// people, so where Orbit ends and your Krews begin reads at a glance.
+.kommunity-home__row {
+  margin-block-end: 1.5rem;
 
-  // Hide the vertical scrollbar — the layer boundaries + snap are
-  // the affordance; a scrollbar would compete with the deck's
-  // horizontal snap on some browsers.
-  scrollbar-width: none;
+  .space-grid__cell:has(.space-card--accent):not(:first-child) {
+    margin-inline-start: 1rem;
+  }
 
-  &::-webkit-scrollbar {
-    display: none;
+  // A sign is a label, not a picture: its glyph fills the tile's height
+  // rather than a square, so the gap before it (which narrows the cell)
+  // doesn't make one sign shorter than another.
+  .space-card--accent .standard-card__media {
+    flex: 1 1 auto;
+    aspect-ratio: auto;
+    background: transparent;
+    color: var(--text-on-accent);
   }
 }
 
-// One deck per layer. Fills the drawer viewport, holds a small title
-// + the horizontal scroll-snap of profile cards.
-.kommunity-deck {
-  block-size: 100%;
-  min-block-size: 100%;
-  scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
-  padding: 24px 0 12px;
-
-  &__title {
-    font-family: var(--font-display);
-    font-size: 15px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    color: var(--text-secondary);
-    margin: 0 24px 12px;
-    text-transform: uppercase;
-  }
-
-  &__state {
-    flex: 1 1 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    color: var(--text-secondary);
-    font-size: 14px;
-    text-align: center;
-
-    &--error {
-      color: var(--semantic-warning-red);
-    }
-  }
-
-  // Stage — wraps the scroller + the desktop prev/next chevrons so
-  // the buttons can sit relative to the deck edges. Fills the layer
-  // vertically; the scroller inside stretches to fill it.
-  &__stage {
-    position: relative;
-    flex: 1 1 auto;
-    display: flex;
-    min-block-size: 0;
-  }
-
-  // Horizontal snap-scroller — one card per screen. Deliberate
-  // exception to the "no side-scroll on phone" rule: the deck IS
-  // the content of the layer, not a peek-slice of something bigger.
-  // `tabIndex=0` in JSX + focus-visible outline here for keyboard
-  // arrow-nav.
-  &__scroller {
-    flex: 1 1 auto;
-    display: flex;
-    gap: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    &:focus-visible {
-      outline: none;
-    }
-  }
-
-  // Desktop prev/next chevrons. Overlaid on the deck edges, only
-  // shown on hover-capable viewports (i.e. desktop with a mouse) —
-  // phone gets native swipe + doesn't need them (Tal 2026-09-08 —
-  // "no way to scroll horizontally on a computer"). Hidden by
-  // default; the media query re-enables them.
-  &__nav {
-    display: none;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    &__nav {
-      position: absolute;
-      inset-block: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      inline-size: 44px;
-      padding: 0;
-      background: none;
-      border: 0;
-      color: var(--kronk-purple-bright);
-      cursor: pointer;
-      z-index: 2;
-      transition:
-        color var(--dur-fast) var(--ease-out),
-        transform var(--dur-fast) var(--ease-out);
-
-      .icon {
-        inline-size: 32px;
-        block-size: 32px;
-      }
-
-      &:hover:not(:disabled) {
-        color: var(--kronk-purple-accent);
-        transform: scale(1.1);
-      }
-
-      &:disabled {
-        opacity: 0.25;
-        cursor: default;
-      }
-
-      &--prev {
-        inset-inline-start: 0;
-      }
-
-      &--next {
-        inset-inline-end: 0;
-      }
-    }
-  }
-
-  // Slide is a thin container. Sizing lives on `.standard-card`
-  // (the primitive ProfileCard is built on) — we just tell it how
-  // much viewport-height the discover deck has to work with via
-  // `--card-portrait-max-block`. The primitive keeps width at 340px
-  // and clamps height at this value, breaking the aspect toward
-  // shorter/squarer when the aspect-derived block would overflow
-  // (see components/standard_card.tsx + `_standard_card.scss`).
-  // Chrome above/below the layer on phone: top-band (~60) + rotator
-  // (~90) + tab bar (~56) + section title (~50) + layer padding
-  // (~36) + safe-area buffer (~28) ≈ 320. The "sticky action row
-  // bleed" (~120) that used to be reserved dropped when the actions
-  // moved inside the card body (they now count in the card height,
-  // not on top of it) — leaving 320 as the accurate offset. Ceiling
-  // 640 so tall viewports get a slightly bigger card without going
-  // full-length (Tal 2026-09-08: "a little longer, without being
-  // too long").
-  // Cover shrunk to 22% (via ProfileCard's own hook) so the
-  // identifying info (name, handle) sits near the top of the layer
-  // instead of ~40% down — Tal 2026-08-31 on the Kronkers deck.
-  &__slide {
-    --card-portrait-max-block: min(640px, calc(100svh - 320px));
-    --profile-card-cover-block: 22%;
-
-    flex: 0 0 100%;
-    scroll-snap-align: center;
-    display: flex;
-
-    // The slide is a flex ROW (default direction), so `align-items`
-    // is the cross-axis (vertical) alignment and `justify-content`
-    // is the main-axis (horizontal). #1640 flipped
-    // `justify-content` from center → flex-start intending "top",
-    // but that just left-aligned the card while the still-in-place
-    // `align-items: center` kept it vertically centred. Both axes
-    // needed the swap:
-    //   align-items:     flex-start → top of the cross-axis (top of the slide)
-    //   justify-content: center     → horizontal centre of the main-axis
-    // Kronkers card now hugs the top of the layer, centred left-to-right.
-    align-items: flex-start;
-    justify-content: center;
-    padding: 0 24px;
-    min-inline-size: 0;
-    min-block-size: 0;
-
-    &--loading {
-      color: var(--text-secondary);
-    }
-  }
+.kommunity-home__everyone {
+  margin-block-end: 0.5rem;
 }
 
 // Kommunity Everyone — the alphabetical directory (Tal 2026-10-26). A
@@ -484,4 +322,16 @@
       border-block-end: 0;
     }
   }
+}
+
+// "Mates" where the Mate button would be, on a list that mixes your Mates
+// with everyone else (`<Account markMates>`).
+.account__mates-marker {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+  color: var(--accent-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
 }

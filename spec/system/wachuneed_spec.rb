@@ -26,16 +26,43 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/wachuneed/new')
   end
 
-  it 'names its sections Offered, Desired and Mine, and posts a wanted ad from Desired' do
+  it 'narrows the one page to Wanted, and posts a wanted ad from there' do
     visit '/hub/wachuneed/desired'
 
+    expect(page).to have_current_path('/hub/wachuneed?show=wanted')
     expect(page).to have_css('.empty-state__title', text: 'Nobody is looking for anything yet')
     click_on 'Post a wanted ad'
 
     expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted')
+    # What are you posting? first, with A job and Something under Looking
+    # for (Tal, 2026-11-17).
+    within('.compose-shell') do
+      expect(page).to have_content('What are you posting?')
+      within('section[aria-label="Looking for"]') { click_on 'A job' }
+    end
+    expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted&looking=job')
     within('.compose-shell') do
       expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
+      expect(page).to have_field('By when')
+      click_on 'Change what you are looking for'
     end
+    expect(page).to have_current_path('/hub/wachuneed/new')
+  end
+
+  # + reaches wanted ads too: one chooser for everything (Tal, 2026-11-17).
+  it 'offers both things on offer and the two kinds of wanted ad from +' do
+    visit '/hub/wachuneed/new'
+
+    within('.compose-shell') do
+      expect(page).to have_content('What are you posting?')
+      expect(page).to have_button('Appointment')
+      within('section[aria-label="Looking for"]') do
+        expect(page).to have_button('A job')
+        click_on 'Something'
+      end
+    end
+    expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted&looking=thing')
+    expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
   end
 
   # The listing composer is photos, name, description and price, nothing
@@ -43,16 +70,59 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
   it 'posts a wanted ad from the composer overlay' do
     visit '/hub/wachuneed/new?kind=wanted'
 
+    within('section[aria-label="Looking for"]') { click_on 'Something' }
     within('.compose-shell') do
       expect(page).to have_css('.compose-shell__label', text: 'Wanted ad')
+      # A thing asks nothing about where or when.
+      expect(page).to have_no_field('Where')
       find('input[aria-label="Title"]').fill_in with: 'A ladder'
       find('textarea[aria-label="Description"]').fill_in with: 'Six rungs is plenty'
-      fill_in 'Budget (in AUD)', with: '40'
+      select 'Up to', from: "What you'll pay"
+      fill_in 'Amount (in AUD)', with: '40'
       click_on 'Publish listing'
     end
 
     expect(page).to have_current_path('/hub/wachuneed/mine')
-    expect(Listing.last).to have_attributes(title: 'A ladder', description: 'Six rungs is plenty', kind: 'wanted', price_cents: 4000, booking: {})
+    expect(Listing.last).to have_attributes(title: 'A ladder', description: 'Six rungs is plenty', kind: 'wanted', looking_for: 'thing', price_cents: 4000, price_type: 'up_to', booking: {})
+    expect(page).to have_css('.space-card', text: 'Up to A$40.00')
+  end
+
+  # docs/spaces/wachuneed.md, Prices: what an amount is for shows on the tile.
+  it 'posts a job paying by the hour, in person, for two people' do
+    visit '/hub/wachuneed/new?kind=wanted&looking=job'
+
+    within('.compose-shell') do
+      find('input[aria-label="Title"]').fill_in with: 'A gardener'
+      fill_in 'Amount (in AUD)', with: '38'
+      select 'An hour', from: 'For'
+      select 'In person', from: 'Where'
+      fill_in 'Area (suburb or town)', with: 'Fitzroy'
+      fill_in 'How many people', with: '2'
+      click_on 'Publish listing'
+    end
+
+    expect(page).to have_css('.space-card', text: 'A$38.00 / hour')
+    expect(Listing.last).to have_attributes(price_cents: 3800, price_type: 'fixed', price_unit: 'hour',
+                                            looking_for: 'job', where_mode: 'in_person', location: 'Fitzroy', spots: 2)
+
+    click_on 'A gardener'
+    expect(page).to have_css('.wachuneed-detail__price', text: 'Paying A$38.00 / hour')
+    expect(page).to have_css('.wachuneed-detail__fact', text: 'A job done')
+    expect(page).to have_css('.wachuneed-detail__fact', text: '2 people')
+    expect(page).to have_content('Fitzroy')
+  end
+
+  it 'posts a wanted ad asking for quotes, with no amount' do
+    visit '/hub/wachuneed/new?kind=wanted&looking=made'
+    within('.compose-shell') do
+      find('input[aria-label="Title"]').fill_in with: 'House plans'
+      select 'Ask for quotes', from: "What you'll pay"
+      expect(page).to have_no_field('Amount (in AUD)')
+      click_on 'Publish listing'
+    end
+
+    expect(page).to have_css('.space-card', text: 'Quote')
+    expect(Listing.last).to have_attributes(price_cents: nil, price_type: 'quote', price_unit: nil)
   end
 
   it 'posts an offering with just a name and price, and asks for nothing else' do
@@ -71,7 +141,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(page).to have_no_content('Options')
 
       find('input[aria-label="Title"]').fill_in with: 'Clay mug'
-      fill_in 'Price (in AUD)', with: '25'
+      fill_in 'Amount (in AUD)', with: '25'
       click_on 'Publish listing'
     end
 
@@ -88,25 +158,119 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/wachuneed')
   end
 
-  # Kommons "Home Page" (117522482475089755).
-  it 'opens on a row each of Offered, Desired and Shops, each with See all' do
+  # Tal, 2026-11-16: everything on one page, offered and wanted together.
+  it 'shows everything offered and wanted in one grid, and narrows it to Offered or Wanted' do
     ana = Fabricate(:account, username: 'ana')
     Listing.create!(account: ana, title: 'Clay mug', category: 'creation', state: 'live')
     Listing.create!(account: ana, title: 'A ladder', category: 'goods', kind: 'wanted', state: 'live')
 
     visit '/hub/wachuneed'
 
-    within('section[aria-label="Offered"]') { expect(page).to have_css('.space-grid--row .space-card', text: 'Clay mug') }
-    within('section[aria-label="Desired"]') do
-      expect(page).to have_css('.space-grid--row .space-card', text: 'A ladder')
-      expect(page).to have_no_content('Clay mug')
-    end
+    expect(page).to have_css('.space-grid .space-card', text: 'Clay mug')
+    expect(page).to have_css('.space-grid .space-card', text: 'A ladder')
     # No shop yet, so no Shops row.
     expect(page).to have_no_css('section[aria-label="Shops"]')
+    expect(page).to have_css('section[aria-label="Listings"] h2')
 
-    within('section[aria-label="Offered"]') { click_on 'See all' }
-    expect(page).to have_current_path('/hub/wachuneed/offered')
-    expect(page).to have_css('.space-grid .space-card', text: 'Clay mug')
+    select 'Wanted', from: 'Filter'
+    expect(page).to have_current_path('/hub/wachuneed?show=wanted')
+    expect(page).to have_css('section[aria-label="Wanted"] h2')
+    expect(page).to have_css('.space-card', text: 'A ladder')
+    expect(page).to have_no_css('.space-card', text: 'Clay mug')
+
+    select 'Offered', from: 'Filter'
+    expect(page).to have_css('.space-card', text: 'Clay mug')
+    expect(page).to have_no_css('.space-card', text: 'A ladder')
+  end
+
+  it 'says on every tile what kind of listing it is, and Mine on your own' do
+    ana = Fabricate(:account, username: 'ana')
+    Listing.create!(account: ana, title: 'Clay mug', category: 'creation', state: 'live')
+    Listing.create!(account: ana, title: 'A ladder', category: 'goods', kind: 'wanted', state: 'live')
+    Listing.create!(account: bob.account, title: 'Old bike', category: 'goods', state: 'live')
+
+    visit '/hub/wachuneed'
+
+    expect(page).to have_css('.space-card__tag--wanted', text: /wanted/i, count: 1)
+    expect(page).to have_css('.space-card__tag--offered', text: /offered/i, count: 1)
+    expect(page).to have_css('.space-card__tag--mine', text: /mine/i, count: 1)
+
+    visit '/hub/wachuneed/mine'
+    expect(page).to have_css('.space-card', text: 'Old bike')
+    expect(page).to have_no_css('.space-card__tag--mine')
+  end
+
+  # docs/spaces/wachuneed.md, Answering a wanted ad.
+  it 'answers a wanted ad with a price, and the poster sees the count' do
+    ana = Fabricate(:account, username: 'ana')
+    job = Listing.create!(account: ana, title: 'A gardener', category: 'service', kind: 'wanted', state: 'live',
+                          looking_for: 'job', price_cents: 3800, price_currency: 'AUD', price_unit: 'hour')
+
+    visit "/hub/wachuneed/listings/#{job.slug}"
+    click_on 'I can do this'
+    fill_in 'What you would do, and when', with: 'Ten years of veggie gardens, Saturdays'
+    expect(page).to have_field('Your price an hour (in AUD)', with: '38.00')
+    fill_in 'Your price an hour (in AUD)', with: '40'
+    click_on 'Send'
+
+    expect(page).to have_content('You will hear if they choose you.')
+    expect(ListingOffer.last).to have_attributes(offerer: bob.account, amount_cents: 4000, state: 'pending')
+
+    visit "/hub/wachuneed/listings/#{job.slug}"
+    expect(page).to have_css('.wachuneed-detail__fact', text: '1 answer')
+  end
+
+  it 'lets the poster choose an answer on the ad, which takes it' do
+    job = Listing.create!(account: bob.account, title: 'A gardener', category: 'service', kind: 'wanted', state: 'live',
+                          looking_for: 'job', price_cents: 3800, price_currency: 'AUD', price_unit: 'hour')
+    ListingOffer.pitch(job, offerer: Fabricate(:account, username: 'cal'), amount_cents: 4000, message: 'Ten years of veggie gardens').save!
+
+    visit "/hub/wachuneed/listings/#{job.slug}"
+
+    within('section[aria-label="Answers (1)"]') do
+      expect(page).to have_content('A$40.00 / hour')
+      expect(page).to have_content('Ten years of veggie gardens')
+      click_on 'Choose'
+      expect(page).to have_content(/chosen/i)
+    end
+    expect(job.reload.state).to eq 'reserved'
+  end
+
+  # Tal, 2026-11-16: Mine shows your jobs, what you sell and buy, and your shop.
+  it 'lays out Mine: answers waiting on you, work you are doing, your wanted ads and what you sell' do
+    ana = Fabricate(:account, username: 'ana')
+    mine = Listing.create!(account: bob.account, title: 'Guitar lesson video', category: 'service', kind: 'wanted', state: 'live', looking_for: 'made')
+    ListingOffer.pitch(mine, offerer: ana, amount_cents: 8000, message: 'I can film it this weekend').save!
+    theirs = Listing.create!(account: ana, title: 'A gardener', category: 'service', kind: 'wanted', state: 'live', looking_for: 'job')
+    ListingOffer.pitch(theirs, offerer: bob.account, message: 'Ten years of veggie gardens').tap(&:save!).accept!
+    Listing.create!(account: bob.account, title: 'Clay mug', category: 'creation', state: 'live')
+
+    visit '/hub/wachuneed/mine'
+
+    within('section[aria-label="Waiting on you"]') { expect(page).to have_content('I can film it this weekend') }
+    within('section[aria-label="Work you\'re doing"]') { expect(page).to have_content('A gardener') }
+    within('section[aria-label="Your wanted ads"]') { expect(page).to have_css('.space-card', text: 'Guitar lesson video') }
+    within('section[aria-label="Selling"]') { expect(page).to have_css('.space-card', text: 'Clay mug') }
+    within('section[aria-label="My shop"]') { expect(page).to have_button('Open a shop') }
+  end
+
+  it 'carries chosen work through: delivered by whoever does it, done by the poster' do
+    ana = Fabricate(:account, username: 'ana')
+    theirs = Listing.create!(account: ana, title: 'A gardener', category: 'service', kind: 'wanted', state: 'live', looking_for: 'job')
+    answer = ListingOffer.pitch(theirs, offerer: bob.account, message: 'Ten years of veggie gardens').tap(&:save!)
+    answer.accept!
+
+    visit '/hub/wachuneed/mine'
+    within('section[aria-label="Work you\'re doing"]') do
+      click_on 'Mark delivered'
+      expect(page).to have_content(/delivered/i)
+      expect(page).to have_no_button('Mark delivered')
+    end
+    expect(answer.reload.delivered_at).to be_present
+
+    answer.complete!
+    visit '/hub/wachuneed/mine'
+    within('section[aria-label="Work you\'re doing"]') { expect(page).to have_content(/done/i) }
   end
 
   it 'takes the old section addresses to the new ones' do
@@ -118,11 +282,10 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
   # docs/spaces/wachuneed.md, Shops.
   describe 'shops' do
-    it 'opens a shop from the Ж menu on Shops, with a Kollection, and lands on its page' do
-      visit '/hub/wachuneed/shops'
+    it 'opens a shop from Mine, with a Kollection, and lands on its page' do
+      visit '/hub/wachuneed/mine'
 
-      find('.kronk-menu__trigger').click
-      find('.kronk-menu__moon[title="Open a shop"]').click
+      click_on 'Open a shop'
       fill_in 'Shop name', with: 'Bob Aromas'
       click_on 'Add a Kollection'
       fill_in 'Kollection name', with: 'Skin Care'
@@ -141,12 +304,14 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         Listing.create!(account: bob.account, title: 'Loose candle', category: 'goods', state: 'live')
       end
 
-      it 'shows the shop in the Shops row of the landing and its listings under their sections' do
+      it 'shows the shop in the Shops row along the top and its listings under their sections' do
         visit '/hub/wachuneed'
 
-        # A card, as in Shops, not a pill.
+        # A card, as in Shops, not a pill: wide, purple and tagged a shop,
+        # so it never reads as one more listing (Tal, 2026-11-16).
         within('section[aria-label="Shops"]') do
-          expect(page).to have_css('.space-grid--row .space-card', text: '2 listings')
+          expect(page).to have_css('.space-grid--row.space-grid--wide .space-card--accent', text: '2 listings')
+          expect(page).to have_css('.space-card__tag--shop', text: /shop/i)
           click_on 'Bob Aromas'
         end
 
@@ -157,10 +322,10 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         within('.wachuneed-shop__section', text: 'Everything else') { expect(page).to have_content('Loose candle') }
       end
 
-      it 'lists the shop in Shops, and its front is the standard detail page with its sections to jump to' do
-        visit '/hub/wachuneed/shops'
+      it 'opens the shop from the Shops row, and its front is the standard detail page with its sections to jump to' do
+        visit '/hub/wachuneed'
 
-        within('.space-grid') { click_on 'Bob Aromas' }
+        within('section[aria-label="Shops"]') { click_on 'Bob Aromas' }
 
         expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
         expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
@@ -169,12 +334,12 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         expect(page).to have_no_button('Message the seller')
       end
 
-      it 'shows your shop as a card at the top of Mine, and + in the shop adds an item to it' do
+      it 'shows your shop as a card under My shop on Mine, and + in the shop adds an item to it' do
         visit '/hub/wachuneed/mine'
 
-        expect(page).to have_css('.wachuneed-shops .space-card', text: 'Bob Aromas')
+        expect(page).to have_css('section[aria-label="My shop"] .space-card', text: 'Bob Aromas')
         expect(page).to have_no_button('See my shop')
-        within('.wachuneed-shops') { click_on 'Bob Aromas' }
+        within('section[aria-label="My shop"]') { click_on 'Bob Aromas' }
 
         expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
         find('.kronk-menu__trigger').click
@@ -436,7 +601,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
                                 booking: { parts: %w(time), minutes: 60 })
       ListingOffer.ask(listing, offerer: bob.account, starts_at: 3.days.from_now.utc.change(hour: 9)).tap(&:save!).accept!
 
-      visit '/hub/wachuneed/requests'
+      visit '/hub/wachuneed/mine'
 
       click_on 'Call it off'
       within('.confirm-dialog__panel') { click_on 'Call it off' }

@@ -21,6 +21,7 @@ import { writeComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { me } from 'mastodon/initial_state';
 
+import { AnswerWanted } from './answer_wanted';
 import { AskForListing } from './ask_for_listing';
 import { ListingBookingSummary } from './listing_booking_summary';
 import {
@@ -28,11 +29,14 @@ import {
   chosenExtraCents,
   formatListingAmount,
 } from './listing_options_chooser';
+import { formatListingPrice } from './listing_price';
 import {
   ListingVariantChooser,
   selectedVariant,
 } from './listing_variant_chooser';
 import type { ChosenVariant } from './listing_variant_chooser';
+import { ListingAnswers } from './requests_view';
+import { wantedFactsOf } from './wanted';
 
 // /hub/wachuneed/listings/:id — the listing detail page. Before this
 // existed the grid tiles on /hub/wachuneed rendered as inert divs
@@ -70,6 +74,12 @@ const messages = defineMessages({
   reservedNotice: {
     id: 'wachuneed.detail.reserved',
     defaultMessage: 'This listing is on hold for another Kronker.',
+  },
+  // A wanted ad with the people it wants (docs/spaces/wachuneed.md,
+  // Answering a wanted ad).
+  takenNotice: {
+    id: 'wachuneed.detail.taken',
+    defaultMessage: 'Someone has been chosen for this.',
   },
   closedNotice: {
     id: 'wachuneed.detail.closed',
@@ -112,8 +122,9 @@ const messages = defineMessages({
     id: 'wachuneed.detail.see_shop',
     defaultMessage: 'See everything from {shop}',
   },
-  wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
-  budget: { id: 'wachuneed.detail.budget', defaultMessage: 'Budget' },
+  wanted: { id: 'wachuneed.card.wanted', defaultMessage: 'Wanted' },
+  // A wanted ad's set price is what the poster pays.
+  paying: { id: 'wachuneed.detail.paying', defaultMessage: 'Paying {price}' },
 });
 
 const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
@@ -309,13 +320,18 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
     );
   }
 
+  const price = formatListingPrice(intl, listing);
+  const wantedFacts = wantedFactsOf(intl, listing);
+
   // The poster edits from the Ж menu; everyone else gets "Message the
   // poster" here.
   const isOwner = !!me && listing.account?.id === me;
 
   const stateNotice =
     listing.state === 'reserved'
-      ? messages.reservedNotice
+      ? listing.kind === 'wanted'
+        ? messages.takenNotice
+        : messages.reservedNotice
       : listing.state === 'closed'
         ? messages.closedNotice
         : null;
@@ -346,13 +362,19 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
               {intl.formatMessage(messages.wanted)}
             </span>
           ) : null}
-          {listing.price_display ? (
+          {price ? (
             <span className='wachuneed-detail__price'>
-              {listing.kind === 'wanted'
-                ? `${intl.formatMessage(messages.budget)} ${listing.price_display}`
-                : listing.price_display}
+              {listing.kind === 'wanted' &&
+              (listing.price_type ?? 'fixed') === 'fixed'
+                ? intl.formatMessage(messages.paying, { price })
+                : price}
             </span>
           ) : null}
+          {wantedFacts.map((fact) => (
+            <span key={fact} className='wachuneed-detail__fact'>
+              {fact}
+            </span>
+          ))}
           {/* Where it is shows once: as its Place's card in Konnected
               when it has one (decisions.md, 2026-10-27). */}
           {listing.location && !listing.place_id ? (
@@ -454,6 +476,19 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
           chosen={chosen}
           quantity={quantity}
         />
+      ) : null}
+
+      {/* A wanted ad: anyone who can see it may answer; its poster sees
+          the answers here and chooses (docs/spaces/wachuneed.md,
+          Answering a wanted ad). */}
+      {listing.kind === 'wanted' &&
+      !isOwner &&
+      !!me &&
+      listing.can_message !== false ? (
+        <AnswerWanted listing={listing} />
+      ) : null}
+      {listing.kind === 'wanted' && isOwner ? (
+        <ListingAnswers listingId={listing.id} />
       ) : null}
 
       {listing.kind !== 'wanted' &&

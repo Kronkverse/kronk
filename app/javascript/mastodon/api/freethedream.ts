@@ -34,6 +34,9 @@ export interface FtdProjectParams {
   parent_id?: string;
   section_order?: string[];
   chat?: boolean;
+  // Its threshold (a projekt's own): null takes a measure off.
+  threshold_people?: number | null;
+  threshold_things?: number | null;
 }
 
 // A projekt page's sections in their usual order: its spaces, then its

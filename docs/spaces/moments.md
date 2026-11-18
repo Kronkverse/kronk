@@ -151,11 +151,15 @@ strip shows whenever you have one live, even before you pick anything.
   Moment**, all sharing one caption, tier and krew.
 - On a still photo: a voice clip, text overlays ("Aa"), and tagging
   people.
-- On a still photo, a row under the hero picks a **film look**: Original,
-  banksia, saltbush, bluegum, wattle or ironbark. The look is baked into
-  the photo in the browser at post time (see below); the server only gets
-  the finished JPEG, so a posted look can't be changed or removed, like
-  text overlays.
+- On a still photo, **Filter** (with the photo's other tools) lets you try
+  the film looks on the photo itself (Tal, 2026-11-12: a row of plant names
+  said nothing about what they did). Swipe across the photo, or tap the
+  arrows, to step through Original, Banksia, Saltbush, Bluegum, Wattle and
+  Ironbark; each shows its name, a plain line about it ("Warm and soft",
+  "Black and white") and a dot per filter, and **Done** keeps the one you
+  are on. The look is baked into the photo in the browser at post time (see
+  below); the server only gets the finished JPEG, so a posted look can't be
+  changed or removed, like text overlays.
 - Reach is the shared `ReachDropdown` limited to Mates and Orbit, with a
   single-select krew submenu.
 

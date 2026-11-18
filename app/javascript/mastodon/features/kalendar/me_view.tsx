@@ -15,7 +15,9 @@ import { apiRequestGet } from 'mastodon/api';
 // Above them, your accepted Wachuneed bookings both ways, soonest first
 // (GET /api/v1/kalendar/bookings; docs/spaces/wachuneed.md, Booking): what
 // you booked and what was booked from you, each with the other person.
-// Only the two of them see a booking. Left out when there are none.
+// Only the two of them see a booking. Left out when there are none. A
+// chosen answer to a wanted ad with a date shows here too, on that day
+// (`due`, no time).
 
 interface BirthdayAccount {
   id: string;
@@ -38,6 +40,8 @@ interface BookingEntry {
   listing: { id: string; slug: string | null };
   side: 'seller' | 'buyer';
   with: BirthdayAccount;
+  // A wanted ad's date (YYYY-MM-DD), for work chosen for it.
+  due?: boolean;
 }
 
 const messages = defineMessages({
@@ -49,6 +53,7 @@ const messages = defineMessages({
     id: 'kalendar.bookings.booked_from',
     defaultMessage: 'with {name}',
   },
+  due: { id: 'kalendar.bookings.due', defaultMessage: 'Due' },
   heading: {
     id: 'kalendar.birthdays.heading',
     defaultMessage: 'Mate birthdays',
@@ -112,17 +117,24 @@ const Bookings: React.FC = () => {
             </span>
           </span>
           <span className='kalendar-birthdays__date'>
-            {intl.formatDate(booking.starts_at, {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-            })}
+            {intl.formatDate(
+              booking.due
+                ? new Date(`${booking.starts_at}T00:00:00`)
+                : booking.starts_at,
+              {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+              },
+            )}
           </span>
           <span className='kalendar-birthdays__countdown'>
-            {intl.formatTime(booking.starts_at, {
-              hour: 'numeric',
-              minute: '2-digit',
-            })}
+            {booking.due
+              ? intl.formatMessage(messages.due)
+              : intl.formatTime(booking.starts_at, {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
           </span>
         </Link>
       ))}

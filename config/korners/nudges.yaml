@@ -175,7 +175,7 @@ listens:
     source_id_key: listing_id
     interaction: interactive
     cta_label: 'See requests'
-    cta_route: '/hub/wachuneed/requests'
+    cta_route: '/hub/wachuneed/mine'
   - event: wachuneed.offer.accepted
     source_korner: wachuneed
     verb: offer_accepted
@@ -202,7 +202,50 @@ listens:
     source_id_key: listing_id
     interaction: interactive
     cta_label: 'See requests'
-    cta_route: '/hub/wachuneed/requests'
+    cta_route: '/hub/wachuneed/mine'
+  # Answers to a wanted ad (docs/spaces/wachuneed.md, Answering a wanted
+  # ad): directed, since whoever answers can be anyone who can see the ad.
+  - event: wachuneed.pitch.made
+    source_korner: wachuneed
+    verb: pitched
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'See answers'
+    cta_route: '/hub/wachuneed/listings/{listing_id}'
+  - event: wachuneed.pitch.chosen
+    source_korner: wachuneed
+    verb: pitch_chosen
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'View wanted ad'
+    cta_route: '/hub/wachuneed/listings/{listing_id}'
+  - event: wachuneed.pitch.passed
+    source_korner: wachuneed
+    verb: pitch_passed
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: passive
+  - event: wachuneed.pitch.delivered
+    source_korner: wachuneed
+    verb: pitch_delivered
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'Mark it done'
+    cta_route: '/hub/wachuneed/mine'
+  - event: wachuneed.pitch.done
+    source_korner: wachuneed
+    verb: pitch_done
+    directed: true
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: passive
   # A brand you proposed has the backers it needs and is in Brands now
   # (docs/spaces/wachuneed.md, Brands). Once per brand. Directed: the
   # backer who brought it there needn't be your Mate.
@@ -261,6 +304,15 @@ listens:
     cta_label: 'Have a look'
     cta_route: '/hub/freethedream/p/{project_id}'
     aggregation: { window: 10m }
+  - event: freethedream.projekt.begun
+    source_korner: freethedream
+    verb: projekt_begun
+    directed: true
+    source_type: Freethedream::Project
+    source_id_key: project_id
+    interaction: interactive
+    cta_label: 'Have a look'
+    cta_route: '/hub/freethedream/p/{project_id}'
   - event: kuestions.question.answered
     source_korner: kuestions
     verb: answered
@@ -298,6 +350,44 @@ listens:
   - event: booth.set.shouted
     source_korner: booth
     verb: shouted
+    directed: true
+    source_type: BoothSet
+    source_id_key: booth_set_id
+    interaction: interactive
+    cta_label: 'View set'
+    cta_route: '/hub/booth/sets/{booth_set_id}'
+  # Samples (docs/spaces/booth.md, Samples). Someone asked to use your
+  # ask-first sample; the maker said yes or no; a set lists your sample
+  # under Samples used. About your work or your own request, and the other
+  # person need not be a Mate, so directed (like a Wachuneed offer).
+  - event: booth.sample.asked
+    source_korner: booth
+    verb: sample_asked
+    directed: true
+    source_type: BoothSample
+    source_id_key: booth_sample_id
+    interaction: interactive
+    cta_label: 'View sample'
+    cta_route: '/hub/booth/samples/{booth_sample_id}'
+  - event: booth.sample.granted
+    source_korner: booth
+    verb: sample_granted
+    directed: true
+    source_type: BoothSample
+    source_id_key: booth_sample_id
+    interaction: interactive
+    cta_label: 'View sample'
+    cta_route: '/hub/booth/samples/{booth_sample_id}'
+  - event: booth.sample.declined
+    source_korner: booth
+    verb: sample_declined
+    directed: true
+    source_type: BoothSample
+    source_id_key: booth_sample_id
+    interaction: passive
+  - event: booth.sample.used
+    source_korner: booth
+    verb: sample_used
     directed: true
     source_type: BoothSet
     source_id_key: booth_set_id

@@ -7,18 +7,21 @@ import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 
+import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import { showAlert } from 'mastodon/actions/alerts';
+import api from 'mastodon/api';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { Icon } from 'mastodon/components/icon';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
-import { SpaceGrid } from 'mastodon/components/space_grid';
+import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { useKonnectReturn } from 'mastodon/hooks/useKonnectReturn';
 import { useIdentity } from 'mastodon/identity_context';
+import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
 import {
@@ -39,23 +42,28 @@ import {
   LiveNowStrip,
   LiveView,
 } from './components/live_view';
+import { SampleComposer } from './components/sample_composer';
+import { SamplesView } from './components/samples_view';
 import { ShareForm } from './components/share_form';
 import { KINDS, kindMessage } from './kinds';
-import type { BoothCredit, BoothKind, BoothSet } from './types';
+import type { BoothCredit, BoothKind, BoothSet, BoothVibe } from './types';
 import { useBoothLives } from './use_booth_lives';
 import { useBoothSets } from './use_booth_sets';
 import type { BoothSort } from './use_booth_sets';
 import { useBoothShelves } from './use_booth_shelves';
+import { VIBES, VIBE_ICONS, isVibe, vibeHint, vibeName } from './vibes';
 
-// The Booth — Musik (every set, searchable and sortable), Live (sets
+// The Booth — Musik (every set, searchable and sortable), Samples (loops,
+// vocals, beats, one-shots and stems to make things with), Live (sets
 // played live on Huddle's Jitsi server, now and coming up), My sets (your
 // own sets, live sets and saved sets) and Artists (the people behind
 // them). Both are views of the manifest
 // (`config/korners/booth.yaml`), routed by `<KornerShell>` from the URL
 // segment after `/hub/booth`; the Frame draws the title rotator.
 //
-// Uploading and going live are the Ж menu's "Upload or go live"
-// (`/hub/booth/composer`, `/composer/live` for Go live); the
+// Uploading, going live and sharing samples are the Ж menu's "Upload, go
+// live or share samples" (`/hub/booth/composer`, `/composer/live` for Go
+// live, `/composer/sample` for samples); the
 // how-it-works strip and the empty state point at it too, because a
 // musician arriving for the first time shouldn't have to find the Ж
 // before they know what the Booth is for.
@@ -83,6 +91,20 @@ const messages = defineMessages({
   },
   clearSearch: { id: 'booth.search_clear', defaultMessage: 'Clear search' },
   allGenres: { id: 'booth.genre_all', defaultMessage: 'All genres' },
+  vibes: { id: 'booth.vibes.heading', defaultMessage: 'Vibes' },
+  vibeShowing: { id: 'booth.vibes.showing', defaultMessage: 'Showing' },
+  openToCollab: { id: 'booth.collab.open', defaultMessage: 'Open to collab' },
+  collab: { id: 'booth.collab.ask', defaultMessage: 'Collab?' },
+  collabMine: {
+    id: 'booth.collab.mine',
+    defaultMessage:
+      'Open to collab: anyone in the Booth can message you about making something together, Mates or not.',
+  },
+  collabMineOff: {
+    id: 'booth.collab.mine_off',
+    defaultMessage:
+      'Say you’re open to collab and anyone in the Booth can message you about making something together.',
+  },
   allKinds: { id: 'booth.kind_all', defaultMessage: 'All kinds' },
   kindLabel: { id: 'booth.filter.kind', defaultMessage: 'Kind' },
   sortChosen: {
@@ -240,7 +262,9 @@ function deriveArtists(sets: BoothSet[]): BoothArtist[] {
           key,
           name: credit.account?.display_name ?? credit.name ?? key,
           acct: credit.account?.acct,
+          accountId: credit.account?.id,
           avatar: credit.account?.avatar,
+          openToCollab: credit.account?.open_to_collab ?? false,
           setCount: 1,
         });
       }
@@ -430,8 +454,48 @@ const MusikShelves: React.FC<{
   );
 };
 
+// Listening by how it feels (docs/spaces/booth.md, Vibes): the four vibes
+// as tiles at the top of Musik, each narrowing the grid to its sets
+// (`?vibe=`, so a vibe can be linked). The one showing says so, and
+// tapping it again shows everything.
+const VibeRow: React.FC<{ chosen: BoothVibe | null }> = ({ chosen }) => {
+  const intl = useIntl();
+  const { pathname } = useLocation();
+
+  return (
+    <section
+      className='booth-vibes'
+      aria-label={intl.formatMessage(messages.vibes)}
+    >
+      <SpaceGrid className='booth-vibes__grid'>
+        {VIBES.map((vibe) => {
+          const Glyph = VIBE_ICONS[vibe];
+          return (
+            <SpaceCard
+              key={vibe}
+              to={chosen === vibe ? pathname : `${pathname}?vibe=${vibe}`}
+              placeholder={<Glyph />}
+              title={intl.formatMessage(vibeName(vibe))}
+              meta={intl.formatMessage(vibeHint(vibe))}
+              tag={
+                chosen === vibe
+                  ? intl.formatMessage(messages.vibeShowing)
+                  : undefined
+              }
+              tagKind='vibe-on'
+            />
+          );
+        })}
+      </SpaceGrid>
+    </section>
+  );
+};
+
 const MusikView: React.FC = () => {
   const intl = useIntl();
+  const { search: urlSearch } = useLocation();
+  const vibeParam = new URLSearchParams(urlSearch).get('vibe');
+  const vibe = isVibe(vibeParam) ? vibeParam : null;
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
   const [genre, setGenre] = useState<string | null>(null);
@@ -442,8 +506,13 @@ const MusikView: React.FC = () => {
   // "See all" on First listens turns the grid into that list.
   const [allFirst, setAllFirst] = useState(false);
   const { sets, loading, loadingMore, hasMore, loadMore, replace, remove } =
-    useBoothSets({ query, genre, kind, sort, firstListens: allFirst });
-  const filtering = query !== '' || genre !== null || kind !== null || allFirst;
+    useBoothSets({ query, genre, kind, vibe, sort, firstListens: allFirst });
+  const filtering =
+    query !== '' ||
+    genre !== null ||
+    kind !== null ||
+    vibe !== null ||
+    allFirst;
   const first = useBoothSets({ firstListens: true });
   const firstBadge = intl.formatMessage(messages.firstListens);
 
@@ -517,6 +586,8 @@ const MusikView: React.FC = () => {
   return (
     <>
       <LiveNowStrip />
+
+      <VibeRow chosen={vibe} />
 
       {/* First listens: recent sets few people have heard yet, up front so
           new voices get a first audience instead of a chart. */}
@@ -802,6 +873,58 @@ const MusikView: React.FC = () => {
   );
 };
 
+// Open to collab, said from My sets (docs/spaces/booth.md, Open to
+// collab). It's the Booth setting `open_to_collab`, so the Booth's settings
+// page has it too.
+const COLLAB_SETTING = '/api/v1/korners/booth/settings';
+
+const CollabToggle: React.FC = () => {
+  const intl = useIntl();
+  const [open, setOpen] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api()
+      .get<{ values?: Record<string, unknown> }>(COLLAB_SETTING)
+      .then((res) => {
+        if (!cancelled) setOpen(res.data.values?.open_to_collab === true);
+        return undefined;
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleToggle = useCallback(() => {
+    if (open === null) return;
+    const next = !open;
+    setOpen(next);
+    api()
+      .patch(`${COLLAB_SETTING}/open_to_collab`, { value: next })
+      .catch(() => {
+        setOpen(!next);
+      });
+  }, [open]);
+
+  if (open === null) return null;
+
+  return (
+    <div className='booth-mine__collab'>
+      <p>
+        {intl.formatMessage(
+          open ? messages.collabMine : messages.collabMineOff,
+        )}
+      </p>
+      <KornerPill
+        label={intl.formatMessage(messages.openToCollab)}
+        active={open}
+        onClick={handleToggle}
+      />
+    </div>
+  );
+};
+
 // My sets: a musician's own corner of the Booth. Their sets (drafts
 // included) with plays, the live sets they've planned, and the sets
 // they've saved. Saved is private to them.
@@ -832,6 +955,8 @@ const MySetsView: React.FC = () => {
 
   return (
     <div className='booth-mine'>
+      <CollabToggle />
+
       <dl className='booth-mine__stats'>
         <div>
           <dt>{intl.formatMessage(messages.mineSets)}</dt>
@@ -939,6 +1064,13 @@ const ArtistsView: React.FC = () => {
     },
     [history],
   );
+  // An artist open to collab: a message to them, Mates or not.
+  const collabId = activeArtistStat?.openToCollab
+    ? activeArtistStat.accountId
+    : undefined;
+  const handleCollab = useCallback(() => {
+    if (collabId) history.push(`/nudges/with/${collabId}`);
+  }, [history, collabId]);
 
   if (loading) {
     return <LoadingState label={intl.formatMessage(messages.loading)} />;
@@ -980,10 +1112,27 @@ const ArtistsView: React.FC = () => {
           {activeArtistStat && (
             <div className='booth-artist-detail__stat'>
               {artistStatLabel(activeArtistStat)}
+              {activeArtistStat.openToCollab && (
+                <span className='booth-artist-detail__collab'>
+                  {intl.formatMessage(messages.openToCollab)}
+                </span>
+              )}
             </div>
           )}
         </div>
       </div>
+      {activeArtistStat?.openToCollab &&
+        activeArtistStat.accountId &&
+        activeArtistStat.accountId !== me && (
+          <KornerActionBar className='booth-artist-detail__actions'>
+            <KornerPill
+              icon={ChatIcon}
+              iconId='chat'
+              label={intl.formatMessage(messages.collab)}
+              onClick={handleCollab}
+            />
+          </KornerActionBar>
+        )}
       {artistSets.length > 0 ? (
         <SetGallery sets={artistSets} onReplace={replace} onRemove={remove} />
       ) : (
@@ -1008,6 +1157,8 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
       location.pathname.startsWith('/hub/booth/new'));
   const goingLive =
     composing && location.pathname.startsWith('/hub/booth/composer/live');
+  const sharingSamples =
+    composing && location.pathname.startsWith('/hub/booth/composer/sample');
 
   // A new set lands on its own page. If it went out to the feed, say so;
   // if not, the page offers to share it.
@@ -1024,6 +1175,14 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     if (returnToSource('/hub/booth')) return;
     history.push('/hub/booth');
   }, [history, returnToSource]);
+
+  // Shared samples open on their page, or their pack's.
+  const handleSamplesShared = useCallback(
+    (to: string) => {
+      history.push(to);
+    },
+    [history],
+  );
 
   // A live set opens its room: the host's get-ready panel for "now", the
   // scheduled page for "later".
@@ -1042,6 +1201,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
       defaultView='musik'
       views={{
         musik: () => <MusikView />,
+        samples: () => <SamplesView />,
         live: () => <LiveView />,
         mine: () => <MySetsView />,
         artists: () => <ArtistsView />,
@@ -1058,7 +1218,13 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
           onCancel={handleCancelUpload}
         />
       )}
-      {composing && !goingLive && (
+      {sharingSamples && (
+        <SampleComposer
+          onShared={handleSamplesShared}
+          onCancel={handleCancelUpload}
+        />
+      )}
+      {composing && !goingLive && !sharingSamples && (
         <BoothComposer
           onCreated={handleCreated}
           onCancel={handleCancelUpload}

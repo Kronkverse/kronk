@@ -9,6 +9,14 @@
 # later edit to the listing doesn't change a request already made.
 # `amount_cents` is a counter-offer, which nothing makes yet.
 #
+# On a wanted ad the request runs the other way: an answer (docs/spaces/
+# wachuneed.md, Answering a wanted ad). The offerer is someone who can do
+# it or has it, with their price (`amount_cents`, for what the ad's price
+# is for) and what they would do (`message`). The poster chooses one, or
+# up to the ad's `spots`, or says no thanks; once enough are chosen the ad
+# is taken and the rest hear it went elsewhere. Whoever was chosen marks it
+# delivered (`delivered_at`) and the poster marks it done (`completed_at`).
+#
 # For a listing that is booked (Listing::BOOKING_PARTS) the request is a
 # booking: it also carries what the parts ask for, a time (`starts_at`,
 # with `ends_at` when the listing has a set length), a from and a to
@@ -17,8 +25,10 @@
 class ListingOffer < ApplicationRecord
   STATES       = %w(pending accepted declined withdrawn expired cancelled).freeze
   MAX_QUANTITY = 99
+  # What an answer to a wanted ad says, at least.
+  MIN_PITCH = 10
   # A booking waiting or accepted holds its time.
-  HELD_STATES  = %w(pending accepted).freeze
+  HELD_STATES = %w(pending accepted).freeze
 
   belongs_to :listing
   belongs_to :offerer, class_name: 'Account'
@@ -31,7 +41,8 @@ class ListingOffer < ApplicationRecord
   validates :message, length: { maximum: 1000 }
   validates :details, length: { maximum: 1000 }
   validate  :amount_non_negative
-  validate  :can_be_asked, on: :create
+  validate  :can_be_asked, on: :create, unless: :pitch?
+  validate  :can_be_pitched, on: :create, if: :pitch?
   validate  :choices_on_offer, on: :create
   validate  :booking_given, on: :create
 
@@ -52,6 +63,18 @@ class ListingOffer < ApplicationRecord
     request.book(starts_at, route, details) if listing.bookable?
     request.pick_date(ticket_date_id) if listing.tickets?
     request
+  end
+
+  # An answer to a wanted ad: who can do it, for how much (in cents, for
+  # what the ad's price is for), and what they would do.
+  def self.pitch(listing, offerer:, amount_cents: nil, message: nil)
+    amount = amount_cents.presence && amount_cents.to_i
+    new(listing: listing, offerer: offerer, quantity: 1, message: message.to_s.strip.presence,
+        amount_cents: amount, price_currency: amount && (listing.price_currency.presence || 'AUD'))
+  end
+
+  def pitch?
+    listing&.wanted?
   end
 
   # A ticket is for one of the listing's dates, and holds its time, so an
@@ -100,6 +123,8 @@ class ListingOffer < ApplicationRecord
   # stays up for the next one.
   # A booked listing stays up for the next booking.
   def accept!
+    return choose! if pitch?
+
     transaction do
       raise ActiveRecord::RecordInvalid, self if ticket_date && !ticket_date.lock!.room_for?(quantity) && seats_error!
 
@@ -111,7 +136,25 @@ class ListingOffer < ApplicationRecord
 
   def decline!
     update!(state: 'declined', responded_at: Time.current)
-    publish_offer_response('wachuneed.offer.declined')
+    publish_offer_response(pitch? ? 'wachuneed.pitch.passed' : 'wachuneed.offer.declined')
+  end
+
+  # The poster chooses this answer. Once as many are chosen as the ad wants
+  # people, it is taken (reserved): it leaves browse, and every answer still
+  # waiting hears it went elsewhere.
+  def choose!
+    passed = []
+    transaction do
+      listing.lock!
+      update!(state: 'accepted', responded_at: Time.current)
+      if listing.listing_offers.accepted.count >= listing.spots
+        listing.update!(state: 'reserved') if listing.state == 'live'
+        passed = listing.listing_offers.pending.where.not(id: id).to_a
+        passed.each { |other| other.update!(state: 'declined', responded_at: Time.current) }
+      end
+    end
+    publish_offer_response('wachuneed.pitch.chosen')
+    passed.each { |other| other.send(:publish_offer_response, 'wachuneed.pitch.passed') }
   end
 
   def withdraw!
@@ -129,6 +172,19 @@ class ListingOffer < ApplicationRecord
       listing_id: listing_id,
       offer_id: id
     )
+  end
+
+  # Whoever was chosen says it is delivered; the poster hears.
+  def deliver!
+    update!(delivered_at: Time.current)
+    Kronk::KornerEvents.publish('wachuneed.pitch.delivered', actor_account_id: offerer_id,
+                                                             recipient_account_id: listing.account_id, listing_id: listing_id, offer_id: id)
+  end
+
+  # The poster says it is done; whoever did it hears.
+  def complete!
+    update!(completed_at: Time.current, delivered_at: delivered_at || Time.current)
+    publish_offer_response('wachuneed.pitch.done')
   end
 
   def seats_error!
@@ -203,6 +259,22 @@ class ListingOffer < ApplicationRecord
     end
   end
 
+  # A wanted ad still up, never your own, only by someone who can see it,
+  # one answer each while it waits or once chosen, saying something.
+  def can_be_pitched
+    return if listing.nil? || offerer.nil?
+
+    if listing.state != 'live'
+      errors.add(:base, 'This is no longer wanted')
+    elsif !listing.messageable_by?(offerer)
+      errors.add(:base, 'You cannot answer this')
+    elsif listing.listing_offers.held.exists?(offerer_id: offerer.id)
+      errors.add(:base, 'You have already answered this')
+    elsif message.to_s.length < MIN_PITCH
+      errors.add(:base, 'Say what you would do')
+    end
+  end
+
   # Only something on offer and still up, never your own, only by someone
   # who can see it (and so message about it), and one open request each.
   def can_be_asked
@@ -234,10 +306,11 @@ class ListingOffer < ApplicationRecord
     errors.add(:amount_cents, 'must not be negative')
   end
 
-  # wachuneed.offer.made: the seller hears that someone asked.
+  # wachuneed.offer.made: the seller hears that someone asked. An answer
+  # to a wanted ad is wachuneed.pitch.made, to the poster.
   def publish_wachuneed_offer_made
     Kronk::KornerEvents.publish(
-      'wachuneed.offer.made',
+      pitch? ? 'wachuneed.pitch.made' : 'wachuneed.offer.made',
       actor_account_id: offerer_id,
       recipient_account_id: listing.account_id,
       listing_id: listing_id,

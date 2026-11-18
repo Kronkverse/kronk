@@ -10,23 +10,18 @@ import type {
   ApiListingOptionJSON,
   ApiListingVariantsJSON,
   ListingAvailability,
+  ListingLookingFor,
+  ListingPriceType,
+  ListingPriceUnit,
   ListingVisibility,
+  ListingWhereMode,
 } from 'mastodon/api_types/wachuneed';
 
-// Wachuneed listings — split by scope so the sub-views share a client
-// but hit the same server endpoint with different params.
-//
-//   offered → live listings on offer.
-//   desired → live listings someone is looking for (wanted).
-//   mine    → the caller's own listings (all states, both kinds).
+// Wachuneed listings. Browse is one list, offered and wanted together
+// (the one page, home_view.tsx); Mine is the caller's own, in every state.
 
-export const apiGetWachuneedListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', { kind: 'offer' });
-
-export const apiGetWachumissingListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', {
-    kind: 'wanted',
-  });
+export const apiGetAllListings = () =>
+  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings');
 
 export const apiGetWachugotListings = () =>
   apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', {
@@ -54,6 +49,12 @@ export interface CreateListingParams {
   subcategory?: string;
   price_cents?: number | null;
   price_currency?: string;
+  price_type?: ListingPriceType;
+  price_unit?: ListingPriceUnit | null;
+  looking_for?: ListingLookingFor;
+  where_mode?: ListingWhereMode | null;
+  due_on?: string | null;
+  spots?: number;
   location?: string;
   state?: 'draft' | 'live';
   // One of your own shop's sections, or null for none.

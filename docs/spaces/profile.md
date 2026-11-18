@@ -55,6 +55,11 @@ only place identity is drawn.
 Counts: `N posts · N Mates · Joined <month year>`, plain text, not links, and under them the bio
 (`AccountBio`; while designing your own, `components/profile_bio_field.tsx`).
 
+The block starts below the top bar's fade (1.5rem under the Frame's first
+row), and the avatar rides up over the cover's edge only when there is a
+cover. A profile you can't see yet has no cover, and its picture and name
+used to sit half under the bar (Kommons "Mateing page", 2026-11-08).
+
 The way to someone's Wachuneed shop is not here but in the header of their
 Wachuneed shelf (`components/profile_shop_link.tsx`; Tal, 2026-10-14).
 

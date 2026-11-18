@@ -43,7 +43,9 @@ RSpec.describe 'Kuestions as a Krew space' do
       post '/api/v2/kuestions', params: payload, headers: headers_for(member)
       expect(response).to have_http_status(201)
       question = Question.find(response.parsed_body[:id])
-      expect(question).to have_attributes(krew_id: krew.id, status_id: nil)
+      expect(question.krew_id).to eq krew.id
+      expect(question.status).to have_attributes(visibility: 'self_only', krews: [krew])
+      expect(StatusPolicy.new(outsider.account, question.status).show?).to be false
 
       get "/api/v2/kuestions/#{question.id}", headers: headers_for(outsider)
       expect(response).to have_http_status(404)

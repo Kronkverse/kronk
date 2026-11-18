@@ -18,15 +18,44 @@ RSpec.describe 'Kuestions in a Krew or projekt' do
     post '/api/v2/kuestions', params: { title: 'Who brings the generator?', answer_format: 'text' }.merge(params), headers: headers_for(user)
   end
 
+  # Asks with the jobs run inline (:inline_jobs), so the feed post has
+  # reached its feeds.
+  def ask_and_deliver(user, **params)
+    allow(redis).to receive(:publish)
+    ask(user, **params)
+    Question.find(response.parsed_body[:id])
+  end
+
+  # Only recently active accounts get home feeds.
+  def active_user
+    Fabricate(:user, current_sign_in_at: Time.now.utc)
+  end
+
+  def home_feed(user)
+    HomeFeed.new(user.account).get(20).map(&:id)
+  end
+
   describe 'asking in a Krew' do
-    it 'keeps it in the Krew, out of the feed', :aggregate_failures do
+    it 'keeps it in the Krew', :aggregate_failures do
       ask(member, krew_id: krew.id)
 
       expect(response).to have_http_status(201)
       question = Question.find(response.parsed_body[:id])
       expect(question.krew).to eq krew
-      expect(question.status_id).to be_nil
       expect(response.parsed_body[:home]).to include(kind: 'krew', id: krew.id.to_s, name: krew.name)
+    end
+
+    it "reaches its members' feeds and no one else's", :aggregate_failures, :inline_jobs do
+      other = active_user
+      outsider.update!(current_sign_in_at: Time.now.utc)
+      krew.krew_memberships.create!(account: other.account, role: 'member', source: 'direct')
+
+      question = ask_and_deliver(member, krew_id: krew.id)
+
+      expect(question.status.visibility).to eq 'self_only'
+      expect(home_feed(other)).to include(question.status_id)
+      expect(home_feed(outsider)).to_not include(question.status_id)
+      expect(StatusPolicy.new(outsider.account, question.status).show?).to be false
     end
 
     it 'is only for its members' do
@@ -118,6 +147,19 @@ RSpec.describe 'Kuestions in a Krew or projekt' do
       ask(member, project_id: listed.id)
 
       expect(Question.find(response.parsed_body[:id]).freethedream_project).to eq listed
+    end
+
+    # Joining a Krew joins its projekts (KrewMembership#join_emergence), so
+    # its members are in; someone who can only see the projekt is not.
+    it "reaches the projekt's members, not everyone who can see it", :aggregate_failures, :inline_jobs do
+      joined = active_user
+      listed.memberships.create!(account: joined.account, state: :member)
+      outsider.update!(current_sign_in_at: Time.now.utc)
+      question = ask_and_deliver(member, project_id: listed.id)
+
+      expect(home_feed(joined)).to include(question.status_id)
+      expect(listed.visible_to?(outsider.account)).to be true
+      expect(home_feed(outsider)).to_not include(question.status_id)
     end
 
     it 'is not asked by someone outside it' do

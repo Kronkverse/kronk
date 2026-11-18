@@ -17,6 +17,119 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-17 — Booth samples: terms are trust, not locks
+
+The last part of Tal's Kommons proposal "Booth Revamp": a place to share
+loops, vocals and beats for others to use, with credit, and their key.
+
+**Decision.** Samples are their own thing in the Booth (a Samples view,
+`BoothSample`), up to two minutes, alone or in packs. Each has terms:
+**Free with credit** or **Ask first**, where the maker says yes or no to
+each request (Tal: free with credit and ask first; anyone who can see it may
+download; packs like albums). A set credits what it used under **Samples
+used**, and the maker is told.
+
+Ask first gates the app's Download and Samples used, not the file. Anyone
+who can see a sample can listen, and listening needs the file's URL, so a
+determined person could save it; holding the audio back until a yes would
+mean no preview, which defeats choosing a sample by ear. Kronk's media is
+not secret anywhere else either. So the terms are an agreement between
+musicians, made visible: who asked, who said yes, and who credited whom.
+docs/spaces/booth.md, Samples.
+
+## 2026-11-17 — A projekt can have a threshold before it begins
+
+Tomas's proposal "Threshold Meter": "Projects that need foundational items,
+people, money, etc, can add a threshold meter that once it hits the project
+begins. Visualised through an actual meter of sorts." Tal: build a first
+version.
+
+**Decision:** a projekt's owner can set, in Edit, how many people it needs
+and how many things on its checklists sorted, either or both. Its page
+shows a meter for each, and it is **begun** (recorded, with the date, and
+its members told) the first time what it asks for is reached; it stays begun if
+someone leaves. There is no money measure: money moves outside Kronk, and
+chipping in is already a Bring, which counts once covered. Begun is a
+marker, not a gate: nothing is locked before it. docs/spaces/freethedream.md,
+The threshold.
+
+## 2026-11-17 — Booth: moments on album tracks, vibes, open to collab
+
+**Decision.** Three parts of Tal's Kommons proposal "Booth Revamp", in one
+change. A shoutout on an album can be pinned to a moment in one of its
+tracks (`booth_shoutouts.booth_set_track_id`). A set has up to two of four
+fixed **vibes** (Acoustic, Beats, Poetry, Organic), and Musik opens with
+the four as tiles that narrow the grid. A musician can say they're **open
+to collab** (a Booth setting), which marks them on their sets and artist
+page and lets anyone in the Booth message them, Mates or not, with a
+**Collab?** action.
+
+**Why.** Timed shoutouts already existed for one recording; only albums
+were left out, because their time runs per track, so the moment now names
+its track. Vibes are how a listener who doesn't know genre names finds
+what they're after; a fixed few keeps them tiles to tap, and they sit at
+the top of Musik because they're where listening starts, not one more
+filter pill. Collab needs a way to reach someone who isn't your Mate, and
+Kronk only allows that with consent: saying "open to collab" is that
+consent, the same shape as a shop inviting enquiries, so it can't become a
+way to reach people who didn't ask for it.
+
+**Not yet.** Samples (loops, vocals and beats to share, with key, BPM and
+credit when used) are the proposal's next part, planned with Tal on their
+own.
+
+---
+
+## 2026-11-17 — Kommunity's first page: a Discover row, then everyone
+
+**Decision.** Kommunity has three views: **Kommunity**, **Mates** and
+**Orb**. The first, Kommunity, is one page: a sideways row of people to
+meet, in three signed groups (Orbit, then your Krews, then Kronkers;
+someone in two groups shows in the first), and under it everyone who chose
+to be visible, A to Z, each row saying where you stand as Mates (Mate?,
+Mating…, Accept, or Mates). Discover and Everyone stop being views and
+their addresses redirect to it. The row is tiles (`SpaceCard`), not the
+drawer of tall profile cards it replaces.
+
+**Why.** Tal, designing Kommons "Kommunity Page": the home page of
+Kommunity should be labelled Kommunity, "show a horizontal scrollable list
+of 'discover' options, then under that the list of all (visible) kronkers,
+and a suggestion of whether you're mates with them or not"; the row
+"should begin with 'mates of mates', then krew members, followed by
+kronkers … maybe have a gap and sign between them". Four views split one
+question (who is here, and who could I meet) across pages. People nearest
+you come first because an introduction through a Mate or a Krew is the
+likeliest to mean something. The Mate wording is the button's own, so the
+journey reads the same everywhere.
+
+**Supersedes.** 2026-11-11 (Mates as the landing view) and the four-view
+order from Kommons "Landing Page" (2026-10-26).
+
+---
+
+## 2026-11-16 — Wachuneed is one page, Brands, and Mine
+
+**Decision.** Wachuneed has three sections: **All**, one page with the
+shops in a sideways row along the top and then one grid of everything
+live, offered and wanted together, with **All · Offered · Wanted** pills to
+narrow it; **Brands**; and **Mine**, which holds your shop, the requests
+asked of you and by you, and your own listings. Offered, Desired, Shops and
+Requests stop being sections and their addresses redirect. A wanted tile
+says **Wanted** (it said "Looking for").
+
+**Why.** Tal: someone scrolling Wachuneed should see everything for sale
+and every job on offer in one feed, told apart on the card, with shops
+along the top; the only other page is your own, with your jobs, what you
+are selling and buying, and your shop. Seven sections split one browse
+across four of them. Brands stays a section of its own (Tal's choice).
+
+**Supersedes** the landing of rows with See all (2026-10-29, Kommons "Home
+Page") and the Open a shop action on the Shops section (2026-10-21), which
+is now on Mine. Further steps (prices per hour and the like, the wanted-ad
+composer, answering a job) are in docs/spaces/wachuneed.md as they land.
+
+---
+
 ## 2026-11-11 — The feed opens on Kronkverse
 
 **Decision (Tal):** everyone's Home feed opens on Kronkverse. Feed settings

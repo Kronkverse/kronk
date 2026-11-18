@@ -11,6 +11,7 @@ class REST::QuestionSummarySerializer < ActiveModel::Serializer
 
   attribute :has_answered
   attribute :recent_answerer_avatars
+  attribute :home, if: -> { object.homed? }
 
   def id
     object.id.to_s
@@ -24,6 +25,15 @@ class REST::QuestionSummarySerializer < ActiveModel::Serializer
     return false unless current_user&.account
 
     object.answered_by?(current_user.account)
+  end
+
+  # Where it was asked, for the card's "In <name>" line.
+  def home
+    if object.krew_id.present?
+      { kind: 'krew', name: object.krew.name }
+    else
+      { kind: 'projekt', name: object.freethedream_project.title }
+    end
   end
 
   # Up to 5 avatars of recent answerers, newest first. Deliberately not

@@ -114,8 +114,14 @@ RSpec.describe 'Hub routes' do
       '/hub/martketplace/listing/1' => '/hub/wachuneed/listing/1',
       '/hub/wachuneed/listing/1' => '/hub/wachuneed/listings/1',
       '/wachuneed/listing/1' => '/hub/wachuneed/listings/1',
-      '/hub/wachuneed/wachumissing' => '/hub/wachuneed/desired',
+      '/hub/wachuneed/wachumissing' => '/hub/wachuneed?show=wanted',
       '/hub/wachuneed/wachugot' => '/hub/wachuneed/mine',
+      '/hub/wachuneed/offered' => '/hub/wachuneed?show=offered',
+      '/hub/wachuneed/desired' => '/hub/wachuneed?show=wanted',
+      '/hub/wachuneed/shops' => '/hub/wachuneed',
+      '/hub/wachuneed/requests' => '/hub/wachuneed/mine',
+      '/hub/kommunity/discover' => '/hub/kommunity',
+      '/hub/kommunity/everyone' => '/hub/kommunity',
     }.each do |old_path, new_path|
       it "301 #{old_path} → #{new_path}" do
         get old_path

@@ -43,6 +43,10 @@ class BoothSet < ApplicationRecord
   # An album's or EP's tracks, each its own audio file, in running order
   # (docs/spaces/booth.md, Albums). Every other kind has none.
   has_many :tracks, -> { order(:position, :id) }, class_name: 'BoothSetTrack', inverse_of: :booth_set, dependent: :delete_all, autosave: true
+  # Samples used (docs/spaces/booth.md, Samples): the samples it was made
+  # with, which credits them and their makers.
+  has_many :set_samples, -> { order(:position, :id) }, class_name: 'BoothSetSample', inverse_of: :booth_set, dependent: :delete_all
+  has_many :samples, through: :set_samples, source: :booth_sample
 
   # What a set is. Filterable in Musik; existing sets are mixes.
   KINDS = %w(mix live_recording track podcast spoken_word album ep).freeze
@@ -53,6 +57,16 @@ class BoothSet < ApplicationRecord
 
   # How many people an uploader can credit on one set.
   MAX_CREDITS = 10
+  # How many samples a set can list as used.
+  MAX_SAMPLES = 30
+
+  # How a set feels, beside its genres, for listeners who browse by what
+  # they're after rather than by name (Tal's Kommons proposal "Booth
+  # Revamp"): a fixed few, so they stay something to tap, never a tag
+  # cloud. Two at most: a set is usually one, and sometimes two at once
+  # (poetry over a guitar).
+  VIBES = %w(acoustic beats poetry organic).freeze
+  VIBES_MAX = 2
 
   # The one-line credit shown on cards and players: the uploader, then
   # everyone they credited. `artist_name` holds it. On sets from before
@@ -101,6 +115,8 @@ class BoothSet < ApplicationRecord
   validates :description, length: { maximum: 5000 }
   validates :event_name, length: { maximum: 200 }
   validates :genres, length: { maximum: 10 }
+  validates :vibes, length: { maximum: VIBES_MAX }
+  validate :vibes_must_be_known
   validates :kind, inclusion: { in: KINDS }
   validate :tracklist_must_be_well_formed
   validate :tracks_must_fit_kind
@@ -185,6 +201,10 @@ class BoothSet < ApplicationRecord
 
   # An album or EP is its tracks: at least two and no single file. Any other
   # kind is one recording and has no tracks.
+  def vibes_must_be_known
+    errors.add(:vibes, :inclusion) unless (Array(vibes) - VIBES).empty?
+  end
+
   def tracks_must_fit_kind
     count = kept_tracks.size
     if album?

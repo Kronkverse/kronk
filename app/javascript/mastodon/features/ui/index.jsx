@@ -105,6 +105,8 @@ import {
   YouPortal,
   Questions,
   BoothSetPage,
+  BoothSamplePage,
+  BoothSamplePackPage,
   ProfileSectionsSettings,
   ProfileSpace,
   ProfileSettingsPer,
@@ -273,13 +275,13 @@ class SwitchingColumnsArea extends PureComponent {
                 inviter automatically (AutoGrooveInviterWorker).
                 Onboarding now ends at /start/profile → /home. */}
             {/* Legacy Mastodon `/directory` — retired 2026-08-05 in
-                favour of `/hub/kommunity/discover`, the Kronk-native
-                Discover list (docs/decisions.md). Any inbound
-                link — federation mail, third-party embed, cached
-                bookmark — lands at Discover instead of a dead SPA
-                route. The `/api/v1/directory` endpoint stays intact
+                favour of Kommunity (its first page has the Discover
+                row and the A to Z list since 2026-11-17;
+                docs/decisions.md). Any inbound link — federation
+                mail, third-party embed, cached bookmark — lands there
+                instead of a dead SPA route. The `/api/v1/directory` endpoint stays intact
                 for federation-facing external consumers. */}
-            <Redirect from='/directory' to='/hub/kommunity/discover' />
+            <Redirect from='/directory' to='/hub/kommunity' />
             <WrappedRoute path='/explore' component={Explore} content={children} />
             {/* /me — signed-in radial hub of self actions (Profile
                 / Timeline / Mates / Switch / Invite / Sign out).
@@ -325,6 +327,9 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/hub/huddle/composer' exact component={Live} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle' exact component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
+            {/* A sample's page and a sample pack's (docs/spaces/booth.md, Samples). */}
+            <WrappedRoute path='/hub/booth/samples/:id(\d+)' exact component={BoothSamplePage} content={children} />
+            <WrappedRoute path='/hub/booth/packs/:id(\d+)' exact component={BoothSamplePackPage} content={children} />
             {/* Native Booth. The non-exact /hub/booth match also catches the
                 lens sub-paths (/hub/booth/musik, /artists, …); the component
                 reads the lens from the URL. Set detail is matched above. */}
@@ -442,7 +447,7 @@ class SwitchingColumnsArea extends PureComponent {
             {/* One brand (docs/spaces/wachuneed.md, Brands); the list is
                 the brands view of the route below. */}
             <WrappedRoute path='/hub/wachuneed/brands/:id' exact component={WachuneedBrand} content={children} />
-            <WrappedRoute path={['/hub/wachuneed/requests', '/hub/wachuneed']} component={Wachuneed} content={children} />
+            <WrappedRoute path={['/hub/wachuneed/mine', '/hub/wachuneed']} component={Wachuneed} content={children} />
             {/* Connections retired with them — it listed follow requests
                 alongside followers and following. Requests keep their own
                 page at /follow_requests; the rest is now just Mates. */}
@@ -548,14 +553,16 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/@:acct/mates' exact component={ProfileSpace} content={children} />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
-            <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />
+            {/* Who frothed a post: /froths, Kronk's word (Tal, 2026-11-12,
+                Kommons "Froths"); /favourites still opens it for old links. */}
+            <WrappedRoute path={['/@:acct/:statusId/froths', '/@:acct/:statusId/favourites']} component={Favourites} content={children} />
             <WrappedRoute path='/@:acct/:statusId/quotes' component={Quotes} content={children} />
 
             {/* Legacy routes, cannot be easily factored with other routes because they share a param name */}
             <WrappedRoute path='/timelines/tag/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/statuses/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/statuses/:statusId/reblogs' component={Reblogs} content={children} />
-            <WrappedRoute path='/statuses/:statusId/favourites' component={Favourites} content={children} />
+            <WrappedRoute path={['/statuses/:statusId/froths', '/statuses/:statusId/favourites']} component={Favourites} content={children} />
 
             <WrappedRoute path='/follow_requests' component={FollowRequests} content={children} />
             <WrappedRoute path='/mate_requests' component={MateRequests} content={children} />

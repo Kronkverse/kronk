@@ -22,12 +22,10 @@ import { initMuteModal } from 'mastodon/actions/mutes';
 import { apiFollowAccount } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
-import { FollowersCounter } from 'mastodon/components/counters';
 import { DisplayName } from 'mastodon/components/display_name';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
-import { ShortNumber } from 'mastodon/components/short_number';
 import { Skeleton } from 'mastodon/components/skeleton';
 import { VerifiedBadge } from 'mastodon/components/verified_badge';
 import { useIdentity } from 'mastodon/identity_context';
@@ -66,6 +64,9 @@ const messages = defineMessages({
   mute: { id: 'account.mute_short', defaultMessage: 'Mute' },
   block: { id: 'account.block_short', defaultMessage: 'Block' },
   more: { id: 'status.more', defaultMessage: 'More' },
+  // Where the Mate journey ends ("Mate? → Mating… → Mates",
+  // follow_button.tsx), said on a row that lists Mates among others.
+  mates: { id: 'account.mates_marker', defaultMessage: 'Mates' },
   addToLists: {
     id: 'account.add_or_remove_from_list',
     defaultMessage: 'Add or Remove from lists',
@@ -84,6 +85,10 @@ interface AccountProps {
   defaultAction?: 'block' | 'mute';
   withBio?: boolean;
   withMenu?: boolean;
+  // Say "Mates" where the Mate button would be, on someone you're Mates
+  // with (the button shows nothing for a Mate). For lists that mix Mates
+  // with everyone else, like Kommunity's.
+  markMates?: boolean;
 }
 
 export const Account: React.FC<AccountProps> = ({
@@ -94,6 +99,7 @@ export const Account: React.FC<AccountProps> = ({
   defaultAction,
   withBio,
   withMenu = true,
+  markMates = false,
 }) => {
   const intl = useIntl();
   const { signedIn } = useIdentity();
@@ -268,6 +274,17 @@ export const Account: React.FC<AccountProps> = ({
         onClick={handleMute}
       />
     );
+  } else if (
+    markMates &&
+    relationship?.mate &&
+    !relationship.muting &&
+    !relationship.blocking
+  ) {
+    button = (
+      <span className='account__mates-marker'>
+        {intl.formatMessage(messages.mates)}
+      </span>
+    );
   } else {
     button = <FollowButton accountId={id} />;
   }
@@ -319,19 +336,18 @@ export const Account: React.FC<AccountProps> = ({
             <div className='account__contents'>
               <DisplayName account={account} />
 
-              {!minimal && (
+              {/* No follower or Mate count: how many Mates someone has
+                  isn't something to show (Tal, 2026-11-12, Kommons
+                  "Froths"). The line holds a verified link or a mute's time
+                  left, when there is one. */}
+              {!minimal && !account && (
                 <div className='account__details'>
-                  {account ? (
-                    <>
-                      <ShortNumber
-                        value={account.followers_count}
-                        renderer={FollowersCounter}
-                      />{' '}
-                      {verification} {muteTimeRemaining}
-                    </>
-                  ) : (
-                    <Skeleton width='7ch' />
-                  )}
+                  <Skeleton width='7ch' />
+                </div>
+              )}
+              {!minimal && account && (verification || muteTimeRemaining) && (
+                <div className='account__details'>
+                  {verification} {muteTimeRemaining}
                 </div>
               )}
             </div>

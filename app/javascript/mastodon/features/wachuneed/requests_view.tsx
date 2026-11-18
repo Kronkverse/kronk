@@ -13,9 +13,7 @@ import type {
   ApiRequestJSON,
   ApiRequestState,
 } from 'mastodon/api/wachuneed_requests';
-import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerPill } from 'mastodon/components/korner_pill';
-import { LoadingState } from 'mastodon/components/loading_state';
 import {
   CardActions,
   CardBadge,
@@ -27,36 +25,20 @@ import {
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { formatListingAmount } from './listing_options_chooser';
+import { formatListingPrice } from './listing_price';
 
-// /hub/wachuneed/requests — requests for listings (docs/spaces/wachuneed.md,
-// Requests). Asked of you first, each with Accept and Decline while it
-// waits; then what you asked for, which you can take back while it waits.
-// One flow card each (<StandardCard>): where it stands, the listing, who
-// and how much, what was chosen and said, and the actions.
+// Requests for listings and answers to wanted ads (docs/spaces/
+// wachuneed.md, Requests and Answering a wanted ad), as Mine lays them out
+// (their own section until 2026-11-16) and on a wanted ad's own page. One
+// flow card each (<StandardCard>): where it stands, the listing (or, on
+// its own page, the person), who and how much, what was chosen and said,
+// and the actions: Accept or Decline, Choose or No thanks, Take it back.
 //
 // A booking (docs/spaces/wachuneed.md, Booking) also shows when, the from
 // and the to, and what they need; once accepted, either of the two can
 // call it off.
 
 const messages = defineMessages({
-  loading: {
-    id: 'wachuneed.requests.loading',
-    defaultMessage: 'Loading requests…',
-  },
-  empty: {
-    id: 'wachuneed.requests.empty',
-    defaultMessage: 'No requests yet',
-  },
-  emptyBody: {
-    id: 'wachuneed.requests.empty.body',
-    defaultMessage:
-      'Choose what you want on a listing and tap Ask for this. What people ask of you shows here too.',
-  },
-  askedOfYou: {
-    id: 'wachuneed.requests.asked_of_you',
-    defaultMessage: 'Asked of you',
-  },
-  youAsked: { id: 'wachuneed.requests.you_asked', defaultMessage: 'You asked' },
   from: { id: 'wachuneed.requests.from', defaultMessage: 'From {name}' },
   to: { id: 'wachuneed.requests.to', defaultMessage: 'To {name}' },
   quantity: { id: 'wachuneed.requests.quantity', defaultMessage: '{count} of' },
@@ -118,6 +100,37 @@ const messages = defineMessages({
     defaultMessage: 'From: {place}',
   },
   routeTo: { id: 'wachuneed.requests.route_to', defaultMessage: 'To: {place}' },
+  // Answers to a wanted ad (docs/spaces/wachuneed.md, Answering a wanted
+  // ad): the poster chooses, or says no thanks.
+  choose: { id: 'wachuneed.answers.choose', defaultMessage: 'Choose' },
+  noThanks: { id: 'wachuneed.answers.no_thanks', defaultMessage: 'No thanks' },
+  noThanksTitle: {
+    id: 'wachuneed.answers.no_thanks_title',
+    defaultMessage: 'Say no thanks?',
+  },
+  noThanksMessage: {
+    id: 'wachuneed.answers.no_thanks_message',
+    defaultMessage: 'They will hear that you did not choose them.',
+  },
+  chosen: { id: 'wachuneed.answers.state.chosen', defaultMessage: 'Chosen' },
+  notChosen: {
+    id: 'wachuneed.answers.state.not_chosen',
+    defaultMessage: 'Not chosen',
+  },
+  deliver: {
+    id: 'wachuneed.answers.deliver',
+    defaultMessage: 'Mark delivered',
+  },
+  complete: { id: 'wachuneed.answers.complete', defaultMessage: 'Mark done' },
+  delivered: {
+    id: 'wachuneed.answers.state.delivered',
+    defaultMessage: 'Delivered',
+  },
+  done: { id: 'wachuneed.answers.state.done', defaultMessage: 'Done' },
+  answers: {
+    id: 'wachuneed.answers.heading',
+    defaultMessage: 'Answers ({count})',
+  },
 });
 
 const STATE_LABELS: Record<ApiRequestState, typeof messages.pending> = {
@@ -129,7 +142,13 @@ const STATE_LABELS: Record<ApiRequestState, typeof messages.pending> = {
   cancelled: messages.cancelled,
 };
 
-type Answer = 'accept' | 'decline' | 'withdraw' | 'cancel';
+export type Answer =
+  | 'accept'
+  | 'decline'
+  | 'withdraw'
+  | 'cancel'
+  | 'deliver'
+  | 'complete';
 
 // A pinned end of a booking: its name, or where it is.
 const placeName = (point: { lat: number; lng: number; name?: string }) =>
@@ -140,9 +159,12 @@ const RequestCard: React.FC<{
   side: 'seller' | 'buyer';
   busy: boolean;
   onAnswer: (request: ApiRequestJSON, answer: Answer) => void;
-}> = ({ request, side, busy, onAnswer }) => {
+  // On the listing's own page: the card is about the person, not the
+  // listing.
+  onListing?: boolean;
+}> = ({ request, side, busy, onAnswer, onListing = false }) => {
   const intl = useIntl();
-  const { listing, choices } = request;
+  const { listing, choices, pitch } = request;
   const other = side === 'seller' ? request.buyer : listing.seller;
   const name = other.display_name !== '' ? other.display_name : other.acct;
 
@@ -157,6 +179,12 @@ const RequestCard: React.FC<{
   }, [onAnswer, request]);
   const handleCancel = useCallback(() => {
     onAnswer(request, 'cancel');
+  }, [onAnswer, request]);
+  const handleDeliver = useCallback(() => {
+    onAnswer(request, 'deliver');
+  }, [onAnswer, request]);
+  const handleComplete = useCallback(() => {
+    onAnswer(request, 'complete');
   }, [onAnswer, request]);
 
   const when = request.starts_at
@@ -191,9 +219,11 @@ const RequestCard: React.FC<{
     !!request.details ||
     !!cancelledBy;
   const meta = [
-    intl.formatMessage(side === 'seller' ? messages.from : messages.to, {
-      name,
-    }),
+    onListing
+      ? null
+      : intl.formatMessage(side === 'seller' ? messages.from : messages.to, {
+          name,
+        }),
     when,
     request.quantity > 1
       ? `${intl.formatMessage(messages.quantity, { count: request.quantity })} ${listing.title}`
@@ -201,15 +231,40 @@ const RequestCard: React.FC<{
     typeof request.total_cents === 'number'
       ? formatListingAmount(request.total_cents, request.price_currency)
       : null,
+    // An answer's price, for what the ad's price is for.
+    pitch && typeof request.amount_cents === 'number'
+      ? formatListingPrice(intl, {
+          price_display: formatListingAmount(
+            request.amount_cents,
+            request.price_currency,
+          ),
+          price_unit: listing.price_unit,
+        })
+      : null,
   ].filter((part): part is string => part !== null);
+  const carried = pitch && request.state === 'accepted';
+  const stateLabel =
+    carried && request.completed_at
+      ? messages.done
+      : carried && request.delivered_at
+        ? messages.delivered
+        : carried
+          ? messages.chosen
+          : pitch && request.state === 'declined'
+            ? messages.notChosen
+            : STATE_LABELS[request.state];
 
   return (
     <StandardCard as='li' variant='flow'>
-      <CardBadge>{intl.formatMessage(STATE_LABELS[request.state])}</CardBadge>
+      <CardBadge>{intl.formatMessage(stateLabel)}</CardBadge>
       <CardTitle>
-        <Link to={listingPath(listing)}>{listing.title}</Link>
+        {onListing ? (
+          <Link to={`/@${other.acct}`}>{name}</Link>
+        ) : (
+          <Link to={listingPath(listing)}>{listing.title}</Link>
+        )}
       </CardTitle>
-      <CardMeta>{meta.join(' · ')}</CardMeta>
+      {meta.length > 0 && <CardMeta>{meta.join(' · ')}</CardMeta>}
       {hasBody && (
         <CardBody>
           {chosen.length > 0 && <p>{chosen.join(', ')}</p>}
@@ -237,13 +292,17 @@ const RequestCard: React.FC<{
           {side === 'seller' ? (
             <>
               <KornerPill
-                label={intl.formatMessage(messages.accept)}
+                label={intl.formatMessage(
+                  pitch ? messages.choose : messages.accept,
+                )}
                 variant='primary'
                 onClick={handleAccept}
                 disabled={busy}
               />
               <KornerPill
-                label={intl.formatMessage(messages.decline)}
+                label={intl.formatMessage(
+                  pitch ? messages.noThanks : messages.decline,
+                )}
                 onClick={handleDecline}
                 disabled={busy}
               />
@@ -257,7 +316,29 @@ const RequestCard: React.FC<{
           )}
         </CardActions>
       )}
-      {request.state === 'accepted' && request.starts_at && (
+      {/* A chosen answer carried through: whoever answered marks it
+          delivered, the poster marks it done. */}
+      {carried && !request.completed_at && (
+        <CardActions>
+          {side === 'buyer' && !request.delivered_at && (
+            <KornerPill
+              label={intl.formatMessage(messages.deliver)}
+              variant='primary'
+              onClick={handleDeliver}
+              disabled={busy}
+            />
+          )}
+          {side === 'seller' && (
+            <KornerPill
+              label={intl.formatMessage(messages.complete)}
+              variant={request.delivered_at ? 'primary' : 'default'}
+              onClick={handleComplete}
+              disabled={busy}
+            />
+          )}
+        </CardActions>
+      )}
+      {!pitch && request.state === 'accepted' && request.starts_at && (
         <CardActions>
           <KornerPill
             label={intl.formatMessage(messages.cancel)}
@@ -271,7 +352,10 @@ const RequestCard: React.FC<{
   );
 };
 
-export const WachuneedRequests: React.FC = () => {
+// Requests asked of you (`asked`) and by you (`mine`), with the way to
+// answer them: Mine lays them out in its sections, and a wanted ad's own
+// page (`listingId`) shows just its answers.
+export const useWachuneedRequests = (listingId?: string) => {
   const intl = useIntl();
   const [confirmDialog, confirm] = useConfirmDialog();
   const [asked, setAsked] = useState<ApiRequestJSON[]>([]);
@@ -279,10 +363,17 @@ export const WachuneedRequests: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
+  // Choosing an answer can settle the others too (the ad is taken), so
+  // what changed is read back whole.
+  const [version, setVersion] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([apiGetRequests('seller'), apiGetRequests('buyer')])
+    Promise.all([
+      apiGetRequests('seller', listingId),
+      listingId ? Promise.resolve([]) : apiGetRequests('buyer'),
+    ])
       .then(([ofYou, byYou]) => {
         if (cancelled) return undefined;
         setAsked(ofYou);
@@ -290,7 +381,7 @@ export const WachuneedRequests: React.FC = () => {
         return undefined;
       })
       .catch(() => {
-        // Left empty; the page says there are none.
+        // Left empty; nothing shows.
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -299,7 +390,7 @@ export const WachuneedRequests: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [listingId, version]);
 
   const handleAnswer = useCallback(
     (request: ApiRequestJSON, answer: Answer) => {
@@ -311,6 +402,9 @@ export const WachuneedRequests: React.FC = () => {
               list.map((r) => (r.id === updated.id ? updated : r));
             setAsked(swap);
             setMine(swap);
+            if (updated.pitch && answer === 'accept') {
+              setVersion((v) => v + 1);
+            }
             return undefined;
           })
           .catch(() => undefined)
@@ -324,15 +418,28 @@ export const WachuneedRequests: React.FC = () => {
         return;
       }
       const cancelling = answer === 'cancel';
+      const pitch = request.pitch;
       void confirm({
         title: intl.formatMessage(
-          cancelling ? messages.cancelTitle : messages.declineTitle,
+          cancelling
+            ? messages.cancelTitle
+            : pitch
+              ? messages.noThanksTitle
+              : messages.declineTitle,
         ),
         message: intl.formatMessage(
-          cancelling ? messages.cancelMessage : messages.declineMessage,
+          cancelling
+            ? messages.cancelMessage
+            : pitch
+              ? messages.noThanksMessage
+              : messages.declineMessage,
         ),
         confirmLabel: intl.formatMessage(
-          cancelling ? messages.cancel : messages.decline,
+          cancelling
+            ? messages.cancel
+            : pitch
+              ? messages.noThanks
+              : messages.decline,
         ),
         destructive: true,
       }).then((ok) => {
@@ -343,46 +450,55 @@ export const WachuneedRequests: React.FC = () => {
     [confirm, intl],
   );
 
-  if (loading) {
-    return <LoadingState label={intl.formatMessage(messages.loading)} />;
-  }
+  return { asked, mine, loading, busy, confirmDialog, handleAnswer };
+};
 
-  if (asked.length === 0 && mine.length === 0) {
-    return (
-      <EmptyState
-        title={intl.formatMessage(messages.empty)}
-        body={intl.formatMessage(messages.emptyBody)}
-      />
-    );
-  }
+// A run of request cards under a heading; nothing when it is empty.
+export const RequestSection: React.FC<{
+  heading: string;
+  requests: ApiRequestJSON[];
+  side: 'seller' | 'buyer';
+  busy: boolean;
+  onAnswer: (request: ApiRequestJSON, answer: Answer) => void;
+  onListing?: boolean;
+}> = ({ heading, requests, side, busy, onAnswer, onListing }) =>
+  requests.length > 0 ? (
+    <section className='wachuneed-shops' aria-label={heading}>
+      <h2 className='wachuneed-shops__heading'>{heading}</h2>
+      <ul className='wachuneed-requests'>
+        {requests.map((request) => (
+          <RequestCard
+            key={request.id}
+            request={request}
+            side={side}
+            busy={busy}
+            onAnswer={onAnswer}
+            onListing={onListing}
+          />
+        ))}
+      </ul>
+    </section>
+  ) : null;
 
-  const section = (
-    heading: string,
-    list: ApiRequestJSON[],
-    side: 'seller' | 'buyer',
-  ) =>
-    list.length > 0 && (
-      <section className='wachuneed-shops' aria-label={heading}>
-        <h2 className='wachuneed-shops__heading'>{heading}</h2>
-        <ul className='wachuneed-requests'>
-          {list.map((request) => (
-            <RequestCard
-              key={request.id}
-              request={request}
-              side={side}
-              busy={busy}
-              onAnswer={handleAnswer}
-            />
-          ))}
-        </ul>
-      </section>
-    );
+// A wanted ad's answers, on its own page, for its poster to choose from.
+export const ListingAnswers: React.FC<{ listingId: string }> = ({
+  listingId,
+}) => {
+  const intl = useIntl();
+  const { asked, busy, confirmDialog, handleAnswer } =
+    useWachuneedRequests(listingId);
 
   return (
     <>
       {confirmDialog}
-      {section(intl.formatMessage(messages.askedOfYou), asked, 'seller')}
-      {section(intl.formatMessage(messages.youAsked), mine, 'buyer')}
+      <RequestSection
+        heading={intl.formatMessage(messages.answers, { count: asked.length })}
+        requests={asked}
+        side='seller'
+        busy={busy}
+        onAnswer={handleAnswer}
+        onListing
+      />
     </>
   );
 };

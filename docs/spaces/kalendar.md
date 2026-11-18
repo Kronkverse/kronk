@@ -150,8 +150,12 @@ leading to the listing. Like birthdays it isn't stored as an event:
 time where you are the one who booked or the seller, from the start of
 today for 90 days, so a booking called off is gone at once. Nobody else
 ever sees it: it has no reach, feed card or RSVPs, which is why it isn't
-an `Event`. Not yet: a marker on the Spiral's day tiles (the day sheet
-would need to show bookings too).
+an `Event`. A chosen answer to a Wachuneed wanted ad with a date (the
+ad's by when, or the day someone is wanted for) shows the same way on
+that day, marked **Due** instead of a time, until the poster marks it
+done ([`wachuneed.md`](wachuneed.md), Answering a wanted ad). Not yet: a
+marker on the Spiral's day tiles (the day sheet would need to show
+bookings too).
 
 ## Links to other korners
 
