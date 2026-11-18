@@ -17,6 +17,34 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-18 — Krew events: who it's for, and who is invited, are choices
+
+Tal noticed that an event made in a private Krew could invite anyone on
+Kronk: the invite search looked everywhere, so one member could bring an
+outsider into something meant for the Krew alone.
+
+**Decision.** Made from a Krew, the composer asks two things. **Who is it
+for?** Just the Krew, or Open, hosted by the Krew (the reach that was
+already there, said plainly). **Who is invited?** Pick people (the
+default) or Everyone in the Krew. An event for the Krew alone can only
+invite the Krew's members: the search looks only there, and the server
+refuses anyone else.
+
+**Why.** "For the Krew alone" should mean the Krew alone; a way round it
+through the invite search breaks a private Krew. Inviting everyone is a
+choice because, in Tal's words, "i don't think everyone should be invited
+automatically to events (krew members) but that should be an option, to
+either invite everyone or to specifically pick people." A Krew event is
+still in every member's Kalendar and feed without an invitation; an
+invitation is a nudge, and not every event needs one to every member.
+
+**Supersedes** the 2026-11-08 Kommons "Creating krew event invitations"
+behaviour, where everyone in the Krew was invited to every event made for
+it. Invitations already sent stay. A projekt's quick call
+(`schedule_call.tsx`) now invites nobody; its Krew sees it as before.
+
+---
+
 ## 2026-11-17 — Booth samples: terms are trust, not locks
 
 The last part of Tal's Kommons proposal "Booth Revamp": a place to share

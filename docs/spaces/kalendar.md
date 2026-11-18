@@ -71,12 +71,20 @@ who has a Krew to tick, and says in words who will see the event. A Krew's
 page lists what it has coming up (`GET /api/v1/events?krew_id=`) when its
 **Kalendar** tile is open, and the Ж menu's + there opens the composer
 (`/hub/kalendar/composer?krew=<id>`) with that Krew already the only
-audience; picking Kronkverse there instead makes it public and hosted by the
-Krew, still on the Krew's page. Either way, **everyone in the Krew is
-invited** when the event is made (`EventsController#invite_krews!`, Kommons
-"Creating krew event invitations", 2026-11-08): an `EventInvitation` and an
+audience. Made from a Krew (or a projekt or Komponent with one), the
+composer asks **Who is it for?**: **Just the Krew** (reach Me, the Krew
+ticked) or **Open, hosted by the Krew** (Kronkverse, the Krew still ticked,
+still on the Krew's page). The reach menu says the same thing and stays in
+step. With a Krew in the audience it also asks **Who is invited?**: **Pick
+people** (the default; nobody is invited until picked) or **Everyone in the
+Krew**, which sends `invite_krew_members` and invites each member
+(`EventsController#invite_krews!`): an `EventInvitation` and an
 `event_invitation` notification each, for the Krews the host belongs to, not
-the host. Each event carries `krews` (id and name) in the API.
+the host. Until 2026-11-18 everyone was invited every time (Kommons
+"Creating krew event invitations", 2026-11-08); Tal made it a choice
+(decisions.md, 2026-11-18). Each event carries `krews` (id and name) and
+`krew_only` (`Event#krew_only?`: reach Me with a Krew, not invite-only) in
+the API.
 
 **A call in the space's Kuddle** (decisions.md, 2026-11-11). Made from a
 Krew, projekt or Komponent (`?krew=`, or `?konnect=krew:` /
@@ -107,7 +115,12 @@ rows and sends an `event_invitation` notification. Only the host can invite,
 and the event page shows its **Invite** to the host on every event, Krew-only
 and Mates ones included (until 2026-11-08 it showed on public events only,
 and to everyone, though only the host's invites went through). Someone
-invited can always see the event.
+invited can always see the event. **An event for a Krew alone is asked of
+its members only** (decisions.md, 2026-11-18): the composer's and the
+page's search look in the Krew (`GET /api/v1/krews/:id/members?q=`,
+`features/kalendar/invitee_search.ts`), and `invite` answers 422, inviting
+nobody, if any account sent isn't in one of the event's Krews. Any other
+event searches all of Kronk.
 
 **Editing.** The Ж menu's Edit event on the event page
 (`features/events/event_detail.tsx`) opens the same `EventComposer` over the
