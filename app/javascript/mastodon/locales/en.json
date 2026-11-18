@@ -3793,6 +3793,8 @@
   "setup.people.title": "A few people",
   "setup.reach.intro": "Where a new post goes unless you choose otherwise. You can still pick per post.",
   "setup.reach.title": "Who sees your posts",
+  "setup.spaces.intro": "A space you’re tuned in to can reach your feed and your Nudges. Tune in or out of any of them. You can still visit every space from the Hub.",
+  "setup.spaces.title": "Your spaces",
   "setup.title": "Make Kronk yours",
   "share_sheet.close": "Close",
   "share_sheet.copied": "Link copied",
