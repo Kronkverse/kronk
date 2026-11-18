@@ -268,6 +268,10 @@ namespace :api, format: false do
         get :my_invitees
       end
       resources :krews, only: [:create, :destroy], module: :events
+      # Its schedule (docs/spaces/kalendar.md, Schedule).
+      resource :schedule, only: :show, module: :events do
+        resources :lines, only: [:create, :update, :destroy], controller: 'schedules'
+      end
     end
     # Moments — ephemeral posts, gone by morning (docs/spaces/moments.md).
     # POST/DELETE :froth is nested via the moment_froths controller

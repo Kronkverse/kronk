@@ -969,6 +969,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.index ["event_id"], name: "index_event_rsvps_on_event_id"
   end
 
+  create_table "event_schedule_lines", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.date "day", null: false
+    t.integer "start_minute", null: false
+    t.integer "end_minute"
+    t.string "title", default: "", null: false
+    t.string "note", default: "", null: false
+    t.bigint "created_by_account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_schedule_lines_on_event_id"
+  end
+
   create_table "events", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.boolean "cancelled", default: false, null: false
@@ -1160,8 +1173,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.bigint "item_id", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_freethedream_claims_on_account_id"
-    t.index ["item_id"], name: "index_freethedream_claims_on_item_id"
     t.index ["item_id", "account_id"], name: "index_freethedream_claims_on_item_id_and_account_id", unique: true
+    t.index ["item_id"], name: "index_freethedream_claims_on_item_id"
   end
 
   create_table "freethedream_comments", force: :cascade do |t|
@@ -1187,8 +1200,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.bigint "project_id", null: false
     t.datetime "updated_at", null: false
     t.index ["depends_on_id"], name: "index_freethedream_dependencies_on_depends_on_id"
-    t.index ["project_id"], name: "index_freethedream_dependencies_on_project_id"
     t.index ["project_id", "depends_on_id"], name: "index_freethedream_dependencies_pair", unique: true
+    t.index ["project_id"], name: "index_freethedream_dependencies_on_project_id"
   end
 
   create_table "freethedream_documents", force: :cascade do |t|
@@ -1245,8 +1258,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.integer "state", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_freethedream_memberships_on_account_id"
-    t.index ["project_id"], name: "index_freethedream_memberships_on_project_id"
     t.index ["project_id", "account_id"], name: "index_freethedream_memberships_on_project_id_and_account_id", unique: true
+    t.index ["project_id"], name: "index_freethedream_memberships_on_project_id"
   end
 
   create_table "freethedream_mycelium_items", force: :cascade do |t|
@@ -1265,8 +1278,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.bigint "item_id", null: false
     t.bigint "project_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["item_id"], name: "index_freethedream_placements_on_item_id"
     t.index ["item_id", "project_id"], name: "index_freethedream_placements_on_item_id_and_project_id", unique: true
+    t.index ["item_id"], name: "index_freethedream_placements_on_item_id"
     t.index ["project_id"], name: "index_freethedream_placements_on_project_id"
   end
 
@@ -1629,7 +1642,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.datetime "delivered_at"
     t.datetime "completed_at"
     t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
-    t.index ["listing_id", "starts_at"], name: "index_listing_offers_on_listing_id_and_starts_at", where: "((starts_at IS NOT NULL) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[])))"
+    t.index ["listing_id", "starts_at"], name: "index_listing_offers_on_listing_id_and_starts_at", where: "((starts_at IS NOT NULL) AND ((state)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text])))"
     t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"
     t.index ["listing_id"], name: "index_listing_offers_on_listing_id"
     t.index ["offerer_id"], name: "index_listing_offers_on_offerer_id"
@@ -3120,6 +3133,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
   add_foreign_key "event_invitations", "events", on_delete: :cascade
   add_foreign_key "event_rsvps", "accounts", on_delete: :cascade
   add_foreign_key "event_rsvps", "events", on_delete: :cascade
+  add_foreign_key "event_schedule_lines", "accounts", column: "created_by_account_id", on_delete: :nullify
+  add_foreign_key "event_schedule_lines", "events", on_delete: :cascade
   add_foreign_key "events", "accounts", on_delete: :cascade
   add_foreign_key "events", "events", column: "parent_event_id", on_delete: :cascade
   add_foreign_key "events", "media_attachments", column: "image_id", on_delete: :nullify

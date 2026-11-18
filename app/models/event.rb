@@ -38,6 +38,7 @@ class Event < ApplicationRecord
   has_many :rsvps, class_name: 'EventRsvp', inverse_of: :event, dependent: :destroy
   has_many :invitations, class_name: 'EventInvitation', inverse_of: :event, dependent: :destroy
   has_many :occurrences, class_name: 'Event', foreign_key: 'parent_event_id', inverse_of: :parent_event, dependent: :destroy
+  has_many :schedule_lines, -> { in_order }, class_name: 'EventScheduleLine', inverse_of: :event, dependent: :delete_all
   # `has_one :spawned_album` retired 2026-08-14 alongside the
   # `albums.event_id` FK drop — the Kalendar → Albutts link now lives
   # in `korner_attachments` (docs/korners/adding_a_korner.md (Korner attachments) Phase 5).
