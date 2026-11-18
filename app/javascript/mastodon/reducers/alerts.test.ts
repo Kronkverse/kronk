@@ -73,4 +73,26 @@ describe('alertsReducer', () => {
       id: 'alert.server_error.title',
     });
   });
+
+  const networkError = (method: string) =>
+    new AxiosError('Network Error', AxiosError.ERR_NETWORK, {
+      method,
+      headers: new AxiosHeaders(),
+    });
+
+  test('a read that never reached the server shows nothing', () => {
+    expect(
+      run(
+        showAlertForError(networkError('get')) as ReturnType<typeof showAlert>,
+      ),
+    ).toHaveLength(0);
+  });
+
+  test('a write that never reached the server still says so', () => {
+    expect(
+      run(
+        showAlertForError(networkError('post')) as ReturnType<typeof showAlert>,
+      ),
+    ).toHaveLength(1);
+  });
 });
