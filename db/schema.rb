@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1173,8 +1173,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.bigint "item_id", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_freethedream_claims_on_account_id"
-    t.index ["item_id", "account_id"], name: "index_freethedream_claims_on_item_id_and_account_id", unique: true
     t.index ["item_id"], name: "index_freethedream_claims_on_item_id"
+    t.index ["item_id", "account_id"], name: "index_freethedream_claims_on_item_id_and_account_id", unique: true
   end
 
   create_table "freethedream_comments", force: :cascade do |t|
@@ -1200,8 +1200,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.bigint "project_id", null: false
     t.datetime "updated_at", null: false
     t.index ["depends_on_id"], name: "index_freethedream_dependencies_on_depends_on_id"
-    t.index ["project_id", "depends_on_id"], name: "index_freethedream_dependencies_pair", unique: true
     t.index ["project_id"], name: "index_freethedream_dependencies_on_project_id"
+    t.index ["project_id", "depends_on_id"], name: "index_freethedream_dependencies_pair", unique: true
   end
 
   create_table "freethedream_documents", force: :cascade do |t|
@@ -1258,8 +1258,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.integer "state", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_freethedream_memberships_on_account_id"
-    t.index ["project_id", "account_id"], name: "index_freethedream_memberships_on_project_id_and_account_id", unique: true
     t.index ["project_id"], name: "index_freethedream_memberships_on_project_id"
+    t.index ["project_id", "account_id"], name: "index_freethedream_memberships_on_project_id_and_account_id", unique: true
   end
 
   create_table "freethedream_mycelium_items", force: :cascade do |t|
@@ -1278,8 +1278,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.bigint "item_id", null: false
     t.bigint "project_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["item_id", "project_id"], name: "index_freethedream_placements_on_item_id_and_project_id", unique: true
     t.index ["item_id"], name: "index_freethedream_placements_on_item_id"
+    t.index ["item_id", "project_id"], name: "index_freethedream_placements_on_item_id_and_project_id", unique: true
     t.index ["project_id"], name: "index_freethedream_placements_on_project_id"
   end
 
@@ -1642,7 +1642,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.datetime "delivered_at"
     t.datetime "completed_at"
     t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
-    t.index ["listing_id", "starts_at"], name: "index_listing_offers_on_listing_id_and_starts_at", where: "((starts_at IS NOT NULL) AND ((state)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text])))"
+    t.index ["listing_id", "starts_at"], name: "index_listing_offers_on_listing_id_and_starts_at", where: "((starts_at IS NOT NULL) AND ((state)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[])))"
     t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"
     t.index ["listing_id"], name: "index_listing_offers_on_listing_id"
     t.index ["offerer_id"], name: "index_listing_offers_on_offerer_id"

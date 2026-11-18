@@ -22,14 +22,15 @@ RSpec.describe 'Event schedule', :js, :streaming do
 
   def add_line(what, day:, start:, until_time: nil)
     click_on(page.has_button?('Add a schedule') ? 'Add a schedule' : 'Add')
-    within('.compose-shell') do
+    # The sheet opens in a portal, outside whatever section the button is in.
+    within(page.document.find('.compose-shell')) do
       fill_in placeholder: 'What happens', with: what
       fill_in 'Day', with: day
       fill_in 'Starts', with: Time.zone.parse(start)
       fill_in 'Ends (optional)', with: Time.zone.parse(until_time) if until_time
       click_on 'Save'
     end
-    expect(page).to have_no_css('.compose-shell')
+    expect(page.document).to have_no_css('.compose-shell')
   end
 
   def konnect_to_projekt
