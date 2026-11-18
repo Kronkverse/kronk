@@ -515,7 +515,8 @@ shadow for a later release. `bin/release` does the mechanics:
 2. **Cut it** — `bin/release cut 2.0.2` builds `release/2.0.2` from `main`,
    cherry-picks the ready PRs, bumps `MILESTONE` (the only place a version is
    ever bumped — see **Versioning**), adds a changelog entry from the PR titles,
-   and opens the PR into `main`, titled with the version. A ready PR that can't
+   and opens the PR into `main`, titled with the version (cutting the same
+   version again rebuilds the branch and updates that PR). A ready PR that can't
    apply on its own — because it builds on work that isn't ready — is left out
    and named in the PR body. A conflict only in Markdown docs (both sides
    kept) or in `db/schema.rb`'s version line (the later one kept) is resolved
