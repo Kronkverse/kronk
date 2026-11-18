@@ -1395,6 +1395,7 @@
   "freethedream.checklist.add_kind": "Add to the checklist as",
   "freethedream.checklist.book": "Book",
   "freethedream.checklist.bring": "Bring",
+  "freethedream.checklist.change_kind": "Change what kind of entry this is",
   "freethedream.checklist.choices": "Pick one",
   "freethedream.checklist.decide": "Decide",
   "freethedream.checklist.decided_on": "Decided: {choice}",

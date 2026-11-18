@@ -99,6 +99,34 @@ module Freethedream
       need_kind? ? covered >= quantity : done?
     end
 
+    # A checklist entry made into another kind (a To do, Pay, Book or
+    # Decide, or something to Bring), keeping what still fits: the title
+    # and notes, who added it, and a Pay's dollars when it becomes a Bring
+    # of that much, or back. A Bring that people are bringing stays one, so
+    # nobody's offer is left against a To do. Saved by the caller, which
+    # asks or drops a Decide's Kuestion.
+    def retype!(kind:, task:)
+      kind = kind.to_s
+      errors.add(:kind, :inclusion) unless %w(job need).include?(kind) && (job_kind? || need_kind?)
+      errors.add(:base, :bringing) if need_kind? && kind == 'job' && offers.exists?
+      raise ActiveRecord::RecordInvalid, self if errors.any?
+
+      self.kind = kind
+      self.task = kind == 'job' ? task : 'todo'
+      self.category = { 'need' => 'things', 'pay' => 'money' }.fetch(kind == 'need' ? 'need' : self.task, 'skills')
+      unless unit == '$' && (need_kind? || task_pay?)
+        self.quantity = 1
+        self.unit = ''
+      end
+      self.more_welcome = false unless need_kind?
+      # Something to Bring is sorted by what's brought, not a tick, and has
+      # no one on it; a new Decide isn't decided yet.
+      self.done_at = nil if need_kind? || (task_decide? && will_save_change_to_task?)
+      claims.delete_all if need_kind?
+      self.question = nil unless task_decide?
+      self
+    end
+
     private
 
     def need_is_a_need
