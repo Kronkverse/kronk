@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -44,6 +44,7 @@ import { eventMapHref, eventWhen, ProjectEvents } from './event_card';
 import { GroupTiles } from './groups';
 import { Yours } from './overview';
 import { ProjectComposer } from './project_composer';
+import { ProjectSchedules } from './project_schedules';
 import {
   itemPath,
   Loading,
@@ -520,12 +521,16 @@ const ProjectView: React.FC<{
               [
                 'kalendar',
                 (hasSpace('kalendar') || !project.top) && (
-                  <ProjectEvents
-                    key='kalendar'
-                    id={spaceSectionId('kalendar')}
-                    project={project}
-                    refresh={refresh}
-                  />
+                  <Fragment key='kalendar'>
+                    <ProjectEvents
+                      id={spaceSectionId('kalendar')}
+                      project={project}
+                      refresh={refresh}
+                    />
+                    {/* Its events' schedules, kept here by anyone in the
+                        projekt and shown on each event (Tal, 2026-11-18). */}
+                    <ProjectSchedules project={project} />
+                  </Fragment>
                 ),
               ],
               [

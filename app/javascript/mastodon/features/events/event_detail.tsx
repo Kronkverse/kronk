@@ -43,6 +43,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
+import { EventSchedule } from './event_schedule';
 import { parseOsmUrl } from './parse_osm_url';
 
 const messages = defineMessages({
@@ -728,6 +729,15 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             Albutts spawn + Booth link). Renders nothing when there
             are no attachments and the viewer can't add any, so a
             non-owner reading a plain event sees no chrome added. */}
+        {/* What happens when (Tal, 2026-11-18). Kept by the host, or by
+            the projekt it's Konnected to; nothing when there's none and
+            the viewer can't start one. */}
+        <EventSchedule
+          eventId={event.id}
+          startTime={event.start_time}
+          endTime={event.end_time}
+        />
+
         <AttachmentSection
           korner='kalendar'
           recordId={event.id}

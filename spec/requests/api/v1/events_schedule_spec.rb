@@ -85,7 +85,7 @@ RSpec.describe 'API V1 event schedule' do
 
     body = api(member, :post, '/schedule/lines', line(title: 'Set up the kitchen'))
     expect(response).to have_http_status(200)
-    expect(body).to include('can_edit' => true, 'projekt' => { 'id' => projekt.id.to_s, 'title' => 'Doof crew' })
+    expect(body).to include('can_edit' => true, 'projekt' => include('id' => projekt.id.to_s, 'title' => 'Doof crew'))
     expect(event.schedule_lines.pluck(:title)).to eq ['Set up the kitchen']
 
     expect(api(stranger, :get, '/schedule')['can_edit']).to be false

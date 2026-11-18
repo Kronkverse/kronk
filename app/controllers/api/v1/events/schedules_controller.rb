@@ -79,7 +79,7 @@ class Api::V1::Events::SchedulesController < Api::BaseController
     {
       lines: @event.schedule_lines.reload.map { |line| line_json(line) },
       can_edit: editor?,
-      projekt: @projekt && { id: @projekt.id.to_s, title: @projekt.title.to_s },
+      projekt: @projekt && { id: @projekt.id.to_s, slug: @projekt.slug, krew_slug: @projekt.krew&.slug, title: @projekt.title.to_s },
     }
   end
 
