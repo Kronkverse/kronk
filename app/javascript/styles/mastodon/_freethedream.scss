@@ -1628,6 +1628,29 @@ $freethedream-wide: 1000px;
     }
   }
 
+  // An entry's kind, for whoever added it: tap it to make it another kind.
+  &__kind--change {
+    margin: -0.15rem -0.3rem;
+    padding: 0.15rem 0.3rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-small);
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible,
+    &[aria-expanded='true'] {
+      border-color: var(--border-default);
+      color: var(--text-primary);
+    }
+
+    .icon:last-child {
+      inline-size: 14px;
+      block-size: 14px;
+    }
+  }
+
   // The kind being added, on the right of the add box: only as wide as the
   // kind it shows.
   &__pick {
