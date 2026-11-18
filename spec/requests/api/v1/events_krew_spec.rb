@@ -63,16 +63,23 @@ RSpec.describe 'Events for a Krew' do
     expect(titles_for(stranger)).to contain_exactly('Open day')
   end
 
-  it 'invites everyone in the Krew, but not the host' do
+  # decisions.md, 2026-11-18: inviting the Krew is the host's choice.
+  it 'invites nobody unless the host asks for the whole Krew' do
     event = create_event('Working bee', visibility: 'self_only', krew_ids: [krew.id])
+
+    expect(EventInvitation.where(event_id: event['id'])).to be_empty
+  end
+
+  it 'invites everyone in the Krew when asked, but not the host' do
+    event = create_event('Working bee', visibility: 'self_only', krew_ids: [krew.id], invite_krew_members: true)
 
     invited = EventInvitation.where(event_id: event['id']).pluck(:account_id)
     expect(invited).to contain_exactly(member.account.id)
     expect(Notification.where(account: member.account, type: :event_invitation)).to exist
   end
 
-  it 'invites the Krew to a public event it hosts too' do
-    event = create_event('Open day', visibility: 'public', krew_ids: [krew.id])
+  it 'invites the Krew to a public event it hosts too, when asked' do
+    event = create_event('Open day', visibility: 'public', krew_ids: [krew.id], invite_krew_members: true)
 
     expect(EventInvitation.where(event_id: event['id']).pluck(:account_id)).to contain_exactly(member.account.id)
   end
@@ -81,9 +88,47 @@ RSpec.describe 'Events for a Krew' do
     other = Krew.create!(slug: 'bakers', name: 'Bakers', access: 'open')
     other.krew_memberships.create!(account: stranger.account)
 
-    event = create_event('Bake off', visibility: 'public', krew_ids: [other.id])
+    event = create_event('Bake off', visibility: 'public', krew_ids: [other.id], invite_krew_members: true)
 
     expect(EventInvitation.where(event_id: event['id'])).to be_empty
+  end
+
+  describe 'inviting people' do
+    def invite(event, *accounts)
+      post "/api/v1/events/#{event['id']}/invite", headers: headers_for(author), params: { account_ids: accounts.map(&:id) }
+    end
+
+    it 'says an event for the Krew alone is for its members' do
+      event = create_event('Working bee', visibility: 'self_only', krew_ids: [krew.id])
+
+      expect(event['krew_only']).to be(true)
+      expect(create_event('Open day', visibility: 'public', krew_ids: [krew.id])['krew_only']).to be(false)
+    end
+
+    it 'invites a member to an event for the Krew alone' do
+      event = create_event('Working bee', visibility: 'self_only', krew_ids: [krew.id])
+      invite(event, member.account)
+
+      expect(response).to have_http_status(200)
+      expect(EventInvitation.where(event_id: event['id']).pluck(:account_id)).to contain_exactly(member.account.id)
+    end
+
+    it 'refuses anyone outside the Krew, and invites nobody', :aggregate_failures do
+      event = create_event('Working bee', visibility: 'self_only', krew_ids: [krew.id])
+      invite(event, member.account, stranger.account)
+
+      expect(response).to have_http_status(422)
+      expect(response.parsed_body['error']).to match(/Krew alone/)
+      expect(EventInvitation.where(event_id: event['id'])).to be_empty
+    end
+
+    it 'invites anyone to an event the Krew hosts in the open' do
+      event = create_event('Open day', visibility: 'public', krew_ids: [krew.id])
+      invite(event, stranger.account)
+
+      expect(response).to have_http_status(200)
+      expect(EventInvitation.where(event_id: event['id']).pluck(:account_id)).to contain_exactly(stranger.account.id)
+    end
   end
 
   it 'gives a Krew its own events' do

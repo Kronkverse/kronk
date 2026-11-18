@@ -58,8 +58,12 @@ class Api::V1::KrewsController < Api::BaseController
 
   # GET /api/v1/krews/:id/members — the accounts in this Krew (the "who's
   # in it" faces on the detail page). Capped; the count lives on the Krew.
+  # `q` narrows it by name, for picking people from the Krew (inviting to
+  # an event for the Krew alone).
   def members
-    accounts = @krew.members.merge(Account.without_suspended).limit(DEFAULT_LIMIT)
+    accounts = @krew.members.merge(Account.without_suspended)
+    accounts = accounts.where('accounts.username ILIKE :q OR accounts.display_name ILIKE :q', q: "%#{Account.sanitize_sql_like(params[:q].to_s.strip)}%") if params[:q].present?
+    accounts = accounts.limit(DEFAULT_LIMIT)
     render json: accounts, each_serializer: REST::AccountSerializer
   end
 
