@@ -1221,7 +1221,11 @@ SPA, a short section per choice, each saved as it is picked; whatever is left
 alone waits for Settings: _How Kronk looks_ (Dark, Light or Match my device,
 then the shade slider; picking a theme reloads the page back at this section,
 `#look`, since the theme is its own stylesheet), _About you_ (the profile's bio field, `<ProfileBioField>`),
-_Who sees your posts_ (the default reach, widest first), _A few people_ (up
+_Who sees your posts_ (the default reach, widest first), _Your spaces_ (every
+live space on the Hub with its icon, name and its `about.what` line, and the
+tune-in switch from Settings → Korners; it shows where the member already
+stands, tuned in to all but the opt-in Kommons, so leaving it alone changes
+nothing), _A few people_ (up
 to eight suggestions with a mate button) and _Notifications_ (the
 `<PushPrompt>` from Settings → Notifications: turn on, or what this device
 can't do). They write through `/api/v1/settings/appearance`,

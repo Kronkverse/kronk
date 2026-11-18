@@ -3,18 +3,23 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
+import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 
 import { fetchSuggestions } from 'mastodon/actions/suggestions';
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
+import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Avatar } from 'mastodon/components/avatar';
 import { DisplayName } from 'mastodon/components/display_name';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { ProfileBioField } from 'mastodon/components/profile_bio_field';
 import { PushPrompt } from 'mastodon/components/push_prompt';
 import { Stage } from 'mastodon/components/stage';
+import { TuneToggle } from 'mastodon/features/settings/nav';
 import { HueWidget } from 'mastodon/features/settings/setting_widgets';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
+import { useKorners } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
@@ -22,13 +27,15 @@ import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 // Setup — the one page a new member lands on after signup (docs/design.md,
 // Signup and the thresholds; decisions.md, 2026-10-22 "Setup after
 // signup"): how Kronk looks, a line about you, who sees your posts by
-// default, a few people to mate, and notifications on this device. Each
+// default, the spaces you're tuned in to, a few people to mate, and
+// notifications on this device. Each
 // choice saves as it is picked; anything left alone can be changed later in
 // Settings. Continue goes to Home with a full load, so the theme picked here
 // is the one the app opens in and the first-run walkthrough starts there.
 //
 // It writes through the same endpoints and pieces as Settings → Appearance,
-// Settings → Posting, the profile's bio and Settings → Notifications;
+// Settings → Posting, the profile's bio, Settings → Korners' tune-in
+// switch and Settings → Notifications;
 // nothing here is stored anywhere else.
 
 const messages = defineMessages({
@@ -99,6 +106,12 @@ const messages = defineMessages({
     id: 'setup.notify.intro',
     defaultMessage:
       'Hear about mates, messages and nudges on this device. You choose which ones in Settings.',
+  },
+  spacesTitle: { id: 'setup.spaces.title', defaultMessage: 'Your spaces' },
+  spacesIntro: {
+    id: 'setup.spaces.intro',
+    defaultMessage:
+      'A space you’re tuned in to can reach your feed and your Nudges. Tune in or out of any of them. You can still visit every space from the Hub.',
   },
   peopleTitle: { id: 'setup.people.title', defaultMessage: 'A few people' },
   peopleIntro: {
@@ -297,6 +310,49 @@ const ReachStep: React.FC = () => {
   );
 };
 
+// One space: its icon, name and what it is (the manifest's `about.what`, the
+// first line of its i pop-up), with the same tune-in switch as Settings →
+// Korners. Tuned out greys the space down, as there.
+const SpaceRow: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+  const Icon = useKornerIcon(korner.slug);
+  const what = korner.about?.what ?? korner.tagline;
+
+  return (
+    <li
+      className={classNames('settings-nav__row setup__space', {
+        'settings-nav__row--muted': korner.tuned_in === false,
+      })}
+    >
+      <span className='settings-nav__row-glyph' aria-hidden='true'>
+        <Icon />
+      </span>
+      <span className='settings-nav__row-body'>
+        <span className='settings-nav__row-name'>{korner.name}</span>
+        {what && <span className='settings-nav__row-desc'>{what}</span>}
+      </span>
+      <TuneToggle korner={korner} />
+    </li>
+  );
+};
+
+// Every live space on the Hub, as the member stands now: tuned in to all
+// but the opt-in ones (Kommons), so leaving this alone changes nothing.
+const SpacesStep: React.FC = () => {
+  const korners = useKorners()
+    .filter((k) => k.enforced !== false)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (korners.length === 0) return null;
+
+  return (
+    <ul className='settings-nav__list setup__spaces'>
+      {korners.map((korner) => (
+        <SpaceRow key={korner.slug} korner={korner} />
+      ))}
+    </ul>
+  );
+};
+
 const Person: React.FC<{ id: string }> = ({ id }) => {
   const account = useAppSelector((state) => state.accounts.get(id));
   if (!account) return null;
@@ -393,6 +449,13 @@ export const Setup: React.FC = () => {
           intro={messages.reachIntro}
         >
           <ReachStep />
+        </Section>
+        <Section
+          id='spaces'
+          title={messages.spacesTitle}
+          intro={messages.spacesIntro}
+        >
+          <SpacesStep />
         </Section>
         <Section
           id='people'
