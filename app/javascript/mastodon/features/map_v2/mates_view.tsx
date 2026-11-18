@@ -30,8 +30,8 @@ import {
 import { CountryLayer } from './country_layer';
 import { CountryPrompt, useShouldOfferCountry } from './country_prompt';
 import { EventLayer } from './event_layer';
-import { NearMe } from './near_me';
 import { LiveLayer } from './live_layer';
+import { NearMe } from './near_me';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
