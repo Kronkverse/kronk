@@ -142,6 +142,37 @@ show, create, update, destroy, plus `rsvp`, `attendees`, `invite`,
 `my_invitees`), `GET /api/v1/kalendar/birthdays` and `GET
 /api/v1/kalendar/bookings`.
 
+## Schedule
+
+What happens when (Kommons "Schedule", Tal 2026-11-18; decisions.md). An
+event has **one schedule**: lines of a day, a start and an optional end,
+what happens and an optional note (`EventScheduleLine`, up to 200). Times
+are the event's own wall clock (minutes from midnight), the same for
+everyone wherever they are.
+
+- **Who keeps it.** The host, and when the event is Konnected to a projekt
+  or one of its Komponents that the host is in, anyone in the projekt
+  (`Kronk::EventSchedule`), from either page. The projekt counts as its
+  Events section does (`Freethedream::Project#event_links`). Whoever can see
+  the event can read it.
+- **How it reads.** A grid (`features/events/event_schedule.tsx`): a column
+  for each day the event runs, as the viewer's calendar has it, up to 14,
+  plus any other day a line is on, and times running down the side; lines
+  that start together share a cell. One day is one column, a list. On a
+  phone the days scroll sideways with the next one peeking; the page
+  doesn't.
+- **Where.** On the event's page, a **Schedule** section above Konnected,
+  with "Kept by the people in {projekt}" when a projekt keeps it, and
+  nothing at all when there's none and the viewer can't start one. On a
+  projekt's page, under its Events (docs/spaces/freethedream.md).
+- **Editing.** **Add** (or **Add a schedule**) and a tap on a line open the
+  shared composer: what happens, day, starts, ends, note; **Take off the
+  schedule** removes a line, after asking.
+- **API:** `GET /api/v1/events/:id/schedule` (`lines`, `can_edit`,
+  `projekt`), and `POST`/`PATCH`/`DELETE`
+  `/api/v1/events/:id/schedule/lines[/:line_id]` (`day`, `start`, `end` as
+  "HH:MM", `title`, `note`), each answering with the whole schedule.
+
 ## Birthdays
 
 Birthdays aren't stored as events. `Api::V1::Kalendar::BirthdaysController`

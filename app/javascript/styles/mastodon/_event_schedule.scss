@@ -1,0 +1,141 @@
+// An event's schedule (features/events/event_schedule.tsx): a grid with a
+// time down the side and a column for each day. The page stays vertical;
+// with more than one day the columns scroll sideways, the next one peeking
+// in on a phone (decisions.md, 2026-10-29: rows yes, page no).
+.event-schedule {
+  &__kept,
+  &__empty {
+    margin: 0 0 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+
+    a {
+      color: var(--accent-text);
+    }
+  }
+
+  &__event + &__event {
+    margin-top: 1.25rem;
+  }
+
+  &__event-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin: 0 0 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+
+    a {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+  }
+
+  &__event-when {
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+  }
+
+  &__scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+  }
+
+  &__grid {
+    --schedule-time: 4.5rem;
+
+    display: grid;
+    grid-template-columns: var(--schedule-time) repeat(
+        var(--schedule-days),
+        minmax(0, 1fr)
+      );
+    gap: 0.5rem 0.75rem;
+    align-items: start;
+  }
+
+  // Each day wide enough to read; on a phone a day is most of the width,
+  // so the next one shows at the edge.
+  &__scroll--days &__grid {
+    grid-template-columns: var(--schedule-time) repeat(
+        var(--schedule-days),
+        minmax(min(13rem, calc(80vw - var(--schedule-time))), 1fr)
+      );
+  }
+
+  &__day {
+    position: sticky;
+    top: 0;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border-default);
+    color: var(--accent-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+    scroll-snap-align: start;
+  }
+
+  &__time {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    padding-top: 0.6rem;
+    background: var(--surface-primary);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__entry {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-card);
+    color: var(--text-primary);
+    font: inherit;
+    text-align: start;
+
+    &--edit {
+      cursor: pointer;
+      transition: border-color var(--dur-fast) var(--ease-out);
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--accent);
+      }
+    }
+  }
+
+  &__what {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  &__until,
+  &__note {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    margin-top: 0.75rem;
+  }
+}

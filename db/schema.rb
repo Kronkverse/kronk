@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -967,6 +967,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
     t.index ["account_id"], name: "index_event_rsvps_on_account_id"
     t.index ["event_id", "account_id"], name: "index_event_rsvps_on_event_id_and_account_id", unique: true
     t.index ["event_id"], name: "index_event_rsvps_on_event_id"
+  end
+
+  create_table "event_schedule_lines", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.date "day", null: false
+    t.integer "start_minute", null: false
+    t.integer "end_minute"
+    t.string "title", default: "", null: false
+    t.string "note", default: "", null: false
+    t.bigint "created_by_account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_schedule_lines_on_event_id"
   end
 
   create_table "events", force: :cascade do |t|
@@ -3120,6 +3133,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_090000) do
   add_foreign_key "event_invitations", "events", on_delete: :cascade
   add_foreign_key "event_rsvps", "accounts", on_delete: :cascade
   add_foreign_key "event_rsvps", "events", on_delete: :cascade
+  add_foreign_key "event_schedule_lines", "accounts", column: "created_by_account_id", on_delete: :nullify
+  add_foreign_key "event_schedule_lines", "events", on_delete: :cascade
   add_foreign_key "events", "accounts", on_delete: :cascade
   add_foreign_key "events", "events", column: "parent_event_id", on_delete: :cascade
   add_foreign_key "events", "media_attachments", column: "image_id", on_delete: :nullify

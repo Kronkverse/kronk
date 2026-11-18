@@ -17,6 +17,33 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-18 — An event has one schedule, kept by its projekt when it has one
+
+Tal's Kommons proposal "Schedule": "for events to create a schedule. And the
+projekt space would be great to have an editable space, then link it to the
+event, so it automatically shows the update on the linked event".
+
+**Decision.** A schedule belongs to the event (`EventScheduleLine`): a day,
+a start and maybe an end on the event's own clock, what happens and a
+note. There is one, never a copy. On its own the host keeps it; Konnected
+to a projekt (or one of its Komponents) that its host is in, **anyone in the
+projekt** keeps it too, from the projekt's page or the event's, and both
+show the same lines (Tal: "One schedule, either place"). The people doing
+the work plan it, rather than routing every change through the host (err
+syntropic, 2026-10-19); the host-in-the-projekt condition is the one the
+projekt's Events section already uses, so linking your event to someone
+else's projekt doesn't hand them its schedule.
+
+It reads as a **grid**: a column for each day the event runs (and any other
+day a line is on), times running down (Tal: "consider multi day events, so
+a grid, with different days on the x axis and different events throughout
+the day running down the y axis"). A one-day event is a single column, a
+list. On a phone the page stays vertical and the days scroll sideways
+(2026-10-29). Times are wall-clock minutes, not instants, so 10:00 reads
+10:00 to everyone. docs/spaces/kalendar.md, Schedule.
+
+---
+
 ## 2026-11-18 — Krew events: who it's for, and who is invited, are choices
 
 Tal noticed that an event made in a private Krew could invite anyone on
