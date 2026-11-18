@@ -233,6 +233,7 @@ en:
         frothed: "%{who} frothed your question"
       map:
         challenged: "%{who} thinks your pin on the Map is out of date"
+        live_shared: "%{who} is sharing their live location with you"
       mates:
         mate_accepted: "%{who} is now your Mate"
         mate_requested: "%{who} wants to be Mates"
@@ -518,6 +519,7 @@ en-GB:
         frothed: "%{who} frothed your question"
       map:
         challenged: "%{who} thinks your pin on the Map is out of date"
+        live_shared: "%{who} is sharing their live location with you"
       mates:
         mate_accepted: "%{who} is now your Mate"
         mate_requested: "%{who} wants to be Mates"

@@ -45,6 +45,33 @@ it. Invitations already sent stay. A projekt's quick call
 
 ---
 
+## 2026-11-18 — Live location comes from Anthemos, exact, to named Mates
+
+Tal wants to share live location with specific people, and wants it to come
+only through Anthemos: people see that a live point comes from an Anthemos
+phone, which means it is signed, and someone who wants live sharing has a
+reason to use Anthemos.
+
+**Decision.** Live location is exact, unlike a pin. Only an Anthemos phone
+linked to the account can start it, naming Mates and an end time (a day at
+most). The phone keeps a P-256 key; Kronk holds the public half, and checks
+the phone's signature on the permission and on every point. Kronk keeps the
+permission as a row and only the latest point, in Redis, until the share
+ends; stopping or unlinking wipes it at once. No trail is kept. The map
+shows a live Mate as a face in a ring, at any zoom, with "From Anthemos,
+signed by their phone" linking to anthemos.org. docs/spaces/map.md, Live
+location.
+
+For now Kronk's server can read the point as it passes. The next step is to
+encrypt it to viewers who use Anthemos too, so Kronk only carries it.
+
+This is the first piece of the Anthemos link that the 2026-08-14 entry
+parked. Its "Connected apps" section now exists in Account & Security,
+listing linked phones (Unlink) and live shares (Stop). The YOU projection
+and the profile chip stay parked.
+
+---
+
 ## 2026-11-17 — Booth samples: terms are trust, not locks
 
 The last part of Tal's Kommons proposal "Booth Revamp": a place to share
