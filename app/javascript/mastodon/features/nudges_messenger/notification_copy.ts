@@ -181,6 +181,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.map.challenged',
     defaultMessage: '{who} thinks your pin on the Map is out of date',
   },
+  mapLiveShared: {
+    id: 'nudges.notification.map.live_shared',
+    defaultMessage: '{who} is sharing their live location with you',
+  },
   roseReceived: {
     id: 'nudges.notification.rose.received',
     defaultMessage: '{who} sent you a rose',
@@ -260,6 +264,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'booth.sample_declined': sentences.boothSampleDeclined,
   'booth.sample_used': sentences.boothSampleUsed,
   'map.challenged': sentences.mapChallenged,
+  'map.live_shared': sentences.mapLiveShared,
   'rose.received': sentences.roseReceived,
   'huddle.gathering': sentences.huddleGathering,
   'huddle.kuddle_gathering': sentences.huddleKuddleGathering,

@@ -92,6 +92,8 @@ resources:
     primary: true
     path: /hub/map/places/:id
   - name: presence_states # one pin per account, Mates-only; never linkable
+  - name: anthemos_links # Anthemos phones linked by their public key
+  - name: live_shares # live location to named Mates; the point is in Redis only
   - name: treks # recorded activities (draft, or published to Mates)
 
 storage:
@@ -124,6 +126,11 @@ emits:
   # A Mate says your pin looks out of date. Nudges turns it into a
   # notification for you (config/korners/nudges.yaml).
   - name: map.pin.challenged
+    payload:
+      - actor_account_id
+      - recipient_account_id
+  # A Mate starts sharing their live location with you from Anthemos.
+  - name: map.live.started
     payload:
       - actor_account_id
       - recipient_account_id
