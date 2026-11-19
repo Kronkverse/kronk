@@ -9,7 +9,7 @@ module Kronk
     module_function
 
     def for(record, viewer)
-      return nil if viewer.nil? || viewer.id != record.reachable_owner_id
+      return nil unless record.audience_owner?(viewer)
 
       people = record.record_people.includes(:account).to_a
       {

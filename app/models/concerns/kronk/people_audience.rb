@@ -43,6 +43,11 @@ module Kronk
       end
     end
 
+    # Whether `viewer` owns it, so may read its people back.
+    def audience_owner?(viewer)
+      viewer.present? && viewer.id == reachable_owner_id
+    end
+
     def audience_added_ids
       record_people.reject(&:excluded).map(&:account_id)
     end
