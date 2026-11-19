@@ -81,6 +81,14 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
     Kronk::VisibleKrews.filter(object.krews.to_a, instance_options[:viewer])
   end
 
+  # Who it is for, or kept from, by name (Kronk::PeopleAudience): the
+  # owner's alone, for their edit form. Detail only.
+  attribute :audience_people, if: :detail?
+
+  def audience_people
+    Kronk::AudiencePeopleJson.for(object, instance_options[:viewer])
+  end
+
   # "Same as": the record whose audience this one follows
   # (Kronk::Audience.leader_preview), or nil. Detail only.
   attribute :audience_follows, if: :detail?

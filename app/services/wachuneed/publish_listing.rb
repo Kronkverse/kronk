@@ -32,7 +32,9 @@ module Wachuneed
         @listing.account,
         text: @listing.title,
         visibility: @listing.visibility,
-        krew_ids: @listing.krew_ids
+        krew_ids: @listing.krew_ids,
+        audience_grant_ids: @listing.audience_added_ids,
+        audience_exclude_ids: @listing.audience_removed_ids
       )
 
       @listing.update_columns(status_id: status.id)

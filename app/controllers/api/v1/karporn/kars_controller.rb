@@ -35,7 +35,7 @@ class Api::V1::Karporn::KarsController < Api::BaseController
     @kar = current_account.owned_kars.new(kar_params)
 
     if @kar.save
-      sync_krew_audience!(@kar)
+      sync_record_audience!(@kar)
       Karporn::PublishKar.new(@kar).call
       render json: @kar.reload, serializer: REST::KarSerializer, status: 201
     else
@@ -47,7 +47,7 @@ class Api::V1::Karporn::KarsController < Api::BaseController
     authorize_owner!
 
     if @kar.update(kar_params)
-      sync_krew_audience!(@kar)
+      sync_record_audience!(@kar)
       render json: @kar.reload, serializer: REST::KarSerializer
     else
       render json: { error: @kar.errors.full_messages.to_sentence }, status: :unprocessable_entity

@@ -40,7 +40,7 @@ class Api::V1::Art::PiecesController < Api::BaseController
     @piece = current_account.owned_art_pieces.new(piece_params)
 
     if @piece.save
-      sync_krew_audience!(@piece)
+      sync_record_audience!(@piece)
       Art::PublishPiece.new(@piece).call
       render json: @piece.reload, serializer: REST::ArtPieceSerializer, status: 201
     else
@@ -52,7 +52,7 @@ class Api::V1::Art::PiecesController < Api::BaseController
     authorize_owner!
 
     if @piece.update(piece_params)
-      sync_krew_audience!(@piece)
+      sync_record_audience!(@piece)
       render json: @piece.reload, serializer: REST::ArtPieceSerializer
     else
       render json: { error: @piece.errors.full_messages.to_sentence }, status: :unprocessable_entity
