@@ -95,9 +95,19 @@ audience = tier  +  krews  +/−  people
 - **Editing afterwards:** `UpdateStatusService` accepts a changed tier,
   krews, and people, and reconciles who has the post in their feed.
 - **`self_only` plus added people** is how you post to specific people,
-  replacing Mastodon's `direct`.
+  replacing Mastodon's `direct`. It reaches the author's own home feed too,
+  as `self_only` plus a Krew does.
+- **Korner records take people too** (films, kars, kronikles, art pieces,
+  listings): `record_people` (Kronk::PeopleAudience), the same rules, read by
+  `Reachable` and copied onto the record's feed post. Their composers send
+  `audience_grant_ids` / `audience_exclude_ids` beside `krew_ids`; the owner
+  reads them back as `audience_people`. Albums keep their own add-only
+  viewers.
+- **One picker.** `<ReachDropdown>` draws the People row and panel
+  (`AudiencePeoplePanel`) for any composer that passes `people` +
+  `onPeopleChange`, so a change to it reaches every composer.
 
-Decision: decisions.md, 2026-08-28.
+Decisions: decisions.md, 2026-08-28 and 2026-11-19.
 
 ### Comments
 
