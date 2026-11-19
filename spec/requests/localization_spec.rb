@@ -38,4 +38,18 @@ RSpec.describe 'Localization' do
       I18n.t('auth.login', locale: 'en')
     )
   end
+
+  # Kronk: British English gets Kronk's English, not
+  # Mastodon's en-GB translation (docs/decisions.md, 2026-11-19).
+  it 'serves Kronk English to a browser asking for British English' do
+    get '/auth/sign_in', headers: { 'Accept-Language' => 'en-GB,en;q=0.9' }
+
+    expect(response.body).to include("<html lang='en'>")
+  end
+
+  it 'serves Kronk English to a browser asking for Australian English' do
+    get '/auth/sign_in', headers: { 'Accept-Language' => 'en-AU' }
+
+    expect(response.body).to include("<html lang='en'>")
+  end
 end

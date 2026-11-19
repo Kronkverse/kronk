@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-19 — British English reads as Kronk
+
+Tal's phone showed "YOU FOLLOW EACH OTHER" on a Mate's profile, where Kronk
+says "You're Mates". The phone asks for British English, and Kronk offered
+`en-GB`, Mastodon's own British translation. Of its 1,039 strings, 98 differ
+from Kronk's `en.json`, and about half of those are Mastodon's words: "Boost
+post?", "Thanks for being part of Mastodon!", "You follow each other". Kronk
+rewords English in place, under the same ids, so every reworded string goes
+stale in `en-GB` and nothing flags it.
+
+**Decision:** `en-GB` is no longer an available locale
+(`config/initializers/i18n.rb`). A browser asking for any English gets `en`,
+and a member whose saved locale was `en-GB` reads `en` (`User` drops a locale
+that isn't offered). The `en-GB` files stay, so upstream merges don't
+conflict on them.
+
+**Why:** Kronk writes one English. Keeping a second one current would mean
+re-translating every reworded string twice; spelling differences ("colour")
+cost less than Mastodon's vocabulary turning up for every member whose phone,
+or whose saved language, asks for British English.
+
 ## 2026-11-19 — One reach picker, with People, for every composer
 
 Asked after a Wachuneed listing set to "Me" showed up in no feed: "I thought
