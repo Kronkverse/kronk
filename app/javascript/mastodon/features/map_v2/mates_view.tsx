@@ -19,6 +19,7 @@ import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 import { MapNeedsWebGL } from 'mastodon/components/map_needs_webgl';
 
+import { AnthemosMissing } from './anthemos_share';
 import {
   BASEMAP_URL,
   HOME_CENTER,
@@ -751,6 +752,9 @@ export const MatesView: React.FC = () => {
             from Anthemos (docs/spaces/map.md, Live location). Reads
             `?live=<account id>`. */}
         <LiveLayer map={mapRef.current} ready={ready} />
+
+        {/* Back from Share live location with no Anthemos on the phone. */}
+        <AnthemosMissing />
       </div>
     </div>
   );

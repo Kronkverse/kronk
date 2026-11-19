@@ -2505,3 +2505,71 @@
     }
   }
 }
+
+// Share live location — in the Place me panel, handing over to Anthemos
+// (anthemos_share.tsx).
+.anthemos-share {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-default);
+
+  &__button {
+    align-self: flex-start;
+    padding: 6px 12px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in oklab, var(--accent) 18%, transparent);
+    }
+  }
+
+  &__note {
+    font-size: 12px;
+    color: var(--text-secondary);
+
+    a {
+      color: var(--text-primary);
+    }
+  }
+}
+
+// Back from Share live location with no Anthemos on the phone.
+.anthemos-missing {
+  position: absolute;
+  inset-inline: 16px;
+  bottom: 16px;
+  z-index: 7;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-inline-size: 420px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium, 12px);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-size: 13px;
+
+  a {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  &__close {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+}

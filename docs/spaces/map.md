@@ -210,13 +210,21 @@ Exact, live location from Anthemos, the phone app (decisions.md,
 2026-11-18). A pin is blurred and lasts until you remove it. A live share is
 exact, goes only to the Mates you name, and ends by itself, a day at most.
 Only a linked Anthemos phone can start one ("share my location with Ana for
-an hour"), so the Kronk website shows them but can't start them.
+an hour"), so the Kronk website shows them and hands the start over.
 
 - **Linking a phone.** Anthemos signs in with Kronk (OAuth), makes a P-256
   key in the phone's keystore, and sends the public half with a signature
   over `anthemos-link-v1`, the account id and the key, proving it holds it
   (`POST /api/v1/anthemos/links`, `AnthemosLink`). Up to ten phones per
   account.
+- **Starting from the Map.** The Place me panel has Share live location
+  (`anthemos_share.tsx`). On Android it picks a Mate and opens Anthemos on
+  them with an intent link (`anthemos://kronk/share?to=<account id>&server=<host>`,
+  package `com.anthemos.app.two`); Anthemos looks the account up and asks
+  before sharing, for an hour. With no Anthemos on the phone the link falls
+  back to `/hub/map?anthemos=missing`, which says the app is needed and links
+  its download. Anywhere else the panel says live location comes from
+  Anthemos on a phone. Kronk itself never reads the phone's position.
 - **Starting.** The phone signs the permission: `anthemos-share-v1`, its link
   id, the Mates' account ids (sorted, comma-joined) and the end time
   (`POST /api/v1/map/live`, `LiveShare`). Kronk checks the signature, that
