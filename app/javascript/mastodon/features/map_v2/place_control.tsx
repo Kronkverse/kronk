@@ -13,6 +13,8 @@ import type {
 } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 
+import { AnthemosShare } from './anthemos_share';
+
 // Map — "search a place" panel. Externally controlled: the caller
 // owns whether it's open, and the panel renders `null` when closed.
 // The trigger button lives with the caller — currently the
@@ -340,6 +342,10 @@ export const PlaceControl: React.FC<Props> = ({
           ))}
         </ul>
       )}
+
+      {/* Or exactly and live, from Anthemos (docs/spaces/map.md, Live
+          location). */}
+      <AnthemosShare />
 
       <div className='place-control__attribution'>
         {intl.formatMessage(messages.attribution)}
