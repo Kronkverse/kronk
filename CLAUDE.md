@@ -596,7 +596,7 @@ PostgreSQL, Redis, push access and the memory flags are already set up there,
 and that is where the rest of the team builds and runs the suite. Ask the
 maintainer for access.
 
-To build on your own machine instead: Ruby 3.4.7 (`.ruby-version`; CI also
+To build on your own machine instead: Ruby 3.4.13 (`.ruby-version`; CI also
 tests 3.3, and 3.2 no longer installs), Node.js, Yarn, PostgreSQL, Redis.
 
 ```bash
