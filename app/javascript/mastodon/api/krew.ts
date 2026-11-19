@@ -6,16 +6,24 @@ import {
   apiRequestDelete,
 } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import { audiencePeopleParams } from 'mastodon/components/audience_people_panel';
 import type { PeopleRowPerson } from 'mastodon/components/people_row';
 
 // The Krews a film, kar, kronikle or art piece is for, on top of its reach,
 // sent top level beside the record's own params as albums send theirs
 // (KrewAudienceParams on the server): left out, the record's Krews stay as
-// they are; an empty list removes them.
+// they are; an empty list removes them. Its people let in or kept out
+// (Kronk::PeopleAudience) go the same way, by the names a post takes.
 export const withAudienceKrews = (
   body: Record<string, unknown>,
   krewIds?: string[],
-) => (krewIds ? { ...body, krew_ids: krewIds } : body);
+  people?: AudiencePeople,
+) => ({
+  ...body,
+  ...(krewIds ? { krew_ids: krewIds } : {}),
+  ...(people ? audiencePeopleParams(people) : {}),
+});
 
 export type KrewAccess =
   | 'open'

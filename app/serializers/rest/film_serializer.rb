@@ -24,8 +24,9 @@ class REST::FilmSerializer < ActiveModel::Serializer
   end
 
   # Who it is for, or kept from, by name (Kronk::PeopleAudience): the
-  # owner's alone, for their edit form. Left out of lists.
-  attribute :audience_people, unless: -> { instance_options[:list] }
+  # owner's alone, for their edit form. In lists too, since an edit form
+  # can open from one; nil, and no query, for anyone but the owner.
+  attribute :audience_people
 
   def audience_people
     Kronk::AudiencePeopleJson.for(object, current_user&.account)

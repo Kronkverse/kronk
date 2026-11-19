@@ -19,6 +19,11 @@ import type {
   ArtSizeUnit,
 } from 'mastodon/api_types/art';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import {
+  audiencePeopleFromApi,
+  NO_PEOPLE,
+} from 'mastodon/components/audience_people_panel';
 import {
   ComposeBody,
   ComposeCheck,
@@ -154,6 +159,7 @@ interface ArtPieceDraftParams {
   kind?: ArtKind;
   visibility?: ReachValue;
   krew_ids?: string[];
+  people?: AudiencePeople;
   konnections?: KonnectTarget[];
   details?: DetailsForm;
 }
@@ -263,6 +269,10 @@ export const ArtPieceComposer: React.FC<Props> = ({
   const [krewIds, setKrewIds] = useState<string[]>(
     editingPiece?.krews?.map((k) => k.id) ?? [],
   );
+  // The people it's for, or kept from, by name (decisions.md, 2026-11-19).
+  const [people, setPeople] = useState<AudiencePeople>(
+    audiencePeopleFromApi(editingPiece?.audience_people),
+  );
   const availableKrews = useAvailableKrews();
   const handleToggleKrew = useCallback((id: string) => {
     setKrewIds((prev) =>
@@ -284,6 +294,8 @@ export const ArtPieceComposer: React.FC<Props> = ({
     onChange: setVisibility,
     onToggleKrew: handleToggleKrew,
   });
+  // Following another record's audience takes its tier and Krews only.
+  const sentPeople = reach.sameAs?.some((o) => o.selected) ? NO_PEOPLE : people;
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
@@ -297,6 +309,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       setKind(p.kind ?? 'painting');
       setVisibility(p.visibility ?? 'public');
       setKrewIds(p.krew_ids ?? []);
+      setPeople(p.people ?? NO_PEOPLE);
       setDetails(p.details ?? detailsFormOf());
       restoreKonnect(p.konnections);
       // Photos picked for another draft don't belong to this one.
@@ -322,6 +335,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
         kind,
         visibility,
         krew_ids: krewIds,
+        people,
         konnections: konnect.saved,
         details,
       },
@@ -517,6 +531,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
               ...detailsPayload(details),
             },
             krewIds,
+            sentPeople,
           );
           for (const id of removedIds) await apiDeletePhoto(id);
           const failed = await uploadPhotos(editingPiece.id, null);
@@ -554,6 +569,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
             ...detailsPayload(details),
           },
           krewIds,
+          sentPeople,
         );
       } catch (e) {
         setPending(false);
@@ -584,6 +600,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
     intl,
     kind,
     krewIds,
+    sentPeople,
     onCreated,
     onUpdated,
     removedIds,
@@ -621,6 +638,8 @@ export const ArtPieceComposer: React.FC<Props> = ({
           krews={availableKrews}
           selectedKrewIds={krewIds}
           onToggleKrew={reach.onToggleKrew}
+          people={people}
+          onPeopleChange={setPeople}
           sameAs={reach.sameAs}
           onSameAs={reach.onSameAs}
         />

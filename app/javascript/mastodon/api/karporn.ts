@@ -10,6 +10,7 @@ import type {
   ApiKarPhotoJSON,
   KarVisibility,
 } from 'mastodon/api_types/karporn';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
 
 interface CreateKarParams {
   title: string;
@@ -54,20 +55,25 @@ export const apiListKars = (scope: KarsScope = 'all') =>
 export const apiGetKar = (id: string) =>
   apiRequestGet<ApiKarJSON>(`v1/karporn/kars/${id}`);
 
-export const apiCreateKar = (params: CreateKarParams, krewIds?: string[]) =>
+export const apiCreateKar = (
+  params: CreateKarParams,
+  krewIds?: string[],
+  people?: AudiencePeople,
+) =>
   apiRequestPost<ApiKarJSON>(
     'v1/karporn/kars',
-    withKrews({ kar: params }, krewIds),
+    withKrews({ kar: params }, krewIds, people),
   );
 
 export const apiUpdateKar = (
   id: string,
   params: UpdateKarParams,
   krewIds?: string[],
+  people?: AudiencePeople,
 ) =>
   apiRequestPut<ApiKarJSON>(
     `v1/karporn/kars/${id}`,
-    withKrews({ kar: params }, krewIds),
+    withKrews({ kar: params }, krewIds, people),
   );
 
 export const apiDeleteKar = (id: string) =>
