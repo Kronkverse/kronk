@@ -33,7 +33,7 @@ import { getHashtagBarForStatus } from './hashtag_bar';
 import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
-import { hasKornerCard, pickKornerCard } from './korner_cards';
+import { hasKornerCard, isKuestionPost, pickKornerCard } from './korner_cards';
 import { KronkLinkCards, kronkPathsIn } from './kronk_link_card';
 import { StatusKrewBadge } from './status_krew_badge';
 import { StatusSpaceBar } from './status_space_bar';
@@ -283,6 +283,7 @@ class Status extends ImmutablePureComponent {
 
   handleHotkeyReply = e => {
     e.preventDefault();
+    if (isKuestionPost(this._properStatus())) return;
     this.props.onReply(this._properStatus());
   };
 
@@ -707,7 +708,10 @@ class Status extends ImmutablePureComponent {
                 {outerPostType !== 'answer' && status.get('post_type') !== 'question' && (
                   <StatusActionBar scrollKey={scrollKey} status={status} account={account}  {...other} />
                 )}
-                {contextType !== 'thread' && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && (
+                {/* A Kuestion is answered, not commented on (Tal's proposal
+                    "Kuestions", 2026-11-18): no comment section; the action
+                    bar's Answer takes Reply's place. */}
+                {contextType !== 'thread' && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && !isKuestionPost(status) && (
                   <StatusReplies
                     statusId={status.get('id')}
                     statusAcct={status.getIn(['account', 'acct'])}

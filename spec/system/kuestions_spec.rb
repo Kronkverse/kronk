@@ -56,4 +56,26 @@ RSpec.describe 'Kuestions', :inline_jobs, :js, :streaming do
       expect(page).to have_text('Under the bridge')
     end
   end
+
+  # Tal's proposal "Kuestions", 2026-11-18: people were answering in the
+  # comments. A Kuestion's post has no comment section, and Answer takes
+  # Reply's place in its action bar.
+  it "puts Answer where a Kuestion post's comments were", :aggregate_failures do
+    asker = Fabricate(:account, username: 'cal')
+    asked = Kuestions::PublishQuestion.new(Question.create!(title: 'Best swim spot?', created_by_account: asker)).call
+    Fabricate(:status, account: asker, thread: asked.status, text: 'An old comment', visibility: :public)
+    ordinary = PostStatusService.new.call(asker, text: 'Just a post', visibility: 'public')
+
+    visit "/@cal/#{ordinary.id}"
+    expect(page).to have_css('.status-replies')
+
+    visit "/@cal/#{asked.status_id}"
+    expect(page).to have_css('.status-kuestions-card', text: 'Best swim spot?')
+    expect(page).to have_no_css('.status-replies')
+    expect(page).to have_no_text('An old comment')
+    expect(page).to have_no_button('Reply')
+
+    within('.status__action-bar') { click_button 'Answer' }
+    expect(page).to have_css('.kuestions-sheet .kuestions-sheet__q', text: 'Best swim spot?')
+  end
 end
