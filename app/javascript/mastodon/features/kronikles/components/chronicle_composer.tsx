@@ -15,6 +15,11 @@ import type {
   ApiChronicleSeriesJSON,
   ChronicleKind,
 } from 'mastodon/api_types/kronikles';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import {
+  audiencePeopleFromApi,
+  NO_PEOPLE,
+} from 'mastodon/components/audience_people_panel';
 import {
   ComposeBody,
   ComposeField,
@@ -149,6 +154,7 @@ interface ChronicleDraftParams {
   kind?: ChronicleKind;
   visibility?: ReachValue;
   krew_ids?: string[];
+  people?: AudiencePeople;
   konnections?: KonnectTarget[];
   // The Series it goes in: an id, NEW_SERIES with its title, or none.
   series?: string;
@@ -189,6 +195,10 @@ export const ChronicleComposer: React.FC<Props> = ({
   // The Krews it's for, on top of its reach (decisions.md, 2026-10-25).
   const [krewIds, setKrewIds] = useState<string[]>(
     editingChronicle?.krews?.map((k) => k.id) ?? [],
+  );
+  // The people it's for, or kept from, by name (decisions.md, 2026-11-19).
+  const [people, setPeople] = useState<AudiencePeople>(
+    audiencePeopleFromApi(editingChronicle?.audience_people),
   );
   const availableKrews = useAvailableKrews();
 
@@ -231,6 +241,8 @@ export const ChronicleComposer: React.FC<Props> = ({
     onChange: setVisibility,
     onToggleKrew: handleToggleKrew,
   });
+  // Following another record's audience takes its tier and Krews only.
+  const sentPeople = reach.sameAs?.some((o) => o.selected) ? NO_PEOPLE : people;
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
@@ -258,6 +270,7 @@ export const ChronicleComposer: React.FC<Props> = ({
       setKind(p.kind ?? 'essay');
       setVisibility(p.visibility ?? 'public');
       setKrewIds(p.krew_ids ?? []);
+      setPeople(p.people ?? NO_PEOPLE);
       setSeries(p.series ?? '');
       setNewSeriesTitle(p.new_series_title ?? '');
       restoreKonnect(p.konnections);
@@ -283,6 +296,7 @@ export const ChronicleComposer: React.FC<Props> = ({
         kind,
         visibility,
         krew_ids: krewIds,
+        people,
         konnections: konnect.saved,
         series,
         new_series_title: newSeriesTitle,
@@ -422,12 +436,18 @@ export const ChronicleComposer: React.FC<Props> = ({
         if (editingChronicle) {
           // Reach is locked while editing — see the ReachDropdown below.
           onUpdated?.(
-            await apiUpdateChronicle(editingChronicle.id, params, krewIds),
+            await apiUpdateChronicle(
+              editingChronicle.id,
+              params,
+              krewIds,
+              sentPeople,
+            ),
           );
         } else {
           const created = await apiCreateChronicle(
             { ...params, visibility },
             krewIds,
+            sentPeople,
           );
           finishDraft();
           await commitKonnect('kronikles', created.id);
@@ -452,6 +472,7 @@ export const ChronicleComposer: React.FC<Props> = ({
     finishDraft,
     kind,
     krewIds,
+    sentPeople,
     onCreated,
     onUpdated,
     resolveSeries,
@@ -490,6 +511,8 @@ export const ChronicleComposer: React.FC<Props> = ({
           krews={availableKrews}
           selectedKrewIds={krewIds}
           onToggleKrew={reach.onToggleKrew}
+          people={people}
+          onPeopleChange={setPeople}
           sameAs={reach.sameAs}
           onSameAs={reach.onSameAs}
         />

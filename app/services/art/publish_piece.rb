@@ -32,7 +32,9 @@ module Art
         @piece.owner,
         text: @piece.title,
         visibility: PIECE_TO_STATUS_VISIBILITY.fetch(@piece.visibility, 'public'),
-        krew_ids: @piece.krew_ids
+        krew_ids: @piece.krew_ids,
+        audience_grant_ids: @piece.audience_added_ids,
+        audience_exclude_ids: @piece.audience_removed_ids
       )
 
       @piece.update_columns(status_id: status.id)

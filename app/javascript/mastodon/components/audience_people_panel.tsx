@@ -4,32 +4,33 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
 
-import { List as ImmutableList } from 'immutable';
-
-import {
-  changeComposeAudienceGrants,
-  changeComposeAudienceExcludes,
-} from 'mastodon/actions/compose';
 import api from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
-import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 // The flyout panel for the reach dropdown's "@ People" row
 // (docs/spaces/feed.md (Per-post audience)). A slim account search; each result /
 // current pick carries an In/Out toggle — In = let them see this even if your
 // reach wouldn't (grant), Out = keep them from seeing it even though your reach
-// would (exclude). Wired straight to the compose draft's audience_grants /
-// audience_excludes. Only mounted on gated scopes (the adapter omits it for
-// public), so it never offers to "restrict" a public post.
+// would (exclude). A controlled input: ReachDropdown draws it for every
+// composer that passes `people` + `onPeopleChange`, and only on gated tiers,
+// so it never offers to "restrict" a Kronkverse post.
 
 // Richer than AccountMultiSelect's AccountLite — we keep the avatar so a
 // current pick renders even when it's not in the live search results.
-interface PersonRef {
+export interface PersonRef {
   id: string;
   acct: string;
   displayName: string;
   avatar: string;
 }
+
+// Who a post or record is for (added) or kept from (removed), by name.
+export interface AudiencePeople {
+  added: PersonRef[];
+  removed: PersonRef[];
+}
+
+export const NO_PEOPLE: AudiencePeople = { added: [], removed: [] };
 
 type PersonState = 'none' | 'in' | 'out';
 
@@ -49,9 +50,6 @@ const messages = defineMessages({
     defaultMessage: 'Search to add or remove people.',
   },
 });
-
-const toRefs = (list: unknown): PersonRef[] =>
-  ((list ?? ImmutableList()) as ImmutableList<PersonRef>).toArray();
 
 const PersonRow: React.FC<{
   person: PersonRef;
@@ -103,16 +101,12 @@ const fromApi = (account: ApiAccountJSON): PersonRef => ({
   avatar: account.avatar,
 });
 
-export const ComposeAudienceMenu: React.FC = () => {
+export const AudiencePeoplePanel: React.FC<{
+  people: AudiencePeople;
+  onChange: (people: AudiencePeople) => void;
+}> = ({ people, onChange }) => {
   const intl = useIntl();
-  const dispatch = useAppDispatch();
-
-  const grants = useAppSelector((state) =>
-    toRefs(state.compose.get('audience_grants')),
-  );
-  const excludes = useAppSelector((state) =>
-    toRefs(state.compose.get('audience_excludes')),
-  );
+  const { added: grants, removed: excludes } = people;
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PersonRef[]>([]);
@@ -135,10 +129,9 @@ export const ComposeAudienceMenu: React.FC = () => {
       const nextExcludes = excludes.filter((p) => p.id !== person.id);
       if (next === 'in') nextGrants.push(person);
       if (next === 'out') nextExcludes.push(person);
-      dispatch(changeComposeAudienceGrants(nextGrants));
-      dispatch(changeComposeAudienceExcludes(nextExcludes));
+      onChange({ added: nextGrants, removed: nextExcludes });
     },
-    [stateOf, grants, excludes, dispatch],
+    [stateOf, grants, excludes, onChange],
   );
 
   const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,3 +202,40 @@ export const ComposeAudienceMenu: React.FC = () => {
     </div>
   );
 };
+
+// A record's people as its API reads them back to the owner
+// (`audience_people`, Kronk::AudiencePeopleJson).
+interface ApiPerson {
+  id: string;
+  acct: string;
+  display_name: string;
+  avatar: string;
+}
+
+export interface ApiAudiencePeople {
+  added: ApiPerson[];
+  removed: ApiPerson[];
+}
+
+const fromApiPerson = (person: ApiPerson): PersonRef => ({
+  id: person.id,
+  acct: person.acct,
+  displayName: person.display_name,
+  avatar: person.avatar,
+});
+
+export const audiencePeopleFromApi = (
+  json: ApiAudiencePeople | null | undefined,
+): AudiencePeople =>
+  json
+    ? {
+        added: json.added.map(fromApiPerson),
+        removed: json.removed.map(fromApiPerson),
+      }
+    : NO_PEOPLE;
+
+// What a composer sends, top level, the same names a post takes.
+export const audiencePeopleParams = (people: AudiencePeople) => ({
+  audience_grant_ids: people.added.map((p) => p.id),
+  audience_exclude_ids: people.removed.map((p) => p.id),
+});

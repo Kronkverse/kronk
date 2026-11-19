@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_18_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_19_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2468,6 +2468,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_120000) do
     t.index ["krew_id"], name: "index_record_krews_on_krew_id"
   end
 
+  create_table "record_people", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "excluded", default: false, null: false
+    t.string "korner_slug", null: false
+    t.bigint "record_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_record_people_on_account_id"
+    t.index ["korner_slug", "record_id", "account_id"], name: "index_record_people_on_record_and_account", unique: true
+  end
+
   create_table "relationship_severance_events", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "purged", default: false, null: false
@@ -3323,6 +3334,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_120000) do
   add_foreign_key "quotes", "statuses", column: "quoted_status_id", on_delete: :nullify
   add_foreign_key "quotes", "statuses", on_delete: :cascade
   add_foreign_key "record_krews", "krews", on_delete: :cascade
+  add_foreign_key "record_people", "accounts", on_delete: :cascade
   add_foreign_key "report_notes", "accounts", on_delete: :cascade
   add_foreign_key "report_notes", "reports", on_delete: :cascade
   add_foreign_key "reports", "accounts", column: "action_taken_by_account_id", name: "fk_bca45b75fd", on_delete: :nullify

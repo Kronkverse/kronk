@@ -1072,12 +1072,12 @@ pop-up. A new pop-up adds its root class to that rule.
 
 ### Audience / Reach
 
-| Primitive                  | What it does                                                                                                | Where                                                                          |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `<ReachDropdown>`          | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
-| `<ScopeMark>`              | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
-| `useAvailableKrews`        | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
-| `<KornerVisibilityPicker>` | Korner-scoped audience control.                                                                             | `components/korner_visibility_picker.tsx`                                      |
+| Primitive                  | What it does                                                                                                                                                                            | Where                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `<ReachDropdown>`          | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews and people (`people` + `onPeopleChange`). The one picker for every composer. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
+| `<ScopeMark>`              | The reach-ring glyph on feed cards and composers.                                                                                                                                       | `components/scope_mark.tsx`                                                    |
+| `useAvailableKrews`        | Loads your Krews for the krew axis on composers.                                                                                                                                        | `hooks/useAvailableKrews.ts`                                                   |
+| `<KornerVisibilityPicker>` | Korner-scoped audience control.                                                                                                                                                         | `components/korner_visibility_picker.tsx`                                      |
 
 ### Feed & status projection
 

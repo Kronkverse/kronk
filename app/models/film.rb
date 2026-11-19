@@ -10,6 +10,7 @@ class Film < ApplicationRecord
   include Kronk::AttachmentSource
   include Kronk::AudienceBearer
   include Kronk::KrewAudience
+  include Kronk::PeopleAudience
 
   self.attachment_source_slug = 'cinema'
 

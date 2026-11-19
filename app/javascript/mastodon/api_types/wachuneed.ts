@@ -1,3 +1,5 @@
+import type { ApiAudiencePeople } from 'mastodon/components/audience_people_panel';
+
 // A Wachuneed listing, as served by /api/v1/wachuneed/listings and
 // embedded on statuses (REST::WachuneedListingSummarySerializer).
 // One photo of a listing: `url` is the small variant, `full_url` the
@@ -199,4 +201,6 @@ export interface ApiListingJSON {
   };
   // The Krews it is for, on top of its reach, named where you may see them.
   krews?: { id: string; name: string; slug?: string }[];
+  // Who it is for or kept from by name; the owner's alone (edit form).
+  audience_people?: ApiAudiencePeople | null;
 }
