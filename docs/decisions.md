@@ -17,6 +17,25 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-18 — A Kuestion is answered, not commented on
+
+Tal's Kommons proposal "Kuestions": "Can we remove the comments section on
+a kuestion? Maybe replace it with the 'answer' button? People are
+commenting answers rather than answering properly".
+
+**Decision.** A Kuestion's post takes no comments. Its comment section is
+gone, Answer takes Reply's place in its action bar, and the server refuses
+a reply anywhere in its thread. The comments already there became answers
+by the same people (Tal: transfer them, don't just hide them), one per
+person, on Kuestions answered in words; the rest stay as posts, unshown.
+
+**Why.** A comment sits outside the answer gate and the reveal, so an
+answer written there is one nobody counting answers sees, and it shows to
+people who haven't answered yet. One place to answer keeps the gate whole.
+
+**Supersedes** nothing written; the 2026-11-12 "Answer / See answers" label
+on the card was the first step.
+
 ## 2026-11-18 — An event has one schedule, kept by its projekt when it has one
 
 Tal's Kommons proposal "Schedule": "for events to create a schedule. And the

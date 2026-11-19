@@ -3868,6 +3868,8 @@
   "status.hide_replies": "Hide replies",
   "status.history.created": "{name} created {date}",
   "status.history.edited": "{name} edited {date}",
+  "status.kuestion_answer": "Answer",
+  "status.kuestion_see_answers": "See answers",
   "status.load_more": "Load more",
   "status.loading_replies": "Loading replies...",
   "status.media.open": "Click to open",

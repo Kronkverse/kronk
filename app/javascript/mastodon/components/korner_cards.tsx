@@ -173,3 +173,10 @@ export function pickKornerCard(status: StatusLike): KornerCardEntry | null {
 export function hasKornerCard(status: StatusLike): boolean {
   return pickKornerCard(status) !== null;
 }
+
+// A Kuestion's post: answered, not commented on (Tal's proposal "Kuestions",
+// 2026-11-18). The card's comment section goes and the action bar's Reply
+// becomes Answer.
+export function isKuestionPost(status: StatusLike): boolean {
+  return pickKornerCard(status)?.slug === 'kuestions';
+}
