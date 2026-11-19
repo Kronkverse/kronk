@@ -21,6 +21,12 @@ import type {
   ListingPriceUnit,
   ListingWhereMode,
 } from 'mastodon/api_types/wachuneed';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import {
+  audiencePeopleFromApi,
+  audiencePeopleParams,
+  NO_PEOPLE,
+} from 'mastodon/components/audience_people_panel';
 import {
   ComposeBody,
   ComposeHint,
@@ -152,6 +158,7 @@ interface ListingDraftParams {
   spots?: string;
   visibility?: ListingVisibility;
   krewIds?: string[];
+  people?: AudiencePeople;
 }
 
 interface ListingComposerProps {
@@ -222,6 +229,8 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
   const [loadError, setLoadError] = useState(false);
   // The Krews it's for, on top of its reach (decisions.md, 2026-10-25).
   const [krewIds, setKrewIds] = useState<string[]>([]);
+  // The people it's for, or kept from, by name (decisions.md, 2026-11-19).
+  const [people, setPeople] = useState<AudiencePeople>(NO_PEOPLE);
   const availableKrews = useAvailableKrews();
 
   useEffect(() => {
@@ -250,6 +259,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
         setPriceUnit(listing.price_unit ?? null);
         setVisibility(listing.visibility ?? 'public');
         setKrewIds(listing.krews?.map((k) => k.id) ?? []);
+        setPeople(audiencePeopleFromApi(listing.audience_people));
         loadPhotos(listing.photos ?? []);
         setLoadingListing(false);
       })
@@ -314,6 +324,8 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
     onToggleKrew: handleToggleKrew,
   });
   const commitKonnect = konnect.commit;
+  // Following another record's audience takes its tier and Krews only.
+  const sentPeople = reach.sameAs?.some((o) => o.selected) ? NO_PEOPLE : people;
 
   // Drafts: a new listing is kept as you write it, here and on the server,
   // and comes back when the composer opens again. Editing one keeps none.
@@ -332,6 +344,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
       setVisibility(p.visibility ?? shopVisibility.current);
       visibilityPicked.current = !!p.visibility;
       setKrewIds(p.krewIds ?? []);
+      setPeople(p.people ?? NO_PEOPLE);
       loadPhotos(
         (d?.media_attachments ?? []).map((m) => ({
           id: m.id,
@@ -362,6 +375,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
         spots,
         visibility,
         krewIds,
+        people,
       },
       mediaIds: photoState.ids,
     },
@@ -449,6 +463,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             ...wantedFields,
             visibility,
             krew_ids: krewIds,
+            ...audiencePeopleParams(sentPeople),
             ...(photoState.touched
               ? {
                   media_attachment_ids: photoState.ids,
@@ -474,6 +489,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
             : {}),
           visibility,
           krew_ids: krewIds,
+          ...audiencePeopleParams(sentPeople),
         };
         const listing = await apiCreateWachuneedListing(payload);
         finishDraft();
@@ -503,6 +519,7 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
     kindChoices,
     visibility,
     krewIds,
+    sentPeople,
     finishDraft,
     commitKonnect,
     onDone,
@@ -586,6 +603,8 @@ export const ListingComposer: React.FC<ListingComposerProps> = ({
           krews={availableKrews}
           selectedKrewIds={krewIds}
           onToggleKrew={reach.onToggleKrew}
+          people={people}
+          onPeopleChange={setPeople}
           sameAs={reach.sameAs}
           onSameAs={reach.onSameAs}
         />

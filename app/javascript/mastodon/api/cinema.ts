@@ -6,6 +6,7 @@ import {
 } from 'mastodon/api';
 import { withAudienceKrews as withKrews } from 'mastodon/api/krew';
 import type { ApiFilmJSON, FilmVisibility } from 'mastodon/api_types/cinema';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
 
 interface CreateFilmParams {
   title: string;
@@ -31,20 +32,25 @@ export const apiListFilms = (scope: FilmsScope = 'all') =>
 export const apiGetFilm = (id: string) =>
   apiRequestGet<ApiFilmJSON>(`v1/cinema/films/${id}`);
 
-export const apiCreateFilm = (params: CreateFilmParams, krewIds?: string[]) =>
+export const apiCreateFilm = (
+  params: CreateFilmParams,
+  krewIds?: string[],
+  people?: AudiencePeople,
+) =>
   apiRequestPost<ApiFilmJSON>(
     'v1/cinema/films',
-    withKrews({ film: params }, krewIds),
+    withKrews({ film: params }, krewIds, people),
   );
 
 export const apiUpdateFilm = (
   id: string,
   params: UpdateFilmParams,
   krewIds?: string[],
+  people?: AudiencePeople,
 ) =>
   apiRequestPut<ApiFilmJSON>(
     `v1/cinema/films/${id}`,
-    withKrews({ film: params }, krewIds),
+    withKrews({ film: params }, krewIds, people),
   );
 
 export const apiDeleteFilm = (id: string) =>

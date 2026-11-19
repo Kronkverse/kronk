@@ -13,6 +13,7 @@ import type {
   ChronicleSummaryJSON,
   ChronicleVisibility,
 } from 'mastodon/api_types/kronikles';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
 
 interface CreateChronicleParams {
   title: string;
@@ -47,20 +48,22 @@ export const apiGetChronicle = (id: string) =>
 export const apiCreateChronicle = (
   params: CreateChronicleParams,
   krewIds?: string[],
+  people?: AudiencePeople,
 ) =>
   apiRequestPost<ApiChronicleJSON>(
     'v1/kronikles/chronicles',
-    withKrews({ chronicle: params }, krewIds),
+    withKrews({ chronicle: params }, krewIds, people),
   );
 
 export const apiUpdateChronicle = (
   id: string,
   params: UpdateChronicleParams,
   krewIds?: string[],
+  people?: AudiencePeople,
 ) =>
   apiRequestPut<ApiChronicleJSON>(
     `v1/kronikles/chronicles/${id}`,
-    withKrews({ chronicle: params }, krewIds),
+    withKrews({ chronicle: params }, krewIds, people),
   );
 
 export const apiDeleteChronicle = (id: string) =>

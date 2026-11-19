@@ -17,6 +17,40 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-19 — One reach picker, with People, for every composer
+
+Asked after a Wachuneed listing set to "Me" showed up in no feed: "I thought
+we arranged it with 'me' while also choosing specific people". That was true
+of posts only (2026-08-28): korner records took a tier and Krews, never
+people. Then: "that composer picker should be standardised, where we work on
+the main one, and it updates across all composers, then we can specifically
+adjust specific composers if we need".
+
+**Decision.** `<ReachDropdown>` is the one picker: tier, Krews, and People.
+It draws the People panel itself (`AudiencePeoplePanel`: search, then In or
+Out per person) from `people` + `onPeopleChange`, hides it on Kronkverse and
+while an audience follows another record ("Same as"), and the main composer
+uses it the same way as every korner composer. A composer adjusts it by
+leaving out what its korner can't store, or by passing its own panel
+(`peopleSlot`, as albums do for their add-only viewers).
+
+Films, kars, kronikles, art pieces and listings now store people:
+`record_people` (Kronk::PeopleAudience, beside `record_krews`), added or
+kept out, read by `Reachable` (`visible_to?` / `visible_to`), copied onto
+the feed post's grants and exclusions, sent as `audience_grant_ids` /
+`audience_exclude_ids` like a post's, and read back to the owner alone as
+`audience_people`. As for posts, only the gated tiers carry people, and a
+person kept out loses every way in. All three Wachuneed composers
+(listing, Offerings, shop item) now offer Krews too.
+
+A Just me post with people added now reaches its author's own home feed, as
+a Just me post with a Krew does (`radiates_to_no_one?`); before, it went
+only to the people added.
+
+**Not yet.** Albums keep their own people (viewers, add-only); Moments,
+Kalendar events, Booth and Kuestions have their own audience models and
+take no people. "Same as" copies a tier and Krews, not people.
+
 ## 2026-11-18 — A Kuestion is answered, not commented on
 
 Tal's Kommons proposal "Kuestions": "Can we remove the comments section on

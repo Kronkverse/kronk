@@ -5,15 +5,21 @@ import { defineMessages, useIntl } from 'react-intl';
 import type { Map as ImmutableMap } from 'immutable';
 import { List as ImmutableList } from 'immutable';
 
-import { changeComposeKrewTargets } from 'mastodon/actions/compose';
+import {
+  changeComposeAudienceExcludes,
+  changeComposeAudienceGrants,
+  changeComposeKrewTargets,
+} from 'mastodon/actions/compose';
 import { changeComposeVisibility } from 'mastodon/actions/compose_typed';
 import type { StatusVisibility } from 'mastodon/api_types/statuses';
+import type {
+  AudiencePeople,
+  PersonRef,
+} from 'mastodon/components/audience_people_panel';
 import type { ReachValue, SelfRung } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
-
-import { ComposeAudienceMenu } from './compose_audience_menu';
 
 // Compose-store adapter for the ReachDropdown — the audience control in the
 // composer header. Reads/writes the compose draft's `privacy` (reach tier) and
@@ -68,19 +74,31 @@ export const ComposeReachDropdown: React.FC<Props> = ({ disabled = false }) => {
   );
   const krews = useAvailableKrews();
 
-  // Per-post audience "people layer" — how many people are added/removed,
-  // to badge the "@ People" row. The slot itself (search + In/Out toggle)
-  // reads/writes the same compose state.
-  const peopleCount = useAppSelector(
+  // Per-post audience "people layer": the draft's added / removed people,
+  // for the standard People panel in the dropdown.
+  const grants = useAppSelector(
     (state) =>
-      (
-        (state.compose.get('audience_grants') ??
-          ImmutableList()) as ImmutableList<unknown>
-      ).size +
-      (
-        (state.compose.get('audience_excludes') ??
-          ImmutableList()) as ImmutableList<unknown>
-      ).size,
+      (state.compose.get('audience_grants') ??
+        ImmutableList()) as ImmutableList<PersonRef>,
+  );
+  const excludes = useAppSelector(
+    (state) =>
+      (state.compose.get('audience_excludes') ??
+        ImmutableList()) as ImmutableList<PersonRef>,
+  );
+  const people: AudiencePeople = useMemo(
+    () => ({
+      added: grants.toArray(),
+      removed: excludes.toArray(),
+    }),
+    [grants, excludes],
+  );
+  const handlePeopleChange = useCallback(
+    (next: AudiencePeople) => {
+      dispatch(changeComposeAudienceGrants(next.added));
+      dispatch(changeComposeAudienceExcludes(next.removed));
+    },
+    [dispatch],
   );
 
   const handleChange = useCallback(
@@ -134,12 +152,11 @@ export const ComposeReachDropdown: React.FC<Props> = ({ disabled = false }) => {
       krews={profileOnly ? undefined : krews}
       selectedKrewIds={selectedKrewIds}
       onToggleKrew={handleToggleKrew}
-      // People layer — hidden for public (a public post can't be restricted)
-      // and for one only on a profile (the profile decides).
-      peopleSlot={
-        value === 'public' || profileOnly ? undefined : <ComposeAudienceMenu />
-      }
-      peopleCount={peopleCount}
+      // People layer — the dropdown hides it for public (a public post
+      // can't be restricted); hidden too for one only on a profile (the
+      // profile decides).
+      people={profileOnly ? undefined : people}
+      onPeopleChange={handlePeopleChange}
       selfRung={selfRung}
     />
   );

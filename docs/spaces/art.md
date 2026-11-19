@@ -16,7 +16,7 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 - **Description** — optional, up to 4000 chars. Plain text.
 - **Kind** — required. One of painting, drawing, illustration, print, photograph, collage, mixed media, sculpture, installation, ceramic, glass, textile, jewellery, woodwork, metalwork, papercraft, calligraphy, mural or street art, and other (`ArtPiece#kind`). The names people see live once, in `features/art/kinds.ts`, which the composer, the page, the grid and the feed card all read; the picker lists them by name with Other last. A new kind takes the next enum number in the model and a name there.
 - **Photos** — zero or more, ordered by `position`. First photo becomes the piece's cover (unless a `cover_media_attachment` is set explicitly). Photos have an optional caption and no independent favourite / reply surface — all interaction lands on the piece's feed card, not per photo.
-- **Visibility** — the reach ladder: `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25).
+- **Visibility** — the reach ladder: `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25). On a gated tier it can also be for, or kept from, people by name (`audience_grant_ids` / `audience_exclude_ids`, `record_people`, `Kronk::PeopleAudience`, decisions.md 2026-11-19), as a post can.
 
 ## Piece details
 

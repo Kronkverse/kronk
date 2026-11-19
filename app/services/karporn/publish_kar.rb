@@ -27,7 +27,9 @@ module Karporn
         @kar.owner,
         text: @kar.title,
         visibility: KAR_TO_STATUS_VISIBILITY.fetch(@kar.visibility, 'public'),
-        krew_ids: @kar.krew_ids
+        krew_ids: @kar.krew_ids,
+        audience_grant_ids: @kar.audience_added_ids,
+        audience_exclude_ids: @kar.audience_removed_ids
       )
 
       @kar.update_columns(status_id: status.id)

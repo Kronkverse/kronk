@@ -32,7 +32,9 @@ module Kronikles
         @chronicle.owner,
         text: @chronicle.title,
         visibility: CHRONICLE_TO_STATUS_VISIBILITY.fetch(@chronicle.visibility, 'public'),
-        krew_ids: @chronicle.krew_ids
+        krew_ids: @chronicle.krew_ids,
+        audience_grant_ids: @chronicle.audience_added_ids,
+        audience_exclude_ids: @chronicle.audience_removed_ids
       )
 
       @chronicle.update_columns(status_id: status.id)

@@ -52,7 +52,8 @@ class FanOutOnWriteService < BaseService
     # krew is an additive axis (docs/decisions.md), so it
     # has a real audience (author + krew members). Such a post behaves like
     # the old `krew` visibility did — it lands in the author's own home and
-    # fires its notifications. `radiates_to_no_one?` captures that.
+    # fires its notifications. So does one with people added by name.
+    # `radiates_to_no_one?` captures that.
     deliver_to_self! unless radiates_to_no_one?
 
     unless @options[:skip_notifications] || radiates_to_no_one?
@@ -328,8 +329,15 @@ class FanOutOnWriteService < BaseService
   # True when a status reaches nobody but the author: self_only reach AND
   # no additive krew targeting. A self_only post that targets a krew has a
   # real audience (the krew's members), so it does NOT radiate to no one.
+  # People added by name give it a real audience too, as a Krew does.
   def radiates_to_no_one?
-    @status.self_only_visibility? && !targets_krew?
+    @status.self_only_visibility? && !targets_krew? && !targets_people?
+  end
+
+  def targets_people?
+    return @targets_people if defined?(@targets_people)
+
+    @targets_people = @status.granted_accounts.exists?
   end
 
   def targets_krew?
