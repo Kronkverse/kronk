@@ -32,16 +32,21 @@ RSpec.describe 'Mateship', :js, :streaming do
     page.current_window.resize_to(390, 900)
   end
 
-  it 'labels the actions on a Mate’s profile and opens the Mateship from Mates' do
+  it 'labels the actions on a Mate’s profile' do
     visit '/@benjamin'
 
     within('.profile-block__actions') do
+      expect(page).to have_button('Mates')
       expect(page).to have_button('Nudge')
       expect(page).to have_button('Post')
       expect(page).to have_button('Rose')
       expect(page).to have_button('Share')
-      click_on 'Mates'
     end
+  end
+
+  it 'opens what the two of you share from Mates' do
+    visit '/@benjamin'
+    within('.profile-block__actions') { click_on 'Mates' }
 
     expect(page).to have_current_path('/@benjamin/mateship')
     expect(page).to have_content('You and Benjamin')

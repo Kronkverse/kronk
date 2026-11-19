@@ -71,9 +71,9 @@ RSpec.describe 'API V1 Accounts Mateship' do
     end
 
     it 'leaves out an invite-only event the viewer was not invited to' do
-      secret = Event.create!(account: chris, title: 'Secret supper', start_time: 2.days.from_now, invite_only: true)
-      EventRsvp.create!(event: secret, account: viewer, status: :going)
-      EventRsvp.create!(event: secret, account: mate, status: :going)
+      supper = Event.create!(account: chris, title: 'Secret supper', start_time: 2.days.from_now, invite_only: true)
+      EventRsvp.create!(event: supper, account: viewer, status: :going)
+      EventRsvp.create!(event: supper, account: mate, status: :going)
 
       get "/api/v1/accounts/#{mate.id}/mateship", headers: headers
 
