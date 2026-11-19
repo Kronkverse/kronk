@@ -110,6 +110,7 @@ import {
   ProfileSectionsSettings,
   ProfileSpace,
   ProfileSettingsPer,
+  Mateship,
   NudgesLegacyArchive,
   Krews,
   KrewDetail,
@@ -504,6 +505,8 @@ class SwitchingColumnsArea extends PureComponent {
                 matched as an :acct value. Signed-in only; anonymous
                 visitors have nothing to configure. */}
             {signedIn && <WrappedRoute path='/@:acct/settings' exact component={ProfileSettingsPer} content={children} />}
+            {/* What you and one Mate share; the two Mates only (docs/spaces/profile.md, Mateship). */}
+            {signedIn && <WrappedRoute path='/@:acct/mateship' exact component={Mateship} content={children} />}
             {/* The profile space — one identity block, three faces turned
                 on the drum (Profile / Timeline / Mates). All three URLs
                 mount the same component; the face comes from the path.
