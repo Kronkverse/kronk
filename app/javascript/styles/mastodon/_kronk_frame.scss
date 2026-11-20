@@ -35,7 +35,18 @@
     [stage-end right-start] 7.75rem
     [right-end];
   grid-template-rows: 4.25rem 1fr;
+
+  // The visible height: on a phone, 100vh is the height with the address
+  // bar hidden, so with it showing every page scrolled by the bar's height.
   min-height: 100vh;
+  min-height: 100dvh;
+}
+
+// Mastodon's phone tab bar is retired (navigation_bar.tsx); the Frame's own
+// bottom row holds Kronk's. The room `.ui` still kept for the old bar
+// made every phone page 53px taller than the screen.
+.ui:has(> .kronk-frame) {
+  padding-bottom: 0;
 }
 
 // Media query, NOT @container: this rule targets `.kronk-frame` itself,
