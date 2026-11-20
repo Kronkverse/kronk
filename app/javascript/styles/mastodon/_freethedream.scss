@@ -117,7 +117,7 @@ $freethedream-wide: 1000px;
 // project page and the audit widen on a wide Stage; an item stays a
 // reading column.
 .korner-detail.freethedream-detail--wide {
-  @container frame (width >= #{$freethedream-wide}) {
+  @media (width >= #{$freethedream-wide}) {
     max-width: 72rem;
   }
 }
@@ -138,7 +138,7 @@ $freethedream-wide: 1000px;
   &--wide .korner-detail__hero {
     aspect-ratio: 5 / 2;
 
-    @container frame (width >= #{$freethedream-wide}) {
+    @media (width >= #{$freethedream-wide}) {
       aspect-ratio: 4 / 1;
     }
   }
@@ -177,14 +177,14 @@ $freethedream-wide: 1000px;
   gap: 1.25rem;
   align-items: start;
 
-  @container frame (width >= #{$freethedream-wide}) {
+  @media (width >= #{$freethedream-wide}) {
     grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
     gap: 2rem;
   }
 
   // A projekt's page: one column, as a Krew's is.
   &--single {
-    @container frame (width >= #{$freethedream-wide}) {
+    @media (width >= #{$freethedream-wide}) {
       grid-template-columns: minmax(0, 1fr);
     }
   }
