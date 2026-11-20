@@ -47,6 +47,9 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
     # keeps the read path unchanged until Phase 14 flips the flag.
     statuses = Kronk::TuneInGate.filter(current_user&.account, statuses)
 
+    # What you've chosen not to see from one Mate (the Mateship page).
+    statuses = Kronk::MateTuneOutGate.filter(current_user&.account, statuses)
+
     # Defence in depth against fan-out-suppressed post types leaking into
     # the feed via any code path we haven't gated on WRITE (populate_home
     # regen, historic pre-#1681 rows stuck in Redis, etc.). Album photos

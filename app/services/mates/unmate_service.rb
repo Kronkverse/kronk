@@ -20,6 +20,11 @@ module Mates
 
       UnfollowService.new.call(@source, @target) if @source.following?(@target) || @source.requested?(@target)
       UnfollowService.new.call(@target, @source) if both_local? && @target.following?(@source)
+
+      # What either chose to see of the other ends with the mateship.
+      MateTuneOut.where(account: @source, target_account: @target)
+                 .or(MateTuneOut.where(account: @target, target_account: @source))
+                 .delete_all
     end
 
     private
