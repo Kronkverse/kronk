@@ -87,6 +87,8 @@ interface Props {
   lower: boolean;
   onSelectPin: (pin: ApiPresencePinJSON) => void;
   onOpenPlace: () => void;
+  // More buttons for the same row (Share live, anthemos_share.tsx).
+  children?: React.ReactNode;
 }
 
 export const NearMe: React.FC<Props> = ({
@@ -96,6 +98,7 @@ export const NearMe: React.FC<Props> = ({
   lower,
   onSelectPin,
   onOpenPlace,
+  children,
 }) => {
   const intl = useIntl();
   const history = useHistory();
@@ -197,15 +200,18 @@ export const NearMe: React.FC<Props> = ({
 
   return (
     <div className={`map-near-me${lower ? ' map-near-me--lower' : ''}`}>
-      <button
-        type='button'
-        className='map-near-me__toggle'
-        onClick={toggle}
-        aria-expanded={selfPin ? open : undefined}
-      >
-        <Icon id='explore' icon={ExploreIcon} />
-        <span>{intl.formatMessage(messages.button)}</span>
-      </button>
+      <div className='map-near-me__buttons'>
+        <button
+          type='button'
+          className='map-near-me__toggle'
+          onClick={toggle}
+          aria-expanded={selfPin ? open : undefined}
+        >
+          <Icon id='explore' icon={ExploreIcon} />
+          <span>{intl.formatMessage(messages.button)}</span>
+        </button>
+        {children}
+      </div>
       {open && selfPin && (
         <div className='map-near-me__panel'>
           {empty && (
