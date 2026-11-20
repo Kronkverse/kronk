@@ -153,7 +153,7 @@ jobs:
       fail-fast: false
       matrix:
         # 3.2 dropped: css_parser (>= 3.3) makes the bundle uninstallable on Ruby 3.2.
-        # The rebuild targets .ruby-version (3.4.7). The 3.3 compat leg runs only
+        # The rebuild targets .ruby-version (3.4.13). The 3.3 compat leg runs only
         # on the nightly schedule, push to main, and manual dispatch — NOT on the
         # merge path (pull_request + merge_group), which runs just .ruby-version.
         # This halves the suite cost on every PR merge while keeping 3.3 covered.
