@@ -201,6 +201,8 @@ Rails.application.routes.draw do
     # Without this mount a direct hit fell through to the /:id status route
     # and 404'd with id='settings' (found 2026-10-05 by the e2e suite).
     get '/@:account_username/settings', to: 'home#index'
+    # What you and one Mate share (docs/spaces/profile.md, Mateship) — SPA-served.
+    get '/@:account_username/mateship', to: 'home#index'
     # Pretty personal invite: /@tal/invite → looks up Tal's evergreen
     # personal invite (creating it if absent) and redirects to the
     # canonical /invite/<code>. Must sit BEFORE the generic /:id

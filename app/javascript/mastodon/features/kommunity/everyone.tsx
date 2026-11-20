@@ -204,6 +204,7 @@ export const KommunityMates: React.FC = () => {
   return (
     <KommunityPeopleList
       fetch={apiGetKommunityMates}
+      markMates
       text={{
         empty: intl.formatMessage(messages.matesEmpty),
         emptyBody: intl.formatMessage(messages.matesEmptyBody),

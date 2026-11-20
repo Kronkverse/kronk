@@ -36,6 +36,9 @@ relationship is **Mates**: mutual, formed by request then accept.
 - **No conversion at cutover.** Follows were never mass-converted. A
   leftover one-way follow is tidied up the next time either person sends a
   request.
+- **What two Mates share** (when they became Mates, Mates in common, Krews,
+  events and projekts) is the Mateship page, `/@:acct/mateship`, which only
+  the two of them can open (docs/spaces/profile.md, Mateship).
 
 ### The reach ladder
 

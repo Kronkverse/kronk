@@ -17,6 +17,34 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-19 — A Mateship page, for the two Mates only
+
+Tal: "make the buttons on profile page more obvious and add a 'mates'
+option, which opens a new page with details about the mateship … length,
+mutuals, shared content."
+
+**Decision:** the profile's actions are labelled pills (Mates, Nudge, Post,
+Rose, Share) instead of bare icons. **Mates** opens `/@:acct/mateship`:
+when you became Mates and for how long, Mates in common, and the Krews,
+events and projekts you're both in. A Mates list row and Kommunity → Mates
+open it too, from the "Mates" marker where the Mate button would be.
+
+- **Only the two Mates can see it.** The API answers 404 to anyone else, as
+  if there were nothing there. A Mateship is between two people; a third
+  person reading what two others share is the kind of view Kronk doesn't
+  build.
+- **Shared things, never measures.** No counts of froths, messages, roses
+  or visits between them, and no "closeness". Counting interactions between
+  two people is the raw material of engagement ranking and of surveillance
+  (CLAUDE.md, What Kronk holds to), and a number on a friendship invites
+  comparing friendships.
+- **Only what the viewer can already see.** An invite-only event they weren't
+  invited to doesn't appear, even if both went.
+- **No Remove Mate on the page.** It stays on the per-person settings page,
+  which the page links to quietly (2026-10-25, No Unmate in lists).
+
+Detail: `docs/spaces/profile.md` (Mateship).
+
 ## 2026-11-19 — British English reads as Kronk
 
 Tal's phone showed "YOU FOLLOW EACH OTHER" on a Mate's profile, where Kronk

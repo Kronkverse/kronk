@@ -778,6 +778,8 @@ namespace :api, format: false do
         # /@:acct/mates); `matuals` is the viewer's mates in common with them.
         resources :mates, only: :index
         resources :matuals, only: :index
+        # What the viewer and this Mate share (Mates only; decisions.md 2026-11-19).
+        resource :mateship, only: :show
 
         namespace :profile do
           resources :sections, only: [:index] do

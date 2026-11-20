@@ -15,6 +15,7 @@ Earlier designs are in git history (see [History](#history)).
 | `/@:acct`          | The profile: block, Profile face, then their timeline                            |
 | `/@:acct/mates`    | The block, then their Mates list (them and their Mates only)                     |
 | `/@:acct/settings` | Your settings for this person (signed in only)                                   |
+| `/@:acct/mateship` | What you and this Mate share (the two of them only)                              |
 | `/@:acct/tagged/…` | A tag-filtered timeline. Not a face; it keeps its own route and draws the block. |
 
 `/accounts/:id` works too. It mounts one component,
@@ -44,12 +45,19 @@ One identity block (`components/profile_block.tsx`) sits at the top. It is the
 only place identity is drawn.
 
 **Contents:** cover, avatar, display name, handle, lock icon, relationship tag
-("You're Mates", "Blocking", …), and a row of actions:
+("You're Mates", "Blocking", …), and a row of actions, each a labelled
+`<KornerPill>` (icon and word) in a `<KornerActionBar>`, which wraps on a
+phone. They were bare icons in circles until 2026-11-19, and nobody could tell
+what they did (Tal):
 
 - the relationship button (`FollowButton`: Mate? / Mating… / Accept). Once you
   are Mates it shows nothing, here or anywhere else it is used;
-- **Nudge**, a link to `/nudges/<accountId>`;
-- **Rose** (see [`rose.md`](rose.md));
+- **Mates**, for a Mate only: opens the [Mateship](#mateship) page;
+- **Nudge**, a link to `/nudges/with/<accountId>`;
+- **Post**, for a Mate only: post on their profile (the composer, aimed at
+  them);
+- **Rose** (see [`rose.md`](rose.md)), for a Mate only; "Rose sent" once
+  today's has gone;
 - **Share**, which opens the shared `<ShareSheet>`.
 
 Counts: `N posts · N Mates · Joined <month year>`, plain text, not links, and under them the bio
@@ -377,6 +385,35 @@ It read 0 for every account until `BackfillMatesCount` (2026-09-15) set the
 starting values; the column had been added with a "follow-up recount" that
 never ran. `spec/models/follow_spec.rb` locks the callbacks. Lesson: a
 migration that says "will be backfilled later" isn't finished.
+
+## Mateship
+
+`/@:acct/mateship` (`features/mateship/`) is what you and one Mate share
+(Tal, 2026-11-19). It opens from the **Mates** pill on their profile and from
+the "Mates" marker on a row in a Mates list or Kommunity → Mates
+(`<Account markMates>`, which links there).
+
+- **Mates since**: the date, and how long, from the later of the two
+  `Follow` rows, which is when the request was accepted.
+- **Mates in common** (Matuals), as tiles that open each profile. Hidden when
+  the Mate hides their connections, as the Matuals row is.
+- **Krews you're both in**, **Events together** (both said Going; coming up
+  first) and **Projekts you're both in**, each a section that is left out when
+  empty. A projekt brings its own Krew, so it shows under Krews too.
+- A quiet link to your settings for them. **Remove Mate is not here**; it
+  stays on the per-person settings page (decisions.md, 2026-10-25).
+
+It is `<Stage>` + `<KornerDetail>` (the Mate's cover, or an accent wash, with both faces as the hero; Nudge as the one
+pill), `<SpaceGrid>`/`<SpaceCard>` sections and `<EmptyState>`.
+
+**Only the two of them.** `GET /api/v1/accounts/:id/mateship`
+(`Mates::MateshipService`) answers 404 to anyone who isn't the account's Mate,
+and the page sends them back to the profile. Every record is one the viewer
+can already see (`Event.visible_to`, `Freethedream::Project.visible_to`, Krews
+they're in). It shows shared things, never measures: no counts of froths,
+messages or visits between the two (decisions.md, 2026-11-19). Specs:
+`spec/requests/api/v1/accounts/mateships_spec.rb`,
+`spec/system/mateship_spec.rb`.
 
 ## Per-person settings
 

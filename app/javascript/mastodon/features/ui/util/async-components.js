@@ -281,6 +281,10 @@ export function ProfileSettingsPer () {
   return import("../../profile_settings_per").then(m => ({ default: m.ProfileSettingsPer }));
 }
 
+export function Mateship () {
+  return import("../../mateship");
+}
+
 export function NudgesLegacyArchive () {
   return import("../../nudges_legacy").then(m => ({ default: m.NudgesLegacyArchive }));
 }
