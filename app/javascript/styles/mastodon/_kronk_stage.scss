@@ -113,6 +113,22 @@ body:has(.kronk-stage) {
   overflow: hidden;
 }
 
+// The page itself never moves. `overflow: hidden` doesn't stop an
+// iPhone: a swipe that reaches the end of the feed (or starts where
+// nothing scrolls) carries on to the page, which bounces, and the tab
+// bar and everything else slide up with it, leaving empty space below
+// (a friend's iPhone, 2026-11-20). So the page doesn't bounce, and a
+// scroll inside the Stage stays inside it.
+html:has(.kronk-stage),
+body:has(.kronk-stage) {
+  overscroll-behavior: none;
+}
+
+.kronk-stage,
+.kronk-stage :is(.stage-column, .stage-grid) {
+  overscroll-behavior-y: contain;
+}
+
 // Let the Stage cell's height flow down Mastodon's columns-area chain
 // so .kronk-stage can fill it and own its own scroll. Scoped to Stage
 // routes — classic <Column> routes keep their own layout.
