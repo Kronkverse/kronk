@@ -52,7 +52,7 @@ what they did (Tal):
 
 - the relationship button (`FollowButton`: Mate? / Mating… / Accept). Once you
   are Mates it shows nothing, here or anywhere else it is used;
-- **Mates**, for a Mate only: opens the [Mateship](#mateship) page;
+- **Mateship**, for a Mate only: opens the [Mateship](#mateship) page;
 - **Nudge**, a link to `/nudges/with/<accountId>`;
 - **Post**, for a Mate only: post on their profile (the composer, aimed at
   them);
@@ -388,8 +388,9 @@ migration that says "will be backfilled later" isn't finished.
 
 ## Mateship
 
-`/@:acct/mateship` (`features/mateship/`) is what you and one Mate share
-(Tal, 2026-11-19). It opens from the **Mates** pill on their profile and from
+`/@:acct/mateship` (`features/mateship/`) is what you and one Mate share,
+and your settings for them (Tal, 2026-11-19 and 2026-11-20). It opens from
+the **Mateship** pill on their profile and from
 the "Mates" marker on a row in a Mates list or Kommunity → Mates
 (`<Account markMates>`, which links there).
 
@@ -400,8 +401,16 @@ the "Mates" marker on a row in a Mates list or Kommunity → Mates
 - **Krews you're both in**, **Events together** (both said Going; coming up
   first) and **Projekts you're both in**, each a section that is left out when
   empty. A projekt brings its own Krew, so it shows under Krews too.
-- A quiet link to your settings for them. **Remove Mate is not here**; it
-  stays on the per-person settings page (decisions.md, 2026-10-25).
+- **What you see from {name}**: a switch for their plain posts (`posts`)
+  and one for each korner whose cards reach a feed, plus **Nudge me when they
+  post** (the `Follow`'s `notify`). Turned off, that kind of post from them
+  leaves Home, Kommunity and Kronkverse (`mate_tune_outs`,
+  `Kronk::MateTuneOutGate`); they aren't told. `PATCH
+/api/v1/accounts/:id/mateship` takes `korner` + `shown`, or `notify`.
+- **What {name} sees of yours**, read-only: which reach tiers and Krews
+  reach them, and that the People row leaves them out of one post.
+- **Quiet** (mute), **Your private note**, and **Ending it**: Remove Mate
+  (confirmed), block (confirmed; it ends the mateship) and report.
 
 It is `<Stage>` + `<KornerDetail>` (the Mate's cover, or an accent wash, with both faces as the hero; Nudge as the one
 pill), `<SpaceGrid>`/`<SpaceCard>` sections and `<EmptyState>`.
@@ -419,10 +428,12 @@ messages or visits between the two (decisions.md, 2026-11-19). Specs:
 
 `/@:acct/settings` (`features/profile_settings_per/`) is your settings for one
 person, reached from the Ж menu's Settings while you're on their profile. It
-has: mute, block, your private note about them, remove Mate, and report. On
-your own profile it points you at your account's Privacy settings instead.
+has: mute, block, your private note about them, and report. On your own
+profile it points you at your account's Privacy settings instead. **For a
+Mate it sends you to the [Mateship](#mateship) page**, where their settings
+live (decisions.md, 2026-11-20).
 
-**Unmate lives only here.** No list row, hover card, profile peek card or
+**Unmate lives only on the Mateship page.** No list row, hover card, profile peek card or
 profile block offers it: `FollowButton` and the peek card's `MateIconButton`
 render nothing for someone who is already your Mate. Ending a Mateship is a
 deliberate act on one person, not a button beside every name in a list

@@ -17,6 +17,38 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-20 — A Mate's settings live on the Mateship page
+
+Tal: "it also should contain the various controls of, access to content,
+what you see from them … in which korners, and also unmating … This is the
+spot where you go when you want to explore your mateship with someone …
+There doesn't need to be a second settings page coming off this one."
+
+**Decision:** for a Mate, `/@:acct/mateship` is the one place for both what
+you share and your settings for them. Below what you share it has: **What you
+see from {name}** (their plain posts and each korner's cards, one switch each,
+plus "Nudge me when they post"), **What {name} sees of yours** (read-only),
+**Quiet** (mute), **Your private note**, and **Ending it** (Remove Mate,
+block, report). The profile pill reads **Mateship**. `/@:acct/settings`
+sends a Mate here; it stays the settings page for everyone else.
+
+- **Per-Mate switches are a read-side filter.** `mate_tune_outs` rows (a
+  korner slug, or `posts`) leave that Mate's posts of that kind out of Home,
+  Kommunity and Kronkverse (`Kronk::MateTuneOutGate`, matched the way
+  `Kronk::TuneInGate` matches korner cards). They aren't told. Nothing is
+  hidden from them, and removing the Mate forgets the switches both ways.
+- **"What they see of yours" only describes.** It says what the code does:
+  Mates, Orbit and Kronkverse posts reach them, Krew posts in the Krews you
+  share, Just me never, and the composer's People row leaves them out of one
+  post. A standing per-person limit on your own posts was not built; it's
+  open for Tal.
+- **Supersedes** 2026-10-25's "Unmate lives only on the per-person settings
+  page" for Mates: Remove Mate is now on the Mateship page (still under
+  Ending it, still confirmed, still never in a list), and the 2026-11-19
+  "no Remove Mate on the page" bullet.
+
+Detail: `docs/spaces/profile.md` (Mateship).
+
 ## 2026-11-19 — A Mateship page, for the two Mates only
 
 Tal: "make the buttons on profile page more obvious and add a 'mates'
@@ -42,6 +74,8 @@ open it too, from the "Mates" marker where the Mate button would be.
   invited to doesn't appear, even if both went.
 - **No Remove Mate on the page.** It stays on the per-person settings page,
   which the page links to quietly (2026-10-25, No Unmate in lists).
+  Superseded 2026-11-20: a Mate's settings, Remove Mate included, moved onto
+  this page.
 
 Detail: `docs/spaces/profile.md` (Mateship).
 

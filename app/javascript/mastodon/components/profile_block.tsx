@@ -97,7 +97,7 @@ const messages = defineMessages({
     id: 'account.mateship',
     defaultMessage: 'You and {name}: what you share',
   },
-  matesShort: { id: 'account.action.mates', defaultMessage: 'Mates' },
+  matesShort: { id: 'account.action.mateship', defaultMessage: 'Mateship' },
   nudgeShort: { id: 'account.action.nudge', defaultMessage: 'Nudge' },
   postShort: { id: 'account.action.post', defaultMessage: 'Post' },
   roseShort: { id: 'account.action.rose', defaultMessage: 'Rose' },
