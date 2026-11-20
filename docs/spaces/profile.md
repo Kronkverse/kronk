@@ -401,9 +401,12 @@ the "Mates" marker on a row in a Mates list or Kommunity → Mates
 - **Krews you're both in**, **Events together** (both said Going; coming up
   first) and **Projekts you're both in**, each a section that is left out when
   empty. A projekt brings its own Krew, so it shows under Krews too.
-- **What you see from {name}**: a switch for their plain posts (`posts`)
-  and one for each korner whose cards reach a feed, plus **Nudge me when they
-  post** (the `Follow`'s `notify`). Turned off, that kind of post from them
+- **What you see from {name}**: a list, one row each for their plain posts
+  (`posts`, the Feed icon) and each korner whose cards reach a feed, plus
+  **Nudge me when they post** (the `Follow`'s `notify`, the Nudges icon).
+  Each row is the space's icon, its name and a switch, as in Settings →
+  Korners, and a row turned off greys down (Tal: a list of icons and names,
+  not a block of text). Turned off, that kind of post from them
   leaves Home, Kommunity and Kronkverse (`mate_tune_outs`,
   `Kronk::MateTuneOutGate`); they aren't told. `PATCH
 /api/v1/accounts/:id/mateship` takes `korner` + `shown`, or `notify`.
