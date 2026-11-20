@@ -156,6 +156,12 @@ You place a pin by searching for a place (`GET /api/v1/map/geocode`, a
 server-side Nominatim proxy so your IP doesn't reach a third party; results
 cached 24h). You can add a short note (60 characters, "Travelling China").
 
+**Where it opens.** On your own pin, at about a region's zoom, so nearby
+Mates show around you (Tal, 2026-11-20). With no pin of your own it fits
+your Mates' pins, and with none of those either, Australia. A link that
+opens the map somewhere (`?lat=&lng=`, `?live=`, `?map_place=`, `?event=`)
+wins.
+
 You are the last face in the Mates list (Tal, 2026-10-17; it was the first,
 and the Ж menu had an **Edit location** moon too, now gone). Before you have
 a pin it is the pin icon, **Put me on the map**. Once you have one it is your
