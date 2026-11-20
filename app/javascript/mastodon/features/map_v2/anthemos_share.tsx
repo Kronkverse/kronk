@@ -16,7 +16,7 @@ import { MatePicker } from 'mastodon/features/nudges_messenger/mate_picker';
 // only picks the Mate, then hands over to Anthemos, which asks before
 // anything leaves the phone. On Android the hand-over is an intent link
 // that falls back to `?anthemos=missing` here when the app isn't there;
-// elsewhere the panel just says Anthemos is needed.
+// elsewhere the button says Anthemos is needed.
 
 const ANTHEMOS_PACKAGE = 'com.anthemos.app.two';
 const ANTHEMOS_DOWNLOAD = 'https://anthemos.org/builds/anthemos2-latest.apk';
@@ -24,7 +24,7 @@ const ANTHEMOS_DOWNLOAD = 'https://anthemos.org/builds/anthemos2-latest.apk';
 const messages = defineMessages({
   share: {
     id: 'map.anthemos_share.share',
-    defaultMessage: 'Share live location',
+    defaultMessage: 'Share live',
   },
   pickerTitle: {
     id: 'map.anthemos_share.picker_title',
@@ -56,56 +56,42 @@ const handOver = (account: ApiAccountJSON) => {
     `S.browser_fallback_url=${fallback};end`;
 };
 
-// In the Place me panel, under the place search.
+// A button on the map beside Near me. On Android it picks a Mate and
+// hands over; anywhere else it opens a note saying where live location
+// comes from.
 export const AnthemosShare: React.FC = () => {
   const intl = useIntl();
-  const [picking, setPicking] = useState(false);
+  const [open, setOpen] = useState(false);
+  const android = isAndroid();
 
-  const open = useCallback(() => {
-    setPicking(true);
+  const toggle = useCallback(() => {
+    setOpen((v) => !v);
   }, []);
   const close = useCallback(() => {
-    setPicking(false);
+    setOpen(false);
   }, []);
   const pick = useCallback((account: ApiAccountJSON) => {
-    setPicking(false);
+    setOpen(false);
     handOver(account);
     return Promise.resolve();
   }, []);
 
-  if (!isAndroid()) {
-    return (
-      <div className='anthemos-share'>
-        <p className='anthemos-share__note'>
-          <FormattedMessage
-            id='map.anthemos_share.needs_phone'
-            defaultMessage='Live location is shared from Anthemos, the Android app, so it comes from your phone. Open the Map on your phone to start one.'
-          />{' '}
-          <DownloadLink />
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className='anthemos-share'>
-      <button type='button' className='anthemos-share__button' onClick={open}>
-        {intl.formatMessage(messages.share)}
+    <>
+      <button
+        type='button'
+        className='map-near-me__toggle anthemos-share'
+        onClick={toggle}
+        aria-expanded={open}
+      >
+        <span className='anthemos-share__dot' aria-hidden />
+        <span>{intl.formatMessage(messages.share)}</span>
       </button>
-      <p className='anthemos-share__note'>
-        <FormattedMessage
-          id='map.anthemos_share.note'
-          defaultMessage='Exact and live, sent from Anthemos on this phone. It asks before sharing.'
-        />{' '}
-        <FormattedMessage
-          id='map.anthemos_share.dont_have'
-          defaultMessage="Don't have it?"
-        />{' '}
-        <DownloadLink />
-      </p>
-      {/* The panel is transformed, which would trap a fixed overlay
-          inside it, so the picker goes to the body. */}
-      {picking &&
+
+      {/* The map's controls sit in a transformed stage, which would trap
+          a fixed overlay, so the picker goes to the body. */}
+      {open &&
+        android &&
         createPortal(
           <MatePicker
             title={intl.formatMessage(messages.pickerTitle)}
@@ -114,7 +100,27 @@ export const AnthemosShare: React.FC = () => {
           />,
           document.body,
         )}
-    </div>
+
+      {open && !android && (
+        <div className='anthemos-share__card' role='dialog'>
+          <p>
+            <FormattedMessage
+              id='map.anthemos_share.needs_phone'
+              defaultMessage='Live location is exact and comes from your phone, through Anthemos, the Android app. Open the Map on your phone to start sharing.'
+            />{' '}
+            <DownloadLink />
+          </p>
+          <button
+            type='button'
+            className='anthemos-share__close'
+            onClick={close}
+            aria-label={intl.formatMessage(messages.close)}
+          >
+            <Icon id='close' icon={CloseIcon} />
+          </button>
+        </div>
+      )}
+    </>
   );
 };
 

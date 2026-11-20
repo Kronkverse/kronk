@@ -217,14 +217,16 @@ an hour"), so the Kronk website shows them and hands the start over.
   over `anthemos-link-v1`, the account id and the key, proving it holds it
   (`POST /api/v1/anthemos/links`, `AnthemosLink`). Up to ten phones per
   account.
-- **Starting from the Map.** The Place me panel has Share live location
-  (`anthemos_share.tsx`). On Android it picks a Mate and opens Anthemos on
-  them with an intent link (`anthemos://kronk/share?to=<account id>&server=<host>`,
-  package `com.anthemos.app.two`); Anthemos looks the account up and asks
-  before sharing, for an hour. With no Anthemos on the phone the link falls
-  back to `/hub/map?anthemos=missing`, which says the app is needed and links
-  its download. Anywhere else the panel says live location comes from
-  Anthemos on a phone. Kronk itself never reads the phone's position.
+- **Starting from the Map.** **Share live**, beside Near me at the top of
+  the map, with a breathing dot like the live faces (`anthemos_share.tsx`).
+  On Android it picks a Mate and opens Anthemos on them with an intent link
+  (`anthemos://kronk/share?to=<account id>&server=<host>`, package
+  `com.anthemos.app.two`); Anthemos looks the account up and asks before
+  sharing, for an hour. With no Anthemos on the phone the link falls back to
+  `/hub/map?anthemos=missing`, which says the app is needed and links its
+  download. Anywhere else the button opens a note saying live location
+  comes from Anthemos on a phone. Kronk itself never reads the phone's
+  position.
 - **Starting.** The phone signs the permission: `anthemos-share-v1`, its link
   id, the Mates' account ids (sorted, comma-joined) and the end time
   (`POST /api/v1/map/live`, `LiveShare`). Kronk checks the signature, that

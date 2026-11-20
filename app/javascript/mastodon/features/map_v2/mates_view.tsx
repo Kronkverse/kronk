@@ -19,7 +19,7 @@ import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 import { MapNeedsWebGL } from 'mastodon/components/map_needs_webgl';
 
-import { AnthemosMissing } from './anthemos_share';
+import { AnthemosMissing, AnthemosShare } from './anthemos_share';
 import {
   BASEMAP_URL,
   HOME_CENTER,
@@ -686,7 +686,10 @@ export const MatesView: React.FC = () => {
           lower={anonymising}
           onSelectPin={handleSelectPin}
           onOpenPlace={openPlacePanel}
-        />
+        >
+          {/* Live location, handed over to Anthemos. */}
+          <AnthemosShare />
+        </NearMe>
 
         {/* Off-map compass overlay — a marker at the canvas edge per
             direction that has mates outside the viewport. Absolute-
