@@ -67,6 +67,10 @@ const messages = defineMessages({
   // Where the Mate journey ends ("Mate? → Mating… → Mates",
   // follow_button.tsx), said on a row that lists Mates among others.
   mates: { id: 'account.mates_marker', defaultMessage: 'Mates' },
+  mateship: {
+    id: 'account.mates_marker.title',
+    defaultMessage: 'What you share',
+  },
   addToLists: {
     id: 'account.add_or_remove_from_list',
     defaultMessage: 'Add or Remove from lists',
@@ -86,8 +90,8 @@ interface AccountProps {
   withBio?: boolean;
   withMenu?: boolean;
   // Say "Mates" where the Mate button would be, on someone you're Mates
-  // with (the button shows nothing for a Mate). For lists that mix Mates
-  // with everyone else, like Kommunity's.
+  // with (the button shows nothing for a Mate), as a link to your Mateship
+  // page with them. For people-lists: Kommunity's and a Mates list.
   markMates?: boolean;
 }
 
@@ -280,10 +284,15 @@ export const Account: React.FC<AccountProps> = ({
     !relationship.muting &&
     !relationship.blocking
   ) {
+    // It opens what the two of you share (`/@:acct/mateship`).
     button = (
-      <span className='account__mates-marker'>
+      <Link
+        className='account__mates-marker'
+        to={`/@${account?.acct}/mateship`}
+        title={intl.formatMessage(messages.mateship)}
+      >
         {intl.formatMessage(messages.mates)}
-      </span>
+      </Link>
     );
   } else {
     button = <FollowButton accountId={id} />;

@@ -56,7 +56,8 @@ export const MatesListView: React.FC<MatesListViewProps> = ({
   return (
     <div className='mates-list'>
       {accountIds.map((id) => (
-        <Account key={id} id={id} withMenu={false} />
+        // Your own Mates in the list open your Mateship page with them.
+        <Account key={id} id={id} withMenu={false} markMates />
       ))}
 
       {hasMore &&

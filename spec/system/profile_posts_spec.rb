@@ -23,7 +23,7 @@ RSpec.describe 'Posts on a profile', :inline_jobs, :js, :streaming do
   it "writes a post on a Mate's profile from their profile" do
     visit '/@ana'
 
-    find('button[title="Post on Ana’s profile"]').click
+    find('button[aria-label="Post on Ana’s profile"]').click
     expect(page).to have_css('.compose-form__profile-target', text: 'Posting on Ana’s profile')
 
     find('textarea.autosuggest-textarea__textarea').fill_in with: 'Happy birthday!'

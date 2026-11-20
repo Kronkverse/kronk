@@ -1,0 +1,47 @@
+// Mateship page — what you and one Mate share, at /@:acct/mateship
+// (features/mateship/). Built from the kit (`<KornerDetail>`, `<SpaceGrid>`,
+// `<EmptyState>`), so only the hero's inside (the Mate's cover, or an accent
+// wash, with the two faces at its foot), the gap between sections and the
+// quiet settings link are styled here.
+
+.mateship__faces {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  padding-block-end: 1rem;
+  border-radius: inherit;
+  background-color: color-mix(
+    in oklab,
+    var(--accent) 22%,
+    var(--surface-elevated)
+  );
+  background-position: center;
+  background-size: cover;
+
+  .account__avatar {
+    border: 3px solid var(--surface-primary);
+    border-radius: var(--radius-round);
+  }
+
+  .account__avatar + .account__avatar {
+    margin-inline-start: -1rem;
+  }
+}
+
+.mateship__section {
+  margin-block-start: 1.5rem;
+}
+
+// Remove Mate lives on the per-person settings page (decisions.md,
+// 2026-10-25); this is the way there, kept quiet.
+.mateship__settings {
+  margin-block: 2rem 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+
+  a {
+    color: var(--text-muted);
+    text-decoration: underline;
+  }
+}
