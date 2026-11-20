@@ -25,8 +25,10 @@ class Api::V1::Timelines::PublicController < Api::V1::Timelines::BaseController
   end
 
   def load_statuses
-    # Korners reach a feed only for those tuned in (Kronk::TuneInGate).
-    Kronk::TuneInGate.filter(current_account, preloaded_public_statuses_page)
+    # Korners reach a feed only for those tuned in (Kronk::TuneInGate), and
+    # a Mate's posts only as the Mateship page says (Kronk::MateTuneOutGate).
+    statuses = Kronk::TuneInGate.filter(current_account, preloaded_public_statuses_page)
+    Kronk::MateTuneOutGate.filter(current_account, statuses)
   end
 
   def preloaded_public_statuses_page

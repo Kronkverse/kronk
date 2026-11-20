@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_19_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1818,6 +1818,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_19_090000) do
     t.index ["user_id", "timeline"], name: "index_markers_on_user_id_and_timeline", unique: true
   end
 
+  create_table "mate_tune_outs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "korner_slug", null: false
+    t.bigint "target_account_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "target_account_id", "korner_slug"], name: "index_mate_tune_outs_on_account_target_slug", unique: true
+    t.index ["target_account_id"], name: "index_mate_tune_outs_on_target_account_id"
+  end
+
   create_table "media_attachments", id: :bigint, default: -> { "timestamp_id('media_attachments'::text)" }, force: :cascade do |t|
     t.bigint "account_id"
     t.string "blurhash"
@@ -3249,6 +3259,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_19_090000) do
   add_foreign_key "map_country_names", "accounts", on_delete: :nullify
   add_foreign_key "map_places", "accounts", on_delete: :nullify
   add_foreign_key "markers", "users", on_delete: :cascade
+  add_foreign_key "mate_tune_outs", "accounts", column: "target_account_id", on_delete: :cascade
+  add_foreign_key "mate_tune_outs", "accounts", on_delete: :cascade
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify
   add_foreign_key "media_attachments", "scheduled_statuses", on_delete: :nullify
   add_foreign_key "media_attachments", "statuses", on_delete: :nullify

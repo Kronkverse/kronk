@@ -3,11 +3,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, Redirect, useHistory, useParams } from 'react-router-dom';
+import { Redirect, useHistory, useParams } from 'react-router-dom';
 
 import { isAxiosError } from 'axios';
 
-import { apiRequestGet } from 'mastodon/api';
+import {
+  blockAccount,
+  fetchAccount,
+  muteAccount,
+  unmateAccount,
+  unmuteAccount,
+} from 'mastodon/actions/accounts';
+import { initReport } from 'mastodon/actions/reports';
+import { apiRequestGet, apiRequestPatch } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { EmptyState } from 'mastodon/components/empty_state';
@@ -18,16 +26,24 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
+import { AccountNote } from 'mastodon/features/account/components/account_note';
+import { ActionRow } from 'mastodon/features/profile_settings_per';
+import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { me } from 'mastodon/initial_state';
-import { useAppSelector } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
-// /@:acct/mateship — what you and one Mate share (docs/spaces/profile.md,
-// Mateship). Only the two of them can open it: the API answers 404 to
-// anyone else, and the page sends them back to the profile. Shared things,
-// never measures: no counts of froths, messages or visits between them
-// (decisions.md, 2026-11-19). Remove Mate isn't here; it lives on the
-// per-person settings page, which this links to (decisions.md, 2026-10-25).
+// /@:acct/mateship — you and one Mate (docs/spaces/profile.md, Mateship).
+// Only the two of them can open it: the API answers 404 to anyone else, and
+// the page sends them back to the profile. Shared things, never measures:
+// no counts of froths, messages or visits between them (decisions.md,
+// 2026-11-19).
+//
+// It's also the one place for that Mate's settings (decisions.md,
+// 2026-11-20): what reaches you from them, what of yours reaches them,
+// mute, your private note, and ending it (Remove Mate, block, report).
+// /@:acct/settings sends a Mate here.
 
 interface MateshipPerson {
   id: string;
@@ -61,10 +77,14 @@ interface ApiMateshipJSON {
     krew_slug: string | null;
     cover_url: string | null;
   }[];
+  // Their plain posts (`posts`, no name) first, then each korner whose cards
+  // reach a feed; `shown: false` keeps that kind out of your feeds.
+  feed: { slug: string; name: string | null; shown: boolean }[];
+  notify: boolean;
 }
 
 const messages = defineMessages({
-  stage: { id: 'mateship.stage', defaultMessage: 'Mates' },
+  stage: { id: 'mateship.stage_label', defaultMessage: 'Mateship' },
   title: { id: 'mateship.title', defaultMessage: 'You and {name}' },
   since: { id: 'mateship.since', defaultMessage: 'Mates since {date}' },
   back: { id: 'mateship.back', defaultMessage: 'Back to {name}' },
@@ -116,9 +136,93 @@ const messages = defineMessages({
     defaultMessage: 'Krews, events and projekts you’re both in will show here.',
   },
   nudge: { id: 'mateship.nudge', defaultMessage: 'Nudge' },
-  settings: {
-    id: 'mateship.settings',
-    defaultMessage: 'Your settings for {name}',
+
+  seeTitle: {
+    id: 'mateship.see.title',
+    defaultMessage: 'What you see from {name}',
+  },
+  seeHint: {
+    id: 'mateship.see.hint',
+    defaultMessage:
+      'What of theirs reaches your feed. Turn off what you’d rather not see; they aren’t told.',
+  },
+  plainPosts: { id: 'mateship.see.posts', defaultMessage: 'Their posts' },
+  plainPostsHint: {
+    id: 'mateship.see.posts_hint',
+    defaultMessage: 'What they post straight to the feed, not from a space.',
+  },
+  kornerHint: {
+    id: 'mateship.see.korner_hint',
+    defaultMessage: 'What they share from {korner}.',
+  },
+  notify: {
+    id: 'mateship.see.notify',
+    defaultMessage: 'Nudge me when they post',
+  },
+  notifyHint: {
+    id: 'mateship.see.notify_hint',
+    defaultMessage: 'A nudge each time a post of theirs reaches your feed.',
+  },
+
+  yoursTitle: {
+    id: 'mateship.yours.title',
+    defaultMessage: 'What {name} sees of yours',
+  },
+  yoursReach: {
+    id: 'mateship.yours.reach',
+    defaultMessage:
+      'Your posts for Mates, Orbit and Kronkverse reach them. Just me posts never do.',
+  },
+  yoursKrews: {
+    id: 'mateship.yours.krews',
+    defaultMessage: 'Krew posts reach them in the Krews you share: {krews}.',
+  },
+  yoursNoKrews: {
+    id: 'mateship.yours.no_krews',
+    defaultMessage:
+      'You’re in no Krew together, so your Krew posts don’t reach them.',
+  },
+  yoursPeople: {
+    id: 'mateship.yours.people',
+    defaultMessage:
+      'To leave them out of one post, take them off in the People row when you post it.',
+  },
+
+  quietTitle: { id: 'mateship.quiet.title', defaultMessage: 'Quiet' },
+  mute: { id: 'mateship.quiet.mute', defaultMessage: 'Mute {name}' },
+  muteHint: {
+    id: 'mateship.quiet.mute_hint',
+    defaultMessage:
+      'Their posts stop appearing in your feeds and their nudges go quiet. You stay Mates, and they aren’t told.',
+  },
+
+  noteTitle: { id: 'mateship.note.title', defaultMessage: 'Your private note' },
+
+  endTitle: { id: 'mateship.end.title', defaultMessage: 'Ending it' },
+  unmate: { id: 'mateship.end.unmate', defaultMessage: 'Remove Mate' },
+  unmateHint: {
+    id: 'mateship.end.unmate_hint',
+    defaultMessage:
+      'You stop being Mates, both ways. Either of you can ask again later.',
+  },
+  unmateConfirm: {
+    id: 'mateship.end.unmate_confirm',
+    defaultMessage: 'Remove {name} as a Mate?',
+  },
+  block: { id: 'mateship.end.block', defaultMessage: 'Block' },
+  blockHint: {
+    id: 'mateship.end.block_hint',
+    defaultMessage:
+      'Ends the mateship, and they can no longer see your posts, mention you or nudge you.',
+  },
+  blockConfirm: {
+    id: 'mateship.end.block_confirm',
+    defaultMessage: 'Block {name}? This ends your mateship.',
+  },
+  report: { id: 'mateship.end.report', defaultMessage: 'Report' },
+  reportHint: {
+    id: 'mateship.end.report_hint',
+    defaultMessage: 'Tell the people who look after Kronk about their account.',
   },
 });
 
@@ -145,6 +249,8 @@ const lengthOf = (since: string) => {
 export const Mateship: React.FC = () => {
   const intl = useIntl();
   const history = useHistory();
+  const dispatch = useAppDispatch();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const { acct } = useParams<{ acct: string }>();
   const nudgesIcon = useKornerIcon('nudges');
   const viewer = useAppSelector((state) =>
@@ -176,6 +282,8 @@ export const Mateship: React.FC = () => {
           `v1/accounts/${found.id}/mateship`,
         );
         if (run.current !== mine) return;
+        // Their record and your relationship, for mute, block and report.
+        dispatch(fetchAccount(found.id));
         setAccount(found);
         setMateship(shared);
         setState('ready');
@@ -185,22 +293,108 @@ export const Mateship: React.FC = () => {
         setState(status === 404 ? 'gone' : 'error');
       }
     })();
-  }, [acct]);
+  }, [acct, dispatch]);
 
   const accountId = account?.id;
+  const storedAccount = useAppSelector((s) =>
+    accountId ? s.accounts.get(accountId) : undefined,
+  );
+  const relationship = useAppSelector((s) =>
+    accountId ? s.relationships.get(accountId) : undefined,
+  );
+  const muted = relationship?.get('muting') ?? false;
+
   const handleNudge = useCallback(() => {
     if (accountId) history.push(`/nudges/with/${accountId}`);
   }, [accountId, history]);
 
-  // Not your Mate (or not a person): their profile is the page that applies.
-  if (state === 'gone') return <Redirect to={`/@${acct}`} />;
+  // One change at a time to the server; the toggle moves at once and goes
+  // back if the change doesn't stick.
+  const change = useCallback(
+    (data: Record<string, string | boolean>, optimistic: ApiMateshipJSON) => {
+      if (!accountId || !mateship) return;
+      const before = mateship;
+      setMateship(optimistic);
+      apiRequestPatch<ApiMateshipJSON>(
+        `v1/accounts/${accountId}/mateship`,
+        data,
+      )
+        .then(setMateship)
+        .catch(() => {
+          setMateship(before);
+        });
+    },
+    [accountId, mateship],
+  );
 
-  const displayName = account?.display_name.trim();
+  const handleSet = useCallback(
+    (name: string, value: unknown) => {
+      if (!mateship) return;
+      const on = value === true;
+      if (name === 'notify') {
+        change({ notify: on }, { ...mateship, notify: on });
+      } else {
+        change(
+          { korner: name, shown: on },
+          {
+            ...mateship,
+            feed: mateship.feed.map((choice) =>
+              choice.slug === name ? { ...choice, shown: on } : choice,
+            ),
+          },
+        );
+      }
+    },
+    [mateship, change],
+  );
+
+  const handleMute = useCallback(
+    (_name: string, value: unknown) => {
+      if (!accountId) return;
+      dispatch(
+        value === true ? muteAccount(accountId) : unmuteAccount(accountId),
+      );
+    },
+    [accountId, dispatch],
+  );
+
+  const displayNameOf = account?.display_name.trim();
   // A blank display name falls back to the username.
   const name =
-    displayName !== undefined && displayName !== ''
-      ? displayName
+    displayNameOf !== undefined && displayNameOf !== ''
+      ? displayNameOf
       : (account?.username ?? acct);
+
+  const handleUnmate = useCallback(() => {
+    if (!accountId) return;
+    confirmThen(
+      intl.formatMessage(messages.unmateConfirm, { name }),
+      'remove',
+      () => {
+        dispatch(unmateAccount(accountId));
+        history.push(`/@${acct}`);
+      },
+    );
+  }, [accountId, acct, name, intl, confirmThen, dispatch, history]);
+
+  const handleBlock = useCallback(() => {
+    if (!accountId) return;
+    confirmThen(
+      intl.formatMessage(messages.blockConfirm, { name }),
+      'confirm',
+      () => {
+        dispatch(blockAccount(accountId));
+        history.push(`/@${acct}`);
+      },
+    );
+  }, [accountId, acct, name, intl, confirmThen, dispatch, history]);
+
+  const handleReport = useCallback(() => {
+    if (storedAccount) dispatch(initReport(storedAccount, null));
+  }, [storedAccount, dispatch]);
+
+  // Not your Mate (or not a person): their profile is the page that applies.
+  if (state === 'gone') return <Redirect to={`/@${acct}`} />;
 
   if (state !== 'ready' || !account || !mateship) {
     return (
@@ -238,6 +432,7 @@ export const Mateship: React.FC = () => {
 
   return (
     <Stage label={intl.formatMessage(messages.stage)}>
+      {confirmDialog}
       <Helmet>
         <title>{intl.formatMessage(messages.title, { name })}</title>
         <meta name='robots' content='noindex' />
@@ -397,11 +592,115 @@ export const Mateship: React.FC = () => {
           </section>
         )}
 
-        <p className='mateship__settings'>
-          <Link to={`/@${account.acct}/settings`}>
-            {intl.formatMessage(messages.settings, { name })}
-          </Link>
-        </p>
+        <section className='mateship__section mateship__controls'>
+          <h2 className='korner-section-heading'>
+            {intl.formatMessage(messages.seeTitle, { name })}
+          </h2>
+          <p className='mateship__hint'>
+            <FormattedMessage {...messages.seeHint} />
+          </p>
+          {mateship.feed.map((choice) => (
+            <NamedSettingRow
+              key={choice.slug}
+              setting={{
+                name: choice.slug,
+                kind: 'boolean',
+                label: choice.name ?? intl.formatMessage(messages.plainPosts),
+                description: choice.name
+                  ? intl.formatMessage(messages.kornerHint, {
+                      korner: choice.name,
+                    })
+                  : intl.formatMessage(messages.plainPostsHint),
+              }}
+              value={choice.shown}
+              onSet={handleSet}
+            />
+          ))}
+          <NamedSettingRow
+            setting={{
+              name: 'notify',
+              kind: 'boolean',
+              label: intl.formatMessage(messages.notify),
+              description: intl.formatMessage(messages.notifyHint),
+            }}
+            value={mateship.notify}
+            onSet={handleSet}
+          />
+        </section>
+
+        <section className='mateship__section mateship__controls'>
+          <h2 className='korner-section-heading'>
+            {intl.formatMessage(messages.yoursTitle, { name })}
+          </h2>
+          <ul className='mateship__facts'>
+            <li>
+              <FormattedMessage {...messages.yoursReach} />
+            </li>
+            <li>
+              {mateship.krews.length > 0 ? (
+                <FormattedMessage
+                  {...messages.yoursKrews}
+                  values={{
+                    krews: intl.formatList(
+                      mateship.krews.map((krew) => krew.name),
+                    ),
+                  }}
+                />
+              ) : (
+                <FormattedMessage {...messages.yoursNoKrews} />
+              )}
+            </li>
+            <li>
+              <FormattedMessage {...messages.yoursPeople} />
+            </li>
+          </ul>
+        </section>
+
+        <section className='mateship__section mateship__controls'>
+          <h2 className='korner-section-heading'>
+            <FormattedMessage {...messages.quietTitle} />
+          </h2>
+          <NamedSettingRow
+            setting={{
+              name: 'mute',
+              kind: 'boolean',
+              label: intl.formatMessage(messages.mute, { name }),
+              description: intl.formatMessage(messages.muteHint),
+            }}
+            value={muted}
+            onSet={handleMute}
+          />
+        </section>
+
+        <section className='mateship__section mateship__controls'>
+          <h2 className='korner-section-heading'>
+            <FormattedMessage {...messages.noteTitle} />
+          </h2>
+          <AccountNote accountId={account.id} />
+        </section>
+
+        <section className='mateship__section mateship__controls mateship__end'>
+          <h2 className='korner-section-heading'>
+            <FormattedMessage {...messages.endTitle} />
+          </h2>
+          <ActionRow
+            label={intl.formatMessage(messages.unmate)}
+            hint={intl.formatMessage(messages.unmateHint)}
+            destructive
+            onClick={handleUnmate}
+          />
+          <ActionRow
+            label={intl.formatMessage(messages.block)}
+            hint={intl.formatMessage(messages.blockHint)}
+            destructive
+            onClick={handleBlock}
+          />
+          <ActionRow
+            label={intl.formatMessage(messages.report)}
+            hint={intl.formatMessage(messages.reportHint)}
+            onClick={handleReport}
+          />
+        </section>
       </KornerDetail>
     </Stage>
   );

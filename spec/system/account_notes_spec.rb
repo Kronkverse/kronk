@@ -39,8 +39,8 @@ RSpec.describe 'Account notes', :inline_jobs, :js, :streaming do
   end
 
   # Kronk keeps your private note about someone on their per-person
-  # settings page (`/@acct/settings`), beside Unmate and Report — not on
-  # the face of their profile.
+  # settings page (`/@acct/settings`; for a Mate, the Mateship page), beside
+  # Report — not on the face of their profile.
   def visit_profile(account)
     visit "#{short_account_path(account)}/settings"
 

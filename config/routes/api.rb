@@ -779,7 +779,7 @@ namespace :api, format: false do
         resources :mates, only: :index
         resources :matuals, only: :index
         # What the viewer and this Mate share (Mates only; decisions.md 2026-11-19).
-        resource :mateship, only: :show
+        resource :mateship, only: [:show, :update]
 
         namespace :profile do
           resources :sections, only: [:index] do
