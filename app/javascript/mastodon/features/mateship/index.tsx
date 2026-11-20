@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
+import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 import { Redirect, useHistory, useParams } from 'react-router-dom';
 
@@ -28,7 +29,10 @@ import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { AccountNote } from 'mastodon/features/account/components/account_note';
 import { ActionRow } from 'mastodon/features/profile_settings_per';
-import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
+import {
+  BooleanWidget,
+  NamedSettingRow,
+} from 'mastodon/features/settings/setting_widgets';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { me } from 'mastodon/initial_state';
@@ -82,6 +86,40 @@ interface ApiMateshipJSON {
   feed: { slug: string; name: string | null; shown: boolean }[];
   notify: boolean;
 }
+
+// One kind of their posts in "What you see from": the space's icon, its name
+// and a switch, as a row of Settings → Korners. Off greys the row down.
+const SeeRow: React.FC<{
+  name: string;
+  iconSlug: string;
+  label: string;
+  value: boolean;
+  onSet: (name: string, value: unknown) => void;
+}> = ({ name, iconSlug, label, value, onSet }) => {
+  const Icon = useKornerIcon(iconSlug);
+  const handleChange = useCallback(
+    (on: boolean) => {
+      onSet(name, on);
+    },
+    [name, onSet],
+  );
+
+  return (
+    <li
+      className={classNames('settings-nav__row', {
+        'settings-nav__row--muted': !value,
+      })}
+    >
+      <span className='settings-nav__row-glyph' aria-hidden='true'>
+        <Icon />
+      </span>
+      <span className='settings-nav__row-body'>
+        <span className='settings-nav__row-name'>{label}</span>
+      </span>
+      <BooleanWidget value={value} onChange={handleChange} ariaLabel={label} />
+    </li>
+  );
+};
 
 const messages = defineMessages({
   stage: { id: 'mateship.stage_label', defaultMessage: 'Mateship' },
@@ -143,25 +181,12 @@ const messages = defineMessages({
   },
   seeHint: {
     id: 'mateship.see.hint',
-    defaultMessage:
-      'What of theirs reaches your feed. Turn off what you’d rather not see; they aren’t told.',
+    defaultMessage: 'Turn off what you’d rather not see. They aren’t told.',
   },
   plainPosts: { id: 'mateship.see.posts', defaultMessage: 'Their posts' },
-  plainPostsHint: {
-    id: 'mateship.see.posts_hint',
-    defaultMessage: 'What they post straight to the feed, not from a space.',
-  },
-  kornerHint: {
-    id: 'mateship.see.korner_hint',
-    defaultMessage: 'What they share from {korner}.',
-  },
   notify: {
     id: 'mateship.see.notify',
     defaultMessage: 'Nudge me when they post',
-  },
-  notifyHint: {
-    id: 'mateship.see.notify_hint',
-    defaultMessage: 'A nudge each time a post of theirs reaches your feed.',
   },
 
   yoursTitle: {
@@ -599,33 +624,25 @@ export const Mateship: React.FC = () => {
           <p className='mateship__hint'>
             <FormattedMessage {...messages.seeHint} />
           </p>
-          {mateship.feed.map((choice) => (
-            <NamedSettingRow
-              key={choice.slug}
-              setting={{
-                name: choice.slug,
-                kind: 'boolean',
-                label: choice.name ?? intl.formatMessage(messages.plainPosts),
-                description: choice.name
-                  ? intl.formatMessage(messages.kornerHint, {
-                      korner: choice.name,
-                    })
-                  : intl.formatMessage(messages.plainPostsHint),
-              }}
-              value={choice.shown}
+          <ul className='settings-nav__list mateship__see'>
+            {mateship.feed.map((choice) => (
+              <SeeRow
+                key={choice.slug}
+                name={choice.slug}
+                iconSlug={choice.name ? choice.slug : 'feed'}
+                label={choice.name ?? intl.formatMessage(messages.plainPosts)}
+                value={choice.shown}
+                onSet={handleSet}
+              />
+            ))}
+            <SeeRow
+              name='notify'
+              iconSlug='nudges'
+              label={intl.formatMessage(messages.notify)}
+              value={mateship.notify}
               onSet={handleSet}
             />
-          ))}
-          <NamedSettingRow
-            setting={{
-              name: 'notify',
-              kind: 'boolean',
-              label: intl.formatMessage(messages.notify),
-              description: intl.formatMessage(messages.notifyHint),
-            }}
-            value={mateship.notify}
-            onSet={handleSet}
-          />
+          </ul>
         </section>
 
         <section className='mateship__section mateship__controls'>

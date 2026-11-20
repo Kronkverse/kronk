@@ -65,3 +65,15 @@
   padding-block-start: 1.5rem;
   border-block-start: 1px solid var(--border-subtle);
 }
+
+// "What you see from": a row per kind of their posts, icon and name and a
+// switch, as Settings → Korners lists spaces.
+.mateship__see {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  .settings-nav__row {
+    padding-block: 10px;
+  }
+}
