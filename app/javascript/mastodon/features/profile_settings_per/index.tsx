@@ -5,7 +5,8 @@
  * are load-bearing: without them setState fires after unmount. */
 
 // /@:acct/settings — per-person settings for the account whose
-// profile you were just on. Parallel to the /nudges/:id/settings
+// profile you were just on. For a Mate it sends you to the Mateship page,
+// where their settings live (decisions.md, 2026-11-20). Parallel to the /nudges/:id/settings
 // "chat info" surface (#1889 + #1893): tapping the Ж menu's Settings
 // verb from a profile brings you HERE, not to the account-wide hub.
 //
@@ -21,7 +22,7 @@ import { useCallback, useEffect } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useParams } from 'react-router-dom';
+import { Link, Redirect, useParams } from 'react-router-dom';
 
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import {
@@ -233,6 +234,12 @@ export const ProfileSettingsPer: React.FC = () => {
   const blocked = relationship?.get('blocking') ?? false;
   const isMate = relationship?.get('mate') ?? false;
 
+  // A Mate's settings live on the Mateship page, with what you share
+  // (decisions.md, 2026-11-20). This page stays for everyone else.
+  if (isMate && !isSelf) {
+    return <Redirect to={`/@${account.get('acct')}/mateship`} />;
+  }
+
   return (
     <Stage label={title}>
       {confirmDialog}
@@ -340,7 +347,9 @@ export const ProfileSettingsPer: React.FC = () => {
   );
 };
 
-const ActionRow: React.FC<{
+// Also the Mateship page's controls (features/mateship/), which is where a
+// Mate's settings live (decisions.md, 2026-11-20).
+export const ActionRow: React.FC<{
   label: string;
   hint: string;
   active?: boolean;

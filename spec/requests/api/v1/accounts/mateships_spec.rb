@@ -116,5 +116,62 @@ RSpec.describe 'API V1 Accounts Mateship' do
 
       expect(response).to have_http_status(401)
     end
+
+    it 'says what reaches you from them, all of it to begin with', :aggregate_failures do
+      get "/api/v1/accounts/#{mate.id}/mateship", headers: headers
+
+      feed = response.parsed_body[:feed]
+      expect(feed.first).to include(slug: 'posts', shown: true)
+      expect(feed.pluck(:slug)).to include('booth', 'kalendar', 'kommons')
+      expect(feed.pluck(:shown)).to all(be true)
+      expect(response.parsed_body[:notify]).to be false
+    end
+  end
+
+  describe 'PATCH /api/v1/accounts/:account_id/mateship' do
+    let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read write') }
+
+    it 'stops and starts one korner from this Mate', :aggregate_failures do
+      patch "/api/v1/accounts/#{mate.id}/mateship", headers: headers, params: { korner: 'booth', shown: false }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body[:feed]).to include(hash_including(slug: 'booth', shown: false))
+      expect(MateTuneOut.where(account: viewer, target_account: mate).pluck(:korner_slug)).to eq ['booth']
+
+      patch "/api/v1/accounts/#{mate.id}/mateship", headers: headers, params: { korner: 'booth', shown: true }
+
+      expect(response.parsed_body[:feed]).to include(hash_including(slug: 'booth', shown: true))
+      expect(MateTuneOut.count).to eq 0
+    end
+
+    it 'tells you when they post', :aggregate_failures do
+      patch "/api/v1/accounts/#{mate.id}/mateship", headers: headers, params: { notify: true }
+
+      expect(response.parsed_body[:notify]).to be true
+      expect(Follow.find_by(account: viewer, target_account: mate).notify?).to be true
+    end
+
+    it 'turns down a korner that sends nothing to the feed' do
+      patch "/api/v1/accounts/#{mate.id}/mateship", headers: headers, params: { korner: 'settings', shown: false }
+
+      expect(response).to have_http_status(422)
+    end
+
+    it 'is not found for someone who is not your Mate, and changes nothing', :aggregate_failures do
+      stranger = Fabricate(:account)
+
+      patch "/api/v1/accounts/#{stranger.id}/mateship", headers: headers, params: { korner: 'booth', shown: false }
+
+      expect(response).to have_http_status(404)
+      expect(MateTuneOut.count).to eq 0
+    end
+
+    it 'needs write access' do
+      read_only = Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read')
+
+      patch "/api/v1/accounts/#{mate.id}/mateship", headers: { 'Authorization' => "Bearer #{read_only.token}" }, params: { notify: true }
+
+      expect(response).to have_http_status(403)
+    end
   end
 end

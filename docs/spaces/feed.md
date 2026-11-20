@@ -38,7 +38,11 @@ relationship is **Mates**: mutual, formed by request then accept.
   request.
 - **What two Mates share** (when they became Mates, Mates in common, Krews,
   events and projekts) is the Mateship page, `/@:acct/mateship`, which only
-  the two of them can open (docs/spaces/profile.md, Mateship).
+  the two of them can open (docs/spaces/profile.md, Mateship). It is also
+  where you choose what of one Mate's reaches your feed: their plain posts
+  and each korner's cards, one switch each (`mate_tune_outs`, applied by
+  `Kronk::MateTuneOutGate` beside the tune-in gate on Home, Kommunity and
+  Kronkverse; decisions.md, 2026-11-20).
 
 ### The reach ladder
 
