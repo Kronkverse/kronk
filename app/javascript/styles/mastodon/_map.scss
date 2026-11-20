@@ -1525,7 +1525,19 @@
     // controls.
     .maplibregl-ctrl-icon {
       filter: invert(1) brightness(1.2);
+
+      // The light theme's surface is light, so the icons' own dark fill
+      // reads; inverted they were white on white.
+      :root[data-theme='light'] & {
+        filter: none;
+      }
     }
+  }
+
+  // The zoom buttons line up with Near me across the top, 16px in, on
+  // every screen (MapLibre's own margin is 10px).
+  .maplibregl-ctrl-top-right .maplibregl-ctrl {
+    margin: 16px 16px 0 0;
   }
 
   // Attribution — the "© OpenStreetMap" pill in the bottom-right.
@@ -1556,6 +1568,10 @@
     .maplibregl-ctrl-attrib-button {
       background-color: transparent;
       filter: invert(1) brightness(1.2);
+
+      :root[data-theme='light'] & {
+        filter: none;
+      }
     }
   }
 }
