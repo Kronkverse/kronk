@@ -13,6 +13,7 @@ import type {
   ArtVisibility,
   ArtKind,
 } from 'mastodon/api_types/art';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
 
 interface CreatePieceParams extends Partial<ArtPieceDetailsJSON> {
   title: string;
@@ -48,20 +49,25 @@ export const apiListPieces = (scope: PiecesScope = 'all') =>
 export const apiGetPiece = (id: string) =>
   apiRequestGet<ApiArtPieceJSON>(`v1/art/pieces/${id}`);
 
-export const apiCreatePiece = (params: CreatePieceParams, krewIds?: string[]) =>
+export const apiCreatePiece = (
+  params: CreatePieceParams,
+  krewIds?: string[],
+  people?: AudiencePeople,
+) =>
   apiRequestPost<ApiArtPieceJSON>(
     'v1/art/pieces',
-    withKrews({ art_piece: params }, krewIds),
+    withKrews({ art_piece: params }, krewIds, people),
   );
 
 export const apiUpdatePiece = (
   id: string,
   params: UpdatePieceParams,
   krewIds?: string[],
+  people?: AudiencePeople,
 ) =>
   apiRequestPut<ApiArtPieceJSON>(
     `v1/art/pieces/${id}`,
-    withKrews({ art_piece: params }, krewIds),
+    withKrews({ art_piece: params }, krewIds, people),
   );
 
 export const apiDeletePiece = (id: string) =>

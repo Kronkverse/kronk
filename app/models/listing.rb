@@ -10,6 +10,7 @@ class Listing < ApplicationRecord
   include Kronk::AttachmentSource
   include Kronk::AudienceBearer
   include Kronk::KrewAudience
+  include Kronk::PeopleAudience
   # Where it is: its Konnected Place, when its own `location` is empty.
   include Kronk::RecordPlace::Konnected
   include Kronk::NamedLink

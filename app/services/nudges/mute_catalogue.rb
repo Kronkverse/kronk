@@ -79,6 +79,7 @@ module Nudges
       'booth.sample_declined' => { korner: 'booth', label: 'A sample you asked for is a no' },
       'booth.sample_used' => { korner: 'booth', label: 'A set uses your sample' },
       'map.challenged' => { korner: 'map', label: 'A Mate thinks your pin on the Map is out of date' },
+      'map.live_shared' => { korner: 'map', label: 'A Mate shares their live location with you' },
       'rose.received' => { korner: 'rose', label: 'A Mate sends you a rose' },
       'huddle.gathering' => { korner: 'huddle', label: 'People are huddling (as many as your number below)' },
       'huddle.kuddle_gathering' => { korner: 'huddle', label: 'People gather in a Kuddle you follow (as many as your number below)' },

@@ -7,6 +7,11 @@ import api from 'mastodon/api';
 import { apiAddPhoto, apiCreateKar, apiUpdateKar } from 'mastodon/api/karporn';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import {
+  audiencePeopleFromApi,
+  NO_PEOPLE,
+} from 'mastodon/components/audience_people_panel';
 import {
   ComposeBody,
   ComposeField,
@@ -99,6 +104,7 @@ interface KarDraftParams {
   model?: string;
   visibility?: ReachValue;
   krew_ids?: string[];
+  people?: AudiencePeople;
   konnections?: KonnectTarget[];
 }
 
@@ -150,6 +156,10 @@ export const KarComposer: React.FC<Props> = ({
   const [krewIds, setKrewIds] = useState<string[]>(
     editingKar?.krews?.map((k) => k.id) ?? [],
   );
+  // The people it's for, or kept from, by name (decisions.md, 2026-11-19).
+  const [people, setPeople] = useState<AudiencePeople>(
+    audiencePeopleFromApi(editingKar?.audience_people),
+  );
   const availableKrews = useAvailableKrews();
   const handleToggleKrew = useCallback((id: string) => {
     setKrewIds((prev) =>
@@ -171,6 +181,8 @@ export const KarComposer: React.FC<Props> = ({
     onChange: setVisibility,
     onToggleKrew: handleToggleKrew,
   });
+  // Following another record's audience takes its tier and Krews only.
+  const sentPeople = reach.sameAs?.some((o) => o.selected) ? NO_PEOPLE : people;
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
@@ -187,6 +199,7 @@ export const KarComposer: React.FC<Props> = ({
       setModel(p.model ?? '');
       setVisibility(p.visibility ?? 'public');
       setKrewIds(p.krew_ids ?? []);
+      setPeople(p.people ?? NO_PEOPLE);
       restoreKonnect(p.konnections);
       setPhotos((prev) => {
         prev.forEach((ph) => {
@@ -211,6 +224,7 @@ export const KarComposer: React.FC<Props> = ({
         model,
         visibility,
         krew_ids: krewIds,
+        people,
         konnections: konnect.saved,
       },
     },
@@ -298,6 +312,7 @@ export const KarComposer: React.FC<Props> = ({
               model: model.trim(),
             },
             krewIds,
+            sentPeople,
           );
           onUpdated?.(updated);
         } catch (e) {
@@ -330,6 +345,7 @@ export const KarComposer: React.FC<Props> = ({
             visibility,
           },
           krewIds,
+          sentPeople,
         );
       } catch (e) {
         setPending(false);
@@ -372,6 +388,7 @@ export const KarComposer: React.FC<Props> = ({
     finishDraft,
     intl,
     krewIds,
+    sentPeople,
     make,
     model,
     onCreated,
@@ -413,6 +430,8 @@ export const KarComposer: React.FC<Props> = ({
           krews={availableKrews}
           selectedKrewIds={krewIds}
           onToggleKrew={reach.onToggleKrew}
+          people={people}
+          onPeopleChange={setPeople}
           sameAs={reach.sameAs}
           onSameAs={reach.onSameAs}
         />

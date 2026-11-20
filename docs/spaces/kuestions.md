@@ -172,6 +172,25 @@ prompt, answer count, recent-answerer avatars and a link that says what it
 does, **Answer** or, once you have, **See answers** (Tal, 2026-11-12: an
 answer had landed in the post's replies).
 
+**A Kuestion is answered, not commented on** (Tal's proposal "Kuestions",
+2026-11-18: people were commenting answers rather than answering). Its post
+has no comment section, and in the action bar **Answer** (the Kuestions
+icon, with the answer count) takes Reply's place: it opens the Kuestion, to
+answer it or, once you have, to see the answers. The `r` shortcut does
+nothing on it. The server refuses a reply to the post, or to anything in
+its thread (`PostStatusService#validate_reply_target!`), so no client can
+add one. A post counts as a Kuestion's by its card (`isKuestionPost`,
+`source_korner: kuestions`), Krew and projekt Kuestions included.
+
+Comments left before then were moved into answers
+(`MoveKuestionCommentsToAnswers`, a migration): each person's first comment
+straight on the post became their answer, with its words (the @mentions in
+front taken off) and its time, and its reach as the answer's own. Left
+alone: replies to comments, the asker's own comments, a person who had
+already answered, Kuestions answered by a choice or yes or no, and comments
+with no words. The comment posts themselves were kept, unshown on the
+Kuestion; no nudges were sent for the moved answers.
+
 ### A Kuestion's own address
 
 `/hub/kuestions/<id>` (the feed card's link, and the 1.x `/questions/<id>`)

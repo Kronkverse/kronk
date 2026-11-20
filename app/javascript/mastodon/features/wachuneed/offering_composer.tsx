@@ -18,6 +18,12 @@ import type {
   ListingOffering,
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import {
+  audiencePeopleFromApi,
+  audiencePeopleParams,
+  NO_PEOPLE,
+} from 'mastodon/components/audience_people_panel';
 import {
   ComposeBody,
   ComposeCheck,
@@ -30,6 +36,7 @@ import {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 
@@ -504,6 +511,16 @@ export const OfferingComposer: React.FC<Props> = ({
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] =
     useState<ListingVisibility>(shopVisibility);
+  // The Krews it's for, and the people it's for or kept from by name, on
+  // top of its reach (decisions.md, 2026-10-25 and 2026-11-19).
+  const [krewIds, setKrewIds] = useState<string[]>([]);
+  const [people, setPeople] = useState<AudiencePeople>(NO_PEOPLE);
+  const availableKrews = useAvailableKrews();
+  const handleToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
   const [sectionId, setSectionId] = useState('');
   const [announced, setAnnounced] = useState(!inShop);
   // Appointment
@@ -555,6 +572,8 @@ export const OfferingComposer: React.FC<Props> = ({
         setTitle(listing.title);
         setDescription(listing.description ?? '');
         setVisibility(listing.visibility ?? 'public');
+        setKrewIds(listing.krews?.map((k) => k.id) ?? []);
+        setPeople(audiencePeopleFromApi(listing.audience_people));
         setSectionId(listing.shop_section_id ?? '');
         setAnnounced(listing.announced !== false);
         setAsk(booking.ask ?? '');
@@ -751,6 +770,8 @@ export const OfferingComposer: React.FC<Props> = ({
       category: 'service',
       offering,
       visibility,
+      krew_ids: krewIds,
+      ...audiencePeopleParams(people),
       ongoing: true,
       announced,
       ...(inShop && sections.length > 0
@@ -916,6 +937,8 @@ export const OfferingComposer: React.FC<Props> = ({
     description,
     offering,
     visibility,
+    krewIds,
+    people,
     announced,
     inShop,
     sections,
@@ -1037,6 +1060,11 @@ export const OfferingComposer: React.FC<Props> = ({
         <ReachDropdown
           value={visibility}
           onChange={setVisibility}
+          krews={availableKrews}
+          selectedKrewIds={krewIds}
+          onToggleKrew={handleToggleKrew}
+          people={people}
+          onPeopleChange={setPeople}
           disabled={busy || loading}
         />
       }

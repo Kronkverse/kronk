@@ -20,6 +20,7 @@ import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import HeartBorderIcon from '@/material-icons/400-24px/favorite.svg?react';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
@@ -27,6 +28,7 @@ import { me } from '../../initial_state';
 
 import { AnimatedNumber } from '../animated_number';
 import { IconButton } from '../icon_button';
+import { isKuestionPost } from '../korner_cards';
 import { NudgeButton } from '../status/nudge_button';
 
 const messages = defineMessages({
@@ -42,6 +44,8 @@ const messages = defineMessages({
   more: { id: 'status.more', defaultMessage: 'More' },
   whoCanSee: { id: 'status.who_can_see', defaultMessage: 'Who can see this?' },
   replyAll: { id: 'status.replyAll', defaultMessage: 'Reply to thread' },
+  answer: { id: 'status.kuestion_answer', defaultMessage: 'Answer' },
+  seeAnswers: { id: 'status.kuestion_see_answers', defaultMessage: 'See answers' },
   favourite: { id: 'status.favourite', defaultMessage: 'Froth' },
   removeFavourite: { id: 'status.remove_favourite', defaultMessage: 'Remove froth' },
   frothedBy: { id: 'status.frothed_by', defaultMessage: 'Who frothed this' },
@@ -118,6 +122,12 @@ class StatusActionBar extends ImmutablePureComponent {
     'quotedAccountId',
     'withDismiss',
   ];
+
+  // A Kuestion's post takes no comments: Reply's place is Answer, which
+  // opens the Kuestion to answer it (or its answers, once you have).
+  handleAnswerClick = () => {
+    this.props.history.push(`/hub/kuestions/${this.props.status.getIn(['question', 'id'])}`);
+  };
 
   handleReplyClick = () => {
     const { signedIn } = this.props.identity;
@@ -285,11 +295,15 @@ class StatusActionBar extends ImmutablePureComponent {
 
     return (
       <div className='status__action-bar'>
-        {/* Kronk action bar: Reply · Froth · Nudge (Edit on your own) ·
+        {/* Kronk action bar: Reply (Answer on a Kuestion) · Froth · Nudge (Edit on your own) ·
             Repost. No … menu (docs/decisions.md, 2026-11-08): Delete, who
             can see it and Pin live inside Edit. */}
         <div className='status__action-bar__button-wrapper'>
-          <IconButton className='status__action-bar__button' title={replyTitle} icon={isReply ? 'reply' : replyIcon} iconComponent={isReply ? ReplyIcon : replyIconComponent} onClick={this.handleReplyClick} counter={status.get('replies_count')} />
+          {isKuestionPost(status) ? (
+            <IconButton className='status__action-bar__button' title={intl.formatMessage(status.getIn(['question', 'has_answered']) ? messages.seeAnswers : messages.answer)} icon='kuestions' iconComponent={kornerIcon('kuestions')} onClick={this.handleAnswerClick} counter={status.getIn(['question', 'answers_count'])} />
+          ) : (
+            <IconButton className='status__action-bar__button' title={replyTitle} icon={isReply ? 'reply' : replyIcon} iconComponent={isReply ? ReplyIcon : replyIconComponent} onClick={this.handleReplyClick} counter={status.get('replies_count')} />
+          )}
         </div>
         <div className='status__action-bar__button-wrapper'>
           <IconButton className='status__action-bar__button star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} />

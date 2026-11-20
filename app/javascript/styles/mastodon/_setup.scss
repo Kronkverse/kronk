@@ -115,6 +115,28 @@
     }
   }
 
+  // Your spaces: Settings → Korners' rows, as a list. A row here is not a
+  // link, so it doesn't lean on hover; the switch is what you press.
+  &__spaces {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__space {
+    align-items: flex-start;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--border-default);
+      transform: none;
+    }
+
+    .settings-nav__row-desc {
+      line-height: 1.4;
+    }
+  }
+
   &__continue {
     align-self: flex-end;
     padding: 0.625rem 1.25rem;

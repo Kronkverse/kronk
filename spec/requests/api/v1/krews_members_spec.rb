@@ -25,6 +25,17 @@ RSpec.describe 'API V1 Krews members' do
     )
   end
 
+  # Picking people from the Krew (inviting to an event for the Krew alone).
+  it 'narrows the members by name' do
+    rosa = Fabricate(:account, username: 'rosa', display_name: 'Rosa Park')
+    Fabricate(:account, username: 'rosalind')
+    krew.krew_memberships.create!(account: rosa, role: 'member', source: 'direct')
+
+    get "/api/v1/krews/#{krew.slug}/members", params: { q: 'ros' }, headers: headers
+
+    expect(response.parsed_body.pluck(:id)).to contain_exactly(rosa.id.to_s)
+  end
+
   # The list's row of faces (Tal, 2026-11-11): the first few people in
   # each Krew, not the suspended, and only on the list.
   it 'lists each krew with its first few faces', :aggregate_failures do

@@ -32,6 +32,7 @@ module Reachable
     # blocked the viewer is hidden from them whatever the reach or Krew.
     return false if reachable_owner.unavailable?
     return false if viewer && reachable_owner.blocking?(viewer)
+    return false if reachable_kept_out?(viewer) # a person kept out, over every way in
     return true if reachable_krew_member?(viewer) # additive krew
     return true if reachable_chosen?(viewer) # additive people, if the model has them
 
@@ -47,6 +48,11 @@ module Reachable
 
   # People chosen by name, on top of the tier (an album's, Album). None here.
   def reachable_chosen?(_viewer)
+    false
+  end
+
+  # People kept out by name (Kronk::PeopleAudience). None here.
+  def reachable_kept_out?(_viewer)
     false
   end
 
@@ -86,6 +92,8 @@ module Reachable
              .or(reachable_krew_scope(viewer.krews.select(:id)))
       # People chosen by name, for a model that has them (Album).
       seen = seen.or(reachable_chosen_scope(viewer)) if respond_to?(:reachable_chosen_scope)
+      # And people kept out by name, over every way in (never the owner).
+      seen = seen.where.not(id: reachable_kept_out_scope(viewer)) if respond_to?(:reachable_kept_out_scope)
       seen
         .where.not(col => gone)
         .where.not(col => blocking_viewer)

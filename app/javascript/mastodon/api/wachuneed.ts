@@ -85,6 +85,9 @@ export interface CreateListingParams {
   // The Krews it is for, on top of its reach (KrewAudienceParams); left
   // out, its Krews stay as they are.
   krew_ids?: string[];
+  // People let in and kept out by name (Kronk::PeopleAudience).
+  audience_grant_ids?: string[];
+  audience_exclude_ids?: string[];
   // Which choice a photo shows, by media id. Read with the photos.
   photo_variants?: Record<string, string>;
   // Optional photos — media_attachment_ids returned from

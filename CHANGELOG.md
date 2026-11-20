@@ -7,6 +7,28 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.16 "Rose"] - 2026-11-20
+
+- Release cut on an open PR (#2604)
+- Krew event invites (#2605)
+- Live location from Anthemos (#2606)
+- Checklist item type (#2607)
+- Event schedule (#2608)
+- Choose spaces at signup (#2610)
+- No error toast on opening the app (#2611)
+- Kuestions answer, not comments (#2609)
+- Share live location from the Map (#2613)
+- People in every reach picker (#2612)
+- British English reads as Kronk (#2614)
+- Mateship page (#2615)
+- Pre-cut checklist (#2616)
+- Mateship controls (#2617)
+- Map on phones (#2618)
+- Map opens on you (#2619)
+- Action four shipped proposals (#2621)
+- Mateship: what you see as icons (#2620)
+- Mastodon 4.5.22 (#2623)
+
 ### [2.1.15 "Rose"] - 2026-11-18
 
 - Froths list (#2576)
@@ -823,6 +845,26 @@ land on the right things.
 - Nav-chrome layout wiring (components exist but not slotted yet)
 
 ## Upstream Mastodon
+
+## [4.5.22] - 2026-11-19
+
+### Security
+
+- Updated dependencies `ruby`, `puma`, `rails`, `sanitize`, `msgpack` and `omniauth`
+
+## [4.5.21] - 2026-11-03
+
+### Security
+
+- Fix DoS through JSON-LD compaction (#41482 by @ClearlyClaire, [GHSA-cf49-73r7-rxj6](https://github.com/mastodon/mastodon/security/advisories/GHSA-cf49-73r7-rxj6))
+- Fix `Forwarded` header taking precedence over `X-Forwarded-For` (#41481 by @ClearlyClaire, [GHSA-qp4r-p842-mw5c](https://github.com/mastodon/mastodon/security/advisories/GHSA-qp4r-p842-mw5c))
+  - If your reverse-proxy setup uses `Forwarded` instead of `X-Forwarded-For`, please make sure it ignores user-provided `X-Forwarded-For` headers.
+  - If you are using our provided `nginx.conf`, please consider updating it.
+- Updated dependencies, in particular to address security advisories in `addressable`, `loofah`, `rack`, and `rails-html-sanitizer`
+
+### Changed
+
+- Change invites use counts to not decrease if an invited user deletes their account (#41458 by @ClearlyClaire)
 
 ## [4.5.20] - 2026-10-29
 

@@ -73,7 +73,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
       attach_media!(@listing, media_attachment_ids_param)
       Wachuneed::TicketDates.sync(@listing, params[:ticket_dates]) if @listing.tickets? && params.key?(:ticket_dates)
     end
-    sync_krew_audience!(@listing)
+    sync_record_audience!(@listing)
 
     # Project a live listing into the feed + the owner's profile by
     # creating its companion Status (the `wachuneed_card`). After the
@@ -116,7 +116,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
       end
     end
 
-    sync_krew_audience!(@listing)
+    sync_record_audience!(@listing)
     # The companion Status carries the title as its text; keep it in step.
     @listing.status&.update_column(:text, @listing.title) if @listing.saved_change_to_title?
     # And its reach, when the seller changed who can see the listing.

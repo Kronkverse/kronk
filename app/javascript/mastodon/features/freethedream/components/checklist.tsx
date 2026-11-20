@@ -13,7 +13,8 @@ import BringIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import PaymentsIcon from '@/material-icons/400-24px/payments.svg?react';
 import QuestionIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import UnfoldMoreIcon from '@/material-icons/400-24px/unfold_more.svg?react';
-import { apiFtdItemAction } from 'mastodon/api/freethedream';
+import { apiFtdItemAction, apiFtdUpdateItem } from 'mastodon/api/freethedream';
+import type { FtdItemParams } from 'mastodon/api/freethedream';
 import {
   apiAnswerKuestion,
   apiUpdateMyKuestionAnswer,
@@ -55,6 +56,10 @@ const messages = defineMessages({
   addKind: {
     id: 'freethedream.checklist.add_kind',
     defaultMessage: 'Add to the checklist as',
+  },
+  changeKind: {
+    id: 'freethedream.checklist.change_kind',
+    defaultMessage: 'Change what kind of entry this is',
   },
   tick: { id: 'freethedream.checklist.tick', defaultMessage: 'Done' },
   tickPay: { id: 'freethedream.checklist.tick_pay', defaultMessage: 'Paid' },
@@ -139,6 +144,15 @@ const KIND_ICONS: Record<QuickAddKind, { id: string; icon: typeof CheckIcon }> =
     book: { id: 'calendar_month', icon: CalendarIcon },
     decide: { id: 'question_mark', icon: QuestionIcon },
   };
+
+// What an entry is sent as when its kind is changed.
+const RETYPE: Record<QuickAddKind, FtdItemParams> = {
+  job: { kind: 'job', task: 'todo' },
+  need: { kind: 'need' },
+  pay: { kind: 'job', task: 'pay' },
+  book: { kind: 'job', task: 'book' },
+  decide: { kind: 'job', task: 'decide' },
+};
 
 const KindIcon: React.FC<{ kind: QuickAddKind }> = ({ kind }) => (
   <Icon id={KIND_ICONS[kind].id} icon={KIND_ICONS[kind].icon} aria-hidden />
@@ -316,13 +330,17 @@ const ToDo: React.FC<{
   );
 };
 
-// What's being added, beside the add box.
+// What's being added, beside the add box, and an entry's own kind, which
+// whoever added it can tap to change (Kommons "Checklist", 2026-11-18).
 // The shared menu (DropdownSelector, styled as the reach menu), opened from
 // a button only as wide as the kind it shows.
 const KindPick: React.FC<{
   kind: QuickAddKind;
   onPick: (kind: QuickAddKind) => void;
-}> = ({ kind, onPick }) => {
+  label: MessageDescriptor;
+  className: string;
+  disabled?: boolean;
+}> = ({ kind, onPick, label: what, className, disabled }) => {
   const intl = useIntl();
   const button = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -343,14 +361,15 @@ const KindPick: React.FC<{
     setOpen(false);
     button.current?.focus();
   }, []);
-  const handleChange = useCallback(
-    (value: string) => {
-      onPick(value as QuickAddKind);
-    },
-    [onPick],
-  );
   const label = intl.formatMessage(
     ADD_KINDS.find((k) => k.kind === kind)?.label ?? messages.todo,
+  );
+  const handlePick = useCallback(
+    (value: string) => {
+      setOpen(false);
+      if (value !== kind) onPick(value as QuickAddKind);
+    },
+    [kind, onPick],
   );
 
   return (
@@ -358,10 +377,11 @@ const KindPick: React.FC<{
       <button
         ref={button}
         type='button'
-        className='freethedream-checklist__pick'
+        className={className}
         aria-haspopup='listbox'
         aria-expanded={open}
-        aria-label={`${intl.formatMessage(messages.addKind)}: ${label}`}
+        aria-label={`${intl.formatMessage(what)}: ${label}`}
+        disabled={disabled}
         onClick={handleToggle}
       >
         <KindIcon kind={kind} />
@@ -391,7 +411,7 @@ const KindPick: React.FC<{
                 items={items}
                 value={kind}
                 onClose={handleClose}
-                onChange={handleChange}
+                onChange={handlePick}
                 classNamePrefix='privacy-dropdown'
               />
             </div>
@@ -408,6 +428,17 @@ const Entry: React.FC<{
   onChange: () => void;
 }> = ({ item, canAct, onChange }) => {
   const intl = useIntl();
+  const [busy, setBusy] = useState(false);
+  const handleRetype = useCallback(
+    (kind: QuickAddKind) => {
+      setBusy(true);
+      void act(apiFtdUpdateItem(item.id, RETYPE[kind])).then(() => {
+        setBusy(false);
+        onChange();
+      });
+    },
+    [item.id, onChange],
+  );
 
   return (
     <li
@@ -415,14 +446,24 @@ const Entry: React.FC<{
         'freethedream-checklist__entry--done': isDone(item),
       })}
     >
-      <span className='freethedream-checklist__kind'>
-        <KindIcon kind={kindOf(item)} />
-        {intl.formatMessage(
-          item.kind === 'need'
-            ? messages.bring
-            : TASK_WORDS[taskOf(item)].label,
-        )}
-      </span>
+      {canAct && item.mine ? (
+        <KindPick
+          kind={kindOf(item)}
+          onPick={handleRetype}
+          label={messages.changeKind}
+          className='freethedream-checklist__kind freethedream-checklist__kind--change'
+          disabled={busy}
+        />
+      ) : (
+        <span className='freethedream-checklist__kind'>
+          <KindIcon kind={kindOf(item)} />
+          {intl.formatMessage(
+            item.kind === 'need'
+              ? messages.bring
+              : TASK_WORDS[taskOf(item)].label,
+          )}
+        </span>
+      )}
       {item.kind === 'need' ? (
         <>
           <span className='freethedream-checklist__title'>{item.title}</span>
@@ -491,7 +532,14 @@ export const Checklist: React.FC<{
             kind={kind}
             projectId={project.id}
             onAdded={onChange}
-            pick={<KindPick kind={kind} onPick={setKind} />}
+            pick={
+              <KindPick
+                kind={kind}
+                onPick={setKind}
+                label={messages.addKind}
+                className='freethedream-checklist__pick'
+              />
+            }
           />
         </div>
       )}

@@ -1072,12 +1072,12 @@ pop-up. A new pop-up adds its root class to that rule.
 
 ### Audience / Reach
 
-| Primitive                  | What it does                                                                                                | Where                                                                          |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `<ReachDropdown>`          | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
-| `<ScopeMark>`              | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
-| `useAvailableKrews`        | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
-| `<KornerVisibilityPicker>` | Korner-scoped audience control.                                                                             | `components/korner_visibility_picker.tsx`                                      |
+| Primitive                  | What it does                                                                                                                                                                            | Where                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `<ReachDropdown>`          | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews and people (`people` + `onPeopleChange`). The one picker for every composer. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
+| `<ScopeMark>`              | The reach-ring glyph on feed cards and composers.                                                                                                                                       | `components/scope_mark.tsx`                                                    |
+| `useAvailableKrews`        | Loads your Krews for the krew axis on composers.                                                                                                                                        | `hooks/useAvailableKrews.ts`                                                   |
+| `<KornerVisibilityPicker>` | Korner-scoped audience control.                                                                                                                                                         | `components/korner_visibility_picker.tsx`                                      |
 
 ### Feed & status projection
 
@@ -1221,7 +1221,11 @@ SPA, a short section per choice, each saved as it is picked; whatever is left
 alone waits for Settings: _How Kronk looks_ (Dark, Light or Match my device,
 then the shade slider; picking a theme reloads the page back at this section,
 `#look`, since the theme is its own stylesheet), _About you_ (the profile's bio field, `<ProfileBioField>`),
-_Who sees your posts_ (the default reach, widest first), _A few people_ (up
+_Who sees your posts_ (the default reach, widest first), _Your spaces_ (every
+live space on the Hub with its icon, name and its `about.what` line, and the
+tune-in switch from Settings → Korners; it shows where the member already
+stands, tuned in to all but the opt-in Kommons, so leaving it alone changes
+nothing), _A few people_ (up
 to eight suggestions with a mate button) and _Notifications_ (the
 `<PushPrompt>` from Settings → Notifications: turn on, or what this device
 can't do). They write through `/api/v1/settings/appearance`,

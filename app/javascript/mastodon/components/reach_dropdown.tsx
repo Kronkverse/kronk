@@ -8,6 +8,8 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import ExpandMoreIcon from '@/material-icons/400-24px/expand_more.svg?react';
 import LinkIcon from '@/material-icons/400-24px/link.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import { AudiencePeoplePanel } from 'mastodon/components/audience_people_panel';
 import { Icon } from 'mastodon/components/icon';
 import type { MarkKind } from 'mastodon/components/scope_mark';
 import { ScopeMark } from 'mastodon/components/scope_mark';
@@ -141,10 +143,15 @@ interface Props {
   // default; the call site still enforces the constraint in `onToggleKrew`.
   krewSingleSelect?: boolean;
   // Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)).
-  // Provide `peopleSlot` to grow an "@ People ›" row (under Krews) that flies
-  // out into a caller-supplied search/toggle panel. `peopleCount` badges the
-  // row with how many people are added/removed. Omit both to hide the row
-  // (e.g. on a public post, which can't be restricted).
+  // Provide `people` + `onPeopleChange` to grow an "@ People ›" row (under
+  // Krews) that flies out into the standard panel (AudiencePeoplePanel):
+  // search, then let each person In or keep them Out. The row hides itself
+  // on Kronkverse (a public post can't be restricted) and while the audience
+  // follows another record. Omit both where a korner can't store people.
+  people?: AudiencePeople;
+  onPeopleChange?: (people: AudiencePeople) => void;
+  // A korner whose people work differently (an album's, add-only) passes
+  // its own panel instead, with `peopleCount` to badge the row.
   peopleSlot?: React.ReactNode;
   peopleCount?: number;
   // "Same as <record>" rows over the tiers, and what choosing one does.
@@ -307,8 +314,10 @@ export const ReachDropdown: React.FC<Props> = ({
   selectedKrewIds,
   onToggleKrew,
   krewSingleSelect = false,
+  people,
+  onPeopleChange,
   peopleSlot,
-  peopleCount = 0,
+  peopleCount,
   sameAs,
   onSameAs,
   selfRung,
@@ -331,8 +340,20 @@ export const ReachDropdown: React.FC<Props> = ({
       : intl.formatMessage(messages[REACH_META[option].hintId]);
 
   const krewEnabled = krews !== undefined && onToggleKrew !== undefined;
-  const peopleEnabled = peopleSlot !== undefined;
   const selectedKrews = selectedKrewIds ?? [];
+
+  const sameAsOptions = onSameAs ? (sameAs ?? []) : [];
+  const leading = sameAsOptions.find((o) => o.selected);
+
+  const standardPeople =
+    people !== undefined &&
+    onPeopleChange !== undefined &&
+    value !== 'public' &&
+    !leading;
+  const peopleEnabled = peopleSlot !== undefined || standardPeople;
+  const peopleBadge =
+    peopleCount ??
+    (standardPeople ? people.added.length + people.removed.length : 0);
 
   // Close on outside click / Escape while open.
   useEffect(() => {
@@ -399,8 +420,6 @@ export const ReachDropdown: React.FC<Props> = ({
     setSubOpen(false);
   }, []);
 
-  const sameAsOptions = onSameAs ? (sameAs ?? []) : [];
-  const leading = sameAsOptions.find((o) => o.selected);
   const handleSameAs = useCallback(
     (key: string) => {
       onSameAs?.(key);
@@ -577,9 +596,9 @@ export const ReachDropdown: React.FC<Props> = ({
                     {intl.formatMessage(messages.peopleRowHint)}
                   </span>
                 </span>
-                {peopleCount > 0 && (
+                {peopleBadge > 0 && (
                   <span className='reach-dropdown__krew-count'>
-                    {peopleCount}
+                    {peopleBadge}
                   </span>
                 )}
                 <Icon
@@ -591,7 +610,13 @@ export const ReachDropdown: React.FC<Props> = ({
 
               {peopleOpen && (
                 <div className='reach-dropdown__submenu' role='menu'>
-                  {peopleSlot}
+                  {peopleSlot ??
+                    (standardPeople && (
+                      <AudiencePeoplePanel
+                        people={people}
+                        onChange={onPeopleChange}
+                      />
+                    ))}
                 </div>
               )}
             </div>

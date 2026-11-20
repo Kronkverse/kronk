@@ -49,7 +49,7 @@ class Api::V1::EventsController < Api::BaseController
     # from every timeline (visible only on the author profile / direct URL).
     @event.save!
     create_status_for_event!(@event) if post_to_feed?
-    invite_krews!(@event)
+    invite_krews!(@event) if truthy_param?(:invite_krew_members)
     konnect_space_kuddle!(@event)
 
     render json: @event, serializer: REST::EventSerializer
@@ -116,7 +116,10 @@ class Api::V1::EventsController < Api::BaseController
     authorize_event_owner!
 
     account_ids = Array(params[:account_ids]).map(&:to_i)
-    send_invitations!(@event, Account.where(id: account_ids))
+    accounts = Account.where(id: account_ids)
+    return render json: { error: I18n.t('kalendar.krew_members_only') }, status: 422 if outsiders_to_krew?(accounts)
+
+    send_invitations!(@event, accounts)
 
     render json: @event, serializer: REST::EventSerializer
   end
@@ -262,8 +265,17 @@ class Api::V1::EventsController < Api::BaseController
     end
   end
 
-  # An event made for a Krew invites everyone in it (Kommons "Creating krew
-  # event invitations", 2026-11-08), whether it is for the Krew alone or
+  # An event for a Krew alone is asked of its members only
+  # (decisions.md, 2026-11-18): nobody from outside it can be invited in.
+  def outsiders_to_krew?(accounts)
+    return false unless @event.krew_only?
+
+    accounts.where.not(id: @event.krew_member_ids).exists?
+  end
+
+  # Everyone in the event's Krews is invited when the host asks for it
+  # (`invite_krew_members`; decisions.md, 2026-11-18, which made this a
+  # choice instead of automatic). Whether it is for the Krew alone or
   # public and hosted by the Krew. Only Krews the host belongs to; not the
   # host.
   def invite_krews!(event)

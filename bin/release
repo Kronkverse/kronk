@@ -9,6 +9,8 @@
 # from `main` and cherry-picks each one's squash commit, in the order they
 # merged into shadow. Unfinished work stays on shadow for a later release.
 #
+#   bin/release check           before a cut: everything that could still make
+#                               it in, and what each needs from whom (below)
 #   bin/release plan            what the next release would take, and what stays
 #   bin/release cut 2.0.2       build release/2.0.2 from main and open its PR
 #   DRY_RUN=1 bin/release cut 2.0.2   build the branch locally, push nothing
@@ -26,6 +28,17 @@
 # A PR that builds a Kommons proposal links it in its body, ideally on a line
 # of its own (`Proposal: <link or id>`). `cut` gathers those into
 # config/shipped_proposals.yaml, and the production deploy marks them actioned.
+#
+# `check` is the pre-cut checklist, so a cut takes all it can and no claimed
+# proposal is forgotten. It lists the open PRs into shadow (still being
+# worked on), the merged ones not marked ready (check them on shadow, then
+# mark them), the ready ones and whether each applies on main alone (and if
+# not, which unready PR it probably needs), and every claimed proposal with
+# where its work stands: shipping now, merged but unready, in an open PR,
+# shipped already but never actioned, or no PR linking it at all. Proposals
+# come from the Kommons mirror (KOMMONS_PROPOSALS, default
+# /home/shared/proposals.json on the mainframe); without it that part is
+# skipped.
 #
 # Needs `git` (run inside a clone with an `origin` remote) and `gh` (logged in).
 # Plain Ruby, no Rails, so it runs anywhere the repo is checked out. See
@@ -82,7 +95,7 @@ def waiting_prs
   since = Time.parse(sh('git', 'log', '-1', '--format=%cI', 'origin/main').strip).utc.iso8601
   gh_json('pr', 'list', '--repo', REPO, '--base', 'shadow', '--state', 'merged', '--limit', '200',
           '--search', "merged:>#{since} -label:\"#{READY_LABEL}\" -label:#{SHIPPED_LABEL}",
-          '--json', 'number,title,mergedAt,author')
+          '--json', 'number,title,body,mergedAt,mergeCommit,author')
     .reject { |pr| pr['title'].start_with?('Back-merge') } # release machinery, not work
     .sort_by { |pr| pr['mergedAt'] }
 end
@@ -149,7 +162,7 @@ PROPOSAL_LINK = %r{kronk\.info/hub/kommons/p/(\d{6,})}
 
 def proposal_ids(prs)
   prs.flat_map do |pr|
-    pr['body'].to_s.lines.reject { |line| line.match?(/^\s*Part of proposal:/i) }.flat_map do |line|
+    pr['body'].to_s.lines.grep_v(/^\s*Part of proposal:/i).flat_map do |line|
       line.match?(/^Proposal:/i) ? line.scan(/\d{6,}/) : line.scan(PROPOSAL_LINK).flatten
     end
   end.uniq
@@ -172,6 +185,182 @@ def plan
   waiting = waiting_prs
   say "Merged into shadow, not marked ready (#{waiting.size}) — these stay on shadow:"
   waiting.empty? ? say('  (none)') : waiting.each { |pr| say "  #{line_for(pr)}" }
+end
+
+# ── check ────────────────────────────────────────────────────────────────────
+
+PROPOSALS_JSON = ENV.fetch('KOMMONS_PROPOSALS', '/home/shared/proposals.json')
+STALE_DAYS = 7
+
+def open_prs
+  gh_json('pr', 'list', '--repo', REPO, '--base', 'shadow', '--state', 'open', '--limit', '200',
+          '--json', 'number,title,body,author,isDraft,updatedAt,statusCheckRollup,autoMergeRequest')
+    .sort_by { |pr| pr['number'] }
+end
+
+def ci_state(pull)
+  checks = pull['statusCheckRollup'].to_a
+  results = checks.map { |c| (c['conclusion'] || c['state']).to_s.upcase }
+  return 'CI failing' if results.intersect?(%w(FAILURE ERROR CANCELLED TIMED_OUT ACTION_REQUIRED))
+  return 'CI running' if results.include?('PENDING') || checks.any? { |c| c['status'] && c['status'] != 'COMPLETED' }
+
+  checks.empty? ? 'no CI yet' : 'CI green'
+end
+
+def days_since(iso) = ((Time.now.utc - Time.parse(iso).utc) / 86_400).floor
+
+# The proposals a PR finishes, and those it is only part of.
+def proposal_links(pull)
+  finishes = proposal_ids([pull])
+  part = pull['body'].to_s.lines.grep(/^\s*Part of proposal:/i).flat_map { |line| line.scan(/\d{6,}/) }
+  [finishes, part - finishes]
+end
+
+def files_of(sha) = sh('git', 'diff-tree', '--no-commit-id', '--name-only', '-r', sha).split("\n")
+
+# What `cut` would do with each ready PR, without touching the checkout:
+# replay the picks onto main with `git merge-tree`. :clean, :mechanical (a
+# docs or schema-stamp conflict `cut` resolves) or :blocked, with the files.
+def simulate_picks(ready)
+  head = sh('git', 'rev-parse', 'origin/main').strip
+  ready.map do |pr|
+    sha = pr.dig('mergeCommit', 'oid')
+    out, = run('git', 'merge-tree', '--write-tree', '--name-only', '--no-messages', "--merge-base=#{sha}^", head, sha, allow_failure: true)
+    tree, *conflicted = out.split("\n").reject(&:empty?)
+    next pr.merge('pick' => :blocked, 'files' => ['(could not replay)']) unless tree.to_s.match?(/\A\h{40}\z/)
+
+    outcome = if conflicted.empty?
+                :clean
+              elsif conflicted.all? { |path| path == SCHEMA || union_doc?(path) }
+                :mechanical
+              else
+                :blocked
+              end
+    head = sh('git', 'commit-tree', tree, '-p', head, '-m', "pick ##{pr['number']}").strip unless outcome == :blocked
+    pr.merge('pick' => outcome, 'files' => conflicted)
+  end
+end
+
+def say_section(title, items, empty: '(none)', hint: nil)
+  say "#{title} (#{items.size})"
+  say "  → #{hint}" if hint && !items.empty?
+  items.empty? ? say("  #{empty}") : items.each { |line| say "  #{line}" }
+  say
+end
+
+def proposal_note(pull, titles)
+  finishes, part = proposal_links(pull)
+  notes = finishes.map { |id| "proposal “#{titles.fetch(id, id)}”" } + part.map { |id| "part of “#{titles.fetch(id, id)}”" }
+  notes.empty? ? '' : " — #{notes.join(', ')}"
+end
+
+def check
+  fetch!
+  proposals = File.exist?(PROPOSALS_JSON) ? JSON.parse(File.read(PROPOSALS_JSON)) : nil
+  titles = proposals.to_a.to_h { |p| [p['id'], p['title']] }
+  todo = []
+
+  say "Before cutting — #{Time.now.utc.strftime('%Y-%m-%d %H:%M')} UTC, production is #{File.read(GUIDE)[/Production is `([^`]*)`/, 1] || '?'}"
+  say
+
+  # 1. Still being worked on.
+  opened = open_prs
+  say_section('1. Open PRs into shadow — still being worked on', opened.map do |pr|
+    state = [pr['isDraft'] ? 'draft' : nil, ci_state(pr), pr['autoMergeRequest'] ? 'queued' : nil,
+             (d = days_since(pr['updatedAt'])) >= STALE_DAYS ? "untouched #{d} days" : nil].compact.join(', ')
+    "#{line_for(pr)} [#{state}]#{proposal_note(pr, titles)}"
+  end, hint: 'finish and merge these to get them in (then check and mark them), or leave them for the next cut')
+  todo << "finish or defer #{opened.size} open PR(s)" unless opened.empty?
+
+  # 2. Merged but not marked.
+  waiting = waiting_prs
+  say_section('2. Merged into shadow, not marked ready — check each on shadow', waiting.map do |pr|
+    "#{line_for(pr)}#{proposal_note(pr, titles)}"
+  end, hint: 'if it works on shadow and is finished, comment `/ready to ship` on it; if not, say what is left')
+  todo << "check #{waiting.size} merged PR(s) on shadow and mark the finished ones ready" unless waiting.empty?
+
+  # 3. Ready, and whether each would go in.
+  ready = simulate_picks(ready_prs)
+  waiting_files = waiting.to_h { |pr| [pr['number'], files_of(pr.dig('mergeCommit', 'oid'))] }
+  say_section('3. Marked ready to ship — the cut takes these', ready.map do |pr|
+    case pr['pick']
+    when :clean then "#{line_for(pr)} — applies on main#{proposal_note(pr, titles)}"
+    when :mechanical then "#{line_for(pr)} — applies; cut resolves #{pr['files'].join(', ')} (read them in the release PR)#{proposal_note(pr, titles)}"
+    else
+      needs = waiting.select { |w| w['mergedAt'] < pr['mergedAt'] && waiting_files[w['number']].intersect?(pr['files']) }
+      needs_note = needs.empty? ? '' : "; probably needs #{needs.map { |w| "##{w['number']}" }.join(', ')} marked ready too"
+      "#{line_for(pr)} — WON'T APPLY alone: conflicts in #{pr['files'].join(', ')}#{needs_note}"
+    end
+  end, empty: '(none — nothing to cut yet)')
+  blocked = ready.count { |pr| pr['pick'] == :blocked }
+  todo << "unblock #{blocked} ready PR(s) that won't apply alone" if blocked.positive?
+
+  # 4. Claimed proposals, and where their work is.
+  if proposals.nil?
+    say "4. Claimed proposals — skipped: no #{PROPOSALS_JSON} (set KOMMONS_PROPOSALS to the Kommons mirror's proposals.json)"
+    say
+  else
+    stages = Hash.new { |h, k| h[k] = [] }
+    { 'ready' => ready, 'merged, not ready' => waiting, 'open PR' => opened }.each do |stage, prs|
+      prs.each do |pr|
+        finishes, part = proposal_links(pr)
+        finishes.each { |id| stages[id] << [stage, pr, false] }
+        part.each { |id| stages[id] << [stage, pr, true] }
+      end
+    end
+
+    claimed = proposals.select { |p| p['status'] == 'claimed' }
+    groups = Hash.new { |h, k| h[k] = [] }
+    claimed.each do |p|
+      line = "“#{p['title']}” (@#{p['claimed_by']}) #{p['url']}"
+      last = p['comments'].to_a.max_by { |c| c['created_at'] }
+      line += " — last comment from @#{last['author']} #{last['created_at'][0, 10]}, reply?" if last && last['author'].casecmp?(p['claimed_by'].to_s) == false
+      found = stages[p['id']]
+      if found.empty?
+        earlier = gh_json('pr', 'list', '--repo', REPO, '--state', 'merged', '--search', p['id'], '--json', 'number,title,author,labels')
+        shipped = earlier.select { |pr| pr['labels'].any? { |l| l['name'] == SHIPPED_LABEL } }
+        if !shipped.empty?
+          groups[:shipped] << "#{line} — shipped in #{shipped.map { |pr| "##{pr['number']}" }.join(', ')}"
+        elsif !earlier.empty?
+          groups[:old] << "#{line} — merged long ago in #{earlier.map { |pr| "##{pr['number']}" }.join(', ')}, never marked ready"
+        else
+          groups[:none] << line
+        end
+      else
+        where = found.map { |stage, pr, part| "##{pr['number']} #{stage}#{' (part)' if part}" }.join(', ')
+        key = if found.any? { |stage, _, part| stage == 'ready' && !part }
+                :shipping
+              elsif found.any? { |stage, _, _| stage == 'merged, not ready' }
+                :waiting
+              else
+                :open
+              end
+        groups[key] << "#{line} — #{where}"
+      end
+    end
+    # Ready or merged work naming a proposal that isn't claimed (open, or
+    # already closed or actioned): worth a look before it is actioned again.
+    unclaimed = stages.keys.reject { |id| claimed.any? { |p| p['id'] == id } }.map do |id|
+      p = proposals.find { |x| x['id'] == id }
+      "“#{p ? p['title'] : id}” is #{p ? p['status'] : 'not on the board'} — linked from #{stages[id].map { |_, pr, _| "##{pr['number']}" }.uniq.join(', ')}"
+    end
+
+    say "4. Claimed proposals (#{claimed.size})"
+    say
+    say_section('  a. Shipping in this cut — the deploy marks them actioned', groups[:shipping])
+    say_section('  b. Work merged, not marked ready — mark it to get them in', groups[:waiting])
+    say_section('  c. Work in an open PR', groups[:open])
+    say_section('  d. Work shipped, still claimed — if it is finished, mark it actioned on the Kommons', groups[:shipped])
+    say_section('  e. Merged long ago, never marked ready — check and mark', groups[:old])
+    say_section('  f. No PR links them — not started, or a PR forgot its `Proposal:` line', groups[:none],
+                hint: 'start it, unclaim it, or add `Proposal: <link>` to the PR that built it')
+    say_section('  Linked from work in flight but not claimed', unclaimed) unless unclaimed.empty?
+    todo << "mark #{groups[:shipped].size} shipped proposal(s) actioned by hand, if finished" unless groups[:shipped].empty?
+    todo << "sort out #{groups[:none].size} claimed proposal(s) no PR links" unless groups[:none].empty?
+  end
+
+  say 'To do before cutting'
+  todo.empty? ? say('  nothing — `bin/release cut <version>`') : todo.each { |item| say "  - #{item}" }
 end
 
 # ── cut ──────────────────────────────────────────────────────────────────────
@@ -271,8 +460,16 @@ def cut(version)
 
   sh('git', 'push', '--quiet', '--force-with-lease', '-u', 'origin', branch)
 
-  url = sh('gh', 'pr', 'create', '--repo', REPO, '--base', 'main', '--head', branch,
-           '--title', version, '--body', release_body(version, taken, blocked, waiting_prs, proposals)).strip
+  # Cutting the same version again (more PRs marked ready since) rebuilds the
+  # branch; the release PR is already open, so update its body instead.
+  body = release_body(version, taken, blocked, waiting_prs, proposals)
+  existing = gh_json('pr', 'list', '--repo', REPO, '--base', 'main', '--head', branch, '--state', 'open', '--json', 'url').first
+  url = if existing
+          sh('gh', 'pr', 'edit', existing['url'], '--repo', REPO, '--title', version, '--body', body)
+          existing['url']
+        else
+          sh('gh', 'pr', 'create', '--repo', REPO, '--base', 'main', '--head', branch, '--title', version, '--body', body).strip
+        end
 
   say "Release PR: #{url}"
   say "Took #{taken.size}: #{taken.map { |pr| "##{pr['number']}" }.join(', ')}"
@@ -347,6 +544,7 @@ def done(version)
 end
 
 case ARGV[0]
+when 'check' then check
 when 'plan' then plan
 when 'cut' then cut(ARGV[1])
 when 'done' then done(ARGV[1])

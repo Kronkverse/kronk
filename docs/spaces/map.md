@@ -156,6 +156,12 @@ You place a pin by searching for a place (`GET /api/v1/map/geocode`, a
 server-side Nominatim proxy so your IP doesn't reach a third party; results
 cached 24h). You can add a short note (60 characters, "Travelling China").
 
+**Where it opens.** On your own pin, at about a region's zoom, so nearby
+Mates show around you (Tal, 2026-11-20). With no pin of your own it fits
+your Mates' pins, and with none of those either, Australia. A link that
+opens the map somewhere (`?lat=&lng=`, `?live=`, `?map_place=`, `?event=`)
+wins.
+
 You are the last face in the Mates list (Tal, 2026-10-17; it was the first,
 and the Ж menu had an **Edit location** moon too, now gone). Before you have
 a pin it is the pin icon, **Put me on the map**. Once you have one it is your
@@ -203,6 +209,55 @@ The privacy rules:
 
 Model: `PresenceState` (`presence_states`, one row per account, cascades
 with the account).
+
+## Live location
+
+Exact, live location from Anthemos, the phone app (decisions.md,
+2026-11-18). A pin is blurred and lasts until you remove it. A live share is
+exact, goes only to the Mates you name, and ends by itself, a day at most.
+Only a linked Anthemos phone can start one ("share my location with Ana for
+an hour"), so the Kronk website shows them and hands the start over.
+
+- **Linking a phone.** Anthemos signs in with Kronk (OAuth), makes a P-256
+  key in the phone's keystore, and sends the public half with a signature
+  over `anthemos-link-v1`, the account id and the key, proving it holds it
+  (`POST /api/v1/anthemos/links`, `AnthemosLink`). Up to ten phones per
+  account.
+- **Starting from the Map.** **Share live**, beside Near me at the top of
+  the map, with a breathing dot like the live faces (`anthemos_share.tsx`).
+  On Android it picks a Mate and opens Anthemos on them with an intent link
+  (`anthemos://kronk/share?to=<account id>&server=<host>`, package
+  `com.anthemos.app.two`); Anthemos looks the account up and asks before
+  sharing, for an hour. With no Anthemos on the phone the link falls back to
+  `/hub/map?anthemos=missing`, which says the app is needed and links its
+  download. Anywhere else the button opens a note saying live location
+  comes from Anthemos on a phone. Kronk itself never reads the phone's
+  position.
+- **Starting.** The phone signs the permission: `anthemos-share-v1`, its link
+  id, the Mates' account ids (sorted, comma-joined) and the end time
+  (`POST /api/v1/map/live`, `LiveShare`). Kronk checks the signature, that
+  everyone named is a Mate (twenty at most) and that the end is within a
+  day. Each Mate named gets a nudge, "Tal is sharing their live location
+  with you", which opens the Map on them (`map.live.started`, `?live=`).
+- **Points.** The phone sends one about every minute, signed over
+  `anthemos-live-v1`, the share id, latitude, longitude, accuracy and time,
+  each exactly as sent (`PUT /api/v1/map/live/:id/point`). Kronk refuses a
+  point that isn't signed by that phone, is dated more than ten minutes from
+  now, or is older than the last one. It keeps only the latest, in Redis
+  (`map:live:<id>`), expiring with the share. No trail is kept.
+- **Seeing it.** `GET /api/v1/map/live` returns the live Mates sharing with
+  you and their latest point, still Mates-gated in case one has unmated
+  since. The Map draws each as a face in a ring (`live_layer.tsx`), at any
+  zoom: the close-zoom hiding is for blurred pins, and this was shared on
+  purpose. Its card: the name, Live, when it was updated and how accurate it
+  is, when it ends, and "From Anthemos, signed by their phone", linking to
+  anthemos.org.
+- **Stopping.** From the phone, or Stop in Account & Security, Connected
+  apps (`DELETE /api/v1/map/live/:id`). Unlinking the phone there stops all
+  of its shares. Both delete the point at once.
+
+For now the server reads the point as it passes. The next step is to
+encrypt it to viewers who use Anthemos too, so Kronk only carries it.
 
 ## Treks
 
@@ -351,7 +406,9 @@ next week, it glows softly; later ones are plain (`whatsOn` in
 All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
 create, destroy), `presence/self`, `geocode`, `treks` (index, show,
 create, destroy, publish, unpublish), `events`, `places` (index, show,
-create, update, destroy), `country_names` (index, create, destroy).
+create, update, destroy), `country_names` (index, create, destroy), `live`
+(index, create, destroy), `live/mine`, `live/:id/point`. Linked Anthemos
+phones are under `/api/v1/anthemos/links` (index, create, destroy).
 
 ## Open
 

@@ -1,0 +1,79 @@
+// Mateship page — what you and one Mate share, at /@:acct/mateship
+// (features/mateship/). Built from the kit (`<KornerDetail>`, `<SpaceGrid>`,
+// `<EmptyState>`), so only the hero's inside (the Mate's cover, or an accent
+// wash, with the two faces at its foot), the gap between sections and the
+// controls' few extras are styled here.
+
+.mateship__faces {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  padding-block-end: 1rem;
+  border-radius: inherit;
+  background-color: color-mix(
+    in oklab,
+    var(--accent) 22%,
+    var(--surface-elevated)
+  );
+  background-position: center;
+  background-size: cover;
+
+  .account__avatar {
+    border: 3px solid var(--surface-primary);
+    border-radius: var(--radius-round);
+  }
+
+  .account__avatar + .account__avatar {
+    margin-inline-start: -1rem;
+  }
+}
+
+.mateship__section {
+  margin-block-start: 1.5rem;
+}
+
+// The controls (decisions.md, 2026-11-20) are the settings kit's rows
+// (`korner-settings__row`) and the per-person page's action rows; only the
+// hint under a heading, the read-only facts and the gap before Ending it
+// are styled here.
+.mateship__hint {
+  margin-block: 0 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+// The settings kit capitalises its labels (they're usually one or two
+// words); these are sentences, and a name.
+.mateship__controls .korner-settings__label {
+  text-transform: none;
+}
+
+.mateship__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  list-style: disc;
+}
+
+.mateship__end {
+  margin-block: 2.5rem 1rem;
+  padding-block-start: 1.5rem;
+  border-block-start: 1px solid var(--border-subtle);
+}
+
+// "What you see from": a row per kind of their posts, icon and name and a
+// switch, as Settings → Korners lists spaces.
+.mateship__see {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  .settings-nav__row {
+    padding-block: 10px;
+  }
+}

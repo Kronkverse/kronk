@@ -40,7 +40,7 @@ class Api::V1::Kronikles::ChroniclesController < Api::BaseController
     @chronicle = current_account.owned_chronicles.new(chronicle_params)
 
     if @chronicle.save
-      sync_krew_audience!(@chronicle)
+      sync_record_audience!(@chronicle)
       Kronikles::PublishChronicle.new(@chronicle).call
       render json: @chronicle.reload, serializer: REST::ChronicleSerializer, status: 201
     else
@@ -52,7 +52,7 @@ class Api::V1::Kronikles::ChroniclesController < Api::BaseController
     authorize_owner!
 
     if @chronicle.update(chronicle_params)
-      sync_krew_audience!(@chronicle)
+      sync_record_audience!(@chronicle)
       render json: @chronicle.reload, serializer: REST::ChronicleSerializer
     else
       render json: { error: @chronicle.errors.full_messages.to_sentence }, status: :unprocessable_entity

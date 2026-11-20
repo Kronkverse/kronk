@@ -38,6 +38,7 @@ class Event < ApplicationRecord
   has_many :rsvps, class_name: 'EventRsvp', inverse_of: :event, dependent: :destroy
   has_many :invitations, class_name: 'EventInvitation', inverse_of: :event, dependent: :destroy
   has_many :occurrences, class_name: 'Event', foreign_key: 'parent_event_id', inverse_of: :parent_event, dependent: :destroy
+  has_many :schedule_lines, -> { in_order }, class_name: 'EventScheduleLine', inverse_of: :event, dependent: :delete_all
   # `has_one :spawned_album` retired 2026-08-14 alongside the
   # `albums.event_id` FK drop — the Kalendar → Albutts link now lives
   # in `korner_attachments` (docs/korners/adding_a_korner.md (Korner attachments) Phase 5).
@@ -165,6 +166,21 @@ class Event < ApplicationRecord
     return false if status.nil?
 
     StatusPolicy.new(account, status).show?
+  end
+
+  # An event for its Krews alone (docs/spaces/kalendar.md, Events for a
+  # Krew): its post reaches nobody but them. Only their members can be
+  # invited (decisions.md, 2026-11-18).
+  def krew_only?
+    return false if invite_only? || status.nil?
+
+    status.visibility.to_s == 'self_only' && status.krews.any?
+  end
+
+  def krew_member_ids
+    return KrewMembership.none.select(:account_id) if status.nil?
+
+    KrewMembership.where(krew_id: status.krews.select(:id)).select(:account_id)
   end
 
   def recurring?

@@ -15,6 +15,12 @@ import type {
   ListingAvailability,
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import {
+  audiencePeopleFromApi,
+  audiencePeopleParams,
+  NO_PEOPLE,
+} from 'mastodon/components/audience_people_panel';
 import {
   ComposeBody,
   ComposeCheck,
@@ -28,6 +34,7 @@ import {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useDraft } from 'mastodon/hooks/useDraft';
 import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
@@ -188,6 +195,8 @@ interface ItemDraftParams {
   variantState?: VariantState;
   announced?: boolean;
   visibility?: ListingVisibility;
+  krewIds?: string[];
+  people?: AudiencePeople;
   photoShows?: Record<string, string>;
   konnections?: KonnectTarget[];
 }
@@ -235,6 +244,16 @@ export const ShopItemComposer: React.FC<Props> = ({
   const [announced, setAnnounced] = useState(false);
   const [visibility, setVisibility] =
     useState<ListingVisibility>(shopVisibility);
+  // The Krews it's for, and the people it's for or kept from by name, on
+  // top of its reach (decisions.md, 2026-10-25 and 2026-11-19).
+  const [krewIds, setKrewIds] = useState<string[]>([]);
+  const [people, setPeople] = useState<AudiencePeople>(NO_PEOPLE);
+  const availableKrews = useAvailableKrews();
+  const handleToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
   // Whether it had already been posted when loaded: that cannot be undone.
   const [wasAnnounced, setWasAnnounced] = useState(false);
   const [again, setAgain] = useState(false);
@@ -272,6 +291,8 @@ export const ShopItemComposer: React.FC<Props> = ({
       setVariantState(p.variantState ?? EMPTY_VARIANTS);
       setAnnounced(p.announced ?? false);
       setVisibility(p.visibility ?? shopVisibility);
+      setKrewIds(p.krewIds ?? []);
+      setPeople(p.people ?? NO_PEOPLE);
       restoreKonnect(p.konnections);
       const shows = p.photoShows ?? {};
       loadPhotos(
@@ -300,6 +321,8 @@ export const ShopItemComposer: React.FC<Props> = ({
         variantState,
         announced,
         visibility,
+        krewIds,
+        people,
         photoShows: photoState.showsPayload(showsChoices),
         konnections: konnect.saved,
       },
@@ -341,6 +364,8 @@ export const ShopItemComposer: React.FC<Props> = ({
         setAnnounced(listing.announced !== false);
         setWasAnnounced(listing.announced !== false);
         setVisibility(listing.visibility ?? 'public');
+        setKrewIds(listing.krews?.map((k) => k.id) ?? []);
+        setPeople(audiencePeopleFromApi(listing.audience_people));
         loadPhotos(listing.photos ?? []);
         setLoading(false);
       })
@@ -424,6 +449,8 @@ export const ShopItemComposer: React.FC<Props> = ({
       availability,
       announced,
       visibility,
+      krew_ids: krewIds,
+      ...audiencePeopleParams(people),
       photo_variants: photoState.showsPayload(showsChoices),
     };
 
@@ -465,6 +492,8 @@ export const ShopItemComposer: React.FC<Props> = ({
           setOptionRows([]);
           setAnnounced(false);
           setVisibility(shopVisibility);
+          setKrewIds([]);
+          setPeople(NO_PEOPLE);
           loadPhotos([]);
           restoreKonnect(null);
           setLastAdded(name);
@@ -491,6 +520,8 @@ export const ShopItemComposer: React.FC<Props> = ({
     availability,
     announced,
     visibility,
+    krewIds,
+    people,
     shopVisibility,
     photoState,
     showsChoices,
@@ -561,6 +592,11 @@ export const ShopItemComposer: React.FC<Props> = ({
         <ReachDropdown
           value={visibility}
           onChange={setVisibility}
+          krews={availableKrews}
+          selectedKrewIds={krewIds}
+          onToggleKrew={handleToggleKrew}
+          people={people}
+          onPeopleChange={setPeople}
           disabled={busy || loading}
         />
       }

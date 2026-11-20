@@ -298,7 +298,9 @@ carry `account`, `price_cents`, `price_currency`, `photo_full_url`,
 `visibility` and `can_message`). Create and `PATCH` take `visibility`
 (`public | mates | orbit | self_only`) and `krew_ids` (top level; only
 Krews the seller is in; on `PATCH` it replaces the set, and leaving it out
-keeps it), and the detail carries `krews`; the index and the detail show only
+keeps it), and `audience_grant_ids` / `audience_exclude_ids` (people let in
+and kept out; either one sent replaces both), and the detail carries `krews`,
+and, to the seller alone, `audience_people`; the index and the detail show only
 what the caller can see (a listing they can't is a 404). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
 order) and `photo_url`, the cover. There is no delete endpoint.
@@ -487,7 +489,11 @@ who can message., full control to seller"). Listings and shops each carry
 control as a post's reach (`<ReachDropdown>`). A listing can also be for
 Krews (`krew_ids`, the same as an album's; `record_krews`,
 decisions.md 2026-10-25): their members see it, and so can message about
-it, whatever its reach. Shops have no Krews.
+it, whatever its reach. On Me, Mates or Orbit it can also be for, or kept
+from, people by name (`record_people`, decisions.md 2026-11-19): Me plus
+people is how a listing goes to just those people. Every listing composer
+(listing, Offerings, shop item) offers Krews and People. Shops have no
+Krews.
 
 - **Me** (`self_only`): only the seller. This also pauses an item.
 - **Mates**: the seller's Mates.

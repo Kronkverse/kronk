@@ -54,6 +54,8 @@ en:
           attributes:
             name:
               taken: is already in Brands
+        freethedream/item:
+          bringing: People are bringing it, so it stays something to bring
   albutts:
     photos_added:
       one: Added a photo to %{title}
@@ -143,6 +145,8 @@ en:
   # Jitsi's own words in a Booth live set's room, served to the Jitsi
   # server by Api::V1::Calls::BrandingsController. Keys follow Jitsi's
   # lang/main.json; {{…}} is Jitsi's placeholder, not Rails'.
+  kalendar:
+    krew_members_only: This event is for its Krew alone, so only its members can be invited.
   kronk_jitsi:
     booth_live:
       dialog:
@@ -231,6 +235,7 @@ en:
         frothed: "%{who} frothed your question"
       map:
         challenged: "%{who} thinks your pin on the Map is out of date"
+        live_shared: "%{who} is sharing their live location with you"
       mates:
         mate_accepted: "%{who} is now your Mate"
         mate_requested: "%{who} wants to be Mates"
@@ -337,6 +342,8 @@ en-GB:
           attributes:
             name:
               taken: is already in Brands
+        freethedream/item:
+          bringing: People are bringing it, so it stays something to bring
   albutts:
     photos_added:
       one: Added a photo to %{title}
@@ -426,6 +433,8 @@ en-GB:
   # Jitsi's own words in a Booth live set's room, served to the Jitsi
   # server by Api::V1::Calls::BrandingsController. Keys follow Jitsi's
   # lang/main.json; {{…}} is Jitsi's placeholder, not Rails'.
+  kalendar:
+    krew_members_only: This event is for its Krew alone, so only its members can be invited.
   kronk_jitsi:
     booth_live:
       dialog:
@@ -514,6 +523,7 @@ en-GB:
         frothed: "%{who} frothed your question"
       map:
         challenged: "%{who} thinks your pin on the Map is out of date"
+        live_shared: "%{who} is sharing their live location with you"
       mates:
         mate_accepted: "%{who} is now your Mate"
         mate_requested: "%{who} wants to be Mates"

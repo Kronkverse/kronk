@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -392,6 +392,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.index ["question_id", "account_id"], name: "index_answers_on_question_id_and_account_id", unique: true
     t.index ["question_id"], name: "index_answers_on_question_id"
     t.index ["status_id"], name: "index_answers_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "anthemos_links", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "device_name", null: false
+    t.datetime "last_used_at"
+    t.text "public_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_anthemos_links_on_account_id"
   end
 
   create_table "appeals", force: :cascade do |t|
@@ -957,6 +967,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.index ["account_id"], name: "index_event_rsvps_on_account_id"
     t.index ["event_id", "account_id"], name: "index_event_rsvps_on_event_id_and_account_id", unique: true
     t.index ["event_id"], name: "index_event_rsvps_on_event_id"
+  end
+
+  create_table "event_schedule_lines", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.date "day", null: false
+    t.integer "start_minute", null: false
+    t.integer "end_minute"
+    t.string "title", default: "", null: false
+    t.string "note", default: "", null: false
+    t.bigint "created_by_account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_schedule_lines_on_event_id"
   end
 
   create_table "events", force: :cascade do |t|
@@ -1734,6 +1757,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.index ["account_id"], name: "index_lists_on_account_id"
   end
 
+  create_table "live_shares", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "anthemos_link_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "recipient_account_ids", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_live_shares_on_account_id"
+    t.index ["anthemos_link_id"], name: "index_live_shares_on_anthemos_link_id"
+    t.index ["recipient_account_ids"], name: "index_live_shares_on_recipient_account_ids", using: :gin
+  end
+
   create_table "login_activities", force: :cascade do |t|
     t.string "authentication_method"
     t.datetime "created_at", precision: nil
@@ -1781,6 +1816,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.datetime "updated_at", precision: nil, null: false
     t.bigint "user_id", null: false
     t.index ["user_id", "timeline"], name: "index_markers_on_user_id_and_timeline", unique: true
+  end
+
+  create_table "mate_tune_outs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "korner_slug", null: false
+    t.bigint "target_account_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "target_account_id", "korner_slug"], name: "index_mate_tune_outs_on_account_target_slug", unique: true
+    t.index ["target_account_id"], name: "index_mate_tune_outs_on_target_account_id"
   end
 
   create_table "media_attachments", id: :bigint, default: -> { "timestamp_id('media_attachments'::text)" }, force: :cascade do |t|
@@ -2433,6 +2478,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.index ["krew_id"], name: "index_record_krews_on_krew_id"
   end
 
+  create_table "record_people", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "excluded", default: false, null: false
+    t.string "korner_slug", null: false
+    t.bigint "record_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_record_people_on_account_id"
+    t.index ["korner_slug", "record_id", "account_id"], name: "index_record_people_on_record_and_account", unique: true
+  end
+
   create_table "relationship_severance_events", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "purged", default: false, null: false
@@ -3021,6 +3077,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   add_foreign_key "announcement_reactions", "custom_emojis", on_delete: :cascade
   add_foreign_key "answers", "accounts", on_delete: :cascade
   add_foreign_key "answers", "questions", on_delete: :cascade
+  add_foreign_key "anthemos_links", "accounts", on_delete: :cascade
   add_foreign_key "appeals", "account_warnings", on_delete: :cascade
   add_foreign_key "appeals", "accounts", column: "approved_by_account_id", on_delete: :nullify
   add_foreign_key "appeals", "accounts", column: "rejected_by_account_id", on_delete: :nullify
@@ -3097,6 +3154,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   add_foreign_key "event_invitations", "events", on_delete: :cascade
   add_foreign_key "event_rsvps", "accounts", on_delete: :cascade
   add_foreign_key "event_rsvps", "events", on_delete: :cascade
+  add_foreign_key "event_schedule_lines", "accounts", column: "created_by_account_id", on_delete: :nullify
+  add_foreign_key "event_schedule_lines", "events", on_delete: :cascade
   add_foreign_key "events", "accounts", on_delete: :cascade
   add_foreign_key "events", "events", column: "parent_event_id", on_delete: :cascade
   add_foreign_key "events", "media_attachments", column: "image_id", on_delete: :nullify
@@ -3193,11 +3252,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   add_foreign_key "listing_ticket_dates", "listings", on_delete: :cascade
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
+  add_foreign_key "live_shares", "accounts", on_delete: :cascade
+  add_foreign_key "live_shares", "anthemos_links", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
   add_foreign_key "map_country_names", "accounts", column: "removed_by_account_id", on_delete: :nullify
   add_foreign_key "map_country_names", "accounts", on_delete: :nullify
   add_foreign_key "map_places", "accounts", on_delete: :nullify
   add_foreign_key "markers", "users", on_delete: :cascade
+  add_foreign_key "mate_tune_outs", "accounts", column: "target_account_id", on_delete: :cascade
+  add_foreign_key "mate_tune_outs", "accounts", on_delete: :cascade
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify
   add_foreign_key "media_attachments", "scheduled_statuses", on_delete: :nullify
   add_foreign_key "media_attachments", "statuses", on_delete: :nullify
@@ -3283,6 +3346,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   add_foreign_key "quotes", "statuses", column: "quoted_status_id", on_delete: :nullify
   add_foreign_key "quotes", "statuses", on_delete: :cascade
   add_foreign_key "record_krews", "krews", on_delete: :cascade
+  add_foreign_key "record_people", "accounts", on_delete: :cascade
   add_foreign_key "report_notes", "accounts", on_delete: :cascade
   add_foreign_key "report_notes", "reports", on_delete: :cascade
   add_foreign_key "reports", "accounts", column: "action_taken_by_account_id", name: "fk_bca45b75fd", on_delete: :nullify

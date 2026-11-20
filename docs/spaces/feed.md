@@ -36,6 +36,13 @@ relationship is **Mates**: mutual, formed by request then accept.
 - **No conversion at cutover.** Follows were never mass-converted. A
   leftover one-way follow is tidied up the next time either person sends a
   request.
+- **What two Mates share** (when they became Mates, Mates in common, Krews,
+  events and projekts) is the Mateship page, `/@:acct/mateship`, which only
+  the two of them can open (docs/spaces/profile.md, Mateship). It is also
+  where you choose what of one Mate's reaches your feed: their plain posts
+  and each korner's cards, one switch each (`mate_tune_outs`, applied by
+  `Kronk::MateTuneOutGate` beside the tune-in gate on Home, Kommunity and
+  Kronkverse; decisions.md, 2026-11-20).
 
 ### The reach ladder
 
@@ -95,9 +102,19 @@ audience = tier  +  krews  +/−  people
 - **Editing afterwards:** `UpdateStatusService` accepts a changed tier,
   krews, and people, and reconciles who has the post in their feed.
 - **`self_only` plus added people** is how you post to specific people,
-  replacing Mastodon's `direct`.
+  replacing Mastodon's `direct`. It reaches the author's own home feed too,
+  as `self_only` plus a Krew does.
+- **Korner records take people too** (films, kars, kronikles, art pieces,
+  listings): `record_people` (Kronk::PeopleAudience), the same rules, read by
+  `Reachable` and copied onto the record's feed post. Their composers send
+  `audience_grant_ids` / `audience_exclude_ids` beside `krew_ids`; the owner
+  reads them back as `audience_people`. Albums keep their own add-only
+  viewers.
+- **One picker.** `<ReachDropdown>` draws the People row and panel
+  (`AudiencePeoplePanel`) for any composer that passes `people` +
+  `onPeopleChange`, so a change to it reaches every composer.
 
-Decision: decisions.md, 2026-08-28.
+Decisions: decisions.md, 2026-08-28 and 2026-11-19.
 
 ### Comments
 

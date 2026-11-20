@@ -7,6 +7,11 @@ import api from 'mastodon/api';
 import { apiCreateFilm, apiUpdateFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
+import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
+import {
+  audiencePeopleFromApi,
+  NO_PEOPLE,
+} from 'mastodon/components/audience_people_panel';
 import {
   ComposeBody,
   ComposeHint,
@@ -79,6 +84,7 @@ interface FilmDraftParams {
   description?: string;
   visibility?: ReachValue;
   krew_ids?: string[];
+  people?: AudiencePeople;
   konnections?: KonnectTarget[];
 }
 
@@ -115,6 +121,10 @@ export const FilmComposer: React.FC<Props> = ({
   const [krewIds, setKrewIds] = useState<string[]>(
     editingFilm?.krews?.map((k) => k.id) ?? [],
   );
+  // The people it's for, or kept from, by name (decisions.md, 2026-11-19).
+  const [people, setPeople] = useState<AudiencePeople>(
+    audiencePeopleFromApi(editingFilm?.audience_people),
+  );
   const availableKrews = useAvailableKrews();
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [pending, setPending] = useState(false);
@@ -140,6 +150,8 @@ export const FilmComposer: React.FC<Props> = ({
     onChange: setVisibility,
     onToggleKrew: handleToggleKrew,
   });
+  // Following another record's audience takes its tier and Krews only.
+  const sentPeople = reach.sameAs?.some((o) => o.selected) ? NO_PEOPLE : people;
   const restoreKonnect = konnect.restore;
   const commitKonnect = konnect.commit;
 
@@ -152,6 +164,7 @@ export const FilmComposer: React.FC<Props> = ({
       setDescription(p.description ?? '');
       setVisibility(p.visibility ?? 'public');
       setKrewIds(p.krew_ids ?? []);
+      setPeople(p.people ?? NO_PEOPLE);
       restoreKonnect(p.konnections);
       // A video chosen for another draft doesn't belong to this one.
       setVideoFile(null);
@@ -170,6 +183,7 @@ export const FilmComposer: React.FC<Props> = ({
         description,
         visibility,
         krew_ids: krewIds,
+        people,
         konnections: konnect.saved,
       },
     },
@@ -228,6 +242,7 @@ export const FilmComposer: React.FC<Props> = ({
             editingFilm.id,
             { title: title.trim(), description: description.trim() },
             krewIds,
+            sentPeople,
           );
           onUpdated?.(updated);
         } catch (e) {
@@ -257,6 +272,7 @@ export const FilmComposer: React.FC<Props> = ({
             video_media_attachment_id: media.data.id,
           },
           krewIds,
+          sentPeople,
         );
         finishDraft();
         await commitKonnect('cinema', film.id);
@@ -278,6 +294,7 @@ export const FilmComposer: React.FC<Props> = ({
     finishDraft,
     intl,
     krewIds,
+    sentPeople,
     onCreated,
     onUpdated,
     title,
@@ -316,6 +333,8 @@ export const FilmComposer: React.FC<Props> = ({
           krews={availableKrews}
           selectedKrewIds={krewIds}
           onToggleKrew={reach.onToggleKrew}
+          people={people}
+          onPeopleChange={setPeople}
           sameAs={reach.sameAs}
           onSameAs={reach.onSameAs}
         />

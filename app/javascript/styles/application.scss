@@ -23,6 +23,7 @@
 @use 'mastodon/profile_settings_per';
 @use 'mastodon/kommunity';
 @use 'mastodon/mates_tab';
+@use 'mastodon/mateship';
 @use 'mastodon/standard_card';
 @use 'mastodon/kronk_link_card';
 @use 'mastodon/profile_peek';
@@ -87,6 +88,7 @@
 @use 'mastodon/status_replies';
 @use 'mastodon/pwa_install_prompt';
 @use 'mastodon/events';
+@use 'mastodon/event_schedule';
 @use 'mastodon/inflow';
 @use 'mastodon/inflow_veil';
 @use 'mastodon/kommons';

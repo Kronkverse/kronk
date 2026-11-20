@@ -27,7 +27,9 @@ module Cinema
         @film.owner,
         text: @film.title,
         visibility: FILM_TO_STATUS_VISIBILITY.fetch(@film.visibility, 'public'),
-        krew_ids: @film.krew_ids
+        krew_ids: @film.krew_ids,
+        audience_grant_ids: @film.audience_added_ids,
+        audience_exclude_ids: @film.audience_removed_ids
       )
 
       @film.update_columns(status_id: status.id)

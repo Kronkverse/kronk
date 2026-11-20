@@ -509,13 +509,28 @@ from `main` and cherry-picks each one's squash commit (every PR is a single
 commit on `shadow`), in the order they merged. Unfinished work stays on
 shadow for a later release. `bin/release` does the mechanics:
 
-1. **See what would ship** — `bin/release plan` lists the ready PRs and the
-   merged ones that are not, so nothing is a surprise.
+1. **Get everything in that can go** — `bin/release check` is the pre-cut
+   checklist. Run it first, and work through what it lists before cutting:
+   - **Open PRs into shadow** — finish and merge them, or leave them for the
+     next cut.
+   - **Merged, not marked ready** — check each on shadow; if it is finished,
+     comment `/ready to ship`; if not, say what is left.
+   - **Marked ready** — and whether each applies on `main` alone. One that
+     won't builds on unready work; it names the PR it probably needs.
+   - **Claimed proposals**, each with where its work stands: shipping in this
+     cut; merged but not marked (mark it); in an open PR; shipped already but
+     still claimed (mark it actioned by hand if it is finished — usually a PR
+     that said `Part of proposal:`); or no PR linking it (start it, unclaim
+     it, or add the `Proposal:` line the PR that built it forgot).
+
+   It ends with a short to-do list. `bin/release plan` is the short form:
+   just the ready PRs and the merged ones that are not.
 
 2. **Cut it** — `bin/release cut 2.0.2` builds `release/2.0.2` from `main`,
    cherry-picks the ready PRs, bumps `MILESTONE` (the only place a version is
    ever bumped — see **Versioning**), adds a changelog entry from the PR titles,
-   and opens the PR into `main`, titled with the version. A ready PR that can't
+   and opens the PR into `main`, titled with the version (cutting the same
+   version again rebuilds the branch and updates that PR). A ready PR that can't
    apply on its own — because it builds on work that isn't ready — is left out
    and named in the PR body. A conflict only in Markdown docs (both sides
    kept) or in `db/schema.rb`'s version line (the later one kept) is resolved
@@ -562,7 +577,7 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.1.15 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
+Production is `2.1.16 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
 release, minors included, is "Rose" (decisions.md, 2026-10-19).
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —

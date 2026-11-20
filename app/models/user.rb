@@ -77,7 +77,7 @@ class User < ApplicationRecord
          :confirmable
 
   belongs_to :account, inverse_of: :user
-  belongs_to :invite, counter_cache: :uses, optional: true
+  belongs_to :invite, optional: true
   belongs_to :created_by_application, class_name: 'Doorkeeper::Application', optional: true
   belongs_to :role, class_name: 'UserRole', optional: true
   accepts_nested_attributes_for :account
@@ -123,6 +123,7 @@ class User < ApplicationRecord
   before_create :set_approved
   before_create :set_age_verified_at
   before_create :default_account_discoverability
+  after_create :increment_invite_uses
   after_commit :send_pending_devise_notifications
   after_create_commit :trigger_webhooks
   after_create_commit :auto_confirm_signup!, if: :auto_confirmable_signup?
@@ -634,5 +635,9 @@ class User < ApplicationRecord
 
   def bust_kommunity_orb_cache
     Api::V1::Kommunity::OrbController.bust_cache!
+  end
+
+  def increment_invite_uses
+    invite&.increment!(:uses)
   end
 end

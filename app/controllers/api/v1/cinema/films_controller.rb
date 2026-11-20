@@ -43,7 +43,7 @@ class Api::V1::Cinema::FilmsController < Api::BaseController
     @film = current_account.owned_films.new(film_params)
 
     if @film.save
-      sync_krew_audience!(@film)
+      sync_record_audience!(@film)
       Cinema::PublishFilm.new(@film).call
       render json: @film.reload, serializer: REST::FilmSerializer, status: 201
     else
@@ -55,7 +55,7 @@ class Api::V1::Cinema::FilmsController < Api::BaseController
     authorize_owner!
 
     if @film.update(film_params_for_update)
-      sync_krew_audience!(@film)
+      sync_record_audience!(@film)
       render json: @film.reload, serializer: REST::FilmSerializer
     else
       render json: { error: @film.errors.full_messages.to_sentence }, status: :unprocessable_entity

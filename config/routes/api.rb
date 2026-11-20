@@ -268,6 +268,10 @@ namespace :api, format: false do
         get :my_invitees
       end
       resources :krews, only: [:create, :destroy], module: :events
+      # Its schedule (docs/spaces/kalendar.md, Schedule).
+      resource :schedule, only: :show, module: :events do
+        resources :lines, only: [:create, :update, :destroy], controller: 'schedules'
+      end
     end
     # Moments — ephemeral posts, gone by morning (docs/spaces/moments.md).
     # POST/DELETE :froth is nested via the moment_froths controller
@@ -432,6 +436,14 @@ namespace :api, format: false do
       # Ask a Mate to bring their pin up to date (once a week per person).
       post   'presence/:account_id/challenge', to: 'presence#challenge'
 
+      # Live location from a linked Anthemos phone: exact, to named Mates,
+      # until a set time; the latest point only, kept in Redis.
+      get    'live',           to: 'live#index'
+      get    'live/mine',      to: 'live#mine'
+      post   'live',           to: 'live#create'
+      put    'live/:id/point', to: 'live#point'
+      delete 'live/:id',       to: 'live#destroy'
+
       # Server-side proxy for OSM Nominatim — see
       # `Api::V1::Map::GeocodeController` for why we don't hit Nominatim
       # from the browser directly. Search box on the map's place
@@ -462,6 +474,11 @@ namespace :api, format: false do
       resources :country_names, only: [:index, :create, :destroy]
       # The Mates born on or living on a Country, for its card.
       get 'country_people', to: 'country_people#index'
+    end
+
+    # Anthemos phones linked to an account (docs/spaces/map.md, Live location).
+    namespace :anthemos do
+      resources :links, only: [:index, :create, :destroy]
     end
 
     namespace :klot do
@@ -761,6 +778,8 @@ namespace :api, format: false do
         # /@:acct/mates); `matuals` is the viewer's mates in common with them.
         resources :mates, only: :index
         resources :matuals, only: :index
+        # What the viewer and this Mate share (Mates only; decisions.md 2026-11-19).
+        resource :mateship, only: [:show, :update]
 
         namespace :profile do
           resources :sections, only: [:index] do

@@ -7,6 +7,7 @@ import { Link, useHistory } from 'react-router-dom';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { composeOnProfile } from 'mastodon/actions/compose';
@@ -18,7 +19,8 @@ import { DisplayName } from 'mastodon/components/display_name';
 import { AnimateEmojiProvider } from 'mastodon/components/emoji/context';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { Icon } from 'mastodon/components/icon';
-import { IconButton } from 'mastodon/components/icon_button';
+import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { ProfileBioField } from 'mastodon/components/profile_bio_field';
 import { ProfileCountryField } from 'mastodon/components/profile_country_field';
 import { ShareSheet } from 'mastodon/components/share_sheet';
@@ -91,6 +93,19 @@ const messages = defineMessages({
     defaultMessage: 'You sent {name} a rose today',
   },
   share: { id: 'account.share', defaultMessage: 'Share {name}’s profile' },
+  mateship: {
+    id: 'account.mateship',
+    defaultMessage: 'You and {name}: what you share',
+  },
+  matesShort: { id: 'account.action.mateship', defaultMessage: 'Mateship' },
+  nudgeShort: { id: 'account.action.nudge', defaultMessage: 'Nudge' },
+  postShort: { id: 'account.action.post', defaultMessage: 'Post' },
+  roseShort: { id: 'account.action.rose', defaultMessage: 'Rose' },
+  roseSentShort: {
+    id: 'account.action.rose_sent',
+    defaultMessage: 'Rose sent',
+  },
+  shareShort: { id: 'account.action.share', defaultMessage: 'Share' },
   changeCover: {
     id: 'profile_block.change_cover',
     defaultMessage: 'Change cover',
@@ -265,6 +280,11 @@ export const ProfileBlock: React.FC<Props> = ({
     history.push(`/nudges/with/${accountId}`);
   }, [accountId, history]);
 
+  const acctPath = account?.acct;
+  const handleMateship = useCallback(() => {
+    if (acctPath) history.push(`/@${acctPath}/mateship`);
+  }, [acctPath, history]);
+
   const handleShareOpen = useCallback(() => {
     setShareOpen(true);
   }, []);
@@ -387,6 +407,10 @@ export const ProfileBlock: React.FC<Props> = ({
   const canSendRose =
     signedIn && !isSelf && !bare && Boolean(relationship?.mate);
 
+  // The Mateship page (`/@:acct/mateship`) is for the two Mates only.
+  const canSeeMateship =
+    signedIn && !isSelf && !bare && Boolean(relationship?.mate);
+
   // Share doesn't need a relationship — anyone can share a public
   // profile URL. Hidden on your own profile (self-share is noise) and
   // when the block is bare (gated / hidden / minimal), matching the
@@ -484,26 +508,42 @@ export const ProfileBlock: React.FC<Props> = ({
         </p>
       )}
 
+      {/* Labelled pills (Tal, 2026-11-19: four bare icons in circles and
+          nobody could tell what they did). The bar wraps on a phone. */}
       {!bare && !isSelf && (
-        <div className='profile-block__actions'>
+        <KornerActionBar className='profile-block__actions'>
           {showFollowButton && (
             <FollowButton accountId={accountId} labelLength='long' />
           )}
 
+          {canSeeMateship && (
+            <KornerPill
+              icon={GroupIcon}
+              iconId='group'
+              label={intl.formatMessage(messages.matesShort)}
+              ariaLabel={intl.formatMessage(messages.mateship, {
+                name: username,
+              })}
+              onClick={handleMateship}
+            />
+          )}
+
           {canNudgeThem && (
-            <IconButton
-              icon='nudge'
-              iconComponent={nudgesIcon}
-              title={nudgeTitle}
+            <KornerPill
+              icon={nudgesIcon}
+              iconId='nudge'
+              label={intl.formatMessage(messages.nudgeShort)}
+              ariaLabel={nudgeTitle}
               onClick={handleNudge}
             />
           )}
 
           {canSendRose && (
-            <IconButton
-              icon='edit'
-              iconComponent={EditIcon}
-              title={intl.formatMessage(messages.postOnProfile, {
+            <KornerPill
+              icon={EditIcon}
+              iconId='edit'
+              label={intl.formatMessage(messages.postShort)}
+              ariaLabel={intl.formatMessage(messages.postOnProfile, {
                 name: account.display_name || account.username,
               })}
               onClick={handlePostOnProfile}
@@ -511,25 +551,29 @@ export const ProfileBlock: React.FC<Props> = ({
           )}
 
           {canSendRose && (
-            <IconButton
-              icon='rose'
-              iconComponent={roseIcon}
+            <KornerPill
+              icon={roseIcon}
+              iconId='rose'
+              label={intl.formatMessage(
+                roseSent ? messages.roseSentShort : messages.roseShort,
+              )}
+              ariaLabel={roseTitle}
               active={roseSent}
               disabled={roseSent}
-              title={roseTitle}
               onClick={handleRose}
             />
           )}
 
           {canShare && (
-            <IconButton
-              icon='share'
-              iconComponent={ShareIcon}
-              title={shareTitle}
+            <KornerPill
+              icon={ShareIcon}
+              iconId='share'
+              label={intl.formatMessage(messages.shareShort)}
+              ariaLabel={shareTitle}
               onClick={handleShareOpen}
             />
           )}
-        </div>
+        </KornerActionBar>
       )}
 
       {!bare && (

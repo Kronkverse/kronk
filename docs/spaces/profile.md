@@ -15,6 +15,7 @@ Earlier designs are in git history (see [History](#history)).
 | `/@:acct`          | The profile: block, Profile face, then their timeline                            |
 | `/@:acct/mates`    | The block, then their Mates list (them and their Mates only)                     |
 | `/@:acct/settings` | Your settings for this person (signed in only)                                   |
+| `/@:acct/mateship` | What you and this Mate share (the two of them only)                              |
 | `/@:acct/tagged/…` | A tag-filtered timeline. Not a face; it keeps its own route and draws the block. |
 
 `/accounts/:id` works too. It mounts one component,
@@ -44,12 +45,19 @@ One identity block (`components/profile_block.tsx`) sits at the top. It is the
 only place identity is drawn.
 
 **Contents:** cover, avatar, display name, handle, lock icon, relationship tag
-("You're Mates", "Blocking", …), and a row of actions:
+("You're Mates", "Blocking", …), and a row of actions, each a labelled
+`<KornerPill>` (icon and word) in a `<KornerActionBar>`, which wraps on a
+phone. They were bare icons in circles until 2026-11-19, and nobody could tell
+what they did (Tal):
 
 - the relationship button (`FollowButton`: Mate? / Mating… / Accept). Once you
   are Mates it shows nothing, here or anywhere else it is used;
-- **Nudge**, a link to `/nudges/<accountId>`;
-- **Rose** (see [`rose.md`](rose.md));
+- **Mateship**, for a Mate only: opens the [Mateship](#mateship) page;
+- **Nudge**, a link to `/nudges/with/<accountId>`;
+- **Post**, for a Mate only: post on their profile (the composer, aimed at
+  them);
+- **Rose** (see [`rose.md`](rose.md)), for a Mate only; "Rose sent" once
+  today's has gone;
 - **Share**, which opens the shared `<ShareSheet>`.
 
 Counts: `N posts · N Mates · Joined <month year>`, plain text, not links, and under them the bio
@@ -378,14 +386,57 @@ starting values; the column had been added with a "follow-up recount" that
 never ran. `spec/models/follow_spec.rb` locks the callbacks. Lesson: a
 migration that says "will be backfilled later" isn't finished.
 
+## Mateship
+
+`/@:acct/mateship` (`features/mateship/`) is what you and one Mate share,
+and your settings for them (Tal, 2026-11-19 and 2026-11-20). It opens from
+the **Mateship** pill on their profile and from
+the "Mates" marker on a row in a Mates list or Kommunity → Mates
+(`<Account markMates>`, which links there).
+
+- **Mates since**: the date, and how long, from the later of the two
+  `Follow` rows, which is when the request was accepted.
+- **Mates in common** (Matuals), as tiles that open each profile. Hidden when
+  the Mate hides their connections, as the Matuals row is.
+- **Krews you're both in**, **Events together** (both said Going; coming up
+  first) and **Projekts you're both in**, each a section that is left out when
+  empty. A projekt brings its own Krew, so it shows under Krews too.
+- **What you see from {name}**: a list, one row each for their plain posts
+  (`posts`, the Feed icon) and each korner whose cards reach a feed, plus
+  **Nudge me when they post** (the `Follow`'s `notify`, the Nudges icon).
+  Each row is the space's icon, its name and a switch, as in Settings →
+  Korners, and a row turned off greys down (Tal: a list of icons and names,
+  not a block of text). Turned off, that kind of post from them
+  leaves Home, Kommunity and Kronkverse (`mate_tune_outs`,
+  `Kronk::MateTuneOutGate`); they aren't told. `PATCH
+/api/v1/accounts/:id/mateship` takes `korner` + `shown`, or `notify`.
+- **What {name} sees of yours**, read-only: which reach tiers and Krews
+  reach them, and that the People row leaves them out of one post.
+- **Quiet** (mute), **Your private note**, and **Ending it**: Remove Mate
+  (confirmed), block (confirmed; it ends the mateship) and report.
+
+It is `<Stage>` + `<KornerDetail>` (the Mate's cover, or an accent wash, with both faces as the hero; Nudge as the one
+pill), `<SpaceGrid>`/`<SpaceCard>` sections and `<EmptyState>`.
+
+**Only the two of them.** `GET /api/v1/accounts/:id/mateship`
+(`Mates::MateshipService`) answers 404 to anyone who isn't the account's Mate,
+and the page sends them back to the profile. Every record is one the viewer
+can already see (`Event.visible_to`, `Freethedream::Project.visible_to`, Krews
+they're in). It shows shared things, never measures: no counts of froths,
+messages or visits between the two (decisions.md, 2026-11-19). Specs:
+`spec/requests/api/v1/accounts/mateships_spec.rb`,
+`spec/system/mateship_spec.rb`.
+
 ## Per-person settings
 
 `/@:acct/settings` (`features/profile_settings_per/`) is your settings for one
 person, reached from the Ж menu's Settings while you're on their profile. It
-has: mute, block, your private note about them, remove Mate, and report. On
-your own profile it points you at your account's Privacy settings instead.
+has: mute, block, your private note about them, and report. On your own
+profile it points you at your account's Privacy settings instead. **For a
+Mate it sends you to the [Mateship](#mateship) page**, where their settings
+live (decisions.md, 2026-11-20).
 
-**Unmate lives only here.** No list row, hover card, profile peek card or
+**Unmate lives only on the Mateship page.** No list row, hover card, profile peek card or
 profile block offers it: `FollowButton` and the peek card's `MateIconButton`
 render nothing for someone who is already your Mate. Ending a Mateship is a
 deliberate act on one person, not a button beside every name in a list

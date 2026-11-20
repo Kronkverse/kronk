@@ -442,6 +442,12 @@
       width: auto;
       max-width: 68px;
     }
+
+    // Your own face, last: its own width, right after the last Mate. At
+    // 100% it took the rest of the band and sat in the middle of it.
+    .map-people__self {
+      width: auto;
+    }
   }
 }
 
@@ -891,7 +897,10 @@
   position: absolute;
   top: 16px;
   left: 16px;
-  z-index: 5;
+
+  // Above the Country search on the right, so its panel and the Share
+  // live note open over it rather than under.
+  z-index: 6;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -900,6 +909,11 @@
 
   &--lower {
     top: 64px;
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 8px;
   }
 
   &__toggle,
@@ -1511,7 +1525,19 @@
     // controls.
     .maplibregl-ctrl-icon {
       filter: invert(1) brightness(1.2);
+
+      // The light theme's surface is light, so the icons' own dark fill
+      // reads; inverted they were white on white.
+      :root[data-theme='light'] & {
+        filter: none;
+      }
     }
+  }
+
+  // The zoom buttons line up with Near me across the top, 16px in, on
+  // every screen (MapLibre's own margin is 10px).
+  .maplibregl-ctrl-top-right .maplibregl-ctrl {
+    margin: 16px 16px 0 0;
   }
 
   // Attribution — the "© OpenStreetMap" pill in the bottom-right.
@@ -1542,6 +1568,10 @@
     .maplibregl-ctrl-attrib-button {
       background-color: transparent;
       filter: invert(1) brightness(1.2);
+
+      :root[data-theme='light'] & {
+        filter: none;
+      }
     }
   }
 }
@@ -2284,6 +2314,101 @@
   }
 }
 
+// ── Live location (docs/spaces/map.md, Live location) ───────────────
+// A face in a ring that breathes: exact, and moving, so it reads apart
+// from a pin's teardrop. Reduced motion keeps the ring still.
+.map-live {
+  position: relative;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0;
+  border: 3px solid var(--accent);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  cursor: pointer;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 45%));
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-round);
+    opacity: 0;
+    animation: map-live-ring 2s var(--ease-out, ease) infinite;
+  }
+
+  &__avatar {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: var(--radius-round);
+    background-position: center;
+    background-size: cover;
+  }
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    transform: scale(1.06);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+      opacity: 0.6;
+    }
+  }
+}
+
+@keyframes map-live-ring {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.9);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+// Shares the event card's frame (.map-event-card).
+.map-live-card {
+  &__dot {
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: var(--radius-round);
+    background: var(--accent);
+  }
+
+  &__live {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  &__line {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__anthemos {
+    margin-block-start: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent-text);
+      text-decoration: underline;
+    }
+  }
+}
+
 // The Place composer: its fields come from the composer kit; only the pin
 // buttons are its own.
 .place-composer {
@@ -2408,5 +2533,100 @@
       opacity: 0.6;
       cursor: default;
     }
+  }
+}
+
+// Share live — beside Near me, handing over to Anthemos
+// (anthemos_share.tsx). Near me's pill, with a breathing dot like the live
+// faces so it reads as live.
+.anthemos-share {
+  border-color: var(--accent);
+
+  &__dot {
+    position: relative;
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: var(--radius-round);
+    background: var(--accent);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 2px solid var(--accent);
+      border-radius: var(--radius-round);
+      opacity: 0;
+      animation: map-live-ring 2s var(--ease-out, ease) infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &::after {
+        animation: none;
+      }
+    }
+  }
+
+  // Off Android: where live location comes from. Spans Near me's column.
+  &__card {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium, 12px);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    font-size: 13px;
+    pointer-events: auto;
+
+    a {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+  }
+
+  &__close {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+}
+
+// Back from Share live location with no Anthemos on the phone.
+.anthemos-missing {
+  position: absolute;
+  inset-inline: 16px;
+  bottom: 16px;
+  z-index: 7;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-inline-size: 420px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium, 12px);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-size: 13px;
+
+  a {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  &__close {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
   }
 }

@@ -128,6 +128,26 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.find_by(title: 'hall deposit')).to have_attributes(task: 'pay', quantity: 200, unit: '$', done?: true)
   end
 
+  # Kommons "Checklist" (2026-11-18): tap an entry's kind to change it.
+  it 'changes what kind of entry something is by tapping its kind', :aggregate_failures do
+    visit_kitchen
+    within('.freethedream-checklist__add') do
+      fill_in placeholder: 'Add something to do', with: 'Hall deposit'
+      send_keys :enter
+    end
+
+    within('.freethedream-checklist__entry', text: 'Hall deposit') do
+      find('.freethedream-checklist__kind--change', text: 'To do').click
+    end
+    page.document.find('.privacy-dropdown__option', text: 'Pay').click
+
+    within('.freethedream-checklist__entry', text: 'Hall deposit') do
+      expect(page).to have_css('.freethedream-checklist__kind', text: 'Pay')
+      expect(page).to have_button('I’ll pay it')
+    end
+    expect(Freethedream::Item.find_by(title: 'Hall deposit').task).to eq 'pay'
+  end
+
   it "decides something on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do

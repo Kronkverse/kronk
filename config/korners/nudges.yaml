@@ -465,6 +465,15 @@ listens:
     interaction: interactive
     cta_label: 'Edit location'
     cta_route: '/hub/map?place=1'
+  # A Mate started sharing their live location with you from Anthemos. Only
+  # Mates can be named in a share, so the Mate gate lets it through. The CTA
+  # opens the Map on them.
+  - event: map.live.started
+    source_korner: map
+    verb: live_shared
+    interaction: interactive
+    cta_label: 'See where'
+    cta_route: '/hub/map?live={actor_account_id}'
   # A Mate sent you a rose (Tal 2026-10-19: on by default). Only a Mate can
   # send one, so the Mate gate lets it through. Swept with the roses at 3am.
   - event: rose.sent

@@ -19,6 +19,7 @@ import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 import { MapNeedsWebGL } from 'mastodon/components/map_needs_webgl';
 
+import { AnthemosMissing, AnthemosShare } from './anthemos_share';
 import {
   BASEMAP_URL,
   HOME_CENTER,
@@ -30,6 +31,7 @@ import {
 import { CountryLayer } from './country_layer';
 import { CountryPrompt, useShouldOfferCountry } from './country_prompt';
 import { EventLayer } from './event_layer';
+import { LiveLayer } from './live_layer';
 import { NearMe } from './near_me';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
@@ -83,6 +85,8 @@ const CLUSTER_PX = 56;
 // takes over. 11 ≈ metropolitan area — anything closer is neighbourhood
 // / street-scale and precise enough to be personally identifying.
 const ANON_ZOOM = 11;
+// Opening on you: about a region, so nearby Mates show around you.
+const OPEN_ZOOM = 6;
 // Where a ?lat=&lng= link opens: close, but under ANON_ZOOM so Mates
 // pins stay as they are at any other zoom.
 const FOCUS_ZOOM = ANON_ZOOM - 1;
@@ -348,14 +352,43 @@ export const MatesView: React.FC = () => {
   }, [focus, noMap]);
 
   // ── Fetch + poll presence ─────────────────────────────────────────
+  // `loaded` once the first fetch of both has settled, for the first view.
+  const [loaded, setLoaded] = useState(false);
   const refresh = useCallback(() => {
-    void apiGetPresence()
-      .then(setPins)
-      .catch(() => undefined);
-    void apiGetSelfPresence()
-      .then(setSelfPin)
-      .catch(() => undefined);
+    void Promise.allSettled([
+      apiGetPresence().then(setPins),
+      apiGetSelfPresence().then(setSelfPin),
+    ]).then(() => {
+      setLoaded(true);
+    });
   }, []);
+
+  // ── First view: you ───────────────────────────────────────────────
+  // The map opens on your own pin, or else around your Mates' pins, and
+  // only falls back to Australia with neither (docs/spaces/map.md). A
+  // link that opens it somewhere (`?lat=`, `?live=`, `?map_place=`,
+  // `?event=`) wins. Kept below ANON_ZOOM so the pins still show.
+  const openedRef = useRef(false);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (openedRef.current || !map || !ready || !loaded) return;
+    openedRef.current = true;
+    const params = new URLSearchParams(location.search);
+    if (focus || ['live', 'map_place', 'event'].some((k) => params.has(k)))
+      return;
+    if (selfPin) {
+      map.jumpTo({ center: [selfPin.lng, selfPin.lat], zoom: OPEN_ZOOM });
+      return;
+    }
+    const [first, ...rest] = pins;
+    if (!first) return;
+    const bounds = new maplibregl.LngLatBounds(
+      [first.lng, first.lat],
+      [first.lng, first.lat],
+    );
+    rest.forEach((p) => bounds.extend([p.lng, p.lat]));
+    map.fitBounds(bounds, { padding: 60, maxZoom: OPEN_ZOOM, duration: 0 });
+  }, [ready, loaded, selfPin, pins, focus, location.search]);
 
   useEffect(() => {
     refresh();
@@ -684,7 +717,10 @@ export const MatesView: React.FC = () => {
           lower={anonymising}
           onSelectPin={handleSelectPin}
           onOpenPlace={openPlacePanel}
-        />
+        >
+          {/* Live location, handed over to Anthemos. */}
+          <AnthemosShare />
+        </NearMe>
 
         {/* Off-map compass overlay — a marker at the canvas edge per
             direction that has mates outside the viewport. Absolute-
@@ -745,6 +781,14 @@ export const MatesView: React.FC = () => {
         {/* Places — exact spots with an address that things Konnect
             to (docs/spaces/map.md, Places). Reads `?map_place=<id>`. */}
         <PlaceLayer map={mapRef.current} ready={ready} />
+
+        {/* Live location — Mates sharing exactly where they are with you
+            from Anthemos (docs/spaces/map.md, Live location). Reads
+            `?live=<account id>`. */}
+        <LiveLayer map={mapRef.current} ready={ready} />
+
+        {/* Back from Share live location with no Anthemos on the phone. */}
+        <AnthemosMissing />
       </div>
     </div>
   );

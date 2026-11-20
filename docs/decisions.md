@@ -17,6 +17,224 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-20 — A Mate's settings live on the Mateship page
+
+Tal: "it also should contain the various controls of, access to content,
+what you see from them … in which korners, and also unmating … This is the
+spot where you go when you want to explore your mateship with someone …
+There doesn't need to be a second settings page coming off this one."
+
+**Decision:** for a Mate, `/@:acct/mateship` is the one place for both what
+you share and your settings for them. Below what you share it has: **What you
+see from {name}** (their plain posts and each korner's cards, one switch each,
+plus "Nudge me when they post"), **What {name} sees of yours** (read-only),
+**Quiet** (mute), **Your private note**, and **Ending it** (Remove Mate,
+block, report). The profile pill reads **Mateship**. `/@:acct/settings`
+sends a Mate here; it stays the settings page for everyone else.
+
+- **Per-Mate switches are a read-side filter.** `mate_tune_outs` rows (a
+  korner slug, or `posts`) leave that Mate's posts of that kind out of Home,
+  Kommunity and Kronkverse (`Kronk::MateTuneOutGate`, matched the way
+  `Kronk::TuneInGate` matches korner cards). They aren't told. Nothing is
+  hidden from them, and removing the Mate forgets the switches both ways.
+- **"What they see of yours" only describes.** It says what the code does:
+  Mates, Orbit and Kronkverse posts reach them, Krew posts in the Krews you
+  share, Just me never, and the composer's People row leaves them out of one
+  post. A standing per-person limit on your own posts was not built; it's
+  open for Tal.
+- **Supersedes** 2026-10-25's "Unmate lives only on the per-person settings
+  page" for Mates: Remove Mate is now on the Mateship page (still under
+  Ending it, still confirmed, still never in a list), and the 2026-11-19
+  "no Remove Mate on the page" bullet.
+
+Detail: `docs/spaces/profile.md` (Mateship).
+
+## 2026-11-19 — A Mateship page, for the two Mates only
+
+Tal: "make the buttons on profile page more obvious and add a 'mates'
+option, which opens a new page with details about the mateship … length,
+mutuals, shared content."
+
+**Decision:** the profile's actions are labelled pills (Mates, Nudge, Post,
+Rose, Share) instead of bare icons. **Mates** opens `/@:acct/mateship`:
+when you became Mates and for how long, Mates in common, and the Krews,
+events and projekts you're both in. A Mates list row and Kommunity → Mates
+open it too, from the "Mates" marker where the Mate button would be.
+
+- **Only the two Mates can see it.** The API answers 404 to anyone else, as
+  if there were nothing there. A Mateship is between two people; a third
+  person reading what two others share is the kind of view Kronk doesn't
+  build.
+- **Shared things, never measures.** No counts of froths, messages, roses
+  or visits between them, and no "closeness". Counting interactions between
+  two people is the raw material of engagement ranking and of surveillance
+  (CLAUDE.md, What Kronk holds to), and a number on a friendship invites
+  comparing friendships.
+- **Only what the viewer can already see.** An invite-only event they weren't
+  invited to doesn't appear, even if both went.
+- **No Remove Mate on the page.** It stays on the per-person settings page,
+  which the page links to quietly (2026-10-25, No Unmate in lists).
+  Superseded 2026-11-20: a Mate's settings, Remove Mate included, moved onto
+  this page.
+
+Detail: `docs/spaces/profile.md` (Mateship).
+
+## 2026-11-19 — British English reads as Kronk
+
+Tal's phone showed "YOU FOLLOW EACH OTHER" on a Mate's profile, where Kronk
+says "You're Mates". The phone asks for British English, and Kronk offered
+`en-GB`, Mastodon's own British translation. Of its 1,039 strings, 98 differ
+from Kronk's `en.json`, and about half of those are Mastodon's words: "Boost
+post?", "Thanks for being part of Mastodon!", "You follow each other". Kronk
+rewords English in place, under the same ids, so every reworded string goes
+stale in `en-GB` and nothing flags it.
+
+**Decision:** `en-GB` is no longer an available locale
+(`config/initializers/i18n.rb`). A browser asking for any English gets `en`,
+and a member whose saved locale was `en-GB` reads `en` (`User` drops a locale
+that isn't offered). The `en-GB` files stay, so upstream merges don't
+conflict on them.
+
+**Why:** Kronk writes one English. Keeping a second one current would mean
+re-translating every reworded string twice; spelling differences ("colour")
+cost less than Mastodon's vocabulary turning up for every member whose phone,
+or whose saved language, asks for British English.
+
+## 2026-11-19 — One reach picker, with People, for every composer
+
+Asked after a Wachuneed listing set to "Me" showed up in no feed: "I thought
+we arranged it with 'me' while also choosing specific people". That was true
+of posts only (2026-08-28): korner records took a tier and Krews, never
+people. Then: "that composer picker should be standardised, where we work on
+the main one, and it updates across all composers, then we can specifically
+adjust specific composers if we need".
+
+**Decision.** `<ReachDropdown>` is the one picker: tier, Krews, and People.
+It draws the People panel itself (`AudiencePeoplePanel`: search, then In or
+Out per person) from `people` + `onPeopleChange`, hides it on Kronkverse and
+while an audience follows another record ("Same as"), and the main composer
+uses it the same way as every korner composer. A composer adjusts it by
+leaving out what its korner can't store, or by passing its own panel
+(`peopleSlot`, as albums do for their add-only viewers).
+
+Films, kars, kronikles, art pieces and listings now store people:
+`record_people` (Kronk::PeopleAudience, beside `record_krews`), added or
+kept out, read by `Reachable` (`visible_to?` / `visible_to`), copied onto
+the feed post's grants and exclusions, sent as `audience_grant_ids` /
+`audience_exclude_ids` like a post's, and read back to the owner alone as
+`audience_people`. As for posts, only the gated tiers carry people, and a
+person kept out loses every way in. All three Wachuneed composers
+(listing, Offerings, shop item) now offer Krews too.
+
+A Just me post with people added now reaches its author's own home feed, as
+a Just me post with a Krew does (`radiates_to_no_one?`); before, it went
+only to the people added.
+
+**Not yet.** Albums keep their own people (viewers, add-only); Moments,
+Kalendar events, Booth and Kuestions have their own audience models and
+take no people. "Same as" copies a tier and Krews, not people.
+
+## 2026-11-18 — A Kuestion is answered, not commented on
+
+Tal's Kommons proposal "Kuestions": "Can we remove the comments section on
+a kuestion? Maybe replace it with the 'answer' button? People are
+commenting answers rather than answering properly".
+
+**Decision.** A Kuestion's post takes no comments. Its comment section is
+gone, Answer takes Reply's place in its action bar, and the server refuses
+a reply anywhere in its thread. The comments already there became answers
+by the same people (Tal: transfer them, don't just hide them), one per
+person, on Kuestions answered in words; the rest stay as posts, unshown.
+
+**Why.** A comment sits outside the answer gate and the reveal, so an
+answer written there is one nobody counting answers sees, and it shows to
+people who haven't answered yet. One place to answer keeps the gate whole.
+
+**Supersedes** nothing written; the 2026-11-12 "Answer / See answers" label
+on the card was the first step.
+
+## 2026-11-18 — An event has one schedule, kept by its projekt when it has one
+
+Tal's Kommons proposal "Schedule": "for events to create a schedule. And the
+projekt space would be great to have an editable space, then link it to the
+event, so it automatically shows the update on the linked event".
+
+**Decision.** A schedule belongs to the event (`EventScheduleLine`): a day,
+a start and maybe an end on the event's own clock, what happens and a
+note. There is one, never a copy. On its own the host keeps it; Konnected
+to a projekt (or one of its Komponents) that its host is in, **anyone in the
+projekt** keeps it too, from the projekt's page or the event's, and both
+show the same lines (Tal: "One schedule, either place"). The people doing
+the work plan it, rather than routing every change through the host (err
+syntropic, 2026-10-19); the host-in-the-projekt condition is the one the
+projekt's Events section already uses, so linking your event to someone
+else's projekt doesn't hand them its schedule.
+
+It reads as a **grid**: a column for each day the event runs (and any other
+day a line is on), times running down (Tal: "consider multi day events, so
+a grid, with different days on the x axis and different events throughout
+the day running down the y axis"). A one-day event is a single column, a
+list. On a phone the page stays vertical and the days scroll sideways
+(2026-10-29). Times are wall-clock minutes, not instants, so 10:00 reads
+10:00 to everyone. docs/spaces/kalendar.md, Schedule.
+
+---
+
+## 2026-11-18 — Krew events: who it's for, and who is invited, are choices
+
+Tal noticed that an event made in a private Krew could invite anyone on
+Kronk: the invite search looked everywhere, so one member could bring an
+outsider into something meant for the Krew alone.
+
+**Decision.** Made from a Krew, the composer asks two things. **Who is it
+for?** Just the Krew, or Open, hosted by the Krew (the reach that was
+already there, said plainly). **Who is invited?** Pick people (the
+default) or Everyone in the Krew. An event for the Krew alone can only
+invite the Krew's members: the search looks only there, and the server
+refuses anyone else.
+
+**Why.** "For the Krew alone" should mean the Krew alone; a way round it
+through the invite search breaks a private Krew. Inviting everyone is a
+choice because, in Tal's words, "i don't think everyone should be invited
+automatically to events (krew members) but that should be an option, to
+either invite everyone or to specifically pick people." A Krew event is
+still in every member's Kalendar and feed without an invitation; an
+invitation is a nudge, and not every event needs one to every member.
+
+**Supersedes** the 2026-11-08 Kommons "Creating krew event invitations"
+behaviour, where everyone in the Krew was invited to every event made for
+it. Invitations already sent stay. A projekt's quick call
+(`schedule_call.tsx`) now invites nobody; its Krew sees it as before.
+
+---
+
+## 2026-11-18 — Live location comes from Anthemos, exact, to named Mates
+
+Tal wants to share live location with specific people, and wants it to come
+only through Anthemos: people see that a live point comes from an Anthemos
+phone, which means it is signed, and someone who wants live sharing has a
+reason to use Anthemos.
+
+**Decision.** Live location is exact, unlike a pin. Only an Anthemos phone
+linked to the account can start it, naming Mates and an end time (a day at
+most). The phone keeps a P-256 key; Kronk holds the public half, and checks
+the phone's signature on the permission and on every point. Kronk keeps the
+permission as a row and only the latest point, in Redis, until the share
+ends; stopping or unlinking wipes it at once. No trail is kept. The map
+shows a live Mate as a face in a ring, at any zoom, with "From Anthemos,
+signed by their phone" linking to anthemos.org. docs/spaces/map.md, Live
+location.
+
+For now Kronk's server can read the point as it passes. The next step is to
+encrypt it to viewers who use Anthemos too, so Kronk only carries it.
+
+This is the first piece of the Anthemos link that the 2026-08-14 entry
+parked. Its "Connected apps" section now exists in Account & Security,
+listing linked phones (Unlink) and live shares (Stop). The YOU projection
+and the profile chip stay parked.
+
+---
+
 ## 2026-11-17 — Booth samples: terms are trust, not locks
 
 The last part of Tal's Kommons proposal "Booth Revamp": a place to share

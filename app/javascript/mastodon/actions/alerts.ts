@@ -87,6 +87,18 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
     return ignoreAlert();
   }
 
+  // A read that never reached the server. On a phone this is mostly the
+  // browser freezing the page in the background and failing what was in
+  // flight when it comes back; the feed simply loads on the next try.
+  // Something the member did (a post, a froth) still says it failed.
+  if (
+    error instanceof AxiosError &&
+    error.code === AxiosError.ERR_NETWORK &&
+    (error.config?.method ?? 'get').toLowerCase() === 'get'
+  ) {
+    return ignoreAlert();
+  }
+
   console.error(error);
 
   return showAlert({

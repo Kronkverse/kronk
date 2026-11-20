@@ -38,6 +38,29 @@ RSpec.describe 'Setup after signup', :js, :streaming do
     end
   end
 
+  it 'lists the spaces as the member stands and tunes out and back in' do
+    visit '/setup'
+    within('#spaces') do
+      expect(page).to have_css('.setup__heading', text: 'Your spaces')
+      row = find('.setup__space', text: 'Karporn')
+      expect(row).to have_css('.settings-nav__row-desc', text: 'Photos of cars')
+      expect(row).to have_css('.settings-nav__toggle[aria-pressed="true"]')
+      # Kommons is opt-in: a new member starts tuned out of it.
+      expect(find('.setup__space', text: 'Kommons')).to have_css('.settings-nav__toggle[aria-pressed="false"]')
+
+      row.find('.settings-nav__toggle').click
+      expect(row).to have_css('.settings-nav__toggle[aria-pressed="false"]')
+    end
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      sleep 0.1 until bob.account.korner_tune_outs.exists?(korner_slug: 'karporn')
+    end
+
+    within('#spaces') { find('.setup__space', text: 'Karporn').find('.settings-nav__toggle').click }
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      sleep 0.1 until bob.account.tuned_in_to?('karporn')
+    end
+  end
+
   it 'saves the default reach, then Continue goes Home' do
     visit '/setup'
     within('#reach') { click_on 'Mates' }

@@ -45,6 +45,7 @@ class PostStatusService < BaseService
     return idempotency_duplicate if idempotency_given? && idempotency_duplicate?
 
     validate_media!
+    validate_reply_target!
     preprocess_attributes!
     validate_profile_target!
 
@@ -293,6 +294,16 @@ class PostStatusService < BaseService
 
     @options = @options.except(:krew_ids, :audience_grant_ids, :audience_exclude_ids) if @visibility.to_s == 'self_only'
     @profile_account = target
+  end
+
+  # A Kuestion is answered, not commented on (Tal's proposal "Kuestions",
+  # 2026-11-18): people were writing their answers as comments, where the
+  # answer gate and the reveal never see them. So its post takes no replies.
+  def validate_reply_target!
+    return if @in_reply_to.nil?
+
+    root = @in_reply_to.thread_root || @in_reply_to
+    raise Mastodon::ValidationError, 'A Kuestion is answered, not commented on' if root.source_korner == 'kuestions'
   end
 
   # The person whose profile was written on is told, whoever can see it.

@@ -20,7 +20,9 @@ Rails.application.configure do
     :de,
     :el,
     :en,
-    :'en-GB',
+    # No :'en-GB': Mastodon's British English carries Mastodon's words
+    # ("You follow each other", "Boost post?"); Kronk's English is `en`.
+    # docs/decisions.md, 2026-11-19.
     :eo,
     :es,
     :'es-AR',

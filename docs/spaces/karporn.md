@@ -23,7 +23,7 @@ Deliberately narrow: this korner is for photos of cars, not car reviews, not cla
 
   Lat/lng have to arrive together; a bare lat or lng without its pair is rejected by the model's `location_coords_are_paired` validator. The label can stand alone (just a place name, no pin).
 
-- **Visibility** — `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25).
+- **Visibility** — `public / orbit / mates / self_only`, plus any Krews it is for (`krew_ids`, the same as an album's): a member of one sees it whatever its tier, and each is a Konnection to the Krew (`record_krews`, `Kronk::KrewAudience`, decisions.md 2026-10-25). On a gated tier it can also be for, or kept from, people by name (`audience_grant_ids` / `audience_exclude_ids`, `record_people`, `Kronk::PeopleAudience`, decisions.md 2026-11-19), as a post can.
 
 ## Location UX
 
