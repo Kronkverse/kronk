@@ -7,6 +7,28 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.16 "Rose"] - 2026-11-20
+
+- Release cut on an open PR (#2604)
+- Krew event invites (#2605)
+- Live location from Anthemos (#2606)
+- Checklist item type (#2607)
+- Event schedule (#2608)
+- Choose spaces at signup (#2610)
+- No error toast on opening the app (#2611)
+- Kuestions answer, not comments (#2609)
+- Share live location from the Map (#2613)
+- People in every reach picker (#2612)
+- British English reads as Kronk (#2614)
+- Mateship page (#2615)
+- Pre-cut checklist (#2616)
+- Mateship controls (#2617)
+- Map on phones (#2618)
+- Map opens on you (#2619)
+- Action four shipped proposals (#2621)
+- Mateship: what you see as icons (#2620)
+- Mastodon 4.5.22 (#2623)
+
 ### [2.1.15 "Rose"] - 2026-11-18
 
 - Froths list (#2576)
