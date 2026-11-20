@@ -597,19 +597,19 @@ pointer-events: none`, with its own vignette so text always wins. This is the
 
 ### Responsive strategy
 
-`.kronk-frame` has `container-type: inline-size; container-name: frame`. It is
-on the Frame, not `body`, because putting it on `body` would change the
-containing block for `position: fixed` descendants.
+The Frame spans the viewport, so rules that switch on its width are plain
+`@media` queries. **No element that holds fixed chrome may be a query
+container** (`container-type`): older iPhone Safari gives a query container
+layout containment, which makes it the containing block for `position: fixed`
+descendants, so the tab bar, the top band and the rails scrolled with the page
+(2026-11-20). The Frame used to be the `frame` container for exactly that
+reason it broke. The Stage cell (`.kronk-frame__stage`) is the query container
+for page content instead; it holds no fixed chrome.
 
 - **≤ 889px** is the phone shape: BottomBand shows, RightBand hides, the header
-  row stacks. The rule on `.kronk-frame` itself has to be a media query (an
-  element can't query its own container); descendants use
-  `@container frame (width <= 889px)`. Some band rules are still plain `@media`.
-  Anything that decides whether the right rail's track exists (the grid
-  tracks, the RightBand, the chrome's right fade, the Stage cell's column)
-  must use the same `@media` query: the container is the viewport minus the
-  page scrollbar, so mixing the two leaves a band of widths (890px to about
-  905px) where the rail and its fade show but the Stage runs underneath them.
+  row stacks. Everything uses the same `@media (width <= 889px)`, so the grid
+  tracks, the RightBand, the chrome's right fade and the Stage cell's column
+  switch together.
 - **≤ 629px** also hides the top rail.
 
 Wider breakpoints are the korner's business.

@@ -961,7 +961,7 @@
     max-height: 55vh;
     overflow-y: auto;
 
-    @container frame (width >= 700px) {
+    @media (width >= 700px) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
@@ -1222,7 +1222,7 @@
   // Wider Stage: the band stops tracking the viewport (a 1400px-tall window
   // should not produce one enormous album cover) and the rail shows two
   // cards per view, still snapping per card.
-  @container frame (width >= 700px) {
+  @media (width >= 700px) {
     &__shelf--fills {
       min-height: 0;
       height: 560px;
