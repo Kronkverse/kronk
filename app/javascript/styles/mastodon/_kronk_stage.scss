@@ -241,7 +241,7 @@ body:has(.kronk-stage) {
 
 // Mobile: pills stack above the title so a long segmented picker
 // doesn't shrink its labels or overlap the h1.
-@container frame (width <= 889px) {
+@media (width <= 889px) {
   .space-header-row {
     padding: 0.75rem 0.75rem 0.5rem;
     display: flex;
