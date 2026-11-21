@@ -6,6 +6,7 @@ import { apiListHomeKuestions } from 'mastodon/api/kuestions';
 import type { KuestionHome } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 import { SpaceGrid } from 'mastodon/components/space_grid';
+import { KornerRowCard } from 'mastodon/components/space_shelf';
 import {
   CardMedia,
   CardMeta,
@@ -110,6 +111,7 @@ export const HomeKuestions: React.FC<Props> = ({
     <>
       {frame(
         <SpaceGrid layout='row' className='home-kuestions'>
+          <KornerRowCard korner='kuestions' count={list.length} />
           {list.map((kuestion) => (
             <KuestionCard
               key={kuestion.id}
