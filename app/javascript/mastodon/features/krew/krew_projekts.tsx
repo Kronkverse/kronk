@@ -9,7 +9,7 @@ import { apiFtdProjects } from 'mastodon/api/freethedream';
 import type { FtdProjectSummary } from 'mastodon/api_types/freethedream';
 import { Icon } from 'mastodon/components/icon';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
-import { ActionCard } from 'mastodon/components/space_shelf';
+import { ActionCard, KornerRowCard } from 'mastodon/components/space_shelf';
 import { projectPath } from 'mastodon/features/freethedream/components/shared';
 import { konnectSearch } from 'mastodon/hooks/useKonnect';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -72,6 +72,7 @@ export const KrewProjekts: React.FC<{
       </h3>
 
       <SpaceGrid layout='row'>
+        <KornerRowCard korner='freethedream' count={projekts.length} />
         {projekts.map((p) => (
           <SpaceCard
             key={p.id}
