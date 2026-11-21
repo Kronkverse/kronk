@@ -78,8 +78,31 @@ function normalizePath(
 
 const KORNER_RE = /^(?:\/deck)?\/hub\/([a-z0-9-]+)/;
 
+const kornerOf = (pathname: string | undefined) =>
+  KORNER_RE.exec(pathname ?? '')?.[1];
+
+// A composer opened from a record (`?konnect=`, the Konnect picker's
+// New …, or the older `?krew=`, a Krew's own New album) that was itself opened from a page to come back to: the record
+// it makes comes back there too. An album made from a Krew backed up to
+// Albutts (Tal's proposal "Konnected sources", 2026-11-18); now it backs
+// up to the Krew, as the composer did. Only for the composer's own korner,
+// which is where a composer goes when it has made something.
+const konnectedFrom = (
+  location: LocationDescriptorObject<LocationState>,
+): Pick<MastodonLocationState, 'backTo' | 'backLabel'> | null => {
+  const { search, state, pathname } = browserHistory.location;
+  if (!state?.backTo || !state.backLabel) return null;
+  const params = new URLSearchParams(search);
+  if (!params.has('konnect') && !params.has('krew')) return null;
+  const from = kornerOf(pathname);
+  if (!from || from !== kornerOf(location.pathname)) return null;
+  if (from === kornerOf(state.backTo)) return null;
+  return { backTo: state.backTo, backLabel: state.backLabel };
+};
+
 browserHistory.push = (path: HistoryPath, state?: MastodonLocationState) => {
   const location = normalizePath(path, state);
+  const carried = konnectedFrom(location);
 
   location.state = location.state ?? {};
   location.state.fromMastodon = true;
@@ -87,15 +110,15 @@ browserHistory.push = (path: HistoryPath, state?: MastodonLocationState) => {
   // Leaving a page that asked to be come back to (useComeBackHere) for a
   // page of another korner: say so, so that page's badge returns here.
   const here = comeBackHere();
-  const to = KORNER_RE.exec(location.pathname ?? '')?.[1];
-  if (
-    here &&
-    to &&
-    !location.state.backTo &&
-    to !== KORNER_RE.exec(here.href)?.[1]
-  ) {
+  const to = kornerOf(location.pathname);
+  if (here && to && !location.state.backTo && to !== kornerOf(here.href)) {
     location.state.backTo = here.href;
     location.state.backLabel = here.label;
+  }
+
+  if (carried && !location.state.backTo) {
+    location.state.backTo = carried.backTo;
+    location.state.backLabel = carried.backLabel;
   }
 
   originalPush(location);
@@ -106,9 +129,15 @@ browserHistory.replace = (path: HistoryPath, state?: MastodonLocationState) => {
 
   if (!location.pathname) return;
 
+  const carried = konnectedFrom(location);
+
   if (browserHistory.location.state?.fromMastodon) {
     location.state = location.state ?? {};
     location.state.fromMastodon = true;
+  }
+
+  if (carried && !location.state?.backTo) {
+    location.state = { ...location.state, ...carried };
   }
 
   originalReplace(location);
