@@ -73,10 +73,6 @@ const messages = defineMessages({
     id: 'albutts.composer.save_error',
     defaultMessage: "Couldn't save the album — try again.",
   },
-  coverLabel: {
-    id: 'albutts.composer.cover_label',
-    defaultMessage: 'Cover',
-  },
   coverHint: {
     id: 'albutts.composer.cover_hint',
     defaultMessage: 'Tap a photo to make it the cover.',
@@ -97,7 +93,7 @@ const messages = defineMessages({
   arrangeHint: {
     id: 'albutts.composer.arrange_hint',
     defaultMessage:
-      'The arrows set the order the album shows them in. The first is the cover unless you pick another.',
+      'Tap a photo to make it the cover. The arrows set the order.',
   },
   krewAudience: {
     id: 'albutts.composer.krew_audience',
@@ -1386,12 +1382,11 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         disabled={!!createdAlbum}
       />
 
-      {editing && editing.photos.length > 0 && (
+      {editing && editing.photos.length > 1 && (
         <CoverPicker
           photos={editing.photos}
           coverId={coverId ?? firstAdded(editing.photos)}
           onPick={pickCover}
-          label={intl.formatMessage(messages.coverLabel)}
           hint={intl.formatMessage(messages.coverHint)}
         />
       )}
@@ -1451,11 +1446,22 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                   className='albutts-composer__pick-thumb'
                   title={intl.formatMessage(chipMessage(p.status, messages))}
                 >
-                  <img
-                    className='albutts-composer__pick-img'
-                    src={p.previewUrl}
-                    alt={p.caption !== '' ? p.caption : (p.file?.name ?? '')}
-                  />
+                  {!editing && photos.length > 1 ? (
+                    <PickCover
+                      photoKey={p.key}
+                      src={p.previewUrl}
+                      alt={p.caption !== '' ? p.caption : (p.file?.name ?? '')}
+                      cover={(coverKey ?? photos[0]?.key) === p.key}
+                      disabled={pending || !!createdAlbum}
+                      onCover={pickCoverKey}
+                    />
+                  ) : (
+                    <img
+                      className='albutts-composer__pick-img'
+                      src={p.previewUrl}
+                      alt={p.caption !== '' ? p.caption : (p.file?.name ?? '')}
+                    />
+                  )}
                   <span
                     className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
                     aria-hidden
@@ -1471,10 +1477,8 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                     photoKey={p.key}
                     first={index === 0}
                     last={index === photos.length - 1}
-                    cover={(coverKey ?? photos[0]?.key) === p.key}
                     disabled={pending || !!createdAlbum}
                     onMove={movePhoto}
-                    onCover={pickCoverKey}
                   />
                 )}
                 <PickCaptionRow
@@ -1732,25 +1736,20 @@ const PickCaptionRow = memo(function PickCaptionRow({
   );
 });
 
-// Under a photo picked for a new album: move it earlier or later, and make
-// it the cover (Tal 2026-10-21). Arrows rather than dragging, so it works
-// the same on a phone.
+// Beside a photo picked for a new album: move it earlier or later (Tal
+// 2026-10-21). Arrows rather than dragging, so it works the same on a phone.
 const PickArrange = memo(function PickArrange({
   photoKey,
   first,
   last,
-  cover,
   disabled,
   onMove,
-  onCover,
 }: {
   photoKey: string;
   first: boolean;
   last: boolean;
-  cover: boolean;
   disabled: boolean;
   onMove: (key: string, by: -1 | 1) => void;
-  onCover: (key: string) => void;
 }) {
   const intl = useIntl();
   const handleEarlier = useCallback(() => {
@@ -1759,9 +1758,6 @@ const PickArrange = memo(function PickArrange({
   const handleLater = useCallback(() => {
     onMove(photoKey, 1);
   }, [onMove, photoKey]);
-  const handleCover = useCallback(() => {
-    onCover(photoKey);
-  }, [onCover, photoKey]);
   return (
     <div className='albutts-composer__arrange'>
       <button
@@ -1773,15 +1769,6 @@ const PickArrange = memo(function PickArrange({
         title={intl.formatMessage(messages.moveEarlier)}
       >
         ↑
-      </button>
-      <button
-        type='button'
-        className={`albutts-composer__arrange-cover${cover ? ' albutts-composer__arrange-cover--on' : ''}`}
-        onClick={handleCover}
-        disabled={disabled}
-        aria-pressed={cover}
-      >
-        {intl.formatMessage(cover ? messages.isCover : messages.makeCover)}
       </button>
       <button
         type='button'
@@ -1797,15 +1784,59 @@ const PickArrange = memo(function PickArrange({
   );
 });
 
+// A new album's photo is its own cover button: tap it to make it the
+// cover, which wears a small Cover mark (Tal 2026-11-18, "much tidier").
+const PickCover = memo(function PickCover({
+  photoKey,
+  src,
+  alt,
+  cover,
+  disabled,
+  onCover,
+}: {
+  photoKey: string;
+  src: string;
+  alt: string;
+  cover: boolean;
+  disabled: boolean;
+  onCover: (key: string) => void;
+}) {
+  const intl = useIntl();
+  const handleClick = useCallback(() => {
+    onCover(photoKey);
+  }, [onCover, photoKey]);
+  return (
+    <button
+      type='button'
+      className='albutts-composer__pick-cover'
+      onClick={handleClick}
+      disabled={disabled}
+      aria-pressed={cover}
+      aria-label={cover ? undefined : intl.formatMessage(messages.makeCover)}
+    >
+      <img className='albutts-composer__pick-img' src={src} alt={alt} />
+      {cover && <CoverMark />}
+    </button>
+  );
+});
+
+const CoverMark: React.FC = () => {
+  const intl = useIntl();
+  return (
+    <span className='albutts-composer__cover-mark'>
+      {intl.formatMessage(messages.isCover)}
+    </span>
+  );
+};
+
 // One saved draft in the composer's Drafts row; tap to carry on with it.
-// The edit form's cover row: the album's photos as a wrapping grid (no
-// side-scroll on a phone), tap one to make it the cover. Videos and
-// photos without a still are skipped.
+// The edit form's cover: the album's photos as a wrapping grid (no
+// side-scroll on a phone), the cover marked; tap another to change it.
+// Videos and photos without a still are skipped.
 interface CoverPickerProps {
   photos: ApiAlbumJSON['photos'];
   coverId: string | undefined;
   onPick: (mediaId: string) => void;
-  label: string;
   hint: string;
 }
 
@@ -1813,10 +1844,9 @@ const CoverPicker: React.FC<CoverPickerProps> = ({
   photos,
   coverId,
   onPick,
-  label,
   hint,
 }) => (
-  <ComposeSection title={label}>
+  <>
     <ComposeHint>{hint}</ComposeHint>
     <ul className='albutts-composer__cover-grid'>
       {photos.map((p) => {
@@ -1834,7 +1864,7 @@ const CoverPicker: React.FC<CoverPickerProps> = ({
         );
       })}
     </ul>
-  </ComposeSection>
+  </>
 );
 
 const CoverOption = memo(function CoverOption({
@@ -1862,6 +1892,7 @@ const CoverOption = memo(function CoverOption({
         onClick={handleClick}
       >
         <img src={url} alt={alt} loading='lazy' />
+        {selected && <CoverMark />}
       </button>
     </li>
   );
