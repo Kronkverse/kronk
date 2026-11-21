@@ -19,7 +19,8 @@ git history (see [History](#history)).
   and a set of krews. The owner edits it from the Ж menu's **Edit album**
   moon on the album page, which opens the album composer filled in
   (`AlbumComposer` with `album`): title, description, who can add, and the
-  cover, picked from a grid of the album's photos. **Delete album** is at
+  cover: the album's photos as a grid with the cover marked, tap another to
+  change it (shown only when there's more than one photo). **Delete album** is at
   the foot of that form. Reach is shown but locked (see Open questions);
   the audience Krews can be changed, and the album's posts follow them. The
   cover can also be set from a photo: open one, tap the Ж menu's **Edit**
@@ -32,8 +33,11 @@ git history (see [History](#history)).
   must be a photo in that album. Until one is chosen, or if the chosen photo
   is deleted, the first photo is used (`REST::AlbumSerializer#cover_url`).
 - **Arranging a new album** (Tal, 2026-10-21). In the composer, before
-  posting, each photo has ↑ and ↓ to move it and **Make it the cover**
-  (`PickArrange`); the first is the cover unless another is picked. A
+  posting, each photo has ↑ and ↓ to move it (`PickArrange`), and tapping
+  the photo makes it the cover (`PickCover`), which wears a small **Cover**
+  mark; the first is the cover unless another is tapped. There was a
+  **Make it the cover** button on each photo until Tal, 2026-11-18: "could
+  be much tidier". A
   little × in each photo's corner, opposite its upload tick, takes that
   one out (`PickRemove`, Tal 2026-11-11); **Add photos** to an album that
   exists has it too, until the photo is added. The

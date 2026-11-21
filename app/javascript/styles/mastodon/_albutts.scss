@@ -821,7 +821,7 @@
     background: color-mix(in oklab, var(--accent), transparent 88%);
   }
 
-  // Up, Cover, down: between a new album's photo and its caption
+  // Up and down: between a new album's photo and its caption
   // (PickArrange).
   &__arrange {
     display: flex;
@@ -832,8 +832,7 @@
     gap: 4px;
   }
 
-  &__arrange-move,
-  &__arrange-cover {
+  &__arrange-move {
     padding: 2px 8px;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-round);
@@ -854,11 +853,50 @@
     }
   }
 
-  &__arrange-cover--on,
-  &__arrange-cover--on:hover:not(:disabled) {
+  // A new album's photo, tapped to make it the cover (PickCover). The
+  // cover wears an accent ring and the Cover mark.
+  &__pick-cover {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: none;
+    cursor: pointer;
+
+    &[aria-pressed='true']::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 2px var(--accent);
+      pointer-events: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+
+  &__cover-mark {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 2px 0;
     background: var(--accent);
-    border-color: var(--accent);
     color: var(--text-on-accent);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+    pointer-events: none;
   }
 
   &__pick-img {
@@ -1094,6 +1132,7 @@
   }
 
   &__cover-option {
+    position: relative;
     display: block;
     width: 100%;
     aspect-ratio: 1;
