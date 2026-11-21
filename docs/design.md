@@ -254,7 +254,10 @@ label })` (2026-11-11). While it's open, the router stamps any link into
    another korner with `backTo` and `backLabel`, and a deeper page there
    backs up to it, named for it: a Krew's event in Kalendar, or its musik in
    Booth, returns to the Krew. A korner root reached that way (from the rail,
-   say) still backs out to `/hub`.
+   say) still backs out to `/hub`. A composer opened that way from a record
+   (`?konnect=`, or a Krew's `?krew=`) passes the way back on to what it
+   makes (2026-11-21): an album made from a Krew backs up to the Krew, not
+   to Albutts (`konnectedFrom` in `components/router.tsx`).
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
    specific parent. Renders `.kronk-back-chip`.
 
