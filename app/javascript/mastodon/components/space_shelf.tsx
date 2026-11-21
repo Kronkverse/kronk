@@ -51,6 +51,10 @@ const messages = defineMessages({
     defaultMessage: 'Konnect one you made',
   },
   empty: { id: 'space_shelf.empty', defaultMessage: 'Nothing here yet.' },
+  here: {
+    id: 'space_shelf.here',
+    defaultMessage: '{count, plural, =0 {None here yet} other {# here}}',
+  },
 });
 
 export interface ShelfCard {
@@ -90,6 +94,36 @@ export const ActionCard: React.FC<{
     </StandardCard>
   </li>
 );
+
+// The first card of a row of things from one korner, so rows from
+// different korners tell apart at a glance: the korner's glyph and name on
+// a purple card, and how many of its things are here (Tal's proposal
+// "Differentiating different korner konnections", 2026-11-18: "in front of
+// each row is a card carrying the icon of the korner"). It opens the
+// korner.
+export const KornerRowCard: React.FC<{
+  korner: string;
+  // How many of its things the row holds; left out while it loads.
+  count?: number;
+}> = ({ korner, count }) => {
+  const intl = useIntl();
+  const manifest = useKorner(korner);
+  const glyph = useKornerIcon(korner);
+
+  return (
+    <SpaceCard
+      to={`/hub/${korner}`}
+      tone='accent'
+      placeholder={<Icon id={`korner-${korner}`} icon={glyph} />}
+      title={manifest?.name ?? korner}
+      meta={
+        count === undefined
+          ? undefined
+          : intl.formatMessage(messages.here, { count })
+      }
+    />
+  );
+};
 
 export const SpaceShelf: React.FC<{
   // The record whose page this is: a Krew or a projekt.
@@ -204,6 +238,10 @@ export const SpaceShelf: React.FC<{
 
       {(items.length > 0 || canAdd) && (
         <SpaceGrid layout='row' className='space-shelf__row'>
+          <KornerRowCard
+            korner={korner}
+            count={settled ? items.length : undefined}
+          />
           {items.map((card) => (
             <SpaceCard
               key={card.key}
