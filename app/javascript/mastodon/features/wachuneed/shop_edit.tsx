@@ -17,6 +17,7 @@ import {
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import type { ListingVisibility } from 'mastodon/api_types/wachuneed';
 import { Icon } from 'mastodon/components/icon';
+import { PhotoDropTarget } from 'mastodon/components/media';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
@@ -608,7 +609,7 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
               <span className='wachuneed__compose-label'>
                 <FormattedMessage {...messages.picture} />
               </span>
-              <div className='wachuneed-shop-edit__picture'>
+              <PhotoDropTarget className='wachuneed-shop-edit__picture'>
                 {picturePreview && (
                   <img
                     src={picturePreview}
@@ -634,7 +635,7 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
                     <FormattedMessage {...messages.pictureRemove} />
                   </button>
                 )}
-              </div>
+              </PhotoDropTarget>
               <p className='wachuneed__compose-hint'>
                 <FormattedMessage {...messages.pictureHint} />
               </p>

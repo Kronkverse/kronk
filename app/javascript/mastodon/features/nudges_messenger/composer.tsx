@@ -13,6 +13,7 @@ import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import UploadFileIcon from '@/material-icons/400-24px/upload_file.svg?react';
 import { apiUploadMedia } from 'mastodon/api/nudges_conversations';
 import { IconButton } from 'mastodon/components/icon_button';
+import { PhotoDropTarget } from 'mastodon/components/media';
 import {
   CardActions,
   CardBadge,
@@ -443,7 +444,8 @@ export const Composer: React.FC<ComposerProps> = ({
   const canAttachMore = staged.length < MAX_MEDIA;
 
   return (
-    <form
+    <PhotoDropTarget
+      as='form'
       className='nudges-composer'
       onSubmit={handleSubmit}
       // A sideways drag in here is someone moving the caret or sliding
@@ -610,7 +612,7 @@ export const Composer: React.FC<ComposerProps> = ({
           <SendIcon />
         </button>
       </div>
-    </form>
+    </PhotoDropTarget>
   );
 };
 

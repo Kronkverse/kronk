@@ -70,6 +70,7 @@ import {
   KronkWheelCentreGlyph,
 } from 'mastodon/components/kronk_wheel';
 import type { KronkWheelSpoke } from 'mastodon/components/kronk_wheel';
+import { PhotoDropTarget } from 'mastodon/components/media';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { useKosmosPresence } from 'mastodon/features/kosmos/use_presence';
 import { useIdentity } from 'mastodon/identity_context';
@@ -517,7 +518,7 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
         onClick={onClose}
         aria-label='Close'
       />
-      <div className='me-hub-avatar-preview__panel'>
+      <PhotoDropTarget className='me-hub-avatar-preview__panel'>
         <div className='me-hub-avatar-preview__image'>
           {displayImage ? (
             <img
@@ -600,7 +601,7 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
             </p>
           )}
         </div>
-      </div>
+      </PhotoDropTarget>
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import api from 'mastodon/api';
+import { PhotoDropTarget } from 'mastodon/components/media';
 import { me } from 'mastodon/initial_state';
 
 // Mockups, briefs and references attached to a proposal.
@@ -137,7 +138,7 @@ export const ProposalAttachments: React.FC<{
         </ul>
       )}
       {uploading && (
-        <div className='kommons-attachments__upload'>
+        <PhotoDropTarget className='kommons-attachments__upload'>
           <select
             value={kind}
             onChange={handleKind}
@@ -171,7 +172,7 @@ export const ProposalAttachments: React.FC<{
               />
             </span>
           </label>
-        </div>
+        </PhotoDropTarget>
       )}
       {error && <p className='kommons-attachments__error'>{error}</p>}
     </section>

@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import classNames from 'classnames';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { usePhotoDrop } from 'mastodon/hooks/usePhotoDrop';
 
 // The avatar + cover-image upload pair — two file-input labels with a live
 // preview and an add/edit icon. Shared by the onboarding profile step and the
@@ -15,8 +16,9 @@ import { Icon } from 'mastodon/components/icon';
 interface Props {
   avatarPreview: string | null;
   headerPreview: string | null;
-  onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onHeaderChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  // A picked or dropped photo.
+  onAvatarChange: (file: File) => void;
+  onHeaderChange: (file: File) => void;
   avatarTitle: string;
   headerTitle: string;
   avatarInvalid?: boolean;
@@ -44,29 +46,65 @@ export const AvatarHeaderInput: React.FC<Props> = ({
 
   return (
     <div className='onboarding__profile'>
-      <label
+      <PhotoLabel
         className={classNames('app-form__header-input', {
           selected: !!headerPreview,
           invalid: headerInvalid,
         })}
         title={headerTitle}
-      >
-        <input type='file' hidden accept='image/*' onChange={onHeaderChange} />
-        {headerPreview && <img src={headerPreview} alt='' />}
-        <Icon id='' icon={headerIcon} />
-      </label>
-
-      <label
+        preview={headerPreview}
+        icon={headerIcon}
+        onPick={onHeaderChange}
+      />
+      <PhotoLabel
         className={classNames('app-form__avatar-input', {
           selected: !!avatarPreview,
           invalid: avatarInvalid,
         })}
         title={avatarTitle}
-      >
-        <input type='file' hidden accept='image/*' onChange={onAvatarChange} />
-        {avatarPreview && <img src={avatarPreview} alt='' />}
-        <Icon id='' icon={avatarIcon} />
-      </label>
+        preview={avatarPreview}
+        icon={avatarIcon}
+        onPick={onAvatarChange}
+      />
     </div>
+  );
+};
+
+// One of the pair: click to choose a photo, or drop one on it.
+const PhotoLabel: React.FC<{
+  className: string;
+  title: string;
+  preview: string | null;
+  icon: typeof EditIcon;
+  onPick: (file: File) => void;
+}> = ({ className, title, preview, icon, onPick }) => {
+  const handleFiles = useCallback(
+    (files: File[]) => {
+      if (files[0]) onPick(files[0]);
+    },
+    [onPick],
+  );
+  const { dragging, dropProps, take } = usePhotoDrop({
+    onFiles: handleFiles,
+    multiple: false,
+  });
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      take(e.target.files);
+      e.target.value = '';
+    },
+    [take],
+  );
+
+  return (
+    <label
+      className={classNames(className, { 'photo-drop-over': dragging })}
+      title={title}
+      {...dropProps}
+    >
+      <input type='file' hidden accept='image/*' onChange={handleChange} />
+      {preview && <img src={preview} alt='' />}
+      <Icon id='' icon={icon} />
+    </label>
   );
 };
