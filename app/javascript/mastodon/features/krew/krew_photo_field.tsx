@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
+import { PhotoDropTarget } from 'mastodon/components/media';
 
 // A Krew's photo as something you can change: the square it is shown in,
 // with a camera on its corner, and the whole square opens the file
@@ -30,7 +31,8 @@ export const KrewPhotoField: React.FC<{
   );
 
   return (
-    <label
+    <PhotoDropTarget
+      as='label'
       className='krew-detail__avatar krew-detail__avatar--editable'
       title={label}
     >
@@ -50,6 +52,6 @@ export const KrewPhotoField: React.FC<{
         aria-label={label}
         className='krew-detail__avatar-input'
       />
-    </label>
+    </PhotoDropTarget>
   );
 };
