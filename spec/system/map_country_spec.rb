@@ -25,7 +25,8 @@ RSpec.describe 'Map Country', :inline_jobs, :js, :streaming do
   it 'shows First Nations Country on the map without a switch' do
     visit '/hub/map'
 
-    expect(page).to have_field('Find a Country')
+    expect(page).to have_css('.map-mates__canvas')
+    expect(page).to have_no_field('Find a Country')
     expect(page).to have_no_button('First Nations Country')
   end
 
