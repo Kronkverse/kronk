@@ -22,10 +22,10 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
   pins, a people strip (a face per pin, your own slot last; tap to
   centre), your upcoming Kalendar events (hosting, going or interested) as
   markers, and Places.
-  **Near me** (top left, `near_me.tsx`) flies to your pin and lists the
-  five closest Mates, Places (within 50 km) and your Events, each with
-  about how far it is from your pin; a row opens that pin, Place or Event.
-  Without a pin it opens "Put me on the map".
+  **Your location** (top left, a round pin button, `location_menu.tsx`)
+  holds what Anthemos does on the Map; see Live location. Near me, which
+  listed what was closest, was taken off to keep the map to location (Tal,
+  2026-11-21).
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
   after your Mates' (Kommons "Treks list of Mates before Mine",
@@ -68,9 +68,10 @@ report on login" (https://kronk.info/hub/kommons/p/117504037032494231).
 The map always shows the **First Nations Country** of Aboriginal and Torres
 Strait Islander peoples over Australia, under the pins (Kommons, @mangobee,
 2026-10-23; always on, with no switch, @mangobee, 2026-10-30; it was a button
-under the zoom buttons that turned it on). A note under "Find a Country" says
-the boundaries are approximate. It carries no on-map credit (@mangobee,
-2026-10-26: take the credit line away).
+under the zoom buttons that turned it on). It carries no on-map credit
+(@mangobee, 2026-10-26: take the credit line away). The search box and the
+note that sat under it were taken off the map to calm it (Tal, 2026-11-21);
+a Country's card still says the boundaries are approximate.
 
 The Countries are shapes you can tap (Kommons "Interactive Map Build",
 @mangobee, 2026-10-26, Option 2): `app/javascript/images/first-nations-countries.geojson`,
@@ -92,8 +93,6 @@ fill calms as you zoom in).
   the bottom of the map names the Country under its middle, changing as you
   move; a tap opens its card. A shape with no name takes the first name
   someone added to it.
-- **Find a Country**: a search box under the button matches any of those
-  names, and names people have added, and flies there.
 - **From a profile**: "Born on" and "Living on <name> Country" each link to
   `/hub/map?country=<name>`, which opens that Country.
 - **People on a Country**: the card shows faces under "Born here" and
@@ -140,7 +139,7 @@ stays open (@mangobee, 2026-10-30): `map_country_names` (`MapCountryName`,
   is saved.
 - On a Country's card anyone can **Add another name**, which ties that name to
   the shape. The card shows the added names as chips, each saying who added
-  it; the search and `?country=<name>` find a Country by them, and the profile
+  it; `?country=<name>` finds a Country by them, and the profile
   fields suggest them.
 - Only a steward (admin or moderator; @mangobee and Tal) takes a name off,
   with the × on its chip. A name taken off stays off: typing it again doesn't
@@ -223,16 +222,26 @@ an hour"), so the Kronk website shows them and hands the start over.
   over `anthemos-link-v1`, the account id and the key, proving it holds it
   (`POST /api/v1/anthemos/links`, `AnthemosLink`). Up to ten phones per
   account.
-- **Starting from the Map.** **Share live**, beside Near me at the top of
-  the map, with a breathing dot like the live faces (`anthemos_share.tsx`).
-  On Android it picks a Mate and opens Anthemos on them with an intent link
+- **Your location button.** Everything Anthemos does on the Map is under one
+  round pin button, top left (`location_menu.tsx`), shown only once a phone
+  is linked (`GET /api/v1/anthemos/links`); nowhere else on Kronk offers it.
+  It opens **Share** (live location with a Mate), **Update** (your pin, to
+  where the phone is) and the shares running now, each with **Stop**. While
+  one runs the button carries the live faces' breathing dot. Kronk itself
+  never reads the phone's position: on Android, Share picks a Mate and opens
+  Anthemos with an intent link
   (`anthemos://kronk/share?to=<account id>&server=<host>`, package
-  `com.anthemos.app.two`); Anthemos looks the account up and asks before
-  sharing, for an hour. With no Anthemos on the phone the link falls back to
-  `/hub/map?anthemos=missing`, which says the app is needed and links its
-  download. Anywhere else the button opens a note saying live location
-  comes from Anthemos on a phone. Kronk itself never reads the phone's
-  position.
+  `com.anthemos.app.two`), and Update opens `anthemos://kronk/update?server=<host>`.
+  Anthemos asks before anything leaves the phone. With no Anthemos there the
+  link falls back to `/hub/map?anthemos=missing`, which says the app is
+  needed and links its download. On a computer, Share and Update say it
+  comes from Anthemos on your phone.
+- **Updating from Anthemos.** Update, or "update my location on Kronk" said
+  to Anthemos, places your pin like Place me (`POST /api/v1/map/presence`,
+  city precision, keeping who sees it and its note) from where the phone is.
+  The phone sends no name, so Kronk names the pin for its town and country
+  (`Kronk::Geocoder.reverse`, Nominatim, cached by the point to about a
+  kilometre).
 - **Starting.** The phone signs the permission: `anthemos-share-v1`, its link
   id, the Mates' account ids (sorted, comma-joined) and the end time
   (`POST /api/v1/map/live`, `LiveShare`). Kronk checks the signature, that
@@ -252,9 +261,9 @@ an hour"), so the Kronk website shows them and hands the start over.
   purpose. Its card: the name, Live, when it was updated and how accurate it
   is, when it ends, and "From Anthemos, signed by their phone", linking to
   anthemos.org.
-- **Stopping.** From the phone, or Stop in Account & Security, Connected
-  apps (`DELETE /api/v1/map/live/:id`). Unlinking the phone there stops all
-  of its shares. Both delete the point at once.
+- **Stopping.** From the phone, or Stop under the location button
+  (`DELETE /api/v1/map/live/:id`). Unlinking the phone in Account & Security,
+  Connected apps, stops all of its shares. Both delete the point at once.
 
 For now the server reads the point as it passes. The next step is to
 encrypt it to viewers who use Anthemos too, so Kronk only carries it.

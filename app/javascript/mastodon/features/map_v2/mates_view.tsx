@@ -19,7 +19,6 @@ import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 import { MapNeedsWebGL } from 'mastodon/components/map_needs_webgl';
 
-import { AnthemosMissing, AnthemosShare } from './anthemos_share';
 import {
   BASEMAP_URL,
   HOME_CENTER,
@@ -32,7 +31,7 @@ import { CountryLayer } from './country_layer';
 import { CountryPrompt, useShouldOfferCountry } from './country_prompt';
 import { EventLayer } from './event_layer';
 import { LiveLayer } from './live_layer';
-import { NearMe } from './near_me';
+import { AnthemosMissing, LocationMenu } from './location_menu';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
@@ -708,19 +707,10 @@ export const MatesView: React.FC = () => {
           />
         )}
 
-        {/* Near me: flies to your pin and lists what's closest. Sits
-            under the in-view panel when that takes the corner. */}
-        <NearMe
-          map={mapRef.current}
-          selfPin={selfPin}
-          pins={pins}
-          lower={anonymising}
-          onSelectPin={handleSelectPin}
-          onOpenPlace={openPlacePanel}
-        >
-          {/* Live location, handed over to Anthemos. */}
-          <AnthemosShare />
-        </NearMe>
+        {/* Your location, from Anthemos: Share and Update. Only once a
+            phone is linked. Sits under the in-view panel when that takes
+            the corner. */}
+        <LocationMenu lower={anonymising} />
 
         {/* Off-map compass overlay — a marker at the canvas edge per
             direction that has mates outside the viewport. Absolute-
@@ -787,7 +777,7 @@ export const MatesView: React.FC = () => {
             `?live=<account id>`. */}
         <LiveLayer map={mapRef.current} ready={ready} />
 
-        {/* Back from Share live location with no Anthemos on the phone. */}
+        {/* Back from Share or Update with no Anthemos on the phone. */}
         <AnthemosMissing />
       </div>
     </div>

@@ -77,10 +77,6 @@ const messages = defineMessages({
     defaultMessage:
       'Boundaries are approximate. Country, its names and its borders are held by its peoples.',
   },
-  find: {
-    id: 'map.country.find',
-    defaultMessage: 'Find a Country',
-  },
   country: {
     id: 'map.country.card_title',
     defaultMessage: '{name} Country',
@@ -221,7 +217,6 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
   const [here, setHere] = useState<CountryProps | null>(null);
   const [countries, setCountries] = useState<CountryCollection | null>(null);
   const [picked, setPicked] = useState<CountryProps | null>(null);
-  const [query, setQuery] = useState('');
   const labelsRef = useRef<Map<number, maplibregl.Marker>>(new Map());
 
   // The open list: names people have added to a Country, by its shape.
@@ -490,36 +485,6 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
     if (found) pick(found.properties, true);
   }, [requested, countries, ready, pick, allNames]);
 
-  // ── Find a Country ────────────────────────────────────────────────
-  const matches = useMemo(() => {
-    const wanted = fold(query);
-    if (!wanted || !countries) return [];
-    return countries.features
-      .map((f) => f.properties)
-      .filter((props) => allNames(props).some((n) => fold(n).includes(wanted)))
-      .sort(
-        (a, b) =>
-          Number(!fold(a.name).startsWith(wanted)) -
-            Number(!fold(b.name).startsWith(wanted)) ||
-          a.name.localeCompare(b.name),
-      )
-      .slice(0, 6);
-  }, [query, countries, allNames]);
-
-  const handleQuery = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-  }, []);
-
-  const choose = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      const id = Number(e.currentTarget.value);
-      const found = countries?.features.find((f) => f.properties.id === id);
-      if (found) pick(found.properties, true);
-      setQuery('');
-    },
-    [countries, pick],
-  );
-
   const close = useCallback(() => {
     pick(null);
   }, [pick]);
@@ -576,32 +541,6 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
         </button>
       )}
       <div className='map-country'>
-        <div className='map-country__find'>
-          <input
-            type='search'
-            value={query}
-            onChange={handleQuery}
-            placeholder={intl.formatMessage(messages.find)}
-            aria-label={intl.formatMessage(messages.find)}
-            className='map-country__find-input'
-          />
-          {matches.length > 0 && (
-            <div className='map-country__matches'>
-              {matches.map((props) => (
-                <button
-                  key={props.id}
-                  type='button'
-                  value={props.id}
-                  onClick={choose}
-                  className='map-country__match'
-                >
-                  {props.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
         {picked && (
           <section className='map-country__card' aria-live='polite'>
             <div className='map-country__card-head'>
@@ -711,12 +650,6 @@ export const CountryLayer: React.FC<Props> = ({ map, ready }) => {
               {intl.formatMessage(messages.disclaimer)}
             </p>
           </section>
-        )}
-
-        {!picked && (
-          <p className='map-country__note'>
-            {intl.formatMessage(messages.disclaimer)}
-          </p>
         )}
       </div>
     </>
