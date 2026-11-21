@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
+import classNames from 'classnames';
 import { Link, useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
@@ -29,6 +30,7 @@ import { MemorialNote } from 'mastodon/features/account_timeline/components/memo
 import { MovedNote } from 'mastodon/features/account_timeline/components/moved_note';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { usePhotoDrop } from 'mastodon/hooks/usePhotoDrop';
 import { useSaveOwnProfile } from 'mastodon/hooks/useSaveOwnProfile';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
@@ -154,6 +156,46 @@ const PhotoPicker: React.FC<{
         <span className='sr-only'>{label}</span>
       )}
     </label>
+  );
+};
+
+// The cover or the photo on your own profile, which a photo can also be
+// dropped on from the desktop (usePhotoDrop). Someone else's is plain.
+const DropOnto: React.FC<{
+  tag: 'div' | 'span';
+  className: string;
+  style?: React.CSSProperties;
+  onPick?: (file: File) => void;
+  children: React.ReactNode;
+}> = ({ tag: Tag, className, style, onPick, children }) => {
+  const handleFiles = useCallback(
+    (files: File[]) => {
+      if (files[0]) onPick?.(files[0]);
+    },
+    [onPick],
+  );
+  const { dragging, dropProps } = usePhotoDrop({
+    onFiles: handleFiles,
+    multiple: false,
+    disabled: !onPick,
+  });
+
+  if (!onPick) {
+    return (
+      <Tag className={className} style={style}>
+        {children}
+      </Tag>
+    );
+  }
+
+  return (
+    <Tag
+      className={classNames(className, { 'photo-drop-over': dragging })}
+      style={style}
+      {...dropProps}
+    >
+      {children}
+    </Tag>
   );
 };
 
@@ -440,9 +482,11 @@ export const ProfileBlock: React.FC<Props> = ({
       )}
 
       {!bare && (
-        <div
+        <DropOnto
+          tag='div'
           className='profile-block__cover'
           style={cover ? { backgroundImage: `url(${cover})` } : undefined}
+          onPick={editable ? saveCover : undefined}
         >
           {tags.length > 0 && <div className='profile-block__tags'>{tags}</div>}
           {editable && (
@@ -453,19 +497,23 @@ export const ProfileBlock: React.FC<Props> = ({
               onPick={saveCover}
             />
           )}
-        </div>
+        </DropOnto>
       )}
 
       <div className='profile-block__ident'>
         {editable ? (
-          <span className='profile-block__avatar-edit'>
+          <DropOnto
+            tag='span'
+            className='profile-block__avatar-edit'
+            onPick={saveAvatar}
+          >
             <Avatar account={account} size={86} />
             <PhotoPicker
               className='profile-block__change profile-block__change--avatar'
               label={intl.formatMessage(messages.changeAvatar)}
               onPick={saveAvatar}
             />
-          </span>
+          </DropOnto>
         ) : (
           <Avatar account={account} size={86} />
         )}

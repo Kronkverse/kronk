@@ -637,8 +637,12 @@ class UI extends PureComponent {
       this.dragTargets.push(e.target);
     }
 
+    // Over a place that takes photos itself (usePhotoDrop), the "drop to
+    // post" overlay steps aside so you can see where they're going.
+    const overOwnDrop = e.target instanceof Element && !!e.target.closest('[data-photo-drop]');
+
     if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files') && this.props.canUploadMore && this.props.identity.signedIn) {
-      this.setState({ draggingOver: true });
+      this.setState({ draggingOver: !overOwnDrop });
     }
   };
 
