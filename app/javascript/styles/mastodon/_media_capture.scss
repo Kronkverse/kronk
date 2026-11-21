@@ -281,6 +281,20 @@
   }
 }
 
+// The page-wide "drop to post" overlay only shows the drag; the drop goes
+// to whatever is under it, so a place that takes photos itself
+// (usePhotoDrop) gets them instead of the post box.
+.upload-area {
+  pointer-events: none;
+}
+
+// A place that takes photos without the box (an avatar, a cover, a message
+// box), while photos are held over it: usePhotoDrop's `dragging`.
+.photo-drop-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+
 // ── Photo drop zone ──────────────────────────────────────────────
 // <PhotoDropZone>: every photo upload's box. The whole box is the label,
 // so a click opens the picker and a drag from the desktop lands on it.

@@ -74,15 +74,15 @@ export const Profile: React.FC<{
   );
 
   const handleAvatarChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setAvatar(e.target.files?.[0]);
+    (file: File) => {
+      setAvatar(file);
     },
     [setAvatar],
   );
 
   const handleHeaderChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setHeader(e.target.files?.[0]);
+    (file: File) => {
+      setHeader(file);
     },
     [setHeader],
   );

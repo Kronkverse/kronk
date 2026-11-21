@@ -2,13 +2,12 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
 import { apiContributePhoto, apiUpdateAlbum } from 'mastodon/api/albutts';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { Icon } from 'mastodon/components/icon';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { PhotoDropZone } from 'mastodon/components/media';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { CaptionTextarea } from './caption_textarea';
@@ -35,10 +34,6 @@ const messages = defineMessages({
     id: 'albutts.contribute.photos_pick_more',
     defaultMessage:
       '{count, plural, one {# selected · drop or click to add more} other {# selected · drop or click to add more}}',
-  },
-  photosDropCue: {
-    id: 'albutts.contribute.photos_drop_cue',
-    defaultMessage: 'Drop to add',
   },
   submit: {
     id: 'albutts.contribute.submit',
@@ -189,7 +184,6 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [dragging, setDragging] = useState(false);
   const [description, setDescription] = useState(albumDescription);
   const [descriptionError, setDescriptionError] = useState(false);
   const descriptionChanged =
@@ -341,32 +335,6 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
       ),
     );
   }, []);
-
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files ? Array.from(e.target.files) : [];
-      addPhotoFiles(files);
-      e.target.value = ''; // allow re-picking the same file
-    },
-    [addPhotoFiles],
-  );
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(true);
-  }, []);
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-  }, []);
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragging(false);
-      addPhotoFiles(Array.from(e.dataTransfer.files));
-    },
-    [addPhotoFiles],
-  );
 
   const handleClear = useCallback(() => {
     uploadQueueRef.current = [];
@@ -542,42 +510,19 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
         )}
 
         {!hasSubmitted && (
-          <div
-            className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <input
-              id='albutts-contribute-file'
-              type='file'
-              multiple
-              accept='image/*,video/*'
-              className='albutts-composer__file'
-              onChange={handleFileChange}
-              disabled={pending}
-            />
-            <label
-              htmlFor='albutts-contribute-file'
-              className='albutts-composer__drop-zone-label'
-            >
-              <Icon
-                id='add_photo_alternate'
-                icon={AddPhotoAlternateIcon}
-                className='albutts-composer__drop-zone-icon'
-              />
-              <span className='albutts-composer__drop-zone-text'>
-                {dragging
-                  ? intl.formatMessage(messages.photosDropCue)
-                  : photos.length > 0
-                    ? intl.formatMessage(messages.photosPickMore, {
-                        count: photos.length,
-                      })
-                    : intl.formatMessage(messages.photosPick)}
-              </span>
-            </label>
-          </div>
+          <PhotoDropZone
+            id='albutts-contribute-file'
+            accept='image/*,video/*'
+            onFiles={addPhotoFiles}
+            disabled={pending}
+            label={
+              photos.length > 0
+                ? intl.formatMessage(messages.photosPickMore, {
+                    count: photos.length,
+                  })
+                : intl.formatMessage(messages.photosPick)
+            }
+          />
         )}
 
         {photos.length > 0 && (

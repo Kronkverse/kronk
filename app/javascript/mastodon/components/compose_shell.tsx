@@ -9,6 +9,7 @@ import { AttachmentPicker } from 'mastodon/components/attachment_picker';
 import { DraftBar } from 'mastodon/components/draft_bar';
 import { Icon } from 'mastodon/components/icon';
 import { KonnectRow } from 'mastodon/components/konnect_row';
+import { PhotoDropTarget } from 'mastodon/components/media/photo_drop_target';
 import type { DraftControls } from 'mastodon/hooks/useDraft';
 import type { KonnectControls } from 'mastodon/hooks/useKonnect';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -150,6 +151,12 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
     if (canSubmit && !submitting) onSubmit();
   }, [canSubmit, submitting, onSubmit]);
 
+  // Files dropped beside the panel, on the dimmed page, go nowhere rather
+  // than through to the post box underneath.
+  const swallowDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
   const primaryText =
     submitting && submittingLabel ? submittingLabel : submitLabel;
 
@@ -159,6 +166,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
       role='dialog'
       aria-modal='true'
       aria-label={label}
+      onDrop={swallowDrop}
     >
       <button
         type='button'
@@ -167,7 +175,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
         aria-label={intl.formatMessage(messages.close)}
         disabled={submitting}
       />
-      <div className='compose-shell__panel'>
+      <PhotoDropTarget className='compose-shell__panel'>
         <header className='compose-shell__header'>
           <span className='compose-shell__icon' aria-hidden='true'>
             <Icon id={`compose-${korner}`} icon={KornerIconComponent} />
@@ -237,7 +245,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
             </button>
           )}
         </footer>
-      </div>
+      </PhotoDropTarget>
 
       {picking && source && konnect && (
         <AttachmentPicker
