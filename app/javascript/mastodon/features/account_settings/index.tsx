@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import {
   fetchSessions,
@@ -11,16 +11,8 @@ import type {
   SessionActivation,
   LoginActivity,
 } from 'mastodon/api/account_settings';
-import {
-  apiGetAnthemosLinks,
-  apiGetOwnLiveShares,
-  apiStopLiveShare,
-  apiUnlinkAnthemos,
-} from 'mastodon/api/map_live';
-import type {
-  ApiAnthemosLinkJSON,
-  ApiOwnLiveShareJSON,
-} from 'mastodon/api/map_live';
+import { apiGetAnthemosLinks, apiUnlinkAnthemos } from 'mastodon/api/map_live';
+import type { ApiAnthemosLinkJSON } from 'mastodon/api/map_live';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import {
@@ -75,7 +67,7 @@ const messages = defineMessages({
   connectedDesc: {
     id: 'account_settings.connected_desc',
     defaultMessage:
-      'Anthemos phones linked to your account, and the live location they are sharing.',
+      'Anthemos phones linked to your account. Unlinking one ends any live location it is sharing.',
   },
   noConnected: {
     id: 'account_settings.no_connected',
@@ -91,7 +83,6 @@ const messages = defineMessages({
     defaultMessage:
       'It can no longer share with Kronk, and any live location it is sharing stops now. You can link it again from Anthemos.',
   },
-  stop: { id: 'account_settings.stop_sharing', defaultMessage: 'Stop' },
   logins: { id: 'account_settings.logins', defaultMessage: 'Recent sign-ins' },
   loginsDesc: {
     id: 'account_settings.logins_desc',
@@ -168,7 +159,6 @@ export const AccountSettings: React.FC = () => {
   const [sessions, setSessions] = useState<SessionActivation[] | null>(null);
   const [logins, setLogins] = useState<LoginActivity[] | null>(null);
   const [links, setLinks] = useState<ApiAnthemosLinkJSON[] | null>(null);
-  const [shares, setShares] = useState<ApiOwnLiveShareJSON[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -191,11 +181,9 @@ export const AccountSettings: React.FC = () => {
         if (!cancelled) setLogins([]);
       });
 
-    void Promise.all([apiGetAnthemosLinks(), apiGetOwnLiveShares()])
-      .then(([linkRows, shareRows]) => {
-        if (cancelled) return undefined;
-        setLinks(linkRows);
-        setShares(shareRows);
+    void apiGetAnthemosLinks()
+      .then((linkRows) => {
+        if (!cancelled) setLinks(linkRows);
         return undefined;
       })
       .catch(() => {
@@ -223,23 +211,9 @@ export const AccountSettings: React.FC = () => {
 
         await apiUnlinkAnthemos(id);
         setLinks((rows) => (rows ?? []).filter((row) => row.id !== id));
-        setShares((rows) => rows.filter((row) => row.link_id !== id));
       })();
     },
     [confirm, intl],
-  );
-
-  const handleStop = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      const id = event.currentTarget.dataset.id;
-      if (!id) return;
-
-      void apiStopLiveShare(id).then(() => {
-        setShares((rows) => rows.filter((row) => row.id !== id));
-        return undefined;
-      });
-    },
-    [],
   );
 
   const handleRevoke = useCallback(
@@ -347,47 +321,6 @@ export const AccountSettings: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                {shares
-                  .filter((share) => share.link_id === link.id)
-                  .map((share) => (
-                    <div key={share.id} className='settings-page__row'>
-                      <div className='settings-page__row-body'>
-                        <div className='settings-page__row-label'>
-                          <FormattedMessage
-                            id='account_settings.live_share'
-                            defaultMessage='Live location with {names}'
-                            values={{
-                              names: intl.formatList(
-                                share.recipients.map((r) => r.name),
-                              ),
-                            }}
-                          />
-                        </div>
-                        <div className='settings-page__row-desc'>
-                          <FormattedMessage
-                            id='account_settings.live_share_until'
-                            defaultMessage='Until {time}'
-                            values={{
-                              time: intl.formatTime(share.expires_at, {
-                                hour: 'numeric',
-                                minute: '2-digit',
-                              }),
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className='settings-page__row-widget'>
-                        <button
-                          type='button'
-                          className='account-settings__revoke'
-                          data-id={share.id}
-                          onClick={handleStop}
-                        >
-                          {intl.formatMessage(messages.stop)}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
               </div>
             ))
           )}

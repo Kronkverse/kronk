@@ -81,7 +81,11 @@ function main() {
       try {
         registration = await wb.register();
       } catch (err) {
-        console.error(err);
+        // Leaving the page while it registers (signing out, say) aborts it,
+        // which is harmless and not worth an error.
+        if (!(err instanceof DOMException && err.name === 'AbortError')) {
+          console.error(err);
+        }
       }
 
       if (

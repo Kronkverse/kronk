@@ -25,6 +25,43 @@ module Kronk
     # ownership of the instance changes.
     USER_AGENT = 'Kronk/1.0 (admin@kronk.info)'
 
+    # The town or city at a point and its country ("Fremantle, Australia"),
+    # or nil. Names a pin set from Anthemos, which sends only where the phone
+    # is (docs/spaces/map.md, Updating from Anthemos). Cached by the point
+    # rounded to about a kilometre, so a phone moving about town asks once.
+    def reverse(lat, lng)
+      lat = Float(lat)
+      lng = Float(lng)
+      return nil unless lat.between?(-90, 90) && lng.between?(-180, 180)
+
+      key = "geocode:reverse:v1:#{lat.round(2)},#{lng.round(2)}"
+      Rails.cache.fetch(key, expires_in: CACHE_TTL) { reverse_from_nominatim(lat, lng) }
+    rescue ArgumentError, TypeError
+      nil
+    rescue => e
+      Rails.logger.warn("Reverse geocode cache failed: #{e.class} #{e.message}")
+      reverse_from_nominatim(lat, lng)
+    end
+
+    def reverse_from_nominatim(lat, lng)
+      conn = Faraday.new(NOMINATIM_URL) do |c|
+        c.headers['User-Agent'] = USER_AGENT
+        c.options.timeout = 5
+        c.options.open_timeout = 3
+      end
+
+      # zoom 10 is a city; addressdetails gives its parts, not a long display name.
+      response = conn.get('/reverse', { lat: lat, lon: lng, format: 'json', zoom: 10, addressdetails: 1 })
+      return nil unless response.success?
+
+      address = JSON.parse(response.body)['address'] || {}
+      place = address.values_at('city', 'town', 'village', 'municipality', 'county', 'state').compact_blank.first
+      [place, address['country']].compact_blank.uniq.join(', ').presence
+    rescue => e
+      Rails.logger.warn("Nominatim reverse geocode failed: #{e.class} #{e.message}")
+      nil
+    end
+
     # Up to MAX_RESULTS `{ label:, lat:, lng: }` for `query`.
     def search(query)
       query = query.to_s.strip
