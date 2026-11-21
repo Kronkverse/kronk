@@ -56,6 +56,23 @@ RSpec.describe 'Krew spaces: albums and works', :js, :streaming do
     expect(page).to have_css('.konnect-row .space-tile', text: 'Painters')
   end
 
+  # Tal's proposal "Differentiating different korner konnections"
+  # (2026-11-18): each row opens with its korner's card.
+  it "leads each space's row with its korner's card" do
+    krew.krew_korners.create!(korner: 'art')
+    piece = ArtPiece.create!(owner: bob.account, title: 'Blue study')
+    KornerAttachment.create!(source_slug: 'krew', source_id: krew.id, target_slug: 'art', target_id: piece.id,
+                             kind: 'link', created_by_account: bob.account)
+
+    visit "/hub/krew/#{krew.slug}"
+    within('.space-shelf .space-grid__cell:first-child .space-card--accent') do
+      expect(page).to have_text('Art')
+      expect(page).to have_text('1 here')
+    end
+    find('.space-shelf .space-card--accent').click
+    expect(page).to have_current_path('/hub/art')
+  end
+
   it "offers Add existing in the Krew albums' New composer" do
     krew.krew_korners.create!(korner: 'albutts')
 

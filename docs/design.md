@@ -742,7 +742,11 @@ The same card three ways (`variant`):
   four from 720px (`<SpaceGrid>` / `<SpaceCard>` in `space_grid.tsx`). Used by
   Albutts, Booth, Kalendar events and Wachuneed. `<SpaceGrid layout='row'>`
   is one line of the same tiles scrolling sideways, for a shelf among
-  others down a page (the Booth's By artist / By kind). `<SpaceGrid wide>`
+  others down a page (the Booth's By artist / By kind). A row of one
+  korner's things on a Krew or projekt (`<SpaceShelf>`, its Projekts and
+  Kuestions) opens with `<KornerRowCard>`: the korner's glyph and name on a
+  purple card, with how many are here, linking to the korner, so rows from
+  different korners tell apart (2026-11-21). `<SpaceGrid wide>`
   makes the tiles half as wide again with a landscape image (two columns in
   the grid), for things that hold other things; with it a `<SpaceCard>` can
   take `images` (up to three, one large and two stacked), an `avatar` in the
