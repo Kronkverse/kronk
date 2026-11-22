@@ -148,6 +148,36 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.find_by(title: 'Hall deposit').task).to eq 'pay'
   end
 
+  # Kommons "Checklist" (2026-11-22): take off an entry added by mistake.
+  # One tap for your own; asked first once someone else has a hand in it.
+  it 'takes an entry off the checklist with its ×', :aggregate_failures do
+    visit_kitchen
+    within('.freethedream-checklist__add') do
+      fill_in placeholder: 'Add something to do', with: 'Hall deposti'
+      send_keys :enter
+    end
+
+    within('.freethedream-checklist__entry', text: 'Hall deposti') do
+      click_on 'Take Hall deposti off the checklist'
+    end
+    expect(page).to have_no_css('.freethedream-checklist__entry', text: 'Hall deposti')
+    expect(Freethedream::Item.where(title: 'Hall deposti')).to be_empty
+
+    kitchen = Freethedream::Project.find_by(title: 'Kitchen')
+    gas = Freethedream::Item.create!(kind: 'job', title: 'Gas bottles', owner: bob.account, root_id: kitchen.top_id)
+    gas.placements.create!(project: kitchen)
+    gas.claims.create!(account: Fabricate(:account))
+    visit current_path
+
+    within('.freethedream-checklist__entry', text: 'Gas bottles') do
+      click_on 'Take Gas bottles off the checklist'
+    end
+    expect(page).to have_text('Someone else already has a hand in it.')
+    click_on 'Take it off'
+    expect(page).to have_no_css('.freethedream-checklist__entry', text: 'Gas bottles')
+    expect(Freethedream::Item.where(title: 'Gas bottles')).to be_empty
+  end
+
   it "decides something on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do

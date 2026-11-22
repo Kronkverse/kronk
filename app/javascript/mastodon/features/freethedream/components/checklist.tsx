@@ -9,11 +9,16 @@ import Overlay from 'react-overlays/Overlay';
 
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import BringIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import PaymentsIcon from '@/material-icons/400-24px/payments.svg?react';
 import QuestionIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import UnfoldMoreIcon from '@/material-icons/400-24px/unfold_more.svg?react';
-import { apiFtdItemAction, apiFtdUpdateItem } from 'mastodon/api/freethedream';
+import {
+  apiFtdItemAction,
+  apiFtdRemoveItem,
+  apiFtdUpdateItem,
+} from 'mastodon/api/freethedream';
 import type { FtdItemParams } from 'mastodon/api/freethedream';
 import {
   apiAnswerKuestion,
@@ -25,9 +30,11 @@ import type {
   FtdProject,
   FtdTask,
 } from 'mastodon/api_types/freethedream';
+import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { DropdownSelector } from 'mastodon/components/dropdown_selector';
 import type { SelectItem } from 'mastodon/components/dropdown_selector';
 import { Icon } from 'mastodon/components/icon';
+import { IconButton } from 'mastodon/components/icon_button';
 import { PeopleRow } from 'mastodon/components/people_row';
 
 import { act } from './act';
@@ -96,6 +103,22 @@ const messages = defineMessages({
   money: {
     id: 'freethedream.checklist.money',
     defaultMessage: '{total} to pay, {paid} of it paid',
+  },
+  remove: {
+    id: 'freethedream.checklist.remove',
+    defaultMessage: 'Take {title} off the checklist',
+  },
+  removeTitle: {
+    id: 'freethedream.checklist.remove_title',
+    defaultMessage: 'Take {title} off?',
+  },
+  removeBody: {
+    id: 'freethedream.checklist.remove_body',
+    defaultMessage: 'Someone else already has a hand in it.',
+  },
+  removeConfirm: {
+    id: 'freethedream.checklist.remove_confirm',
+    defaultMessage: 'Take it off',
   },
   empty: {
     id: 'freethedream.checklist.empty',
@@ -167,6 +190,14 @@ const kindOf = (item: FtdItemRow): QuickAddKind =>
       : (taskOf(item) as QuickAddKind);
 
 const taskOf = (item: FtdItemRow): FtdTask => item.task ?? 'todo';
+
+// Whether anyone but you is on it, bringing some or has picked a choice:
+// taking it off then asks first.
+const othersIn = (item: FtdItemRow) =>
+  (item.claimers?.length ?? 0) > (item.claimed_by_me ? 1 : 0) ||
+  (item.contributors?.length ?? 0) > (item.my_quantity ? 1 : 0) ||
+  (item.decide?.options ?? []).reduce((sum, o) => sum + o.count, 0) >
+    (item.decide?.mine != null ? 1 : 0);
 
 const isDone = (item: FtdItemRow) =>
   item.kind === 'need' ? (item.left ?? 1) === 0 : !!item.done;
@@ -439,11 +470,31 @@ const Entry: React.FC<{
     },
     [item.id, onChange],
   );
+  // Whoever added an entry takes it off with the × at its end (Kommons
+  // "Checklist", 2026-11-22: "easily delete checklist items if added by
+  // mistake"). One tap, unless someone else already has a hand in it.
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const remove = useCallback(() => {
+    setConfirmRemove(false);
+    setBusy(true);
+    void act(apiFtdRemoveItem(item.id)).then(() => {
+      setBusy(false);
+      onChange();
+    });
+  }, [item.id, onChange]);
+  const handleRemove = useCallback(() => {
+    if (othersIn(item)) setConfirmRemove(true);
+    else remove();
+  }, [item, remove]);
+  const cancelRemove = useCallback(() => {
+    setConfirmRemove(false);
+  }, []);
 
   return (
     <li
       className={classNames('freethedream-checklist__entry', {
         'freethedream-checklist__entry--done': isDone(item),
+        'freethedream-checklist__entry--mine': canAct && item.mine,
       })}
     >
       {canAct && item.mine ? (
@@ -471,6 +522,28 @@ const Entry: React.FC<{
         </>
       ) : (
         <ToDo item={item} canAct={canAct} onChange={onChange} />
+      )}
+      {canAct && item.mine && (
+        <IconButton
+          className='freethedream-checklist__remove'
+          icon='close'
+          iconComponent={CloseIcon}
+          title={intl.formatMessage(messages.remove, { title: item.title })}
+          disabled={busy}
+          onClick={handleRemove}
+        />
+      )}
+      {confirmRemove && (
+        <ConfirmDialog
+          title={intl.formatMessage(messages.removeTitle, {
+            title: item.title,
+          })}
+          message={intl.formatMessage(messages.removeBody)}
+          confirmLabel={intl.formatMessage(messages.removeConfirm)}
+          destructive
+          onConfirm={remove}
+          onCancel={cancelRemove}
+        />
       )}
     </li>
   );
