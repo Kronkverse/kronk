@@ -134,6 +134,26 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     render json: view.item(@item)
   end
 
+  # Move a checklist entry from one part to another of the same projekt:
+  # into a fractal, out of it, or from one fractal to the next (Kommons
+  # "drag and drop/move checklist items", 2026-11-22). Anyone in the
+  # projekt can, as they can tick it or add to it.
+  def move
+    require_member!(@item.root)
+    from = @item.placements.find_by!(project_id: params.require(:from_project_id))
+    to = Freethedream::Project.find(params.require(:to_project_id))
+    raise ActiveRecord::RecordNotFound unless to.top_id == @item.root_id
+
+    Freethedream::Item.transaction do
+      if @item.placements.exists?(project_id: to.id)
+        from.destroy!
+      else
+        from.update!(project: to)
+      end
+    end
+    render json: view.item(@item.reload)
+  end
+
   private
 
   def set_item

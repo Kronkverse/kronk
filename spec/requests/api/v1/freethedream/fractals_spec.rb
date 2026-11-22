@@ -57,6 +57,40 @@ RSpec.describe 'API V1 FreeTheDream fractals' do
     expect(response).to have_http_status(403)
   end
 
+  # Kommons "drag and drop/move checklist items" (2026-11-22).
+  describe 'moving a checklist entry' do
+    let!(:spice) { api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'job', title: 'Spice run' }) }
+
+    def move(user, from, to)
+      api(user, :post, "/items/#{spice['id']}/move", from_project_id: from['id'], to_project_id: to['id'])
+    end
+
+    def titles(part)
+      api(alice, :get, "/projects/#{kitchen['id']}")['fractals'].find { |f| f['id'] == part['id'] }['items'].pluck('title')
+    end
+
+    it 'moves it into a fractal and back, for anyone in the projekt', :aggregate_failures do
+      move(bob, kitchen, cooking)
+      expect(response).to have_http_status(200)
+      expect(titles(cooking)).to eq ['Spice run']
+      expect(api(alice, :get, "/projects/#{kitchen['id']}")['items']).to eq []
+
+      move(bob, cooking, kitchen)
+      expect(titles(cooking)).to eq []
+      expect(api(alice, :get, "/projects/#{kitchen['id']}")['items'].pluck('title')).to eq ['Spice run']
+    end
+
+    it 'only within its projekt, and only for people in it', :aggregate_failures do
+      move(cara, kitchen, cooking)
+      expect(response).to have_http_status(403)
+
+      elsewhere = api(cara, :post, '/projects', project: { title: 'Elsewhere', krew_id: Fabricate(:krew, seeded_by: cara.account).id })
+      move(bob, kitchen, elsewhere)
+      expect(response).to have_http_status(404)
+      expect(Freethedream::Item.find(spice['id']).projects.map(&:title)).to eq ['Kitchen']
+    end
+  end
+
   it 'goes when the fractal is removed' do
     api(alice, :post, "/projects/#{cooking['id']}/assign", account_id: alice.account.id)
     api(alice, :delete, "/projects/#{cooking['id']}")

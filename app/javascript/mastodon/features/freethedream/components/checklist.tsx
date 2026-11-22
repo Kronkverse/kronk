@@ -7,6 +7,7 @@ import classNames from 'classnames';
 
 import Overlay from 'react-overlays/Overlay';
 
+import MoveIcon from '@/material-icons/400-24px/arrow_right_alt.svg?react';
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
@@ -16,6 +17,7 @@ import QuestionIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import UnfoldMoreIcon from '@/material-icons/400-24px/unfold_more.svg?react';
 import {
   apiFtdItemAction,
+  apiFtdMoveItem,
   apiFtdRemoveItem,
   apiFtdUpdateItem,
 } from 'mastodon/api/freethedream';
@@ -115,6 +117,14 @@ const messages = defineMessages({
   removeBody: {
     id: 'freethedream.checklist.remove_body',
     defaultMessage: 'Someone else already has a hand in it.',
+  },
+  move: {
+    id: 'freethedream.checklist.move',
+    defaultMessage: 'Move {title} to another checklist',
+  },
+  dropHere: {
+    id: 'freethedream.checklist.drop_here',
+    defaultMessage: 'Drop it here',
   },
   removeConfirm: {
     id: 'freethedream.checklist.remove_confirm',
@@ -453,11 +463,112 @@ const KindPick: React.FC<{
   );
 };
 
+// Where an entry can go on a Komponent's page: its own checklist and each
+// of its fractals' (Kommons "drag and drop/move checklist items",
+// 2026-11-22: "be able to move the check list items into fractals").
+export interface MoveTarget {
+  id: string;
+  title: string;
+}
+
+export const moveTargets = (project: FtdProject): MoveTarget[] =>
+  project.fractals.length > 0
+    ? [
+        { id: project.id, title: project.title },
+        ...project.fractals.map((f) => ({ id: f.id, title: f.title })),
+      ]
+    : [];
+
+// What a dragged entry carries: which entry, and from which checklist.
+const DRAG_TYPE = 'application/x-kronk-checklist-entry';
+
+const move = (itemId: string, fromId: string, toId: string) =>
+  act(apiFtdMoveItem(itemId, fromId, toId));
+
+// Move to…: a menu of the other checklists on the page. A drag does the
+// same on a computer; this is how it's done on a phone, where there is no
+// dragging, and from a keyboard.
+const MovePick: React.FC<{
+  item: FtdItemRow;
+  fromId: string;
+  targets: MoveTarget[];
+  onMoved: () => void;
+}> = ({ item, fromId, targets, onMoved }) => {
+  const intl = useIntl();
+  const button = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const items = useMemo<SelectItem[]>(
+    () => targets.map((t) => ({ value: t.id, text: t.title })),
+    [targets],
+  );
+  const handleToggle = useCallback(() => {
+    setOpen((was) => !was);
+  }, []);
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    button.current?.focus();
+  }, []);
+  const handlePick = useCallback(
+    (toId: string) => {
+      setOpen(false);
+      void move(item.id, fromId, toId).then(onMoved);
+    },
+    [item.id, fromId, onMoved],
+  );
+
+  return (
+    <>
+      <IconButton
+        ref={button}
+        className='freethedream-checklist__move'
+        icon='arrow_right_alt'
+        iconComponent={MoveIcon}
+        title={intl.formatMessage(messages.move, { title: item.title })}
+        expanded={open}
+        onClick={handleToggle}
+      />
+      <Overlay
+        show={open}
+        offset={[0, 4]}
+        placement='bottom-end'
+        onHide={handleClose}
+        flip
+        target={button.current}
+        popperConfig={{ strategy: 'fixed' }}
+      >
+        {({ props, placement }) => (
+          <div {...props} className='privacy-dropdown__overlay'>
+            <div
+              className={classNames(
+                'dropdown-animation',
+                'privacy-dropdown__dropdown',
+                'freethedream-checklist__menu',
+                placement,
+              )}
+            >
+              <DropdownSelector
+                items={items}
+                value=''
+                onClose={handleClose}
+                onChange={handlePick}
+                classNamePrefix='privacy-dropdown'
+              />
+            </div>
+          </div>
+        )}
+      </Overlay>
+    </>
+  );
+};
+
 const Entry: React.FC<{
   item: FtdItemRow;
   canAct: boolean;
   onChange: () => void;
-}> = ({ item, canAct, onChange }) => {
+  fromId: string;
+  // The other checklists it can move to; none when there are none.
+  targets: MoveTarget[];
+}> = ({ item, canAct, onChange, fromId, targets }) => {
   const intl = useIntl();
   const [busy, setBusy] = useState(false);
   const handleRetype = useCallback(
@@ -490,12 +601,32 @@ const Entry: React.FC<{
     setConfirmRemove(false);
   }, []);
 
+  const movable = canAct && targets.length > 0;
+  const removable = canAct && item.mine;
+  const handleDragStart = useCallback(
+    (e: React.DragEvent<HTMLLIElement>) => {
+      e.dataTransfer.setData(
+        DRAG_TYPE,
+        JSON.stringify({ id: item.id, from: fromId }),
+      );
+      e.dataTransfer.effectAllowed = 'move';
+    },
+    [item.id, fromId],
+  );
+
   return (
     <li
       className={classNames('freethedream-checklist__entry', {
         'freethedream-checklist__entry--done': isDone(item),
-        'freethedream-checklist__entry--mine': canAct && item.mine,
+        'freethedream-checklist__entry--movable': movable,
       })}
+      style={
+        {
+          '--corner-buttons': Number(movable) + Number(removable),
+        } as React.CSSProperties
+      }
+      draggable={movable}
+      onDragStart={movable ? handleDragStart : undefined}
     >
       {canAct && item.mine ? (
         <KindPick
@@ -523,15 +654,29 @@ const Entry: React.FC<{
       ) : (
         <ToDo item={item} canAct={canAct} onChange={onChange} />
       )}
-      {canAct && item.mine && (
-        <IconButton
-          className='freethedream-checklist__remove'
-          icon='close'
-          iconComponent={CloseIcon}
-          title={intl.formatMessage(messages.remove, { title: item.title })}
-          disabled={busy}
-          onClick={handleRemove}
-        />
+      {(movable || removable) && (
+        <span className='freethedream-checklist__corner'>
+          {movable && (
+            <MovePick
+              item={item}
+              fromId={fromId}
+              targets={targets}
+              onMoved={onChange}
+            />
+          )}
+          {removable && (
+            <IconButton
+              className='freethedream-checklist__remove'
+              icon='close'
+              iconComponent={CloseIcon}
+              title={intl.formatMessage(messages.remove, {
+                title: item.title,
+              })}
+              disabled={busy}
+              onClick={handleRemove}
+            />
+          )}
+        </span>
       )}
       {confirmRemove && (
         <ConfirmDialog
@@ -556,9 +701,40 @@ export const ChecklistEntries: React.FC<{
   items: FtdItemRow[];
   canAct: boolean;
   onChange: () => void;
-}> = ({ projectId, items, canAct, onChange }) => {
+  // Every checklist on the page, this one included (`moveTargets`).
+  targets?: MoveTarget[];
+}> = ({ projectId, items, canAct, onChange, targets = [] }) => {
   const intl = useIntl();
   const [kind, setKind] = useState<QuickAddKind>('job');
+  const others = useMemo(
+    () => targets.filter((t) => t.id !== projectId),
+    [targets, projectId],
+  );
+
+  // An entry dragged here from another checklist on the page moves here.
+  const [over, setOver] = useState(false);
+  const droppable = canAct && others.length > 0;
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (!e.dataTransfer.types.includes(DRAG_TYPE)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setOver(true);
+  }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+      setOver(false);
+  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      setOver(false);
+      const raw = e.dataTransfer.getData(DRAG_TYPE);
+      if (!raw) return;
+      e.preventDefault();
+      const { id, from } = JSON.parse(raw) as { id: string; from: string };
+      if (from !== projectId) void move(id, from, projectId).then(onChange);
+    },
+    [projectId, onChange],
+  );
 
   const entries = items
     .filter((item) => item.kind === 'job' || item.kind === 'need')
@@ -577,7 +753,15 @@ export const ChecklistEntries: React.FC<{
   );
 
   return (
-    <>
+    <div
+      className={classNames('freethedream-checklist__drop', {
+        'freethedream-checklist__drop--over': over,
+      })}
+      onDragOver={droppable ? handleDragOver : undefined}
+      onDragLeave={droppable ? handleDragLeave : undefined}
+      onDrop={droppable ? handleDrop : undefined}
+      data-drop-label={over ? intl.formatMessage(messages.dropHere) : undefined}
+    >
       {total > 0 && (
         <p className='freethedream-checklist__money'>
           {intl.formatMessage(messages.money, {
@@ -598,6 +782,8 @@ export const ChecklistEntries: React.FC<{
               item={item}
               canAct={canAct}
               onChange={onChange}
+              fromId={projectId}
+              targets={others}
             />
           ))}
         </ul>
@@ -619,7 +805,7 @@ export const ChecklistEntries: React.FC<{
           />
         </div>
       )}
-    </>
+    </div>
   );
 };
 
@@ -636,6 +822,7 @@ export const Checklist: React.FC<{
         items={project.items}
         canAct={project.can.add}
         onChange={onChange}
+        targets={moveTargets(project)}
       />
     </Section>
   );
