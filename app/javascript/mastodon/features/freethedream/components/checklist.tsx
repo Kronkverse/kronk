@@ -9,9 +9,8 @@ import Overlay from 'react-overlays/Overlay';
 
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
-import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import BringIcon from '@/material-icons/400-24px/inventory_2.svg?react';
-import MoveIcon from '@/material-icons/400-24px/more_horiz.svg?react';
+import MoreIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import PaymentsIcon from '@/material-icons/400-24px/payments.svg?react';
 import QuestionIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import UnfoldMoreIcon from '@/material-icons/400-24px/unfold_more.svg?react';
@@ -106,10 +105,6 @@ const messages = defineMessages({
     id: 'freethedream.checklist.money',
     defaultMessage: '{total} to pay, {paid} of it paid',
   },
-  remove: {
-    id: 'freethedream.checklist.remove',
-    defaultMessage: 'Take {title} off the checklist',
-  },
   removeTitle: {
     id: 'freethedream.checklist.remove_title',
     defaultMessage: 'Take {title} off?',
@@ -118,9 +113,17 @@ const messages = defineMessages({
     id: 'freethedream.checklist.remove_body',
     defaultMessage: 'Someone else already has a hand in it.',
   },
-  move: {
-    id: 'freethedream.checklist.move',
-    defaultMessage: 'Move {title} to another checklist',
+  menu: {
+    id: 'freethedream.checklist.menu',
+    defaultMessage: 'More for {title}',
+  },
+  moveTo: {
+    id: 'freethedream.checklist.move_to',
+    defaultMessage: 'Move to {checklist}',
+  },
+  delete: {
+    id: 'freethedream.checklist.delete',
+    defaultMessage: 'Delete',
   },
   dropHere: {
     id: 'freethedream.checklist.drop_here',
@@ -485,21 +488,33 @@ const DRAG_TYPE = 'application/x-kronk-checklist-entry';
 const move = (itemId: string, fromId: string, toId: string) =>
   act(apiFtdMoveItem(itemId, fromId, toId));
 
-// Move to…: a menu of the other checklists on the page. A drag does the
-// same on a computer; this is how it's done on a phone, where there is no
-// dragging, and from a keyboard.
-const MovePick: React.FC<{
+// An entry's ⋯ menu: Move to… each other checklist on the page, and Delete
+// for whoever added it. A drag moves it too on a computer; the menu is how
+// it's done on a phone, where there is no dragging, and from a keyboard.
+const REMOVE = '__remove';
+const EntryMenu: React.FC<{
   item: FtdItemRow;
   fromId: string;
   targets: MoveTarget[];
+  removable: boolean;
+  disabled: boolean;
   onMoved: () => void;
-}> = ({ item, fromId, targets, onMoved }) => {
+  onRemove: () => void;
+}> = ({ item, fromId, targets, removable, disabled, onMoved, onRemove }) => {
   const intl = useIntl();
   const button = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const items = useMemo<SelectItem[]>(
-    () => targets.map((t) => ({ value: t.id, text: t.title })),
-    [targets],
+    () => [
+      ...targets.map((t) => ({
+        value: t.id,
+        text: intl.formatMessage(messages.moveTo, { checklist: t.title }),
+      })),
+      ...(removable
+        ? [{ value: REMOVE, text: intl.formatMessage(messages.delete) }]
+        : []),
+    ],
+    [targets, removable, intl],
   );
   const handleToggle = useCallback(() => {
     setOpen((was) => !was);
@@ -509,22 +524,24 @@ const MovePick: React.FC<{
     button.current?.focus();
   }, []);
   const handlePick = useCallback(
-    (toId: string) => {
+    (value: string) => {
       setOpen(false);
-      void move(item.id, fromId, toId).then(onMoved);
+      if (value === REMOVE) onRemove();
+      else void move(item.id, fromId, value).then(onMoved);
     },
-    [item.id, fromId, onMoved],
+    [item.id, fromId, onMoved, onRemove],
   );
 
   return (
     <>
       <IconButton
         ref={button}
-        className='freethedream-checklist__move'
+        className='freethedream-checklist__more'
         icon='more_horiz'
-        iconComponent={MoveIcon}
-        title={intl.formatMessage(messages.move, { title: item.title })}
+        iconComponent={MoreIcon}
+        title={intl.formatMessage(messages.menu, { title: item.title })}
         expanded={open}
+        disabled={disabled}
         onClick={handleToggle}
       />
       <Overlay
@@ -581,7 +598,7 @@ const Entry: React.FC<{
     },
     [item.id, onChange],
   );
-  // Whoever added an entry takes it off with the × at its end (Kommons
+  // Whoever added an entry deletes it from its ⋯ menu (Kommons
   // "Checklist", 2026-11-22: "easily delete checklist items if added by
   // mistake"). One tap, unless someone else already has a hand in it.
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -622,7 +639,7 @@ const Entry: React.FC<{
       })}
       style={
         {
-          '--corner-buttons': Number(movable) + Number(removable),
+          '--corner-buttons': Number(movable || removable),
         } as React.CSSProperties
       }
       draggable={movable}
@@ -656,26 +673,15 @@ const Entry: React.FC<{
       )}
       {(movable || removable) && (
         <span className='freethedream-checklist__corner'>
-          {movable && (
-            <MovePick
-              item={item}
-              fromId={fromId}
-              targets={targets}
-              onMoved={onChange}
-            />
-          )}
-          {removable && (
-            <IconButton
-              className='freethedream-checklist__remove'
-              icon='close'
-              iconComponent={CloseIcon}
-              title={intl.formatMessage(messages.remove, {
-                title: item.title,
-              })}
-              disabled={busy}
-              onClick={handleRemove}
-            />
-          )}
+          <EntryMenu
+            item={item}
+            fromId={fromId}
+            targets={movable ? targets : []}
+            removable={removable}
+            disabled={busy}
+            onMoved={onChange}
+            onRemove={handleRemove}
+          />
         </span>
       )}
       {confirmRemove && (

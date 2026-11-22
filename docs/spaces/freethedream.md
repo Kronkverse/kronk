@@ -278,8 +278,8 @@ a Decide takes its Kuestion with it. Something people are already
 bringing stays a Bring, so nobody's offer is left against a To do.
 
 **Taking an entry off** (Kommons "Checklist", 2026-11-22: "easily delete
-checklist items if added by mistake"): whoever added an entry has a quiet
-× in its corner. One tap takes it off (`DELETE /items/:id`, a Decide's
+checklist items if added by mistake"): whoever added an entry has
+**Delete** in its ⋯ menu. One tap takes it off (`DELETE /items/:id`, a Decide's
 Kuestion with it); once someone else is on it, bringing some or has
 picked a choice, it asks first.
 
@@ -484,7 +484,7 @@ the place the work is done:
   an entry from its checklist into a fractal's, out again, or from one
   fractal to another. On a computer, drag it onto the other checklist
   (it's outlined, "Drop it here"); on a phone or from a keyboard, the ⋯
-  in the entry's corner opens **Move to…**, a menu of the other
+  in the entry's corner lists **Move to** each of the other
   checklists (`POST /items/:id/move` with `from_project_id` and
   `to_project_id`, both in the same projekt). Who is on it, bringing it or
   has picked a choice stays as it was.
