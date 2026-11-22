@@ -194,7 +194,7 @@ RSpec.describe 'Projekts', :js, :streaming do
       fill_in placeholder: 'Add something to do', with: 'Spice run'
       send_keys :enter
       expect(page).to have_css('.freethedream-checklist__entry', text: 'Spice run')
-      click_on 'Assign Cooking to someone'
+      click_on 'Assign'
     end
     page.document.find('.privacy-dropdown__option', text: bob.account.display_name.presence || bob.account.username).click
 
