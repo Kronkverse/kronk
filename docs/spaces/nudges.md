@@ -5,11 +5,11 @@
 `/hub/nudges` space) · **Node:** `nudges.index`.
 
 Nudges is where activity that involves you lands, and where you talk to
-people. It replaced Mastodon's notifications bell and its DMs. It has two
-faces on one barrel: **Notifications**, a list of what has happened that
-involves you ("Ana backed your proposal"), which is where you land; and
-**Messages**, a messenger with a strip of conversations on the left and the
-open conversation on the right. A sideways swipe turns between them.
+people. It replaced Mastodon's notifications bell and its DMs. It is one
+space (Tal, 2026-11-23): a list of chats down the side, with
+**Notifications** (what has happened that involves you, "Ana backed your
+proposal") pinned as its first row, and the Mates and Krews you talk to
+beneath it. Choosing a row changes what is open beside the list.
 
 Nudges is a core space, not a korner. It is a pillar in the primary switcher
 (`features/ui/components/hub_switcher.tsx`), carries the unread badge, has no
@@ -170,26 +170,44 @@ the manifest (`icon.material: raven`) through `kornerIcon('nudges')`. The
 badge is a number (2026-10-12; it was a waving hand): unread chats plus
 unseen notifications plus unread system notices (`selectNudgesAlertCount`),
 seeded at boot by `useNudgesBadgeSeed` and kept live by the account stream.
-Opening the Notifications face clears the last two, including notices that
-arrived live and were still pending.
+Opening Notifications clears the last two, including notices that arrived
+live and were still pending.
 
-**2. The two faces** (`features/nudges_messenger/`, routed in
-`features/ui/index.jsx`), turned with `<FeedDrum>`:
+**2. One space** (`features/nudges_messenger/`, routed in
+`features/ui/index.jsx`). Tal, 2026-11-23: "melded into one space, with
+notifications forming one chat space, persistently at the top of the list
+… so its not swapping a page to get to chats but just changing view". It
+was two faces on a barrel, Notifications and Messages, from 2026-10-10.
 
-| URL                       | What it is                                                        |
+| URL                       | What is open                                                      |
 | ------------------------- | ----------------------------------------------------------------- |
-| `/nudges`                 | Notifications. Where you land.                                    |
-| `/nudges/messages`        | Messages, with no chat open.                                      |
-| `/nudges/:conversationId` | Messages, with that chat open. `…/settings` is its info screen.   |
+| `/nudges`                 | The list. On a wide screen, Notifications beside it.              |
+| `/nudges/notifications`   | Notifications.                                                    |
+| `/nudges/:conversationId` | That chat. `…/settings` is its info screen.                       |
 | `/nudges/with/:accountId` | Opens the Mate chat with that person, then becomes the URL above. |
+| `/nudges/messages`        | The list, as `/nudges` (older links).                             |
 
-- **Turning.** Both faces wear the standard `<ScopeTitle>` rotator in the
-  Frame's header slot, as every space does, and a sideways swipe turns
-  between them on touch. Inside an open chat a swipe does nothing, so a
-  stray thumb can't throw you out of a conversation (the pane is
-  `data-no-swipe`). Turning back to
-  Messages returns to the chat that was open.
-- **Notifications face** (`notifications_face.tsx`). One row shape for
+- **The list.** **Notifications** is always its first row, whatever the
+  search: a bell, "What's new for you" (or "3 new"), and a count of what is
+  new in it (everything behind the pillar that isn't an unread chat). Then
+  Mates and Krews, mixed, newest activity first. A chat row is the avatar,
+  the name, the latest line, when, and the unread count. The list holds
+  every Krew chat, and a Mate chat once it has a message in it. Search is a
+  full-width box above the list and filters by **name only**. "New chat" is
+  on the Ж menu (`/nudges?compose=1`) and opens a picker of your Mates
+  (`GET /api/v1/nudges/mates`). Its search asks the server (`?q=`), since
+  the list it holds is one page; Rose's **Send a rose** uses the same picker.
+- **What's open** has a head row with its name (a chat's also carries its
+  avatar, Mute and Leave). The title row above is the space's own: Nudges.
+  - **Wide screen:** the list is a column on the left and what's open is on
+    the right. Choosing a row changes the right side in place; each still
+    has its own URL, so links and Back work.
+  - **Phone:** two pages. The list, under the title, is where you land; a
+    chat or Notifications takes the whole page, with the shared back chip
+    to the list ("Chats") in its head row where the title was.
+  - A Krew page's **Open in Nudges** goes to `/nudges/<its chat>`, which
+    opens with that chat picked out in the list.
+- **Notifications** (`notifications_face.tsx`). One row shape for
   everything: who (or a mark, for a system notice), a sentence, a line
   quoting what it is about, and when. A row is a single link. A small badge
   on the avatar says **what happened** where the app already has an icon
@@ -206,33 +224,19 @@ arrived live and were still pending.
 
   The korner icon is the manifest one (`useKornerIcon`), the same as the
   Hub and the pillar: not the thin line set in `<KornerGlyph>`. A source
-  with neither an action icon nor a manifest gets no badge. Opening the
-  face is what marks things seen; what was new on arrival keeps its tint and
-  dot for the rest of the visit. While messages are unread, a shortcut to
-  them sits at the top. Day separators group the list; "Show earlier" pages
-  back.
+  with neither an action icon nor a manifest gets no badge. Opening it is
+  what marks things seen: on a wide screen that is landing on `/nudges`, on
+  a phone tapping its row. What was new on arrival keeps its tint and dot
+  for the rest of the visit. Day separators group the list; "Show earlier"
+  pages back.
 
-- **Messages face.** A list of chats and the open chat (Tal, 2026-10-12;
-  it was an avatar-only strip beside the chat before, with a bell at its
-  head). A row is the avatar, the name, the latest line, when, and the
-  unread count. Mates and Krews are mixed, newest activity first. The list
-  holds every Krew chat, and a Mate chat once it has a message in it. Search
-  is a full-width box above the list and filters by **name only**. "New
-  chat" is on the Ж menu and opens a picker of your Mates
-  (`GET /api/v1/nudges/mates`). Its search asks the server (`?q=`), since
-  the list it holds is one page; Rose's **Send a rose** uses the same picker.
-  - **Wide screen:** the list is a column on the left, the open chat on the
-    right.
-  - **Phone:** two pages. The list, under the title; and a chat, which
-    takes the whole page with one row at the top (the shared back chip to
-    the list, then the name) where the title was.
-  - **Height is measured, not inherited** (`use_fill_viewport.ts`): from the
-    messenger's top edge to the top of the pillar nav, or to the bottom of
-    what is visible when the nav is not (wide screens; the keyboard up). It
-    used to come from pinning the page to `100vh`, which on a phone is
-    taller than the screen whenever the browser's bar is showing, so the
-    composer sat below the bottom edge. Don't put a viewport-height rule
-    back on this page.
+- **Height is measured, not inherited** (`use_fill_viewport.ts`): from the
+  messenger's top edge to the top of the pillar nav, or to the bottom of
+  what is visible when the nav is not (wide screens; the keyboard up). It
+  used to come from pinning the page to `100vh`, which on a phone is
+  taller than the screen whenever the browser's bar is showing, so the
+  composer sat below the bottom edge. Don't put a viewport-height rule
+  back on this page.
 - No presence, last-seen or typing indicators. See
   [Non-negotiables](#non-negotiables).
 
@@ -615,7 +619,8 @@ Traps when removing things:
 
 Rewritten 2026-10-05 to describe what is built. 2026-10-10: notifications
 moved out of the chats onto their own face, and the pinned "Kronk" system
-chat was removed. Earlier designs and notes
+chat was removed. 2026-11-23: the two faces became one space, with
+Notifications as the pinned first row of the list. Earlier designs and notes
 (the original Nudges brief and its amendments, the 2026-08-12 delivery
 audit, and the legacy-notification retirement plan): `git show
 231cca937a00bf7bdbee9db6f25b6cbc541a8565:docs/spaces/nudges.md`.

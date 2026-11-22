@@ -588,7 +588,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       () => {
         void (async () => {
           await apiLeaveNudgeConversation(conversationId);
-          history.push('/nudges/messages');
+          history.push('/nudges');
         })();
       },
     );
@@ -673,7 +673,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           {/* Phones only (the stylesheet hides it on a wide screen, where the
             list is alongside): the shared back chip, to the list of chats. */}
           <BackToKorner
-            href='/nudges/messages'
+            href='/nudges'
             label={intl.formatMessage(messages.back)}
             className='nudges-conversation__to-chats'
           />

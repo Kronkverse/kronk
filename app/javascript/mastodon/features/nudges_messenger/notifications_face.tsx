@@ -9,10 +9,6 @@ import {
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
-
-import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
-import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import { submitMarkers } from 'mastodon/actions/markers';
 import {
   loadPending,
@@ -26,7 +22,6 @@ import {
 import type { ApiNudgeNotificationJSON } from 'mastodon/api_types/nudges_notifications';
 import { compareId } from 'mastodon/compare_id';
 import { EmptyState } from 'mastodon/components/empty_state';
-import { Icon } from 'mastodon/components/icon';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { PushPrompt } from 'mastodon/components/push_prompt';
@@ -40,8 +35,8 @@ import { SystemNoticeRow } from './system_notice_row';
 import { useNudgesAccountStream } from './use_nudges_account_stream';
 import type { NudgesArrival } from './use_nudges_account_stream';
 
-// The Notifications face of Nudges: everything addressed to you, newest
-// first, in one list. Spec: docs/spaces/nudges.md (Nudges spec)
+// Notifications in Nudges: everything addressed to you, newest first, in
+// one list. Spec: docs/spaces/nudges.md (Nudges spec)
 // § Notifications list.
 //
 // Opening the face is what marks things seen — there is no "mark all read"
@@ -70,11 +65,6 @@ const messages = defineMessages({
   earlier: {
     id: 'nudges.notifications.earlier',
     defaultMessage: 'Show earlier',
-  },
-  unreadMessages: {
-    id: 'nudges.notifications.unread_messages',
-    defaultMessage:
-      '{count, plural, one {# unread message} other {# unread messages}}',
   },
   listLabel: {
     id: 'nudges.notifications.list_label',
@@ -116,17 +106,10 @@ type Entry =
 const sameDay = (a: string, b: string) =>
   new Date(a).toDateString() === new Date(b).toDateString();
 
-interface Props {
-  unreadMessages: number;
-  // Where the Messages face is right now (the chat list, or the chat that
-  // was open when the viewer turned away from it).
-  messagesPath: string;
-}
-
-export const NotificationsFace: React.FC<Props> = ({
-  unreadMessages,
-  messagesPath,
-}) => {
+// Notifications, open in the Nudges pane: the first row of the list of
+// chats (docs/spaces/nudges.md § Surfaces). The chats are beside it, or one
+// step back on a phone, so it no longer points at unread messages itself.
+export const NotificationsFace: React.FC = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
 
@@ -302,18 +285,6 @@ export const NotificationsFace: React.FC<Props> = ({
             theme. */}
         <div className='nudges-notifications'>
           <PushPrompt variant='strip' />
-
-          {unreadMessages > 0 && (
-            <Link to={messagesPath} className='nudges-notifications__messages'>
-              <Icon id='chat' icon={ChatIcon} />
-              <span className='nudges-notifications__messages-label'>
-                {intl.formatMessage(messages.unreadMessages, {
-                  count: unreadMessages,
-                })}
-              </span>
-              <Icon id='chevron-right' icon={ChevronRightIcon} />
-            </Link>
-          )}
 
           {status === 'loading' && (
             <LoadingState label={intl.formatMessage(messages.loading)} />

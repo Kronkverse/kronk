@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-23 — Nudges is one space, Notifications first in the list
+
+**Decided by Tal:** "The Nudges space should be melded into one space, with
+notifications forming one chat space, persistently at the top of the list,
+and in the same format as it is now, but integrated so other chats with
+users or groups are listed down the side so its not swapping a page to get
+to chats but just changing view."
+
+The two faces on a barrel (2026-10-10, below) go. Nudges is the list of chats
+with **Notifications** pinned as its first row, whatever the search, and the
+Mates and Krews beneath it; choosing a row changes what's open beside the
+list. Notifications keep their own list and row shape. They are not turned
+into chat bubbles, and activity lines still stay out of the chats. On a wide
+screen `/nudges` opens Notifications beside the list. On a phone, `/nudges`
+is the list and Notifications opens over it like a chat, with the back chip.
+That means a phone now lands on the list, one tap from Notifications, where
+it used to land on them. The turning title and the swipe between faces go
+with the barrel. Detail: `docs/spaces/nudges.md` (Nudges spec) § Surfaces.
+
+---
+
 ## 2026-11-22 — Kronk asks Anthemos, and you tap to allow
 
 Tal: handing over from Kronk to Anthemos needs a clear handshake between
@@ -2953,6 +2974,9 @@ Considered and not taken: grouping the list by kind, and filter chips. Code:
 ---
 
 ## 2026-10-10 — Notifications get their own face in Nudges
+
+_The two faces were merged into one space on 2026-11-23 (above); activity
+lines staying out of the chats still holds._
 
 **Decided by Tal**, after requests for a plain notifications space. Nudges
 keeps its pillar and gains two faces on the barrel: **Notifications**, where
