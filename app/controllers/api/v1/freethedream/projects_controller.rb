@@ -149,6 +149,25 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
+  # Assign a fractal to someone in the projekt, or take them off it
+  # (Kommons "Fractals", 2026-11-22). Nobody leads a Komponent, so anyone
+  # in the projekt can.
+  def assign
+    require_member!(@project.top)
+    raise Mastodon::NotPermittedError unless @project.fractal?
+
+    assignment = @project.assignments.find_or_initialize_by(account_id: params[:account_id])
+    return render_invalid(assignment) unless assignment.save
+
+    render_empty
+  end
+
+  def unassign
+    require_member!(@project.top)
+    @project.assignments.where(account_id: params[:account_id]).delete_all
+    render_empty
+  end
+
   # You've looked at this project's or section's talk: nothing in it is new
   # to you any more.
   def seen

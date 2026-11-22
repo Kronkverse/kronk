@@ -382,6 +382,61 @@ $freethedream-wide: 1000px;
   }
 }
 
+// A Komponent's fractals (Kommons "Fractals", 2026-11-22): each a panel
+// under its checklist, named like a card, with who it's assigned to and
+// its own checklist.
+.freethedream-fractal {
+  margin-block-start: 1rem;
+  padding: 0.25rem 0.75rem 0.85rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+
+  .freethedream-section {
+    margin-block-start: 0.5rem;
+  }
+
+  .freethedream-section__title {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  &__about {
+    margin: 0 0 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block-end: 0.75rem;
+
+    .people-row {
+      --people-row-size: 28px;
+
+      margin-block: 0;
+    }
+  }
+
+  &__remove.icon-button {
+    color: var(--text-muted);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--destructive);
+    }
+  }
+
+  &__add {
+    margin-block-start: 1rem;
+  }
+}
+
 // Working groups: a grid of tiles, more columns as the Stage widens.
 .freethedream-groups {
   list-style: none;

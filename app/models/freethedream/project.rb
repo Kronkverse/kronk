@@ -62,6 +62,7 @@ module Freethedream
     has_many :needed_by, through: :dependent_links, source: :project
     has_many :comments, class_name: 'Freethedream::Comment', as: :subject, dependent: :delete_all
     has_many :gang_members, class_name: 'Freethedream::GangMember', dependent: nil
+    has_many :assignments, class_name: 'Freethedream::Assignment', dependent: nil
     has_many :activities, class_name: 'Freethedream::Activity', dependent: nil
 
     enum :joining, { open: 0, by_request: 1 }, suffix: :joining, validate: true

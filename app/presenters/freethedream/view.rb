@@ -91,6 +91,9 @@ module Freethedream
         source_idea: project.source_idea && { id: project.source_idea_id.to_s, title: project.source_idea.title },
         progress: tree.progress(project.id),
         sections: tree.children(project.id).map { |section| section_row(section, tree) },
+        # A Komponent's fractals, each a checklist of its own on the
+        # Komponent's page (Kommons "Fractals", 2026-11-22).
+        fractals: project.gang? ? tree.children(project.id).map { |fractal| fractal_row(fractal, tree) } : [],
         still_needed: still_needed(project, tree),
         items: own_items.sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) },
         inside: inside(project, tree),
@@ -102,7 +105,7 @@ module Freethedream
         in_gang: tree.joined?(Freethedream::GangNudges.gang_of(project)&.id, @viewer&.id),
         membership: membership_state(project),
         members_count: Membership.member.where(project_id: top.id).count,
-        members: project.top? ? Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
+        members: project.fractal? ? [] : Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) },
         people: project.top? ? people(top, tree) : [],
         level: level(project),
         crew: project.top? ? [] : crew(project, tree),
@@ -279,6 +282,16 @@ module Freethedream
         joined: tree.joined?(section.id, @viewer&.id),
         progress: tree.progress(section.id),
       }
+    end
+
+    # A fractal on its Komponent's page: its own checklist, and who it is
+    # assigned to.
+    def fractal_row(fractal, tree)
+      section_row(fractal, tree).merge(
+        items: tree.items_in([fractal.id]).sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) },
+        assignees: tree.assignees(fractal.id).map { |acct| account(acct) },
+        can: { remove: fractal.owned_by?(@viewer) && !fractal.holds_others_work?(@viewer) }
+      )
     end
 
     # Who's in an emergence and what each is on, for its Krew: whoever
@@ -564,12 +577,18 @@ module Freethedream
         @by_parent = @parts.group_by(&:parent_id)
         @by_id = ([top] + @parts).index_by(&:id)
         @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account, question: :answers).to_a
+        @assigned = Assignment.where(project_id: @parts.map(&:id)).includes(:account).order(:created_at, :id).group_by(&:project_id)
         @joined = GangMember.where(project_id: @parts.map(&:id)).pluck(:project_id, :account_id).group_by(&:first).transform_values { |rows| rows.map(&:last) }
       end
 
       # Whether `account_id` joined the Komponent `id`.
       def joined?(id, account_id)
         id.present? && account_id.present? && (@joined[id] || []).include?(account_id)
+      end
+
+      # Who the fractal `id` is assigned to, first assigned first.
+      def assignees(id)
+        (@assigned[id] || []).map(&:account)
       end
 
       attr_reader :parts
