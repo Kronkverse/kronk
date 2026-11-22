@@ -156,6 +156,26 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(edges['composer']).to be_within(1.5).of(edges['screen'])
   end
 
+  # Tal, 2026-11-23: bubbles, and the emoji picker at the side of a message
+  # (as in Signal), not a smiley under every one.
+  it 'puts the reaction control beside the bubble, out until the bubble is tapped' do
+    page.current_window.resize_to(390, 800)
+    visit "/nudges/with/#{ana.id}"
+
+    message = find('.nudges-msg', text: 'Dawn patrol tomorrow?')
+    expect(message).to have_css('.nudges-msg__line > .nudges-msg__bubble + .nudges-msg__actions .emoji-picker-dropdown', visible: :all)
+    expect(message).to have_no_css('.nudges-msg__reactions')
+    expect(page).to have_no_css('.nudges-msg--active')
+
+    message.find('.nudges-msg__body').click
+    expect(page).to have_css('.nudges-msg--active', text: 'Dawn patrol tomorrow?')
+    expect(message).to have_css('.nudges-msg__actions .emoji-picker-dropdown button', visible: :visible)
+
+    # A tap on the empty stream puts it away.
+    page.execute_script("document.querySelector('.nudges-conversation__stream').click()")
+    expect(page).to have_no_css('.nudges-msg--active')
+  end
+
   it 'opens the chat with a person from their account id' do
     visit "/nudges/with/#{ana.id}"
 

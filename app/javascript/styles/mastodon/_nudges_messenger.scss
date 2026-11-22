@@ -798,6 +798,7 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 
 .nudges-msg__bubble {
   position: relative;
+  display: flow-root; // holds the floated meta line
   min-width: 0;
   padding: 0.45rem 0.75rem 0.35rem;
   border-radius: var(--radius-large);
@@ -829,13 +830,16 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   }
 }
 
-// When, and whether it's been read: small, at the bubble's foot.
+// When, and whether it's been read: small, at the bubble's foot. It
+// floats, so on a short message it sits at the end of the last line (as
+// in Signal) and only takes a line of its own when the words fill theirs.
 .nudges-msg__meta {
   display: flex;
+  float: inline-end;
   justify-content: flex-end;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 0.1rem;
+  margin: 0.35rem 0 0 0.6rem;
   color: var(--text-muted);
   font-size: 0.68rem;
   line-height: 1.2;
