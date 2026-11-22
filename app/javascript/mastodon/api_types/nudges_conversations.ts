@@ -47,6 +47,8 @@ export interface ApiNudgeMessageMediaJSON {
   type: string; // 'image' | 'video' | 'gifv' | 'audio' | 'unknown'
   url: string | null;
   preview_url: string | null;
+  // The file is still being processed; `url` is null until it's ready.
+  processing?: boolean;
   description: string | null;
 }
 
