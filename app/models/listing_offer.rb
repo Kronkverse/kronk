@@ -57,8 +57,13 @@ class ListingOffer < ApplicationRecord
   # `variant` is a choice per variation, in the seller's order; `options`
   # is [{ name:, choice: }]. Anything that doesn't match the listing is an
   # error rather than a guess.
-  def self.ask(listing, offerer:, variant: nil, options: nil, quantity: 1, message: nil, starts_at: nil, route: nil, details: nil, ticket_date_id: nil)
+  #
+  # Asking to unlock a lesson (docs/spaces/wachuneed.md, Lessons) is a
+  # request like any other; on one priced Pay what you want, `amount_cents`
+  # is what the person says they'll pay.
+  def self.ask(listing, offerer:, variant: nil, options: nil, quantity: 1, message: nil, starts_at: nil, route: nil, details: nil, ticket_date_id: nil, amount_cents: nil)
     request = new(listing: listing, offerer: offerer, quantity: quantity.to_i, message: message.to_s.strip.presence)
+    request.amount_cents = Integer(amount_cents.to_s, exception: false) if listing.lesson? && listing.price_type == 'offers'
     request.choose(variant, options)
     request.book(starts_at, route, details) if listing.bookable?
     request.pick_date(ticket_date_id) if listing.tickets?
@@ -129,7 +134,7 @@ class ListingOffer < ApplicationRecord
       raise ActiveRecord::RecordInvalid, self if ticket_date && !ticket_date.lock!.room_for?(quantity) && seats_error!
 
       update!(state: 'accepted', responded_at: Time.current)
-      listing.update!(state: 'reserved') if !listing.ongoing? && !listing.bookable? && !listing.tickets? && listing.state == 'live'
+      listing.update!(state: 'reserved') if !listing.ongoing? && !listing.bookable? && !listing.tickets? && !listing.lesson? && listing.state == 'live'
     end
     publish_offer_response('wachuneed.offer.accepted')
   end
@@ -286,6 +291,10 @@ class ListingOffer < ApplicationRecord
       errors.add(:base, 'You cannot ask for this')
     elsif listing.tickets_elsewhere?
       errors.add(:base, 'Tickets for this are sold elsewhere')
+    elsif listing.lesson_open?
+      errors.add(:base, 'This lesson is open to everyone')
+    elsif listing.lesson? && listing.listing_offers.accepted.exists?(offerer_id: offerer.id)
+      errors.add(:base, 'You can already open this lesson')
     elsif listing.tickets? && ticket_date.nil?
       errors.add(:base, 'Choose a date')
     elsif listing.tickets? && (ticket_date.starts_at <= Time.current || !ticket_date.room_for?(quantity))
