@@ -150,7 +150,7 @@ RSpec.describe 'Projekts', :js, :streaming do
 
   # Kommons "Checklist" (2026-11-22): take off an entry added by mistake.
   # One tap for your own; asked first once someone else has a hand in it.
-  it 'takes an entry off the checklist with its ×', :aggregate_failures do
+  it 'deletes an entry from its ⋯ menu', :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do
       fill_in placeholder: 'Add something to do', with: 'Hall deposti'
@@ -158,8 +158,9 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
 
     within('.freethedream-checklist__entry', text: 'Hall deposti') do
-      click_on 'Take Hall deposti off the checklist'
+      click_on 'More for Hall deposti'
     end
+    page.document.find('.privacy-dropdown__option', text: 'Delete').click
     expect(page).to have_no_css('.freethedream-checklist__entry', text: 'Hall deposti')
     expect(Freethedream::Item.where(title: 'Hall deposti')).to be_empty
   end
@@ -173,8 +174,9 @@ RSpec.describe 'Projekts', :js, :streaming do
     visit current_path
 
     within('.freethedream-checklist__entry', text: 'Gas bottles') do
-      click_on 'Take Gas bottles off the checklist'
+      click_on 'More for Gas bottles'
     end
+    page.document.find('.privacy-dropdown__option', text: 'Delete').click
     expect(page).to have_text('Someone else already has a hand in it.')
     click_on 'Take it off'
     expect(page).to have_no_css('.freethedream-checklist__entry', text: 'Gas bottles')
@@ -206,7 +208,7 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Assignment.sole).to have_attributes(account: bob.account)
   end
 
-  # Kommons "drag and drop/move checklist items" (2026-11-22): Move to… on
+  # Kommons "drag and drop/move checklist items" (2026-11-22): the ⋯ menu on
   # a phone or from a keyboard, a drag on a computer.
   it 'moves a checklist entry into a fractal and back', :aggregate_failures do
     visit_kitchen
@@ -218,8 +220,8 @@ RSpec.describe 'Projekts', :js, :streaming do
       send_keys :enter
     end
 
-    click_on 'Move Spice run to another checklist'
-    page.document.find('.privacy-dropdown__option', text: 'Cooking').click
+    click_on 'More for Spice run'
+    page.document.find('.privacy-dropdown__option', text: 'Move to Cooking').click
     within('.freethedream-fractal', text: 'Cooking') do
       expect(page).to have_css('.freethedream-checklist__entry', text: 'Spice run')
     end
