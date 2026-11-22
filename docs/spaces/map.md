@@ -421,9 +421,23 @@ OpenStreetMap `location_url`, or no `location_url` and a Konnected Place
 `?event=<slug>` too, so that one event gets its pin even when you haven't
 answered it, if you may see it.
 
+**One marker per spot** (Tal, 2026-11-23: "Why is there two indicators?").
+An event pinned at its Place used to draw twice: the Places layer drew the
+Place's pin glyph and the events layer an event tile underneath, at the
+same point. Now an event pin says which Place it stands on (`place`: `id`,
+`name`, `address`, `url`, only when the pin comes from the Place), the
+events at one Place, or at one point, are a single marker, and that Place
+draws no pin of its own (`EventLayer` hands the ids to `PlaceLayer`). The
+marker is a small date badge, the month over the day of the next event
+there, with a point at the spot and "+N" when more share it; a Mate is a
+face and a plain Place is a pin glyph. Tapping it opens one card: each
+event (date, what, when, **Open in Kalendar**), then where they are, the
+Place's name, address and Country with **Open place →**, or the event's own
+place name.
+
 **What's on.** An event stays on the map while it is happening (started and
 not yet ended; one with no end time counts as on for three hours), and its pin
-shows when: happening now, it glows and slowly breathes; starting within the
+shows when (on the spot's marker, the busiest of its events): happening now, it glows and slowly breathes; starting within the
 next week, it glows softly; later ones are plain (`whatsOn` in
 `event_layer.tsx`; still, without the breathing, with reduced motion).
 

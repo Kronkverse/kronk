@@ -75,6 +75,29 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.map-place-card', text: 'Bondi Pavilion')
   end
 
+  # Tal, 2026-11-23: "Why is there two indicators?" An event at its Place
+  # is one marker, and the events sharing a Place are one marker too.
+  it 'draws one marker for the events at a Place, and one card', :aggregate_failures do
+    hall = MapPlace.create!(account: bob.account, name: 'Moyhu Hall', address: 'Moyhu, Victoria', latitude: -36.58, longitude: 146.38)
+    ember = Event.create!(account: bob.account, title: 'Ember', start_time: 3.days.from_now)
+    jam = Event.create!(account: bob.account, title: 'Hall jam', start_time: 20.days.from_now)
+    [ember, jam].each do |event|
+      KornerAttachment.create!(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: hall.id,
+                               kind: 'link', created_by_account: bob.account)
+    end
+
+    visit "/hub/map?event=#{ember.slug}"
+
+    within('.map-event-card') do
+      expect(page).to have_text('Ember')
+      expect(page).to have_text('Hall jam')
+      expect(page).to have_text('Moyhu Hall')
+      expect(page).to have_link('Open place →', href: "/hub/map/places/#{hall.id}")
+    end
+    expect(page).to have_css('.map-event-pin', count: 1, text: '+1')
+    expect(page).to have_no_css('.map-place-pin')
+  end
+
   it 'logs a trek on the day it happened, not the day it was posted' do
     visit '/hub/map/composer'
 

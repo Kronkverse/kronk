@@ -201,6 +201,16 @@ export const MatesView: React.FC = () => {
   const [noMap, setNoMap] = useState(() => !supportsWebGL());
   const [pins, setPins] = useState<ApiPresencePinJSON[]>([]);
   const [selfPin, setSelfPin] = useState<ApiPresencePinJSON | null>(null);
+  // The Places your events stand on: the event marker is the one marker
+  // there, so PlaceLayer leaves their pins off (docs/spaces/map.md, Events).
+  const [eventPlaces, setEventPlacesState] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const setEventPlaces = useCallback((ids: ReadonlySet<string>) => {
+    setEventPlacesState((was) =>
+      was.size === ids.size && [...ids].every((id) => was.has(id)) ? was : ids,
+    );
+  }, []);
 
   // People strip is sorted closest-to-me first when a self-pin exists;
   // otherwise the API's own order is preserved (freshest first, per
@@ -762,7 +772,11 @@ export const MatesView: React.FC = () => {
             markers, and reads `?event=<slug>` from the URL to focus
             on a specific event when someone follows the location link
             from event_detail. */}
-        <EventLayer map={mapRef.current} ready={ready} />
+        <EventLayer
+          map={mapRef.current}
+          ready={ready}
+          onPlaces={setEventPlaces}
+        />
 
         {/* First Nations Country — a picture layer over Australia, under
             the pins, switched on from its own button under the zoom. */}
@@ -770,7 +784,7 @@ export const MatesView: React.FC = () => {
 
         {/* Places — exact spots with an address that things Konnect
             to (docs/spaces/map.md, Places). Reads `?map_place=<id>`. */}
-        <PlaceLayer map={mapRef.current} ready={ready} />
+        <PlaceLayer map={mapRef.current} ready={ready} hidden={eventPlaces} />
 
         {/* Live location — Mates sharing exactly where they are with you
             from Anthemos (docs/spaces/map.md, Live location). Reads
