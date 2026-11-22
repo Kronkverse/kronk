@@ -1969,61 +1969,94 @@
 }
 
 // ── Event pins (Kalendar ↔ Map bridge) ───────────────────────────────
-// Distinct from the mates teardrop so the two layers read as different
-// things: presence = teardrop with a face, event = squircle with the
-// Kalendar spiral glyph. Huddle events swap in a videocam glyph.
+// One marker per spot (event_layer.tsx): a small date badge, the month
+// over the day as on the card and in Kalendar, with a point at the spot.
+// It reads apart from a Mate's face and a Place's pin glyph, and a Place
+// an event stands on draws no pin of its own. "+2" when events share it.
 .map-event-pin {
-  --ev-w: 40px;
-  --ev-h: 40px;
-
-  width: var(--ev-w);
-  height: var(--ev-h);
+  position: relative;
+  min-inline-size: 2.5rem;
+  padding: 0.25rem 0.4rem 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-block-end: 0.4rem;
+  background: var(--surface-elevated);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-small);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  line-height: 1;
   cursor: pointer;
   filter: drop-shadow(0 3px 6px rgb(0 0 0 / 45%));
-  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+  transition: transform var(--dur-fast) var(--ease-out);
+
+  // The point, in the border's colour.
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline-start: 50%;
+    translate: -50% 0;
+    border: 0.4rem solid transparent;
+    border-block-start-color: var(--accent);
+  }
 
   &:hover,
   &:focus-visible {
     transform: scale(1.08);
+    outline: none;
   }
 
-  &__bulb {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  &__month {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  &__day {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  &__more {
+    position: absolute;
+    inset-block-start: -0.55rem;
+    inset-inline-end: -0.7rem;
+    padding: 0.1rem 0.3rem;
+    background: var(--accent);
+    border-radius: var(--radius-round);
     color: var(--semantic-text-on-accent);
-    background: var(--kronk-purple-accent);
-    border: 2px solid color-mix(in oklab, var(--kronk-purple-bright) 70%, white);
-    border-radius: var(--radius-medium);
-
-    svg {
-      width: 60%;
-      height: 60%;
-      fill: currentColor;
-    }
+    font-family: var(--font-body, inherit);
+    font-size: 0.65rem;
+    font-weight: 700;
   }
 
-  &--huddle &__bulb {
-    background: var(--kronk-purple-bright);
+  &--huddle {
+    border-color: var(--kronk-purple-bright);
+
+    &::after {
+      border-block-start-color: var(--kronk-purple-bright);
+    }
   }
 
   // What's on: in the next week a soft glow; happening now a glow that
   // breathes (event_layer.tsx, whatsOn). Still with reduced motion.
-  &--soon &__bulb {
+  &--soon {
     box-shadow: 0 0 10px 2px
       color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
   }
 
-  &--now &__bulb {
+  &--now {
     box-shadow: 0 0 14px 4px
       color-mix(in oklab, var(--kronk-purple-bright) 80%, transparent);
     animation: map-event-on 2.4s ease-in-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    &--now &__bulb {
+    &--now {
       animation: none;
     }
   }
@@ -2196,6 +2229,46 @@
 
     &:hover {
       text-decoration: underline;
+    }
+  }
+
+  // A spot's card (event_layer.tsx, SpotCard): each event there, then
+  // where they are.
+  &--spot {
+    flex-direction: column;
+    max-block-size: min(60vh, 26rem);
+    overflow-y: auto;
+  }
+
+  &__events {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__event {
+    display: flex;
+    gap: 12px;
+  }
+
+  &__events &__event + &__event {
+    padding-block-start: 12px;
+    border-block-start: 1px solid var(--border-subtle);
+  }
+
+  &__where {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-block-start: 10px;
+    border-block-start: 1px solid var(--border-subtle);
+
+    .map-event-card__location {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text-primary);
+      font-size: 13px;
     }
   }
 }

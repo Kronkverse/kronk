@@ -8,7 +8,9 @@
 # filtered by the caller's visibility on the underlying Event (see
 # `Event#visible_to?` and `Event.visible_to`). An event's own
 # `location_url` wins over its Place. Tapping a pin opens a preview card
-# with the essentials + a link to /kalendar/<slug>.
+# with the essentials + a link to /kalendar/<slug>. A pin that stands on
+# its Place says which (`place`), so the Map draws the two as one marker
+# instead of a Place pin over an event pin (docs/spaces/map.md, Events).
 #
 #   GET /api/v1/map/events — pins for my upcoming events, and ones on now
 #   GET /api/v1/map/events?event=<slug> — the same, plus that one event
@@ -115,7 +117,19 @@ class Api::V1::Map::EventsController < Api::BaseController
     return Kronk::OsmPin.parse(event.location_url) if event.location_url.present?
 
     place = event.konnected_place
-    place && { lat: place.latitude.to_f, lng: place.longitude.to_f, zoom: nil }
+    place && { lat: place.latitude.to_f, lng: place.longitude.to_f, zoom: nil, place: place }
+  end
+
+  # The Place a pin stands on, for the one card. The viewer may see it:
+  # it is the host's own, Konnected by them to an event the viewer sees
+  # (MapPlace#visible_to?).
+  def place_json(place)
+    place && {
+      id: place.id.to_s,
+      name: place.name,
+      address: place.address,
+      url: Kronk::KornerRecords.path_for('map', place),
+    }
   end
 
   def project(event, coords, going_count)
@@ -130,6 +144,7 @@ class Api::V1::Map::EventsController < Api::BaseController
       lat: coords[:lat],
       lng: coords[:lng],
       zoom: coords[:zoom],
+      place: place_json(coords[:place]),
       # The First Nations Country it is on (Kronk::FirstNationsCountries).
       country: Kronk::FirstNationsCountries.at(coords[:lat], coords[:lng]),
       host: {
