@@ -403,6 +403,14 @@ module Freethedream
         mine: item.owned_by?(@viewer),
       }
 
+      # Who's been suggested for it (Kommons "Tagging people on a checklist
+      # item", 2026-11-22), until they take it on or say it's not for them.
+      if item.need_kind? || item.job_kind?
+        suggestions = item.suggestions.sort_by { |s| [s.created_at, s.id] }
+        row[:suggested] = suggestions.map { |s| account(s.account) }
+        row[:suggested_me] = @viewer.present? && suggestions.any? { |s| s.account_id == @viewer.id }
+      end
+
       case item.kind
       when 'need'
         covered = item.covered
@@ -576,7 +584,7 @@ module Freethedream
         @parts = Project.where(root_id: top.id).includes(:owner).order(:created_at, :id).to_a
         @by_parent = @parts.group_by(&:parent_id)
         @by_id = ([top] + @parts).index_by(&:id)
-        @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account, question: :answers).to_a
+        @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account, suggestions: :account, question: :answers).to_a
         @assigned = Assignment.where(project_id: @parts.map(&:id)).includes(:account).order(:created_at, :id).group_by(&:project_id)
         @joined = GangMember.where(project_id: @parts.map(&:id)).pluck(:project_id, :account_id).group_by(&:first).transform_values { |rows| rows.map(&:last) }
       end
