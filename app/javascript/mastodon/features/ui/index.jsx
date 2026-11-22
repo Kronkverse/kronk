@@ -453,12 +453,14 @@ class SwitchingColumnsArea extends PureComponent {
                 alongside followers and following. Requests keep their own
                 page at /follow_requests; the rest is now just Mates. */}
             <Redirect from='/@:acct/connections' to='/@:acct' exact />
-            {/* Nudges has two faces on one barrel: /nudges is Notifications
-                (where you land), /nudges/messages is the messenger, and
-                /nudges/:conversationId is the messenger with that chat open.
-                /nudges/with/:accountId resolves a person to their Mate chat.
-                All four are the same component. See docs/spaces/nudges.md
-                (Nudges spec) § Surfaces. */}
+            {/* Nudges is one space: the list of chats led by Notifications,
+                and whatever is open beside it. /nudges is the list (with
+                Notifications open on a wide screen), /nudges/notifications
+                has Notifications open, /nudges/:conversationId that chat,
+                and /nudges/with/:accountId resolves a person to their Mate
+                chat. /nudges/messages, the old Messages face, is the list.
+                All the same component. See docs/spaces/nudges.md (Nudges
+                spec) § Surfaces. */}
             {/* Per-conversation settings — the "chat info" screen a Signal
                 user opens by tapping the chat's header. Declared BEFORE the
                 bare :conversationId route so the settings suffix wins the
@@ -467,8 +469,9 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+)" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/with/:accountId(\d+)" component={Nudges} content={children} exact />}
             {signedIn && <WrappedRoute path="/nudges/messages" component={Nudges} content={children} exact />}
-            {/* The pinned "Kronk" system chat is gone; its notices are on the
-                Notifications face. */}
+            {signedIn && <WrappedRoute path="/nudges/notifications" component={Nudges} content={children} exact />}
+            {/* The pinned "Kronk" system chat is gone; its notices are in
+                Notifications. */}
             <Redirect from='/nudges/kronk' to='/nudges' exact />
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
             {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons" />}

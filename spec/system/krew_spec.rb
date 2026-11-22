@@ -171,6 +171,12 @@ RSpec.describe 'Krew page', :js, :streaming do
 
     within('.attachment-section') { click_on 'Chat' }
     expect(page).to have_css('.krew-detail__chat')
+
+    # Open in Nudges lands on this chat, picked out in the list.
+    click_on 'Open in Nudges'
+    expect(page).to have_current_path(%r{\A/nudges/\d+\z})
+    expect(page).to have_css('.nudges-row--active', text: 'Growers')
+    expect(page).to have_text('On my way')
   end
 
   it 'opens People from the faces, with the people asking to join' do
