@@ -483,7 +483,7 @@ the place the work is done:
   fractals"): once a Komponent has fractals, anyone in the projekt can move
   an entry from its checklist into a fractal's, out again, or from one
   fractal to another. On a computer, drag it onto the other checklist
-  (it's outlined, "Drop it here"); on a phone or from a keyboard, the →
+  (it's outlined, "Drop it here"); on a phone or from a keyboard, the ⋯
   in the entry's corner opens **Move to…**, a menu of the other
   checklists (`POST /items/:id/move` with `from_project_id` and
   `to_project_id`, both in the same projekt). Who is on it, bringing it or
