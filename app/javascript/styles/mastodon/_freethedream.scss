@@ -1744,9 +1744,9 @@ $freethedream-wide: 1000px;
     min-inline-size: 10rem;
   }
 
-  // An entry's corner: Move to… (when the page has other checklists) and,
-  // for whoever added it, a quiet × to take it off. Pinned to the top
-  // corner so they never wrap onto a line of their own on a phone.
+  // An entry's corner: its ⋯ menu (Move to… when the page has other
+  // checklists, Delete for whoever added it). Pinned to the top corner so
+  // it never wraps onto a line of its own on a phone.
   &__entry {
     position: relative;
     padding-inline-end: calc(0.75rem + var(--corner-buttons, 0) * 1.9rem);
@@ -1764,19 +1764,13 @@ $freethedream-wide: 1000px;
     gap: 0.15rem;
   }
 
-  &__move.icon-button,
-  &__remove.icon-button {
+  &__more.icon-button {
     color: var(--text-muted);
 
     &:hover,
     &:focus-visible {
       color: var(--text-primary);
     }
-  }
-
-  &__remove.icon-button:hover,
-  &__remove.icon-button:focus-visible {
-    color: var(--destructive);
   }
 
   // A checklist an entry is being dragged over.
