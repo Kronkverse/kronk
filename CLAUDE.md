@@ -42,8 +42,8 @@ should be.
 - **One reach ladder** — Just me → Mates → Orbit → Kronkverse — sets both how far
   a post goes (the composer) and how wide your feed reads (`/home/settings`).
   **Krews** are a separate group axis on top. Mastodon's visibilities are gone.
-- **Four pillars** — Me, Home (the feed), Hub, Nudges (notifications and
-  messages, two faces of one space)
+- **Four pillars** — Me, Home (the feed), Hub, Nudges (one list of chats
+  with Notifications pinned first)
   — and **korners** plugged into the Hub: Kalendar, Kommons, Booth, Kuestions,
   Moments, Albutts, Wachuneed, Kronikles, Krew and more.
 - **Governance is in the open.** Structural change is a Kommons proposal on the
@@ -163,7 +163,7 @@ server-side strings go in `config/locales/kronk/overrides.yml`.
 | Kommunity                            | (a reach tier)                   | the community korner, not a reach tier                  |
 | korner                               | app, module, planet              | "space" is the general term; a korner is one kind       |
 | tune in / tune out                   | subscribe, follow (a korner)     | code field stays `subscription`                         |
-| nudge, Nudges                        | bell                             | the space; its two faces are Notifications and Messages |
+| nudge, Nudges                        | bell                             | the space; Notifications sits pinned atop its chat list |
 | froth                                | like, favourite                  | code stays `favourite`                                  |
 | Konnect, Konnected, Diskonnect       | attach, attached, link           | records across spaces; code stays `attachment`          |
 | Kuddle                               | room, Huddle room                | a topical Huddle; code stays `room` / `HuddleSession`   |

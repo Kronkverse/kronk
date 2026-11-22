@@ -2,9 +2,9 @@
 
 require 'rails_helper'
 
-# Nudges has two faces on one barrel: Notifications at /nudges (where you
-# land) and Messages at /nudges/messages. docs/spaces/nudges.md (Nudges spec)
-# § Surfaces.
+# Nudges is one space: the list of chats, led by Notifications, and whatever
+# is open beside it (on a phone, over it). docs/spaces/nudges.md (Nudges
+# spec) § Surfaces.
 RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
   include ProfileStories
 
@@ -43,14 +43,14 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.hub-switcher__badge', text: /\A[23]\z/)
 
     visit '/nudges'
-    expect(page).to have_css('h1', text: 'Notifications')
+    expect(page).to have_css('.nudges-messenger__notifications .nudges-conversation__name', text: 'Notifications')
     expect(page).to have_css('.hub-switcher__badge', text: '1')
   end
 
-  it 'lands on notifications, rolled up and in plain words' do
+  it 'opens on notifications on a wide screen, rolled up and in plain words' do
     visit '/nudges'
 
-    expect(page).to have_css('h1', text: 'Notifications')
+    expect(page).to have_css('.nudges-row--notifications.nudges-row--active')
     expect(page).to have_content('Ben and 1 other frothed your post')
     expect(page).to have_content('Swell is up at the point')
     expect(page).to have_content('Ana wants to be Mates')
@@ -63,27 +63,28 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.nudges-notification--fresh', count: 1)
   end
 
-  it 'turns to messages and back' do
-    visit '/nudges'
+  # Tal, 2026-11-23: notifications are "one chat space, persistently at the
+  # top of the list", and the chats are beside it, "so its not swapping a page
+  # to get to chats but just changing view".
+  it 'keeps Notifications first in the list and changes the view beside it' do
+    visit "/nudges/with/#{ana.id}"
+    expect(page).to have_content('Dawn patrol tomorrow?')
 
-    # You land on notifications, so waiting messages are pointed out.
-    expect(page).to have_link('1 unread message')
+    # First in the list, with what's new in it counted.
+    expect(page).to have_css('.nudges-sidebar__list:first-of-type .nudges-row--notifications .nudges-row__badge', text: /\A[12]\z/)
 
-    click_on 'Next view'
-    expect(page).to have_css('.nudges-messenger')
-    expect(page).to have_current_path('/nudges/messages')
-    # The messenger carries no notifications any more.
+    find('.nudges-row--notifications .nudges-row__button').click
+    expect(page).to have_current_path('/nudges/notifications')
+    expect(page).to have_css('.nudges-notification', count: 2)
+    expect(page).to have_css('.nudges-notification--fresh', count: 1)
+    # Opening it is what marks them seen.
+    expect(page).to have_no_css('.nudges-row--notifications .nudges-row__badge')
+
+    find('.nudges-row', text: 'Ana').click
     expect(page).to have_no_css('.nudges-notification')
+    expect(page).to have_content('Dawn patrol tomorrow?')
 
-    # Messages wears the same turning title as every space. The bell that
-    # used to lead back is gone.
-    expect(page).to have_css('h1', text: 'Messages')
-    expect(page).to have_no_css('.nudges-sidebar__notifications')
-
-    click_on 'Next view'
-    expect(page).to have_current_path('/nudges')
-    expect(page).to have_css('h1', text: 'Notifications')
-    # Opening the face the first time is what marked them seen.
+    find('.nudges-row--notifications .nudges-row__button').click
     expect(page).to have_css('.nudges-notification', count: 2)
     expect(page).to have_no_css('.nudges-notification--fresh')
   end
@@ -91,33 +92,36 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
   it 'lists chats with a name and the latest line, and finds one by name' do
     visit '/nudges/messages'
 
-    within('.nudges-row') do
+    chats = '.nudges-row:not(.nudges-row--notifications)'
+    within(chats) do
       expect(page).to have_content('Ana')
       expect(page).to have_content('Dawn patrol tomorrow?')
     end
 
     fill_in placeholder: 'Search chats', with: 'zzz'
-    expect(page).to have_no_css('.nudges-row')
+    expect(page).to have_no_css(chats)
     expect(page).to have_content('No match')
+    # Notifications is not a chat to find; it stays put.
+    expect(page).to have_css('.nudges-row--notifications')
 
     fill_in placeholder: 'Search chats', with: 'an'
-    expect(page).to have_css('.nudges-row', count: 1)
+    expect(page).to have_css(chats, count: 1)
   end
 
   it 'on a phone, opens a chat as its own page with the text box on screen' do
     page.current_window.resize_to(390, 800)
-    visit '/nudges/messages'
+    visit '/nudges'
 
-    # The list is the whole page.
-    expect(page).to have_css('h1', text: 'Messages')
-    expect(page).to have_no_css('.nudges-conversation')
+    # The list is the whole page, Notifications first; nothing is open.
+    expect(page).to have_css('h1', text: 'Nudges')
+    expect(page).to have_no_css('.nudges-conversation, .nudges-notification')
 
-    find('.nudges-row__button').click
+    find('.nudges-row', text: 'Ana').click
 
     # The chat takes over: its own row with the way back and the name, no
     # title row, no list.
     expect(page).to have_content('Dawn patrol tomorrow?')
-    expect(page).to have_no_css('h1', text: 'Messages')
+    expect(page).to have_no_css('h1', text: 'Nudges')
     expect(page).to have_no_css('.nudges-row')
     expect(page).to have_link('Chats')
 
@@ -134,8 +138,22 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(edges['composer']).to be <= edges['screen']
 
     click_on 'Chats'
-    expect(page).to have_current_path('/nudges/messages')
-    expect(page).to have_css('.nudges-row')
+    expect(page).to have_current_path('/nudges')
+    expect(page).to have_css('.nudges-row', text: 'Ana')
+  end
+
+  it 'on a phone, opens Notifications from the top of the list, and back' do
+    page.current_window.resize_to(390, 800)
+    visit '/nudges'
+
+    find('.nudges-row--notifications .nudges-row__button').click
+    expect(page).to have_current_path('/nudges/notifications')
+    expect(page).to have_css('.nudges-notification', count: 2)
+    expect(page).to have_no_css('.nudges-row')
+
+    click_on 'Chats'
+    expect(page).to have_current_path('/nudges')
+    expect(page).to have_css('.nudges-row--notifications')
   end
 
   it 'on a wide screen, keeps the list beside the open chat down to the bottom edge' do
@@ -143,8 +161,8 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     visit "/nudges/with/#{ana.id}"
 
     expect(page).to have_content('Dawn patrol tomorrow?')
-    expect(page).to have_css('.nudges-row')
-    expect(page).to have_css('h1', text: 'Messages')
+    expect(page).to have_css('.nudges-row--active', text: 'Ana')
+    expect(page).to have_css('h1', text: 'Nudges')
     expect(page).to have_no_link('Chats')
 
     edges = page.evaluate_script(<<~JS)
