@@ -38,6 +38,33 @@ with the barrel. Detail: `docs/spaces/nudges.md` (Nudges spec) § Surfaces.
 
 ---
 
+## 2026-11-22 — Lessons in Wachuneed, unlocked by the seller
+
+Tal: "the next step … is for people to be able to post lessons … a
+tutorial or a music lesson or a video that they want to post that teaches
+people something … behind essentially a paywall … even have a donation
+option … people can determine either how much that's worth, or they can
+put a price on it". Asked how unlocking should work: "tapping the 'Unlock'
+option sends a request to the poster's nudges, then they take the nudge
+which takes them to the request to access the content, then the poster can
+determine if the person can access, either from received payment or
+through communication, keeps it simple for now".
+
+**Decision:** a sixth offering, **A lesson**, in Wachuneed: a listing with
+a lesson behind it (uploads and notes) that opens for the seller, for
+everyone who can see it when it is free or for a donation, and otherwise
+for each person whose request to unlock it the seller accepts. Prices are a
+set price, Pay what you want (the person says what they'll pay), a
+donation, or free. The seller says how to pay them on the listing. Kronk
+still takes no payment (the rule at the top of docs/spaces/wachuneed.md
+stands): the seller decides who gets in. Paying by card inside Kronk, with
+the lesson opening on payment, is the next step if people sell, and needs
+that rule changed first. The lesson's uploads go only to people who may
+open it, but a file someone was let into can be passed on.
+docs/spaces/wachuneed.md, Lessons.
+
+---
+
 ## 2026-11-22 — Kronk asks Anthemos, and you tap to allow
 
 Tal: handing over from Kronk to Anthemos needs a clear handshake between

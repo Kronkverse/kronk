@@ -14,6 +14,7 @@ export const OFFERINGS: readonly ListingOffering[] = [
   'service',
   'trip',
   'tickets',
+  'lesson',
 ];
 
 export const isOffering = (value: unknown): value is ListingOffering =>
@@ -59,6 +60,12 @@ export const offeringMessages = defineMessages({
     id: 'wachuneed.offering.change',
     defaultMessage: 'Change what you are offering',
   },
+  lesson: { id: 'wachuneed.offering.lesson', defaultMessage: 'A lesson' },
+  lessonHint: {
+    id: 'wachuneed.offering.lesson_hint',
+    defaultMessage:
+      'A tutorial or video that teaches something, opened by you for each person',
+  },
 });
 
 export const OFFERING_LABEL: Record<
@@ -82,6 +89,7 @@ export const OFFERING_LABEL: Record<
     label: offeringMessages.tickets,
     hint: offeringMessages.ticketsHint,
   },
+  lesson: { label: offeringMessages.lesson, hint: offeringMessages.lessonHint },
 };
 
 // Line glyphs for each, in the space purple (--signal).
@@ -116,6 +124,13 @@ const GLYPHS: Record<ListingOffering, React.ReactNode> = {
     <>
       <path d='M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z' />
       <path d='M14 7v10' strokeDasharray='2 2' />
+    </>
+  ),
+  lesson: (
+    <>
+      <path d='M3 9l9-4 9 4-9 4z' />
+      <path d='M7 11v4c0 1.5 2.2 3 5 3s5-1.5 5-3v-4' />
+      <path d='M21 9v5' />
     </>
   ),
 };

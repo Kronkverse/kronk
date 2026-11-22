@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import type { IntlShape } from 'react-intl';
 
 import type {
+  ListingOffering,
   ListingPriceType,
   ListingPriceUnit,
 } from 'mastodon/api_types/wachuneed';
@@ -35,6 +36,11 @@ const messages = defineMessages({
   quote: { id: 'wachuneed.price.quote', defaultMessage: 'Quote' },
   trade: { id: 'wachuneed.price.trade', defaultMessage: 'Trade' },
   free: { id: 'wachuneed.price.free', defaultMessage: 'Free' },
+  payWhatYouWant: {
+    id: 'wachuneed.price.pay_what_you_want',
+    defaultMessage: 'Pay what you want',
+  },
+  donation: { id: 'wachuneed.price.donation', defaultMessage: 'Donation' },
 });
 
 const PER = {
@@ -46,6 +52,8 @@ const PER = {
 } as const;
 
 interface Priced {
+  // A lesson's offers read as Pay what you want (Lessons).
+  offering?: ListingOffering | null;
   price_display?: string | null;
   price_type?: ListingPriceType | null;
   price_unit?: ListingPriceUnit | null;
@@ -57,7 +65,11 @@ export const formatListingPrice = (
 ): string | null => {
   const type = listing.price_type ?? 'fixed';
 
-  if (type === 'offers') return intl.formatMessage(messages.offers);
+  if (type === 'offers')
+    return intl.formatMessage(
+      listing.offering === 'lesson' ? messages.payWhatYouWant : messages.offers,
+    );
+  if (type === 'donation') return intl.formatMessage(messages.donation);
   if (type === 'quote') return intl.formatMessage(messages.quote);
   if (type === 'trade') return intl.formatMessage(messages.trade);
   if (type === 'free') return intl.formatMessage(messages.free);

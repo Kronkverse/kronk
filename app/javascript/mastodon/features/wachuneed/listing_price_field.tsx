@@ -46,6 +46,14 @@ const messages = defineMessages({
   },
   trade: { id: 'wachuneed.price_field.trade', defaultMessage: 'Trade or swap' },
   free: { id: 'wachuneed.price_field.free', defaultMessage: 'Free' },
+  payWhatYouWant: {
+    id: 'wachuneed.price_field.pay_what_you_want',
+    defaultMessage: 'Pay what you want',
+  },
+  donation: {
+    id: 'wachuneed.price_field.donation',
+    defaultMessage: 'Free, for a donation',
+  },
   whole: { id: 'wachuneed.price_field.whole', defaultMessage: 'The lot' },
   hour: { id: 'wachuneed.price_field.hour', defaultMessage: 'An hour' },
   day: { id: 'wachuneed.price_field.day', defaultMessage: 'A day' },
@@ -69,6 +77,14 @@ const WANTED_TYPES: ListingPriceType[] = [
   'trade',
   'free',
 ];
+// A lesson (Lessons): a set price or Pay what you want unlock it person
+// by person; Free and a donation open it to everyone who can see it.
+const LESSON_TYPES: ListingPriceType[] = [
+  'fixed',
+  'offers',
+  'donation',
+  'free',
+];
 const UNITS: ListingPriceUnit[] = ['hour', 'day', 'week', 'month', 'session'];
 
 export const priceHasAmount = (type: ListingPriceType) =>
@@ -76,13 +92,15 @@ export const priceHasAmount = (type: ListingPriceType) =>
 
 export const isPriceType = (value: unknown): value is ListingPriceType =>
   typeof value === 'string' &&
-  (WANTED_TYPES as readonly string[]).includes(value);
+  ([...WANTED_TYPES, 'donation'] as readonly string[]).includes(value);
 
 export const isPriceUnit = (value: unknown): value is ListingPriceUnit =>
   typeof value === 'string' && (UNITS as readonly string[]).includes(value);
 
 interface Props {
   wanted: boolean;
+  // A lesson's own kinds of price, each for the whole lesson.
+  lesson?: boolean;
   type: ListingPriceType;
   amount: string;
   unit: ListingPriceUnit | null;
@@ -93,6 +111,7 @@ interface Props {
 
 export const ListingPriceField: React.FC<Props> = ({
   wanted,
+  lesson = false,
   type,
   amount,
   unit,
@@ -109,7 +128,11 @@ export const ListingPriceField: React.FC<Props> = ({
       case 'up_to':
         return intl.formatMessage(messages.upTo);
       case 'offers':
-        return intl.formatMessage(messages.offers);
+        return intl.formatMessage(
+          lesson ? messages.payWhatYouWant : messages.offers,
+        );
+      case 'donation':
+        return intl.formatMessage(messages.donation);
       case 'quote':
         return intl.formatMessage(wanted ? messages.quotes : messages.quote);
       case 'trade':
@@ -146,15 +169,29 @@ export const ListingPriceField: React.FC<Props> = ({
         label={intl.formatMessage(wanted ? messages.pay : messages.price)}
       >
         <ComposeSelect value={type} onChange={handleType}>
-          {(wanted ? WANTED_TYPES : OFFER_TYPES).map((value) => (
-            <option key={value} value={value}>
-              {typeLabel(value)}
-            </option>
-          ))}
+          {(lesson ? LESSON_TYPES : wanted ? WANTED_TYPES : OFFER_TYPES).map(
+            (value) => (
+              <option key={value} value={value}>
+                {typeLabel(value)}
+              </option>
+            ),
+          )}
         </ComposeSelect>
       </ComposeField>
 
-      {priceHasAmount(type) && (
+      {priceHasAmount(type) && lesson && (
+        <ComposeField label={intl.formatMessage(messages.amount)}>
+          <ComposeInput
+            type='number'
+            min={0}
+            step={0.01}
+            value={amount}
+            onChange={handleAmount}
+          />
+        </ComposeField>
+      )}
+
+      {priceHasAmount(type) && !lesson && (
         <ComposeRow>
           <ComposeField label={intl.formatMessage(messages.amount)}>
             <ComposeInput
