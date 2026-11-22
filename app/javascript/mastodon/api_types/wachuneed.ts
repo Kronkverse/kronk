@@ -83,7 +83,8 @@ export type ListingOffering =
   | 'appointment'
   | 'service'
   | 'trip'
-  | 'tickets';
+  | 'tickets'
+  | 'lesson';
 
 // One date a ticketed listing runs on (docs/spaces/wachuneed.md, Tickets).
 // `seats` and `seats_left` are null when it has no limit (or is sold
@@ -99,6 +100,26 @@ export interface ApiTicketDateJSON {
   event_slug: string | null;
 }
 
+// A lesson's upload, sent only to someone who may open it.
+export interface ApiLessonMediaJSON {
+  id: string;
+  type: 'video' | 'audio' | 'image' | 'unknown';
+  url: string;
+  preview_url: string | null;
+  description: string | null;
+}
+
+export interface ApiLessonJSON {
+  // Free or for a donation: anyone who can see the listing opens it.
+  open: boolean;
+  unlocked: boolean;
+  has_text: boolean;
+  // How many of each kind of upload it has, for the locked preview.
+  counts: Partial<Record<'video' | 'audio' | 'image' | 'unknown', number>>;
+  body?: string | null;
+  media?: ApiLessonMediaJSON[];
+}
+
 // How the price reads (docs/spaces/wachuneed.md, Prices); null is `fixed`.
 export type ListingPriceType =
   | 'fixed'
@@ -106,7 +127,8 @@ export type ListingPriceType =
   | 'offers'
   | 'quote'
   | 'trade'
-  | 'free';
+  | 'free'
+  | 'donation';
 // What an amount is for; null is the whole thing.
 export type ListingPriceUnit = 'hour' | 'day' | 'week' | 'month' | 'session';
 
@@ -136,6 +158,13 @@ export interface ApiListingJSON {
   // A wanted ad's page: how many have answered, and the viewer's answer.
   answers_count?: number;
   my_answer?: { id: string; state: string } | null;
+  // Something on offer: where the viewer's own latest request stands.
+  my_request?: { id: string; state: string } | null;
+  // How to pay the seller, said on the listing (Lessons).
+  pay_details?: string | null;
+  // A lesson (docs/spaces/wachuneed.md, Lessons). `body` and `media` come
+  // only when the viewer may open it.
+  lesson?: ApiLessonJSON;
   location?: string | null;
   // The Place it is Konnected to, if any (detail only). Its card in
   // Konnected then says where the listing is.

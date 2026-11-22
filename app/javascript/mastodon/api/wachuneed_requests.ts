@@ -1,5 +1,9 @@
 import { apiRequestGet, apiRequestPost } from 'mastodon/api';
-import type { ListingPriceUnit } from 'mastodon/api_types/wachuneed';
+import type {
+  ListingOffering,
+  ListingPriceType,
+  ListingPriceUnit,
+} from 'mastodon/api_types/wachuneed';
 
 // Requests for Wachuneed listings (docs/spaces/wachuneed.md, Requests): a
 // buyer asks with the kind, extras and quantity they chose; the seller
@@ -71,6 +75,8 @@ export interface ApiRequestJSON {
     title: string;
     state: string;
     kind: 'offer' | 'wanted';
+    offering?: ListingOffering | null;
+    price_type?: ListingPriceType | null;
     price_unit: ListingPriceUnit | null;
     cover_url: string | null;
     seller: ApiRequestAccountJSON;
@@ -87,6 +93,8 @@ export interface AskParams {
   details?: string;
   // Tickets: the date asked for.
   ticket_date_id?: string;
+  // A Pay what you want lesson: what they'll pay, in cents.
+  amount_cents?: number;
 }
 
 export const apiAskForListing = (listingId: string, params: AskParams) =>

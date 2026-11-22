@@ -71,6 +71,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     ApplicationRecord.transaction do
       @listing.save!
       attach_media!(@listing, media_attachment_ids_param)
+      attach_lesson_media!(@listing) if @listing.lesson?
       Wachuneed::TicketDates.sync(@listing, params[:ticket_dates]) if @listing.tickets? && params.key?(:ticket_dates)
     end
     sync_record_audience!(@listing)
@@ -105,6 +106,12 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
       if params.key?(:media_attachment_ids)
         @listing.listing_photos.destroy_all
         attach_media!(@listing, media_attachment_ids_param)
+      end
+
+      # A lesson's uploads, whole, when sent, as the photos.
+      if @listing.lesson? && params.key?(:lesson_media_ids)
+        @listing.listing_lesson_media.destroy_all
+        attach_lesson_media!(@listing)
       end
 
       # Its dates, whole, when sent; otherwise its events keep up with the
@@ -198,7 +205,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
   def listing_params
     params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :price_type, :price_unit, :looking_for, :where_mode, :due_on, :spots, :location, :state, :kind,
-                  :listing_shop_section_id, :ongoing, :availability, :announced, :visibility, :offering, :ticket_url)
+                  :listing_shop_section_id, :ongoing, :availability, :announced, :visibility, :offering, :ticket_url,
+                  :lesson_body, :pay_details)
   end
 
   # Accept a homogeneous array of media_attachment_ids under either
@@ -229,6 +237,20 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     ordered.each_with_index do |media, index|
       ListingPhoto.create!(listing: listing, media_attachment: media, position: index,
                            variant_value: shows[media.id.to_s].to_s.strip.first(40).presence)
+    end
+  end
+
+  # A lesson's uploads (docs/spaces/wachuneed.md, Lessons), from
+  # `lesson_media_ids` in order: the caller's own, not yet on anything, up
+  # to Listing::MAX_LESSON_MEDIA. Kept out of the photos, so only someone
+  # who may open the lesson is ever sent them.
+  def attach_lesson_media!(listing)
+    ids = Array(params[:lesson_media_ids]).filter_map { |id| Integer(id.to_s, exception: false) }.uniq.first(Listing::MAX_LESSON_MEDIA)
+    return if ids.empty?
+
+    scope = MediaAttachment.where(id: ids, account: current_account, status_id: nil)
+    ids.filter_map { |id| scope.find { |m| m.id == id } }.each_with_index do |media, index|
+      listing.listing_lesson_media.create!(media_attachment: media, position: index)
     end
   end
 end

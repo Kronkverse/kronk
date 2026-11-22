@@ -48,13 +48,14 @@ class Listing < ApplicationRecord
   KINDS      = %w(offer wanted).freeze
   # What it offers, chosen first in the composer (docs/spaces/wachuneed.md,
   # What are you offering?). Null is a product, as every older listing is.
-  OFFERINGS  = %w(product appointment service trip tickets).freeze
+  OFFERINGS  = %w(product appointment service trip tickets lesson).freeze
 
   # How the price reads (docs/spaces/wachuneed.md, Prices). `fixed`: the
   # amount (a wanted ad's is what the poster pays). `up_to`: a wanted ad's
-  # most. `offers`, `quote`, `trade` and `free` carry no amount. Null reads
+  # most. `offers`, `quote`, `trade`, `free` and `donation` (a lesson open
+  # to all, with the seller asking for support) carry no amount. Null reads
   # as `fixed`, as every older listing does.
-  PRICE_TYPES   = %w(fixed up_to offers quote trade free).freeze
+  PRICE_TYPES   = %w(fixed up_to offers quote trade free donation).freeze
   PRICE_AMOUNTS = %w(fixed up_to).freeze
   # What the amount is for: an hour of work, a day... Null is the whole
   # thing.
@@ -114,10 +115,19 @@ class Listing < ApplicationRecord
   belongs_to :account
   # First photo is the cover (docs/spaces/wachuneed.md).
   MAX_PHOTOS = 10
+  # A lesson (docs/spaces/wachuneed.md, Lessons): what it teaches with, and
+  # how long its text and the seller's way to be paid may run.
+  MAX_LESSON_MEDIA = 20
+  MAX_LESSON_BODY  = 20_000
+  MAX_PAY_DETAILS  = 500
+  # A lesson anyone who can see it may open: free, or for a donation.
+  OPEN_LESSON_PRICES = %w(free donation).freeze
 
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :listing
   has_many   :listing_photos, -> { order(:position) }, dependent: :destroy, inverse_of: :listing
   has_many   :media_attachments, through: :listing_photos
+  # A lesson's own uploads, locked with it; never among the photos.
+  has_many   :listing_lesson_media, -> { order(:position) }, dependent: :destroy, inverse_of: :listing
   has_many   :listing_offers, dependent: :destroy
   # Tickets (docs/spaces/wachuneed.md, Tickets): the dates it runs on.
   has_many   :ticket_dates, -> { order(:starts_at) }, class_name: 'ListingTicketDate', dependent: :destroy, inverse_of: :listing
@@ -131,6 +141,8 @@ class Listing < ApplicationRecord
   validates :offering, inclusion: { in: OFFERINGS }, allow_nil: true
   # Sold on another platform: where to get the tickets.
   validates :ticket_url, length: { maximum: 400 }, format: { with: %r{\Ahttps?://\S+\z} }, allow_blank: true
+  validates :lesson_body, length: { maximum: MAX_LESSON_BODY }
+  validates :pay_details, length: { maximum: MAX_PAY_DETAILS }
   validates :availability, inclusion: { in: AVAILABILITIES }
   validates :looking_for, inclusion: { in: LOOKING_FOR }, allow_nil: true
   validates :where_mode, inclusion: { in: WHERE_MODES }, allow_nil: true
@@ -168,6 +180,7 @@ class Listing < ApplicationRecord
   before_validation :wanted_details_fit
   before_validation :price_from_variants
   before_validation :price_fits_type
+  before_validation :lesson_details_fit
   before_save :stamp_closed_at
 
   # Stored whole and cut to shape here, like the options: the axes the
@@ -352,6 +365,27 @@ class Listing < ApplicationRecord
     offering == 'tickets'
   end
 
+  def lesson?
+    offering == 'lesson'
+  end
+
+  # A lesson anyone who can see it may open: free, for a donation, or with
+  # no price at all. Any other is unlocked person by person.
+  def lesson_open?
+    lesson? && (OPEN_LESSON_PRICES.include?(price_type) || (price_amount? && price_cents.nil?))
+  end
+
+  # Whether `viewer` may open the lesson itself, not just its preview: the
+  # seller; anyone who can see an open lesson; anyone whose request to
+  # unlock it the seller accepted, while they can still see it.
+  def lesson_unlocked_for?(viewer)
+    return false unless lesson?
+    return true if viewer.present? && viewer.id == account_id
+    return false unless visible_to?(viewer)
+
+    lesson_open? || (viewer.present? && listing_offers.accepted.exists?(offerer_id: viewer.id))
+  end
+
   # Tickets bought on another platform, not asked for here.
   def tickets_elsewhere?
     tickets? && ticket_url.present?
@@ -482,6 +516,13 @@ class Listing < ApplicationRecord
 
     self.where_mode = nil
     self.spots      = 1
+  end
+
+  # A lesson's text belongs to a lesson; anything else keeps none. How to
+  # pay is said on any listing that is on offer.
+  def lesson_details_fit
+    self.lesson_body = nil unless lesson?
+    self.pay_details = nil if wanted?
   end
 
   # "Up to" is a budget's ceiling: only something wanted has one.

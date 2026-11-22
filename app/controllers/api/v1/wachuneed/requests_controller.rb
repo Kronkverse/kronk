@@ -98,7 +98,7 @@ class Api::V1::Wachuneed::RequestsController < Api::BaseController
                               variant: params[:variant], options: params[:options],
                               quantity: params.fetch(:quantity, 1), message: params[:message],
                               starts_at: params[:starts_at], route: params[:route], details: params[:details],
-                              ticket_date_id: params[:ticket_date_id])
+                              ticket_date_id: params[:ticket_date_id], amount_cents: params[:amount_cents])
   end
 
   # Only someone party to it finds it at all.

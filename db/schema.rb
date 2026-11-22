@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1675,6 +1675,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_110000) do
     t.index ["ticket_date_id"], name: "index_listing_offers_on_ticket_date_id"
   end
 
+  create_table "listing_lesson_media", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "listing_id", null: false
+    t.bigint "media_attachment_id", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_id", "position"], name: "index_listing_lesson_media_on_listing_id_and_position"
+    t.index ["media_attachment_id"], name: "index_listing_lesson_media_on_media_attachment_id", unique: true
+  end
+
   create_table "listing_photos", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "listing_id", null: false
@@ -1762,6 +1772,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_110000) do
     t.string "where_mode"
     t.date "due_on"
     t.integer "spots", default: 1, null: false
+    t.text "lesson_body"
+    t.text "pay_details"
     t.index ["account_id"], name: "index_listings_on_account_id"
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
@@ -3274,6 +3286,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_110000) do
   add_foreign_key "list_accounts", "lists", on_delete: :cascade
   add_foreign_key "listing_offers", "accounts", column: "offerer_id", on_delete: :cascade
   add_foreign_key "listing_offers", "listings", on_delete: :cascade
+  add_foreign_key "listing_lesson_media", "listings", on_delete: :cascade
+  add_foreign_key "listing_lesson_media", "media_attachments", on_delete: :cascade
   add_foreign_key "listing_photos", "listings", on_delete: :cascade
   add_foreign_key "listing_photos", "media_attachments", on_delete: :cascade
   add_foreign_key "listing_shop_sections", "listing_shops", on_delete: :cascade

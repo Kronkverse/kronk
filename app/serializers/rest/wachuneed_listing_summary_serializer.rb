@@ -61,6 +61,55 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
     object.listing_offers.held.count
   end
 
+  # Something on offer: where the viewer's own latest request stands, so
+  # the page can say Asked, or that the lesson is theirs, after a reload.
+  attribute :my_request, if: -> { detail? && !object.wanted? }
+
+  def my_request
+    viewer = instance_options[:viewer]
+    return if viewer.nil?
+
+    request = object.listing_offers.where(offerer_id: viewer.id).order(created_at: :desc).first
+    request && { id: request.id.to_s, state: request.state }
+  end
+
+  # How to pay the seller, said on the listing (docs/spaces/wachuneed.md,
+  # Lessons). Anyone who can see the listing reads it.
+  attribute :pay_details, if: :detail?
+
+  # A lesson (docs/spaces/wachuneed.md, Lessons): whether it is open to
+  # all, whether the viewer may open it, and what is in it. The text and
+  # the uploads go only to someone who may open it; the rest only learn
+  # how much there is. An upload's address works for anyone who has it, so
+  # it is never sent to anyone else.
+  attribute :lesson, if: -> { detail? && object.lesson? }
+
+  def lesson
+    media    = object.listing_lesson_media.includes(:media_attachment).filter_map(&:media_attachment)
+    unlocked = object.lesson_unlocked_for?(instance_options[:viewer])
+    summary  = {
+      open: object.lesson_open?,
+      unlocked: unlocked,
+      has_text: object.lesson_body.present?,
+      counts: media.group_by { |m| lesson_media_kind(m) }.transform_values(&:size),
+    }
+    return summary unless unlocked
+
+    summary.merge(
+      body: object.lesson_body,
+      media: media.map do |m|
+        { id: m.id.to_s, type: lesson_media_kind(m), url: m.file.url(:original),
+          preview_url: m.thumbnail.present? ? m.thumbnail.url(:original) : m.file.url(:small),
+          description: m.description }
+      end
+    )
+  end
+
+  # video, audio or image; a looping gif plays as a video.
+  def lesson_media_kind(media)
+    media.gifv? ? 'video' : media.type
+  end
+
   def my_answer
     viewer = instance_options[:viewer]
     return if viewer.nil?
