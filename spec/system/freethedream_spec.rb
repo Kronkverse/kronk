@@ -181,6 +181,31 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.where(title: 'Gas bottles')).to be_empty
   end
 
+  # Kommons "Fractals" (2026-11-22): a Komponent's fractals are checklists
+  # on its own page, each assigned to people in the projekt.
+  it "shows a Komponent's fractals as checklists on its page, and assigns them", :aggregate_failures do
+    visit_kitchen
+    kitchen = Freethedream::Project.find_by(title: 'Kitchen')
+    Freethedream::Project.create!(title: 'Cooking', parent: kitchen, owner: bob.account)
+    visit current_path
+
+    within('.freethedream-fractal', text: 'Cooking') do
+      expect(page).to have_text('Not assigned yet')
+      fill_in placeholder: 'Add something to do', with: 'Spice run'
+      send_keys :enter
+      expect(page).to have_css('.freethedream-checklist__entry', text: 'Spice run')
+      click_on 'Assign'
+    end
+    page.document.find('.privacy-dropdown__option', text: bob.account.display_name.presence || bob.account.username).click
+
+    within('.freethedream-fractal', text: 'Cooking') do
+      expect(page).to have_css(".people-row a[href='/@#{bob.account.username}']")
+    end
+    expect(page).to have_no_css('.freethedream-group', text: 'Cooking')
+    expect(Freethedream::Item.find_by(title: 'Spice run').projects.map(&:title)).to eq ['Cooking']
+    expect(Freethedream::Assignment.sole).to have_attributes(account: bob.account)
+  end
+
   it "decides something on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do

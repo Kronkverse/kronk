@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1165,6 +1165,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
     t.index ["account_id"], name: "index_freethedream_activities_on_account_id"
     t.index ["project_id"], name: "index_freethedream_activities_on_project_id"
     t.index ["root_id"], name: "index_freethedream_activities_on_root_id"
+  end
+
+  create_table "freethedream_assignments", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_assignments_on_account_id"
+    t.index ["project_id", "account_id"], name: "index_freethedream_assignments_on_project_id_and_account_id", unique: true
   end
 
   create_table "freethedream_claims", force: :cascade do |t|
@@ -3182,6 +3191,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
   add_foreign_key "freethedream_activities", "accounts", on_delete: :nullify
   add_foreign_key "freethedream_activities", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_activities", "freethedream_projects", column: "root_id", on_delete: :cascade
+  add_foreign_key "freethedream_assignments", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_assignments", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_claims", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_claims", "freethedream_items", column: "item_id", on_delete: :cascade
   add_foreign_key "freethedream_comments", "accounts", on_delete: :cascade
