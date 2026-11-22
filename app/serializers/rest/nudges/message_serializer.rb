@@ -8,6 +8,8 @@
 # Tombstoned messages redact body / media / reactions; the client
 # renders a "message deleted" placeholder.
 class REST::Nudges::MessageSerializer < ActiveModel::Serializer
+  include RoutingHelper
+
   attributes :id, :conversation_id, :body, :media, :voice,
              :reactions, :created_at, :deleted, :deleted_at,
              :author_is_self, :author
@@ -28,6 +30,14 @@ class REST::Nudges::MessageSerializer < ActiveModel::Serializer
   # bubble can render without a follow-up fetch. Always an array so
   # single-vs-multi doesn't require two code paths on the client.
   # Empty when the message has no attachments or is tombstoned.
+  #
+  # The urls follow REST::MediaAttachmentSerializer. A message used to
+  # send the original file as its preview whatever it was, so a sound
+  # sent from "File" came back as an mp3 for the chat to draw as a
+  # picture, and a video still being processed pointed at a file that
+  # wasn't there yet: both showed as a broken image. Now the preview is
+  # only ever a picture (the small still, or a cover), `url` is nil until
+  # the file is ready, and `processing` says whether it's on its way.
   def media
     return [] if object.tombstoned?
 
@@ -35,8 +45,9 @@ class REST::Nudges::MessageSerializer < ActiveModel::Serializer
       {
         id: attachment.id.to_s,
         type: attachment.type,
-        url: attachment.file&.url(:original),
-        preview_url: attachment.file&.url(attachment.file.styles.keys.first || :original),
+        url: media_url(attachment),
+        preview_url: media_preview_url(attachment),
+        processing: attachment.not_processed? && !attachment.processing_failed?,
         description: attachment.description,
       }
     end
@@ -77,5 +88,23 @@ class REST::Nudges::MessageSerializer < ActiveModel::Serializer
 
   def author
     REST::AccountSerializer.new(object.author_account).as_json
+  end
+
+  private
+
+  def media_url(attachment)
+    return if attachment.not_processed? || attachment.file.blank?
+
+    full_asset_url(attachment.file.url(:original))
+  end
+
+  def media_preview_url(attachment)
+    return if attachment.not_processed?
+
+    if attachment.thumbnail.present?
+      full_asset_url(attachment.thumbnail.url(:original))
+    elsif attachment.file.present? && attachment.file.styles.key?(:small)
+      full_asset_url(attachment.file.url(:small))
+    end
   end
 end

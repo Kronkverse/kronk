@@ -832,6 +832,35 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   object-fit: cover;
 }
 
+// In place of a picture or video that can't be shown (gone, failed, or
+// still being processed): a quiet tile saying so, with a link to the
+// original when there is one.
+.nudges-msg__media-missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 10rem;
+  min-height: 6rem;
+  padding: 0.75rem;
+  background: var(--surface-elevated);
+  border: 1px dashed var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+
+  a {
+    color: var(--accent-text);
+  }
+}
+
+.nudges-msg__media-audio {
+  display: block;
+  width: 100%;
+  min-width: 14rem;
+}
+
 // Grid of message media — 1/2/3/4-tile layouts. Bubble constrains
 // the outer width; each tile fills its cell.
 .nudges-msg__media-grid {
