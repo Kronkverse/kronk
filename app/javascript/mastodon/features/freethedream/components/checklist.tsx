@@ -7,11 +7,11 @@ import classNames from 'classnames';
 
 import Overlay from 'react-overlays/Overlay';
 
-import MoveIcon from '@/material-icons/400-24px/arrow_right_alt.svg?react';
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import BringIcon from '@/material-icons/400-24px/inventory_2.svg?react';
+import MoveIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import PaymentsIcon from '@/material-icons/400-24px/payments.svg?react';
 import QuestionIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import UnfoldMoreIcon from '@/material-icons/400-24px/unfold_more.svg?react';
@@ -521,7 +521,7 @@ const MovePick: React.FC<{
       <IconButton
         ref={button}
         className='freethedream-checklist__move'
-        icon='arrow_right_alt'
+        icon='more_horiz'
         iconComponent={MoveIcon}
         title={intl.formatMessage(messages.move, { title: item.title })}
         expanded={open}
