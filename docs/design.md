@@ -108,6 +108,7 @@ theme.
 | `--success-green`                                       | `#4b9160`                   | Success                               |
 | `--decision-agree` / `-abstain` / `-block` / `-pending` | green / slate / red / amber | Kommons votes and outcomes            |
 | `--tile-glyph-on` / `--tile-glyph-off`                  | `#8c7dff` / `#4e4a72`       | Hub tile glyphs, live and coming-soon |
+| `--tile-text`                                           | `#ece9f5` (both themes)     | A korner's name on its Hub tile       |
 
 Kosmos has its own `--kosmos-*` tokens (the background canvas, see
 [Frame](#frame)). They are theme-invariant on purpose.
