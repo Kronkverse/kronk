@@ -16,6 +16,7 @@ import type {
   ApiListingJSON,
   ListingBookingWhere,
   ListingOffering,
+  ListingPriceType,
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
 import type { AudiencePeople } from 'mastodon/components/audience_people_panel';
@@ -40,7 +41,9 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useKonnect } from 'mastodon/hooks/useKonnect';
 
+import { LessonMediaField, useLessonMedia } from './lesson_media_field';
 import { ListingPhotoField, useListingPhotos } from './listing_photo_field';
+import { ListingPriceField, priceHasAmount } from './listing_price_field';
 import { OFFERING_LABEL, offeringMessages } from './offering';
 import { WEEKDAYS_NINE_TO_FIVE, WeeklyHoursField } from './weekly_hours_field';
 
@@ -57,6 +60,11 @@ import { WEEKDAYS_NINE_TO_FIVE, WeeklyHoursField } from './weekly_hours_field';
 //   ask people (`booking.ask`, the details part).
 // - Trip or delivery: a set price or a quote each trip, any time or your
 //   hours, and pick-up and drop-off on the Map (the job parts).
+// - Lesson (docs/spaces/wachuneed.md, Lessons): a price (set, Pay what
+//   you want, a donation or free), what people will learn (the
+//   description, which everyone sees), the lesson itself (uploads and text,
+//   locked until the seller lets someone in, unless it is free or for a
+//   donation) and how to pay the seller.
 // - Tickets: sold here or elsewhere (a link); its dates, each with a place
 //   and seats, each made a Kalendar event; and ticket types with prices (a
 //   Ticket kind each). A ticket request names its date.
@@ -209,6 +217,29 @@ const messages = defineMessages({
     id: 'wachuneed.new.announce',
     defaultMessage: 'Announce it in the feed',
   },
+  lessonLearn: {
+    id: 'wachuneed.lesson.learn',
+    defaultMessage: 'What people will learn',
+  },
+  lesson: { id: 'wachuneed.lesson.field', defaultMessage: 'The lesson' },
+  lessonHint: {
+    id: 'wachuneed.lesson.field_hint',
+    defaultMessage:
+      'Only you and the people you let in see this. Free or donation lessons are open to everyone who can see the listing.',
+  },
+  lessonBody: {
+    id: 'wachuneed.lesson.body',
+    defaultMessage: 'Notes, steps, links… (optional)',
+  },
+  payDetails: {
+    id: 'wachuneed.lesson.pay_details',
+    defaultMessage: 'How to pay you',
+  },
+  payDetailsHint: {
+    id: 'wachuneed.lesson.pay_details_hint',
+    defaultMessage:
+      'PayID, bank details, PayPal.me or a Ko-fi link. Kronk doesn’t take the payment; people pay you, then ask to unlock.',
+  },
   error: {
     id: 'wachuneed.offer.error',
     defaultMessage: "Couldn't save it. Try again?",
@@ -259,6 +290,9 @@ interface PriceRow {
   price: string;
   minutes: number;
 }
+
+// A lesson's price is for the whole lesson.
+const noUnit = () => undefined;
 
 const centsOf = (price: string): number | null => {
   const value = price.trim();
@@ -550,6 +584,13 @@ export const OfferingComposer: React.FC<Props> = ({
   const [ticketTypes, setTicketTypes] = useState<PriceRow[]>([
     { name: '', price: '', minutes: 0 },
   ]);
+  // Lesson
+  const lessonMedia = useLessonMedia();
+  const { load: loadLessonMedia } = lessonMedia;
+  const [lessonPriceType, setLessonPriceType] =
+    useState<ListingPriceType>('fixed');
+  const [lessonBody, setLessonBody] = useState('');
+  const [payDetails, setPayDetails] = useState('');
 
   const [loading, setLoading] = useState(!!editId);
   const [busy, setBusy] = useState(false);
@@ -641,6 +682,13 @@ export const OfferingComposer: React.FC<Props> = ({
                 ],
           );
         }
+        if (offering === 'lesson') {
+          setLessonPriceType(listing.price_type ?? 'fixed');
+          setPrice(priceOf(listing.price_cents));
+          setLessonBody(listing.lesson?.body ?? '');
+          setPayDetails(listing.pay_details ?? '');
+          loadLessonMedia(listing.lesson?.media ?? []);
+        }
         if (offering === 'trip') {
           setQuoted(typeof listing.price_cents !== 'number');
           setPrice(priceOf(listing.price_cents));
@@ -658,7 +706,7 @@ export const OfferingComposer: React.FC<Props> = ({
     return () => {
       cancelled = true;
     };
-  }, [editId, offering, intl, loadPhotos]);
+  }, [editId, offering, intl, loadPhotos, loadLessonMedia]);
 
   const handleTitle = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
@@ -688,6 +736,16 @@ export const OfferingComposer: React.FC<Props> = ({
     },
     [],
   );
+  const handleLessonBody = useCallback<
+    React.ChangeEventHandler<HTMLTextAreaElement>
+  >((e) => {
+    setLessonBody(e.currentTarget.value);
+  }, []);
+  const handlePayDetails = useCallback<
+    React.ChangeEventHandler<HTMLTextAreaElement>
+  >((e) => {
+    setPayDetails(e.currentTarget.value);
+  }, []);
   const handleTakeQuotes = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
@@ -917,6 +975,24 @@ export const OfferingComposer: React.FC<Props> = ({
       };
     }
 
+    if (offering === 'lesson') {
+      return {
+        ...base,
+        price_type: lessonPriceType,
+        price_cents: priceHasAmount(lessonPriceType) ? centsOf(price) : null,
+        price_unit: null,
+        price_currency: 'AUD',
+        options: [],
+        variants: {},
+        booking: {},
+        lesson_body: lessonBody.trim() || null,
+        pay_details: payDetails.trim() || null,
+        ...(!editId || lessonMedia.touched
+          ? { lesson_media_ids: lessonMedia.ids }
+          : {}),
+      };
+    }
+
     // Trip or delivery
     return {
       ...base,
@@ -956,6 +1032,12 @@ export const OfferingComposer: React.FC<Props> = ({
     ticketUrl,
     dates,
     ticketTypes,
+    lessonPriceType,
+    lessonBody,
+    payDetails,
+    lessonMedia.touched,
+    lessonMedia.ids,
+    editId,
     intl,
   ]);
 
@@ -964,6 +1046,9 @@ export const OfferingComposer: React.FC<Props> = ({
     !busy &&
     title.trim().length > 0 &&
     !photoState.uploading &&
+    (offering !== 'lesson' ||
+      (!lessonMedia.uploading &&
+        (lessonMedia.ids.length > 0 || lessonBody.trim().length > 0))) &&
     (offering !== 'appointment' || (lengths.length > 0 && hours.length > 0)) &&
     (offering !== 'service' ||
       takeQuotes ||
@@ -1367,13 +1452,64 @@ export const OfferingComposer: React.FC<Props> = ({
             </ComposeField>
           )}
 
+          {offering === 'lesson' && (
+            <ListingPriceField
+              wanted={false}
+              lesson
+              type={lessonPriceType}
+              amount={price}
+              unit={null}
+              onType={setLessonPriceType}
+              onAmount={setPrice}
+              onUnit={noUnit}
+            />
+          )}
+
           <ComposeBody
             value={description}
             onChange={handleDescription}
-            placeholder={intl.formatMessage(messages.description)}
-            aria-label={intl.formatMessage(messages.description)}
+            placeholder={intl.formatMessage(
+              offering === 'lesson'
+                ? messages.lessonLearn
+                : messages.description,
+            )}
+            aria-label={intl.formatMessage(
+              offering === 'lesson'
+                ? messages.lessonLearn
+                : messages.description,
+            )}
             rows={3}
           />
+
+          {offering === 'lesson' && (
+            <>
+              <ComposeField label={intl.formatMessage(messages.lesson)}>
+                <LessonMediaField state={lessonMedia} />
+                <ComposeBody
+                  value={lessonBody}
+                  onChange={handleLessonBody}
+                  placeholder={intl.formatMessage(messages.lessonBody)}
+                  aria-label={intl.formatMessage(messages.lessonBody)}
+                  rows={4}
+                />
+                <ComposeHint>
+                  {intl.formatMessage(messages.lessonHint)}
+                </ComposeHint>
+              </ComposeField>
+              <ComposeField label={intl.formatMessage(messages.payDetails)}>
+                <ComposeBody
+                  value={payDetails}
+                  onChange={handlePayDetails}
+                  aria-label={intl.formatMessage(messages.payDetails)}
+                  rows={2}
+                  maxLength={500}
+                />
+                <ComposeHint>
+                  {intl.formatMessage(messages.payDetailsHint)}
+                </ComposeHint>
+              </ComposeField>
+            </>
+          )}
 
           {inShop && !editId && (
             <ComposeCheck

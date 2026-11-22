@@ -93,6 +93,11 @@ export interface CreateListingParams {
   // Optional photos — media_attachment_ids returned from
   // apiUploadListingMedia. Position is preserved by order.
   media_attachment_ids?: string[];
+  // A lesson (docs/spaces/wachuneed.md, Lessons): its text, its uploads
+  // (replaced whole when sent, in order) and how to pay the seller.
+  lesson_body?: string | null;
+  lesson_media_ids?: string[];
+  pay_details?: string | null;
 }
 
 export const apiCreateWachuneedListing = (params: CreateListingParams) =>

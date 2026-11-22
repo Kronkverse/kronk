@@ -39,6 +39,20 @@ import { formatListingPrice } from './listing_price';
 // call it off.
 
 const messages = defineMessages({
+  // A lesson (docs/spaces/wachuneed.md, Lessons): asking is asking to be
+  // let in, and accepting lets them in.
+  unlockAsk: {
+    id: 'wachuneed.requests.lesson_unlock',
+    defaultMessage: 'Asks to unlock this lesson',
+  },
+  willPay: {
+    id: 'wachuneed.requests.lesson_will_pay',
+    defaultMessage: 'Says they’ll pay {amount}',
+  },
+  letIn: {
+    id: 'wachuneed.requests.lesson_let_in',
+    defaultMessage: 'Let them in',
+  },
   from: { id: 'wachuneed.requests.from', defaultMessage: 'From {name}' },
   to: { id: 'wachuneed.requests.to', defaultMessage: 'To {name}' },
   quantity: { id: 'wachuneed.requests.quantity', defaultMessage: '{count} of' },
@@ -165,6 +179,7 @@ const RequestCard: React.FC<{
 }> = ({ request, side, busy, onAnswer, onListing = false }) => {
   const intl = useIntl();
   const { listing, choices, pitch } = request;
+  const lesson = listing.offering === 'lesson';
   const other = side === 'seller' ? request.buyer : listing.seller;
   const name = other.display_name !== '' ? other.display_name : other.acct;
 
@@ -231,6 +246,15 @@ const RequestCard: React.FC<{
     typeof request.total_cents === 'number'
       ? formatListingAmount(request.total_cents, request.price_currency)
       : null,
+    lesson && side === 'seller' ? intl.formatMessage(messages.unlockAsk) : null,
+    lesson && typeof request.amount_cents === 'number'
+      ? intl.formatMessage(messages.willPay, {
+          amount: formatListingAmount(
+            request.amount_cents,
+            request.price_currency,
+          ),
+        })
+      : null,
     // An answer's price, for what the ad's price is for.
     pitch && typeof request.amount_cents === 'number'
       ? formatListingPrice(intl, {
@@ -293,7 +317,11 @@ const RequestCard: React.FC<{
             <>
               <KornerPill
                 label={intl.formatMessage(
-                  pitch ? messages.choose : messages.accept,
+                  pitch
+                    ? messages.choose
+                    : lesson
+                      ? messages.letIn
+                      : messages.accept,
                 )}
                 variant='primary'
                 onClick={handleAccept}
