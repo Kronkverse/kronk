@@ -549,15 +549,18 @@ const Entry: React.FC<{
   );
 };
 
-export const Checklist: React.FC<{
-  project: FtdProject;
+// One checklist's entries and its add line: a Komponent's own, or one of
+// its fractals' (Kommons "Fractals", 2026-11-22).
+export const ChecklistEntries: React.FC<{
+  projectId: string;
+  items: FtdItemRow[];
+  canAct: boolean;
   onChange: () => void;
-}> = ({ project, onChange }) => {
+}> = ({ projectId, items, canAct, onChange }) => {
   const intl = useIntl();
   const [kind, setKind] = useState<QuickAddKind>('job');
-  const canAct = project.can.add;
 
-  const entries = project.items
+  const entries = items
     .filter((item) => item.kind === 'job' || item.kind === 'need')
     // Not done first, each half in the order they were added.
     .map((item, at) => ({ item, at }))
@@ -574,7 +577,7 @@ export const Checklist: React.FC<{
   );
 
   return (
-    <Section title={intl.formatMessage(messages.title)}>
+    <>
       {total > 0 && (
         <p className='freethedream-checklist__money'>
           {intl.formatMessage(messages.money, {
@@ -603,7 +606,7 @@ export const Checklist: React.FC<{
         <div className='freethedream-checklist__add'>
           <QuickAdd
             kind={kind}
-            projectId={project.id}
+            projectId={projectId}
             onAdded={onChange}
             pick={
               <KindPick
@@ -616,6 +619,24 @@ export const Checklist: React.FC<{
           />
         </div>
       )}
+    </>
+  );
+};
+
+export const Checklist: React.FC<{
+  project: FtdProject;
+  onChange: () => void;
+}> = ({ project, onChange }) => {
+  const intl = useIntl();
+
+  return (
+    <Section title={intl.formatMessage(messages.title)}>
+      <ChecklistEntries
+        projectId={project.id}
+        items={project.items}
+        canAct={project.can.add}
+        onChange={onChange}
+      />
     </Section>
   );
 };
