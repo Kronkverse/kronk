@@ -10,6 +10,7 @@ import UploadFileIcon from '@/material-icons/400-24px/upload_file.svg?react';
 import { apiUploadListingMedia } from 'mastodon/api/wachuneed';
 import type { ApiLessonMediaJSON } from 'mastodon/api_types/wachuneed';
 import { Icon } from 'mastodon/components/icon';
+import { PhotoDropTarget } from 'mastodon/components/media';
 
 // What a lesson teaches with (docs/spaces/wachuneed.md, Lessons): videos,
 // recordings and pictures, in order, uploaded as the photos are. Each row
@@ -209,7 +210,8 @@ export const LessonMediaField: React.FC<{ state: LessonMediaState }> = ({
         </ul>
       )}
       {state.slots.length < MAX_LESSON_MEDIA && (
-        <label className='wachuneed-lesson-media__pick'>
+        // A file dropped on it goes to the lesson, not the photos.
+        <PhotoDropTarget as='label' className='wachuneed-lesson-media__pick'>
           <Icon id='upload' icon={UploadFileIcon} />
           <span>{intl.formatMessage(messages.add)}</span>
           <input
@@ -219,7 +221,7 @@ export const LessonMediaField: React.FC<{ state: LessonMediaState }> = ({
             onChange={state.handleAdd}
             className='wachuneed-lesson-media__input'
           />
-        </label>
+        </PhotoDropTarget>
       )}
       {state.error && (
         <p className='wachuneed__compose-error' role='alert'>
