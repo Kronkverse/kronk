@@ -20,7 +20,8 @@ import { IconButton } from 'mastodon/components/icon_button';
 import { PeopleRow } from 'mastodon/components/people_row';
 
 import { act } from './act';
-import { ChecklistEntries } from './checklist';
+import { ChecklistEntries, moveTargets } from './checklist';
+import type { MoveTarget } from './checklist';
 import { Section } from './shared';
 
 // A Komponent's fractals (Kommons "Fractals", 2026-11-22: "Fractals are
@@ -149,7 +150,8 @@ const Fractal: React.FC<{
   members: FtdAccount[];
   canAct: boolean;
   onChange: () => void;
-}> = ({ fractal, members, canAct, onChange }) => {
+  targets: MoveTarget[];
+}> = ({ fractal, members, canAct, onChange, targets }) => {
   const intl = useIntl();
   const [confirmRemove, setConfirmRemove] = useState(false);
   const askRemove = useCallback(() => {
@@ -205,6 +207,7 @@ const Fractal: React.FC<{
           items={fractal.items}
           canAct={canAct}
           onChange={onChange}
+          targets={targets}
         />
       </Section>
       {confirmRemove && (
@@ -228,25 +231,30 @@ export const Fractals: React.FC<{
   onChange: () => void;
   addLabel: string;
   onAdd?: () => void;
-}> = ({ project, onChange, addLabel, onAdd }) => (
-  <>
-    {project.fractals.map((fractal) => (
-      <Fractal
-        key={fractal.id}
-        fractal={fractal}
-        members={project.members}
-        canAct={project.can.add}
-        onChange={onChange}
-      />
-    ))}
-    {onAdd && (
-      <button
-        type='button'
-        className='freethedream__button freethedream__button--quiet freethedream-fractal__add'
-        onClick={onAdd}
-      >
-        {addLabel}
-      </button>
-    )}
-  </>
-);
+}> = ({ project, onChange, addLabel, onAdd }) => {
+  const targets = moveTargets(project);
+
+  return (
+    <>
+      {project.fractals.map((fractal) => (
+        <Fractal
+          key={fractal.id}
+          fractal={fractal}
+          members={project.members}
+          canAct={project.can.add}
+          onChange={onChange}
+          targets={targets}
+        />
+      ))}
+      {onAdd && (
+        <button
+          type='button'
+          className='freethedream__button freethedream__button--quiet freethedream-fractal__add'
+          onClick={onAdd}
+        >
+          {addLabel}
+        </button>
+      )}
+    </>
+  );
+};

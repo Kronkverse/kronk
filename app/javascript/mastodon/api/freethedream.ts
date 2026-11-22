@@ -207,6 +207,14 @@ export type FtdItemAction =
 export const apiFtdItemAction = (id: string, action: FtdItemAction) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/${action}`);
 
+// Move a checklist entry from one part of the projekt to another (into a
+// fractal, out of one, or between them).
+export const apiFtdMoveItem = (id: string, fromId: string, toId: string) =>
+  apiRequestPost<FtdItem>(`${base}/items/${id}/move`, {
+    from_project_id: fromId,
+    to_project_id: toId,
+  });
+
 // How much of a need you're bringing (0 takes it back); from your
 // Mycelium when `myceliumItemId` is given.
 export const apiFtdBring = (
