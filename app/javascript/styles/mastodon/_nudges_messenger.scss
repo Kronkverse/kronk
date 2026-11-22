@@ -673,8 +673,13 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 1rem;
+  padding: 1rem 0.75rem;
+
+  // Messages space themselves by run (`.nudges-msg`); everything else in
+  // the stream (a Krew join, a milestone) keeps a little air around it.
+  > :not(.nudges-msg, .nudges-day-separator, .nudges-conversation__load-older) {
+    margin-block: 0.5rem;
+  }
 }
 
 // "Load older messages" button at the top of the stream. Kept
@@ -706,54 +711,172 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 }
 
 // ── Message bubble ───────────────────────────────────────────────
+// Every message is a bubble (Tal, 2026-11-23, "bubbles around messages"):
+// other people's on the left in a neutral tint, yours on the right in the
+// accent. The incoming tint is a mix of the text colour into nothing, not
+// a surface token, so it shows on whatever the chat sits on: the Nudges
+// pane, or the Krew page's frame (which is `--surface-elevated`, the
+// colour the bubble used to be, so it vanished there).
+
+// A run of messages from one person (`--run-start` … `--run-end`, see
+// `sameRun` in conversation_view.tsx) sits close, with the name and
+// avatar once at the top; runs are spaced apart. The stream's own gap is
+// 0, so the spacing is all here.
 .nudges-msg {
+  --nudges-bubble-in: color-mix(in oklab, var(--text-primary) 10%, transparent);
+  --nudges-avatar: 28px;
+
   display: flex;
-  flex-direction: column;
-  max-width: 70%;
-  gap: 0.15rem;
-}
-
-.nudges-msg--out {
-  align-self: flex-end;
-  align-items: flex-end;
-}
-
-.nudges-msg--in {
-  align-self: flex-start;
   align-items: flex-start;
-}
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 2px;
 
-.nudges-msg__bubble {
-  padding: 0.5rem 0.8rem;
-  border-radius: var(--radius-large);
-  color: var(--text-primary);
-  background: var(--surface-elevated);
-  overflow-wrap: break-word;
+  &--run-start {
+    margin-top: 0.75rem;
+  }
 
-  .nudges-msg--out & {
-    background: var(--kronk-purple-primary);
-    color: var(--text-on-accent);
+  // A reaction chip hangs off the bottom edge; make room for it.
+  &--reacted {
+    padding-bottom: 0.85rem;
   }
 }
 
-// ── Reactions row (sits just below the bubble) ───────────────────
-.nudges-msg__reactions {
+.nudges-conversation__stream > .nudges-msg:first-child,
+.nudges-day-separator + .nudges-msg {
+  margin-top: 0;
+}
+
+.nudges-msg--out {
+  justify-content: flex-end;
+}
+
+.nudges-msg__avatar {
+  flex: none;
+  width: var(--nudges-avatar);
+  margin-top: 1.1rem; // level with the bubble, under the name
+
+  .nudges-msg--run-start & .account__avatar {
+    display: block;
+  }
+}
+
+.nudges-msg__main {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  min-width: 0;
+  max-width: min(78%, 36rem);
+
+  .nudges-msg--out & {
+    align-items: flex-end;
+  }
+
+  .nudges-msg--in & {
+    align-items: flex-start;
+  }
+}
+
+.nudges-msg__sender-name {
+  margin: 0 0 0.2rem 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+// The bubble and its controls, side by side. Yours mirror: controls on the
+// left of the bubble.
+.nudges-msg__line {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+
+  .nudges-msg--out & {
+    flex-direction: row-reverse;
+  }
+}
+
+.nudges-msg__bubble {
+  position: relative;
+  display: flow-root; // holds the floated meta line
+  min-width: 0;
+  padding: 0.45rem 0.75rem 0.35rem;
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  background: var(--nudges-bubble-in);
+  overflow-wrap: break-word;
+
+  .nudges-msg--out & {
+    background: var(--accent);
+    color: var(--text-on-accent);
+  }
+
+  // The corner nearest the sender tightens inside a run, so a run reads
+  // as one block.
+  .nudges-msg--in:not(.nudges-msg--run-start) & {
+    border-start-start-radius: var(--radius-small);
+  }
+
+  .nudges-msg--in:not(.nudges-msg--run-end) & {
+    border-end-start-radius: var(--radius-small);
+  }
+
+  .nudges-msg--out:not(.nudges-msg--run-start) & {
+    border-start-end-radius: var(--radius-small);
+  }
+
+  .nudges-msg--out:not(.nudges-msg--run-end) & {
+    border-end-end-radius: var(--radius-small);
+  }
+}
+
+// When, and whether it's been read: small, at the bubble's foot. It
+// floats, so on a short message it sits at the end of the last line (as
+// in Signal) and only takes a line of its own when the words fill theirs.
+.nudges-msg__meta {
+  display: flex;
+  float: inline-end;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.35rem 0 0 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  .nudges-msg--out & {
+    color: color-mix(in oklab, var(--text-on-accent) 72%, transparent);
+  }
+}
+
+// ── Reactions: chips on the bubble's bottom edge ─────────────────
+.nudges-msg__reactions {
+  position: absolute;
+  bottom: -0.95rem;
+  display: flex;
   gap: 0.2rem;
-  margin-top: 0.15rem;
+
+  .nudges-msg--in & {
+    inset-inline-start: 0.6rem;
+  }
+
+  .nudges-msg--out & {
+    inset-inline-end: 0.6rem;
+  }
 }
 
 .nudges-msg__reaction {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.15rem 0.5rem;
-  border: 1px solid var(--border-default);
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-round);
   background: var(--surface-elevated);
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  box-shadow: var(--elevation-subtle);
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -775,7 +898,7 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 }
 
 .nudges-msg__reaction-symbol {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   line-height: 1;
 }
 
@@ -783,27 +906,62 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   font-weight: 500;
 }
 
-// Compact add-picker — sits inline at the end of the reaction row.
-.nudges-msg__react-picker {
-  display: inline-flex;
-  gap: 0.2rem;
+// ── Beside the bubble: react, delete ─────────────────────────────
+// Out of sight until wanted, as in Signal: on hover where there is a
+// mouse, on focus from the keyboard, and after a tap on the bubble on a
+// touch screen (`--active`, one message at a time). Kept in the layout
+// (not `display: none`) so showing them never shifts the bubble, and so
+// the keyboard can reach them.
+.nudges-msg__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out);
+
+  .nudges-msg--active &,
+  .nudges-msg:focus-within &,
+  // The emoji picker is open from here.
+  .nudges-msg:has([aria-expanded='true']) & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: hover) {
+    .nudges-msg:hover & {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
 }
 
-.nudges-msg__react-add {
-  padding: 0.15rem 0.4rem;
-  border: 1px dashed var(--border-subtle);
-  border-radius: var(--radius-round);
-  background: transparent;
+.nudges-msg__action {
+  display: inline-flex;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition:
-    color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
 
-  &:hover {
-    color: var(--text-primary);
-    border-color: var(--border-default);
+  .icon-button {
+    padding: 0.3rem;
+    border-radius: var(--radius-round);
+    color: inherit;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      background: color-mix(in oklab, var(--text-primary) 10%, transparent);
+    }
+  }
+
+  &.nudges-msg__delete {
+    padding: 0.3rem;
+    border-radius: var(--radius-round);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--destructive);
+      background: color-mix(in oklab, var(--destructive) 12%, transparent);
+    }
   }
 }
 
@@ -984,43 +1142,9 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   opacity: 0.9;
 }
 
-.nudges-msg__time {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-// Mate-only "Seen" indicator on self-authored bubbles. Kept subtle —
-// same font size + muted-color slot as the timestamp; the eye-glyph
-// weight lets it read without shouting.
+// Read receipts ride in the meta line, in its colour.
 .nudges-msg__seen {
-  font-size: 0.7rem;
-  color: var(--text-muted);
   font-style: italic;
-}
-
-// Tiny × affordance shown next to the timestamp on self-authored
-// messages. Reveals only on hover so the timestamp stays clean.
-.nudges-msg__delete {
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 0.9rem;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-out);
-
-  .nudges-msg:hover & {
-    opacity: 1;
-  }
-
-  &:hover {
-    color: var(--warning-red);
-  }
 }
 
 // Deleted-message placeholder — muted italic bubble in place of the
@@ -1028,14 +1152,16 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 .nudges-msg__bubble--deleted {
   color: var(--text-muted);
   font-style: italic;
-  background: var(--surface-elevated);
+  background: transparent;
+  outline: 1px dashed var(--border-subtle);
+  outline-offset: -1px;
 
   .nudges-msg--out & {
-    background: color-mix(
-      in oklab,
-      var(--kronk-purple-primary) 30%,
-      var(--surface-elevated)
-    );
+    color: var(--text-muted);
+    background: transparent;
+  }
+
+  .nudges-msg__meta {
     color: var(--text-muted);
   }
 }
@@ -1052,6 +1178,8 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 
 .nudges-msg__failed-controls {
   display: inline-flex;
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
   align-items: center;
   gap: 0.4rem;
 }
