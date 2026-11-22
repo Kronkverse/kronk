@@ -227,8 +227,20 @@ was two faces on a barrel, Notifications and Messages, from 2026-10-10.
   with neither an action icon nor a manifest gets no badge. Opening it is
   what marks things seen: on a wide screen that is landing on `/nudges`, on
   a phone tapping its row. What was new on arrival keeps its tint and dot
-  for the rest of the visit. Day separators group the list; "Show earlier"
-  pages back.
+  for the rest of the visit. Day separators group the list.
+
+  It reads like a chat (Tal, 2026-11-23: "All the messages are in
+  chronological order with the latest message at the bottom, can we try
+  with the notifications also?"): oldest at the top, the newest at the
+  bottom, and it opens there. Earlier ones load as you scroll near the
+  top, with what you were looking at held still while they go in above
+  ("Show earlier" stays at the top for a list too short to scroll, and
+  for the keyboard). Something that arrives while you are at the bottom
+  joins it there; if you have scrolled up, a **New** pill over the bottom
+  takes you down to it instead of pulling you. A live arrival is merged
+  into the list rather than reloading it, so earlier pages you've scrolled
+  into stay. "Turn on notifications" is pinned above the list, not
+  scrolled with it.
 
 - **Height is measured, not inherited** (`use_fill_viewport.ts`): from the
   messenger's top edge to the top of the pillar nav, or to the bottom of
