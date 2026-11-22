@@ -228,14 +228,31 @@ an hour"), so the Kronk website shows them and hands the start over.
   It opens **Share** (live location with a Mate), **Update** (your pin, to
   where the phone is) and the shares running now, each with **Stop**. While
   one runs the button carries the live faces' breathing dot. Kronk itself
-  never reads the phone's position: on Android, Share picks a Mate and opens
-  Anthemos with an intent link
-  (`anthemos://kronk/share?to=<account id>&server=<host>`, package
-  `com.anthemos.app.two`), and Update opens `anthemos://kronk/update?server=<host>`.
-  Anthemos asks before anything leaves the phone. With no Anthemos there the
-  link falls back to `/hub/map?anthemos=missing`, which says the app is
-  needed and links its download. On a computer, Share and Update say it
-  comes from Anthemos on your phone.
+  never reads the phone's position: on Android, Share (after picking a Mate)
+  and Update are asks to Anthemos (below), and the menu stays open saying
+  "Waiting for Anthemos on your phone" until the phone answers, then what it
+  did. With no Anthemos there the link falls back to
+  `/hub/map?anthemos=missing`, which says the app is needed and links its
+  download. On a computer, Share and Update say it comes from Anthemos on
+  your phone.
+- **Asks from Kronk.** How the website gets Anthemos to do something, for
+  location now and other things later (Tal, 2026-11-22). Kronk makes the
+  ask (`POST /api/v1/anthemos/asks`, `AnthemosAsk`: a kind, what it carries,
+  a random token, five minutes to live) and opens Anthemos with only the
+  token (`anthemos://kronk/ask?id=<token>&server=<host>&for=<acct>`, package
+  `com.anthemos.app.two`, via `useAnthemosAsk`). Anthemos reads the ask with
+  its own sign-in (`GET /api/v1/anthemos/asks/:token`). An ask belongs to the
+  account that made it, so a phone signed in to another account gets
+  nothing, and Anthemos says which account the ask was for and which one it
+  is connected as. It shows the ask as a card, "From Kronk, @you", with
+  Allow and Not now: a tap, not a spoken yes. On Allow it does the thing,
+  then answers, signed over `anthemos-answer-v1`, the token, its link id,
+  the outcome (`done`, `declined` or `failed`) and a short result, each as
+  sent (`POST /api/v1/anthemos/asks/:token/answer`). An ask is answered once;
+  the website watches it for the answer. Kinds: `location.update` and
+  `location.share` (carries `to`, a Mate). A new kind is an entry in
+  `AnthemosAsk::PAYLOAD` and a handler in Anthemos. Things asked of
+  Anthemos by voice are still confirmed by voice.
 - **Updating from Anthemos.** Update, or "update my location on Kronk" said
   to Anthemos, places your pin like Place me (`POST /api/v1/map/presence`,
   city precision, keeping who sees it and its note) from where the phone is.

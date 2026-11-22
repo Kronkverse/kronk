@@ -16,15 +16,16 @@ import type { ApiOwnLiveShareJSON } from 'mastodon/api/map_live';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Icon } from 'mastodon/components/icon';
 import { MatePicker } from 'mastodon/features/nudges_messenger/mate_picker';
+import { useAnthemosAsk } from 'mastodon/hooks/useAnthemosAsk';
 
 // Your location, from Anthemos (docs/spaces/map.md, Your location button).
 // The pin button top left holds everything Anthemos does on the Map: Share
 // (live location with a Mate), Update (your pin, to where the phone is) and
 // the shares running now, each with Stop. Kronk never reads a phone's GPS
-// itself, so Share and Update hand over to Anthemos, which asks before
-// anything leaves the phone. Shown only once a phone is linked.
+// itself, so Share and Update are asks to Anthemos (useAnthemosAsk), which
+// shows them on the phone with Allow and Not now. The menu stays open on
+// the answer. Shown only once a phone is linked.
 
-const ANTHEMOS_PACKAGE = 'com.anthemos.app.two';
 const ANTHEMOS_DOWNLOAD = 'https://anthemos.org/builds/anthemos2-latest.apk';
 
 const messages = defineMessages({
@@ -48,6 +49,38 @@ const messages = defineMessages({
     defaultMessage: 'Sharing with {names} until {time}',
   },
   stop: { id: 'map.location.stop', defaultMessage: 'Stop' },
+  waiting: {
+    id: 'map.location.waiting',
+    defaultMessage: 'Waiting for Anthemos on your phone',
+  },
+  moved: {
+    id: 'map.location.moved',
+    defaultMessage: 'Your pin is in {place}',
+  },
+  movedSomewhere: {
+    id: 'map.location.moved_somewhere',
+    defaultMessage: 'Your pin is moved',
+  },
+  sharingWith: {
+    id: 'map.location.sharing_with',
+    defaultMessage: 'Sharing with {name}',
+  },
+  declined: {
+    id: 'map.location.declined',
+    defaultMessage: 'Left as it was: Not now on the phone',
+  },
+  failed: {
+    id: 'map.location.failed',
+    defaultMessage: 'Anthemos couldn’t do it: {reason}',
+  },
+  expired: {
+    id: 'map.location.expired',
+    defaultMessage: 'Nothing came back from the phone, so that was dropped',
+  },
+  unreachable: {
+    id: 'map.location.unreachable',
+    defaultMessage: 'Couldn’t reach Kronk. Try again.',
+  },
   close: { id: 'map.location.close', defaultMessage: 'Close' },
 });
 
@@ -59,32 +92,23 @@ const DownloadLink: React.FC = () => (
   </a>
 );
 
-// The intent link: opens Anthemos on Share or Update, or comes back to the
-// Map saying it's needed.
-const handOver = (action: 'share' | 'update', to?: string) => {
-  const { origin, host } = window.location;
-  const params = new URLSearchParams({ server: host });
-  if (to) params.set('to', to);
-  const fallback = encodeURIComponent(`${origin}/hub/map?anthemos=missing`);
-  window.location.href =
-    `intent://kronk/${action}?${params.toString()}` +
-    `#Intent;scheme=anthemos;package=${ANTHEMOS_PACKAGE};` +
-    `S.browser_fallback_url=${fallback};end`;
-};
-
 interface Props {
   // Dropped below the in-view pill when that takes the corner.
   lower: boolean;
+  // Reloads your pin once the phone has moved it.
+  onPinMoved: () => void;
 }
 
-export const LocationMenu: React.FC<Props> = ({ lower }) => {
+export const LocationMenu: React.FC<Props> = ({ lower, onPinMoved }) => {
   const intl = useIntl();
   const [linked, setLinked] = useState(false);
   const [open, setOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [elsewhere, setElsewhere] = useState(false);
   const [shares, setShares] = useState<ApiOwnLiveShareJSON[]>([]);
+  const { ask, failed, start, clear } = useAnthemosAsk();
   const android = isAndroid();
+  const answered = ask?.status === 'done' ? ask.kind : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -99,7 +123,13 @@ export const LocationMenu: React.FC<Props> = ({ lower }) => {
     };
   }, []);
 
-  // The shares running now: once linked, and fresh each time the menu opens.
+  // The phone said yes: show what it did.
+  useEffect(() => {
+    if (answered === 'location.update') onPinMoved();
+  }, [answered, onPinMoved]);
+
+  // The shares running now: once linked, fresh each time the menu opens,
+  // and after the phone starts one.
   useEffect(() => {
     if (!linked) return;
     let cancelled = false;
@@ -112,33 +142,31 @@ export const LocationMenu: React.FC<Props> = ({ lower }) => {
     return () => {
       cancelled = true;
     };
-  }, [linked, open]);
+  }, [linked, open, answered]);
 
   const toggle = useCallback(() => {
     setOpen((v) => !v);
     setElsewhere(false);
-  }, []);
+    if (ask?.status !== 'waiting') clear();
+  }, [ask, clear]);
   const share = useCallback(() => {
     if (android) setPicking(true);
     else setElsewhere(true);
   }, [android]);
   const update = useCallback(() => {
-    if (android) {
-      setOpen(false);
-      handOver('update');
-    } else {
-      setElsewhere(true);
-    }
-  }, [android]);
+    if (android) void start('location.update');
+    else setElsewhere(true);
+  }, [android, start]);
   const closePicker = useCallback(() => {
     setPicking(false);
   }, []);
-  const pick = useCallback((account: ApiAccountJSON) => {
-    setPicking(false);
-    setOpen(false);
-    handOver('share', account.id);
-    return Promise.resolve();
-  }, []);
+  const pick = useCallback(
+    (account: ApiAccountJSON) => {
+      setPicking(false);
+      return start('location.share', { to: account.id });
+    },
+    [start],
+  );
   const stop = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const id = e.currentTarget.value;
     void apiStopLiveShare(id).then(() => {
@@ -190,6 +218,32 @@ export const LocationMenu: React.FC<Props> = ({ lower }) => {
                 id='map.location.needs_phone'
                 defaultMessage='This comes from Anthemos on your phone. Open the Map there.'
               />
+            </p>
+          )}
+
+          {(ask ?? failed) && (
+            <p className='map-location__note' role='status'>
+              {failed && intl.formatMessage(messages.unreachable)}
+              {ask?.status === 'waiting' &&
+                intl.formatMessage(messages.waiting)}
+              {ask?.status === 'done' &&
+                ask.kind === 'location.update' &&
+                (ask.result
+                  ? intl.formatMessage(messages.moved, { place: ask.result })
+                  : intl.formatMessage(messages.movedSomewhere))}
+              {ask?.status === 'done' &&
+                ask.kind === 'location.share' &&
+                intl.formatMessage(messages.sharingWith, {
+                  name: ask.to?.name ?? '',
+                })}
+              {ask?.status === 'declined' &&
+                intl.formatMessage(messages.declined)}
+              {ask?.status === 'failed' &&
+                intl.formatMessage(messages.failed, {
+                  reason: ask.result ?? '',
+                })}
+              {ask?.status === 'expired' &&
+                intl.formatMessage(messages.expired)}
             </p>
           )}
 

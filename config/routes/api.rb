@@ -482,6 +482,10 @@ namespace :api, format: false do
     # Anthemos phones linked to an account (docs/spaces/map.md, Live location).
     namespace :anthemos do
       resources :links, only: [:index, :create, :destroy]
+      # What the website asks the phone to do (docs/spaces/map.md, Asks from Kronk).
+      resources :asks, only: [:create, :show] do
+        member { post :answer }
+      end
     end
 
     namespace :klot do
