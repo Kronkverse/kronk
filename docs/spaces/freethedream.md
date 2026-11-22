@@ -478,6 +478,16 @@ the place the work is done:
   `POST /projects/:id/assign` and `/unassign` with `account_id`).
   Whoever made a fractal removes it from the bin on its panel, asked
   first. Members get **+ Add a fractal** last.
+- **Moving an entry between checklists** (Kommons "drag and drop/move
+  checklist items", 2026-11-22: "be able to move the check list items into
+  fractals"): once a Komponent has fractals, anyone in the projekt can move
+  an entry from its checklist into a fractal's, out again, or from one
+  fractal to another. On a computer, drag it onto the other checklist
+  (it's outlined, "Drop it here"); on a phone or from a keyboard, the →
+  in the entry's corner opens **Move to…**, a menu of the other
+  checklists (`POST /items/:id/move` with `from_project_id` and
+  `to_project_id`, both in the same projekt). Who is on it, bringing it or
+  has picked a choice stays as it was.
 - Events, Activity and Talk. Kuestions are the projekt's, so a
   gang's page has none of its own.
 - **Off the page for now** (Tal, 2026-11-08, "Sections": "We'll build up
