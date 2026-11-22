@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -392,6 +392,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_100000) do
     t.index ["question_id", "account_id"], name: "index_answers_on_question_id_and_account_id", unique: true
     t.index ["question_id"], name: "index_answers_on_question_id"
     t.index ["status_id"], name: "index_answers_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "anthemos_asks", force: :cascade do |t|
+    t.string "token", null: false
+    t.bigint "account_id", null: false
+    t.bigint "anthemos_link_id"
+    t.string "kind", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "status", default: "waiting", null: false
+    t.string "result"
+    t.datetime "expires_at", null: false
+    t.datetime "answered_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_anthemos_asks_on_account_id"
+    t.index ["anthemos_link_id"], name: "index_anthemos_asks_on_anthemos_link_id"
+    t.index ["token"], name: "index_anthemos_asks_on_token", unique: true
   end
 
   create_table "anthemos_links", force: :cascade do |t|
@@ -3086,6 +3103,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_100000) do
   add_foreign_key "announcement_reactions", "custom_emojis", on_delete: :cascade
   add_foreign_key "answers", "accounts", on_delete: :cascade
   add_foreign_key "answers", "questions", on_delete: :cascade
+  add_foreign_key "anthemos_asks", "accounts", on_delete: :cascade
+  add_foreign_key "anthemos_asks", "anthemos_links", on_delete: :nullify
   add_foreign_key "anthemos_links", "accounts", on_delete: :cascade
   add_foreign_key "appeals", "account_warnings", on_delete: :cascade
   add_foreign_key "appeals", "accounts", column: "approved_by_account_id", on_delete: :nullify
