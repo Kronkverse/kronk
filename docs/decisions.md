@@ -17,6 +17,25 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-22 — Kronk asks Anthemos, and you tap to allow
+
+Tal: handing over from Kronk to Anthemos needs a clear handshake between
+accounts, and a tap to confirm rather than the voice recorder; build it as
+the way Kronk asks Anthemos for anything, location first. The hand-over link
+used to carry what to do (`/share?to=`, `/update`) and only the server, so a
+phone signed in to another account could act on it, and any web page could
+open it.
+
+**Decision.** Kronk keeps each ask (`AnthemosAsk`): the account that made it,
+a kind, what it carries, five minutes to live, answered once. The link hands
+Anthemos only a random token. Anthemos reads the ask with its own sign-in,
+so only a phone signed in to that account can, shows it as a card with
+Allow and Not now, and signs its answer with the phone's key. The website
+watches the ask and says what happened. A new kind is one entry on each
+side. docs/spaces/map.md, Asks from Kronk.
+
+---
+
 ## 2026-11-20 — A Mate's settings live on the Mateship page
 
 Tal: "it also should contain the various controls of, access to content,
