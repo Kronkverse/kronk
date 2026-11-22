@@ -162,7 +162,10 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
     expect(page).to have_no_css('.freethedream-checklist__entry', text: 'Hall deposti')
     expect(Freethedream::Item.where(title: 'Hall deposti')).to be_empty
+  end
 
+  it 'asks before taking off an entry someone else is on', :aggregate_failures do
+    visit_kitchen
     kitchen = Freethedream::Project.find_by(title: 'Kitchen')
     gas = Freethedream::Item.create!(kind: 'job', title: 'Gas bottles', owner: bob.account, root_id: kitchen.top_id)
     gas.placements.create!(project: kitchen)
