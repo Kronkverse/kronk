@@ -113,31 +113,4 @@ RSpec.describe 'Swiping the barrel', :js, :streaming do
     swipe([195, 600], across: -200)
     expect(page).to have_no_css('.scope-title h1', text: 'All albums')
   end
-
-  context 'with Nudges, whose faces scroll in a box of their own' do
-    let(:ana) { Fabricate(:account, username: 'ana', display_name: 'Ana') }
-
-    before do
-      Fabricate(:follow, account: bob.account, target_account: ana)
-      Fabricate(:follow, account: ana, target_account: bob.account)
-      chat = Nudges::Conversation.mate_between!(bob.account, ana)
-      Fabricate(:nudges_conversation_message, conversation: chat, author_account: ana, body: 'Dawn patrol tomorrow?')
-    end
-
-    it 'turns from the middle of the page' do
-      visit '/nudges'
-      expect(page).to have_css('.scope-title h1', text: 'Notifications')
-      swipe([195, 450], across: -200)
-      expect(page).to have_current_path('/nudges/messages')
-    end
-
-    it 'stays put inside an open chat' do
-      visit '/nudges/messages'
-      find('.nudges-row', text: 'Ana').click
-      expect(page).to have_content('Dawn patrol tomorrow?')
-      swipe(point_in('.nudges-messenger__pane', 200), across: -200)
-      expect(page).to have_content('Dawn patrol tomorrow?')
-      expect(page).to have_no_current_path('/nudges')
-    end
-  end
 end

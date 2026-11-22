@@ -286,7 +286,7 @@ const usePostTarget = (): PostTarget | null => {
       // above: as a string the `?compose=1` stays in the pathname, no route
       // matches it, and New chat lands on "not found".
       return {
-        href: { pathname: '/nudges/messages', search: '?compose=1' },
+        href: { pathname: '/nudges', search: '?compose=1' },
         label: intl.formatMessage(messages.new_chat),
       };
     }

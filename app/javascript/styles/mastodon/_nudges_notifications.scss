@@ -1,4 +1,5 @@
-// Nudges — the Notifications face (`/nudges`).
+// Nudges — Notifications, the pinned first row of the list of chats, open
+// in the pane (`/nudges/notifications`; on a wide screen also `/nudges`).
 // Spec: docs/spaces/nudges.md (Nudges spec) § Notifications list.
 // A single reading column of rows inside `.stage-column`. One row shape
 // for everything: who or what on the left, a sentence, an optional line
@@ -18,44 +19,6 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-large);
   background: var(--surface-primary);
-}
-
-// Shortcut to the Messages face, shown only while messages are unread:
-// you land on Notifications, so waiting messages must not be out of sight.
-.nudges-notifications__messages {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: var(--radius-medium);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--text-primary);
-  font-weight: 600;
-  text-decoration: none;
-  transition: background var(--dur-fast) var(--ease-out);
-
-  .icon {
-    flex: 0 0 auto;
-    width: 1.25rem;
-    height: 1.25rem;
-    color: var(--kronk-purple-bright);
-  }
-
-  &:hover,
-  &:focus-visible {
-    background: color-mix(in srgb, var(--accent) 18%, transparent);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--kronk-purple-bright);
-    outline-offset: 2px;
-  }
-}
-
-.nudges-notifications__messages-label {
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .nudges-notifications__list {

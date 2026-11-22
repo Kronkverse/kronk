@@ -4,8 +4,10 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useHistory, useLocation } from 'react-router-dom';
 
+import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { ApiNudgeConversationJSON } from 'mastodon/api_types/nudges_conversations';
+import { Icon } from 'mastodon/components/icon';
 
 import { ConversationRow } from './conversation_row';
 import { MatePicker } from './mate_picker';
@@ -28,10 +30,22 @@ const messages = defineMessages({
     id: 'nudges.requests',
     defaultMessage: 'Requests',
   },
+  notifications: {
+    id: 'nudges.face.notifications',
+    defaultMessage: 'Notifications',
+  },
+  notificationsLine: {
+    id: 'nudges.face.notifications.tagline',
+    defaultMessage: "What's new for you",
+  },
+  notificationsWaiting: {
+    id: 'nudges.notifications.waiting',
+    defaultMessage: '{count} new',
+  },
 });
 
 // URL-driven picker: the Kronk menu's "New chat" action navigates to
-// `/nudges/messages?compose=1`, we surface the mate picker and strip the flag
+// `/nudges?compose=1`, we surface the mate picker and strip the flag
 // on close. Keeps the sidebar chrome minimal (search input only) while
 // leaving the compose affordance where every other create-action
 // lives — the floating Kronk menu.
@@ -41,6 +55,10 @@ interface ConversationListProps {
   conversations: ApiNudgeConversationJSON[];
   loading: boolean;
   activeId: string | null;
+  // Notifications, pinned first: open in the pane, and how much is new.
+  notificationsActive: boolean;
+  notificationsCount: number;
+  onOpenNotifications: () => void;
   onOpen: (id: string) => void;
   onNewConversation: (conversation: ApiNudgeConversationJSON) => void;
   onAccept: (id: string) => void;
@@ -51,6 +69,9 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   loading,
   activeId,
+  notificationsActive,
+  notificationsCount,
+  onOpenNotifications,
   onOpen,
   onNewConversation,
   onAccept,
@@ -120,6 +141,46 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           onChange={handleSearchChange}
         />
       </div>
+
+      {/* Notifications is always the first row, whatever the search. */}
+      <ul className='nudges-sidebar__list'>
+        <li
+          className={`nudges-row nudges-row--notifications ${
+            notificationsActive ? 'nudges-row--active' : ''
+          } ${notificationsCount > 0 ? 'nudges-row--unread' : ''}`}
+        >
+          <button
+            type='button'
+            className='nudges-row__button'
+            onClick={onOpenNotifications}
+          >
+            <span className='nudges-row__avatar'>
+              <span className='nudges-row__krew-avatar nudges-row__notifications-icon'>
+                <Icon id='notifications' icon={NotificationsIcon} />
+              </span>
+            </span>
+            <span className='nudges-row__body'>
+              <span className='nudges-row__head'>
+                <span className='nudges-row__name'>
+                  {intl.formatMessage(messages.notifications)}
+                </span>
+              </span>
+              <span className='nudges-row__preview'>
+                {notificationsCount > 0
+                  ? intl.formatMessage(messages.notificationsWaiting, {
+                      count: notificationsCount,
+                    })
+                  : intl.formatMessage(messages.notificationsLine)}
+              </span>
+            </span>
+            {notificationsCount > 0 && (
+              <span className='nudges-row__badge' aria-hidden>
+                {notificationsCount}
+              </span>
+            )}
+          </button>
+        </li>
+      </ul>
 
       {loading && (
         <p className='nudges-sidebar__status'>
