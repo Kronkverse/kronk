@@ -24,6 +24,7 @@ import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { LinkifiedBody } from './linkified_body';
+import { MessageMediaGrid } from './message_media';
 
 const messages = defineMessages({
   addReaction: {
@@ -386,44 +387,6 @@ const SenderAvatar: React.FC<{
 }> = ({ author }) => {
   const account = createAccountFromServerJSON(author);
   return <Avatar account={account} size={20} />;
-};
-
-const MessageMediaGrid: React.FC<{
-  media: ApiNudgeMessageJSON['media'];
-}> = ({ media }) => {
-  const count = Math.min(media.length, 4);
-  return (
-    <div className={`nudges-msg__media-grid nudges-msg__media-grid--${count}`}>
-      {media.map((m) => (
-        <MessageMediaTile key={m.id} media={m} />
-      ))}
-    </div>
-  );
-};
-
-const MessageMediaTile: React.FC<{
-  media: ApiNudgeMessageJSON['media'][number];
-}> = ({ media }) => {
-  if (media.type === 'video' || media.type === 'gifv') {
-    return (
-      // eslint-disable-next-line jsx-a11y/media-has-caption
-      <video
-        className='nudges-msg__media'
-        src={media.url ?? undefined}
-        poster={media.preview_url ?? undefined}
-        controls
-        playsInline
-      />
-    );
-  }
-
-  return (
-    <img
-      className='nudges-msg__media'
-      src={media.preview_url ?? media.url ?? undefined}
-      alt={media.description ?? ''}
-    />
-  );
 };
 
 interface AddReactionPickerProps {
