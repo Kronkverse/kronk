@@ -140,6 +140,7 @@ namespace :api, format: false do
           post :bring
           post :take_over
           post :hand_over
+          post :move
         end
         resources :placements, only: [:create, :destroy]
       end
