@@ -23,6 +23,7 @@ import { me } from 'mastodon/initial_state';
 
 import { AnswerWanted } from './answer_wanted';
 import { AskForListing } from './ask_for_listing';
+import { LessonSection } from './lesson_section';
 import { ListingBookingSummary } from './listing_booking_summary';
 import {
   ListingOptionsChooser,
@@ -397,7 +398,25 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         </p>
       ) : null}
 
-      {listing.kind !== 'wanted' && listing.booking ? (
+      {/* A lesson (docs/spaces/wachuneed.md, Lessons): locked, with
+          Unlock, or the lesson itself. It asks for itself, so the Ask
+          button and quantity below leave it out. */}
+      {listing.offering === 'lesson' ? (
+        <LessonSection
+          listing={listing}
+          isOwner={isOwner}
+          signedIn={!!me}
+          canAsk={
+            !isOwner &&
+            listing.state === 'live' &&
+            listing.can_message !== false
+          }
+        />
+      ) : null}
+
+      {listing.kind !== 'wanted' &&
+      listing.offering !== 'lesson' &&
+      listing.booking ? (
         <ListingBookingSummary booking={listing.booking} />
       ) : null}
 
@@ -435,7 +454,9 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
 
       {/* How many, for something that keeps selling or comes in kinds; and
           what that comes to when there are no extras to show a total. */}
-      {listing.kind !== 'wanted' && (listing.ongoing || variants) ? (
+      {listing.kind !== 'wanted' &&
+      listing.offering !== 'lesson' &&
+      (listing.ongoing || variants) ? (
         <div className='wachuneed-detail__buy'>
           <label className='wachuneed-detail__quantity'>
             <span>{intl.formatMessage(messages.quantity)}</span>
@@ -465,6 +486,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
       ) : null}
 
       {listing.kind !== 'wanted' &&
+      listing.offering !== 'lesson' &&
       !isOwner &&
       !!me &&
       listing.state === 'live' &&

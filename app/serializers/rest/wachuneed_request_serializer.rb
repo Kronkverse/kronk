@@ -38,6 +38,8 @@ class REST::WachuneedRequestSerializer < ActiveModel::Serializer
       title: listing.title,
       state: listing.state,
       kind: listing.kind,
+      offering: listing.offering,
+      price_type: listing.price_type,
       price_unit: listing.price_unit,
       cover_url: cover&.file&.url(:small),
       seller: REST::AccountSerializer.new(listing.account).as_json,
