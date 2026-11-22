@@ -12,12 +12,14 @@ import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import BringIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import MoreIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import PaymentsIcon from '@/material-icons/400-24px/payments.svg?react';
+import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import QuestionIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import UnfoldMoreIcon from '@/material-icons/400-24px/unfold_more.svg?react';
 import {
   apiFtdItemAction,
   apiFtdMoveItem,
   apiFtdRemoveItem,
+  apiFtdSuggest,
   apiFtdUpdateItem,
 } from 'mastodon/api/freethedream';
 import type { FtdItemParams } from 'mastodon/api/freethedream';
@@ -26,6 +28,7 @@ import {
   apiUpdateMyKuestionAnswer,
 } from 'mastodon/api/kuestions';
 import type {
+  FtdAccount,
   FtdDecide,
   FtdItemRow,
   FtdProject,
@@ -37,6 +40,7 @@ import type { SelectItem } from 'mastodon/components/dropdown_selector';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 import { PeopleRow } from 'mastodon/components/people_row';
+import { me } from 'mastodon/initial_state';
 
 import { act } from './act';
 import { BringControl } from './bring';
@@ -119,7 +123,23 @@ const messages = defineMessages({
   },
   moveTo: {
     id: 'freethedream.checklist.move_to',
-    defaultMessage: 'Move to {checklist}',
+    defaultMessage: 'Move to…',
+  },
+  suggest: {
+    id: 'freethedream.checklist.suggest',
+    defaultMessage: 'Suggest someone…',
+  },
+  suggested: {
+    id: 'freethedream.checklist.suggested',
+    defaultMessage: 'Suggested',
+  },
+  suggestedYou: {
+    id: 'freethedream.checklist.suggested_you',
+    defaultMessage: 'You’re suggested for this',
+  },
+  notForMe: {
+    id: 'freethedream.checklist.not_for_me',
+    defaultMessage: 'Not for me',
   },
   delete: {
     id: 'freethedream.checklist.delete',
@@ -488,35 +508,68 @@ const DRAG_TYPE = 'application/x-kronk-checklist-entry';
 const move = (itemId: string, fromId: string, toId: string) =>
   act(apiFtdMoveItem(itemId, fromId, toId));
 
-// An entry's ⋯ menu: Move to… each other checklist on the page, and Delete
-// for whoever added it. A drag moves it too on a computer; the menu is how
-// it's done on a phone, where there is no dragging, and from a keyboard.
+// An entry's ⋯ menu: Suggest someone… (anyone in the projekt, Kommons
+// "Tagging people on a checklist item", 2026-11-22), Move to… (when the
+// page has other checklists) and Delete, in red, for whoever added it.
+// Suggest someone… and Move to… each open their own list in the same menu.
+// A drag moves an entry too on a computer; the menu is how it's done on a
+// phone, where there is no dragging, and from a keyboard.
 const REMOVE = '__remove';
+const SUGGEST = '__suggest';
+const MOVE = '__move';
+type MenuList = 'top' | 'suggest' | 'move';
 const EntryMenu: React.FC<{
   item: FtdItemRow;
   fromId: string;
   targets: MoveTarget[];
+  // Who can be suggested: everyone else in the projekt.
+  people: FtdAccount[];
   removable: boolean;
   disabled: boolean;
-  onMoved: () => void;
+  onChange: () => void;
   onRemove: () => void;
-}> = ({ item, fromId, targets, removable, disabled, onMoved, onRemove }) => {
+}> = ({
+  item,
+  fromId,
+  targets,
+  people,
+  removable,
+  disabled,
+  onChange,
+  onRemove,
+}) => {
   const intl = useIntl();
   const button = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const items = useMemo<SelectItem[]>(
-    () => [
-      ...targets.map((t) => ({
-        value: t.id,
-        text: intl.formatMessage(messages.moveTo, { checklist: t.title }),
-      })),
+  const [list, setList] = useState<MenuList>('top');
+  const suggested = useMemo(
+    () => new Set((item.suggested ?? []).map((a) => a.id)),
+    [item.suggested],
+  );
+  const items = useMemo<SelectItem[]>(() => {
+    if (list === 'move')
+      return targets.map((t) => ({ value: t.id, text: t.title }));
+    if (list === 'suggest')
+      return people.map((p) => ({
+        value: p.id,
+        text: p.display_name || p.acct,
+        icon: suggested.has(p.id) ? 'check' : 'person',
+        iconComponent: suggested.has(p.id) ? CheckIcon : PersonIcon,
+      }));
+    return [
+      ...(people.length > 0
+        ? [{ value: SUGGEST, text: intl.formatMessage(messages.suggest) }]
+        : []),
+      ...(targets.length > 0
+        ? [{ value: MOVE, text: intl.formatMessage(messages.moveTo) }]
+        : []),
       ...(removable
         ? [{ value: REMOVE, text: intl.formatMessage(messages.delete) }]
         : []),
-    ],
-    [targets, removable, intl],
-  );
+    ];
+  }, [list, targets, people, suggested, removable, intl]);
   const handleToggle = useCallback(() => {
+    setList('top');
     setOpen((was) => !was);
   }, []);
   const handleClose = useCallback(() => {
@@ -525,11 +578,21 @@ const EntryMenu: React.FC<{
   }, []);
   const handlePick = useCallback(
     (value: string) => {
+      if (list === 'top' && (value === SUGGEST || value === MOVE)) {
+        // The menu closes on a pick; this one opens the next list instead.
+        setList(value === SUGGEST ? 'suggest' : 'move');
+        setOpen(true);
+        return;
+      }
       setOpen(false);
-      if (value === REMOVE) onRemove();
-      else void move(item.id, fromId, value).then(onMoved);
+      if (list === 'move') void move(item.id, fromId, value).then(onChange);
+      else if (list === 'suggest')
+        void act(apiFtdSuggest(item.id, value, !suggested.has(value))).then(
+          onChange,
+        );
+      else if (value === REMOVE) onRemove();
     },
-    [item.id, fromId, onMoved, onRemove],
+    [list, item.id, fromId, suggested, onChange, onRemove],
   );
 
   return (
@@ -564,6 +627,7 @@ const EntryMenu: React.FC<{
               )}
             >
               <DropdownSelector
+                key={list}
                 items={items}
                 value=''
                 onClose={handleClose}
@@ -578,6 +642,40 @@ const EntryMenu: React.FC<{
   );
 };
 
+// Who's been suggested for an entry; to whoever it is, a way to say it's
+// not for them (taking it on, On it or I'll bring it, ends it too).
+const Suggested: React.FC<{
+  item: FtdItemRow;
+  canAct: boolean;
+  onChange: () => void;
+}> = ({ item, canAct, onChange }) => {
+  const intl = useIntl();
+  const me = item.suggested_me;
+  const people = item.suggested ?? [];
+  const handleNotForMe = useCallback(() => {
+    void act(apiFtdSuggest(item.id, null, false)).then(onChange);
+  }, [item.id, onChange]);
+  if (people.length === 0) return null;
+
+  return (
+    <span className='freethedream-checklist__suggested'>
+      <span className='freethedream-checklist__suggested-label'>
+        {intl.formatMessage(me ? messages.suggestedYou : messages.suggested)}
+      </span>
+      <PeopleRow people={people} max={3} />
+      {me && canAct && (
+        <button
+          type='button'
+          className='freethedream__button freethedream__button--small freethedream__button--quiet'
+          onClick={handleNotForMe}
+        >
+          {intl.formatMessage(messages.notForMe)}
+        </button>
+      )}
+    </span>
+  );
+};
+
 const Entry: React.FC<{
   item: FtdItemRow;
   canAct: boolean;
@@ -585,7 +683,9 @@ const Entry: React.FC<{
   fromId: string;
   // The other checklists it can move to; none when there are none.
   targets: MoveTarget[];
-}> = ({ item, canAct, onChange, fromId, targets }) => {
+  // Who it can be suggested to (everyone else in the projekt).
+  people: FtdAccount[];
+}> = ({ item, canAct, onChange, fromId, targets, people }) => {
   const intl = useIntl();
   const [busy, setBusy] = useState(false);
   const handleRetype = useCallback(
@@ -620,6 +720,8 @@ const Entry: React.FC<{
 
   const movable = canAct && targets.length > 0;
   const removable = canAct && item.mine;
+  const suggestable = canAct && people.length > 0;
+  const menu = movable || removable || suggestable;
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLLIElement>) => {
       e.dataTransfer.setData(
@@ -639,7 +741,7 @@ const Entry: React.FC<{
       })}
       style={
         {
-          '--corner-buttons': Number(movable || removable),
+          '--corner-buttons': Number(menu),
         } as React.CSSProperties
       }
       draggable={movable}
@@ -671,15 +773,17 @@ const Entry: React.FC<{
       ) : (
         <ToDo item={item} canAct={canAct} onChange={onChange} />
       )}
-      {(movable || removable) && (
+      <Suggested item={item} canAct={canAct} onChange={onChange} />
+      {menu && (
         <span className='freethedream-checklist__corner'>
           <EntryMenu
             item={item}
             fromId={fromId}
             targets={movable ? targets : []}
+            people={suggestable ? people : []}
             removable={removable}
             disabled={busy}
-            onMoved={onChange}
+            onChange={onChange}
             onRemove={handleRemove}
           />
         </span>
@@ -709,13 +813,17 @@ export const ChecklistEntries: React.FC<{
   onChange: () => void;
   // Every checklist on the page, this one included (`moveTargets`).
   targets?: MoveTarget[];
-}> = ({ projectId, items, canAct, onChange, targets = [] }) => {
+  // Everyone in the projekt, to suggest for an entry.
+  members?: FtdAccount[];
+}> = ({ projectId, items, canAct, onChange, targets = [], members = [] }) => {
   const intl = useIntl();
   const [kind, setKind] = useState<QuickAddKind>('job');
   const others = useMemo(
     () => targets.filter((t) => t.id !== projectId),
     [targets, projectId],
   );
+  // Suggesting is for someone else: the viewer is left out.
+  const people = useMemo(() => members.filter((m) => m.id !== me), [members]);
 
   // An entry dragged here from another checklist on the page moves here.
   const [over, setOver] = useState(false);
@@ -790,6 +898,7 @@ export const ChecklistEntries: React.FC<{
               onChange={onChange}
               fromId={projectId}
               targets={others}
+              people={people}
             />
           ))}
         </ul>
@@ -829,6 +938,7 @@ export const Checklist: React.FC<{
         canAct={project.can.add}
         onChange={onChange}
         targets={moveTargets(project)}
+        members={project.members}
       />
     </Section>
   );

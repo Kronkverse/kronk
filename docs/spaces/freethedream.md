@@ -277,11 +277,27 @@ asks a Yes or No Kuestion and starts undecided, and one that stops being
 a Decide takes its Kuestion with it. Something people are already
 bringing stays a Bring, so nobody's offer is left against a To do.
 
+**An entry's ⋯ menu** reads **Suggest someone…**, **Move to…** (when the
+page has fractals, below) and **Delete**, in red, for whoever added it.
+
 **Taking an entry off** (Kommons "Checklist", 2026-11-22: "easily delete
 checklist items if added by mistake"): whoever added an entry has
 **Delete** in its ⋯ menu. One tap takes it off (`DELETE /items/:id`, a Decide's
 Kuestion with it); once someone else is on it, bringing some or has
 picked a choice, it asks first.
+
+**Suggesting someone** (Kommons "Tagging people on a checklist item",
+2026-11-22: "If i know someone has a generator, i would suggest them"):
+anyone in the projekt picks **Suggest someone…** on a To do or something
+to Bring, then someone else in the projekt (`POST /items/:id/suggest`
+with `account_id`; picking them again takes it back, `unsuggest`). It's
+added after the entry, not while adding it. They're told (a Nudge,
+`freethedream.item.suggested`, linking to the entry), and the entry shows
+**Suggested** with their faces; to them it reads "You're suggested for
+this" with **Not for me** (`unsuggest` with no one given). It's a nudge,
+not a job: they take it on the usual way, On it or I'll bring it, which
+ends the suggestion, and leaving the projekt ends it too. Only people in
+the projekt can be suggested, as only they can take it on.
 
 ### The kinds of item
 
@@ -484,7 +500,7 @@ the place the work is done:
   an entry from its checklist into a fractal's, out again, or from one
   fractal to another. On a computer, drag it onto the other checklist
   (it's outlined, "Drop it here"); on a phone or from a keyboard, the ⋯
-  in the entry's corner lists **Move to** each of the other
+  in the entry's corner has **Move to…**, which opens a list of the other
   checklists (`POST /items/:id/move` with `from_project_id` and
   `to_project_id`, both in the same projekt). Who is on it, bringing it or
   has picked a choice stays as it was.
