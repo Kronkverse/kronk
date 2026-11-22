@@ -1689,6 +1689,25 @@ $freethedream-wide: 1000px;
     min-inline-size: 10rem;
   }
 
+  // Whoever added an entry takes it off: a quiet × in its top corner, so
+  // it never wraps onto a line of its own on a phone.
+  &__entry--mine {
+    position: relative;
+    padding-inline-end: 2.5rem;
+  }
+
+  &__remove.icon-button {
+    position: absolute;
+    inset-block-start: 0.45rem;
+    inset-inline-end: 0.4rem;
+    color: var(--text-muted);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--destructive);
+    }
+  }
+
   // A Pay entry's amount, and Paid or Booked once it's ticked.
   &__amount {
     font-weight: 600;

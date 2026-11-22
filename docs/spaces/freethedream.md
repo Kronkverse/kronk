@@ -277,6 +277,12 @@ asks a Yes or No Kuestion and starts undecided, and one that stops being
 a Decide takes its Kuestion with it. Something people are already
 bringing stays a Bring, so nobody's offer is left against a To do.
 
+**Taking an entry off** (Kommons "Checklist", 2026-11-22: "easily delete
+checklist items if added by mistake"): whoever added an entry has a quiet
+× in its corner. One tap takes it off (`DELETE /items/:id`, a Decide's
+Kuestion with it); once someone else is on it, bringing some or has
+picked a choice, it asks first.
+
 ### The kinds of item
 
 | List               | What it is                                                     | How people take part                                                                                                                                                                                                                                                  |
