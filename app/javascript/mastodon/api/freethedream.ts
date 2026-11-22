@@ -121,6 +121,16 @@ export type FtdProjectAction =
 export const apiFtdProjectAction = (id: string, action: FtdProjectAction) =>
   apiRequestPost<FtdProject>(`${base}/projects/${id}/${action}`);
 
+// Assign a fractal to someone in the projekt, or take them off it.
+export const apiFtdAssign = (
+  id: string,
+  accountId: string,
+  assigned: boolean,
+) =>
+  apiRequestPost(`${base}/projects/${id}/${assigned ? 'assign' : 'unassign'}`, {
+    account_id: accountId,
+  });
+
 // Its chat, for its page: the Nudges conversation and what's unread.
 export const apiFtdChat = (id: string) =>
   apiRequestGet<{ conversation_id: string; unread: number }>(

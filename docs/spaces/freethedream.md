@@ -466,8 +466,18 @@ the place the work is done:
   overlapping, then "+7" for the rest (`PeopleRow`, a kit primitive; Tal,
   2026-11-10: "a rough idea of which people, and how many"), whoever is on
   the most first. Each picture opens that person.
-- **Fractals** as the same row of cards (description, progress), each opening
-  its own page; members get **+ Add a fractal** last.
+- **Fractals** under its checklist, on this same page (Kommons "Fractals",
+  2026-11-22: "Fractals are not new pages, they're just displayed
+  checklists lists on this same page. Compartmentalised sections of the
+  overall task that can be assigned to team members"). Each is a panel
+  (`fractals.tsx`): its name, what it's about, who it's **assigned** to
+  (their pictures, or "Not assigned yet") and its own checklist, which
+  works as the Komponent's does. Anyone in the projekt assigns it, to
+  anyone in the projekt, from **Assign** (a menu of the projekt's people;
+  picking someone assigned takes them off; `Freethedream::Assignment`,
+  `POST /projects/:id/assign` and `/unassign` with `account_id`).
+  Whoever made a fractal removes it from the bin on its panel, asked
+  first. Members get **+ Add a fractal** last.
 - Events, Activity and Talk. Kuestions are the projekt's, so a
   gang's page has none of its own.
 - **Off the page for now** (Tal, 2026-11-08, "Sections": "We'll build up
@@ -481,7 +491,9 @@ the place the work is done:
   line ("Pills"): a need is Things and an idea is Skills.
 
 **A fractal's page** is the same, without fractals of its own; its back
-chip goes to its gang.
+chip goes to its gang. Nothing on the Komponent's page links to it any
+more; it is still where a fractal's talk and activity are, reached from
+Activity and Nudges.
 
 - **Lists roll up.** The emergence's list is everything in it: first **For
   all of Mini Doof**, what's placed on the emergence itself, which is
