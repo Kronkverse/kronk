@@ -137,6 +137,15 @@ RSpec.describe 'Location from a Konnected Place' do
       expect(pin).to include('location_name' => 'Fitzroy Gardens')
       expect(pin['lat']).to be_within(0.0001).of(-37.8136)
       expect(pin['lng']).to be_within(0.0001).of(144.9799)
+      # Which Place it stands on, so the Map draws one marker for both.
+      expect(pin['place']).to include('id' => place.id.to_s, 'name' => 'Fitzroy Gardens', 'url' => "/hub/map/places/#{place.id}")
+    end
+
+    it 'names no Place for an event pinned by its own location' do
+      own = create_event('Own spot', location_url: 'https://www.openstreetmap.org/?mlat=-37.81&mlon=144.96')
+      link('kalendar', own.id)
+
+      expect(pins_for(author)['Own spot']['place']).to be_nil
     end
 
     it "keeps to the event's reach" do
