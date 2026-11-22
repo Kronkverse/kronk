@@ -710,7 +710,7 @@ export const MatesView: React.FC = () => {
         {/* Your location, from Anthemos: Share and Update. Only once a
             phone is linked. Sits under the in-view panel when that takes
             the corner. */}
-        <LocationMenu lower={anonymising} />
+        <LocationMenu lower={anonymising} onPinMoved={refresh} />
 
         {/* Off-map compass overlay — a marker at the canvas edge per
             direction that has mates outside the viewport. Absolute-
