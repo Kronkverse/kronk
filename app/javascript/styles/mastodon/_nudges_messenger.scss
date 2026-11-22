@@ -501,6 +501,7 @@ body.layout-single-column:has(.nudges-messenger) {
 // (`.nudges-notifications`, drawn for when it stood alone on the sky)
 // goes.
 .nudges-messenger__notifications {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -511,6 +512,46 @@ body.layout-single-column:has(.nudges-messenger) {
     border: 0;
     border-radius: 0;
     background: transparent;
+  }
+
+  // Pinned above the list rather than scrolled with it: the list opens at
+  // its bottom, so the top of it is out of sight.
+  > .push-prompt {
+    flex: 0 0 auto;
+    margin: 0.75rem 1rem 0;
+  }
+}
+
+// The list reads like a chat: oldest at the top, the newest at the bottom.
+// A short list sits at the bottom too, as a short chat does, and the
+// bottom has no extra room under the last row.
+.nudges-notifications__scroll {
+  flex-direction: column;
+  align-items: center;
+
+  // Not centred along the column: a centred list taller than the pane
+  // overflows above the top too, where it can't be scrolled to.
+  justify-content: flex-start;
+  padding-block-end: 1rem;
+
+  > .stage-column__inner {
+    margin-block-start: auto;
+  }
+}
+
+// "New", over the bottom of the list, when something arrived while you
+// were scrolled up. Tapping it goes down to it.
+.nudges-notifications__new {
+  position: absolute;
+  inset-block-end: 1rem;
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+
+  .korner-pill {
+    pointer-events: auto;
+    box-shadow: var(--elevation-floating);
   }
 }
 

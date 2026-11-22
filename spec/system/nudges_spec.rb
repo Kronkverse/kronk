@@ -17,6 +17,17 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
   let(:ben) { Fabricate(:account, username: 'ben', display_name: 'Ben') }
   let(:me)  { bob.account }
 
+  # The scroll position settles a frame or two after the rows render.
+  def eventually
+    deadline = Time.current + Capybara.default_max_wait_time
+    loop do
+      result = yield
+      return result if result || Time.current > deadline
+
+      sleep 0.1
+    end
+  end
+
   def notify(actor, **attrs)
     Fabricate(:nudges_event, conversation: nil, recipient_account: me, actor_account: actor, **attrs)
   end
@@ -87,6 +98,39 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     find('.nudges-row--notifications .nudges-row__button').click
     expect(page).to have_css('.nudges-notification', count: 2)
     expect(page).to have_no_css('.nudges-notification--fresh')
+  end
+
+  # Tal, 2026-11-23: "All the messages are in chronological order with the
+  # latest message at the bottom, can we try with the notifications also?"
+  it 'reads notifications like a chat: newest at the bottom, earlier ones above as you scroll up', :aggregate_failures do
+    45.times do |i|
+      post = Fabricate(:status, account: me, text: "Old post #{i}")
+      notify(ben, source_korner_slug: 'feed', verb: 'frothed', source_type: 'Status', source_id: post.id,
+                  created_at: (3 + i).days.ago, seen_at: 1.day.ago)
+    end
+    visit '/nudges/notifications'
+
+    # A page of them: the newest is the last row, the Mate request (older)
+    # comes before the froths.
+    expect(page).to have_css('.nudges-notification', minimum: 30)
+    expect(page).to have_no_css('.nudges-notification', text: 'Old post 44')
+    rows = all('.nudges-notification').map(&:text)
+    expect(rows.last).to include('Ben and 1 other frothed your post')
+    expect(rows.index { |t| t.include?('Ana wants to be Mates') }).to be < rows.index { |t| t.include?('Ben and 1 other') }
+
+    # It opens at the bottom.
+    scroller = '.nudges-messenger__notifications .nudges-notifications__scroll'
+    at_bottom = "(() => { const el = document.querySelector('#{scroller}'); " \
+                'return el.scrollHeight - el.scrollTop - el.clientHeight < 80; })()'
+    expect(page).to have_css('.nudges-notification', text: 'Ben and 1 other frothed your post')
+    expect(eventually { page.evaluate_script(at_bottom) }).to be true
+
+    # Scrolled up to the top, the earlier ones load in above, and what was
+    # at the top stays in view rather than jumping.
+    page.execute_script("document.querySelector('#{scroller}').scrollTop = 0")
+    expect(page).to have_css('.nudges-notification', count: 47)
+    expect(page.evaluate_script("document.querySelector('#{scroller}').scrollTop")).to be > 0
+    expect(first('.nudges-notification').text).to include('Old post 44')
   end
 
   it 'lists chats with a name and the latest line, and finds one by name' do
