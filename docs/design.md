@@ -266,7 +266,11 @@ label })` (2026-11-11). While it's open, the router stamps any link into
    makes (2026-11-21): an album made from a Krew backs up to the Krew, not
    to Albutts (`konnectedFrom` in `components/router.tsx`).
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
-   specific parent. Renders `.kronk-back-chip`.
+   specific parent. Renders `.kronk-back-chip`. Only where the Frame shows
+   no space badge (a profile's pages, say): a page never has two back
+   buttons. `<KornerDetail back>` enforces it (2026-11-23): on a korner page
+   it sets where the badge goes (`useSpaceBack`) instead of drawing a chip,
+   so the one badge reads "All brands" and goes there.
 
 A hand-rolled "← Back" link or button is banned. On the governed files,
 stylelint fails any class matching `__back`, `__back-link`, `__back-button`,

@@ -4,9 +4,11 @@ import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
 
 import { AttachmentSection } from './attachment_section';
 import type { AttachmentExclude } from './attachment_section';
+import { useSpaceBadgeSlug } from './auto_space_badge';
 import { BackToKorner } from './back_to_korner';
 import type { IconProp } from './icon';
 import { Icon } from './icon';
+import { useSpaceBack } from './space_back';
 
 // KornerDetail — the shell every korner's detail page mounts inside.
 // Provides the outer structure (back-to-parent affordance, hero
@@ -44,7 +46,10 @@ interface KornerDetailProps {
   // parent (typically the korner root or a specific face — e.g. an
   // event detail points at `/hub/kalendar/list`, the "all events"
   // face). Optional so shells without a natural parent (top-level
-  // korner landing) can omit it.
+  // korner landing) can omit it. On a korner page the Frame's space
+  // badge already is the back button, so there `back` sets where the
+  // badge goes (useSpaceBack) and no second chip is drawn; the chip is
+  // only for pages with no badge, like a profile's.
   back?: { href: string; label: React.ReactNode };
   // The record this page shows, for the Konnected block under the body:
   // what it's Konnected to both ways, with Konnect for whoever looks after
@@ -63,6 +68,16 @@ interface KornerDetailProps {
   className?: string;
 }
 
+// The badge takes a parent inside its own korner, named in words.
+const badgeTakes = (
+  back: KornerDetailProps['back'],
+  slug: string | null,
+): back is { href: string; label: string } =>
+  !!back &&
+  !!slug &&
+  typeof back.label === 'string' &&
+  (back.href === `/hub/${slug}` || back.href.startsWith(`/hub/${slug}/`));
+
 export const KornerDetail: React.FC<KornerDetailProps> = ({
   title,
   titleIcon,
@@ -76,36 +91,44 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
   attached,
   children,
   className,
-}) => (
-  <div className='stage-column'>
-    <div className={classNames('korner-detail', className)}>
-      {back && <BackToKorner href={back.href} label={back.label} />}
-      {hero && <div className='korner-detail__hero'>{hero}</div>}
-      {banner && <div className='korner-detail__banner'>{banner}</div>}
-      <h1 className='korner-detail__title'>
-        {titleIcon && titleIconId && (
-          <Icon
-            id={titleIconId}
-            icon={titleIcon}
-            className='korner-detail__title-icon'
+}) => {
+  const badgeSlug = useSpaceBadgeSlug();
+  const toBadge = badgeTakes(back, badgeSlug);
+  useSpaceBack(toBadge ? back : null);
+
+  return (
+    <div className='stage-column'>
+      <div className={classNames('korner-detail', className)}>
+        {back && !toBadge && (
+          <BackToKorner href={back.href} label={back.label} />
+        )}
+        {hero && <div className='korner-detail__hero'>{hero}</div>}
+        {banner && <div className='korner-detail__banner'>{banner}</div>}
+        <h1 className='korner-detail__title'>
+          {titleIcon && titleIconId && (
+            <Icon
+              id={titleIconId}
+              icon={titleIcon}
+              className='korner-detail__title-icon'
+            />
+          )}
+          <span className='korner-detail__title-text'>{title}</span>
+        </h1>
+        {subtitle && <p className='korner-detail__subtitle'>{subtitle}</p>}
+        {meta && <div className='korner-detail__meta'>{meta}</div>}
+        {actions && <div className='korner-detail__actions'>{actions}</div>}
+        {children && <div className='korner-detail__body'>{children}</div>}
+        {attached && (
+          <AttachmentSection
+            korner={attached.korner}
+            recordId={attached.id}
+            canManage={attached.canManage}
+            exclude={attached.exclude}
+            excludeSlugs={attached.excludeSlugs}
+            onKonnections={attached.onKonnections}
           />
         )}
-        <span className='korner-detail__title-text'>{title}</span>
-      </h1>
-      {subtitle && <p className='korner-detail__subtitle'>{subtitle}</p>}
-      {meta && <div className='korner-detail__meta'>{meta}</div>}
-      {actions && <div className='korner-detail__actions'>{actions}</div>}
-      {children && <div className='korner-detail__body'>{children}</div>}
-      {attached && (
-        <AttachmentSection
-          korner={attached.korner}
-          recordId={attached.id}
-          canManage={attached.canManage}
-          exclude={attached.exclude}
-          excludeSlugs={attached.excludeSlugs}
-          onKonnections={attached.onKonnections}
-        />
-      )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
