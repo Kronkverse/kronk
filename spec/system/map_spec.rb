@@ -98,6 +98,34 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
     expect(page).to have_no_css('.map-place-pin')
   end
 
+  # Tal, 2026-11-23: choose what the map shows, under a cog.
+  it 'hides and shows layers from the cog, and keeps the choice', :aggregate_failures do
+    hall = MapPlace.create!(account: bob.account, name: 'Moyhu Hall', latitude: -36.58, longitude: 146.38)
+    ember = Event.create!(account: bob.account, title: 'Ember', start_time: 3.days.from_now)
+    KornerAttachment.create!(source_slug: 'kalendar', source_id: ember.id, target_slug: 'map', target_id: hall.id,
+                             kind: 'link', created_by_account: bob.account)
+
+    visit "/hub/map?event=#{ember.slug}"
+    expect(page).to have_css('.map-event-pin', count: 1)
+    expect(page).to have_no_css('.map-place-pin')
+
+    click_on 'What the map shows'
+    within('.map-show__menu') { find('label', text: 'Events').click }
+
+    # The event marker goes, and the Place it stood on gets its own pin.
+    expect(page).to have_no_css('.map-event-pin')
+    expect(page).to have_css('.map-place-pin', count: 1)
+
+    # Kept after a reload (the map opened on the Place).
+    visit '/hub/map?lat=-36.58&lng=146.38'
+    expect(page).to have_css('.map-place-pin', count: 1)
+    expect(page).to have_no_css('.map-event-pin')
+
+    # A link to the event switches Events back on.
+    visit "/hub/map?event=#{ember.slug}"
+    expect(page).to have_css('.map-event-pin', count: 1)
+  end
+
   it 'logs a trek on the day it happened, not the day it was posted' do
     visit '/hub/map/composer'
 
