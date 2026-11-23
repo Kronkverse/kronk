@@ -138,7 +138,8 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
 
     visit "/hub/krew/#{krew.slug}"
     within('.krew-detail__kuestions') { find('.home-kuestions__card', text: 'Who brings the generator?').click }
-    within('.compose-shell') { click_on 'Delete Kuestion' }
+    # A red pill in the bottom bar, beside Cancel (Tal, 2026-11-23).
+    within('.compose-shell__footer') { find('.korner-pill--destructive[aria-label="Delete Kuestion"]', text: 'Delete').click }
     within('.confirm-dialog__panel') { click_on 'Delete' }
 
     within('.krew-detail__kuestions') { expect(page).to have_no_css('.home-kuestions__card', text: 'Who brings the generator?') }

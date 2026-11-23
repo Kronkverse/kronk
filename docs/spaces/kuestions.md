@@ -136,7 +136,9 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
   included, and everyone's answers. Nothing to Konnect. The button at its
   foot is **Answer** while you are writing one, then **Next kuestion**,
   which steps through the row's Kuestions in turn (**Done** when there is
-  only one). The asker gets **Delete Kuestion** at its foot.
+  only one). The asker gets **Delete** (Delete Kuestion), a red pill at the
+  start of that bottom bar, beside Cancel (Tal, 2026-11-23; ComposeShell's
+  `footerStart`).
 - **One after the next** (Kommons "Kuestions", 2026-11-22: "If a kuestion
   is opened, someone should be able to hit the 'next' button (left or
   right arrow probably)"): with more than one in the row, ‹ and › either
@@ -165,7 +167,8 @@ answer count is a running total.
 
 **Deleting one** (Tal, 2026-11-08): whoever asked a community Kuestion can
 delete it. Opening your own (from Answered, or a Krew's or projekt's row)
-shows **Delete Kuestion** under the answers; it asks first, then the
+shows **Delete Kuestion** (under the answers in the Kuestions korner; a
+red pill in the bottom bar of a Krew's or projekt's pop-up); it asks first, then the
 Kuestion goes with its answers, its Konnections and its post in the feed
 (`DELETE /api/v2/kuestions/:id`, `Question#deletable_by?`). Nobody else can
 delete it, and a profile Kuestion can't be deleted this way, since its
