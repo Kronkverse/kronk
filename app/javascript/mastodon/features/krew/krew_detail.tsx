@@ -704,18 +704,16 @@ export const KrewDetail = () => {
   );
 
   const frameKuestions = useCallback(
-    (row: React.ReactNode) => (
+    (row: React.ReactNode, title: React.ReactNode) => (
       <section
         id={SECTION_IDS.kuestions}
         className='krew-detail__section krew-detail__kuestions'
       >
-        <h3 className='korner-section-heading'>
-          {intl.formatMessage(messages.kuestions)}
-        </h3>
+        <h3 className='korner-section-heading'>{title}</h3>
         {row}
       </section>
     ),
-    [intl],
+    [],
   );
 
   // Tiles for what has its own section further down: tapping one scrolls

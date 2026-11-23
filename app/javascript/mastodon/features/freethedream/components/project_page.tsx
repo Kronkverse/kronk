@@ -175,10 +175,10 @@ const ProjectView: React.FC<{
   // new to you after that.
   const isMember = project.membership === 'member';
   const frameKuestions = useCallback(
-    (row: React.ReactNode) => (
-      <Section title={intl.formatMessage(messages.kuestions)}>{row}</Section>
+    (row: React.ReactNode, title: React.ReactNode) => (
+      <Section title={title}>{row}</Section>
     ),
-    [intl],
+    [],
   );
   useEffect(() => {
     if (isMember) void act(apiFtdSeen(project.id));

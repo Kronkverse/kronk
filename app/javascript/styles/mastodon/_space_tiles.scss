@@ -22,6 +22,37 @@
   text-transform: uppercase;
 }
 
+// A row's heading that names its korner (KornerRowTitle, space_shelf.tsx):
+// the glyph and name in the heading's own type, the count quiet beside it,
+// the whole of it a link to the korner.
+.korner-row-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: inherit;
+  text-decoration: none;
+
+  .icon {
+    inline-size: 1.15em;
+    block-size: 1.15em;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+  }
+
+  &__count {
+    margin-inline-start: 0.2rem;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+}
+
 .space-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
