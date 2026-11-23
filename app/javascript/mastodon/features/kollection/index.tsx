@@ -8,6 +8,8 @@ import { apiGetKollectionApps } from 'mastodon/api/kollection';
 import type { ApiKollectionAppJSON } from 'mastodon/api/kollection';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { Icon } from 'mastodon/components/icon';
+import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
@@ -19,9 +21,11 @@ import { AppComposer } from './app_composer';
 // linked to Kronk, A to Z, as a grid of cards. Each says whether it signs
 // in with Kronk or is a link, and whether you are connected. A card opens
 // the app's page (app_page.tsx), where you see what it can see of you and
-// disconnect. /hub/kollection/composer opens the composer over the list
-// (the Ж menu's Add an app, from the manifest's `compose:`). The apps you
-// are connected to are also on /hub/kollection/settings (settings.tsx).
+// disconnect. The Add an app button above the grid (<KornerActionBar> +
+// a primary <KornerPill>) goes to /hub/kollection/composer, which opens the
+// composer over the list. Nothing is added to the Ж menu: the manifest has
+// no `compose:` (Tal, 2026-11-23). The apps you are connected to are also
+// on /hub/kollection/settings (settings.tsx).
 
 const messages = defineMessages({
   title: { id: 'kollection.title', defaultMessage: 'Kollection' },
@@ -36,8 +40,9 @@ const messages = defineMessages({
   },
   emptyBody: {
     id: 'kollection.empty.body',
-    defaultMessage: 'Add one from the Ж menu.',
+    defaultMessage: 'Add one with Add an app.',
   },
+  add: { id: 'kollection.add', defaultMessage: 'Add an app' },
   signsIn: {
     id: 'kollection.card.signs_in',
     defaultMessage: 'Sign in with Kronk',
@@ -125,9 +130,21 @@ const Kollection: React.FC<{
     [history],
   );
 
+  const handleAdd = useCallback(() => {
+    history.push({ pathname: '/hub/kollection/composer' });
+  }, [history]);
+
+  const addLabel = intl.formatMessage(messages.add);
   const renderAll = useCallback(
-    () => <AppGrid reloadKey={reloadKey} />,
-    [reloadKey],
+    () => (
+      <>
+        <KornerActionBar className='kollection__actions'>
+          <KornerPill variant='primary' label={addLabel} onClick={handleAdd} />
+        </KornerActionBar>
+        <AppGrid reloadKey={reloadKey} />
+      </>
+    ),
+    [reloadKey, addLabel, handleAdd],
   );
 
   return (

@@ -29,7 +29,8 @@ user, which Tal found odd: an app belongs to a person. So:
   account.
 - **Any member can add an app, and it is live straight away.** Admins can
   pull it (off the list, its tokens revoked, no more sign-ins) from the
-  admin panel, and restore it. Undo after the fact, not approval before
+  admin panel, and restore it. Adding is an **Add an app** button on the
+  Kollection page, not an entry in the Ж menu. Undo after the fact, not approval before
   (2026-10-19, err syntropic).
 - **The app belongs to Kronk.** Its Doorkeeper application has no owner.
   The member who added it is its **keeper**: they and admins see its client

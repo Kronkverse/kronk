@@ -90,9 +90,12 @@ and nobody else's (`KollectionApp#disconnect!`, the same steps as
   "What it can see of you" lists its scopes in plain words. Its keeper and
   admins also see the client key, secret, redirect URIs and the OpenID
   configuration address.
-- **`/hub/kollection/composer`**: the composer (`<ComposeShell>`), from the
-  Ж menu's **Add an app** (manifest `compose:`). `/hub/kollection/:id/edit`
-  opens it over an app's page.
+- **`/hub/kollection/composer`**: the composer (`<ComposeShell>`), opened by
+  the **Add an app** button above the grid (`<KornerActionBar>` with a
+  primary `<KornerPill>`). Kollection adds nothing to the Ж menu: the
+  manifest has no `compose:` (Tal, 2026-11-23), an exception to the
+  recipe's "the Ж menu is the one place to create things".
+  `/hub/kollection/:id/edit` opens the composer over an app's page.
 - **`/hub/kollection/settings`** (bespoke, above the generic korner settings
   route): **Connected apps**. The apps you signed in to, each with what it
   sees and Disconnect, and the Anthemos phones linked to your account, each

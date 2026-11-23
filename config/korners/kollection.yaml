@@ -19,7 +19,7 @@ about:
     - 'Open an app to see what it is and what it can see of you.'
     - 'Disconnect signs you out of it. You can sign in again any time.'
     - 'Settings lists everything connected to your account: the apps you signed in to, and Anthemos phones.'
-    - 'Add an app from the Ж menu. You keep it: you see its keys and can change or remove it.'
+    - 'Add an app with the Add an app button. You keep it: you see its keys and can change or remove it.'
 icon:
   # Material Symbol `apps`, scaffolding until Kollection has a Kronk glyph
   # (docs/korners/adding_a_korner.md, step 8).
@@ -67,9 +67,9 @@ notifications:
 # (features/kollection/settings.tsx) listing what is connected to you.
 settings: []
 
-compose:
-  label: 'Add an app'
-  route: '/hub/kollection/composer'
+# No `compose:` block: nothing in the Ж menu (Tal, 2026-11-23). The
+# Kollection page has its own Add an app button, which opens the composer
+# at /hub/kollection/composer.
 
 hub_teaser:
   static: 'Apps linked to Kronk, and what each can see of you.'

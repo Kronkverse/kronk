@@ -4,6 +4,10 @@
 // sizes only what is Kollection's own: an app's icon, its keys, and the
 // Pulled chip.
 
+.kollection__actions {
+  margin-bottom: var(--sp-4, 16px);
+}
+
 .space-card__tag--pulled {
   border-color: var(--warning-red);
   color: var(--warning-red);
