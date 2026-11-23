@@ -842,10 +842,6 @@
   gap: 8px;
   width: min(280px, calc(100% - 32px));
   pointer-events: none;
-
-  &--lower {
-    top: 64px;
-  }
 }
 
 .map-location,
@@ -1014,124 +1010,6 @@
       border-color: var(--accent);
       outline: none;
     }
-  }
-}
-
-.map-in-view {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: min(300px, calc(100% - 32px));
-
-  &__toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px 8px 12px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
-
-    .icon {
-      width: 16px;
-      height: 16px;
-      color: var(--kronk-purple-bright);
-    }
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--kronk-purple-bright);
-      outline: none;
-    }
-  }
-
-  &__panel {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 6px;
-    max-height: 320px;
-    overflow-y: auto;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
-  }
-
-  &__empty {
-    margin: 0;
-    padding: 10px 12px;
-    color: var(--text-secondary);
-    font-size: 12px;
-  }
-
-  &__row {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 6px 8px;
-    border: 0;
-    border-radius: var(--radius-medium);
-    background: transparent;
-    color: var(--text-primary);
-    text-align: start;
-    cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 18%,
-        transparent
-      );
-      outline: none;
-    }
-
-    &--self .map-in-view__name::after {
-      content: ' · you';
-      color: var(--kronk-purple-bright);
-      font-weight: 500;
-    }
-  }
-
-  &__avatar {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    border-radius: var(--radius-round);
-    background-color: var(--surface-elevated);
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-  }
-
-  &__name {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__handle {
-    flex: 0 0 auto;
-    font-size: 11px;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
   }
 }
 
@@ -2312,6 +2190,17 @@
       gap: 5px;
       color: var(--text-primary);
       font-size: 13px;
+
+      a {
+        color: inherit;
+        text-decoration: none;
+
+        &:hover,
+        &:focus-visible {
+          color: var(--accent-text);
+          text-decoration: underline;
+        }
+      }
     }
   }
 }
@@ -2499,16 +2388,6 @@
       color: var(--accent-text);
       text-decoration: underline;
     }
-  }
-}
-
-// The Place composer: its fields come from the composer kit; only the pin
-// buttons are its own.
-.place-composer {
-  &__pin-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
   }
 }
 

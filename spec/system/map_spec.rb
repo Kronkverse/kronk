@@ -93,6 +93,8 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
       expect(page).to have_text('Hall jam')
       expect(page).to have_text('Moyhu Hall')
       expect(page).to have_link('Open place →', href: "/hub/map/places/#{hall.id}")
+      # The Place's name opens its page too (Tal, 2026-11-23).
+      expect(page).to have_link('Moyhu Hall', href: "/hub/map/places/#{hall.id}")
     end
     expect(page).to have_css('.map-event-pin', count: 1, text: '+1')
     # The Kalendar korner's spiral, not a hand-drawn copy.
@@ -126,6 +128,15 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
     # A link to the event switches Events back on.
     visit "/hub/map?event=#{ember.slug}"
     expect(page).to have_css('.map-event-pin', count: 1)
+  end
+
+  # decisions.md, 2026-11-23: no adding Places on the Map.
+  it 'has no Place composer' do
+    visit '/hub/map/places/new'
+
+    expect(page).to have_css('.map-mates')
+    expect(page).to have_no_css('.compose-shell')
+    expect(page).to have_no_button('Add place')
   end
 
   it 'logs a trek on the day it happened, not the day it was posted' do
