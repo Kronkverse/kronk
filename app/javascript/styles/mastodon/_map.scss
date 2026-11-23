@@ -2141,16 +2141,13 @@
     white-space: nowrap;
   }
 
-  &__open {
-    margin-top: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--kronk-purple-bright);
+  // A card's action: the kit's pill (korner-pill), set under the text and
+  // left-aligned, at its own width (Tal, 2026-11-23: a button, not a text
+  // link with an arrow).
+  &__action {
+    align-self: flex-start;
+    margin-top: 8px;
     text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
   }
 
   // A spot's card (event_layer.tsx, SpotCard): each event there, then
