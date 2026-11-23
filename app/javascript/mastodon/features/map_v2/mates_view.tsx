@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import classNames from 'classnames';
 import { useLocation } from 'react-router-dom';
 
 import type { Feature, Polygon } from 'geojson';
@@ -32,6 +33,7 @@ import { CountryPrompt, useShouldOfferCountry } from './country_prompt';
 import { EventLayer } from './event_layer';
 import { LiveLayer } from './live_layer';
 import { AnthemosMissing, LocationMenu } from './location_menu';
+import { MapShowMenu, useMapShow } from './map_show';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
@@ -201,6 +203,8 @@ export const MatesView: React.FC = () => {
   const [noMap, setNoMap] = useState(() => !supportsWebGL());
   const [pins, setPins] = useState<ApiPresencePinJSON[]>([]);
   const [selfPin, setSelfPin] = useState<ApiPresencePinJSON | null>(null);
+  // What the viewer chose to see (the cog, map_show.tsx).
+  const { show, setLayer } = useMapShow();
   // The Places your events stand on: the event marker is the one marker
   // there, so PlaceLayer leaves their pins off (docs/spaces/map.md, Events).
   const [eventPlaces, setEventPlacesState] = useState<ReadonlySet<string>>(
@@ -525,7 +529,8 @@ export const MatesView: React.FC = () => {
     // takes over as the only surface a viewer can inspect. The fuzz
     // layer also empties so a screenshot at this zoom shows nothing
     // pin-shaped.
-    if (anonymising) {
+    // Mates switched off with the cog: none of them, nor their circles.
+    if (anonymising || !show.mates) {
       const source = map.getSource<maplibregl.GeoJSONSource>('fuzz');
       void source?.setData({ type: 'FeatureCollection', features: [] });
       return;
@@ -576,7 +581,7 @@ export const MatesView: React.FC = () => {
       type: 'FeatureCollection',
       features: allPins.map(circleFeature),
     });
-  }, [allPins, ready, anonymising, viewport]);
+  }, [allPins, ready, anonymising, viewport, show.mates]);
 
   // ── Place / remove me ─────────────────────────────────────────────
   // Pin-drop: the Country your new pin is on, offered as where you live.
@@ -619,16 +624,31 @@ export const MatesView: React.FC = () => {
     });
   }, [refresh]);
 
-  const handleSelectPin = useCallback((pin: ApiPresencePinJSON) => {
-    setSelectedAccountId(pin.account_id);
-    const map = mapRef.current;
-    if (!map) return;
-    map.flyTo({
-      center: [pin.lng, pin.lat],
-      zoom: Math.min(Math.max(map.getZoom(), 9), ANON_ZOOM - 0.5),
-      duration: 900,
-    });
-  }, []);
+  // The Mates list stays when Mates are switched off; picking someone
+  // from it shows Mates again, so the tap lands on them.
+  const handleSelectPin = useCallback(
+    (pin: ApiPresencePinJSON) => {
+      setLayer('mates', true);
+      setSelectedAccountId(pin.account_id);
+      const map = mapRef.current;
+      if (!map) return;
+      map.flyTo({
+        center: [pin.lng, pin.lat],
+        zoom: Math.min(Math.max(map.getZoom(), 9), ANON_ZOOM - 0.5),
+        duration: 900,
+      });
+    },
+    [setLayer],
+  );
+
+  // A link to an event, a Place or a live location shows that layer, even
+  // when it was switched off, so the link still lands on something.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.has('event')) setLayer('events', true);
+    if (params.has('map_place')) setLayer('places', true);
+    if (params.has('live')) setLayer('live', true);
+  }, [location.search, setLayer]);
 
   const closeCard = useCallback(() => {
     setSelectedAccountId(null);
@@ -706,7 +726,7 @@ export const MatesView: React.FC = () => {
             only affordance for finding a mate. A drop-down of avatar
             bubbles opens on click. Sits top-left so it doesn't fight
             the zoom controls on the right. */}
-        {anonymising && (
+        {anonymising && show.mates && (
           <InViewPanel
             pins={pinsInView}
             open={inViewOpen}
@@ -717,17 +737,24 @@ export const MatesView: React.FC = () => {
           />
         )}
 
-        {/* Your location, from Anthemos: Share and Update. Only once a
-            phone is linked. Sits under the in-view panel when that takes
-            the corner. */}
-        <LocationMenu lower={anonymising} onPinMoved={refresh} />
+        {/* Your location, from Anthemos: Share and Update (only once a
+            phone is linked), and beside it the cog for what the map shows.
+            They sit under the in-view panel when that takes the corner. */}
+        <div
+          className={classNames('map-corner', {
+            'map-corner--lower': anonymising && show.mates,
+          })}
+        >
+          <LocationMenu onPinMoved={refresh} />
+          <MapShowMenu show={show} onChange={setLayer} />
+        </div>
 
         {/* Off-map compass overlay — a marker at the canvas edge per
             direction that has mates outside the viewport. Absolute-
             positioned inside the stage; pointer-events are only enabled
             on the marks themselves so the map behind them still pans
             and zooms freely. */}
-        {!anonymising && compassMarks.length > 0 && (
+        {!anonymising && show.mates && compassMarks.length > 0 && (
           <div className='map-compass' aria-hidden={false}>
             {compassMarks.map((mark) => (
               <CompassMark
@@ -772,11 +799,13 @@ export const MatesView: React.FC = () => {
             markers, and reads `?event=<slug>` from the URL to focus
             on a specific event when someone follows the location link
             from event_detail. */}
-        <EventLayer
-          map={mapRef.current}
-          ready={ready}
-          onPlaces={setEventPlaces}
-        />
+        {show.events && (
+          <EventLayer
+            map={mapRef.current}
+            ready={ready}
+            onPlaces={setEventPlaces}
+          />
+        )}
 
         {/* First Nations Country — a picture layer over Australia, under
             the pins, switched on from its own button under the zoom. */}
@@ -784,12 +813,18 @@ export const MatesView: React.FC = () => {
 
         {/* Places — exact spots with an address that things Konnect
             to (docs/spaces/map.md, Places). Reads `?map_place=<id>`. */}
-        <PlaceLayer map={mapRef.current} ready={ready} hidden={eventPlaces} />
+        {show.places && (
+          <PlaceLayer
+            map={mapRef.current}
+            ready={ready}
+            hidden={show.events ? eventPlaces : undefined}
+          />
+        )}
 
         {/* Live location — Mates sharing exactly where they are with you
             from Anthemos (docs/spaces/map.md, Live location). Reads
             `?live=<account id>`. */}
-        <LiveLayer map={mapRef.current} ready={ready} />
+        {show.live && <LiveLayer map={mapRef.current} ready={ready} />}
 
         {/* Back from Share or Update with no Anthemos on the phone. */}
         <AnthemosMissing />
