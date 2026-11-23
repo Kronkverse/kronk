@@ -18,15 +18,17 @@ import { HomeKuestionComposer } from './home_kuestion_composer';
 import { HomeKuestionDialog } from './home_kuestion_dialog';
 
 // The Kuestions asked in a Krew or a projekt, on its page (Tal's proposal
-// "Kuestions", 2026-11-08): a row of cards that scrolls sideways, the last
-// one Ask, which opens the composer for this Krew or projekt. Tapping a card
+// "Kuestions", 2026-11-08): a row of cards that scrolls sideways, the first
+// one Ask (Kommons "Ask Question", 2026-11-22: "at the start (on the left)
+// of the list of questions"), which opens the composer for this Krew or
+// projekt. Tapping a card
 // opens it in the standard pop-up (home_kuestion_dialog.tsx): answer it,
 // see what everyone said, step to the next one. Only the
 // Krew's members, or whoever can see the projekt, get them from the server
 // (docs/spaces/kuestions.md, Kuestions in a Krew).
 //
 // It shows once the Krew has turned Kuestions on (Konnect → Kuestions, or
-// Krew settings, Spaces; a projekt follows its Krew), Ask first when there
+// Krew settings, Spaces; a projekt follows its Krew), Ask alone when there
 // are none yet. Ask opens a small composer of its own over the page
 // (home_kuestion_composer.tsx), not the Kuestions composer with its deck and
 // profile choices (Tal, 2026-11-08). `frame` puts the row in the page's own
@@ -113,23 +115,6 @@ export const HomeKuestions: React.FC<Props> = ({
     <>
       {frame(
         <SpaceGrid layout='row' className='home-kuestions'>
-          {list.map((kuestion) => (
-            <KuestionCard
-              key={kuestion.id}
-              kuestion={kuestion}
-              onOpen={handleOpen}
-              state={intl.formatMessage(
-                kuestion.has_answered
-                  ? messages.answered
-                  : kuestion.asked_by_me
-                    ? messages.yours
-                    : messages.answer,
-              )}
-              answers={intl.formatMessage(messages.answers, {
-                count: kuestion.answers_count,
-              })}
-            />
-          ))}
           {canAsk && (
             <li className='space-grid__cell'>
               <StandardCard
@@ -154,6 +139,23 @@ export const HomeKuestions: React.FC<Props> = ({
               </StandardCard>
             </li>
           )}
+          {list.map((kuestion) => (
+            <KuestionCard
+              key={kuestion.id}
+              kuestion={kuestion}
+              onOpen={handleOpen}
+              state={intl.formatMessage(
+                kuestion.has_answered
+                  ? messages.answered
+                  : kuestion.asked_by_me
+                    ? messages.yours
+                    : messages.answer,
+              )}
+              answers={intl.formatMessage(messages.answers, {
+                count: kuestion.answers_count,
+              })}
+            />
+          ))}
         </SpaceGrid>,
         <KornerRowTitle korner='kuestions' count={list.length} />,
       )}
