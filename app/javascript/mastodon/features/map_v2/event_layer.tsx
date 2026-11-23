@@ -11,6 +11,7 @@ import type { IntlShape } from 'react-intl';
 import { Link, useLocation } from 'react-router-dom';
 
 import * as maplibregl from 'maplibre-gl';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
@@ -23,6 +24,7 @@ import type {
   ApiMapEventPlaceJSON,
 } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { CountryLine } from './country_line';
 
@@ -41,7 +43,7 @@ import { CountryLine } from './country_line';
 // One marker per spot (docs/spaces/map.md, Events). An event whose
 // location is a Konnected Place stands on that Place, and the Places layer
 // draws Places too, so the two used to stack: a Place pin over an event
-// tile. Now the events at a spot are one marker, a date badge, and the
+// tile. Now the events at a spot are one marker, the Kalendar spiral, and the
 // Place they stand on leaves its own pin off (`onPlaces`, which mates_view
 // hands to PlaceLayer). Tapping it opens one card: the events, then the
 // Place.
@@ -121,10 +123,19 @@ const spotOn = (spot: Spot) => {
   return null;
 };
 
-// Marker DOM (MapLibre owns positioning): a small date badge, the month
-// over the day, like the card's and Kalendar's, with a point at the spot.
-// "+2" when more events share the spot. Built with textContent, so a
-// title can't become markup.
+// The Kalendar korner's own glyph (its manifest's icon, the one on the
+// Kalendar tile and a KornerRowCard), as markup for a marker MapLibre owns.
+let kalendarGlyph: string | null = null;
+const kalendarMarkup = () =>
+  (kalendarGlyph ??= renderToStaticMarkup(
+    <Icon id='korner-kalendar' icon={kornerIcon('kalendar')} />,
+  ));
+
+// Marker DOM (MapLibre owns positioning): the Kalendar spiral, white on an
+// accent disc with a ring and a point at the spot (Tal, 2026-11-23), so it
+// reads on any Country's colour in either theme. "+2" when more events
+// share the spot. Text goes in with textContent, so a title can't become
+// markup.
 const buildSpotMarker = (spot: Spot, intl: IntlShape): HTMLElement => {
   const next = spot.events[0];
   if (!next) throw new Error('A spot has an event');
@@ -142,13 +153,10 @@ const buildSpotMarker = (spot: Spot, intl: IntlShape): HTMLElement => {
   const on = spotOn(spot);
   if (on) el.classList.add(`map-event-pin--${on}`);
 
-  const month = document.createElement('span');
-  month.className = 'map-event-pin__month';
-  month.textContent = intl.formatDate(next.start_time, { month: 'short' });
-  const day = document.createElement('span');
-  day.className = 'map-event-pin__day';
-  day.textContent = intl.formatDate(next.start_time, { day: 'numeric' });
-  el.append(month, day);
+  const disc = document.createElement('span');
+  disc.className = 'map-event-pin__disc';
+  disc.innerHTML = kalendarMarkup();
+  el.appendChild(disc);
 
   if (spot.events.length > 1) {
     const more = document.createElement('span');
