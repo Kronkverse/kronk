@@ -93,13 +93,11 @@ const DownloadLink: React.FC = () => (
 );
 
 interface Props {
-  // Dropped below the in-view pill when that takes the corner.
-  lower: boolean;
   // Reloads your pin once the phone has moved it.
   onPinMoved: () => void;
 }
 
-export const LocationMenu: React.FC<Props> = ({ lower, onPinMoved }) => {
+export const LocationMenu: React.FC<Props> = ({ onPinMoved }) => {
   const intl = useIntl();
   const [linked, setLinked] = useState(false);
   const [open, setOpen] = useState(false);
@@ -178,7 +176,7 @@ export const LocationMenu: React.FC<Props> = ({ lower, onPinMoved }) => {
   if (!linked) return null;
 
   return (
-    <div className={`map-location${lower ? ' map-location--lower' : ''}`}>
+    <div className='map-location'>
       <button
         type='button'
         className='map-location__button'
