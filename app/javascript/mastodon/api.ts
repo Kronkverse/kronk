@@ -9,6 +9,10 @@ import LinkHeader from 'http-link-header';
 
 import { getAccessToken } from './initial_state';
 import ready from './ready';
+import {
+  backgroundUploadAdapter,
+  goesInBackground,
+} from './utils/background_upload';
 import { holdScreenAwake } from './utils/wake_lock';
 
 export const getLinks = (response: AxiosResponse) => {
@@ -158,6 +162,23 @@ export default function api(withAuthorization = true) {
     const file = data.get('file');
     return file instanceof File && file.type.startsWith('video/') ? file : null;
   };
+  // A big upload goes to the browser to finish (utils/background_upload),
+  // so it keeps going when the member leaves the app. Registered first so
+  // it runs last, once a video has been shrunk and its size is known.
+  instance.interceptors.request.use(
+    (config) => {
+      if (goesInBackground(config, !!(config as UploadTry).uploadTry)) {
+        config.adapter = backgroundUploadAdapter;
+      } else if (config.adapter === backgroundUploadAdapter) {
+        // Sent again after the browser couldn't finish it: as a page
+        // request this time.
+        config.adapter = undefined;
+      }
+      return config;
+    },
+    null,
+    { synchronous: true, runWhen: isUpload },
+  );
   instance.interceptors.request.use(
     async (config) => {
       // An upload sent again after the connection dropped (below) keeps

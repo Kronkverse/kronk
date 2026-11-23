@@ -112,7 +112,13 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
   }
 
   // An aborted request, e.g. due to reloading the browser window, is not really an error
-  if (error instanceof AxiosError && error.code === AxiosError.ECONNABORTED) {
+  // Nor is an upload the member cancelled from the phone's notification
+  // (utils/background_upload).
+  if (
+    error instanceof AxiosError &&
+    (error.code === AxiosError.ECONNABORTED ||
+      error.code === AxiosError.ERR_CANCELED)
+  ) {
     return ignoreAlert();
   }
 

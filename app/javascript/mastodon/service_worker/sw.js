@@ -2,6 +2,12 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 
+import {
+  handleBackgroundFetchAbort,
+  handleBackgroundFetchClick,
+  handleBackgroundFetchFail,
+  handleBackgroundFetchSuccess,
+} from './background_upload';
 import { handleNotificationClick, handlePush } from './web_push_notifications';
 
 const CACHE_NAME_PREFIX = 'mastodon-';
@@ -86,3 +92,9 @@ self.addEventListener('fetch', function(event) {
 
 self.addEventListener('push', handlePush);
 self.addEventListener('notificationclick', handleNotificationClick);
+
+// Big uploads the browser finishes in the background (background_upload.js).
+self.addEventListener('backgroundfetchsuccess', handleBackgroundFetchSuccess);
+self.addEventListener('backgroundfetchfail', handleBackgroundFetchFail);
+self.addEventListener('backgroundfetchabort', handleBackgroundFetchAbort);
+self.addEventListener('backgroundfetchclick', handleBackgroundFetchClick);
