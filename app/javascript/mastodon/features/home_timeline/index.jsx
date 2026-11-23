@@ -258,8 +258,7 @@ class HomeTimeline extends PureComponent {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
     }
 
-    // Feed inserts (banners + the InFlow veil) that the audience-scoped home
-    // feeds share with orbit.
+    // Every width shows the same banners and the InFlow veil.
     const homeInsertNode = this.props.inflowTunedOut ? undefined : <VeilScene key='inflow-veil' />;
 
     let feedConfig;
@@ -268,8 +267,8 @@ class HomeTimeline extends PureComponent {
         timelineId: 'community',
         onLoadMore: this.handleLoadMoreKommunity,
         emptyMessage: <FormattedMessage id='empty_column.community' defaultMessage='The local timeline is empty. Write something publicly to get the ball rolling!' />,
-        prepend: [],
-        insertNode: undefined,
+        prepend: banners,
+        insertNode: homeInsertNode,
       };
     } else if (reach === 'mates' || reach === 'me') {
       // Me / Mates ride the home timeline narrowed by ?scope=, in their own

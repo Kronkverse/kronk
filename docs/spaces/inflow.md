@@ -14,8 +14,9 @@ Inflow's surface is the **veil**: the home feed parts to show a night sky that
 was always there, then closes again over your posts.
 
 - **In the feed.** `VeilScene` (`features/inflow/veil_scene.tsx`) is inserted
-  into the home feed as a gap. The sky is a fixed backdrop rendered through a
-  portal, so as you scroll the post above uncovers the moon and the post below
+  into the home feed as a gap, in every width (Kronkverse, Orbit, Mates, Me).
+  The sky is a fixed backdrop rendered through a portal, so
+  as you scroll the post above uncovers the moon and the post below
   covers it again. It also brightens the `KronkKosmos` backdrop for the moment.
 - **On its own.** `/hub/inflow` renders the same scene in a `Stage`
   (`features/inflow/veil.tsx`).
