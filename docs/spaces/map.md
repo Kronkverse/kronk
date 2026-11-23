@@ -428,9 +428,11 @@ same point. Now an event pin says which Place it stands on (`place`: `id`,
 `name`, `address`, `url`, only when the pin comes from the Place), the
 events at one Place, or at one point, are a single marker, and that Place
 draws no pin of its own (`EventLayer` hands the ids to `PlaceLayer`). The
-marker is a small date badge, the month over the day of the next event
-there, with a point at the spot and "+N" when more share it; a Mate is a
-face and a plain Place is a pin glyph. Tapping it opens one card: each
+marker is the Kalendar spiral (the korner's own icon, from its manifest),
+white on an accent disc with a ring and a point at the spot, and a "+N"
+chip when more events share it (Tal, 2026-11-23, in place of a date
+badge); the ring keeps it clear on any Country's colour in either theme.
+A Mate is a face and a plain Place is a pin glyph. Tapping it opens one card: each
 event (date, what, when, **Open in Kalendar**), then where they are, the
 Place's name, address and Country with **Open place →**, or the event's own
 place name.

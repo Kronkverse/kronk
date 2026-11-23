@@ -95,6 +95,8 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
       expect(page).to have_link('Open place →', href: "/hub/map/places/#{hall.id}")
     end
     expect(page).to have_css('.map-event-pin', count: 1, text: '+1')
+    # The Kalendar korner's spiral, not a hand-drawn copy.
+    expect(page).to have_css('.map-event-pin .map-event-pin__disc svg.icon')
     expect(page).to have_no_css('.map-place-pin')
   end
 
