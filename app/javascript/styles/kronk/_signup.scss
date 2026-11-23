@@ -132,11 +132,20 @@
 // Screen 1 — the account form.
 
 .signup-account {
+  // Padding counts inside the width, so the form fits a phone: with
+  // content-box it was `100% + 3rem` and its fields ran off the right.
+  box-sizing: border-box;
   width: 100%;
   max-width: 26rem;
   margin: 0 auto;
-  padding: 1rem 1.5rem 2rem;
+  padding: 1rem 1rem 2rem;
   animation: signup-account-rise var(--dur-slow) var(--ease-out) both;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 }
 
 @keyframes signup-account-rise {
@@ -363,11 +372,11 @@
   overflow: hidden;
 }
 
-// primary continue button
+// primary continue button: a pill, as primary CTAs are
 .signup-account__continue {
   width: 100%;
   height: 44px;
-  border-radius: var(--radius-medium);
+  border-radius: var(--radius-round);
   background: var(--accent);
   color: var(--text-on-accent);
   font-family: inherit;
