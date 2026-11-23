@@ -65,7 +65,7 @@
               %span.signup-account__avatar-value= t('kronk.signup.account.avatar_hint')
               %button.signup-account__avatar-remove#signup-avatar-remove{ type: 'button', hidden: true }
                 = t('kronk.signup.account.avatar_remove')
-            = ff.input :avatar, as: :file, label: false, wrapper: false, input_html: { id: 'signup-avatar-input', accept: 'image/*', hidden: true, autocomplete: 'off' }
+            = ff.input :avatar, as: :file, label: false, hint: false, wrapper: false, input_html: { id: 'signup-avatar-input', accept: 'image/*', hidden: true, autocomplete: 'off' }
 
         .signup-account__field
           %label.signup-account__label{ for: 'user_email' }= t('kronk.signup.account.email_label')

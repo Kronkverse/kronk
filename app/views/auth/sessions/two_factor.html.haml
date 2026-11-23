@@ -3,7 +3,9 @@
 
 = vite_typescript_tag 'two_factor_authentication.ts', crossorigin: 'anonymous'
 
-- if webauthn_enabled?
-  = render partial: 'auth/sessions/two_factor/webauthn_form', locals: { hidden: @scheme_type != 'webauthn' }
+-# In the shell every other Devise view uses (auth/shared/_kronk_auth_form).
+= render 'auth/shared/kronk_auth_form', footer_links: false do
+  - if webauthn_enabled?
+    = render partial: 'auth/sessions/two_factor/webauthn_form', locals: { hidden: @scheme_type != 'webauthn' }
 
-= render partial: 'auth/sessions/two_factor/otp_authentication_form', locals: { hidden: @scheme_type != 'totp' }
+  = render partial: 'auth/sessions/two_factor/otp_authentication_form', locals: { hidden: @scheme_type != 'totp' }
