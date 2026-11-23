@@ -306,39 +306,6 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
                 className='nudges-msg__links'
               />
             )}
-            <span className='nudges-msg__meta'>
-              {item.sending ? (
-                <FormattedMessage
-                  id='nudges.sending'
-                  defaultMessage='Sending…'
-                />
-              ) : (
-                <RelativeTimestamp timestamp={item.created_at} short />
-              )}
-              {seenByOther && (
-                <span
-                  className='nudges-msg__seen'
-                  aria-label='Seen'
-                  title='Seen'
-                >
-                  <FormattedMessage id='nudges.seen' defaultMessage='Seen' />
-                </span>
-              )}
-              {showKrewReadReceipt && (
-                <span
-                  className='nudges-msg__seen'
-                  aria-label={`Read by ${krewReadCount} of ${krewReadTotal}`}
-                  title={`Read by ${krewReadCount} of ${krewReadTotal}`}
-                >
-                  <FormattedMessage
-                    id='nudges.krew_seen'
-                    defaultMessage='Read {count}/{total}'
-                    values={{ count: krewReadCount, total: krewReadTotal }}
-                  />
-                </span>
-              )}
-            </span>
-
             {/* Reactions sit on the bubble's bottom edge. */}
             {!isOptimistic && grouped.length > 0 && (
               <div className='nudges-msg__reactions'>
@@ -355,8 +322,10 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
             )}
           </div>
 
-          {/* Beside the bubble, as in Signal: react, and take back your own.
-              Shown on hover, on focus, or after a tap on the bubble. */}
+          {/* Beside the bubble, as in Signal: react, on every message,
+              yours too, there faintly at rest so it can be found; and take
+              back your own, on hover, on focus, or after a tap on the
+              bubble. */}
           {(canReact || canDelete) && (
             <div className='nudges-msg__actions'>
               {canReact && (
@@ -369,6 +338,37 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
             </div>
           )}
         </div>
+
+        {/* When, and whether it's been read: under the bubble, not in it
+            (Tal, 2026-11-23), once at the end of a run, where Signal and
+            the rest put it too. One still going, or failed, says so. */}
+        {(runEnd || isOptimistic) && (
+          <span className='nudges-msg__meta'>
+            {item.sending ? (
+              <FormattedMessage id='nudges.sending' defaultMessage='Sending…' />
+            ) : (
+              <RelativeTimestamp timestamp={item.created_at} short />
+            )}
+            {seenByOther && (
+              <span className='nudges-msg__seen' aria-label='Seen' title='Seen'>
+                <FormattedMessage id='nudges.seen' defaultMessage='Seen' />
+              </span>
+            )}
+            {showKrewReadReceipt && (
+              <span
+                className='nudges-msg__seen'
+                aria-label={`Read by ${krewReadCount} of ${krewReadTotal}`}
+                title={`Read by ${krewReadCount} of ${krewReadTotal}`}
+              >
+                <FormattedMessage
+                  id='nudges.krew_seen'
+                  defaultMessage='Read {count}/{total}'
+                  values={{ count: krewReadCount, total: krewReadTotal }}
+                />
+              </span>
+            )}
+          </span>
+        )}
 
         {item.failed && (
           <FailedControls
@@ -437,11 +437,13 @@ const DeletedMessage: React.FC<{
             id='nudges.message_deleted'
             defaultMessage='Message deleted'
           />
-          <span className='nudges-msg__meta'>
-            <RelativeTimestamp timestamp={item.created_at} short />
-          </span>
         </div>
       </div>
+      {runEnd && (
+        <span className='nudges-msg__meta'>
+          <RelativeTimestamp timestamp={item.created_at} short />
+        </span>
+      )}
     </div>
   </div>
 );

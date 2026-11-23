@@ -259,17 +259,21 @@ messages … the emoji picker at the side of a message, same as Signal"):
 
 - **Bubbles.** Everyone else's on the left in a neutral tint (the text
   colour mixed into nothing, so it shows on any background), yours on the
-  right in the accent. The time, and the "Seen" or "Read 2/6" mark on yours,
-  sit small at the bubble's foot.
+  right in the accent. Nothing but the message goes inside. The time, and
+  the "Seen" or "Read 2/6" mark on yours, sit under the bubble, outside it,
+  small and muted, lined up with its side, once at the end of a run (Tal,
+  2026-11-23). One still sending, or failed, always says so.
 - **Runs.** Messages from one person less than five minutes apart on the same
   day are a run (`sameRun` in `conversation_view.tsx`): they sit close, the
   corners between them tighten, and in a Krew chat the sender's avatar and
   name show once, at the top of the run.
-- **Beside the bubble.** The reaction smiley, and the bin on your own
-  messages, sit beside the bubble, out of sight until wanted: on hover with
-  a mouse, on focus from the keyboard, or after a tap on the bubble on a
-  touch screen (one message at a time; a tap on the empty stream puts them
-  away). Reactions given show as small chips on the bubble's bottom edge;
+- **Beside the bubble.** The reaction smiley is beside every message,
+  yours too, faintly at rest so it can be found, on a phone as well as with
+  a mouse (Tal couldn't see it at all when it only showed on hover or a
+  tap). The bin on your own messages is out of sight until wanted. Both
+  come up fully on hover with a mouse, on focus from the keyboard, or after
+  a tap on the bubble on a touch screen (one message at a time; a tap on
+  the empty stream puts them away). Reactions given show as small chips on the bubble's bottom edge;
   tap one to add or take back yours.
 
 Shared posts render as a card (`inline_status_card.tsx`). Mate chats show a "seen" mark on your messages
