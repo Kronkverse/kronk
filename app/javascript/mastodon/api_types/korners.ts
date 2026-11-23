@@ -174,7 +174,7 @@ export interface ApiKornerJSON {
   feature_flag?: string | null;
   enforced?: boolean;
   // Present when the korner is a portal — a Kronk-native landing that
-  // links out to an external app (e.g. YOU at you.kronk.info). The Hub
+  // links out to an external app (e.g. YOU, on Netlify). The Hub
   // treats portal korners as live regardless of `enforced` (portals
   // ship at enforced:false because they own no Kronk-side resources).
   portal?: { url: string } | null;
