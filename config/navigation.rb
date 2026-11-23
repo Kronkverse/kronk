@@ -4,7 +4,8 @@ SimpleNavigation::Configuration.run do |navigation|
   self_destruct = SelfDestructHelper.self_destruct?
 
   navigation.items do |n|
-    n.item :web, safe_join([material_symbol('chevron_left'), t('settings.back')]), root_path
+    # No "Back to Kronk" item: the page's top-left back pill does that
+    # (layouts/admin.html.haml, shared/_kronk_back_badge).
 
     n.item :software_updates,
            safe_join([material_symbol('report'), t('admin.critical_update_pending')]),

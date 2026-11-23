@@ -1,0 +1,535 @@
+// Rails pages in Kronk dress (2026-11-23, Tal: "the admin page seems
+// hella legacy with the top bar and whatnot").
+// The pages Rails still serves — the settings pages the app links out to
+// (two-factor, filters, import and export, deleting an account…) and the
+// whole of admin — use `layouts/admin.html.haml`: Mastodon's markup, with
+// Mastodon's styles compiled against its own palette. This dresses them as
+// the app dresses a page, from the same tokens and primitives:
+// - the Stage: the page panel, transparent on the starfield in dark and a
+//   pale panel in light (`--surface-stage`), inside the top band and the
+//   korner rail, exactly as `.kronk-stage` sits;
+// - the top-left back pill: the app's own `.space-badge`
+//   (shared/_kronk_back_badge), "Settings" for the member pages, "Kronk"
+//   for admin;
+// - the title as the app's space header title (`.space-header__title`):
+//   display serif, Kronk purple;
+// - Mastodon's colour variables (`--background-color` and the rest) mapped
+//   onto Kronk's semantic tokens, so every legacy surface built on them
+//   (tables, the dashboard, report cards) takes Kronk's surfaces and
+//   follows light and dark;
+// - forms, buttons, tables, notices and tabs as the kit draws them:
+//   `.settings-page__*` panels, pill buttons with the rose destructive
+//   pill, rounded fields.
+// docs/design.md 4.3 (Server-rendered settings and admin).
+
+body.admin {
+  // Mastodon's own palette, as Kronk tokens. Its stylesheets read these for
+  // most surfaces, so mapping them here retints tables, cards, dropdowns
+  // and fields in one place, in both themes.
+  --background-color: var(--surface-card);
+  --background-color-tint: color-mix(
+    in oklab,
+    var(--surface-card) 90%,
+    transparent
+  );
+  --background-border-color: var(--border-subtle);
+  --surface-background-color: var(--surface-card);
+  --surface-variant-background-color: var(--surface-card-inset);
+  --surface-variant-active-background-color: var(--surface-elevated);
+  --surface-border-color: var(--border-default);
+  --input-background-color: var(--surface-card-inset);
+  --input-placeholder-color: var(--text-muted);
+  --on-input-color: var(--text-primary);
+  --dropdown-background-color: var(--surface-elevated);
+  --dropdown-border-color: var(--border-default);
+  --error-background-color: var(--destructive);
+  --error-active-background-color: color-mix(
+    in oklab,
+    var(--destructive) 85%,
+    var(--text-primary)
+  );
+  --on-error-color: var(--text-on-accent);
+
+  color: var(--text-primary);
+
+  // ── The Stage ──────────────────────────────────────────────────
+  // Clears the top band (4.25rem) and, on a wide screen, the korner rail
+  // (7.75rem) and a left gutter, as `.kronk-frame__stage` does for the app.
+  .kronk-rails-stage {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    min-height: calc(100dvh - 4.25rem);
+    margin: 4.25rem 7.75rem 0 1.5rem;
+    padding: 1rem 1.5rem calc(3rem + var(--kronk-tab-bar-height, 0px));
+    background: var(--surface-stage);
+    border-radius: var(--radius-large) var(--radius-large) 0 0;
+
+    @media (width <= 889px) {
+      margin: 4.25rem 0 0;
+      padding-inline: 1rem;
+    }
+
+    // The top band hides on a phone; the tab bar is at the bottom.
+    @media (width <= 629px) {
+      margin-top: 0;
+      min-height: 100dvh;
+      padding-top: max(0.75rem, env(safe-area-inset-top));
+      border-radius: 0;
+    }
+  }
+
+  .kronk-rails-stage__head {
+    display: flex;
+    align-items: center;
+    min-height: 2.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .content-wrapper {
+    padding: 0;
+  }
+
+  .content {
+    padding: 0;
+    color: var(--text-primary);
+
+    // Body copy and the many small print classes Mastodon uses.
+    p,
+    li,
+    .muted-hint,
+    .hint {
+      color: var(--text-secondary);
+    }
+
+    // `:where` keeps this at one element's weight (Sass spells a `:not`
+    // list as a chain, which outweighed every specific link rule).
+    a:where(:not(.button, .btn, .space-badge, .name-tag, .table-action-link)) {
+      color: var(--accent-text);
+    }
+
+    strong {
+      color: var(--text-primary);
+    }
+
+    // ── Titles ──────────────────────────────────────────────────
+    // The page title is the app's space header title.
+    .content__heading {
+      margin-bottom: 1.75rem;
+
+      h2 {
+        margin: 0;
+        color: var(--kronk-purple-bright);
+        font-family: var(--font-display);
+        font-size: clamp(1.85rem, 4vw, 2.35rem);
+        font-weight: 400;
+        line-height: 1.1;
+        letter-spacing: 0.01em;
+
+        small {
+          margin-top: 0.35rem;
+          color: var(--text-muted);
+          font-family: var(--font-body);
+          font-size: 0.8rem;
+        }
+      }
+    }
+
+    // A section inside the page: the settings panel's section title.
+    h3,
+    h4 {
+      margin: 1.75rem 0 0.75rem;
+      color: var(--kronk-purple-bright);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1.3;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    hr,
+    hr.spacer {
+      border: 0;
+      border-top: 1px solid var(--border-subtle);
+      margin: 1.75rem 0;
+    }
+
+    // ── Tabs (a page's sub-pages) ───────────────────────────────
+    // The app's segmented pill (`.space-view-picker`).
+    .content__heading__tabs > div {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 3px;
+      border-radius: var(--radius-large);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+
+      a {
+        padding: 0.35rem 0.85rem;
+        border-radius: var(--radius-round);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 500;
+
+        &:hover,
+        &:focus-visible {
+          background: color-mix(
+            in oklab,
+            var(--kronk-purple-accent) 15%,
+            transparent
+          );
+          color: var(--text-primary);
+        }
+
+        &.selected {
+          background: var(--accent);
+          color: var(--text-on-accent);
+          font-weight: 600;
+        }
+
+        @media screen and (width <= 629px) {
+          flex: 1 0 auto;
+        }
+      }
+    }
+  }
+
+  // ── Filters across a list (admin) ─────────────────────────────
+  // Status / origin / role pickers: pills, not underlined words.
+  .filters .filter-subset {
+    strong {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+    }
+
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    li {
+      margin: 0;
+    }
+
+    a {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-round);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-transform: none;
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--text-primary);
+        border-color: var(--border-default);
+      }
+
+      &.selected {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--text-on-accent);
+        font-weight: 600;
+      }
+    }
+  }
+
+  // ── Forms ─────────────────────────────────────────────────────
+  // Fields as the app's settings fields: inset surface, rounded, the
+  // border lighting up on focus.
+  .simple_form {
+    color: var(--text-primary);
+
+    label,
+    .label_input > label,
+    .input.with_block_label > label,
+    .input.with_label .label_input > label {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .hint,
+    p.hint,
+    span.hint {
+      color: var(--text-muted);
+    }
+
+    input[type='text'],
+    input[type='number'],
+    input[type='email'],
+    input[type='password'],
+    input[type='url'],
+    input[type='search'],
+    input[type='datetime-local'],
+    textarea,
+    select {
+      color: var(--text-primary);
+      background-color: var(--surface-card-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-medium);
+      transition:
+        border-color var(--dur-fast) var(--ease-out),
+        background-color var(--dur-fast) var(--ease-out);
+
+      &::placeholder {
+        color: var(--text-muted);
+      }
+
+      &:focus {
+        border-color: var(--border-default);
+        background-color: var(--surface-elevated);
+        outline: none;
+      }
+
+      &:required:valid {
+        border-color: var(--border-subtle);
+      }
+    }
+
+    select {
+      // Mastodon's arrow is a data URL tinted at build time; a token-
+      // coloured chevron instead.
+      background-image: none;
+      background-color: var(--surface-card-inset);
+      padding-inline-end: 2rem;
+    }
+
+    .select .label_input__wrapper,
+    .label_input__wrapper:has(select) {
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset-inline-end: 0.85rem;
+        top: 50%;
+        width: 0.45rem;
+        height: 0.45rem;
+        border-inline-end: 1.5px solid var(--text-muted);
+        border-bottom: 1.5px solid var(--text-muted);
+        transform: translateY(-70%) rotate(45deg);
+        pointer-events: none;
+      }
+    }
+
+    input[type='checkbox'],
+    input[type='radio'] {
+      accent-color: var(--accent);
+    }
+
+    .input.field_with_errors {
+      label,
+      .error {
+        color: var(--warning-red);
+      }
+
+      input,
+      textarea,
+      select {
+        border-color: var(--warning-red);
+      }
+    }
+
+    .actions {
+      flex-wrap: wrap;
+    }
+
+    // Mastodon's `.btn`: the app's pill button.
+    .btn,
+    button[type='submit'] {
+      width: auto;
+      min-width: 8rem;
+      padding: 0.55rem 1.4rem;
+      border-radius: var(--radius-round);
+      background: var(--accent);
+      color: var(--text-on-accent);
+      font-weight: 600;
+
+      &:hover,
+      &:focus-visible {
+        background: var(--kronk-purple-deep);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        background: var(--accent);
+      }
+
+      &.negative {
+        background: var(--destructive);
+
+        &:hover,
+        &:focus-visible {
+          background: color-mix(
+            in oklab,
+            var(--destructive) 85%,
+            var(--text-primary)
+          );
+        }
+      }
+    }
+  }
+
+  // Destructive buttons anywhere on these pages: the rose pill.
+  .button.button--destructive,
+  .button.button--dangerous,
+  .button.negative {
+    background: var(--destructive);
+    color: var(--text-on-accent);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--destructive) 85%,
+        var(--text-primary)
+      );
+    }
+  }
+
+  .button.button-secondary.button--destructive,
+  .button.button-secondary.negative {
+    background: transparent;
+    color: var(--destructive);
+    border-color: var(--destructive);
+  }
+
+  // ── Tables ────────────────────────────────────────────────────
+  // A table is a section panel: one rounded surface, hairlines between
+  // rows, the header in the settings section-title voice.
+  .table,
+  .batch-table {
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+  }
+
+  .table {
+    border: 1px solid var(--border-subtle);
+
+    th,
+    td {
+      background: var(--surface-card);
+      border-bottom-color: var(--border-subtle);
+      color: var(--text-primary);
+    }
+
+    & > thead > tr > th {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    a {
+      color: var(--accent-text);
+
+      &:hover {
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  .batch-table {
+    border: 1px solid var(--border-subtle);
+
+    &__toolbar,
+    &__row {
+      border-color: var(--border-subtle);
+    }
+
+    &__toolbar {
+      background: var(--surface-elevated);
+    }
+  }
+
+  // ── Admin dashboard ───────────────────────────────────────────
+  // The "1 pending report" rows: settings rows on the card surface, the
+  // count in the accent, not a stack of solid buttons.
+  .dashboard__quick-access {
+    align-items: center;
+    margin-bottom: 0.35rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    background: var(--surface-card);
+    color: var(--text-secondary);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    strong {
+      color: var(--accent-text);
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--border-default);
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+    }
+
+    &.positive,
+    &.negative {
+      background: var(--surface-card);
+    }
+
+    &.positive {
+      color: var(--success-green);
+    }
+
+    &.negative {
+      color: var(--warning-red);
+    }
+  }
+
+  // A file field's button: a quiet pill.
+  input[type='file'] {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+
+    &::file-selector-button {
+      margin-inline-end: 0.75rem;
+      padding: 0.4rem 1rem;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-round);
+      background: transparent;
+      color: var(--accent-text);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  }
+
+  // ── Notices ───────────────────────────────────────────────────
+  // Flash messages and the dashboard's warnings: a panel with an accent
+  // (or warning) edge, not Mastodon's tinted box.
+  .flash-message {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--accent) 14%, var(--surface-card));
+    color: var(--text-primary);
+
+    &.alert,
+    &.warning {
+      border-color: color-mix(in oklab, var(--warning-red) 55%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--warning-red) 12%,
+        var(--surface-card)
+      );
+    }
+
+    a {
+      color: var(--accent-text);
+    }
+  }
+}

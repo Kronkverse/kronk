@@ -13,6 +13,10 @@
 -# is reserved for the signup ritual (`/auth/sign_up` and
 -# `/auth/thresholds`). The landing is an ambient page, not a ritual.
 
+-# On the starfield, with no Stage panel: always the dark skin
+-# (ApplicationHelper#page_theme).
+- content_for :page_theme, 'default'
+
 - content_for :page_title do
   = t('auth.login')
 
