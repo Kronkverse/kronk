@@ -413,7 +413,13 @@ Rails.application.routes.draw do
   # Framework surfaces reached from the Ж menu — SPA-only, no controller.
   # Without these, a direct load / hard-reload of the deep link 404s.
   get '/hub/search', to: 'home#index'
-  get '/hub/you', to: 'home#index'
+  # YOU folded into Kollection as one of its apps (decisions.md,
+  # 2026-11-23). Kept indefinitely: the old URL is in bookmarks.
+  get '/hub/you', to: redirect('/hub/kollection', status: 301)
+  get '/hub/you/*path', to: redirect('/hub/kollection', status: 301)
+  # Kollection (docs/spaces/kollection.md) — SPA-only.
+  get '/hub/kollection', to: 'home#index'
+  get '/hub/kollection/*path', to: 'home#index', format: false
   get '/hub/freethedream', to: 'home#index'
   get '/hub/freethedream/*path', to: 'home#index', format: false
   # A Room is a Kuddle wherever people see it (decisions.md, 2026-10-27).

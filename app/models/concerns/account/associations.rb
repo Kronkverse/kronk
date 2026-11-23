@@ -139,6 +139,10 @@ module Account::Associations
     # Karporn — car posts this account owns. Same single-author shape.
     has_many :owned_kars, class_name: 'Kar', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
 
+    # Kollection — apps this account keeps. The app belongs to Kronk, so
+    # it stays when its keeper goes (docs/spaces/kollection.md).
+    has_many :kept_kollection_apps, class_name: 'KollectionApp', foreign_key: :keeper_id, inverse_of: :keeper, dependent: :nullify
+
     # Moments — ephemeral photo/video posts this account has shared
     # (MomentsController#create builds through `current_account.moments`).
     # Cascade destroy: a Moment goes with its author.

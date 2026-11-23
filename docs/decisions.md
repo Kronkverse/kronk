@@ -17,6 +17,42 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-23 — Kollection: apps belong to Kronk, and YOU folds in
+
+**Decided by Tal.** Kronk needs one place for every app linked to it (apps
+that "Sign in with Kronk", the first being Anthemos). Until now an OAuth app
+was registered per member at `/settings/applications` and owned by their
+user, which Tal found odd: an app belongs to a person. So:
+
+- **Kollection**, a korner at `/hub/kollection`, holds them. Members only
+  see the list; Sign in with Kronk itself keeps working for anyone with an
+  account.
+- **Any member can add an app, and it is live straight away.** Admins can
+  pull it (off the list, its tokens revoked, no more sign-ins) from the
+  admin panel, and restore it. Undo after the fact, not approval before
+  (2026-10-19, err syntropic).
+- **The app belongs to Kronk.** Its Doorkeeper application has no owner.
+  The member who added it is its **keeper**: they and admins see its client
+  key and secret, edit it and remove it. If the keeper's account goes, the
+  app stays and an admin names a new keeper.
+- **Each listing says** what the app is, what it can see of you (its scopes
+  in plain words), whether you are connected, and has **Disconnect**, which
+  revokes your own tokens for it.
+- **Connected apps move into Kollection's settings** (`/hub/kollection/settings`):
+  the apps you are connected to and the linked Anthemos phones. Account &
+  Security keeps one row linking there, so there are not two lists.
+- **YOU is retired as a korner.** It becomes one Kollection entry, a link
+  (it has its own sign-in), with no keeper; `/hub/you` 301s to
+  `/hub/kollection` and `you` is an ex-slug. `docs/spaces/you.md` is folded
+  into `docs/spaces/kollection.md`.
+
+**Supersedes** the 2026-08-14 entry below that parked the "connected apps"
+surface as coming-soon until the Anthemos membrane existed: the 2026-11-22
+entry already brought the Anthemos phones in, and this brings the apps.
+Detail: `docs/spaces/kollection.md`.
+
+---
+
 ## 2026-11-23 — Nudges is one space, Notifications first in the list
 
 **Decided by Tal:** "The Nudges space should be melded into one space, with

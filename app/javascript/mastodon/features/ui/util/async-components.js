@@ -240,8 +240,16 @@ export function KronkSearch () {
 }
 
 
-export function YouPortal () {
-  return import("../../you_portal");
+export function Kollection () {
+  return import("../../kollection");
+}
+
+export function KollectionAppPage () {
+  return import("../../kollection/app_page");
+}
+
+export function KollectionSettings () {
+  return import("../../kollection/settings");
 }
 
 

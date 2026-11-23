@@ -116,6 +116,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_booth_native.scss',
         'app/javascript/styles/mastodon/_huddle_rooms.scss',
         'app/javascript/styles/mastodon/_klot.scss',
+        'app/javascript/styles/mastodon/_kollection.scss',
         'app/javascript/styles/mastodon/_kommons.scss',
         'app/javascript/styles/mastodon/_kommons_lattice.scss',
         'app/javascript/styles/mastodon/_kommons_tree.scss',

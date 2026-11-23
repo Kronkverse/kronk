@@ -25,6 +25,7 @@ class Vacuum::MediaAttachmentsVacuum
     'films' => %w(video_media_attachment_id),
     'freethedream_projects' => %w(cover_media_attachment_id),
     'kar_photos' => %w(media_attachment_id),
+    'kollection_apps' => %w(icon_media_attachment_id),
     'kars' => %w(cover_media_attachment_id),
     'listing_lesson_media' => %w(media_attachment_id),
     'listing_photos' => %w(media_attachment_id),

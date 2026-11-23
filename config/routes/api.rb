@@ -389,6 +389,14 @@ namespace :api, format: false do
       resource :portfolio, only: [:update], controller: 'portfolios'
     end
 
+    # Kollection (docs/spaces/kollection.md): the apps linked to Kronk.
+    # Members add them; admins pull them from /admin/kollection_apps.
+    namespace :kollection do
+      resources :apps, only: [:index, :show, :create, :update, :destroy] do
+        post :disconnect, on: :member
+      end
+    end
+
     # Kronikles — single-author long-form written works. Body is
     # markdown, no length limit; kind labels the work (essay / short
     # story / poetry / letter / journal / constitution / legal / other).

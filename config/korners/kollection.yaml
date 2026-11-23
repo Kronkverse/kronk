@@ -1,0 +1,95 @@
+# Kollection — every app linked to Kronk (docs/spaces/kollection.md).
+#
+# An app here is either one that signs people in with Kronk (Kronk's
+# OAuth/OIDC: its Doorkeeper application has no owner, because the app
+# belongs to Kronk, not to a person) or a link to an app with its own
+# sign-in, like YOU. Any member adds one and it is live at once; the member
+# who added it is its keeper; admins pull one from /admin/kollection_apps
+# (decisions.md, 2026-11-23). YOU folded in as one entry here, and
+# /hub/you 301s to /hub/kollection.
+
+slug: kollection
+name: Kollection
+purpose: 'To hold every app linked to Kronk in one place, with what each can see of you and a way to disconnect.'
+tagline: 'Apps linked to Kronk.'
+about:
+  what: 'Every app linked to Kronk: the ones you sign in to with your Kronk account, and ones Kronk points you to.'
+  why: 'An app you sign in to with Kronk can see some of your account. Here you can see what each one sees, whether you are connected, and cut it off.'
+  how:
+    - 'Open an app to see what it is and what it can see of you.'
+    - 'Disconnect signs you out of it. You can sign in again any time.'
+    - 'Settings lists everything connected to your account: the apps you signed in to, and Anthemos phones.'
+    - 'Add an app from the Ж menu. You keep it: you see its keys and can change or remove it.'
+icon:
+  # Material Symbol `apps`, scaffolding until Kollection has a Kronk glyph
+  # (docs/korners/adding_a_korner.md, step 8).
+  material: apps
+render_target: native
+version: 1.0.0
+
+resources:
+  - name: kollection_apps
+    primary: true
+    path: /hub/kollection/:id
+
+storage:
+  db_namespace: kollection_ # table: `kollection_apps`
+  media_prefix: # not-applicable — an app's icon is an ordinary upload
+  redis_prefix: # not-applicable
+
+security:
+  permissions:
+    - read:accounts
+    - write:accounts
+  # No reach ladder: every app is listed for every signed-in member.
+  visibility_scopes: []
+  visibility: members
+  maintainers:
+    - admin # pull, restore and keeper: manage_settings (KollectionAppPolicy)
+  federates: false
+
+emits: []
+listens: []
+
+# An app is a door to somewhere else, not something made on Kronk.
+no_attachments: 'An app in Kollection is a door to somewhere else, not something made on Kronk; there is nothing in it to Konnect.'
+
+# No feed card: adding an app is not news for the feed (decisions.md,
+# 2026-11-23).
+feed_projection:
+  card: # not-applicable
+  status_association: # not-applicable
+
+notifications:
+  types: []
+
+# No manifest settings: /hub/kollection/settings is a bespoke page
+# (features/kollection/settings.tsx) listing what is connected to you.
+settings: []
+
+compose:
+  label: 'Add an app'
+  route: '/hub/kollection/composer'
+
+hub_teaser:
+  static: 'Apps linked to Kronk, and what each can see of you.'
+
+launch:
+  blurb: 'Kollection — the apps linked to Kronk.'
+  cta: 'Open Kollection'
+
+enforced: true
+
+nodes:
+  - id: kollection.index
+    label: Kollection
+    url: /hub/kollection
+    lifecycle: live
+    spa: true
+  # Kollection's own settings page: the apps you are connected to and
+  # your Anthemos phones (decisions.md, 2026-11-23).
+  - id: kollection.settings
+    label: Connected apps
+    url: /hub/kollection/settings
+    lifecycle: live
+    spa: true

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_23_093100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_23_100100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1496,6 +1496,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_093100) do
     t.index ["owner_id"], name: "index_kars_on_owner_id"
     t.index ["status_id"], name: "index_kars_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_kars_on_visibility"
+  end
+
+  create_table "kollection_apps", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.bigint "icon_media_attachment_id"
+    t.bigint "keeper_id"
+    t.string "name", null: false
+    t.bigint "oauth_application_id"
+    t.datetime "pulled_at"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.string "website"
+    t.index ["keeper_id"], name: "index_kollection_apps_on_keeper_id"
+    t.index ["oauth_application_id"], name: "index_kollection_apps_on_oauth_application_id", unique: true
   end
 
   create_table "korner_attachments", force: :cascade do |t|
@@ -3280,6 +3295,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_093100) do
   add_foreign_key "kars", "accounts", column: "owner_id", on_delete: :cascade
   add_foreign_key "kars", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "kars", "statuses", on_delete: :nullify
+  add_foreign_key "kollection_apps", "accounts", column: "keeper_id", on_delete: :nullify
+  add_foreign_key "kollection_apps", "media_attachments", column: "icon_media_attachment_id", on_delete: :nullify
+  add_foreign_key "kollection_apps", "oauth_applications", on_delete: :cascade
   add_foreign_key "korner_attachments", "accounts", column: "created_by_account_id", on_delete: :cascade
   add_foreign_key "korner_content_views", "accounts", on_delete: :cascade
   add_foreign_key "korner_seen_markers", "accounts", on_delete: :cascade

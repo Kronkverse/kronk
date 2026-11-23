@@ -22,7 +22,7 @@ relying on it.
 ### Korners
 
 Slug matches `config/korners/<slug>.yaml`. Every korner below is
-`enforced: true` and live at `/hub/<slug>`, except YOU, which is a portal.
+`enforced: true` and live at `/hub/<slug>`.
 
 | Doc                                  | Manifest                           | What it is                                                                     |
 | ------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------ |
@@ -36,6 +36,7 @@ Slug matches `config/korners/<slug>.yaml`. Every korner below is
 | [`kalendar.md`](kalendar.md)         | `config/korners/kalendar.yaml`     | Events and gatherings                                                          |
 | [`karporn.md`](karporn.md)           | `config/korners/karporn.yaml`      | Single-author car posts (year, make, model, optional location)                 |
 | [`klot.md`](klot.md)                 | `config/korners/klot.yaml`         | Private cycle tracker; share the phase, not the data                           |
+| [`kollection.md`](kollection.md)     | `config/korners/kollection.yaml`   | Every app linked to Kronk: what each sees of you, connect and disconnect       |
 | [`kommons.md`](kommons.md)           | `config/korners/kommons.yaml`      | Proposals and backing: the community decides what Kronk builds                 |
 | [`kommunity.md`](kommunity.md)       | `config/korners/kommunity.yaml`    | The follow graph as a 3D orb, plus Discover                                    |
 | [`krew.md`](krew.md)                 | `config/korners/krew.yaml`         | Krews: defined groups you can post to. The build spec                          |
@@ -46,7 +47,6 @@ Slug matches `config/korners/<slug>.yaml`. Every korner below is
 | [`moments.md`](moments.md)           | `config/korners/moments.yaml`      | Ephemeral posts, gone by morning                                               |
 | [`rose.md`](rose.md)                 | `config/korners/rose.yaml`         | A wordless daily gesture to a Mate, cleared at 3am Sydney                      |
 | [`wachuneed.md`](wachuneed.md)       | `config/korners/wachuneed.yaml`    | Person-to-person listings and offers (renamed from `marketplace`)              |
-| [`you.md`](you.md)                   | `config/korners/you.yaml`          | Portal to Kashka's YOU app (`enforced: false`; the Hub still shows it as live) |
 
 ### Core and cross-cutting spaces
 
