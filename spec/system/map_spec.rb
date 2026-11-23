@@ -73,6 +73,7 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
 
     visit "/hub/map?map_place=#{place.id}"
     expect(page).to have_css('.map-place-card', text: 'Bondi Pavilion')
+    expect(page).to have_css(".map-place-card a.korner-pill[href='/hub/map/places/#{place.id}']", text: 'Open place')
   end
 
   # Tal, 2026-11-23: "Why is there two indicators?" An event at its Place
@@ -92,9 +93,11 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
       expect(page).to have_text('Ember')
       expect(page).to have_text('Hall jam')
       expect(page).to have_text('Moyhu Hall')
-      expect(page).to have_link('Open place →', href: "/hub/map/places/#{hall.id}")
-      # The Place's name opens its page too (Tal, 2026-11-23).
+      # The Place's name is the way to its page; no second "Open place", and
+      # each event's action is a pill (Tal, 2026-11-23).
       expect(page).to have_link('Moyhu Hall', href: "/hub/map/places/#{hall.id}")
+      expect(page).to have_no_link('Open place')
+      expect(page).to have_css("a.korner-pill[href='/hub/kalendar/#{ember.slug}']", text: 'Open in Kalendar')
     end
     expect(page).to have_css('.map-event-pin', count: 1, text: '+1')
     # The Kalendar korner's spiral, not a hand-drawn copy.

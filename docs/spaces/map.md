@@ -359,8 +359,8 @@ and `longitude` as exact decimals, `account_id` of its maker).
   name.
 - **On the Map.** A Places layer (`place_layer.tsx`) draws the Places in
   view as pin glyphs, reloading as the map moves. Tapping one opens a card
-  with its address and what's Konnected to it (both ways), and a link to
-  its page. `/hub/map?map_place=<id>` flies to a Place and opens its card
+  with its address and what's Konnected to it (both ways), and an **Open
+  place** pill to its page. `/hub/map?map_place=<id>` flies to a Place and opens its card
   (not `?place=`, which opens your own pin's search: `?place=1`).
 - **Its page** (`place_page.tsx`) is a `<KornerDetail>`: the pin as hero
   (`<MapPinPreview>`), the address, who added it, See on the map, Delete
@@ -429,9 +429,10 @@ white on an accent disc with a ring and a point at the spot, and a "+N"
 chip when more events share it (Tal, 2026-11-23, in place of a date
 badge); the ring keeps it clear on any Country's colour in either theme.
 A Mate is a face and a plain Place is a pin glyph. Tapping it opens one card: each
-event (date, what, when, **Open in Kalendar**), then where they are, the
-Place's name (a link to its page, Tal 2026-11-23), address and Country with
-**Open place →**, or the event's own place name.
+event (date, what, when, and an **Open in Kalendar** pill), then where
+they are: the Place's name, which is the link to its page, its address and
+Country, or the event's own place name (Tal, 2026-11-23: no separate "Open
+place", and actions are the kit's pill, not a text link with an arrow).
 
 **What's on.** An event stays on the map while it is happening (started and
 not yet ended; one with no end time counts as on for three hours), and its pin

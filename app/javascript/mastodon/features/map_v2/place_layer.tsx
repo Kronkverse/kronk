@@ -32,7 +32,7 @@ import { CountryLine } from './country_line';
 
 const messages = defineMessages({
   close: { id: 'map.place_card.close', defaultMessage: 'Close' },
-  open: { id: 'map.place_card.open', defaultMessage: 'Open place →' },
+  open: { id: 'map.place_card.open', defaultMessage: 'Open place' },
   konnected: {
     id: 'map.place_card.konnected',
     defaultMessage: 'Konnected',
@@ -271,8 +271,13 @@ const PlacePreviewCard: React.FC<{
             )}
           </div>
         )}
-        <Link to={place.url} className='map-event-card__open'>
-          {intl.formatMessage(messages.open)}
+        <Link
+          to={place.url}
+          className='korner-pill korner-pill--primary map-event-card__action'
+        >
+          <span className='korner-pill__label'>
+            {intl.formatMessage(messages.open)}
+          </span>
         </Link>
       </div>
     </div>
