@@ -18,6 +18,7 @@ import {
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { IconButton } from 'mastodon/components/icon_button';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
@@ -30,7 +31,8 @@ import { ChoiceReveal, TextReveal } from './reveal_sheet';
 // (the asker too), and everyone's answers, which every member sees whether
 // they've answered or not (Kuestions::VisibilityGate, a home is open).
 // Nothing to Konnect. Next kuestion steps through the row's Kuestions; the
-// asker can delete theirs.
+// asker can delete theirs, from a red Delete pill at the start of the
+// bottom bar, beside Cancel and Next kuestion (Tal, 2026-11-23).
 //
 // One after the next (Kommons "Kuestions", 2026-11-22: "If a kuestion is
 // opened, someone should be able to hit the 'next' button (left or right
@@ -272,6 +274,17 @@ export const HomeKuestionDialog: React.FC<Props> = ({
       onSubmit={handleFooter}
       onCancel={onClose}
       konnect={null}
+      footerStart={
+        detail?.asked_by_me ? (
+          <KornerPill
+            variant='destructive'
+            label={intl.formatMessage(messages.deleteConfirm)}
+            ariaLabel={intl.formatMessage(messages.delete)}
+            onClick={handleDelete}
+            disabled={pending}
+          />
+        ) : undefined
+      }
     >
       {confirmDialog}
       {many && (
@@ -357,16 +370,6 @@ export const HomeKuestionDialog: React.FC<Props> = ({
                 )
               )}
             </section>
-
-            {detail.asked_by_me && (
-              <button
-                type='button'
-                className='compose-shell__delete'
-                onClick={handleDelete}
-              >
-                {intl.formatMessage(messages.delete)}
-              </button>
-            )}
           </>
         )}
       </div>
