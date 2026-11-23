@@ -64,13 +64,11 @@ accepts:
     kind: link
 
 # Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
-# Korner attachments §2.6). "New place" from the Konnect picker: on a
-# record's page it opens the Place composer with `?konnect=<slug>:<id>`
-# (Map's `compose:` logs a trek, so the route and label are its own); in
-# a composer, where the record isn't made yet, the picker makes the Place
-# itself (components/konnect_new_place.tsx) and picks it. A location is
-# a Konnection to a Place (decisions.md, 2026-10-23, "Location fields
-# become Konnect → Map").
+# Korner attachments §2.6). A location is a Konnection to a Place
+# (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). The
+# Konnect picker's map makes the Place where a record's location is chosen
+# (components/konnect_map.tsx); the Map itself has no Place composer and
+# offers no "New place" (decisions.md, 2026-11-23).
 konnect:
   # Where it Konnects (the Konnect grid, decisions.md 2026-11-08): its
   # kind, and per korner `space` (turns a section on there) or `link`
@@ -83,9 +81,6 @@ konnect:
   # its title ("the Ember event"), so records that share a title can be
   # told apart (decisions.md, 2026-10-26).
   noun: place
-  make: true
-  route: /hub/map/places/new
-  label: 'New place'
 
 resources:
   - name: map_places # Places: the linkable record (docs/spaces/map.md, Places)

@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-23 — No adding Places on the Map
+
+**Decided by Tal:** "I don't understand nor do i see the point of adding a
+'place' to the map, i think that function should be removed." The Map's
+Place composer (`/hub/map/places/new`) is gone, and with it the "New place"
+the Konnect picker offered from a record's page (`konnect.make`/`route` off
+in `config/korners/map.yaml`).
+
+**What stays.** Places are still the records a location Konnects to
+(2026-10-23, "Location fields become Konnect → Map"): an event's location is
+still chosen in the Konnect picker's map, which makes the Place behind it,
+and a Place still has its page and card. No data or table is removed.
+
+**Why.** On the Map a Place read as a thing of its own with no purpose a
+member could see; what people do is say where an event is. Making a Place
+belongs to that moment, not to the Map.
+
+Supersedes the Map half of 2026-10-23's "Konnect → Map → New place".
+
+---
+
 ## 2026-11-23 — Kollection: apps belong to Kronk, and YOU folds in
 
 **Decided by Tal.** Kronk needs one place for every app linked to it (apps
