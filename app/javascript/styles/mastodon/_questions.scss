@@ -1559,6 +1559,38 @@
 
 // A Krew or projekt Kuestion in the standard pop-up (home_kuestion_dialog.tsx).
 .home-kuestion-dialog {
+  // ‹ 2 of 5 ›: step back and on through the row.
+  &__stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-block-end: -0.25rem;
+
+    .icon-button {
+      color: var(--text-secondary);
+
+      &:hover,
+      &:focus-visible {
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  &__position {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // The question and its answers: swiped sideways on a phone.
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: inherit;
+    touch-action: pan-y;
+  }
+
   &__q {
     margin: 0;
     font-family: var(--font-display);
