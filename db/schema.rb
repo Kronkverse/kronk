@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_100300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1498,19 +1498,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
     t.index ["visibility"], name: "index_kars_on_visibility"
   end
 
+  create_table "kollection_app_screenshots", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "kollection_app_id", null: false
+    t.bigint "media_attachment_id", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["kollection_app_id", "position"], name: "idx_on_kollection_app_id_position_77590e854a"
+    t.index ["media_attachment_id"], name: "index_kollection_app_screenshots_on_media_attachment_id", unique: true
+  end
+
   create_table "kollection_apps", force: :cascade do |t|
+    t.string "category"
+    t.bigint "cover_media_attachment_id"
     t.datetime "created_at", null: false
     t.text "description", default: "", null: false
     t.bigint "icon_media_attachment_id"
     t.bigint "keeper_id"
+    t.string "made_by", default: "", null: false
     t.string "name", null: false
     t.bigint "oauth_application_id"
+    t.string "platforms", default: [], null: false, array: true
     t.datetime "pulled_at"
+    t.string "slug", null: false
     t.integer "status", default: 0, null: false
+    t.string "tagline", default: "", null: false
     t.datetime "updated_at", null: false
     t.string "website"
     t.index ["keeper_id"], name: "index_kollection_apps_on_keeper_id"
     t.index ["oauth_application_id"], name: "index_kollection_apps_on_oauth_application_id", unique: true
+    t.index ["slug"], name: "index_kollection_apps_on_slug", unique: true
   end
 
   create_table "korner_attachments", force: :cascade do |t|
@@ -3295,7 +3312,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
   add_foreign_key "kars", "accounts", column: "owner_id", on_delete: :cascade
   add_foreign_key "kars", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "kars", "statuses", on_delete: :nullify
+  add_foreign_key "kollection_app_screenshots", "kollection_apps", on_delete: :cascade
+  add_foreign_key "kollection_app_screenshots", "media_attachments", on_delete: :cascade
   add_foreign_key "kollection_apps", "accounts", column: "keeper_id", on_delete: :nullify
+  add_foreign_key "kollection_apps", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "kollection_apps", "media_attachments", column: "icon_media_attachment_id", on_delete: :nullify
   add_foreign_key "kollection_apps", "oauth_applications", on_delete: :cascade
   add_foreign_key "korner_attachments", "accounts", column: "created_by_account_id", on_delete: :cascade

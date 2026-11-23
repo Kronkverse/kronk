@@ -20,9 +20,16 @@ application has no owner. The member who added it is its **keeper**.
 
 A `KollectionApp` (`app/models/kollection_app.rb`, table `kollection_apps`):
 
-- **name**, **description** (what it is), **website**, an optional **icon**
-  (one of the keeper's uploads; kept from the media vacuum by
-  `Vacuum::MediaAttachmentsVacuum::KEEPERS`).
+- **name**, and the **slug** its page is reached by (`Kronk::NamedLink`,
+  below).
+- What its page shows: a **tagline** (one line, up to 100 characters), the
+  **description** (what it is, up to 4,000), **made by**, a **category**
+  (`KollectionApp::CATEGORIES`: wellbeing, social, creative, learning,
+  tools, games, other), the **platforms** it runs on (`PLATFORMS`: web,
+  Android, iOS), its **website**, an optional **icon** and **cover**, and up
+  to six **screenshots** in order (`kollection_app_screenshots`). The
+  pictures are the keeper's own uploads, through the normal upload path,
+  kept from the media vacuum by `Vacuum::MediaAttachmentsVacuum::KEEPERS`.
 - **keeper** (`keeper_id`, an account; nullified when the account row goes).
   A keeper whose account is suspended or deleted keeps nothing
   (`current_keeper` is nil), and the app stays.
@@ -82,31 +89,66 @@ and nobody else's (`KollectionApp#disconnect!`, the same steps as
 ## Where you see it
 
 - **`/hub/kollection`**: the apps, A to Z, as a `<SpaceGrid>` of
-  `<SpaceCard>`s: icon, name, "Sign in with Kronk" or "A link", and a
-  Connected or Pulled chip. Built on `<KornerShell>` with one view.
-- **`/hub/kollection/:id`**: one app on `<Stage>` + `<KornerDetail>`: what
-  it is, who keeps it, Connected or not, then **Open**, **Disconnect**
-  (when connected), and **Edit** and **Remove** for its keeper and admins.
-  "What it can see of you" lists its scopes in plain words. Its keeper and
-  admins also see the client key, secret, redirect URIs and the OpenID
-  configuration address.
+  `<SpaceCard>`s: icon, name, its tagline (or "Sign in with Kronk" / "A
+  link"), and a Connected or Pulled chip. **Tapping a card opens the app
+  itself**: its website, in a new tab (on Android an installed app catches
+  its own link). A small **About** under each card opens the app's page
+  (`SpaceCard`'s `href` and `after`). An app with no website, or a pulled
+  one, opens its page. Built on `<KornerShell>` with one view.
+- **`/hub/kollection/<name>`**: one app's page, laid out like an app store
+  listing on `<Stage>` + `<KornerDetail>`: the cover over the top, the icon,
+  name, tagline and "By …", a big **Open** (and **Disconnect** when you are
+  connected), the screenshots in a row that scrolls sideways (each opens
+  full size in a new tab), **About** (the description), **Details** (made
+  by, category, works on, website, sign-in, keeper), **What it can see of
+  you** (its scopes in plain words) and **Mates using it** (below). Its
+  keeper and admins also see the client key, secret, redirect URIs and the
+  OpenID configuration address. **Edit** is the Ж menu's page action, as on
+  an album (`useRegisterPageAction`); there are no Edit or Remove buttons on
+  the page, and Remove is at the foot of the edit composer.
 - **`/hub/kollection/composer`**: the composer (`<ComposeShell>`), opened by
   the **Add an app** button above the grid (`<KornerActionBar>` with a
   primary `<KornerPill>`). Kollection adds nothing to the Ж menu: the
   manifest has no `compose:` (Tal, 2026-11-23), an exception to the
   recipe's "the Ж menu is the one place to create things".
-  `/hub/kollection/:id/edit` opens the composer over an app's page.
+  `/hub/kollection/<name>/edit` opens the composer over an app's page.
 - **`/hub/kollection/settings`** (bespoke, above the generic korner settings
   route): **Connected apps**. The apps you signed in to, each with what it
   sees and Disconnect, and the Anthemos phones linked to your account, each
   with Unlink (`map.md`, Live location). This was the Connected apps section
   of Account & Security until 2026-11-23; that page now has one row
-  linking here.
+  linking here. It also holds Kollection's one setting, **Show my mates which
+  apps I use** (`show_mates_apps`, on by default).
 - **Admin**: `/admin/kollection_apps`, under Administration, for
   `manage_settings`: every app with what it sees, its keeper (a username
   field to name a new one, blank for none) and status, with Pull or Restore.
 
 No feed card and no notifications: adding an app is not news.
+
+### Reached by name
+
+An app's page is `/hub/kollection/<slug>`, the slug made from its name
+(`Kronk::NamedLink`, decisions.md 2026-10-22): `/hub/kollection/you`, and
+`anthemos-2` for a second app called Anthemos. `composer` and `settings` are
+Kollection's own pages, so an app called Settings is `settings-1`. A rename
+takes a new slug and the old one keeps working (`link_redirects`); the
+number still opens the page, and the app puts the name in the address bar
+(`useNamedLink`). A pulled app answers not found to anyone but its keeper
+and admins, the same as an app that doesn't exist. The migration
+`KollectionAppPages` named the apps already there.
+
+### Mates using it
+
+On the page of an app that signs in with Kronk: your Mates (mutual, the one
+Mate rule, `Account#mates`) who hold a live token for it, up to 24, as
+faces linking to their profiles (`KollectionApp#mates_using`). Only ever
+your own Mates, so nobody learns who uses an app beyond the people who would
+see each other anyway, and there is no count. A member who turns off **Show
+my mates which apps I use** in Kollection's settings is left out of every
+list; it is on by default (Tal, 2026-11-24), stored the standard korner way
+(`user_korner_settings`, manifest `settings:`). It is only on an app's page,
+not in the list. A link, like YOU, shows a quiet line instead: it has its own
+sign-in, so Kronk can't tell who uses it.
 
 ## API
 
@@ -121,11 +163,14 @@ DELETE /api/v1/kollection/apps/:id             keeper or admin; its tokens go wi
 POST   /api/v1/kollection/apps/:id/disconnect  revoke your own tokens for it
 ```
 
-Create and update take `name`, `description`, `website`, `sign_in`,
-`redirect_uris` (one per line), `scopes[]` and `icon_id`
+`:id` is the slug, an old slug or the number. Create and update take `name`,
+`tagline`, `description`, `website`, `made_by`, `category`, `platforms[]`,
+`sign_in`, `redirect_uris` (one per line), `scopes[]`, `icon_id`, `cover_id`
+and `screenshot_ids[]` (in order; more than six is refused)
 (`Kollection::SaveApp`). `REST::KollectionAppSerializer` returns
 `client_id`, `client_secret` and `redirect_uris` only to the keeper and
-admins (`can_manage`).
+admins (`can_manage`); one app (`show` and the writes) adds `screenshots`
+and `mates_using`.
 
 ## YOU
 
@@ -142,6 +187,13 @@ https://you-app-build.netlify.app/ (`PointYouAtItsLiveAddress`; the old
 portal's `you.kronk.info` was never set up). `/hub/you` and `/hub/you/*` 301 to
 `/hub/kollection`, and `you` is an ex-slug in
 `config/korners/reserved_slugs.yaml`. An admin can name Kashka its keeper.
+
+Its page was filled in by the migration `FillInYouInKollection`, only where
+blank: the tagline, description, made by (Kashka), category (wellbeing)
+and platforms (web), in plain words from Kashka's own README
+(`web-next/README.md`). It has no pictures yet: the repo has an icon and a
+few demo screens (`design/demo/`), but pictures are uploads, so its keeper
+adds them from the composer rather than a migration fetching them.
 When YOU takes Sign in with Kronk, its keeper (or an admin) edits it and
 ticks "People sign in to it with Kronk": a link can become an app that signs
 in, though not the other way round.
