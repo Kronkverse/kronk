@@ -441,7 +441,26 @@ shows when (on the spot's marker, the busiest of its events): happening now, it 
 next week, it glows softly; later ones are plain (`whatsOn` in
 `event_layer.tsx`; still, without the breathing, with reduced motion).
 
-## API
+## What the map shows
+
+A cog in the Map's top-left corner, beside your location button, opens
+**Show on the map**: a box each for **Mates**, **Live locations**,
+**Events** and **Places**, all on to begin with (Tal, 2026-11-23: "choose
+what you see on the map … checkboxes … hidden under a button next to the
+pin button … a settings cog"; `map_show.tsx`). Each viewer's choice stays
+in their browser (`localStorage`, `kronk.map.show`); where storage is
+blocked it lasts the visit.
+
+- **Mates** off hides the Mates' pins, their circles, the off-map compass
+  and the "N mates in view" pill. The Mates list down the side stays: it is
+  where your own pin is set, and picking someone from it shows Mates again
+  so the tap lands on them.
+- **Events** off hides the event markers, and a Place an event stood on
+  draws its own pin again (when Places are on).
+- A link that opens something on the Map (`?event=`, `?map_place=`,
+  `?live=`) switches its layer back on, so it never lands on nothing.
+- **First Nations Country** has no box: it is always on, with no switch
+  (@mangobee, 2026-10-30, above). Treks are their own view, not a layer.
 
 All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
 create, destroy), `presence/self`, `geocode`, `treks` (index, show,

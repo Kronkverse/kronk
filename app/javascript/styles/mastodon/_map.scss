@@ -829,13 +829,15 @@
 // Your location (features/map_v2/location_menu.tsx): a round pin button top
 // left that opens Share and Update, from Anthemos, and the shares running
 // now. Dropped below the in-view pill when that is showing.
-.map-location {
+// The top-left corner of the Map: your location from Anthemos and the cog
+// for what the map shows, side by side (map_show.tsx). Each one's menu
+// drops below the row, so opening one doesn't move the other.
+.map-corner {
   position: absolute;
   top: 16px;
   left: 16px;
   z-index: 6;
   display: flex;
-  flex-direction: column;
   align-items: flex-start;
   gap: 8px;
   width: min(280px, calc(100% - 32px));
@@ -844,10 +846,25 @@
   &--lower {
     top: 64px;
   }
+}
 
+.map-location,
+.map-show {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.map-location {
   &__button,
   &__menu {
     pointer-events: auto;
+  }
+
+  &__menu {
+    position: absolute;
+    inset-block-start: calc(44px + 8px);
+    inset-inline-start: 0;
   }
 
   &__button {
@@ -922,7 +939,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    width: 100%;
+    width: min(280px, calc(100vw - 32px));
     padding: 6px;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-medium);
@@ -1966,6 +1983,34 @@
   .map-pin-card {
     animation: none;
   }
+}
+
+// The cog's menu: a box per layer (map_show.tsx). It wears the location
+// menu's frame; this only undoes the fieldset's own look.
+.map-show__menu {
+  margin: 0;
+  min-inline-size: 0;
+  width: min(220px, calc(100vw - 32px));
+  padding: 10px 12px;
+
+  .check-box {
+    padding: 6px 2px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+  }
+}
+
+.map-show__title {
+  float: inline-start;
+  width: 100%;
+  margin-block-end: 4px;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 // ── Event pins (Kalendar ↔ Map bridge) ───────────────────────────────
