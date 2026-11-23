@@ -77,6 +77,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_settings_list.scss',
         'app/javascript/styles/mastodon/_settings_nav.scss',
         'app/javascript/styles/mastodon/_settings_page.scss',
+        'app/javascript/styles/mastodon/_kronk_rails_pages.scss',
         'app/javascript/styles/mastodon/_groups.scss',
         'app/javascript/styles/mastodon/_korner_settings.scss',
         'app/javascript/styles/mastodon/_korner_sidebar.scss',
