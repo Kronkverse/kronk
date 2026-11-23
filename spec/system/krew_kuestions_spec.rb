@@ -32,7 +32,7 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
     within('.attachment-picker') { click_on 'Kuestions' }
 
     within('.krew-detail__kuestions') do
-      expect(page).to have_css('.space-grid__cell:last-child .home-kuestions__card--ask', text: 'Ask')
+      expect(page).to have_css('.space-grid__cell:first-child .home-kuestions__card--ask', text: 'Ask')
     end
     within('.attachment-section') { expect(page).to have_button('Kuestions') }
     expect(page).to have_no_css('.attachment-picker')
@@ -52,7 +52,11 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
     within('.compose-shell') { click_on 'Ask' }
 
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
-    within('.krew-detail__kuestions') { expect(page).to have_css('.home-kuestions__card', text: 'Which weekend for the harvest?') }
+    within('.krew-detail__kuestions') do
+      expect(page).to have_css('.home-kuestions__card', text: 'Which weekend for the harvest?')
+      # Kommons "Ask Question" (2026-11-22): Ask stays first, on the left.
+      expect(page).to have_css('.space-grid__cell:first-child .home-kuestions__card--ask')
+    end
     question = Question.find_by(title: 'Which weekend for the harvest?')
     expect(question.krew_id).to eq krew.id
     expect(question.status.krews).to eq [krew]
