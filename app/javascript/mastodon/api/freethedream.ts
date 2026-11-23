@@ -215,6 +215,19 @@ export const apiFtdMoveItem = (id: string, fromId: string, toId: string) =>
     to_project_id: toId,
   });
 
+// Suggest someone in the projekt for a checklist entry, or take the
+// suggestion back (Kommons "Tagging people on a checklist item"); with no
+// one given, it's you saying it's not for you.
+export const apiFtdSuggest = (
+  id: string,
+  accountId: string | null,
+  on: boolean,
+) =>
+  apiRequestPost<FtdItem>(
+    `${base}/items/${id}/${on ? 'suggest' : 'unsuggest'}`,
+    accountId ? { account_id: accountId } : {},
+  );
+
 // How much of a need you're bringing (0 takes it back); from your
 // Mycelium when `myceliumItemId` is given.
 export const apiFtdBring = (

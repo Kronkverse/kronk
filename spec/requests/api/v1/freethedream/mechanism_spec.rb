@@ -369,6 +369,38 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(response).to have_http_status(422)
     end
 
+    # Kommons "Tagging people on a checklist item" (2026-11-22).
+    it 'suggests someone in the projekt for an entry, tells them, and ends when they take it on', :aggregate_failures do
+      job = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Run the generator' })
+
+      body = api(cara, :post, "/items/#{job['id']}/suggest", account_id: bob.account_id)
+      expect(body['suggested'].pluck('id')).to eq [bob.account_id.to_s]
+      expect(api(bob, :get, "/items/#{job['id']}")['suggested_me']).to be true
+      suggested = Nudges::Event.where(source_korner_slug: 'freethedream', verb: 'item_suggested')
+      expect(suggested.pluck(:actor_account_id, :recipient_account_id, :source_id)).to eq [[cara.account_id, bob.account_id, job['id'].to_i]]
+
+      # Suggesting them again changes nothing, and tells them nothing more.
+      api(alice, :post, "/items/#{job['id']}/suggest", account_id: bob.account_id)
+      expect(suggested.count).to eq 1
+
+      api(bob, :post, "/items/#{job['id']}/claim")
+      expect(api(alice, :get, "/items/#{job['id']}")['suggested']).to eq []
+    end
+
+    it 'lets whoever was suggested say it is not for them, and suggests only people in the projekt', :aggregate_failures do
+      need = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Generator', quantity: 1 })
+      api(alice, :post, "/items/#{need['id']}/suggest", account_id: cara.account_id)
+
+      api(cara, :post, "/items/#{need['id']}/unsuggest")
+      expect(api(alice, :get, "/items/#{need['id']}")['suggested']).to eq []
+
+      api(alice, :post, "/items/#{need['id']}/suggest", account_id: Fabricate(:user).account_id)
+      expect(response).to have_http_status(422)
+
+      api(Fabricate(:user), :post, "/items/#{need['id']}/suggest", account_id: bob.account_id)
+      expect(response).to have_http_status(403)
+    end
+
     it 'lets only the owner change an item, and members comment', :aggregate_failures do
       need = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'PA system' })
 

@@ -1742,11 +1742,41 @@ $freethedream-wide: 1000px;
 
   &__menu {
     min-inline-size: 10rem;
+
+    // Delete, on an entry's ⋯ menu, in red (white on red when picked).
+    .privacy-dropdown__option[data-index='__remove'] {
+      .privacy-dropdown__option__content strong {
+        color: var(--destructive);
+      }
+
+      &:focus,
+      &.active {
+        background: var(--destructive);
+
+        .privacy-dropdown__option__content strong {
+          color: var(--surface-primary);
+        }
+      }
+    }
   }
 
-  // An entry's corner: its ⋯ menu (Move to… when the page has other
-  // checklists, Delete for whoever added it). Pinned to the top corner so
-  // it never wraps onto a line of its own on a phone.
+  // Who's been suggested for an entry, on a line of its own under it.
+  &__suggested {
+    display: flex;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+  }
+
+  &__suggested-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  // An entry's corner: its ⋯ menu (Suggest someone…, Move to… when the
+  // page has other checklists, Delete for whoever added it). Pinned to the
+  // top corner so it never wraps onto a line of its own on a phone.
   &__entry {
     position: relative;
     padding-inline-end: calc(0.75rem + var(--corner-buttons, 0) * 1.9rem);
