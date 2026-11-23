@@ -137,7 +137,9 @@ Bank, mood and kosmic rhythms. It keeps its own look on its own domain, with
 its own sign-in; Kronk hosts the door.
 
 Now it is one app in Kollection, a link with no keeper, added by the
-migration `AddYouToKollection`. `/hub/you` and `/hub/you/*` 301 to
+migration `AddYouToKollection`. It links to the app's live address,
+https://you-app-build.netlify.app/ (`PointYouAtItsLiveAddress`; the old
+portal's `you.kronk.info` was never set up). `/hub/you` and `/hub/you/*` 301 to
 `/hub/kollection`, and `you` is an ex-slug in
 `config/korners/reserved_slugs.yaml`. An admin can name Kashka its keeper.
 When YOU takes Sign in with Kronk, its keeper (or an admin) edits it and
