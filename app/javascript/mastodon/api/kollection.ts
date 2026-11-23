@@ -23,6 +23,42 @@ export const isKollectionScope = (value: unknown): value is KollectionScope =>
   typeof value === 'string' &&
   (KOLLECTION_SCOPES as readonly string[]).includes(value);
 
+// The details an app's page lists (KollectionApp::CATEGORIES, PLATFORMS).
+export const KOLLECTION_CATEGORIES = [
+  'wellbeing',
+  'social',
+  'creative',
+  'learning',
+  'tools',
+  'games',
+  'other',
+] as const;
+
+export type KollectionCategory = (typeof KOLLECTION_CATEGORIES)[number];
+
+export const isKollectionCategory = (
+  value: unknown,
+): value is KollectionCategory =>
+  typeof value === 'string' &&
+  (KOLLECTION_CATEGORIES as readonly string[]).includes(value);
+
+export const KOLLECTION_PLATFORMS = ['web', 'android', 'ios'] as const;
+
+export type KollectionPlatform = (typeof KOLLECTION_PLATFORMS)[number];
+
+export const isKollectionPlatform = (
+  value: unknown,
+): value is KollectionPlatform =>
+  typeof value === 'string' &&
+  (KOLLECTION_PLATFORMS as readonly string[]).includes(value);
+
+export interface ApiKollectionScreenshotJSON {
+  id: string;
+  url: string;
+  preview_url: string;
+  description: string | null;
+}
+
 export interface ApiKollectionKeeperJSON {
   id: string;
   acct: string;
@@ -34,10 +70,17 @@ export interface ApiKollectionKeeperJSON {
 
 export interface ApiKollectionAppJSON {
   id: string;
+  // Its page is /hub/kollection/<slug> (pages are reached by name).
+  slug: string;
   name: string;
+  tagline: string;
   description: string;
   website: string | null;
+  made_by: string;
+  category: string | null;
+  platforms: string[];
   icon_url: string | null;
+  cover_url: string | null;
   // It signs people in with Kronk. Otherwise it is a link.
   signs_in: boolean;
   // What it can see of you. Empty for a link.
@@ -52,8 +95,13 @@ export interface ApiKollectionAppJSON {
   can_manage: boolean;
   keeper: ApiKollectionKeeperJSON | null;
   created_at: string;
+  // One app's page only: its screenshots in order, and your Mates who use
+  // it (never anyone else; empty for a link).
+  screenshots?: ApiKollectionScreenshotJSON[];
+  mates_using?: ApiKollectionKeeperJSON[];
   // Only with can_manage.
   icon_id?: string | null;
+  cover_id?: string | null;
   redirect_uris?: string[];
   // Only with can_manage, and only for an app that signs in.
   client_id?: string;
@@ -62,8 +110,15 @@ export interface ApiKollectionAppJSON {
 
 export interface SaveKollectionAppParams {
   name?: string;
+  tagline?: string;
   description?: string;
   website?: string | null;
+  made_by?: string;
+  category?: KollectionCategory | null;
+  platforms?: KollectionPlatform[];
+  // Upload ids in order. Omit to leave the screenshots.
+  screenshot_ids?: string[];
+  cover_id?: string | null;
   sign_in?: boolean;
   // One per line.
   redirect_uris?: string;
@@ -98,3 +153,27 @@ export const apiRemoveKollectionApp = (id: string) =>
 
 export const apiDisconnectKollectionApp = (id: string) =>
   apiRequestPost<ApiKollectionAppJSON>(`v1/kollection/apps/${id}/disconnect`);
+
+// Kollection's one setting, stored the standard korner way
+// (/api/v1/korners/kollection/settings): whether your Mates see which apps
+// you use. On unless turned off.
+export const SHOW_MATES_SETTING = 'show_mates_apps';
+
+interface KornerSettingsPayload {
+  values: Record<string, unknown>;
+}
+
+export const apiGetShowMatesApps = async () => {
+  const payload = await apiRequestGet<KornerSettingsPayload>(
+    'v1/korners/kollection/settings',
+  );
+  return payload.values[SHOW_MATES_SETTING] !== false;
+};
+
+export const apiSetShowMatesApps = async (value: boolean) => {
+  const payload = await apiRequestPatch<KornerSettingsPayload>(
+    `v1/korners/kollection/settings/${SHOW_MATES_SETTING}`,
+    { value },
+  );
+  return payload.values[SHOW_MATES_SETTING] !== false;
+};

@@ -14,12 +14,109 @@
 }
 
 .kollection-app {
+  &__cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 1;
+    object-fit: cover;
+    border-radius: var(--radius-large);
+  }
+
   &__icon {
     display: block;
     width: 96px;
     height: 96px;
     object-fit: cover;
     border-radius: var(--radius-medium);
+    box-shadow: var(--elevation-card);
+  }
+
+  // The big Open, as on an app store page.
+  &__open {
+    min-width: 8rem;
+    justify-content: center;
+  }
+
+  // Screenshots in a row that scrolls sideways, each its own shape.
+  &__shots {
+    display: flex;
+    gap: var(--sp-3, 12px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    list-style: none;
+    margin: var(--sp-4, 16px) 0 0;
+    padding: 0 0 var(--sp-2, 8px);
+
+    li {
+      flex: none;
+      scroll-snap-align: start;
+    }
+
+    a {
+      display: block;
+      line-height: 0;
+    }
+
+    img {
+      height: 320px;
+      max-width: 80vw;
+      width: auto;
+      object-fit: contain;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-medium);
+      background: var(--surface-elevated);
+    }
+  }
+
+  &__description {
+    white-space: pre-line;
+  }
+
+  &__details {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--sp-2, 8px) var(--sp-4, 16px);
+    margin: 0;
+    font-size: 15px;
+
+    dt {
+      color: var(--text-muted);
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text-primary);
+      overflow-wrap: anywhere;
+    }
+
+    a {
+      color: var(--accent-text);
+    }
+  }
+
+  &__mates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3, 12px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    a {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2, 8px);
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 15px;
+    }
+
+    img {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-round);
+      object-fit: cover;
+    }
   }
 
   &__section {
@@ -79,6 +176,54 @@
 }
 
 .kollection-composer {
+  &__cover {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+  }
+
+  &__cover-preview {
+    width: 180px;
+    aspect-ratio: 3 / 1;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+  }
+
+  &__shots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2, 8px);
+    list-style: none;
+    margin: 0 0 var(--sp-2, 8px);
+    padding: 0;
+  }
+
+  &__shot {
+    position: relative;
+
+    img {
+      display: block;
+      height: 120px;
+      width: auto;
+      border-radius: var(--radius-small);
+      border: 1px solid var(--border-default);
+    }
+  }
+
+  &__shot-remove {
+    position: absolute;
+    inset-block-start: var(--sp-1, 4px);
+    inset-inline-end: var(--sp-1, 4px);
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--surface-primary) 80%, transparent);
+    color: var(--text-primary);
+    cursor: pointer;
+    line-height: 1;
+  }
+
   &__icon {
     display: flex;
     align-items: center;

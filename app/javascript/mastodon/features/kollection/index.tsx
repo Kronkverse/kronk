@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import { apiGetKollectionApps } from 'mastodon/api/kollection';
 import type { ApiKollectionAppJSON } from 'mastodon/api/kollection';
@@ -18,10 +18,13 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { AppComposer } from './app_composer';
 
 // /hub/kollection — Kollection (docs/spaces/kollection.md): every app
-// linked to Kronk, A to Z, as a grid of cards. Each says whether it signs
-// in with Kronk or is a link, and whether you are connected. A card opens
-// the app's page (app_page.tsx), where you see what it can see of you and
-// disconnect. The Add an app button above the grid (<KornerActionBar> +
+// linked to Kronk, A to Z, as a grid of cards. Each shows the app's
+// tagline (or whether it signs in with Kronk) and whether you are connected.
+// Tapping a card opens the app itself, its website in a new tab (on Android
+// an installed app catches its own link); About under it opens the app's
+// page (app_page.tsx), where you see what it can see of you and disconnect
+// (decisions.md, 2026-11-24). An app with no website, or a pulled one,
+// opens its page. The Add an app button above the grid (<KornerActionBar> +
 // a primary <KornerPill>) goes to /hub/kollection/composer, which opens the
 // composer over the list. Nothing is added to the Ж menu: the manifest has
 // no `compose:` (Tal, 2026-11-23). The apps you are connected to are also
@@ -50,6 +53,11 @@ const messages = defineMessages({
   link: { id: 'kollection.card.link', defaultMessage: 'A link' },
   connected: { id: 'kollection.card.connected', defaultMessage: 'Connected' },
   pulled: { id: 'kollection.card.pulled', defaultMessage: 'Pulled' },
+  about: { id: 'kollection.card.about', defaultMessage: 'About' },
+  aboutLabel: {
+    id: 'kollection.card.about_label',
+    defaultMessage: 'About {name}',
+  },
 });
 
 const AppGrid: React.FC<{ reloadKey: number }> = ({ reloadKey }) => {
@@ -89,13 +97,27 @@ const AppGrid: React.FC<{ reloadKey: number }> = ({ reloadKey }) => {
       {apps.map((app) => (
         <SpaceCard
           key={app.id}
-          to={`/hub/kollection/${app.id}`}
+          to={`/hub/kollection/${app.slug}`}
+          href={app.status === 'live' ? app.website : null}
+          after={
+            app.status === 'live' && app.website ? (
+              <Link
+                to={`/hub/kollection/${app.slug}`}
+                aria-label={intl.formatMessage(messages.aboutLabel, {
+                  name: app.name,
+                })}
+              >
+                {intl.formatMessage(messages.about)}
+              </Link>
+            ) : undefined
+          }
           image={app.icon_url}
           placeholder={<Icon id='kollection' icon={KornerIcon} />}
           title={app.name}
-          meta={intl.formatMessage(
-            app.signs_in ? messages.signsIn : messages.link,
-          )}
+          meta={
+            app.tagline ||
+            intl.formatMessage(app.signs_in ? messages.signsIn : messages.link)
+          }
           tag={
             app.status === 'pulled'
               ? intl.formatMessage(messages.pulled)
@@ -125,7 +147,7 @@ const Kollection: React.FC<{
   const handleSaved = useCallback(
     (app: ApiKollectionAppJSON) => {
       setReloadKey((key) => key + 1);
-      history.push({ pathname: `/hub/kollection/${app.id}` });
+      history.push({ pathname: `/hub/kollection/${app.slug}` });
     },
     [history],
   );

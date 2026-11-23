@@ -283,6 +283,32 @@
   display: flex;
 }
 
+// A card with a line under it (`after`): the card fills what the line
+// leaves.
+.space-grid__cell--after {
+  flex-direction: column;
+  gap: var(--sp-1, 4px);
+
+  > .space-card {
+    flex: 1;
+  }
+}
+
+.space-card__after {
+  font-size: 13px;
+  padding-inline: var(--sp-1, 4px);
+
+  a {
+    color: var(--accent-text);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+}
+
 // A card without a picture shows its space's glyph (no emoji, site-wide).
 .space-card__photo--placeholder .icon {
   inline-size: 2.75rem;

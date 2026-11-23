@@ -5,13 +5,20 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { isAxiosError } from 'axios';
 
 import {
+  KOLLECTION_CATEGORIES,
+  KOLLECTION_PLATFORMS,
   KOLLECTION_SCOPES,
   apiCreateKollectionApp,
   apiGetKollectionApp,
+  apiRemoveKollectionApp,
   apiUpdateKollectionApp,
+  isKollectionCategory,
+  isKollectionPlatform,
 } from 'mastodon/api/kollection';
 import type {
   ApiKollectionAppJSON,
+  KollectionCategory,
+  KollectionPlatform,
   KollectionScope,
 } from 'mastodon/api/kollection';
 import { apiUploadListingMedia } from 'mastodon/api/wachuneed';
@@ -21,7 +28,9 @@ import {
   ComposeField,
   ComposeHint,
   ComposeInput,
+  ComposeRow,
   ComposeSection,
+  ComposeSelect,
   ComposeTextarea,
   ComposeTitle,
 } from 'mastodon/components/compose_fields';
@@ -29,13 +38,17 @@ import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { PhotoDropZone } from 'mastodon/components/media';
+import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
+import { categoryMessages, platformMessages } from './details';
 import { knownScopes, scopeMessages } from './scopes';
 
 // Add an app to Kollection, or change one you keep
 // (docs/spaces/kollection.md). The standard composer overlay with the kit:
-// an icon, the name, what it is, its website, and whether it signs people
-// in with Kronk. One that does takes where Kronk sends people back (one
+// what its app store style page shows (an icon, a cover, the name, a
+// tagline, what it is, who made it, a category, where it runs, up to six
+// screenshots in order), its website, and whether it signs people in with
+// Kronk. Editing ends with Remove this app, which asks first. One that does takes where Kronk sends people back (one
 // address per line, an app may have several) and what it may see. No
 // reach control: every app is for every member. No Konnect row: an app is
 // not something to Konnect.
@@ -136,7 +149,72 @@ const messages = defineMessages({
     id: 'kollection.compose.error',
     defaultMessage: "Couldn't save the app. Try again?",
   },
+  tagline: { id: 'kollection.compose.tagline', defaultMessage: 'Tagline' },
+  taglineHint: {
+    id: 'kollection.compose.tagline_hint',
+    defaultMessage: 'One short line under its name.',
+  },
+  madeBy: { id: 'kollection.compose.made_by', defaultMessage: 'Made by' },
+  category: { id: 'kollection.compose.category', defaultMessage: 'Category' },
+  categoryNone: {
+    id: 'kollection.compose.category_none',
+    defaultMessage: 'No category',
+  },
+  platforms: {
+    id: 'kollection.compose.platforms',
+    defaultMessage: 'Works on',
+  },
+  cover: { id: 'kollection.compose.cover', defaultMessage: 'Add a cover' },
+  coverRemove: {
+    id: 'kollection.compose.cover_remove',
+    defaultMessage: 'Remove cover',
+  },
+  screenshots: {
+    id: 'kollection.compose.screenshots',
+    defaultMessage: 'Screenshots',
+  },
+  screenshotsHint: {
+    id: 'kollection.compose.screenshots_hint',
+    defaultMessage:
+      'Up to {max}, in the order they show. Remove one and add it again to move it to the end.',
+  },
+  screenshotsAdd: {
+    id: 'kollection.compose.screenshots_add',
+    defaultMessage: 'Add screenshots',
+  },
+  screenshotRemove: {
+    id: 'kollection.compose.screenshot_remove',
+    defaultMessage: 'Remove screenshot',
+  },
+  remove: {
+    id: 'kollection.compose.remove',
+    defaultMessage: 'Remove this app',
+  },
+  removeTitle: {
+    id: 'kollection.app.remove_title',
+    defaultMessage: 'Remove {name}?',
+  },
+  removeBody: {
+    id: 'kollection.app.remove_body',
+    defaultMessage:
+      'It leaves Kollection, everyone connected to it is signed out of it, and its keys stop working. This can’t be undone.',
+  },
+  removeConfirm: { id: 'kollection.app.remove', defaultMessage: 'Remove' },
+  removeError: {
+    id: 'kollection.app.error',
+    defaultMessage: 'That didn’t work. Try again?',
+  },
 });
+
+// At most this many screenshots (KollectionApp::SCREENSHOTS_LIMIT).
+const MAX_SCREENSHOTS = 6;
+
+// A screenshot in the composer: an upload on its way (no id yet) or done.
+interface Shot {
+  key: string;
+  id: string | null;
+  preview: string;
+}
 
 // The server's own words for a refusal, else `fallback`.
 const errorFrom = (e: unknown, fallback: string): string => {
@@ -157,10 +235,30 @@ interface Props {
   editId?: string;
   onCancel: () => void;
   onSaved: (app: ApiKollectionAppJSON) => void;
+  // Removed (from editing): where to go now.
+  onRemoved?: () => void;
 }
 
-export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
+export const AppComposer: React.FC<Props> = ({
+  editId,
+  onCancel,
+  onSaved,
+  onRemoved,
+}) => {
   const intl = useIntl();
+  const [confirmDialog, confirm] = useConfirmDialog();
+
+  const [tagline, setTagline] = useState('');
+  const [madeBy, setMadeBy] = useState('');
+  const [category, setCategory] = useState<KollectionCategory | ''>('');
+  const [platforms, setPlatforms] = useState<KollectionPlatform[]>([]);
+  // As the icon: undefined untouched, null removed, a string an upload.
+  const [coverId, setCoverId] = useState<string | null | undefined>();
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverBusy, setCoverBusy] = useState(false);
+  const [shots, setShots] = useState<Shot[]>([]);
+  // Whether the screenshots were touched: only then are they sent.
+  const [shotsTouched, setShotsTouched] = useState(false);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -186,6 +284,12 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
     },
     [iconPreview],
   );
+  useEffect(
+    () => () => {
+      if (coverPreview?.startsWith('blob:')) URL.revokeObjectURL(coverPreview);
+    },
+    [coverPreview],
+  );
 
   useEffect(() => {
     if (!editId) return;
@@ -195,6 +299,18 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
       .then((app) => {
         if (cancelled) return undefined;
         setName(app.name);
+        setTagline(app.tagline);
+        setMadeBy(app.made_by);
+        setCategory(isKollectionCategory(app.category) ? app.category : '');
+        setPlatforms(app.platforms.filter(isKollectionPlatform));
+        setCoverPreview(app.cover_url);
+        setShots(
+          (app.screenshots ?? []).map((shot) => ({
+            key: shot.id,
+            id: shot.id,
+            preview: shot.preview_url,
+          })),
+        );
         setDescription(app.description);
         setWebsite(app.website ?? '');
         setSignIn(app.signs_in);
@@ -222,6 +338,33 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
     },
     [],
   );
+  const handleTagline = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      setTagline(e.target.value);
+    },
+    [],
+  );
+  const handleMadeBy = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      setMadeBy(e.target.value);
+    },
+    [],
+  );
+  const handleCategory = useCallback<
+    React.ChangeEventHandler<HTMLSelectElement>
+  >((e) => {
+    const value = e.target.value;
+    setCategory(isKollectionCategory(value) ? value : '');
+  }, []);
+  const handlePlatform = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    const value = e.target.value;
+    const on = e.target.checked;
+    setPlatforms((prev) =>
+      KOLLECTION_PLATFORMS.filter((p) => (p === value ? on : prev.includes(p))),
+    );
+  }, []);
   const handleDescription = useCallback<
     React.ChangeEventHandler<HTMLTextAreaElement>
   >((e) => {
@@ -279,12 +422,77 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
     },
     [iconError],
   );
+  const handleCover = useCallback(
+    (files: File[]) => {
+      const file = files[0];
+      if (!file) return;
+
+      setError(null);
+      setCoverBusy(true);
+      setCoverPreview(URL.createObjectURL(file));
+      apiUploadListingMedia(file)
+        .then((uploaded) => {
+          setCoverId(uploaded.id);
+          return undefined;
+        })
+        .catch(() => {
+          setCoverPreview(null);
+          setError(iconError);
+        })
+        .finally(() => {
+          setCoverBusy(false);
+        });
+    },
+    [iconError],
+  );
+  const handleCoverRemove = useCallback(() => {
+    setCoverPreview(null);
+    setCoverId(null);
+  }, []);
+
+  const handleShots = useCallback(
+    (files: File[]) => {
+      setError(null);
+      setShotsTouched(true);
+      const room = MAX_SCREENSHOTS - shots.length;
+      files.slice(0, Math.max(room, 0)).forEach((file, i) => {
+        const key = `new-${Date.now()}-${i}`;
+        setShots((prev) => [
+          ...prev,
+          { key, id: null, preview: URL.createObjectURL(file) },
+        ]);
+        apiUploadListingMedia(file)
+          .then((uploaded) => {
+            setShots((prev) =>
+              prev.map((s) => (s.key === key ? { ...s, id: uploaded.id } : s)),
+            );
+            return undefined;
+          })
+          .catch(() => {
+            setShots((prev) => prev.filter((s) => s.key !== key));
+            setError(iconError);
+          });
+      });
+    },
+    [shots.length, iconError],
+  );
+  const handleShotRemove = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const key = e.currentTarget.dataset.key;
+      setShotsTouched(true);
+      setShots((prev) => prev.filter((s) => s.key !== key));
+    },
+    [],
+  );
+  const shotsBusy = shots.some((s) => s.id === null);
+
   const handleIconRemove = useCallback(() => {
     setIconPreview(null);
     setIconId(null);
   }, []);
 
-  const canSubmit = !busy && !iconBusy && !loading && !loadError;
+  const canSubmit =
+    !busy && !iconBusy && !coverBusy && !shotsBusy && !loading && !loadError;
 
   const errorSave = intl.formatMessage(messages.errorSave);
   const handleSubmit = useCallback(() => {
@@ -311,11 +519,19 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
 
     const fields = {
       name: name.trim(),
+      tagline: tagline.trim(),
+      made_by: madeBy.trim(),
+      category: category || null,
+      platforms,
       description: description.trim(),
       website: website.trim() ? withScheme(website.trim()) : null,
       sign_in: signIn,
       ...(signIn ? { redirect_uris: redirectList.join('\n'), scopes } : {}),
       ...(iconId !== undefined ? { icon_id: iconId } : {}),
+      ...(coverId !== undefined ? { cover_id: coverId } : {}),
+      ...(shotsTouched
+        ? { screenshot_ids: shots.flatMap((s) => (s.id ? [s.id] : [])) }
+        : {}),
     };
 
     void (async () => {
@@ -338,10 +554,42 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
     redirects,
     scopes,
     iconId,
+    coverId,
+    shots,
+    shotsTouched,
+    tagline,
+    madeBy,
+    category,
+    platforms,
     editId,
     onSaved,
     errorSave,
   ]);
+
+  const removeError = intl.formatMessage(messages.removeError);
+  const handleRemove = useCallback(() => {
+    if (!editId) return;
+
+    void (async () => {
+      const ok = await confirm({
+        title: intl.formatMessage(messages.removeTitle, { name: name.trim() }),
+        message: intl.formatMessage(messages.removeBody),
+        confirmLabel: intl.formatMessage(messages.removeConfirm),
+        destructive: true,
+      });
+      if (!ok) return;
+
+      setBusy(true);
+      setError(null);
+      try {
+        await apiRemoveKollectionApp(editId);
+        onRemoved?.();
+      } catch {
+        setError(removeError);
+        setBusy(false);
+      }
+    })();
+  }, [confirm, editId, intl, name, onRemoved, removeError]);
 
   return (
     <ComposeShell
@@ -357,7 +605,18 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
       onSubmit={handleSubmit}
       onCancel={onCancel}
       konnect={null}
+      footerStart={
+        editId ? (
+          <KornerPill
+            variant='destructive'
+            label={intl.formatMessage(messages.remove)}
+            onClick={handleRemove}
+            disabled={busy}
+          />
+        ) : undefined
+      }
     >
+      {confirmDialog}
       {loading && <LoadingState label={intl.formatMessage(messages.loading)} />}
       {loadError && (
         <ComposeHint error>
@@ -391,6 +650,30 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
             )}
           </div>
 
+          <div className='kollection-composer__cover'>
+            {coverPreview ? (
+              <>
+                <img
+                  src={coverPreview}
+                  alt=''
+                  className='kollection-composer__cover-preview'
+                />
+                <KornerPill
+                  label={intl.formatMessage(messages.coverRemove)}
+                  onClick={handleCoverRemove}
+                  disabled={busy || coverBusy}
+                />
+              </>
+            ) : (
+              <PhotoDropZone
+                onFiles={handleCover}
+                multiple={false}
+                disabled={busy || coverBusy}
+                label={intl.formatMessage(messages.cover)}
+              />
+            )}
+          </div>
+
           <ComposeTitle
             value={name}
             onChange={handleName}
@@ -399,14 +682,98 @@ export const AppComposer: React.FC<Props> = ({ editId, onCancel, onSaved }) => {
             maxLength={60}
           />
 
+          <ComposeField
+            label={<FormattedMessage {...messages.tagline} />}
+            hint={<FormattedMessage {...messages.taglineHint} />}
+          >
+            <ComposeInput
+              value={tagline}
+              onChange={handleTagline}
+              maxLength={100}
+            />
+          </ComposeField>
+
           <ComposeBody
             value={description}
             onChange={handleDescription}
             placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
             aria-label={intl.formatMessage(messages.description)}
-            maxLength={500}
-            rows={3}
+            maxLength={4000}
+            rows={5}
           />
+
+          <ComposeSection
+            title={<FormattedMessage {...messages.screenshots} />}
+          >
+            <ComposeHint>
+              <FormattedMessage
+                {...messages.screenshotsHint}
+                values={{ max: MAX_SCREENSHOTS }}
+              />
+            </ComposeHint>
+            {shots.length > 0 && (
+              <ul className='kollection-composer__shots'>
+                {shots.map((shot) => (
+                  <li key={shot.key} className='kollection-composer__shot'>
+                    <img src={shot.preview} alt='' />
+                    <button
+                      type='button'
+                      className='kollection-composer__shot-remove'
+                      data-key={shot.key}
+                      onClick={handleShotRemove}
+                      disabled={busy}
+                      aria-label={intl.formatMessage(messages.screenshotRemove)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {shots.length < MAX_SCREENSHOTS && (
+              <PhotoDropZone
+                onFiles={handleShots}
+                multiple
+                disabled={busy}
+                label={intl.formatMessage(messages.screenshotsAdd)}
+              />
+            )}
+          </ComposeSection>
+
+          <ComposeRow>
+            <ComposeField label={<FormattedMessage {...messages.madeBy} />}>
+              <ComposeInput
+                value={madeBy}
+                onChange={handleMadeBy}
+                maxLength={80}
+              />
+            </ComposeField>
+            <ComposeField label={<FormattedMessage {...messages.category} />}>
+              <ComposeSelect value={category} onChange={handleCategory}>
+                <option value=''>
+                  {intl.formatMessage(messages.categoryNone)}
+                </option>
+                {KOLLECTION_CATEGORIES.map((value) => (
+                  <option key={value} value={value}>
+                    {intl.formatMessage(categoryMessages[value])}
+                  </option>
+                ))}
+              </ComposeSelect>
+            </ComposeField>
+          </ComposeRow>
+
+          <p className='compose-field__label'>
+            <FormattedMessage {...messages.platforms} />
+          </p>
+          {KOLLECTION_PLATFORMS.map((platform) => (
+            <ComposeCheck
+              key={platform}
+              value={platform}
+              label={intl.formatMessage(platformMessages[platform])}
+              checked={platforms.includes(platform)}
+              onChange={handlePlatform}
+            />
+          ))}
 
           <ComposeField
             label={<FormattedMessage {...messages.website} />}

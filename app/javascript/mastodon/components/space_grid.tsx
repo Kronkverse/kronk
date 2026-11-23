@@ -81,6 +81,13 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
 interface SpaceCardProps {
   // Where tapping the card goes. Omit for a card that isn't a link.
   to?: string;
+  // An address outside Kronk to open instead, in a new tab: the card is
+  // then a plain link (a Kollection app opens the app itself). Wins over
+  // `to`.
+  href?: string | null;
+  // A line under the card, outside its link, for a second way in (a
+  // Kollection app's About). Keep it to one small link.
+  after?: React.ReactNode;
   image?: string | null;
   // Several pictures instead of one: the first large, the next two stacked
   // beside it, for a card that stands for a collection. Fewer than two falls
@@ -105,6 +112,8 @@ interface SpaceCardProps {
 
 export const SpaceCard: React.FC<SpaceCardProps> = ({
   to,
+  href,
+  after,
   image,
   images,
   avatar,
@@ -122,10 +131,15 @@ export const SpaceCard: React.FC<SpaceCardProps> = ({
   return (
     // The <li> is the grid cell and the card is what sits in it, so the card
     // can be a link without the list losing its semantics.
-    <li className='space-grid__cell'>
+    <li
+      className={
+        after ? 'space-grid__cell space-grid__cell--after' : 'space-grid__cell'
+      }
+    >
       <StandardCard
-        as={to ? Link : 'div'}
-        to={to}
+        as={href ? 'a' : to ? Link : 'div'}
+        to={href ? undefined : to}
+        {...(href ? { href, target: '_blank', rel: 'noopener' } : {})}
         variant='grid'
         className={tone ? `space-card space-card--${tone}` : 'space-card'}
       >
@@ -170,6 +184,7 @@ export const SpaceCard: React.FC<SpaceCardProps> = ({
           </CardMeta>
         ) : null}
       </StandardCard>
+      {after && <div className='space-card__after'>{after}</div>}
     </li>
   );
 };
