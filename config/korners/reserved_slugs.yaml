@@ -37,6 +37,10 @@
 # resolve for one release via a 301; nothing else should be able
 # to grab the slug.
 - martketplace
+# `you` — YOU was a portal korner until it folded into Kollection as one
+# of its apps (decisions.md, 2026-11-23). /hub/you 301s to
+# /hub/kollection; nothing else should be able to grab the slug.
+- you
 
 # Mastodon route stems (single-word top-level paths)
 - notifications

@@ -79,9 +79,12 @@ Where each setting lives today. Code comments cite this section as
   server-update emails, and the list of muted nudge types. Nudges' own
   settings are in `docs/spaces/nudges.md` (Nudge settings).
 - **Account & security**: change email and password (in the page), signed-in
-  devices with revoke, Connected apps (linked Anthemos phones with Unlink,
-  and their live location shares with Stop; `docs/spaces/map.md`, Live
-  location), and recent sign-ins.
+  devices with revoke, recent sign-ins, and a Connected apps row that opens
+  Kollection's settings.
+- **Connected apps** (`/hub/kollection/settings`, Kollection's own settings
+  page since 2026-11-23): the apps you signed in to with Kronk, each with
+  Disconnect, and the Anthemos phones linked to your account, each with
+  Unlink (`docs/spaces/map.md`, Live location). `docs/spaces/kollection.md`.
 - **Korner settings**: tune-in, per-korner push toggles, and the manifest
   settings.
 
@@ -103,7 +106,7 @@ Kronk pages link out to some of these. The rest have no link from Kronk.
 | Archive export, six CSV exports, imports                       | `/settings/export`, `/settings/exports/*`, `/settings/imports`                 | Data                 |
 | Keyword filters                                                | `/filters`                                                                     | Feed settings        |
 | Account aliases                                                | `/settings/aliases`                                                            | none                 |
-| Authorised apps; your own developer apps                       | `/oauth/authorized_applications`; `/settings/applications`                     | none                 |
+| Authorised apps; your own developer apps                       | `/oauth/authorized_applications`; `/settings/applications`                     | none (Kollection)    |
 | Profile form (incl. bot flag); verification; featured hashtags | `/settings/profile`; `/settings/verification`; `/settings/featured_tags`       | none                 |
 | Relationships, severed relationships, invites, appeals         | `/relationships`, `/severed_relationships`, `/invites`, `/disputes`            | none                 |
 | Classic preference pages                                       | `/settings/preferences/{appearance,posting_defaults,notifications,other,feed}` | some older SPA links |
