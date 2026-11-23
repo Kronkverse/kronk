@@ -748,9 +748,11 @@ The same card three ways (`variant`):
   is one line of the same tiles scrolling sideways, for a shelf among
   others down a page (the Booth's By artist / By kind). A row of one
   korner's things on a Krew or projekt (`<SpaceShelf>`, its Projekts and
-  Kuestions) opens with `<KornerRowCard>`: the korner's glyph and name on a
-  purple card, with how many are here, linking to the korner, so rows from
-  different korners tell apart (2026-11-21). `<SpaceGrid wide>`
+  Kuestions) is headed by `<KornerRowTitle>` inside its one
+  `.korner-section-heading`: the korner's glyph and name, with how many are
+  here quiet beside it, the whole heading linking to the korner, so rows
+  from different korners tell apart (2026-11-23; it replaced a purple card
+  at the head of the row, which read as one of the row's things). `<SpaceGrid wide>`
   makes the tiles half as wide again with a landscape image (two columns in
   the grid), for things that hold other things; with it a `<SpaceCard>` can
   take `images` (up to three, one large and two stacked), an `avatar` in the
