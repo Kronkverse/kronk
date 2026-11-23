@@ -57,19 +57,21 @@ RSpec.describe 'Krew spaces: albums and works', :js, :streaming do
   end
 
   # Tal's proposal "Differentiating different korner konnections"
-  # (2026-11-18): each row opens with its korner's card.
-  it "leads each space's row with its korner's card" do
+  # (2026-11-18): each row is headed by its korner's glyph, name and count,
+  # a small header that opens the korner (2026-11-23), not a card in the row.
+  it "heads each space's row with its korner" do
     krew.krew_korners.create!(korner: 'art')
     piece = ArtPiece.create!(owner: bob.account, title: 'Blue study')
     KornerAttachment.create!(source_slug: 'krew', source_id: krew.id, target_slug: 'art', target_id: piece.id,
                              kind: 'link', created_by_account: bob.account)
 
     visit "/hub/krew/#{krew.slug}"
-    within('.space-shelf .space-grid__cell:first-child .space-card--accent') do
-      expect(page).to have_text('Art')
-      expect(page).to have_text('1 here')
+    within('.space-shelf .korner-section-heading') do
+      expect(page).to have_css('.korner-row-title', text: /gallery/i)
+      expect(page).to have_css('.korner-row-title__count', text: '1 here')
     end
-    find('.space-shelf .space-card--accent').click
+    expect(page).to have_no_css('.space-shelf .space-card--accent')
+    find('.space-shelf .korner-row-title').click
     expect(page).to have_current_path('/hub/art')
   end
 

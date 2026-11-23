@@ -6,7 +6,7 @@ import { apiListHomeKuestions } from 'mastodon/api/kuestions';
 import type { KuestionHome } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 import { SpaceGrid } from 'mastodon/components/space_grid';
-import { KornerRowCard } from 'mastodon/components/space_shelf';
+import { KornerRowTitle } from 'mastodon/components/space_shelf';
 import {
   CardMedia,
   CardMeta,
@@ -30,7 +30,7 @@ import { HomeKuestionDialog } from './home_kuestion_dialog';
 // are none yet. Ask opens a small composer of its own over the page
 // (home_kuestion_composer.tsx), not the Kuestions composer with its deck and
 // profile choices (Tal, 2026-11-08). `frame` puts the row in the page's own
-// section, under its own heading.
+// section, under its own heading (KornerRowTitle).
 
 const messages = defineMessages({
   answer: { id: 'kuestions.home.answer', defaultMessage: 'Answer it' },
@@ -52,7 +52,9 @@ interface Props {
   // Members can ask (the Ask card); anyone who sees the row can answer.
   canAsk: boolean;
   onCount?: (count: number) => void;
-  frame: (row: React.ReactNode) => React.ReactNode;
+  // The page's own section round the row, with `title` (the korner's
+  // glyph, name and count, opening Kuestions) as its one heading.
+  frame: (row: React.ReactNode, title: React.ReactNode) => React.ReactNode;
 }
 
 export const HomeKuestions: React.FC<Props> = ({
@@ -111,7 +113,6 @@ export const HomeKuestions: React.FC<Props> = ({
     <>
       {frame(
         <SpaceGrid layout='row' className='home-kuestions'>
-          <KornerRowCard korner='kuestions' count={list.length} />
           {list.map((kuestion) => (
             <KuestionCard
               key={kuestion.id}
@@ -154,6 +155,7 @@ export const HomeKuestions: React.FC<Props> = ({
             </li>
           )}
         </SpaceGrid>,
+        <KornerRowTitle korner='kuestions' count={list.length} />,
       )}
       {openId && (
         <HomeKuestionDialog
