@@ -789,9 +789,14 @@ body.layout-single-column:has(.nudges-messenger) {
     margin-top: 0.75rem;
   }
 
-  // A reaction chip hangs off the bottom edge; make room for it.
+  // A reaction chip hangs off the bottom edge; make room for it. Under a
+  // bubble with its time below, the time makes the room instead.
   &--reacted {
     padding-bottom: 0.85rem;
+  }
+
+  &--reacted:has(.nudges-msg__meta) {
+    padding-bottom: 0;
   }
 }
 
@@ -851,9 +856,9 @@ body.layout-single-column:has(.nudges-messenger) {
 
 .nudges-msg__bubble {
   position: relative;
-  display: flow-root; // holds the floated meta line
+  display: flow-root;
   min-width: 0;
-  padding: 0.45rem 0.75rem 0.35rem;
+  padding: 0.45rem 0.75rem;
   border-radius: var(--radius-large);
   color: var(--text-primary);
   background: var(--nudges-bubble-in);
@@ -883,23 +888,22 @@ body.layout-single-column:has(.nudges-messenger) {
   }
 }
 
-// When, and whether it's been read: small, at the bubble's foot. It
-// floats, so on a short message it sits at the end of the last line (as
-// in Signal) and only takes a line of its own when the words fill theirs.
+// When, and whether it's been read: small and muted, under the bubble's
+// edge, outside it (Tal, 2026-11-23); under the last of a run. It lines
+// up with the bubble's side: left under theirs, right under yours.
 .nudges-msg__meta {
   display: flex;
-  float: inline-end;
-  justify-content: flex-end;
   align-items: center;
   gap: 0.35rem;
-  margin: 0.35rem 0 0 0.6rem;
+  margin: 0.2rem 0.6rem 0;
   color: var(--text-muted);
   font-size: 0.68rem;
   line-height: 1.2;
   white-space: nowrap;
 
-  .nudges-msg--out & {
-    color: color-mix(in oklab, var(--text-on-accent) 72%, transparent);
+  // Below the reaction chips when there are some.
+  .nudges-msg--reacted & {
+    margin-top: 1.05rem;
   }
 }
 
@@ -960,9 +964,11 @@ body.layout-single-column:has(.nudges-messenger) {
 }
 
 // ── Beside the bubble: react, delete ─────────────────────────────
-// Out of sight until wanted, as in Signal: on hover where there is a
-// mouse, on focus from the keyboard, and after a tap on the bubble on a
-// touch screen (`--active`, one message at a time). Kept in the layout
+// The reaction smiley is beside every message, yours too, there faintly
+// at rest so it can be found (Tal, 2026-11-23, couldn't see it at all
+// when it only showed on hover or a tap), and full on hover, on focus,
+// or after a tap on the bubble (`--active`, one message at a time). The
+// bin on your own is out of sight until then. Both stay in the layout
 // (not `display: none`) so showing them never shifts the bubble, and so
 // the keyboard can reach them.
 .nudges-msg__actions {
@@ -970,8 +976,16 @@ body.layout-single-column:has(.nudges-messenger) {
   flex: none;
   align-items: center;
   gap: 0.1rem;
-  opacity: 0;
-  pointer-events: none;
+
+  // Yours: the smiley next to the bubble, the bin (hidden at rest) on the
+  // far side, so the smiley doesn't sit a gap away.
+  .nudges-msg--out & {
+    flex-direction: row-reverse;
+  }
+}
+
+.nudges-msg__react-add,
+.nudges-msg__delete {
   transition: opacity var(--dur-fast) var(--ease-out);
 
   .nudges-msg--active &,
@@ -988,6 +1002,15 @@ body.layout-single-column:has(.nudges-messenger) {
       pointer-events: auto;
     }
   }
+}
+
+.nudges-msg__react-add {
+  opacity: 0.45;
+}
+
+.nudges-msg__delete {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .nudges-msg__action {

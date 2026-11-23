@@ -219,19 +219,32 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
   end
 
   # Tal, 2026-11-23: bubbles, and the emoji picker at the side of a message
-  # (as in Signal), not a smiley under every one.
-  it 'puts the reaction control beside the bubble, out until the bubble is tapped' do
+  # (as in Signal), not a smiley under every one. Then: she couldn't see it at
+  # all in a chat where only she had posted; you react to your own too. And
+  # the time and read receipt go under the bubble, not in it.
+  it 'puts the reaction control beside every bubble, yours too, and the time under it', :aggregate_failures do
     page.current_window.resize_to(390, 800)
     visit "/nudges/with/#{ana.id}"
 
     message = find('.nudges-msg', text: 'Dawn patrol tomorrow?')
     expect(message).to have_css('.nudges-msg__line > .nudges-msg__bubble + .nudges-msg__actions .emoji-picker-dropdown', visible: :all)
     expect(message).to have_no_css('.nudges-msg__reactions')
+    expect(message).to have_no_css('.nudges-msg__bubble .nudges-msg__meta')
+    expect(message).to have_css('.nudges-msg__main > .nudges-msg__meta')
+
+    # Something you've sent: the smiley is there at rest, faintly; the bin
+    # waits for a tap.
+    find('.nudges-composer textarea').fill_in(with: 'See you at six')
+    find('.nudges-composer textarea').send_keys(:enter)
+    mine = find('.nudges-msg--out', text: 'See you at six')
+    expect(mine).to have_css('.nudges-msg__react-add .emoji-picker-dropdown button', visible: :visible)
+    expect(mine).to have_no_css('.nudges-msg__delete', visible: :visible)
+    expect(mine).to have_css('.nudges-msg__main > .nudges-msg__meta')
     expect(page).to have_no_css('.nudges-msg--active')
 
-    message.find('.nudges-msg__body').click
-    expect(page).to have_css('.nudges-msg--active', text: 'Dawn patrol tomorrow?')
-    expect(message).to have_css('.nudges-msg__actions .emoji-picker-dropdown button', visible: :visible)
+    mine.find('.nudges-msg__body').click
+    expect(page).to have_css('.nudges-msg--active', text: 'See you at six')
+    expect(mine).to have_css('.nudges-msg__delete', visible: :visible)
 
     # A tap on the empty stream puts it away.
     page.execute_script("document.querySelector('.nudges-conversation__stream').click()")
