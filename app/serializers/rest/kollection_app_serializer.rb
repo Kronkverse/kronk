@@ -5,13 +5,22 @@
 # whether they are connected to it, and who keeps it. Its keeper and admins
 # (`can_manage`) also get its redirect URIs and its client key and secret.
 #
+# One app's page (`detail: true`) adds its screenshots and the viewer's
+# Mates who use it (KollectionApp#mates_using): only ever the viewer's own
+# Mates, and only those who let their Mates see it.
+#
 # instance_options:
 #   viewer         the signed-in account
+#   detail         one app's page
 #   connected_ids  oauth application ids the viewer holds a live token for
 #                  (KollectionApp.connected_application_ids)
 class REST::KollectionAppSerializer < ActiveModel::Serializer
-  attributes :id, :name, :description, :website, :icon_url, :signs_in,
+  attributes :id, :slug, :name, :tagline, :description, :website, :made_by,
+             :category, :platforms, :icon_url, :cover_url, :signs_in,
              :scopes, :status, :connected, :can_manage, :keeper, :created_at
+
+  attribute :screenshots, if: :detail?
+  attribute :mates_using, if: :detail?
 
   # Whether the viewer keeps it.
   attribute :is_keeper do
@@ -19,6 +28,7 @@ class REST::KollectionAppSerializer < ActiveModel::Serializer
   end
 
   attribute :icon_id, if: :can_manage
+  attribute :cover_id, if: :can_manage
   attribute :redirect_uris, if: :can_manage
   attribute :client_id, if: :secrets?
   attribute :client_secret, if: :secrets?
@@ -33,6 +43,31 @@ class REST::KollectionAppSerializer < ActiveModel::Serializer
 
   def icon_id
     object.icon_media_attachment_id&.to_s
+  end
+
+  def cover_url
+    object.cover_media_attachment&.file&.url(:original)
+  end
+
+  def cover_id
+    object.cover_media_attachment_id&.to_s
+  end
+
+  def screenshots
+    object.screenshots.includes(:media_attachment).filter_map do |shot|
+      media = shot.media_attachment
+      next if media.nil?
+
+      { id: media.id.to_s, url: media.file.url(:original), preview_url: media.file.url(:small), description: media.description }
+    end
+  end
+
+  def mates_using
+    object.mates_using(viewer).map { |account| face(account) }
+  end
+
+  def detail?
+    instance_options[:detail].present?
   end
 
   def signs_in
@@ -69,12 +104,7 @@ class REST::KollectionAppSerializer < ActiveModel::Serializer
 
   def keeper
     account = object.current_keeper
-    return if account.nil?
-
-    ActiveModelSerializers::SerializableResource
-      .new(account, serializer: REST::AccountSerializer)
-      .as_json
-      .slice(:id, :acct, :username, :display_name, :avatar, :avatar_static)
+    face(account) unless account.nil?
   end
 
   private
@@ -89,5 +119,12 @@ class REST::KollectionAppSerializer < ActiveModel::Serializer
 
   def policy
     @policy ||= KollectionAppPolicy.new(viewer, object)
+  end
+
+  def face(account)
+    ActiveModelSerializers::SerializableResource
+      .new(account, serializer: REST::AccountSerializer)
+      .as_json
+      .slice(:id, :acct, :username, :display_name, :avatar, :avatar_static)
   end
 end

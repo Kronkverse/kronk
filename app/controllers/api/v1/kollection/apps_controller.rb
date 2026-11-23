@@ -6,7 +6,8 @@
 #   GET    /api/v1/kollection/apps                 every live app, A to Z,
 #                                                  and any you keep that
 #                                                  are pulled
-#   GET    /api/v1/kollection/apps/:id             one app
+#   GET    /api/v1/kollection/apps/:id             one app, by its name (slug),
+#                                                  an old name, or its number
 #   POST   /api/v1/kollection/apps                 add one; you keep it
 #   PATCH  /api/v1/kollection/apps/:id             its keeper or an admin
 #   DELETE /api/v1/kollection/apps/:id             its keeper or an admin
@@ -28,7 +29,7 @@ class Api::V1::Kollection::AppsController < Api::BaseController
 
   def index
     apps = KollectionApp.shown_to(current_account)
-                        .includes(:oauth_application, :icon_media_attachment, keeper: :user)
+                        .includes(:oauth_application, :icon_media_attachment, :cover_media_attachment, keeper: :user)
                         .order(Arel.sql('lower(kollection_apps.name)'), :id)
                         .limit(LIMIT)
                         .to_a
@@ -70,18 +71,19 @@ class Api::V1::Kollection::AppsController < Api::BaseController
   private
 
   def set_app
-    @app = KollectionApp.find(params[:id])
+    @app = KollectionApp.by_link!(params[:id])
     # A pulled app is not there for anyone but its keeper and admins.
     raise ActiveRecord::RecordNotFound unless KollectionAppPolicy.new(current_account, @app).show?
   end
 
   def render_app
     @app.reload
-    render json: @app, serializer: REST::KollectionAppSerializer,
+    render json: @app, serializer: REST::KollectionAppSerializer, detail: true,
            viewer: current_account, connected_ids: KollectionApp.connected_application_ids(current_user, [@app])
   end
 
   def app_params
-    params.permit(:name, :description, :website, :sign_in, :redirect_uris, :icon_id, redirect_uris: [], scopes: [])
+    params.permit(:name, :tagline, :description, :website, :made_by, :category, :sign_in, :redirect_uris, :icon_id, :cover_id,
+                  redirect_uris: [], scopes: [], platforms: [], screenshot_ids: [])
   end
 end

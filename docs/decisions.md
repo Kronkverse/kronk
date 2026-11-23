@@ -17,6 +17,30 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-24 — Kollection: tap to open, app store pages, Mates using it
+
+**Decided by Tal.** Kollection should feel like a place to find apps, not a
+list of settings:
+
+- **Tapping an app's card opens the app** (its website, in a new tab; an
+  installed app on Android catches its own link). A small **About** under
+  the card opens its Kollection page. An app with no website opens its page.
+- **An app's page reads like an app store listing**: cover, icon, name,
+  tagline, who made it, a big Open, screenshots in a row, the description, a
+  few details from small fixed sets (category, platforms), what it can see
+  of you, and which of your Mates use it. Pages are reached by name, like
+  albums and events (2026-10-22).
+- **Mates using it** shows your Mates who hold a live sign-in to the app,
+  only to their Mates, never as a count to anyone else. Each member can
+  turn it off with "Show my mates which apps I use"; it is **on by
+  default**, because seeing what your Mates use is how people find apps,
+  and Mates are the people who see each other anyway. Links (YOU) show
+  nobody: Kronk can't see who uses an app with its own sign-in.
+
+Detail: `docs/spaces/kollection.md`.
+
+---
+
 ## 2026-11-23 — No adding Places on the Map
 
 **Decided by Tal:** "I don't understand nor do i see the point of adding a

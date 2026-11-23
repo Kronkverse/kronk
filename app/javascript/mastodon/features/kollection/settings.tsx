@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom';
 import {
   apiDisconnectKollectionApp,
   apiGetKollectionApps,
+  apiGetShowMatesApps,
+  apiSetShowMatesApps,
 } from 'mastodon/api/kollection';
 import type { ApiKollectionAppJSON } from 'mastodon/api/kollection';
 import { apiGetAnthemosLinks, apiUnlinkAnthemos } from 'mastodon/api/map_live';
@@ -15,8 +17,10 @@ import { LoadingState } from 'mastodon/components/loading_state';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import {
   SettingsPage,
+  SettingsRow,
   SettingsSection,
 } from 'mastodon/features/settings/components';
+import { BooleanWidget } from 'mastodon/features/settings/setting_widgets';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { knownScopes, scopeMessages } from './scopes';
@@ -25,11 +29,26 @@ import { knownScopes, scopeMessages } from './scopes';
 // (docs/spaces/kollection.md, Settings; Standard L8 and L12): what is
 // connected to your account. The apps you have signed in to with Kronk,
 // each with Disconnect, and the Anthemos phones linked to your account,
-// each with Unlink (docs/spaces/map.md, Live location). This was the
+// each with Unlink (docs/spaces/map.md, Live location). And one setting:
+// whether your Mates see which apps you use ("Mates using it" on an app's
+// page), on unless turned off (decisions.md, 2026-11-24). This was the
 // Connected apps section of Account & Security until 2026-11-23, which
 // now links here.
 
 const messages = defineMessages({
+  privacy: {
+    id: 'kollection.settings.privacy',
+    defaultMessage: 'Your Mates',
+  },
+  showMates: {
+    id: 'kollection.settings.show_mates',
+    defaultMessage: 'Show my mates which apps I use',
+  },
+  showMatesDesc: {
+    id: 'kollection.settings.show_mates_desc',
+    defaultMessage:
+      'Your Mates see you under Mates using it on the pages of apps you sign in to with Kronk. Nobody else does.',
+  },
   title: { id: 'kollection.settings.title', defaultMessage: 'Connected apps' },
   intro: {
     id: 'kollection.settings.intro',
@@ -92,6 +111,7 @@ const KollectionSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const [confirmDialog, confirm] = useConfirmDialog();
   const [apps, setApps] = useState<ApiKollectionAppJSON[] | null>(null);
   const [links, setLinks] = useState<ApiAnthemosLinkJSON[] | null>(null);
+  const [showMates, setShowMates] = useState<boolean | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,6 +123,15 @@ const KollectionSettings: React.FC<{ multiColumn?: boolean }> = () => {
       })
       .catch(() => {
         if (!cancelled) setApps([]);
+      });
+
+    void apiGetShowMatesApps()
+      .then((value) => {
+        if (!cancelled) setShowMates(value);
+        return undefined;
+      })
+      .catch(() => {
+        if (!cancelled) setShowMates(true);
       });
 
     void apiGetAnthemosLinks()
@@ -140,6 +169,15 @@ const KollectionSettings: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [confirm, intl],
   );
+
+  const handleShowMates = useCallback((value: boolean) => {
+    setShowMates(value);
+    void apiSetShowMatesApps(value)
+      .then(setShowMates)
+      .catch(() => {
+        setShowMates(!value);
+      });
+  }, []);
 
   const handleUnlink = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -183,7 +221,7 @@ const KollectionSettings: React.FC<{ multiColumn?: boolean }> = () => {
               <div key={app.id} className='settings-page__row'>
                 <div className='settings-page__row-body'>
                   <div className='settings-page__row-label'>
-                    <Link to={`/hub/kollection/${app.id}`}>{app.name}</Link>
+                    <Link to={`/hub/kollection/${app.slug}`}>{app.name}</Link>
                   </div>
                   <div className='settings-page__row-desc'>
                     {knownScopes(app.scopes)
@@ -204,6 +242,23 @@ const KollectionSettings: React.FC<{ multiColumn?: boolean }> = () => {
                 </div>
               </div>
             ))
+          )}
+        </SettingsSection>
+
+        <SettingsSection title={intl.formatMessage(messages.privacy)}>
+          {showMates === null ? (
+            <LoadingState />
+          ) : (
+            <SettingsRow
+              label={intl.formatMessage(messages.showMates)}
+              description={intl.formatMessage(messages.showMatesDesc)}
+            >
+              <BooleanWidget
+                value={showMates}
+                onChange={handleShowMates}
+                ariaLabel={intl.formatMessage(messages.showMates)}
+              />
+            </SettingsRow>
           )}
         </SettingsSection>
 

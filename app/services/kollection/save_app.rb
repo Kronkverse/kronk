@@ -4,7 +4,9 @@
 #
 # Params (each optional on an update):
 #
-#   name, description, website
+#   name, tagline, description, website, made_by
+#   category       one of KollectionApp::CATEGORIES, or blank
+#   platforms      any of KollectionApp::PLATFORMS
 #   sign_in        true: it signs people in with Kronk, so it gets (or
 #                  keeps) a Doorkeeper application with no owner. An app
 #                  that signs in stays one; turning it into a link would
@@ -14,6 +16,10 @@
 #                  line (or an array)
 #   scopes         what it may ask to see, from KollectionApp::SCOPES
 #   icon_id        one of `actor`'s own unattached uploads; blank removes it
+#   cover_id       the same, for the cover picture
+#   screenshot_ids the screenshots, in order: each one of `actor`'s own
+#                  unattached uploads or already one of this app's; at most
+#                  KollectionApp::SCREENSHOTS_LIMIT (more is refused)
 #
 # The listing and its Doorkeeper application are saved together, so a bad
 # redirect URI leaves nothing behind. The Doorkeeper application is
@@ -28,8 +34,11 @@ class Kollection::SaveApp
   end
 
   def call
-    @app.assign_attributes(@params.slice(:name, :description, :website).to_h)
-    @app.icon_media_attachment = icon if @params.key?(:icon_id)
+    @app.assign_attributes(@params.slice(:name, :tagline, :description, :website, :made_by, :category).to_h)
+    @app.platforms = Array(@params[:platforms]) if @params.key?(:platforms)
+    @app.icon_media_attachment = upload(:icon_id, @app.icon_media_attachment) if @params.key?(:icon_id)
+    @app.cover_media_attachment = upload(:cover_id, @app.cover_media_attachment) if @params.key?(:cover_id)
+    arrange_screenshots if @params.key?(:screenshot_ids)
 
     build_sign_in if sign_in?
     sync_sign_in if @app.signs_in?
@@ -73,11 +82,29 @@ class Kollection::SaveApp
     chosen.presence || KollectionApp::DEFAULT_SCOPES
   end
 
-  def icon
-    id = Integer(@params[:icon_id].to_s, exception: false)
+  # The upload `key` names: the one already there, or one of the actor's
+  # own unattached uploads. Blank or anything else is none.
+  def upload(key, current)
+    id = Integer(@params[key].to_s, exception: false)
     return if id.nil?
-    return @app.icon_media_attachment if id == @app.icon_media_attachment_id
+    return current if current&.id == id
 
     MediaAttachment.find_by(id: id, account: @actor, status_id: nil)
+  end
+
+  # Replaces the screenshots with the ids given, in that order. Ids that are
+  # neither already the app's nor the actor's own uploads are dropped.
+  def arrange_screenshots
+    ids = Array(@params[:screenshot_ids]).filter_map { |id| Integer(id.to_s, exception: false) }.uniq
+    raise Mastodon::ValidationError, "An app can have at most #{KollectionApp::SCREENSHOTS_LIMIT} screenshots" if ids.size > KollectionApp::SCREENSHOTS_LIMIT
+
+    current = @app.screenshots.index_by(&:media_attachment_id)
+    own = MediaAttachment.where(id: ids - current.keys, account: @actor, status_id: nil).index_by(&:id)
+
+    kept = ids.filter_map.with_index do |id, position|
+      shot = current[id] || (own[id] && @app.screenshots.build(media_attachment: own[id]))
+      shot&.tap { |s| s.position = position }
+    end
+    (current.values - kept).each(&:mark_for_destruction)
   end
 end
