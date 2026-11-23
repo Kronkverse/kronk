@@ -59,21 +59,37 @@ const SETTINGS_SUBROUTE_RE = /^\/hub\/[a-z0-9-]+\/settings(?:\/|$)/;
 // name was retired 2026-08-06 (Tal: "superfluous"); SpaceBadge now
 // renders `[← <name>]` only.
 
-export const AutoSpaceBadge: React.FC = () => {
-  const location = useLocation<LocationState>();
+// The korner whose badge the Frame shows on this page, or null when it
+// shows none. KornerDetail asks, so a detail page hands its back link to
+// the badge instead of drawing a second one.
+export const useSpaceBadgeSlug = (): string | null => {
+  const location = useLocation();
   const korners = useAppSelector((state) => state.korners);
-  const parent = useSpaceBackTarget();
 
   if (SETTINGS_SUBROUTE_RE.test(location.pathname)) return null;
 
-  const match = HUB_ROUTE_RE.exec(location.pathname);
-  const slug = match?.[1];
+  const slug = HUB_ROUTE_RE.exec(location.pathname)?.[1];
   if (!slug) return null;
 
   const korner = korners[slug];
   // Core spaces (e.g. settings at /hub/settings) are not korners and get no
   // korner badge — their own chrome (SettingsBadge) takes the slot instead.
   if (!korner || korner.core) return null;
+
+  return slug;
+};
+
+export const AutoSpaceBadge: React.FC = () => {
+  const location = useLocation<LocationState>();
+  const korners = useAppSelector((state) => state.korners);
+  const parent = useSpaceBackTarget();
+  const slug = useSpaceBadgeSlug();
+
+  const match = HUB_ROUTE_RE.exec(location.pathname);
+  if (!slug || !match) return null;
+
+  const korner = korners[slug];
+  if (!korner) return null;
 
   const segment = match[2];
   const isView =
