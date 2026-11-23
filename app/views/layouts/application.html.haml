@@ -23,7 +23,7 @@
       -# tint is applied by Safari via the `color` attribute below.
       %link{ rel: 'mask-icon', href: '/mask-icon.svg', color: '#6364FF' }/
     %link{ rel: 'manifest', href: manifest_path(format: :json) }/
-    = theme_color_tags current_theme
+    = theme_color_tags page_theme
     %meta{ name: 'mobile-web-app-capable', content: 'yes' }/
     -# The frontend build this page was rendered with; open tabs compare it
     -# against /api/v1/kronk_build to pick up a deploy (Kronk::Build).
@@ -31,7 +31,7 @@
 
     %title= html_title
 
-    = theme_style_tags current_theme
+    = theme_style_tags page_theme
     = vite_client_tag
     = vite_react_refresh_tag
     = vite_polyfills_tag

@@ -16,6 +16,10 @@
 -# path that trips `require_crossed_thresholds!` and bounces back
 -# here, so a member who hasn't crossed yet cannot escape the loop by
 -# clicking chrome. Same reason the ToS interstitial uses `app-body`.
+-# On the starfield, with no Stage panel: always the dark skin
+-# (ApplicationHelper#page_theme).
+- content_for :page_theme, 'default'
+
 - content_for :body_classes, 'app-body'
 
 - content_for :header_tags do

@@ -28,6 +28,17 @@ RSpec.describe ApplicationHelper do
           .to match(/admin/)
       end
 
+      # A page on the starfield with no Stage panel pins the dark skin,
+      # whatever the member's theme (layouts/auth, layouts/kronk_void).
+      it 'uses the theme a layout pins over the member theme', :aggregate_failures do
+        helper.singleton_class.define_method(:current_theme) { 'mastodon-light' }
+        helper.content_for(:page_theme) { 'default' }
+
+        expect(helper.page_theme).to eq 'default'
+        expect(helper.body_classes).to match(/theme-default/)
+        expect(helper.body_classes).to_not match(/theme-mastodon-light/)
+      end
+
       private
 
       def controller_helpers

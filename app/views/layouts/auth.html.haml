@@ -1,3 +1,7 @@
+-# On the starfield, with no Stage panel: always the dark skin
+-# (ApplicationHelper#page_theme).
+- content_for :page_theme, 'default'
+
 - content_for :header_tags do
   = vite_typescript_tag 'public.tsx', crossorigin: 'anonymous'
 

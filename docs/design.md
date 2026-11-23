@@ -241,6 +241,24 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
   it. Moderation and Administration are headings that always show their
   pages; a section that is itself a page shows its pages while you're in it.
   Below 900px it folds behind a menu toggle above the content.
+  These pages wear the app's dress (2026-11-23,
+  `styles/mastodon/_kronk_rails_pages.scss`): the page sits in a Stage
+  panel (`--surface-stage`, pale in light, transparent on the starfield
+  in dark), the top-left back pill is the app's `.space-badge`
+  (`shared/_kronk_back_badge`: "Settings" on the member pages, "Kronk" in
+  admin, so the sidebar has no "Back to Kronk" item), and the title is the
+  space header title. Mastodon's colour variables (`--background-color`
+  and the rest) are mapped onto the semantic tokens inside them, so its
+  tables, cards and fields follow both themes; forms, buttons (the rose
+  `--destructive` pill), tabs, list filters and notices are restyled to
+  the kit. The static chrome (`shared/_kronk_static_chrome`) draws the
+  app's five pillars, avatar and all, and the phone tab bar.
+- **Theme on Rails pages.** Every page stamps `data-theme` (`applyThemeVariant`
+  from `mastodon/common`), not only the app, so the light tokens turn on
+  there too. A page that sits straight on the starfield with no Stage panel
+  (sign-in and the other Devise flows, sign-up, the signed-out landing)
+  pins the dark skin with `content_for :page_theme, 'default'`
+  (`ApplicationHelper#page_theme`): the starfield is dark in every theme.
 
 **Back navigation: one pattern.** Two primitives cover it:
 

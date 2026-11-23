@@ -1,0 +1,10 @@
+-# The top-left back pill on a Rails-served page: the app's SpaceBadge /
+-# SettingsBadge (`.space-badge`, docs/design.md 4.3 Back navigation), so
+-# these pages back out the way every other page does. Locals: `href`,
+-# `label`, and `cog` for the settings cog the app's SettingsBadge carries.
+%a.space-badge{ href: href, 'aria-label': "Back to #{label}" }
+  %svg.space-badge__arrow{ viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'aria-hidden': 'true' }
+    %path{ d: 'M10 3.5 L5.5 8 L10 12.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }
+  - if local_assigns[:cog]
+    = material_symbol('settings', class: 'space-badge__glyph')
+  %span.space-badge__name= label
