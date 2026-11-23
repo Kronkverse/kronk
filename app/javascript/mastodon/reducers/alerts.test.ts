@@ -114,4 +114,14 @@ describe('alertsReducer', () => {
       id: 'alert.upload_too_big.title',
     });
   });
+
+  test('an upload cancelled from the phone notification shows nothing', () => {
+    expect(
+      run(
+        showAlertForError(
+          new AxiosError('canceled', AxiosError.ERR_CANCELED),
+        ) as ReturnType<typeof showAlert>,
+      ),
+    ).toHaveLength(0);
+  });
 });
