@@ -91,11 +91,11 @@
 @use 'mastodon/event_schedule';
 @use 'mastodon/inflow';
 @use 'mastodon/inflow_veil';
+@use 'mastodon/kollection';
 @use 'mastodon/kommons';
 @use 'mastodon/kommons_tree';
 @use 'mastodon/kommons_lattice';
 @use 'mastodon/kronk_search';
-@use 'mastodon/you_portal';
 @use 'mastodon/node_page';
 @use 'mastodon/profile_identity';
 @use 'mastodon/space_grid';

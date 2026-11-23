@@ -727,7 +727,7 @@ the manifest, with the reason:
 no_attachments: 'A Moment is gone in a day; a link to it would soon point at nothing.'
 ```
 
-Moments, Klot and Rose do (Map did until its Places, 2026-10-23). `korners doctor` and the `across_korners`
+Moments, Klot, Rose and Kollection do (Map did until its Places, 2026-10-23). `korners doctor` and the `across_korners`
 request spec both fail a korner with a primary resource that does neither,
 naming what to add (`Kronk::KornerRecords.attachment_gaps`).
 

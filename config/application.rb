@@ -122,6 +122,7 @@ module Mastodon
 
     config.to_prepare do
       Doorkeeper::Application.include ApplicationExtension
+      Doorkeeper::Application.include Kronk::KollectionClient
       Doorkeeper::AccessGrant.include AccessGrantExtension
       Doorkeeper::AccessToken.include AccessTokenExtension
       Devise::FailureApp.include AbstractController::Callbacks
