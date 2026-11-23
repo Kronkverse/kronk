@@ -50,11 +50,7 @@ import { CountryLine } from './country_line';
 
 const messages = defineMessages({
   close: { id: 'map.event_card.close', defaultMessage: 'Close' },
-  open: { id: 'map.event_card.open', defaultMessage: 'Open in Kalendar →' },
-  openPlace: {
-    id: 'map.event_card.open_place',
-    defaultMessage: 'Open place →',
-  },
+  open: { id: 'map.event_card.open', defaultMessage: 'Open in Kalendar' },
   spot: {
     id: 'map.event_pin.label',
     defaultMessage: '{count, plural, one {{title}} other {# events here}}',
@@ -309,11 +305,14 @@ const SpotEvent: React.FC<{ event: ApiMapEventPinJSON }> = ({ event }) => {
             </>
           )}
         </div>
+        {/* The card's main action, as the kit's pill (Tal, 2026-11-23). */}
         <Link
           to={`/hub/kalendar/${event.slug}`}
-          className='map-event-card__open'
+          className='korner-pill korner-pill--primary map-event-card__action'
         >
-          {intl.formatMessage(messages.open)}
+          <span className='korner-pill__label'>
+            {intl.formatMessage(messages.open)}
+          </span>
         </Link>
       </div>
     </div>
@@ -368,11 +367,6 @@ const SpotCard: React.FC<{
             <div className='map-place-card__address'>{spot.place.address}</div>
           )}
           <CountryLine country={country} />
-          {spot.place && (
-            <Link to={spot.place.url} className='map-event-card__open'>
-              {intl.formatMessage(messages.openPlace)}
-            </Link>
-          )}
         </div>
       )}
     </div>
