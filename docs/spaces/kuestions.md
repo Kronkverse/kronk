@@ -136,6 +136,15 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
   foot is **Answer** while you are writing one, then **Next kuestion**,
   which steps through the row's Kuestions in turn (**Done** when there is
   only one). The asker gets **Delete Kuestion** at its foot.
+- **One after the next** (Kommons "Kuestions", 2026-11-22: "If a kuestion
+  is opened, someone should be able to hit the 'next' button (left or
+  right arrow probably)"): with more than one in the row, ‹ and › either
+  side of "2 of 5" at the top of the pop-up step back and on at any time,
+  answered or not, round from the last to the first. So do the ← and →
+  keys (not while typing an answer) and a swipe sideways on a phone. In
+  the Kuestions korner, **Next kuestion** on a Kuestion opened from
+  Answered opens the next one in that list (its answers, or the answer
+  sheet if you haven't answered it); tapping outside closes it.
 - **Asking:** Ask opens a small composer of its own over the page
   (`home_kuestion_composer.tsx`): the question, how it's answered (words,
   choices, yes or no) and a line saying who sees it. No deck or profile

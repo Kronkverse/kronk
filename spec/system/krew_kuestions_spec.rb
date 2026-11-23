@@ -81,6 +81,29 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
     end
   end
 
+  # Kommons "Kuestions" (2026-11-22): ‹ and › step back and on through
+  # the row at any time, answered or not, round from the last to the first.
+  it 'steps through the row with the arrows', :aggregate_failures do
+    turn_on_kuestions
+    Question.create!(title: 'Who brings the generator?', created_by_account: asker, krew: krew, locked: true)
+    Question.create!(title: 'Which weekend?', created_by_account: asker, krew: krew, locked: true)
+
+    visit "/hub/krew/#{krew.slug}"
+    within('.krew-detail__kuestions') { find('.home-kuestions__card', text: 'Who brings the generator?').click }
+
+    # The row is newest first, so this one is the second of two.
+    within('.compose-shell') do
+      expect(page).to have_text('2 of 2')
+      within('.home-kuestion-dialog__stepper') { click_button 'Next' }
+      expect(page).to have_css('.home-kuestion-dialog__q', text: 'Which weekend?')
+      expect(page).to have_text('1 of 2')
+      within('.home-kuestion-dialog__stepper') { click_button 'Previous' }
+      expect(page).to have_css('.home-kuestion-dialog__q', text: 'Who brings the generator?')
+      within('.home-kuestion-dialog__stepper') { click_button 'Previous' }
+      expect(page).to have_css('.home-kuestion-dialog__q', text: 'Which weekend?')
+    end
+  end
+
   it 'lets the asker answer their own Kuestion' do
     turn_on_kuestions
     Question.create!(title: 'Who brings the generator?', created_by_account: bob.account, krew: krew, locked: true)
