@@ -145,7 +145,7 @@ input.kronk-form__input {
   width: 100%;
   height: 44px;
   padding: 0 1.25rem;
-  border-radius: var(--radius-medium);
+  border-radius: var(--radius-round);
   background: var(--accent);
   color: var(--text-on-accent);
   font-family: inherit;
@@ -262,10 +262,14 @@ input.kronk-form__input {
 // standard.
 
 .kronk-auth-shell {
+  // Padding counts inside the width: with content-box the shell was
+  // `100% + 3rem` wide and its fields ran off the right of a phone
+  // (the consent screen, 2026-11-23).
+  box-sizing: border-box;
   width: 100%;
   max-width: 24rem;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: 3rem 1rem;
   min-height: calc(100dvh - 4.25rem);
   display: flex;
   flex-direction: column;
@@ -306,6 +310,12 @@ input.kronk-form__input {
   color: var(--text-secondary);
   font-size: 0.9375rem;
   line-height: 1.5;
+}
+
+.kronk-auth-shell *,
+.kronk-auth-shell *::before,
+.kronk-auth-shell *::after {
+  box-sizing: border-box;
 }
 
 .kronk-auth-shell__body {
@@ -359,11 +369,12 @@ input.kronk-form__input {
     flex-direction: column;
     gap: 0.75rem;
 
+    // A pill, as primary CTAs are (docs/design.md 2.5).
     button {
       width: 100%;
       height: 44px;
       padding: 0 1.25rem;
-      border-radius: var(--radius-medium);
+      border-radius: var(--radius-round);
       background: var(--accent);
       color: var(--text-on-accent);
       font-family: inherit;
@@ -406,6 +417,25 @@ input.kronk-form__input {
     strong {
       color: var(--text-primary);
     }
+  }
+}
+
+// Small print inside the shell (the two-factor and password prompts,
+// the captcha step): muted, centred, as the footer links read; links
+// in the accent.
+.kronk-auth-shell__body {
+  .hint,
+  .form-footer {
+    margin: 1rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .hint a,
+  .form-footer a {
+    color: var(--accent-text);
   }
 }
 
