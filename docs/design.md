@@ -235,6 +235,12 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
 - **Settings navigation** (`features/settings/nav.tsx`). The profile entry
   goes to `/@:acct/shelves`. Editing a profile is Arrange mode on the shelves;
   the old `/@:acct/edit` composer is gone.
+- **Server-rendered settings and admin** (`/settings/*`, `/admin/*`,
+  `/filters`) have a left sidebar (`shared/_kronk_settings_nav.html.haml`):
+  every item in `config/navigation.rb`, each section's pages nested under
+  it. Moderation and Administration are headings that always show their
+  pages; a section that is itself a page shows its pages while you're in it.
+  Below 900px it folds behind a menu toggle above the content.
 
 **Back navigation: one pattern.** Two primitives cover it:
 
