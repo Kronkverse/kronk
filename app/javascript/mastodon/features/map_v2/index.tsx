@@ -5,12 +5,10 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
-import type { ApiMapPlaceJSON } from 'mastodon/api/map_places';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
 
 import { MatesView } from './mates_view';
-import { PlaceComposer } from './place_composer';
 import { PlacePage } from './place_page';
 import { TrekComposer } from './trek_composer';
 import { TreksView } from './treks_view';
@@ -48,7 +46,6 @@ const VIEWS = [
   'my-treks',
   'composer',
   'treks-detail',
-  'place-new',
   'place-detail',
 ] as const;
 type MapView = (typeof VIEWS)[number];
@@ -61,14 +58,13 @@ const ROTATOR_FACES = ['mates', 'mates-treks', 'my-treks'] as const;
 
 const HUB_ROUTE_RE = /^\/hub\/map(?:\/([a-z0-9-]+))?/;
 const TREK_DETAIL_RE = /^\/hub\/map\/treks\/\d+$/;
-// Places (docs/spaces/map.md, Places): a Place's page, and the Place
-// composer, which opens over the map like the trek composer.
-const PLACE_NEW_RE = /^\/hub\/map\/places\/new\/?$/;
+// Places (docs/spaces/map.md, Places): a Place's page. There is no Place
+// composer on the Map (Tal, 2026-11-23): a Place is made where a record's
+// location is chosen, in the Konnect picker (konnect_map.tsx).
 const PLACE_DETAIL_RE = /^\/hub\/map\/places\/(\d+)\/?$/;
 
 const resolveView = (pathname: string): MapView => {
   if (TREK_DETAIL_RE.test(pathname)) return 'treks-detail';
-  if (PLACE_NEW_RE.test(pathname)) return 'place-new';
   if (PLACE_DETAIL_RE.test(pathname)) return 'place-detail';
   const segment = HUB_ROUTE_RE.exec(pathname)?.[1];
   // Legacy bare /hub/map/treks (the retired outer picker landed here)
@@ -106,19 +102,6 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
   const onTrekCreated = useCallback(() => {
     history.push('/hub/map/my-treks');
   }, [history]);
-  // The Place composer goes back where it came from (often a Konnect on
-  // another space's page), or to the map when opened directly; a new
-  // Place opens on its own page, with what it was Konnected to.
-  const closePlaceComposer = useCallback(() => {
-    if (history.action === 'PUSH') history.goBack();
-    else history.push('/hub/map');
-  }, [history]);
-  const onPlaceCreated = useCallback(
-    (place: ApiMapPlaceJSON) => {
-      history.replace(place.url);
-    },
-    [history],
-  );
   const placeId = PLACE_DETAIL_RE.exec(location.pathname)?.[1];
 
   // FeedDrum's swipe/keyboard handler → map a rotator face key back to
@@ -186,13 +169,6 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
 
       {view === 'composer' && (
         <TrekComposer onCancel={closeComposer} onCreated={onTrekCreated} />
-      )}
-
-      {view === 'place-new' && (
-        <PlaceComposer
-          onCancel={closePlaceComposer}
-          onCreated={onPlaceCreated}
-        />
       )}
     </Stage>
   );

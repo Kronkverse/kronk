@@ -34,8 +34,8 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here),
 `/hub/map/composer` (the trek composer in the shared compose-shell
 overlay; `/hub/map/logger` is a legacy alias for it), and for Places
-`/hub/map/places/:id` (a Place's page) and `/hub/map/places/new` (the
-Place composer). The legacy bare
+`/hub/map/places/:id` (a Place's page). There is no Place composer on
+the Map (decisions.md, 2026-11-23). The legacy bare
 `/hub/map/treks` opens **My treks**.
 
 The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
@@ -365,16 +365,11 @@ and `longitude` as exact decimals, `account_id` of its maker).
 - **Its page** (`place_page.tsx`) is a `<KornerDetail>`: the pin as hero
   (`<MapPinPreview>`), the address, who added it, See on the map, Delete
   for its maker, and the Konnected block.
-- **Making one.** `/hub/map/places/new` (`place_composer.tsx`, in
-  `<ComposeShell>`): a name, an address, and a pin from the shared
-  `<MapPinPicker>` (search an address, or tap the map; a pin dropped on a
-  search result fills the address and name). Without a pin, the server
-  looks the address up (`Kronk::Geocoder`) and refuses one it can't find.
-  Opened with `?konnect=<slug>:<id>`, it links that record to the new
-  Place once it is made, then opens the Place. The Ж bubble still logs a
-  trek (`compose:`); the Place composer is reached from a Konnect (the
-  manifest's `konnect: { make: true, route: /hub/map/places/new, label:
-'New place' }`), or by its URL.
+- **Making one** happens only where a record's location is chosen, in
+  the Konnect picker (below). The Map has no Place composer and offers no
+  "New place": Tal, 2026-11-23, "I don't understand nor do i see the point
+  of adding a 'place' to the map" (decisions.md). Places stay as the
+  records locations Konnect to; nothing was removed from the data.
 - **A Place, from a composer.** Composers have no location fields
   (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). In
   a composer's Konnect picker, picking Map opens the map at once
@@ -435,8 +430,8 @@ chip when more events share it (Tal, 2026-11-23, in place of a date
 badge); the ring keeps it clear on any Country's colour in either theme.
 A Mate is a face and a plain Place is a pin glyph. Tapping it opens one card: each
 event (date, what, when, **Open in Kalendar**), then where they are, the
-Place's name, address and Country with **Open place →**, or the event's own
-place name.
+Place's name (a link to its page, Tal 2026-11-23), address and Country with
+**Open place →**, or the event's own place name.
 
 **What's on.** An event stays on the map while it is happening (started and
 not yet ended; one with no end time counts as on for three hours), and its pin
@@ -454,8 +449,8 @@ pin button … a settings cog"; `map_show.tsx`). Each viewer's choice stays
 in their browser (`localStorage`, `kronk.map.show`); where storage is
 blocked it lasts the visit.
 
-- **Mates** off hides the Mates' pins, their circles, the off-map compass
-  and the "N mates in view" pill. The Mates list down the side stays: it is
+- **Mates** off hides the Mates' pins, their circles and the off-map
+  compass. The Mates list down the side stays: it is
   where your own pin is set, and picking someone from it shows Mates again
   so the tap lands on them.
 - **Events** off hides the event markers, and a Place an event stood on

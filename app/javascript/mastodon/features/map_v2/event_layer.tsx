@@ -360,7 +360,8 @@ const SpotCard: React.FC<{
                 icon={LocationIcon}
                 className='map-event-card__type-icon'
               />
-              {name}
+              {/* The Place's name opens its page (Tal, 2026-11-23). */}
+              {spot.place ? <Link to={spot.place.url}>{name}</Link> : name}
             </div>
           )}
           {spot.place?.address && (
