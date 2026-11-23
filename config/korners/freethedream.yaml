@@ -96,6 +96,13 @@ emits:
       - actor_account_id
       - recipient_account_id
       - item_id
+  # Someone in the projekt suggested you for a checklist entry (Kommons
+  # "Tagging people on a checklist item", 2026-11-22). Only you hear of it.
+  - name: freethedream.item.suggested
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - item_id
 listens: []
 
 # A Kalendar event links to the emergence it is the event for: the Overview

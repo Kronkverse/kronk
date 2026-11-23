@@ -68,6 +68,7 @@ module Nudges
       'freethedream.gang_updated' => { korner: 'freethedream', label: 'Someone adds to a Komponent you joined' },
       'freethedream.projekt_begun' => { korner: 'freethedream', label: 'A projekt you’re in reaches its threshold and begins' },
       'freethedream.mycelium_matched' => { korner: 'freethedream', label: 'A new need fits something you shared from your Mycelium' },
+      'freethedream.item_suggested' => { korner: 'freethedream', label: 'Someone suggests you for something on a checklist' },
       'kuestions.answered' => { korner: 'kuestions', label: 'Someone answers your question' },
       'kuestions.frothed' => { korner: 'kuestions', label: 'Someone froths your question' },
       'booth.frothed' => { korner: 'booth', label: 'Someone froths your set' },

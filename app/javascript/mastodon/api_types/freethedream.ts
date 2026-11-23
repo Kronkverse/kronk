@@ -169,6 +169,10 @@ export interface FtdItemRow {
   need?: FtdRef | null;
   // An offer: shared from its owner's Mycelium.
   mycelium?: boolean;
+  // A To do or something to Bring: who's been suggested for it, and
+  // whether that's you (Kommons "Tagging people on a checklist item").
+  suggested?: FtdAccount[];
+  suggested_me?: boolean;
 }
 
 // A thing on the list, quoted on a comment about it.

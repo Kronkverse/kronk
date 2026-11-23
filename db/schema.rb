@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_23_093100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1349,6 +1349,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
     t.datetime "updated_at", null: false
     t.index ["account_id", "project_id"], name: "index_freethedream_reads_on_account_id_and_project_id", unique: true
     t.index ["project_id"], name: "index_freethedream_reads_on_project_id"
+  end
+
+  create_table "freethedream_suggestions", force: :cascade do |t|
+    t.bigint "item_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "suggested_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_suggestions_on_account_id"
+    t.index ["item_id", "account_id"], name: "index_freethedream_suggestions_on_item_id_and_account_id", unique: true
   end
 
   create_table "generated_annual_reports", force: :cascade do |t|
@@ -3251,6 +3261,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
   add_foreign_key "freethedream_projects", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "freethedream_reads", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_reads", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_suggestions", "accounts", column: "suggested_by_id", on_delete: :nullify
+  add_foreign_key "freethedream_suggestions", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_suggestions", "freethedream_items", column: "item_id", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
   add_foreign_key "huddle_follows", "accounts", on_delete: :cascade
   add_foreign_key "huddle_follows", "huddle_sessions", on_delete: :cascade

@@ -281,6 +281,17 @@ listens:
     interaction: interactive
     cta_label: 'Have a look'
     cta_route: '/hub/freethedream/i/{item_id}'
+  # Someone suggested you for a checklist entry (Kommons "Tagging people on
+  # a checklist item", 2026-11-22). Directed: it's you they thought of.
+  - event: freethedream.item.suggested
+    source_korner: freethedream
+    verb: item_suggested
+    directed: true
+    source_type: Freethedream::Item
+    source_id_key: item_id
+    interaction: interactive
+    cta_label: 'Have a look'
+    cta_route: '/hub/freethedream/i/{item_id}'
   # Something happened in a Komponent you joined (Freethedream::GangNudges):
   # talk in it, or something added to it. Directed: you asked to hear. A
   # burst collapses into one.

@@ -141,6 +141,8 @@ namespace :api, format: false do
           post :take_over
           post :hand_over
           post :move
+          post :suggest
+          post :unsuggest
         end
         resources :placements, only: [:create, :destroy]
       end

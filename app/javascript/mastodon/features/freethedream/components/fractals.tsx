@@ -208,6 +208,7 @@ const Fractal: React.FC<{
           canAct={canAct}
           onChange={onChange}
           targets={targets}
+          members={members}
         />
       </Section>
       {confirmRemove && (
