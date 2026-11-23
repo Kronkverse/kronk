@@ -215,6 +215,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.freethedream.mycelium_matched',
     defaultMessage: '{who} needs something you shared from your Mycelium',
   },
+  freethedreamItemSuggested: {
+    id: 'nudges.notification.freethedream.item_suggested',
+    defaultMessage: '{who} suggested you for something on a checklist',
+  },
   krewJoinRequested: {
     id: 'nudges.notification.krew.join_requested',
     defaultMessage: '{who} asked to join your Krew',
@@ -282,6 +286,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'freethedream.invited': sentences.freethedreamInvited,
   'freethedream.mentioned': sentences.freethedreamMentioned,
   'freethedream.mycelium_matched': sentences.freethedreamMyceliumMatched,
+  'freethedream.item_suggested': sentences.freethedreamItemSuggested,
   'freethedream.gang_talked': sentences.freethedreamGangTalked,
   'freethedream.gang_updated': sentences.freethedreamGangUpdated,
   'freethedream.projekt_begun': sentences.freethedreamProjektBegun,

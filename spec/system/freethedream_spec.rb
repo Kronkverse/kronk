@@ -183,6 +183,32 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.where(title: 'Gas bottles')).to be_empty
   end
 
+  # Kommons "Tagging people on a checklist item" (2026-11-22): suggest
+  # someone from the entry's ⋯ menu; they see it, and can say not for me.
+  it 'suggests someone for an entry from its ⋯ menu', :aggregate_failures do
+    visit_kitchen
+    sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
+    Freethedream::Membership.create!(project: Freethedream::Project.find_by(title: 'Mini Doof'), account: sam, state: :member)
+    visit current_path
+    within('.freethedream-checklist__add') do
+      fill_in placeholder: 'Add something to do', with: 'Generator'
+      send_keys :enter
+    end
+
+    within('.freethedream-checklist__entry', text: 'Generator') do
+      click_on 'More for Generator'
+    end
+    page.document.find('.privacy-dropdown__option', text: 'Suggest someone…').click
+    page.document.find('.privacy-dropdown__option', text: 'Sam').click
+
+    within('.freethedream-checklist__entry', text: 'Generator') do
+      expect(page).to have_text('Suggested')
+      expect(page).to have_css(".people-row a[href='/@sam']")
+    end
+    item = Freethedream::Item.find_by(title: 'Generator')
+    expect(item.suggestions.pluck(:account_id)).to eq [sam.id]
+  end
+
   # Kommons "Fractals" (2026-11-22): a Komponent's fractals are checklists
   # on its own page, each assigned to people in the projekt.
   it "shows a Komponent's fractals as checklists on its page, and assigns them", :aggregate_failures do
@@ -221,7 +247,8 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
 
     click_on 'More for Spice run'
-    page.document.find('.privacy-dropdown__option', text: 'Move to Cooking').click
+    page.document.find('.privacy-dropdown__option', text: 'Move to…').click
+    page.document.find('.privacy-dropdown__option', text: 'Cooking').click
     within('.freethedream-fractal', text: 'Cooking') do
       expect(page).to have_css('.freethedream-checklist__entry', text: 'Spice run')
     end
