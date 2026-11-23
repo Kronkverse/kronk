@@ -124,8 +124,9 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
   projekt's section follows its Krew (`krew.kuestions` in the projekt's
   API).
 - **Where it shows:** with the space on, on its Krew's or projekt's page
-  (`features/questions/home_kuestions.tsx`), a row of cards with Ask last
-  (Ask alone when there are none yet), from `GET /api/v2/kuestions?krew_id=`
+  (`features/questions/home_kuestions.tsx`), a row of cards with Ask first,
+  on the left (Kommons "Ask Question", 2026-11-22; Ask alone when there
+  are none yet), from `GET /api/v2/kuestions?krew_id=`
   or `?project_id=`. Not in the Deck. It is on
   your Answered list once you've answered or asked it, while you can see it.
 - **Opening one** (Tal, 2026-11-09): a card opens the standard pop-up over
