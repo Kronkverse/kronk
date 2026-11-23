@@ -33,6 +33,15 @@ namespace :admin do
   resources :action_logs, only: [:index]
   resources :warning_presets, except: [:new, :show]
 
+  # Kollection's apps (docs/spaces/kollection.md): pull, restore, keeper.
+  resources :kollection_apps, only: [:index] do
+    member do
+      post :pull
+      post :restore
+      patch :keeper
+    end
+  end
+
   resources :announcements, except: [:show] do
     member do
       post :publish

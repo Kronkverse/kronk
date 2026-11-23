@@ -102,7 +102,9 @@ import {
   KommonsNodeMeta,
   KommonsProposePicker,
   KronkSearch,
-  YouPortal,
+  Kollection,
+  KollectionAppPage,
+  KollectionSettings,
   Questions,
   BoothSetPage,
   BoothSamplePage,
@@ -309,6 +311,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/hub/klot/settings' exact component={KlotSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/kommons/settings' exact component={KommonsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/kuestions/settings' exact component={KuestionsSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/kollection/settings' exact component={KollectionSettings} content={children} />}
             {/* Projekts have no settings of their own: they live in Krews. */}
             <Redirect from='/hub/freethedream/settings' to='/hub/krew' exact />
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
@@ -498,7 +501,13 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/kommons" component={Kommons} content={children} />}
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id", "/questions", "/hub/kuestions"]} component={Questions} content={children} />}
             <WrappedRoute path='/hub/search' component={KronkSearch} content={children} />
-            <WrappedRoute path='/hub/you' component={YouPortal} content={children} />
+            {/* Kollection (docs/spaces/kollection.md), members only. YOU
+                folded into it (decisions.md, 2026-11-23); /hub/you 301s on
+                a full load and redirects here inside the app. */}
+            {signedIn && <Redirect from='/hub/you' to='/hub/kollection' />}
+            {signedIn && <WrappedRoute path='/hub/kollection/composer' exact component={Kollection} componentParams={{ autoOpenComposer: true }} content={children} />}
+            {signedIn && <WrappedRoute path={['/hub/kollection/:id/edit', '/hub/kollection/:id']} exact component={KollectionAppPage} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/kollection' exact component={Kollection} content={children} />}
             {signedIn && <WrappedRoute path='/hub/freethedream' component={FreeTheDream} content={children} />}
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 

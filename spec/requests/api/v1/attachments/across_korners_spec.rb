@@ -29,7 +29,7 @@ RSpec.describe 'Attachments across korners' do
     gaps = Kronk::KornerRegistry.all.flat_map { |manifest| Kronk::KornerRecords.attachment_gaps(manifest) }
 
     expect(gaps).to be_empty, gaps.join("\n")
-    expect(Kronk::KornerRegistry.all.select { |m| m.no_attachments.present? }.map(&:slug)).to contain_exactly('inflow', 'klot', 'moments', 'nudges', 'rose')
+    expect(Kronk::KornerRegistry.all.select { |m| m.no_attachments.present? }.map(&:slug)).to contain_exactly('inflow', 'klot', 'kollection', 'moments', 'nudges', 'rose')
   end
 
   it 'lets an album link to an event, shown from both ends at its real page' do

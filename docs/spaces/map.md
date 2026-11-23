@@ -279,8 +279,9 @@ an hour"), so the Kronk website shows them and hands the start over.
   is, when it ends, and "From Anthemos, signed by their phone", linking to
   anthemos.org.
 - **Stopping.** From the phone, or Stop under the location button
-  (`DELETE /api/v1/map/live/:id`). Unlinking the phone in Account & Security,
-  Connected apps, stops all of its shares. Both delete the point at once.
+  (`DELETE /api/v1/map/live/:id`). Unlinking the phone in Connected apps
+  (`/hub/kollection/settings`, linked from Account & Security) stops all of
+  its shares. Both delete the point at once.
 
 For now the server reads the point as it passes. The next step is to
 encrypt it to viewers who use Anthemos too, so Kronk only carries it.

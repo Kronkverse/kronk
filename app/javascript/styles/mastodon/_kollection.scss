@@ -1,0 +1,94 @@
+// Kollection — /hub/kollection. The apps linked to Kronk.
+// See docs/spaces/kollection.md. The grid, the detail page and the
+// composer are the kit's (SpaceGrid, KornerDetail, ComposeShell); this
+// sizes only what is Kollection's own: an app's icon, its keys, and the
+// Pulled chip.
+
+.kollection__actions {
+  margin-bottom: var(--sp-4, 16px);
+}
+
+.space-card__tag--pulled {
+  border-color: var(--warning-red);
+  color: var(--warning-red);
+}
+
+.kollection-app {
+  &__icon {
+    display: block;
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+  }
+
+  &__section {
+    margin-top: var(--sp-5, 24px);
+  }
+
+  &__heading {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--text-primary);
+    margin: 0 0 var(--sp-2, 8px);
+  }
+
+  &__text,
+  &__scopes {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin: 0;
+  }
+
+  &__scopes {
+    padding-inline-start: var(--sp-5, 24px);
+
+    li + li {
+      margin-top: var(--sp-1, 4px);
+    }
+  }
+
+  &__pulled,
+  &__error {
+    color: var(--warning-red);
+    font-size: 15px;
+    margin: 0 0 var(--sp-3, 12px);
+  }
+
+  &__keys {
+    margin: var(--sp-3, 12px) 0 0;
+
+    dt {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: var(--sp-3, 12px);
+    }
+
+    dd {
+      margin: var(--sp-1, 4px) 0 0;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text-primary);
+      word-break: break-all;
+      user-select: all;
+    }
+  }
+}
+
+.kollection-composer {
+  &__icon {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+  }
+
+  &__icon-preview {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+  }
+}

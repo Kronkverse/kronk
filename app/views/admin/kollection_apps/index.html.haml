@@ -1,0 +1,44 @@
+- content_for :page_title do
+  = t('kollection.admin.title')
+
+%p.muted-hint= t('kollection.admin.intro')
+
+- if @apps.empty?
+  = nothing_here
+- else
+  .table-wrapper
+    %table.table
+      %thead
+        %tr
+          %th= t('kollection.admin.app')
+          %th= t('kollection.admin.signs_in')
+          %th= t('kollection.admin.keeper')
+          %th= t('kollection.admin.status')
+          %th
+      %tbody
+        - @apps.each do |app|
+          %tr
+            %td
+              = link_to app.name, "/hub/kollection/#{app.id}"
+              - if app.website.present?
+                %br/
+                %small= link_to app.website, app.website, rel: 'noopener', target: '_blank'
+            %td
+              - if app.signs_in?
+                = app.scopes.join(' ')
+              - else
+                = t('kollection.admin.link_only')
+            %td
+              = form_with url: keeper_admin_kollection_app_path(app), method: :patch, class: 'kollection-admin__keeper' do |f|
+                = f.text_field :username, value: app.current_keeper&.username, placeholder: t('kollection.admin.no_keeper'), 'aria-label': t('kollection.admin.keeper')
+                = f.button t('kollection.admin.set_keeper'), class: 'button button-secondary', type: :submit
+            %td
+              - if app.pulled?
+                = t('kollection.admin.pulled_on', date: l(app.pulled_at.to_date))
+              - else
+                = t('kollection.admin.live')
+            %td
+              - if app.pulled?
+                = table_link_to 'history', t('kollection.admin.restore'), restore_admin_kollection_app_path(app), method: :post
+              - else
+                = table_link_to 'block', t('kollection.admin.pull'), pull_admin_kollection_app_path(app), method: :post, data: { confirm: t('kollection.admin.pull_confirm', name: app.name) }
