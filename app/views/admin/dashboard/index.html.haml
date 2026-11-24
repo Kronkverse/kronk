@@ -1,8 +1,11 @@
 - content_for :page_title do
   = t('admin.dashboard.title')
 
-- content_for :heading_actions do
-  = date_range(@time_period)
+-# The period sits under the title, not beside it, so the title has its
+-# own line like every other page's.
+- content_for :heading do
+  %h2= t('admin.dashboard.title')
+  %p.content__heading__period= date_range(@time_period)
 
 - unless @system_checks.empty?
   .flash-message-stack
