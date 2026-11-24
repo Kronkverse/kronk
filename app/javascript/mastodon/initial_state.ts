@@ -59,6 +59,7 @@ interface InitialStateMeta {
   personal_font_body?: string;
   ui_scale?: string;
   walkthrough_dismissed?: boolean;
+  korner_icons?: Record<string, string>;
 }
 
 interface Role {
@@ -160,6 +161,7 @@ export const personalFontDisplay = getMeta('personal_font_display');
 export const personalFontBody = getMeta('personal_font_body');
 export const uiScale = getMeta('ui_scale');
 export const walkthroughDismissed = getMeta('walkthrough_dismissed') ?? false;
+export const kornerIcons = getMeta('korner_icons') ?? {};
 
 const displayNames =
   // Intl.DisplayNames can be undefined in old browsers
