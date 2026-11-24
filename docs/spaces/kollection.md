@@ -26,8 +26,13 @@ A `KollectionApp` (`app/models/kollection_app.rb`, table `kollection_apps`):
   **description** (what it is, up to 4,000), **made by**, a **category**
   (`KollectionApp::CATEGORIES`: wellbeing, social, creative, learning,
   tools, games, other), the **platforms** it runs on (`PLATFORMS`: web,
-  Android, iOS), its **website**, an optional **icon** and **cover**, and up
-  to six **screenshots** in order (`kollection_app_screenshots`). The
+  Android, iOS), its **website**, a **download link** for a phone app (an
+  app store page or the file itself; its page's Get the app), an optional
+  **icon** (without one the app shows its first letter, `app_letter.tsx`) and
+  **cover**, and up to six **screenshots** in order
+  (`kollection_app_screenshots`). Made by starts as the adder's name in the
+  composer, since whoever adds an app has usually made it; it stays editable
+  for an app added on someone's behalf (YOU, by Kashka). The
   pictures are the keeper's own uploads, through the normal upload path,
   kept from the media vacuum by `Vacuum::MediaAttachmentsVacuum::KEEPERS`.
 - **keeper** (`keeper_id`, an account; nullified when the account row goes).
@@ -44,6 +49,20 @@ A `KollectionApp` (`app/models/kollection_app.rb`, table `kollection_apps`):
     the same (`spec/requests/oauth/kollection_sign_in_spec.rb`).
   - **A link.** No Doorkeeper application, so it needs a website. YOU is
     one (below).
+
+**Hooking up an app that signs in with Kronk**, all from the composer but
+the last step:
+
+1. Add it with "People sign in to it with Kronk" ticked, and give where
+   Kronk sends people back: the address in the app that a member returns to
+   after saying yes on Kronk (for Anthemos Pods,
+   `https://pod.anthemos.org/signup/callback`). The app's maker knows it.
+2. Saving makes its client key and secret, shown on its page to its keeper
+   and admins only, with the OpenID configuration address (the standard
+   "Sign in with Kronk" is built on; nothing to do with it but hand it over).
+3. Those go into the app's own server, by whoever runs it: the secret is
+   how the app proves it is itself, so it lives with the app, never in
+   Kronk or a chat.
 
 An app that signs in stays one: turning it into a link would strand
 everyone connected to it. Remove it and add it again instead.
@@ -90,15 +109,15 @@ and nobody else's (`KollectionApp#disconnect!`, the same steps as
 
 - **`/hub/kollection`**: the apps, A to Z, as a `<SpaceGrid>` of
   `<SpaceCard>`s: icon, name, its tagline (or "Sign in with Kronk" / "A
-  link"), and a Connected or Pulled chip. **Tapping a card opens the app
-  itself**: its website, in a new tab (on Android an installed app catches
-  its own link). A small **About** under each card opens the app's page
-  (`SpaceCard`'s `href` and `after`). An app with no website, or a pulled
-  one, opens its page. Built on `<KornerShell>` with one view.
+  link"), and a Connected or Pulled chip; an app with no icon shows its
+  first letter. **Tapping a card opens the app's page** (Tal, 2026-11-24,
+  reversing the same day's tap-to-open). Built on `<KornerShell>` with one
+  view.
 - **`/hub/kollection/<name>`**: one app's page, laid out like an app store
   listing on `<Stage>` + `<KornerDetail>`: the cover over the top, the icon,
-  name, tagline and "By …", a big **Open** (and **Disconnect** when you are
-  connected), the screenshots in a row that scrolls sideways (each opens
+  name, tagline and "By …", a big **Open** (the website), **Get the app**
+  when it has a download link (the main button when it has no website), and
+  **Disconnect** when you are connected, the screenshots in a row that scrolls sideways (each opens
   full size in a new tab), **About** (the description), **Details** (made
   by, category, works on, website, sign-in, keeper), **What it can see of
   you** (its scopes in plain words) and **Mates using it** (below). Its
@@ -164,7 +183,7 @@ POST   /api/v1/kollection/apps/:id/disconnect  revoke your own tokens for it
 ```
 
 `:id` is the slug, an old slug or the number. Create and update take `name`,
-`tagline`, `description`, `website`, `made_by`, `category`, `platforms[]`,
+`tagline`, `description`, `website`, `download_url`, `made_by`, `category`, `platforms[]`,
 `sign_in`, `redirect_uris` (one per line), `scopes[]`, `icon_id`, `cover_id`
 and `screenshot_ids[]` (in order; more than six is refused)
 (`Kollection::SaveApp`). `REST::KollectionAppSerializer` returns

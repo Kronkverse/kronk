@@ -60,6 +60,7 @@ class KollectionApp < ApplicationRecord
   normalizes :name, with: ->(name) { name.to_s.squish }
   normalizes :description, with: ->(description) { description.to_s.strip }
   normalizes :website, with: ->(website) { website.to_s.strip.presence }
+  normalizes :download_url, with: ->(url) { url.to_s.strip.presence }
   normalizes :tagline, with: ->(tagline) { tagline.to_s.squish }
   normalizes :made_by, with: ->(made_by) { made_by.to_s.squish }
   normalizes :category, with: ->(category) { category.to_s.strip.presence }
@@ -68,10 +69,11 @@ class KollectionApp < ApplicationRecord
   validates :name, presence: true, length: { maximum: NAME_LIMIT }
   validates :description, length: { maximum: DESCRIPTION_LIMIT }
   validates :website, length: { maximum: ApplicationExtension::APP_WEBSITE_LIMIT }
+  validates :download_url, length: { maximum: ApplicationExtension::APP_WEBSITE_LIMIT }
   validates :tagline, length: { maximum: TAGLINE_LIMIT }
   validates :made_by, length: { maximum: MADE_BY_LIMIT }
   validates :category, inclusion: { in: CATEGORIES }, allow_nil: true
-  validate :website_is_web_address
+  validate :web_addresses
   validate :link_has_website
   validate :screenshots_within_limit
 
@@ -186,13 +188,18 @@ class KollectionApp < ApplicationRecord
     Doorkeeper::AccessGrant.where(application_id: oauth_application_id, revoked_at: nil).in_batches.update_all(revoked_at: now)
   end
 
-  def website_is_web_address
-    return if website.blank?
+  def web_addresses
+    %i(website download_url).each do |field|
+      value = public_send(field)
+      next if value.blank?
 
-    uri = URI.parse(website)
-    errors.add(:website, NOT_WEB_ADDRESS) unless uri.is_a?(URI::HTTP) && uri.host.present?
-  rescue URI::InvalidURIError
-    errors.add(:website, NOT_WEB_ADDRESS)
+      begin
+        uri = URI.parse(value)
+        errors.add(field, NOT_WEB_ADDRESS) unless uri.is_a?(URI::HTTP) && uri.host.present?
+      rescue URI::InvalidURIError
+        errors.add(field, NOT_WEB_ADDRESS)
+      end
+    end
   end
 
   def screenshots_within_limit

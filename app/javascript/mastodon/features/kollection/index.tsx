@@ -2,29 +2,26 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import { apiGetKollectionApps } from 'mastodon/api/kollection';
 import type { ApiKollectionAppJSON } from 'mastodon/api/kollection';
 import { EmptyState } from 'mastodon/components/empty_state';
-import { Icon } from 'mastodon/components/icon';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { AppComposer } from './app_composer';
+import { AppLetter } from './app_letter';
 
 // /hub/kollection — Kollection (docs/spaces/kollection.md): every app
 // linked to Kronk, A to Z, as a grid of cards. Each shows the app's
-// tagline (or whether it signs in with Kronk) and whether you are connected.
-// Tapping a card opens the app itself, its website in a new tab (on Android
-// an installed app catches its own link); About under it opens the app's
-// page (app_page.tsx), where you see what it can see of you and disconnect
-// (decisions.md, 2026-11-24). An app with no website, or a pulled one,
-// opens its page. The Add an app button above the grid (<KornerActionBar> +
+// tagline (or whether it signs in with Kronk) and whether you are connected,
+// and its icon, or its first letter when it has none. Tapping a card opens
+// the app's page (app_page.tsx), an app store style listing with Open and
+// Get the app (decisions.md, 2026-11-24, tap opens the page). The Add an app button above the grid (<KornerActionBar> +
 // a primary <KornerPill>) goes to /hub/kollection/composer, which opens the
 // composer over the list. Nothing is added to the Ж menu: the manifest has
 // no `compose:` (Tal, 2026-11-23). The apps you are connected to are also
@@ -53,16 +50,10 @@ const messages = defineMessages({
   link: { id: 'kollection.card.link', defaultMessage: 'A link' },
   connected: { id: 'kollection.card.connected', defaultMessage: 'Connected' },
   pulled: { id: 'kollection.card.pulled', defaultMessage: 'Pulled' },
-  about: { id: 'kollection.card.about', defaultMessage: 'About' },
-  aboutLabel: {
-    id: 'kollection.card.about_label',
-    defaultMessage: 'About {name}',
-  },
 });
 
 const AppGrid: React.FC<{ reloadKey: number }> = ({ reloadKey }) => {
   const intl = useIntl();
-  const KornerIcon = useKornerIcon('kollection');
   const [apps, setApps] = useState<ApiKollectionAppJSON[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -98,21 +89,8 @@ const AppGrid: React.FC<{ reloadKey: number }> = ({ reloadKey }) => {
         <SpaceCard
           key={app.id}
           to={`/hub/kollection/${app.slug}`}
-          href={app.status === 'live' ? app.website : null}
-          after={
-            app.status === 'live' && app.website ? (
-              <Link
-                to={`/hub/kollection/${app.slug}`}
-                aria-label={intl.formatMessage(messages.aboutLabel, {
-                  name: app.name,
-                })}
-              >
-                {intl.formatMessage(messages.about)}
-              </Link>
-            ) : undefined
-          }
           image={app.icon_url}
-          placeholder={<Icon id='kollection' icon={KornerIcon} />}
+          placeholder={<AppLetter name={app.name} />}
           title={app.name}
           meta={
             app.tagline ||

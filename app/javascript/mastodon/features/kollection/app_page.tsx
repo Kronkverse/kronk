@@ -24,13 +24,15 @@ import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { AppComposer } from './app_composer';
+import { AppLetter } from './app_letter';
 import { categoryMessages, platformMessages } from './details';
 import { knownScopes, scopeMessages } from './scopes';
 
 // One app in Kollection (docs/spaces/kollection.md, An app's page), at
 // /hub/kollection/<name>: an app store style listing on <Stage> +
 // <KornerDetail>. The cover over the top, then the icon, name, tagline and
-// who made it, a big Open (and Disconnect when you are connected), the
+// who made it, a big Open, Get the app when it has a download (and
+// Disconnect when you are connected), the
 // screenshots in a row that scrolls sideways (each opens full size), what it
 // is, its details, what it can see of you, and which of your Mates use it.
 // Its keeper and admins also see what Sign in with Kronk needs (client key
@@ -55,6 +57,7 @@ const messages = defineMessages({
       'Pulled by an admin: it is off the list and can’t sign anyone in.',
   },
   open: { id: 'kollection.app.open', defaultMessage: 'Open' },
+  getApp: { id: 'kollection.app.get_app', defaultMessage: 'Get the app' },
   disconnect: { id: 'kollection.app.disconnect', defaultMessage: 'Disconnect' },
   disconnectTitle: {
     id: 'kollection.app.disconnect_title',
@@ -205,6 +208,10 @@ export const KollectionAppPage: React.FC<{ multiColumn?: boolean }> = () => {
     if (app?.website) window.open(app.website, '_blank', 'noopener');
   }, [app]);
 
+  const handleGetApp = useCallback(() => {
+    if (app?.download_url) window.open(app.download_url, '_blank', 'noopener');
+  }, [app]);
+
   const handleDisconnect = useCallback(() => {
     if (!app) return;
     void (async () => {
@@ -302,7 +309,9 @@ export const KollectionAppPage: React.FC<{ multiColumn?: boolean }> = () => {
         banner={
           app.icon_url ? (
             <img src={app.icon_url} alt='' className='kollection-app__icon' />
-          ) : undefined
+          ) : (
+            <AppLetter name={app.name} large />
+          )
         }
         title={app.name}
         subtitle={app.tagline || undefined}
@@ -323,6 +332,14 @@ export const KollectionAppPage: React.FC<{ multiColumn?: boolean }> = () => {
                 className='kollection-app__open'
                 label={intl.formatMessage(messages.open)}
                 onClick={handleOpen}
+              />
+            )}
+            {app.download_url && app.status === 'live' && (
+              <KornerPill
+                variant={app.website ? undefined : 'primary'}
+                className='kollection-app__open'
+                label={intl.formatMessage(messages.getApp)}
+                onClick={handleGetApp}
               />
             )}
             {app.connected && (

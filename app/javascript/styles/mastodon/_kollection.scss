@@ -13,6 +13,27 @@
   color: var(--warning-red);
 }
 
+// An app with no icon: its first letter, on its card and its page.
+.kollection-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--kronk-purple-primary);
+
+  &--large {
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-medium);
+    background: var(--surface-variant-background-color);
+    box-shadow: var(--elevation-card);
+  }
+}
+
 .kollection-app {
   &__cover {
     display: block;

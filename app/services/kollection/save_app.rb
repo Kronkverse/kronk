@@ -4,7 +4,7 @@
 #
 # Params (each optional on an update):
 #
-#   name, tagline, description, website, made_by
+#   name, tagline, description, website, download_url, made_by
 #   category       one of KollectionApp::CATEGORIES, or blank
 #   platforms      any of KollectionApp::PLATFORMS
 #   sign_in        true: it signs people in with Kronk, so it gets (or
@@ -34,7 +34,7 @@ class Kollection::SaveApp
   end
 
   def call
-    @app.assign_attributes(@params.slice(:name, :tagline, :description, :website, :made_by, :category).to_h)
+    @app.assign_attributes(@params.slice(:name, :tagline, :description, :website, :download_url, :made_by, :category).to_h)
     @app.platforms = Array(@params[:platforms]) if @params.key?(:platforms)
     @app.icon_media_attachment = upload(:icon_id, @app.icon_media_attachment) if @params.key?(:icon_id)
     @app.cover_media_attachment = upload(:cover_id, @app.cover_media_attachment) if @params.key?(:cover_id)
