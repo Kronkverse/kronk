@@ -1504,17 +1504,13 @@ ms:
     title: Sesi
     view_authentication_history: Lihat sejarah pengesahan akaun anda
   settings:
-    account: Akaun
     account_settings: Tetapan akaun
     aliases: Alias ​​akaun
     appearance: Penampilan
-    authorized_apps: Apl yang dibenarkan
-    back: Kembali ke Mastodon
     development: Pembangunan
     edit_profile: Sunting profil
     featured_tags: Tanda pagar terpilih
     import: Import
-    import_and_export: Import dan eksport
     migrate: Penghijrahan akaun
     preferences: Keutamaan
     profile: Profil

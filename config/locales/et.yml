@@ -1871,18 +1871,14 @@ et:
     title: Seansid
     view_authentication_history: Konto autentimisajaloo vaatamine
   settings:
-    account: Konto
     account_settings: Kontosätted
     aliases: Siia kolitavad kontod
     appearance: Välimus
-    authorized_apps: Lubatud rakendused
-    back: Tagasi Mastodoni
     development: Arendus
     edit_profile: Muuda profiili
     export: Eksport
     featured_tags: Esile toodud teemaviited
     import: Impordi
-    import_and_export: Import / eksport
     migrate: Konto kolimine
     notifications: E-postiteated
     preferences: Eelistused

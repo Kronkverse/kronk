@@ -1833,18 +1833,14 @@ ko:
     title: 세션
     view_authentication_history: 내 계정에 대한 인증 이력 보기
   settings:
-    account: 계정
     account_settings: 계정 설정
     aliases: 계정 별명
     appearance: 외관
-    authorized_apps: 승인된 애플리케이션
-    back: 마스토돈으로 돌아가기
     development: 개발
     edit_profile: 프로필 편집
     export: 내보내기
     featured_tags: 추천 해시태그
     import: 데이터 가져오기
-    import_and_export: 가져오기 & 내보내기
     migrate: 계정 이동
     notifications: 이메일 알림
     preferences: 환경설정

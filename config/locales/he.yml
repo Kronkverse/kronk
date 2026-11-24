@@ -1913,18 +1913,14 @@ he:
     title: מכשירים מחוברים
     view_authentication_history: צפיה בהיסטוריית התחברויות לחשבונך
   settings:
-    account: חשבון
     account_settings: הגדרות חשבון
     aliases: שמות נרדפים לחשבון
     appearance: תצוגה
-    authorized_apps: ישומים מאושרים
-    back: חזרה למסטודון
     development: פיתוח
     edit_profile: עריכת פרופיל
     export: ייצוא
     featured_tags: תגיות נבחרות
     import: יבוא
-    import_and_export: יבוא ויצוא
     migrate: הגירת חשבון
     notifications: התראות בדואל
     preferences: העדפות

@@ -1260,17 +1260,13 @@ sk:
     title: Aktívne prihlásenia
     view_authentication_history: Zobraziť históriu prihlásení účtu
   settings:
-    account: Účet
     account_settings: Nastavenia účtu
     aliases: Aliasy účtov
     appearance: Vzhľad
-    authorized_apps: Povolené aplikácie
-    back: Späť na Mastodon
     development: Vývoj
     edit_profile: Úprava profilu
     featured_tags: Zvýraznené hashtagy
     import: Import
-    import_and_export: Import a export
     migrate: Presuň účet
     notifications: E-mailové upozornenia
     preferences: Predvoľby

@@ -1869,18 +1869,14 @@ pt-PT:
     title: Sessões
     view_authentication_history: Ver histórico de autenticação da tua conta
   settings:
-    account: Conta
     account_settings: Definições da conta
     aliases: Pseudónimos da conta
     appearance: Aparência
-    authorized_apps: Aplicações autorizadas
-    back: Voltar ao Mastodon
     development: Desenvolvimento
     edit_profile: Editar perfil
     export: Exportar
     featured_tags: Etiquetas destacadas
     import: Importar
-    import_and_export: Importar e exportar
     migrate: Migração de conta
     notifications: Notificações por e-mail
     preferences: Preferências

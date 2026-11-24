@@ -1871,18 +1871,14 @@ gl:
     title: Sesións
     view_authentication_history: Ver o historial de conexións da túa conta
   settings:
-    account: Conta
     account_settings: Axustes da conta
     aliases: Alcumes da conta
     appearance: Aparencia
-    authorized_apps: Apps autorizadas
-    back: Volver a Mastodon
     development: Desenvolvemento
     edit_profile: Editar perfil
     export: Exportar
     featured_tags: Cancelos destacados
     import: Importar
-    import_and_export: Importar e exportar
     migrate: Migrar conta
     notifications: Notificacións por correo
     preferences: Preferencias

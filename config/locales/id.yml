@@ -1329,17 +1329,13 @@ id:
     title: Sesi
     view_authentication_history: Lihat riwayat otentikasi akun Anda
   settings:
-    account: Akun
     account_settings: Pengaturan akun
     aliases: Alias akun
     appearance: Tampilan
-    authorized_apps: Apl yang diizinkan
-    back: Kembali ke Mastodon
     development: Pengembangan
     edit_profile: Ubah profil
     featured_tags: Tagar unggulan
     import: Impor
-    import_and_export: Impor dan ekspor
     migrate: Pemindahan akun
     preferences: Pilihan
     profile: Profil

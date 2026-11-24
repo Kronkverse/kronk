@@ -1869,18 +1869,14 @@ fo:
     title: Setur
     view_authentication_history: Sí samgildissøgu fyri tína kontu
   settings:
-    account: Konta
     account_settings: Kontustillingar
     aliases: Tøkuheiti hjá kontuni
     appearance: Útsjónd
-    authorized_apps: Góðkendar appir
-    back: Aftur til Mastodon
     development: Menning
     edit_profile: Rætta vanga
     export: Flyt út
     featured_tags: Varpaði frámerki
     import: Innflyt
-    import_and_export: Innflyt og útflyt
     migrate: Flyting av kontu
     notifications: Teldupostfráboðanir
     preferences: Stillingar
