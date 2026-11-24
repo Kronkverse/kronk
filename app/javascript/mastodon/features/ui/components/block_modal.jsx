@@ -68,7 +68,7 @@ export const BlockModal = ({ accountId, acct }) => {
 
           <div>
             <div className='safety-action-modal__bullet-points__icon'><Icon icon={ReplyIcon} /></div>
-            <div><FormattedMessage id='block_modal.they_cant_mention' defaultMessage="They can't mention or follow you." /></div>
+            <div><FormattedMessage id='block_modal.they_cant_mention' defaultMessage='They can’t mention you or be your Mate.' /></div>
           </div>
         </div>
       </div>

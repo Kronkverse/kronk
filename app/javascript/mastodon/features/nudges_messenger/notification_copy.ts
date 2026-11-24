@@ -197,7 +197,7 @@ const sentences = defineMessages({
   // The same for a Kuddle you follow; the line under it names the Kuddle.
   huddleKuddleGathering: {
     id: 'nudges.notification.huddle.kuddle_gathering',
-    defaultMessage: 'People are in a Kuddle you follow',
+    defaultMessage: 'People are in a Kuddle you’re tuned in to',
   },
   freethedreamGangTalked: {
     id: 'nudges.notification.freethedream.gang_talked',

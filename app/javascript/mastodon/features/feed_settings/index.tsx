@@ -74,7 +74,7 @@ const messages = defineMessages({
 
   groupBoosts: {
     id: 'feed_settings.group_boosts',
-    defaultMessage: 'Group boosts of the same post',
+    defaultMessage: 'Group shares of the same post',
   },
   mediaDisplay: {
     id: 'feed_settings.media_display',
@@ -617,13 +617,13 @@ const LanguagesSection: React.FC<{
       <h2 className='feed-settings__section-title'>
         <FormattedMessage
           id='feed_settings.languages_title'
-          defaultMessage='Languages in public timelines'
+          defaultMessage='Languages in the Kronkverse feed'
         />
       </h2>
       <p className='feed-settings__section-hint'>
         <FormattedMessage
           id='feed_settings.languages_hint'
-          defaultMessage='Which languages you want to see in the public timelines. Leave empty to see them all.'
+          defaultMessage='Which languages you want to see in the Kronkverse feed. Leave empty to see them all.'
         />
       </p>
       <div className='feed-settings__lang-toolbar'>

@@ -35,7 +35,7 @@ const messages = defineMessages({
   },
   quoteFollowers: {
     id: 'visibility_modal.quote_followers',
-    defaultMessage: 'Followers only',
+    defaultMessage: 'Mates only',
   },
   quoteNobody: {
     id: 'visibility_modal.quote_nobody',
@@ -303,7 +303,7 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
                 >
                   <FormattedMessage
                     id='visibility_modal.helper.privacy_private_self_quote'
-                    defaultMessage='Self-quotes of private posts cannot be made public.'
+                    defaultMessage='Quoting your own Mates post can’t take it to Kronkverse.'
                   />
                 </p>
               )}
@@ -396,7 +396,7 @@ const QuotePolicyHelper: FC<
     hintText = (
       <FormattedMessage
         id='visibility_modal.helper.private_quoting'
-        defaultMessage="Follower-only posts authored on Kronk can't be quoted by others."
+        defaultMessage='Mates posts made on Kronk can’t be quoted by others.'
       />
     );
   }

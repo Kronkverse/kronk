@@ -114,7 +114,7 @@ const messages = defineMessages({
   },
   cleanupMinReblogs: {
     id: 'posting_settings.cleanup.min_reblogs',
-    defaultMessage: 'Minimum boosts to keep a post',
+    defaultMessage: 'Minimum shares to keep a post',
   },
   cleanupNoMinimum: {
     id: 'posting_settings.cleanup.no_minimum',

@@ -107,7 +107,7 @@ export const MuteModal = ({ accountId, acct }) => {
 
           <div>
             <div className='safety-action-modal__bullet-points__icon'><Icon icon={ReplyIcon} /></div>
-            <div><FormattedMessage id='mute_modal.they_can_mention_and_follow' defaultMessage="They can mention and follow you, but you won't see them." /></div>
+            <div><FormattedMessage id='mute_modal.they_can_mention_and_follow' defaultMessage='They can still mention you, but you won’t see them.' /></div>
           </div>
         </div>
       </div>

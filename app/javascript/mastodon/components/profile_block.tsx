@@ -82,7 +82,7 @@ const messages = defineMessages({
   accountLocked: {
     id: 'account.locked_info',
     defaultMessage:
-      'This account privacy status is set to locked. The owner manually reviews who can follow them.',
+      'This account is locked. Its owner reviews every Mate request.',
   },
   nudge: { id: 'account.nudge', defaultMessage: 'Nudge {name}' },
   postOnProfile: {

@@ -83,6 +83,14 @@ en:
       title:
         all: Full access to your Kronk account
         profile: Your Kronk profile
+        favourites: Froths
+        follow: Mates, mutes and blocks
+        follows: Mates
+    scopes:
+      read:favourites: see your froths
+      read:follows: see your Mates
+      write:favourites: froth posts
+      write:follows: send and answer Mate requests
   devise:
     mailer:
       confirmation_instructions:
@@ -272,7 +280,7 @@ en:
       generic: "%{who} has something for you in %{korner}"
       huddle:
         gathering: People are huddling
-        kuddle_gathering: People are in a Kuddle you follow
+        kuddle_gathering: People are in a Kuddle you're tuned in to
       kalendar:
         rsvpd_going: "%{who} is going to your event"
         rsvpd_interested: "%{who} is interested in your event"
@@ -325,6 +333,36 @@ en:
       kuddle_now:
         one: 1 person is in the %{name} Kuddle now
         other: "%{count} people are in the %{name} Kuddle now"
+  deletes:
+    warning:
+      caches: Copies other sites on the network have kept may stay for a while
+  disputes:
+    strikes:
+      status: Post %{id}
+  filters:
+    contexts:
+      home: Home
+      public: Kronkverse
+  self_destruct:
+    title: This Kronk is closing down
+  severed_relationships:
+    event_type:
+      domain_block: Site suspended (%{target_name})
+    lost_followers: Lost Mates who added you
+    lost_follows: Lost Mates you added
+    preamble: You may lose Mates when you block a site on the network, or when Kronk's admins suspend one. When that happens, you can download a list of who you lost.
+    purged: Kronk's admins have cleared the details of this site.
+  statuses_cleanup:
+    explanation: Deleting posts is heavy work, so Kronk does it slowly, when it's quiet. Your posts may go a while after they reach the age you set.
+    ignore_favs: Ignore froths
+    ignore_reblogs: Ignore shares
+    interaction_exceptions_explanation: A post that once passed the froth or share count may not be deleted if it later drops below it.
+    keep_self_fav: Keep posts you frothed
+    keep_self_fav_hint: Doesn't delete your own posts if you've frothed them
+    min_favs: Keep posts frothed at least
+    min_favs_hint: Doesn't delete any of your posts with at least this many froths. Leave blank to delete posts whatever their froths
+    min_reblogs: Keep posts shared at least
+    min_reblogs_hint: Doesn't delete any of your posts shared at least this many times. Leave blank to delete posts whatever their shares
   user_mailer:
     announcement_published:
       description: 'From the people who run %{domain}:'
@@ -434,6 +472,14 @@ en-GB:
       title:
         all: Full access to your Kronk account
         profile: Your Kronk profile
+        favourites: Froths
+        follow: Mates, mutes and blocks
+        follows: Mates
+    scopes:
+      read:favourites: see your froths
+      read:follows: see your Mates
+      write:favourites: froth posts
+      write:follows: send and answer Mate requests
   devise:
     mailer:
       confirmation_instructions:
@@ -623,7 +669,7 @@ en-GB:
       generic: "%{who} has something for you in %{korner}"
       huddle:
         gathering: People are huddling
-        kuddle_gathering: People are in a Kuddle you follow
+        kuddle_gathering: People are in a Kuddle you're tuned in to
       kalendar:
         rsvpd_going: "%{who} is going to your event"
         rsvpd_interested: "%{who} is interested in your event"
@@ -676,6 +722,36 @@ en-GB:
       kuddle_now:
         one: 1 person is in the %{name} Kuddle now
         other: "%{count} people are in the %{name} Kuddle now"
+  deletes:
+    warning:
+      caches: Copies other sites on the network have kept may stay for a while
+  disputes:
+    strikes:
+      status: Post %{id}
+  filters:
+    contexts:
+      home: Home
+      public: Kronkverse
+  self_destruct:
+    title: This Kronk is closing down
+  severed_relationships:
+    event_type:
+      domain_block: Site suspended (%{target_name})
+    lost_followers: Lost Mates who added you
+    lost_follows: Lost Mates you added
+    preamble: You may lose Mates when you block a site on the network, or when Kronk's admins suspend one. When that happens, you can download a list of who you lost.
+    purged: Kronk's admins have cleared the details of this site.
+  statuses_cleanup:
+    explanation: Deleting posts is heavy work, so Kronk does it slowly, when it's quiet. Your posts may go a while after they reach the age you set.
+    ignore_favs: Ignore froths
+    ignore_reblogs: Ignore shares
+    interaction_exceptions_explanation: A post that once passed the froth or share count may not be deleted if it later drops below it.
+    keep_self_fav: Keep posts you frothed
+    keep_self_fav_hint: Doesn't delete your own posts if you've frothed them
+    min_favs: Keep posts frothed at least
+    min_favs_hint: Doesn't delete any of your posts with at least this many froths. Leave blank to delete posts whatever their froths
+    min_reblogs: Keep posts shared at least
+    min_reblogs_hint: Doesn't delete any of your posts shared at least this many times. Leave blank to delete posts whatever their shares
   user_mailer:
     announcement_published:
       description: 'From the people who run %{domain}:'

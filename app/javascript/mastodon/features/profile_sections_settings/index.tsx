@@ -357,7 +357,7 @@ export const ProfileSectionsSettings = () => {
             <p style={{ color: 'var(--text-muted)' }}>
               <FormattedMessage
                 id='profile_sections.no_kategories'
-                defaultMessage='No curated kategories seeded yet. Run bin/tootctl kategories seed on this instance.'
+                defaultMessage='No kategories yet.'
               />
             </p>
           )}

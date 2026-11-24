@@ -59,7 +59,7 @@ export const navMessages = defineMessages({
   },
   privacyDesc: {
     id: 'settings_hub.privacy_desc',
-    defaultMessage: 'Follower approval, who reaches you, filters and blocks.',
+    defaultMessage: 'Mate requests, who reaches you, filters and blocks.',
   },
   data: { id: 'settings_hub.data', defaultMessage: 'Data' },
   dataDesc: {

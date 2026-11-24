@@ -37,10 +37,10 @@ const messages = defineMessages({
     id: 'data_settings.csv_heading_desc',
     defaultMessage: 'One row per entry. Downloads immediately.',
   },
-  csvFollows: { id: 'data_settings.csv_follows', defaultMessage: 'Follows' },
+  csvFollows: { id: 'data_settings.csv_follows', defaultMessage: 'Mates' },
   csvFollowsHint: {
     id: 'data_settings.csv_follows_hint',
-    defaultMessage: 'Everyone you follow, one per row.',
+    defaultMessage: 'Everyone you’re Mates with, one per row.',
   },
   csvBlocks: { id: 'data_settings.csv_blocks', defaultMessage: 'Blocks' },
   csvBlocksHint: {

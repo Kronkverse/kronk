@@ -73,7 +73,7 @@ const messages = defineMessages({
   },
   sectionInteractionsDesc: {
     id: 'privacy_settings.section.interactions_desc',
-    defaultMessage: 'Who can follow you, message you, or see who you follow.',
+    defaultMessage: 'Who can be your Mate, message you, or see your Mates.',
   },
   sectionManageTitle: {
     id: 'privacy_settings.section.manage',
@@ -100,12 +100,11 @@ const messages = defineMessages({
   },
   locked: {
     id: 'privacy_settings.locked',
-    defaultMessage: 'Require follow approval',
+    defaultMessage: 'Approve Mate requests',
   },
   lockedHint: {
     id: 'privacy_settings.locked_hint',
-    defaultMessage:
-      'New followers must be approved before they can follow you.',
+    defaultMessage: 'You approve each Mate request before it goes through.',
   },
   discoverable: {
     id: 'privacy_settings.discoverable',
@@ -113,7 +112,7 @@ const messages = defineMessages({
   },
   discoverableHint: {
     id: 'privacy_settings.discoverable_hint',
-    defaultMessage: 'Show up in the directory, search, and follow suggestions.',
+    defaultMessage: 'Show up in the directory, search and suggestions.',
   },
   kommunityDiscoverability: {
     id: 'privacy_settings.kommunity_discoverability',
@@ -126,12 +125,11 @@ const messages = defineMessages({
   },
   hideCollections: {
     id: 'privacy_settings.hide_collections',
-    defaultMessage: 'Hide followers and follows',
+    defaultMessage: 'Hide your Mates',
   },
   hideCollectionsHint: {
     id: 'privacy_settings.hide_collections_hint',
-    defaultMessage:
-      'Keep your follower and following lists off your public profile.',
+    defaultMessage: 'Keep your Mates list off your profile.',
   },
   mutedTitle: {
     id: 'privacy_settings.muted',
@@ -159,7 +157,7 @@ const messages = defineMessages({
   domainsHint: {
     id: 'privacy_settings.domains_hint',
     defaultMessage:
-      'Every post from a blocked domain is hidden from your timeline, and nobody from that domain can follow you.',
+      'Every post from a blocked domain is hidden from you, and nobody from it can be your Mate.',
   },
   domainsEmpty: {
     id: 'privacy_settings.domains_empty',
