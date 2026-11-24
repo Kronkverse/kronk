@@ -178,13 +178,18 @@
 
   &__lang-toolbar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 0.75rem;
   }
 
   &__lang-filter {
-    flex: 1;
+    // A text box won't shrink below its built-in width (about 20
+    // characters) unless told to; that held this panel 130px past a
+    // phone's edge.
+    flex: 1 1 10rem;
+    min-width: 0;
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-medium);

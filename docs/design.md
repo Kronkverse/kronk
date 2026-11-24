@@ -894,6 +894,27 @@ A field drawn bigger on purpose (`.compose-title`) sets `--field-font-size` to
 its size and keeps it. User zoom stays on: never set `maximum-scale` or
 `user-scalable=no`. Spec: `spec/system/touch_input_zoom_spec.rb`.
 
+**Nothing crosses its container's edge on a phone.** A card stays inside
+its panel and a panel stays inside the screen. Only a row whose container
+scrolls sideways may run past (Card standard), along with anything positioned
+on purpose (badges, menus, toasts). Three things caused every crossing found
+(2026-11-24):
+
+- **A page centred with `margin: 0 auto` sizes to its content**, because the
+  Stage is a flex column and auto margins switch off stretching. One long
+  unbreakable line then held the whole page wider than the screen, and on
+  desktop each settings page came out a different width. `.kronk-stage > *`
+  now takes the full width up to the page's own `max-width`.
+- **A text field won't shrink below about 20 characters** unless it has
+  `min-width: 0`. In a row beside other things, give it that.
+- **A row of label and control** has to wrap (`flex-wrap: wrap`) so a wide
+  control drops below its label. `.settings-page__row` does.
+
+`spec/system/phone_crossovers_spec.rb` opens every page in the route table and
+every korner at 390px, and fails on any element sticking past its parent. A
+new page is covered without being added. Pages that need an id (one post, one
+event) aren't covered, so check those by eye.
+
 ---
 
 ## Platform primitives
