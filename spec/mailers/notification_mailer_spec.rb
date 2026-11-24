@@ -82,8 +82,8 @@ RSpec.describe NotificationMailer do
     it 'renders the email' do
       expect(mail)
         .to be_present
-        .and(have_subject('bob is now following you'))
-        .and(have_body_text('bob is now following you'))
+        .and(have_subject('bob is now your Mate'))
+        .and(have_body_text('bob is now your Mate'))
         .and have_standard_headers('follow').for(receiver)
     end
 
@@ -100,8 +100,8 @@ RSpec.describe NotificationMailer do
     it 'renders the email' do
       expect(mail)
         .to be_present
-        .and(have_subject('bob favorited your post'))
-        .and(have_body_text('Your post was favorited by bob'))
+        .and(have_subject('bob frothed your post'))
+        .and(have_body_text('Your post was frothed by bob'))
         .and(have_body_text('The body of the own status'))
         .and have_thread_headers
         .and have_standard_headers('favourite').for(receiver)
@@ -121,8 +121,8 @@ RSpec.describe NotificationMailer do
     it 'renders the email' do
       expect(mail)
         .to be_present
-        .and(have_subject('bob boosted your post'))
-        .and(have_body_text('Your post was boosted by bob'))
+        .and(have_subject('bob shared your post'))
+        .and(have_body_text('Your post was shared by bob'))
         .and(have_body_text('The body of the own status'))
         .and have_thread_headers
         .and have_standard_headers('reblog').for(receiver)
@@ -142,8 +142,8 @@ RSpec.describe NotificationMailer do
     it 'renders the email' do
       expect(mail)
         .to be_present
-        .and(have_subject('Pending follower: bob'))
-        .and(have_body_text('bob has requested to follow you'))
+        .and(have_subject('bob wants to be Mates'))
+        .and(have_body_text('bob wants to be Mates'))
         .and have_standard_headers('follow_request').for(receiver)
     end
 

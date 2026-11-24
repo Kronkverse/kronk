@@ -43,6 +43,10 @@ en:
   about:
     about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
     hosted_on: Kronk hosted on %{domain}
+  accounts:
+    mates:
+      one: Mate
+      other: Mates
   activerecord:
     attributes:
       wachuneed_brand:
@@ -212,9 +216,36 @@ en:
   mail_subscriptions:
     unsubscribe:
       confirmation_html: Are you sure you want to unsubscribe from receiving %{type} for Kronk on %{domain} to your email at %{email}? You can always re-subscribe from your <a href="%{settings_path}">email notification settings</a>.
+      emails:
+        notification_emails:
+          favourite: froth emails
+          follow: new Mate emails
+          follow_request: Mate request emails
+          reblog: share emails
       success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
   privacy:
     hint_html: <strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case.
+  # Notification emails, in the app's words: Mates (mutual) rather than
+  # follows, froth rather than favourite, share rather than boost. The
+  # same words as the matching Nudges (en.json nudges.notification.*).
+  notification_mailer:
+    favourite:
+      body: 'Your post was frothed by %{name}:'
+      subject: "%{name} frothed your post"
+      title: New froth
+    follow:
+      body: "%{name} is now your Mate."
+      subject: "%{name} is now your Mate"
+      title: A new Mate
+    follow_request:
+      action: See Mate requests
+      body: "%{name} wants to be Mates."
+      subject: "%{name} wants to be Mates"
+      title: A Mate request
+    reblog:
+      body: 'Your post was shared by %{name}:'
+      subject: "%{name} shared your post"
+      title: New share
   nudges:
     push:
       albutts:
@@ -331,8 +362,15 @@ en:
     warning:
       appeal: Submit an appeal
       appeal_description: If you think this is a mistake, you can appeal to the people who run %{instance}.
+      explanation:
+        silence: You can still use your account, but only your Mates will see your posts, and you may be left out of places where people discover others.
       reason: 'Reason:'
       statuses: 'Posts cited:'
+    welcome:
+      explanation: Your account has been approved. You've crossed the threshold.
+      sign_in_action: Open Kronk
+      subject: You're approved—welcome to Kronk, %{name}
+      title: You're in, %{name}.
 
 # ── en-GB ────────────────────────────────────────────────────────────
 #
@@ -356,6 +394,10 @@ en-GB:
   about:
     about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
     hosted_on: Kronk hosted on %{domain}
+  accounts:
+    mates:
+      one: Mate
+      other: Mates
   activerecord:
     attributes:
       wachuneed_brand:
@@ -525,9 +567,36 @@ en-GB:
   mail_subscriptions:
     unsubscribe:
       confirmation_html: Are you sure you want to unsubscribe from receiving %{type} for Kronk on %{domain} to your email at %{email}? You can always re-subscribe from your <a href="%{settings_path}">email notification settings</a>.
+      emails:
+        notification_emails:
+          favourite: froth emails
+          follow: new Mate emails
+          follow_request: Mate request emails
+          reblog: share emails
       success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
   privacy:
     hint_html: <strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case.
+  # Notification emails, in the app's words: Mates (mutual) rather than
+  # follows, froth rather than favourite, share rather than boost. The
+  # same words as the matching Nudges (en.json nudges.notification.*).
+  notification_mailer:
+    favourite:
+      body: 'Your post was frothed by %{name}:'
+      subject: "%{name} frothed your post"
+      title: New froth
+    follow:
+      body: "%{name} is now your Mate."
+      subject: "%{name} is now your Mate"
+      title: A new Mate
+    follow_request:
+      action: See Mate requests
+      body: "%{name} wants to be Mates."
+      subject: "%{name} wants to be Mates"
+      title: A Mate request
+    reblog:
+      body: 'Your post was shared by %{name}:'
+      subject: "%{name} shared your post"
+      title: New share
   nudges:
     push:
       albutts:
@@ -644,5 +713,12 @@ en-GB:
     warning:
       appeal: Submit an appeal
       appeal_description: If you think this is a mistake, you can appeal to the people who run %{instance}.
+      explanation:
+        silence: You can still use your account, but only your Mates will see your posts, and you may be left out of places where people discover others.
       reason: 'Reason:'
       statuses: 'Posts cited:'
+    welcome:
+      explanation: Your account has been approved. You've crossed the threshold.
+      sign_in_action: Open Kronk
+      subject: You're approved—welcome to Kronk, %{name}
+      title: You're in, %{name}.

@@ -124,19 +124,19 @@ const messages = defineMessages({
   },
   emailFollow: {
     id: 'notifications_settings.email_follow',
-    defaultMessage: 'Email me on new followers',
+    defaultMessage: 'Email me on new Mates',
   },
   emailFollowRequest: {
     id: 'notifications_settings.email_follow_request',
-    defaultMessage: 'Email me on follow requests',
+    defaultMessage: 'Email me on Mate requests',
   },
   emailReblog: {
     id: 'notifications_settings.email_reblog',
-    defaultMessage: 'Email me on boosts',
+    defaultMessage: 'Email me on shares',
   },
   emailFavourite: {
     id: 'notifications_settings.email_favourite',
-    defaultMessage: 'Email me on favourites',
+    defaultMessage: 'Email me on froths',
   },
   emailQuote: {
     id: 'notifications_settings.email_quote',
