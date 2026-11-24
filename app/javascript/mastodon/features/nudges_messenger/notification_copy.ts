@@ -138,7 +138,7 @@ const sentences = defineMessages({
   },
   matesRequested: {
     id: 'nudges.notification.mates.requested',
-    defaultMessage: '{who} wants to be Mates',
+    defaultMessage: '{who} reckons you should be Mates',
   },
   matesAccepted: {
     id: 'nudges.notification.mates.accepted',

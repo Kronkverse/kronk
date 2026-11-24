@@ -142,9 +142,23 @@ RSpec.describe NotificationMailer do
     it 'renders the email' do
       expect(mail)
         .to be_present
-        .and(have_subject('bob wants to be Mates'))
-        .and(have_body_text('bob wants to be Mates'))
+        .and(have_subject('bob reckons you should be Mates'))
+        .and(have_body_text('bob reckons you should be Mates'))
         .and have_standard_headers('follow_request').for(receiver)
+    end
+
+    it 'names the Mates they have in common' do
+      carol = Fabricate(:account, username: 'carol', display_name: 'Carol')
+      [receiver.account, sender].each do |account|
+        account.follow!(carol)
+        carol.follow!(account)
+      end
+
+      expect(mail).to have_body_text('1 Mate in common: Carol')
+    end
+
+    it 'says when they have no Mates in common' do
+      expect(mail).to have_body_text('No Mates in common yet')
     end
 
     it_behaves_like 'delivery to non functional user'

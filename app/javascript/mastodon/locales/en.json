@@ -3462,7 +3462,7 @@
   "nudges.notification.map.challenged": "{who} thinks your pin on the Map is out of date",
   "nudges.notification.map.live_shared": "{who} is sharing their live location with you",
   "nudges.notification.mates.accepted": "{who} is now your Mate",
-  "nudges.notification.mates.requested": "{who} wants to be Mates",
+  "nudges.notification.mates.requested": "{who} reckons you should be Mates",
   "nudges.notification.new": "New",
   "nudges.notification.profile.posted_on": "{who} posted on your profile",
   "nudges.notification.rose.received": "{who} sent you a rose",
