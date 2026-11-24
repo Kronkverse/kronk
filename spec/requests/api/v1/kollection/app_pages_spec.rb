@@ -80,7 +80,7 @@ RSpec.describe 'Kollection app pages' do
 
     it 'takes where to get it for a phone, as a web address' do
       post '/api/v1/kollection/apps', headers: headers, params: {
-        name: 'Anthemos', website: 'https://anthemos.example', download_url: ' https://anthemos.example/app.apk ',
+        name: 'Anthemos', website: 'https://anthemos.example', download_url: ' https://anthemos.example/app.apk '
       }
 
       expect(response).to have_http_status(200)

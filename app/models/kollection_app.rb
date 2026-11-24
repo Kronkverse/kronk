@@ -189,7 +189,7 @@ class KollectionApp < ApplicationRecord
   end
 
   def web_addresses
-    %i[website download_url].each do |field|
+    %i(website download_url).each do |field|
       value = public_send(field)
       next if value.blank?
 
