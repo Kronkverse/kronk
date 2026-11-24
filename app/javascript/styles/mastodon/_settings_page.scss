@@ -148,6 +148,7 @@
   &__row,
   &__action-row {
     display: flex;
+
     // A widget too wide to sit beside its label drops under it (on a
     // phone, a note or a row of choices), never past the panel's edge.
     flex-wrap: wrap;
