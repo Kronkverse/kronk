@@ -1473,26 +1473,13 @@ ie:
     prompt: Si tu fide ti ligament, clicca it por continuar.
     title: Tu exea de %{instance}.
   relationships:
-    activity: Activitá de conto
-    confirm_follow_selected_followers: Esque tu vermen vole sequer selectet sequitores?
-    confirm_remove_selected_followers: Esque tu vermen vole remover selectet sequitores?
-    confirm_remove_selected_follows: Esque tu vermen vole remover selectet sequetes?
-    dormant: Dormient
-    follow_failure: Ne posset sequer quelc del contos selectet.
-    follow_selected_followers: Sequer selectet sequitores
     followers: Sequitores
     following: Sequetes
     invited: Invitat
     last_active: Ultimmen activ
     most_recent: Max recent
-    moved: Movet
     mutual: Reciproc
-    primary: Primari
     relationship: Relation
-    remove_selected_domains: Remover omni sequitores del selectet dominias
-    remove_selected_followers: Remover selectet sequitores
-    remove_selected_follows: Dessequer selectet usatores
-    status: Statu del conto
   remote_follow:
     missing_resource: Ne posset trovar li besonat URL de redirection por tui conto
   reports:
@@ -1566,7 +1553,6 @@ ie:
     migrate: Migration de conto
     preferences: Preferenties
     profile: Public profil
-    relationships: Sequetes e sequitores
     severed_relationships: Detranchat relationes
     statuses_cleanup: Automatisat deletion de postas
     strikes: Admonimentes moderatori
@@ -1751,7 +1737,6 @@ ie:
       apps_ios_action: Descargar sur li App Store
       apps_step: Descargar nor aplis oficial.
       apps_title: Aplis de Mastodon
-      checklist_subtitle: 'Lass nos auxiliar te comensar sur ti-ci frontiera social:'
       checklist_title: Lista de benevenit
       edit_profile_action: Personalisar
       edit_profile_step: Agranda tui interactiones per un profil detalliat.
@@ -1769,13 +1754,11 @@ ie:
       follow_action: Sequer
       follow_step: Sequer interessant gente es to quo importa in Mastodon.
       follow_title: Personalisar tui hemal témpor-linea
-      follows_subtitle: Sequer famosi contos
       follows_title: Persones a sequer
       follows_view_more: Vider plu persones a sequer
       hashtags_recent_count:
         one: "%{people} person in li passat 2 dies"
         other: "%{people} persones in li passat 2 dies"
-      hashtags_subtitle: Explorar li postas de tendentie durant li passat 2 dies
       hashtags_title: Populari hashtags
       hashtags_view_more: Vider plu hashtags in tendentie
       post_action: Composir

@@ -1745,26 +1745,13 @@ nan-TW:
     prompt: 若是lí信任tsit ê連結，tshi̍h伊繼續。
     title: Lí teh-beh離開 %{instance}。
   relationships:
-    activity: 口座ê活動
-    confirm_follow_selected_followers: Lí kám確定beh跟tuè所揀ê跟tuè者？
-    confirm_remove_selected_followers: Lí kám確定beh suá掉所揀ê跟tuè者？
-    confirm_remove_selected_follows: Lí kám確定beh取消跟tuè所揀ê用者？
-    dormant: Teh歇睏
-    follow_failure: Bē當跟tuè一寡所揀ê口座。
-    follow_selected_followers: 跟tuè所揀ê跟tuè者
     followers: 跟tuè ê
     following: Leh跟tuè
     invited: 邀請ah
     last_active: 上尾ê活動
     most_recent: 最近來ê
-    moved: 有suá ah
     mutual: 相跟tuè
-    primary: 主要ê
     relationship: 關係
-    remove_selected_domains: Suá掉所揀ê域名內底ê所有跟tuè者
-    remove_selected_followers: Suá掉所揀ê跟tuè者
-    remove_selected_follows: 取消跟tuè所揀ê用者
-    status: 口座ê狀態
   remote_follow:
     missing_resource: Bē當tshuē著lí ê口座ê需要ê重轉URL
   reports:
@@ -1841,7 +1828,6 @@ nan-TW:
     notifications: 電子phue ê通知
     preferences: 偏愛ê設定
     profile: 個人ê資料
-    relationships: Leh跟tuè ê kap跟tuè lí ê
     severed_relationships: 斷開ê關係
     statuses_cleanup: 自動thâi PO文
     strikes: 管理ê警告
@@ -2054,7 +2040,6 @@ nan-TW:
       apps_ios_action: 對App Store載落去
       apps_step: Kā阮ê官方應用程式載落去。
       apps_title: Mastodon APP
-      checklist_subtitle: 予lán幫tsān lí佇tsit ê社群新境界起行：
       checklist_title: 歡迎ê檢查列單
       edit_profile_action: 個人化
       edit_profile_step: 若有全面ê個人資料，通促進lí ê互動。

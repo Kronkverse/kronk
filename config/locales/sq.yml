@@ -1770,26 +1770,13 @@ sq:
     prompt: Nëse e besoni këtë lidhje, klikoni që të vazhdohet.
     title: Po e braktisni %{instance}.
   relationships:
-    activity: Veprimtari llogarie
-    confirm_follow_selected_followers: Jeni i sigurt se doni të ndiqet ndjekësit e përzgjedhur?
-    confirm_remove_selected_followers: Jeni i sigurt se doni të hiqen ndjekësit e përzgjedhur?
-    confirm_remove_selected_follows: Jeni i sigurt se doni të hiqen ndjekjet e përzgjedhura?
-    dormant: Në gjumë
-    follow_failure: S’u ndoqën dot disa nga llogaritë e përzgjedhura.
-    follow_selected_followers: Ndiq ndjekësit e përzgjedhur
     followers: Ndjekës
     following: Ndjek
     invited: Të ftuar
     last_active: Aktiv së fundi më
     most_recent: Më të freskëtat
-    moved: Lëvizur
     mutual: Reciproke
-    primary: Parësore
     relationship: Marrëdhënie
-    remove_selected_domains: Hiqi krejt ndjekësit prej përkatësive të përzgjedhura
-    remove_selected_followers: Hiq ndjekësit e përzgjedhur
-    remove_selected_follows: Hiqe ndjekjen e përdoruesve të përzgjedhur
-    status: Gjendje llogarie
   remote_follow:
     missing_resource: S’u gjet dot URL-ja e domosdoshme e ridrejtimit për llogarinë tuaj
   reports:
@@ -1866,7 +1853,6 @@ sq:
     notifications: Njoftime me email
     preferences: Parapëlqime
     profile: Profil
-    relationships: Ndjekje dhe ndjekës
     severed_relationships: Marrëdhënie të ndërprera
     statuses_cleanup: Fshirje e automatizuar postimesh
     strikes: Paralajmërime nga moderimi
@@ -2089,7 +2075,6 @@ sq:
       apps_ios_action: Shkarkojeni nga App Store
       apps_step: Shkarkoni aplikacionet tona zyrtare.
       apps_title: Aplikacione Mastodon
-      checklist_subtitle: 'Le t’ju vëmë në udhë drejt këtij horizonti të ri rrjetesh shoqërorë:'
       checklist_title: Listë hapash mirëseardhjeje
       edit_profile_action: Personalizojeni
       edit_profile_step: Përforconi ndërveprimet tuaja, duke pasur një profil shterues.
@@ -2107,13 +2092,11 @@ sq:
       follow_action: Ndiqeni
       follow_step: Ndjekje personash interesantë është ajo çka përbën thelbin e Mastodon-it.
       follow_title: Personalizoni prurjen tuaj të kreut
-      follows_subtitle: Ndiqni llogari të mirënjohura
       follows_title: Cilët të ndiqen
       follows_view_more: Shihni më tepër vetë për ndjekje
       hashtags_recent_count:
         one: "%{people} person në 2 ditët e shkuara"
         other: "%{people} vetë në 2 ditët e shkuara"
-      hashtags_subtitle: Eksploroni ç’është në modëë që prej 2 ditëve të fundit
       hashtags_title: Hashtag-ë në modë
       hashtags_view_more: Shihni më tepër hashtagë në modë
       post_action: Hartoni

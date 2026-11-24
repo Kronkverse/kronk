@@ -750,14 +750,10 @@ br:
     prompt: M'ho peus fiziañs el liamm-mañ, klikit warnañ evit kenderc'hel.
     title: O kuitaat %{instance} emaoc'h.
   relationships:
-    dormant: O kousket
     followers: Heulier·ezed·ien
     following: Koumanantoù
     invited: Pedet
-    moved: Dilojet
     mutual: Kenetre
-    primary: Kentañ
-    status: Statud ar gont
   sessions:
     browser: Merdeer
     browsers:
@@ -811,7 +807,6 @@ br:
     notifications: Kemennoù dre bostel
     preferences: Gwellvezioù
     profile: Profil
-    relationships: Heulierien·ezed ha tud heuliet
   severed_relationships:
     download: Pellgargañ (%{count})
     event_type:
@@ -916,7 +911,6 @@ br:
       feature_action: Gouzout hiroc'h
       follow_action: Heuliañ
       follow_title: Personelait ho red degemer
-      follows_subtitle: Heuilhit kontoù brudet-mat
       follows_title: Piv heuliañ
       hashtags_title: Gerioù-klik diouzh ar c'hiz
       hashtags_view_more: Gwelet muioc'h a c'herioù-klik diouzh ar c'hiz

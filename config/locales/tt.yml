@@ -452,14 +452,11 @@ tt:
   privacy_policy:
     title: Хосусыйлык сәясәте
   relationships:
-    dormant: Актив түгел
     followers: Язылучылар
     following: Язылулар
     invited: Чакырылды
     most_recent: Иң соңгы
-    moved: Күчерелде
     mutual: Үзара
-    primary: Төп
     relationship: Бәйләнеш
   sessions:
     browser: Браузер

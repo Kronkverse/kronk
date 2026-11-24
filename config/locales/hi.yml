@@ -58,8 +58,6 @@ hi:
   redirects:
     prompt: अगर आपको इस लिंक पर भरोसा है तो आगे बढ़ने के लिए इसे क्लिक करें
     title: आप इस %{instance} को छोड़ने वाले हैं
-  relationships:
-    follow_failure: चुने हुए अकाउंट्स में से कुछ को फ़ॉलो नहीं किया जा सकता
   sessions:
     browsers:
       huawei_browser: हुआवे ब्राउज़र

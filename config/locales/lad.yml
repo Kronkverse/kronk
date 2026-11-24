@@ -1665,26 +1665,13 @@ lad:
     prompt: Si konfiyas en este atadijo, klikalo para kontinuar.
     title: Estas salyendo de %{instance}.
   relationships:
-    activity: Aktivita del kuento
-    confirm_follow_selected_followers: Estas siguro ke keres segir a los suivantes eskojidos?
-    confirm_remove_selected_followers: Estas siguro ke keres kitar a los suivantes eskojidos?
-    confirm_remove_selected_follows: Estas siguro ke keres kitar los kuentos segidos a los kualos tienes eskojido?
-    dormant: Inaktivo
-    follow_failure: No se pudo segir algunos de los kuentos eskojidos.
-    follow_selected_followers: Sige a los suivantes eskojidos
     followers: Suivantes
     following: Segidos
     invited: Envitados
     last_active: Ultima aktivita
     most_recent: Mas reziente
-    moved: Migrados
     mutual: Mutual
-    primary: Prinsipal
     relationship: Relasyon
-    remove_selected_domains: Kita todos los suivantes de los domenos eskojidos
-    remove_selected_followers: Kita a los suivantes eskojidos
-    remove_selected_follows: Desige a los utilizadores eskojidos
-    status: Estado del kuento
   remote_follow:
     missing_resource: No se pudo topar el URL del readreso rekerido para tu kuento
   reports:
@@ -1761,7 +1748,6 @@ lad:
     notifications: Avizos por posta elektronika
     preferences: Preferensyas
     profile: Profil publiko
-    relationships: Segidos i suivantes
     severed_relationships: Relasyones kortadas
     statuses_cleanup: Efasasyon otomatika de publikasyones
     strikes: Amonestamientos de moderasyon
@@ -1982,13 +1968,11 @@ lad:
       follow_action: Sige
       follow_step: El buto de Mastodon es segir a djente interesante.
       follow_title: Personaliza tu linya prinsipala
-      follows_subtitle: Sige kuentos konesidos
       follows_title: A ken segir
       follows_view_more: Ve mas personas para segir
       hashtags_recent_count:
         one: "%{people} persona en los ultimos 2 diyas"
         other: "%{people} personas en los ultimos 2 diyas"
-      hashtags_subtitle: Eksplora los trendes de los ultimos 2 diyas
       hashtags_title: Etiketas en trend
       hashtags_view_more: Ve mas etiketas en trend
       post_action: Eskrive

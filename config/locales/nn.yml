@@ -1786,26 +1786,13 @@ nn:
     prompt: Viss du stolar på denne lenka, klikkar du på ho for å halda fram.
     title: No forlèt du %{instance}.
   relationships:
-    activity: Kontoaktivitet
-    confirm_follow_selected_followers: Er du sikker på at du ynskjer å fylgja dei valde fylgjarane?
-    confirm_remove_selected_followers: Er du sikker på at du ynskjer å fjerna dei valde fylgjarane?
-    confirm_remove_selected_follows: Er du sikker på at du ikkje vil fylgja desse?
-    dormant: I dvale
-    follow_failure: Greidde ikkje fylgja alle kontoane du valde.
-    follow_selected_followers: Fylg desse som fylgjer deg
     followers: Fylgjarar
     following: Folk du fylgjer
     invited: Innboden
     last_active: Sist aktiv
     most_recent: Sist
-    moved: Flytta
     mutual: Felles
-    primary: Primært
     relationship: Forhold
-    remove_selected_domains: Fjern alle fylgjarar frå dei valde domena
-    remove_selected_followers: Fjern valde fylgjarar
-    remove_selected_follows: Slutt å fylgja desse brukarane
-    status: Kontostatus
   remote_follow:
     missing_resource: Kunne ikke finne URLen for din konto
   reports:
@@ -1882,7 +1869,6 @@ nn:
     notifications: Epostvarsel
     preferences: Innstillingar
     profile: Profil
-    relationships: Fylgjer og fylgjarar
     severed_relationships: Brotne forhold
     statuses_cleanup: Automatisert sletting av innlegg
     strikes: Modereringsadvarsler
@@ -2106,7 +2092,6 @@ nn:
       apps_ios_action: Last ned på App Store
       apps_step: Last ned dei offisielle appane våre.
       apps_title: Mastodon-appar
-      checklist_subtitle: 'La oss hjelpa deg i gang på denne nye sosiale reisa:'
       checklist_title: Kom i gang
       edit_profile_action: Tilpass til deg
       edit_profile_step: Få fleire samhandlingar ved å fylla ut profilen din.
@@ -2124,13 +2109,11 @@ nn:
       follow_action: Fylg
       follow_step: Å fylgja interessante folk er det det handlar om på Mastodon.
       follow_title: Tilpass tidslina di
-      follows_subtitle: Fylg kjende folk
       follows_title: Kven du kan fylgja
       follows_view_more: Sjå fleire du kan fylgja
       hashtags_recent_count:
         one: "%{people} person dei siste to dagane"
         other: "%{people} personar dei siste to dagane"
-      hashtags_subtitle: Sjå kva som har vore populært dei siste to dagane
       hashtags_title: Populære emneknaggar
       hashtags_view_more: Sjå fleire populære emneknaggar
       post_action: Skriv

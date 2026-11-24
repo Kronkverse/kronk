@@ -1790,26 +1790,13 @@ hu:
     prompt: Ha megbízol ebben a hivatkozásban, kattints rá a folytatáshoz.
     title: Elhagyod a(z) %{instance} kiszolgálót.
   relationships:
-    activity: Fiók aktivitás
-    confirm_follow_selected_followers: Biztos, hogy követni akarod a kiválasztott követőket?
-    confirm_remove_selected_followers: Biztos, hogy el szeretnéd távolítani a kiválasztott követőket?
-    confirm_remove_selected_follows: Biztos, hogy el szeretnéd távolítani a kiválasztott követéseket?
-    dormant: Elhagyott
-    follow_failure: Nem sikerült bekövetni néhányat a kiválasztott fiókok közül.
-    follow_selected_followers: Kiválasztott követők bekövetése
     followers: Követők
     following: Követve
     invited: Meghívva
     last_active: Utoljára aktív
     most_recent: Legutóbbi
-    moved: Átköltöztetve
     mutual: Kölcsönös
-    primary: Elsődleges
     relationship: Kapcsolat
-    remove_selected_domains: A választott domainekről minden követő eltávolítása
-    remove_selected_followers: Kiválasztott követők eltávolítása
-    remove_selected_follows: Kiválasztottak követésének abbahagyása
-    status: Fiók állapota
   remote_follow:
     missing_resource: A fiókodnál nem található a szükséges átirányítási URL
   reports:
@@ -1886,7 +1873,6 @@ hu:
     notifications: E-mail-értesítések
     preferences: Beállítások
     profile: Profil
-    relationships: Követések és követők
     severed_relationships: Megszakított kapcsolatok
     statuses_cleanup: Bejegyzések automatikus törlése
     strikes: Moderációs felrótt vétségek
@@ -2110,7 +2096,6 @@ hu:
       apps_ios_action: Letöltés az App Store-ból
       apps_step: Hivatalos alkalmazásaink letöltése.
       apps_title: Mastodon alkalmazások
-      checklist_subtitle: 'Indulás a közösségi érintkezés új élvonalába:'
       checklist_title: Üdvözlő ellenőrzőlista
       edit_profile_action: Személyre szabás
       edit_profile_step: Növeld az interakciószámot egy átfogó profillal.
@@ -2128,13 +2113,11 @@ hu:
       follow_action: Követés
       follow_step: A Mastodon az érdekes emberek követéséről szól.
       follow_title: Kezdőlapi hírfolyam testreszabása
-      follows_subtitle: Jól ismert fiókok követése
       follows_title: Kit érdemes követni
       follows_view_more: További követendő személyek megtekintése
       hashtags_recent_count:
         one: "%{people} személy az elmúlt 2 napban"
         other: "%{people} személy az elmúlt 2 napban"
-      hashtags_subtitle: Fedezd fel, mi felkapott az elmúlt 2 napban
       hashtags_title: Felkapott hashtagek
       hashtags_view_more: További felkapott hashtagek megtekintése
       post_action: Bejegyzés írása

@@ -1865,26 +1865,13 @@ be:
     prompt: Калі вы давяраеце гэтай спасылцы, націсніце на яе, каб працягнуць.
     title: Вы пакідаеце %{instance}.
   relationships:
-    activity: Актыўнасць ул. запісу
-    confirm_follow_selected_followers: Вы ўпэўнены, што хочаце падпісацца на выбраных падпісчыкаў?
-    confirm_remove_selected_followers: Вы ўпэўнены, што хочаце выдаліць выбраных падпісчыкаў?
-    confirm_remove_selected_follows: Вы ўпэўнены, што хочаце выдаліць выбраныя падпіскі?
-    dormant: Занядбаны
-    follow_failure: Вы не можаце падпісацца на некаторыя акаўнты.
-    follow_selected_followers: Падпісацца на выбраных падпісчыкаў
     followers: Падпісчыкі
     following: Падпіскі
     invited: Запрошаны
     last_active: Апошняя актыўнасць
     most_recent: Даўнасць
-    moved: Перанесены
     mutual: Узаемныя
-    primary: Асноўны
     relationship: Зносіны
-    remove_selected_domains: Выдаліць усіх падпісчыкаў з выбраных даменаў
-    remove_selected_followers: Выдаліць выбраных падпісчыкаў
-    remove_selected_follows: Адпісацца ад выбраных карыстальнікаў
-    status: Стан уліковага запісу
   remote_follow:
     missing_resource: Не ўдалося знайсці патрэбны URL перанакіравання для вашага ўліковага запісу
   reports:
@@ -1961,7 +1948,6 @@ be:
     notifications: Апавяшчэнні па эл. пошце
     preferences: Налады
     profile: Профіль
-    relationships: Падпіскі і падпісчыкі
     severed_relationships: Разрыў сувязяў
     statuses_cleanup: Аўтавыдаленне допісаў
     strikes: Папярэджанні мадэратараў
@@ -2193,7 +2179,6 @@ be:
       apps_ios_action: Спампваваць з App Store
       apps_step: Спампуйце нашыя афіцыйныя праграмы.
       apps_title: Кліенты Mastodon
-      checklist_subtitle: 'Давайце паспрабуем разабрацца ў гэтай новай сацыяльнай сетцы:'
       checklist_title: З чаго пачаць
       edit_profile_action: Персаналізаваць
       edit_profile_step: Узмацніце ўзаемадзеянне, запоўніўшы поўны профіль.
@@ -2211,7 +2196,6 @@ be:
       follow_action: Падпісацца
       follow_step: Падпіска на цікавых людзей - гэта галоўнае ў Mastodon.
       follow_title: Наладзьце сваю хатнюю стужку
-      follows_subtitle: Падпішыцеся на папулярных карыстальнікаў
       follows_title: На каго падпісацца
       follows_view_more: Прагледзець больш людзей, на якіх варта падпісацца
       hashtags_recent_count:
@@ -2219,7 +2203,6 @@ be:
         many: "%{people} чалавек за апошнія 2 дні"
         one: "%{people} чалавек за апошнія 2 дні"
         other: "%{people} чалавека за апошнія 2 дні"
-      hashtags_subtitle: Даведайцеся што было ў трэндзе за апошнія 2 дні
       hashtags_title: Папулярныя хэштэгі
       hashtags_view_more: Прагледзець іншыя трэндавыя хэштэгі
       post_action: Стварыць

@@ -1790,26 +1790,13 @@ sv:
     prompt: Om du litar på denna länk, klicka på den för att fortsätta.
     title: Du lämnar %{instance}.
   relationships:
-    activity: Kontoaktivitet
-    confirm_follow_selected_followers: Är du säker på att du vill följa valda följare?
-    confirm_remove_selected_followers: Är du säker på att du vill ta bort valda följare?
-    confirm_remove_selected_follows: Är du säker på att du vill ta bort valda följare?
-    dormant: Vilande
-    follow_failure: Kan inte följa några av de valda kontona.
-    follow_selected_followers: Följ valda personer
     followers: Följare
     following: Följer
     invited: Inbjuden
     last_active: Senast aktiv
     most_recent: Senaste
-    moved: Flyttad
     mutual: Ömsesidig
-    primary: Primära
     relationship: Samband
-    remove_selected_domains: Ta bort alla följare från de valda domänerna
-    remove_selected_followers: Ta bort valda följare
-    remove_selected_follows: Sluta följ valda användare
-    status: Kontostatus
   remote_follow:
     missing_resource: Det gick inte att hitta den begärda omdirigeringsadressen för ditt konto
   reports:
@@ -1886,7 +1873,6 @@ sv:
     notifications: E-postaviseringar
     preferences: Inställningar
     profile: Profil
-    relationships: Följer och följare
     severed_relationships: Avbrutna relationer
     statuses_cleanup: Automatisk radering av inlägg
     strikes: Modereringsprickar
@@ -2110,7 +2096,6 @@ sv:
       apps_ios_action: Ladda ner på App Store
       apps_step: Ladda ner våra officiella appar.
       apps_title: Mastodon-appar
-      checklist_subtitle: 'Låt oss komma igång med denna nya sociala upplevelse:'
       checklist_title: Välkomstchecklista
       edit_profile_action: Gör mer personlig
       edit_profile_step: Öka din interaktion genom att ha en omfattande profil.
@@ -2128,13 +2113,11 @@ sv:
       follow_action: Följ
       follow_step: Att följa intressanta människor är vad Mastodon handlar om.
       follow_title: Anpassa ditt hemflöde
-      follows_subtitle: Följ välkända konton
       follows_title: Rekommenderade profiler
       follows_view_more: Visa fler personer att följa
       hashtags_recent_count:
         one: "%{people} personer de senaste 2 dagarna"
         other: "%{people} personer under de senaste 2 dagarna"
-      hashtags_subtitle: Utforska vad som har trendat de senaste 2 dagarna
       hashtags_title: Trendande hashtaggar
       hashtags_view_more: Visa fler trendande hashtaggar
       post_action: Skriv

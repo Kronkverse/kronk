@@ -1493,26 +1493,13 @@
     prompt: Hvis du stoler på denne lenken, så trykk på den for å fortsette.
     title: Du forlater %{instance}.
   relationships:
-    activity: Kontoaktivitet
-    confirm_follow_selected_followers: Er du sikker på at du vil følge valgte følgere?
-    confirm_remove_selected_followers: Er du sikker på at du vil fjerne valgte følgere?
-    confirm_remove_selected_follows: Er du sikker på at du vil fjerne valgte følginger?
-    dormant: Dormende
-    follow_failure: Kunne ikke følge noen av de valgte kontoene.
-    follow_selected_followers: Følg valgte tilhengere
     followers: Følgere
     following: Følginger
     invited: Invitert
     last_active: Senest aktiv
     most_recent: Nyligst
-    moved: Flyttet
     mutual: Gjensidig
-    primary: Primær
     relationship: Forhold
-    remove_selected_domains: Fjern alle følgere fra de valgte domenene
-    remove_selected_followers: Fjern de valgte følgerne
-    remove_selected_follows: Avfølg de valgte brukerne
-    status: Kontostatus
   remote_follow:
     missing_resource: Kunne ikke finne URLen for din konto
   reports:
@@ -1587,7 +1574,6 @@
     notifications: E-postbeskjeder
     preferences: Innstillinger
     profile: Profil
-    relationships: Følginger og følgere
     statuses_cleanup: Automatisert sletting av innlegg
     strikes: Modereringsadvarsler
     two_factor_authentication: Tofaktorautentisering
@@ -1772,7 +1758,6 @@
       feature_moderation_title: Moderering slik det burde være
       follow_action: Følg
       follow_title: Tilpass tidslinjen din
-      follows_subtitle: Følg godt kjente kontoer
       follows_title: Hvem å følge
       follows_view_more: Vis flere personer å følge
       hashtags_title: Populære emneknagger

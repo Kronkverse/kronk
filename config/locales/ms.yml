@@ -1422,26 +1422,13 @@ ms:
       limit_reached: Had tindak balas yang berbeza dicapai
       unrecognized_emoji: bukan emoji yang diiktiraf
   relationships:
-    activity: Aktiviti akaun
-    confirm_follow_selected_followers: Adakah anda pasti mahu mengikuti pengikut yang dipilih?
-    confirm_remove_selected_followers: Adakah anda pasti mahu mengalih keluar pengikut yang dipilih?
-    confirm_remove_selected_follows: Adakah anda pasti mahu mengalih keluar mengikuti yang dipilih?
-    dormant: Tidak aktif
-    follow_failure: Tidak dapat mengikuti beberapa akaun yang dipilih.
-    follow_selected_followers: Ikut pengikut yang dipilih
     followers: Pengikut
     following: Ikutan
     invited: Dijemput
     last_active: Terakhir aktif
     most_recent: Terkini
-    moved: Dipindah
     mutual: Saling setuju
-    primary: Utama
     relationship: Hubungan
-    remove_selected_domains: Alih keluar semua pengikut daripada domain yang dipilih
-    remove_selected_followers: Alih keluar pengikut yang dipilih
-    remove_selected_follows: Nyahikut pengguna yang dipilih
-    status: Status akaun
   remote_follow:
     missing_resource: Tidak dapat mencari URL ubah hala yang diperlukan untuk akaun anda
   reports:
@@ -1514,7 +1501,6 @@ ms:
     migrate: Penghijrahan akaun
     preferences: Keutamaan
     profile: Profil
-    relationships: Ikutan dan pengikut
     statuses_cleanup: Pemadaman hantaran automatik
     strikes: Pelanggaran penyederhanaan
     two_factor_authentication: Pengesahan Dua Faktor

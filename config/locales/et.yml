@@ -1787,26 +1787,13 @@ et:
     prompt: Kui te usaldate seda linki, klõpsake sellele, et jätkata.
     title: Te lahkute %{instance}.
   relationships:
-    activity: Konto tegevus
-    confirm_follow_selected_followers: Oled kindel, et soovid jälgida valitud jälgijaid?
-    confirm_remove_selected_followers: Oled kindel, et soovid eemaldada valitud jälgijad?
-    confirm_remove_selected_follows: Oled kindel, et soovid eemaldada valitud jälgitavad?
-    dormant: Seisev
-    follow_failure: Mõne valitud konto jälgimine polnud võimalik.
-    follow_selected_followers: Valitud jälgijate jälgimine
     followers: Jälgijad
     following: Jälgib
     invited: Kutsutud
     last_active: Viimati aktiivne
     most_recent: Viimased
-    moved: Kolinud
     mutual: Ühine
-    primary: Peamine
     relationship: Seos
-    remove_selected_domains: Eemalda kõik jälgijad valitud domeenidelt
-    remove_selected_followers: Eemalda valitud jälgijad
-    remove_selected_follows: Lõpeta valitud kasutajate jälgimine
-    status: Konto olek
   remote_follow:
     missing_resource: Ei ole võimalik leida konto jaoks vajalikku suunamise URLi
   reports:
@@ -1883,7 +1870,6 @@ et:
     notifications: E-postiteated
     preferences: Eelistused
     profile: Profiil
-    relationships: Jälgitud ja jälgijad
     severed_relationships: Katkestatud seos
     statuses_cleanup: Automaatne kustutamine
     strikes: Modereerimisjuhtumid
@@ -2109,7 +2095,6 @@ et:
       apps_ios_action: Allalaadimine App Store'ist
       apps_step: Laadi meie ametlikud rakendused.
       apps_title: Mastodoni rakendused
-      checklist_subtitle: 'Kuidas sel uudsel sotsiaalmeediarindel pihta hakata:'
       checklist_title: Millest alustada
       edit_profile_action: Isikupärasta
       edit_profile_step: Anna oma tegevustele hoogu, luues põhjalik kasutajaprofiil.
@@ -2127,13 +2112,11 @@ et:
       follow_action: Jälgi
       follow_step: Huvipakkuvate inimeste jälgimine ongi Mastodoni olemuseks.
       follow_title: Isikupärasta oma koduvoogu
-      follows_subtitle: Jälgi teada-tuntud kasutajaid
       follows_title: Keda jälgida
       follows_view_more: Vaata lähemalt, keda jälgida
       hashtags_recent_count:
         one: "%{people} isikut viimase 2 päeva jooksul"
         other: "%{people} inimest viimase 2 päeva jooksul"
-      hashtags_subtitle: Avasta, mis viimase 2 päeva jooksul on toimunud
       hashtags_title: Populaarsed märksõnad
       hashtags_view_more: Vaata teisi trendikaid teemaviiteid
       post_action: Postita

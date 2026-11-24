@@ -1790,26 +1790,13 @@ it:
     prompt: Se ti fidi di questo collegamento, fai clic su di esso per continuare.
     title: Stai lasciando %{instance}.
   relationships:
-    activity: Attività dell'account
-    confirm_follow_selected_followers: Sei sicuro di voler seguire i follower selezionati?
-    confirm_remove_selected_followers: Sei sicuro di voler rimuovere i follower selezionati?
-    confirm_remove_selected_follows: Sei sicuro di voler rimuovere i follow selezionati?
-    dormant: Dormiente
-    follow_failure: Impossibile seguire alcuni degli account selezionati.
-    follow_selected_followers: Segui i follower selezionati
     followers: Follower
     following: Seguiti
     invited: Invitato
     last_active: Ultima attività
     most_recent: Più recente
-    moved: Trasferito
     mutual: Reciproco
-    primary: Principale
     relationship: Relazione
-    remove_selected_domains: Rimuovi tutti i follower dai domini selezionati
-    remove_selected_followers: Rimuovi i follower selezionati
-    remove_selected_follows: Smetti di seguire gli utenti selezionati
-    status: Stato dell'account
   remote_follow:
     missing_resource: Impossibile trovare l'URL di reindirizzamento richiesto per il tuo account
   reports:
@@ -1886,7 +1873,6 @@ it:
     notifications: Notifiche e-mail
     preferences: Preferenze
     profile: Profilo
-    relationships: Seguiti e follower
     severed_relationships: Relazioni interrotte
     statuses_cleanup: Cancellazione automatica dei post
     strikes: Sanzioni di moderazione
@@ -2110,7 +2096,6 @@ it:
       apps_ios_action: Scarica dall'App Store
       apps_step: Scarica le nostre app ufficiali.
       apps_title: App di Mastodon
-      checklist_subtitle: 'Iniziamo su questa nuova frontiera sociale:'
       checklist_title: Lista di controllo di Benvenuto
       edit_profile_action: Personalizza
       edit_profile_step: Gli altri hanno maggiori probabilità di interagire con te se completi il tuo profilo.
@@ -2128,13 +2113,11 @@ it:
       follow_action: Segui
       follow_step: Seguire persone interessanti è ciò che fa Mastodon.
       follow_title: Personalizza il tuo home feed
-      follows_subtitle: Segui account ben noti
       follows_title: Chi seguire
       follows_view_more: Visualizza più persone da seguire
       hashtags_recent_count:
         one: "%{people} persona negli ultimi 2 giorni"
         other: "%{people} persone negli ultimi 2 giorni"
-      hashtags_subtitle: Esplora le tendenze degli ultimi 2 giorni
       hashtags_title: Hashtag di tendenza
       hashtags_view_more: Visualizza altri hashtag di tendenza
       post_action: Scrivi

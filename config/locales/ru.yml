@@ -1849,26 +1849,13 @@ ru:
     prompt: Переходите по ссылке только в том случае, если доверяете сайту, на который она ведёт.
     title: Вы покидаете %{instance}.
   relationships:
-    activity: Фильтр по активности
-    confirm_follow_selected_followers: Вы уверены, что хотите взаимно подписаться на выбранных пользователей?
-    confirm_remove_selected_followers: Вы уверены, что хотите убрать выбранных пользователей из подписчиков?
-    confirm_remove_selected_follows: Вы уверены, что хотите отписаться от выбранных пользователей?
-    dormant: Неактивные
-    follow_failure: Не удалось подписаться за некоторыми из выбранных аккаунтов.
-    follow_selected_followers: Подписаться в ответ
     followers: Подписчики
     following: Подписки
     invited: Приглашённые
     last_active: Сначала активные
     most_recent: Сначала новые
-    moved: Перенаправленные
     mutual: Взаимные подписки
-    primary: Действующие
     relationship: Вид отношений
-    remove_selected_domains: Убрать всех подписчиков с того же сервера
-    remove_selected_followers: Убрать из подписчиков
-    remove_selected_follows: Отписаться от выбранных пользователей
-    status: Фильтр по состоянию учётной записи
   remote_follow:
     missing_resource: Поиск требуемого перенаправления URL для Вашей учётной записи завершился неудачей
   reports:
@@ -1945,7 +1932,6 @@ ru:
     notifications: Уведомления по эл. почте
     preferences: Настройки
     profile: Профиль
-    relationships: Подписки и подписчики
     severed_relationships: Разорванные отношения
     statuses_cleanup: Автоудаление постов
     strikes: Замечания модерации
@@ -2172,7 +2158,6 @@ ru:
       apps_ios_action: Установить из App Store
       apps_step: Установите наши официальные приложения.
       apps_title: Приложения Mastodon
-      checklist_subtitle: 'Вот несколько шагов, чтобы освоиться на новом рубеже:'
       checklist_title: С чего начать
       edit_profile_action: В профиль
       edit_profile_step: С заполненным профилем вы получите больше взаимодействий.
@@ -2190,7 +2175,6 @@ ru:
       follow_action: Подписаться
       follow_step: Подписывайтесь на интересных людей — в этом суть Mastodon.
       follow_title: Наполните свою домашнюю ленту
-      follows_subtitle: Подпишитесь на популярных пользователей
       follows_title: На кого подписаться
       follows_view_more: К другим рекомендуемым профилям
       hashtags_recent_count:
@@ -2198,7 +2182,6 @@ ru:
         many: "%{people} человек за последние 2 дня"
         one: "%{people} человек за последние 2 дня"
         other: "%{people} человека за последние 2 дня"
-      hashtags_subtitle: Посмотрите, что обсуждали за последние 2 дня
       hashtags_title: Актуальные хештеги
       hashtags_view_more: К другим актуальным хештегам
       post_action: Написать

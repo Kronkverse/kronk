@@ -1863,26 +1863,13 @@ gd:
     prompt: Ma tha earbsa agad sa cheangal seo, briog airson leantainn air adhart.
     title: Tha thu a’ fàgail %{instance}.
   relationships:
-    activity: Gnìomhachd a’ chunntais
-    confirm_follow_selected_followers: A bheil thu cinnteach gu bheil thu airson an luchd-leantainn a thagh thu a leantainn?
-    confirm_remove_selected_followers: A bheil thu cinnteach gu bheil thu airson an luchd-leantainn a thagh thu a thoirt air falbh?
-    confirm_remove_selected_follows: A bheil thu cinnteach nach eil thu airson an fheadhainn a thagh thu a leantainn tuilleadh?
-    dormant: Na thàmh
-    follow_failure: Cha deach le leantainn cuid dhe na cunntasan a thagh thu.
-    follow_selected_followers: Lean an luchd-leantainn a thagh thu
     followers: Luchd-leantainn
     following: A’ leantainn
     invited: Air cuireadh fhaighinn
     last_active: An gnìomh mu dheireadh
     most_recent: As ùire
-    moved: Air imrich
     mutual: Co-dhàimh
-    primary: Prìomh-dhàimh
     relationship: Dàimh
-    remove_selected_domains: Thoir air falbh a h-uile neach-leantainn o na h-àrainnean a thagh thu
-    remove_selected_followers: Thoir air falbh a h-uile neach-leantainn a thagh thu
-    remove_selected_follows: Na lean na cleachdaichean a thagh thu tuilleadh
-    status: Staid a’ chunntais
   remote_follow:
     missing_resource: Cha do lorg sinn URL ath-stiùiridh riatanach a’ chunntais agad
   reports:
@@ -1959,7 +1946,6 @@ gd:
     notifications: Brathan puist-d
     preferences: Roghainnean
     profile: Pròifil phoblach
-    relationships: Dàimhean leantainn
     severed_relationships: Dàimhean dealaichte
     statuses_cleanup: Sguabadh às phostaichean
     strikes: Rabhaidhean na maorsainneachd
@@ -2191,7 +2177,6 @@ gd:
       apps_ios_action: Luchdaich a-nuas aplacaid on App Store
       apps_step: Luchdaich a-nuas na h-aplacaidean oifigeil againn.
       apps_title: Aplacaidean Mastodon
-      checklist_subtitle: 'Seo toiseach-tòiseachaidh dhut air an t-saoghal shòisealta ùr:'
       checklist_title: Liosta-chromagan fàilteachaidh
       edit_profile_action: Cuir dreach pearsanta air
       edit_profile_step: Brosnaich an conaltradh a gheibh thu le pròifil shlàn.
@@ -2209,7 +2194,6 @@ gd:
       follow_action: Lean
       follow_step: Tha leantainn dhaoine inntinneach air cridhe Mhastodon.
       follow_title: Cuir dreach pearsanta air do dhachaigh
-      follows_subtitle: Lean cunntasan cliùiteach
       follows_title: Molaidhean leantainn
       follows_view_more: Seall barrachd dhaoine ri leantainn
       hashtags_recent_count:
@@ -2217,7 +2201,6 @@ gd:
         one: "%{people} neach san 2 latha seo chaidh"
         other: "%{people} daoine san 2 latha seo chaidh"
         two: "%{people} daoine san 2 latha seo chaidh"
-      hashtags_subtitle: Rùraich na tha a’ treandadh san 2 latha seo chaidh
       hashtags_title: Tagaichean hais a’ treandadh
       hashtags_view_more: Seall barrachd thagaichean hais a’ treandadh
       post_action: Sgrìobh

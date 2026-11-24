@@ -1790,26 +1790,13 @@ fi:
     prompt: Jos luotat linkkiin, jatka napsauttamalla sitä.
     title: Olet poistumassa palvelimelta %{instance}.
   relationships:
-    activity: Tilin aktiivisuus
-    confirm_follow_selected_followers: Haluatko varmasti seurata valittuja seuraajia?
-    confirm_remove_selected_followers: Haluatko varmasti poistaa valitut seuraajat?
-    confirm_remove_selected_follows: Haluatko varmasti poistaa valitut seuraamiset?
-    dormant: Horroksessa
-    follow_failure: Joitain valittuja tilejä ei voitu seurata.
-    follow_selected_followers: Seuraa valittuja seuraajia
     followers: Seuraajat
     following: Seurattavat
     invited: Kutsutut
     last_active: Viimeksi aktiivisena
     most_recent: Tuorein
-    moved: Muuttaneet
     mutual: Seuraatte toisianne
-    primary: Ensisijaiset
     relationship: Seurantasuhde
-    remove_selected_domains: Poista kaikki seuraajat valituista verkkotunnuksista
-    remove_selected_followers: Poista valitut seuraajat
-    remove_selected_follows: Lopeta valittujen käyttäjien seuraaminen
-    status: Tilin tila
   remote_follow:
     missing_resource: Vaadittavaa uudelleenohjaus-URL:ää tiliisi ei löytynyt
   reports:
@@ -1886,7 +1873,6 @@ fi:
     notifications: Sähköposti-ilmoitukset
     preferences: Asetukset
     profile: Julkinen profiili
-    relationships: Seurattavat ja seuraajat
     severed_relationships: Katkenneet suhteet
     statuses_cleanup: Julkaisujen automaattipoisto
     strikes: Moderointivaroitukset
@@ -2110,7 +2096,6 @@ fi:
       apps_ios_action: Lataa App Storesta
       apps_step: Lataa viralliset sovelluksemme.
       apps_title: Mastodon-sovellukset
-      checklist_subtitle: 'Näin pääset alkuun tällä uudella sosiaalisella alustalla:'
       checklist_title: Tervetulon tarkistuslista
       edit_profile_action: Mukauta
       edit_profile_step: Täydentämällä profiilisi tietoja tehostat vuorovaikutteisuutta.
@@ -2128,13 +2113,11 @@ fi:
       follow_action: Seuraa
       follow_step: Mastodonissa on kyse kiinnostavien käyttäjien seuraamisesta.
       follow_title: Mukauta kotisyötettäsi
-      follows_subtitle: Seuraa tunnettuja tilejä
       follows_title: Seurantaehdotuksia
       follows_view_more: Näytä lisää seurattavia käyttäjiä
       hashtags_recent_count:
         one: "%{people} käyttäjä viimeisenä 2 päivänä"
         other: "%{people} käyttäjää viimeisenä 2 päivänä"
-      hashtags_subtitle: Tutki, mikä on ollut suosittua viimeisenä 2 päivänä
       hashtags_title: Suositut aihetunnisteet
       hashtags_view_more: Näytä lisää suosittuja aihetunnisteita
       post_action: Laadi

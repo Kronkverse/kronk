@@ -1502,26 +1502,13 @@ sr-Latn:
     prompt: Ako verujete ovoj vezi, kliknite na nju za nastavak.
     title: Napuštate %{instance}.
   relationships:
-    activity: Aktivnost naloga
-    confirm_follow_selected_followers: Da li ste sigurni da želite da pratite izabrane pratioce?
-    confirm_remove_selected_followers: Da li ste sigurni da želite da uklonite izabrane pratioce?
-    confirm_remove_selected_follows: Da li ste sigurni da želite da uklonite izabrana praćenja?
-    dormant: Neaktivan
-    follow_failure: Nije moguće pratiti neke od izabranih naloga.
-    follow_selected_followers: Prati izabrane pratioce
     followers: Pratioci
     following: Praćenja
     invited: Pozvan
     last_active: Poslednji put aktivan
     most_recent: Najnoviji
-    moved: Premešten
     mutual: Zajednički
-    primary: Primarni
     relationship: Odnos
-    remove_selected_domains: Ukloni sve pratioce sa izabranih domena
-    remove_selected_followers: Ukloni izabrane pratioce
-    remove_selected_follows: Otprati izabrane korisnike
-    status: Status naloga
   remote_follow:
     missing_resource: Ne mogu da nađem zahtevanu adresu preusmeravanja za Vaš nalog
   reports:
@@ -1595,7 +1582,6 @@ sr-Latn:
     migrate: Prebacivanje naloga
     preferences: Podešavanja
     profile: Javni profil
-    relationships: Praćenja i pratioci
     severed_relationships: Prekinute veze
     statuses_cleanup: Automatsko brisanje objava
     strikes: Moderacijski prestupi
@@ -1784,7 +1770,6 @@ sr-Latn:
       apps_ios_action: Preuzmite sa App Store
       apps_step: Preuzmite naše zvanične aplikacije.
       apps_title: Mastodon aplikacije
-      checklist_subtitle: 'Započnimo na ovoj novoj društvenoj granici:'
       checklist_title: Koraci dobrodošlice
       edit_profile_action: Personalizujte
       edit_profile_step: Povećajte svoje interakcije tako što ćete imati sveobuhvatan profil.
@@ -1802,14 +1787,12 @@ sr-Latn:
       follow_action: Pratite
       follow_step: Praćenje zanimljivih ljudi je ono o čemu se radi u Mastodon-u.
       follow_title: Personalizujte svoju početnu stranicu
-      follows_subtitle: Pratite dobro poznate naloge
       follows_title: Koga pratiti
       follows_view_more: Pogledajte još ljudi za praćenje
       hashtags_recent_count:
         few: "%{people} osobe u poslednja 2 dana"
         one: "%{people} osoba u poslednja 2 dana"
         other: "%{people} osoba u poslednja 2 dana"
-      hashtags_subtitle: Istražite šta je u trendu u poslednja 2 dana
       hashtags_title: Heš oznake u trendu
       hashtags_view_more: Pogledajte još heš oznaka u trendu
       post_action: Napišite

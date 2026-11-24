@@ -1258,22 +1258,13 @@ id:
       limit_reached: Batas reaksi yang berbeda terpenuhi
       unrecognized_emoji: bukan emoji yang dikenal
   relationships:
-    activity: Aktivitas akun
-    dormant: Terbengkalai
-    follow_selected_followers: Ikuti pengikut yang dipilih
     followers: Pengikut
     following: Mengikuti
     invited: Diundang
     last_active: Terakhir aktif
     most_recent: Terkini
-    moved: Dipindah
     mutual: Mutual
-    primary: Utama
     relationship: Hubungan
-    remove_selected_domains: Hapus semua pengikut dari domain yang dipilih
-    remove_selected_followers: Hampus pengikut yang dipilih
-    remove_selected_follows: Batal ikuti pengguna terpilih
-    status: Status akun
   remote_follow:
     missing_resource: Tidak dapat menemukan URL redirect dari akun anda
   reports:
@@ -1339,7 +1330,6 @@ id:
     migrate: Pemindahan akun
     preferences: Pilihan
     profile: Profil
-    relationships: Ikuti dan pengikut
     statuses_cleanup: Hapus kiriman otomatis
     strikes: Moderasi hukuman
     two_factor_authentication: Autentikasi Two-factor

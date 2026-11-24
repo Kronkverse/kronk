@@ -1725,26 +1725,13 @@ ja:
     prompt: リンク先を確かめ、信用できる場合のみリンクをクリックしてください。
     title: "%{instance} から別のサーバーに移動します。"
   relationships:
-    activity: 活動
-    confirm_follow_selected_followers: 選択したフォロワーをフォローしてもよろしいですか？
-    confirm_remove_selected_followers: 選択したフォロワーを削除してもよろしいですか？
-    confirm_remove_selected_follows: 選択したフォローを削除してもよろしいですか？
-    dormant: 非アクティブ
-    follow_failure: 選択したアカウントの一部をフォローできませんでした。
-    follow_selected_followers: 選択したフォロワーをフォロー
     followers: フォロワー
     following: フォロー中
     invited: 招待済み
     last_active: 最後の活動
     most_recent: 新着
-    moved: 引っ越し済み
     mutual: 相互
-    primary: 標準
     relationship: 関係性
-    remove_selected_domains: 選択したドメインのフォロワーを全て解除
-    remove_selected_followers: 選択したフォロワーを解除
-    remove_selected_follows: 選択したユーザーをフォロー解除
-    status: 状態
   remote_follow:
     missing_resource: リダイレクト先が見つかりませんでした
   reports:
@@ -1821,7 +1808,6 @@ ja:
     notifications: メール通知
     preferences: ユーザー設定
     profile: プロフィール
-    relationships: フォロー・フォロワー
     severed_relationships: 途切れたフォロー関係
     statuses_cleanup: 投稿の自動削除
     strikes: モデレーションストライク
@@ -2031,7 +2017,6 @@ ja:
       apps_ios_action: App Store からダウンロード
       apps_step: 公式アプリのダウンロード
       apps_title: Mastodon アプリ
-      checklist_subtitle: 新世代のSNSが始まります
       checklist_title: 最初のステップはここから
       edit_profile_action: プロフィール設定
       edit_profile_step: ほかのユーザーが親しみやすいように、プロフィールを整えましょう。
@@ -2049,12 +2034,10 @@ ja:
       follow_action: フォロー
       follow_step: ユーザーをフォローしてみましょう。これがMastodonを楽しむ基本です。
       follow_title: 自分のホームタイムラインを作る
-      follows_subtitle: 人気アカウントをフォロー
       follows_title: フォローを増やしてみませんか？
       follows_view_more: フォローするユーザーを探す
       hashtags_recent_count:
         other: 過去 2 日間で %{people} 人が共有
-      hashtags_subtitle: 過去2日間のトレンドを見る
       hashtags_title: トレンドのハッシュタグ
       hashtags_view_more: トレンドのハッシュタグをもっと見る
       post_action: 作成

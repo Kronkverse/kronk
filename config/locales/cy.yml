@@ -1941,26 +1941,13 @@ cy:
     prompt: Os ydych chi'n ymddiried yn y ddolen hon, cliciwch arni i barhau.
     title: Rydych chi'n gadael %{instance}.
   relationships:
-    activity: Gweithgareddau cyfrif
-    confirm_follow_selected_followers: Ydych chi'n siŵr eich bod am ddilyn y dilynwyr a ddewiswyd?
-    confirm_remove_selected_followers: Ydych chi'n siŵr eich bod am ddileu'r dilynwyr a ddewiswyd?
-    confirm_remove_selected_follows: Ydych chi'n siŵr eich bod am ddileu'r canlynol?
-    dormant: Segur
-    follow_failure: Methu dilyn rhai o'r cyfrifon a ddewiswyd.
-    follow_selected_followers: Dilynwch y dilynwyr a ddewiswyd
     followers: Dilynwyr
     following: Yn dilyn
     invited: Gwahoddwyd
     last_active: Yn weithgar ddiwethaf
     most_recent: Y diweddaraf
-    moved: Wedi symud
     mutual: Yn Gyffredin
-    primary: Cynradd
     relationship: Perthynas
-    remove_selected_domains: Tynnu'r holl ddilynwyr o'r parthau a ddewiswyd
-    remove_selected_followers: Dileu'r dilynwyr a ddewiswyd
-    remove_selected_follows: Dad-ddilyn y defnyddwyr a ddewiswyd
-    status: Statws cyfrif
   remote_follow:
     missing_resource: Methu â dod o hyd i'r URL ailgyfeirio gofynnol ar gyfer eich cyfrif
   reports:
@@ -2037,7 +2024,6 @@ cy:
     notifications: Hysbysiadau e-bost
     preferences: Dewisiadau
     profile: Proffil cyhoeddus
-    relationships: Yn dilyn a dilynwyr
     severed_relationships: Perthynasau wedi'u torri
     statuses_cleanup: Dileu postiadau'n awtomatig
     strikes: Rhybuddion cymedroli
@@ -2277,7 +2263,6 @@ cy:
       apps_ios_action: Ei lwytho i lawr o'r App Store
       apps_step: Llwythwch i awr ein apiau swyddogol.
       apps_title: Apiau Mastodon
-      checklist_subtitle: 'Gadewch i ni eich rhoi ar ben ffordd ar y datblygiad cymdeithasol newydd hon:'
       checklist_title: Rhestr Wirio Croeso
       edit_profile_action: Personoli
       edit_profile_step: Rhowch hwb i'ch rhyngweithiadau trwy gael proffil cynhwysfawr.
@@ -2295,7 +2280,6 @@ cy:
       follow_action: Dilyn
       follow_step: Dilyn pobl ddiddorol yw hanfod Mastodon.
       follow_title: Personoli eich llif cartref
-      follows_subtitle: Dilynwch gyfrifon adnabyddus
       follows_title: Pwy i ddilyn
       follows_view_more: Gweld mwy o bobl i ddilyn
       hashtags_recent_count:
@@ -2305,7 +2289,6 @@ cy:
         other: "%{people} o bobl yn y 2 ddiwrnod diwethaf"
         two: "%{people} o bobl yn y 2 ddiwrnod diwethaf"
         zero: "%{people} o bobl yn y 2 ddiwrnod diwethaf"
-      hashtags_subtitle: Gweld beth sy'n trendio dros y 2 ddiwrnod diwethaf
       hashtags_title: Hashnodau trendio
       hashtags_view_more: Gweld mwy o hashnodau trendio
       post_action: Creu

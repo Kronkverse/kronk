@@ -290,21 +290,10 @@ az:
   privacy_policy:
     title: Məxfilik Siyasəti
   relationships:
-    activity: Hesab fəaliyyəti
-    confirm_follow_selected_followers: Seçilmiş izləyicləri izləmək istədiyinizə əminsiniz?
-    confirm_remove_selected_followers: Seçilmiş izləyiciləri çıxartmaq istədiyinizə əminsiniz?
-    confirm_remove_selected_follows: Seçilmiş izləmələri çıxartmaq istədiyinizə əminsiniz?
-    dormant: Fəaliyyətsiz
-    follow_failure: Seçilmiş hesablardan bəziləri izlənilə bilmədi.
-    follow_selected_followers: Seçilmiş izləyiciləri izlə
     followers: İzləyicilər
     most_recent: Ən son
     mutual: Ortaq
     relationship: Münasibət
-    remove_selected_domains: Seçilmiş domenlərin bütün izləyicilərini çıxart
-    remove_selected_followers: Seçilmiş izləyiciləri çıxart
-    remove_selected_follows: Seçilmiş istifadəçiləri izləmədən çıxart
-    status: Hesab statusu
   self_destruct:
     lead_html: Təəssüf ki, <strong>%{domain}</strong> həmişəlik bağlanır. Əgər orda bir hesabınız varsa, onu istifadə etməyə davam edə bilməyəcəksiniz, ancaq hələ də verilərinizin bir nüsxəsini istəyə bilərsiniz.
   sessions:
@@ -319,7 +308,6 @@ az:
     development: Gəlişdirmə
     export: Xaricə köçür
     notifications: E-poçt bildirişləri
-    relationships: İzlənilənlər və izləyicilər
     severed_relationships: Kəsilmiş münasibətlər
     statuses_cleanup: Göndərişin avtomatik silinməsi
     strikes: Moderasiya pozuntuları

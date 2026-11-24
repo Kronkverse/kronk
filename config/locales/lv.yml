@@ -1756,26 +1756,13 @@ lv:
     prompt: Ja uzticies šai saitei, jāklikšķina uz tās, lai turpinātu.
     title: Tu atstāj %{instance}.
   relationships:
-    activity: Konta aktivitāte
-    confirm_follow_selected_followers: Vai tiešām vēlies sekot atlasītajiem sekotājiem?
-    confirm_remove_selected_followers: Vai tiešām vēlies noņemt atlasītos sekotājus?
-    confirm_remove_selected_follows: Vai tiešām vēlies noņemt atlasītos sekojumus?
-    dormant: Snaudošie
-    follow_failure: Nevarēja sekot dažiem atlasītajiem kontiem.
-    follow_selected_followers: Sekot atlasītajiem sekotājiem
     followers: Sekotāji
     following: Seko
     invited: Uzaicinātie
     last_active: Pēdējā aktivitāte
     most_recent: Jaunākais
-    moved: Pārvietots
     mutual: Savstarpējs
-    primary: Primārais
     relationship: Attiecības
-    remove_selected_domains: Noņemt visus sekotājus no atlasītajiem domēniem
-    remove_selected_followers: Noņemt atlasītos sekotājus
-    remove_selected_follows: Pārtraukt sekošanu atlasītajiem lietotājiem
-    status: Konta stāvoklis
   remote_follow:
     missing_resource: Nevarēja atrast tavam kontam nepieciešamo novirzīšanas URL
   reports:
@@ -1852,7 +1839,6 @@ lv:
     notifications: E-pasta paziņojumi
     preferences: Iestatījumi
     profile: Profils
-    relationships: Sekojamie un sekotāji
     severed_relationships: Pārtrauktās attiecības
     statuses_cleanup: Automatizēta ierakstu izdzēšana
     strikes: Satura pārraudzības aizrādījumi
@@ -2083,14 +2069,12 @@ lv:
       follow_action: Sekot
       follow_step: Sekošana aizraujošiem cilvēkiem ir viss, par ko ir Mastodon.
       follow_title: Pielāgo savu mājas barotni
-      follows_subtitle: Seko labi zināmiem kontiem
       follows_title: Kam sekot
       follows_view_more: Rādīt vairāk cilvēku, kuriem sekot
       hashtags_recent_count:
         one: "%{people} cilvēks pēdējās 2 dienās"
         other: "%{people} cilvēki pēdējās 2 dienās"
         zero: "%{people} cilvēku pēdējās divās dienās"
-      hashtags_subtitle: Izpēti, kas pēdējās divās dienās ir piesasitījis cilvēku uzmanību
       hashtags_title: Populārākie tēmturi
       hashtags_view_more: Skatīt vairāk izplatītu tēmturu
       post_action: Rakstīt

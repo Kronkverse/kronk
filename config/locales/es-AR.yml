@@ -1790,26 +1790,13 @@ es-AR:
     prompt: Si confiás en este enlace, dale clic o un toque para continuar.
     title: Estás dejando %{instance}.
   relationships:
-    activity: Actividad de la cuenta
-    confirm_follow_selected_followers: "¿De verdad querés seguir a los seguidores seleccionados?"
-    confirm_remove_selected_followers: "¿De verdad querés quitar a los seguidores seleccionados?"
-    confirm_remove_selected_follows: "¿De verdad querés quitar a las cuentas seguidas seleccionadas?"
-    dormant: Inactivas
-    follow_failure: No se pudieron seguir algunas de las cuentas seleccionadas.
-    follow_selected_followers: Seguir a los seguidores seleccionados
     followers: Seguidores
     following: Siguiendo
     invited: Invitados
     last_active: Última actividad
     most_recent: Más recientes
-    moved: Mudadas
     mutual: Mutuales
-    primary: Principales
     relationship: Relación
-    remove_selected_domains: Quitar todos los seguidores de los dominios seleccionados
-    remove_selected_followers: Quitar los seguidores seleccionados
-    remove_selected_follows: Dejar de seguir a los usuarios seleccionados
-    status: Estado de la cuenta
   remote_follow:
     missing_resource: No se pudo encontrar la dirección web de redireccionamiento requerida para tu cuenta
   reports:
@@ -1886,7 +1873,6 @@ es-AR:
     notifications: Notificaciones por correo electrónico
     preferences: Configuración
     profile: Perfil público
-    relationships: Seguimientos
     severed_relationships: Relaciones cortadas
     statuses_cleanup: Eliminación auto. de mensajes
     strikes: Moderación de incumplimientos
@@ -2110,7 +2096,6 @@ es-AR:
       apps_ios_action: Descargala desde la App Store
       apps_step: Descargá nuestras aplicaciones oficiales.
       apps_title: Aplicaciones de Mastodon
-      checklist_subtitle: 'Vamos a iniciarte en esta nueva experiencia social:'
       checklist_title: Repaso de bienvenida
       edit_profile_action: Personalizar
       edit_profile_step: Completá tu perfil para aumentar las posibilidades de interacción.
@@ -2128,13 +2113,11 @@ es-AR:
       follow_action: Seguir
       follow_step: Seguir cuentas interesantes es de lo que se trata Mastodon.
       follow_title: Personalizá tu línea de tiempo principal
-      follows_subtitle: Seguí cuentas populares
       follows_title: A quién seguir
       follows_view_more: Encontrá más cuentas para seguir
       hashtags_recent_count:
         one: "%{people} cuenta en los últimos 2 días"
         other: "%{people} cuenta en los últimos 2 días"
-      hashtags_subtitle: Explora las tendencias de los últimos 2 días
       hashtags_title: Etiquetas en tendencia
       hashtags_view_more: Ver más etiquetas en tendencias
       post_action: Redactar

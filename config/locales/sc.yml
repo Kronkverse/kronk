@@ -1036,22 +1036,13 @@ sc:
       limit_reached: Lìmite de reatziones diferentes cròmpidu
       unrecognized_emoji: no est un'emoji reconnotu
   relationships:
-    activity: Atividade de su contu
-    dormant: Firmu
-    follow_selected_followers: Sighi is persones seletzionadas
     followers: Sighiduras
     following: Sighende
     invited: Invitos
     last_active: Ùrtima atividade
     most_recent: Prus reghentes
-    moved: Tramudadu
     mutual: Pari-pari
-    primary: Primàriu
     relationship: Relatzione
-    remove_selected_domains: Boga totu is sighiduras de is domìnios seletzionados
-    remove_selected_followers: Boga is sighiduras seletzionadas
-    remove_selected_follows: Non sigas prus is persones seletzionadas
-    status: Istadu de su contu
   remote_follow:
     missing_resource: Impossìbile agatare sa rechesta de indiritzamentu URL pro su contu tuo
   rss:
@@ -1118,7 +1109,6 @@ sc:
     migrate: Tràmuda de contu
     preferences: Preferèntzias
     profile: Profilu pùblicu
-    relationships: Gente chi sighis e sighiduras
     two_factor_authentication: Autenticatzione de duos fatores
     webauthn_authentication: Craes de seguresa
   statuses:

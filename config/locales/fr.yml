@@ -1787,26 +1787,13 @@ fr:
     prompt: Si vous faites confiance à ce lien, cliquez pour continuer.
     title: Vous quittez %{instance}.
   relationships:
-    activity: Activité du compte
-    confirm_follow_selected_followers: Voulez-vous vraiment suivre les abonné⋅e⋅s sélectionné⋅e⋅s ?
-    confirm_remove_selected_followers: Voulez-vous vraiment supprimer les abonné⋅e⋅s sélectionné⋅e⋅s ?
-    confirm_remove_selected_follows: Voulez-vous vraiment supprimer les abonnements sélectionnés ?
-    dormant: Dormant
-    follow_failure: Impossibilité de suivre certains des comptes sélectionnés.
-    follow_selected_followers: Suivre les abonné·e·s sélectionné·e·s
     followers: Abonné·e
     following: Abonnement
     invited: Invité·e
     last_active: Dernière activité
     most_recent: Plus récent
-    moved: Déménagé
     mutual: Mutuel
-    primary: Primaire
     relationship: Relation
-    remove_selected_domains: Supprimer tou·te·s les abonné·e·s des domaines sélectionnés
-    remove_selected_followers: Supprimer les abonné·e·s sélectionné·e·s
-    remove_selected_follows: Ne plus suivre les comptes sélectionnés
-    status: État du compte
   remote_follow:
     missing_resource: L’URL de redirection requise pour votre compte n’a pas pu être trouvée
   reports:
@@ -1883,7 +1870,6 @@ fr:
     notifications: Notifications par courriel
     preferences: Préférences
     profile: Profil
-    relationships: Abonnements et abonné·e·s
     severed_relationships: Relations rompues
     statuses_cleanup: Suppression automatique de messages
     strikes: Sanctions de modération
@@ -2107,7 +2093,6 @@ fr:
       apps_ios_action: Télécharger sur l'App Store
       apps_step: Téléchargez nos applications officielles.
       apps_title: Applications Mastodon
-      checklist_subtitle: 'Commencez votre aventure sur le web social:'
       checklist_title: Premières étapes
       edit_profile_action: Personnaliser
       edit_profile_step: Améliorez vos interactions avec un profil plus complet.
@@ -2125,13 +2110,11 @@ fr:
       follow_action: Suivre
       follow_step: Suivre des personnes intéressantes est l'essence de Mastodon.
       follow_title: Personnaliser votre fil principal
-      follows_subtitle: Suivez des comptes populaires
       follows_title: Qui suivre
       follows_view_more: Voir plus de personnes à suivre
       hashtags_recent_count:
         one: "%{people} personne dans les deux derniers jours"
         other: "%{people} personnes dans les deux derniers jours"
-      hashtags_subtitle: Explorez les tendances depuis les 2 derniers jours
       hashtags_title: Hashtags populaires
       hashtags_view_more: Voir plus de hashtags populaires
       post_action: Rédiger

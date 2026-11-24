@@ -1791,26 +1791,13 @@ de:
     prompt: Wenn du diesem Link vertraust, dann klicke ihn an, um fortzufahren.
     title: Du verlässt %{instance}.
   relationships:
-    activity: Kontoaktivität
-    confirm_follow_selected_followers: Möchtest du den ausgewählten Followern folgen?
-    confirm_remove_selected_followers: Möchtest du die ausgewählten Follower wirklich entfernen?
-    confirm_remove_selected_follows: Möchtest du den ausgewählten Konten wirklich entfolgen?
-    dormant: Inaktiv
-    follow_failure: Einigen der ausgewählten Konten konnte nicht gefolgt werden.
-    follow_selected_followers: Ausgewählten Followern folgen
     followers: Follower
     following: Folge ich
     invited: Eingeladen
     last_active: Zuletzt aktiv
     most_recent: Neueste
-    moved: Umgezogen
     mutual: Gegenseitig
-    primary: Primär
     relationship: Beziehung
-    remove_selected_domains: Alle Follower von den ausgewählten Domains entfernen
-    remove_selected_followers: Ausgewählten Followern entfolgen
-    remove_selected_follows: Ausgewählten Profilen entfolgen
-    status: Kontostatus
   remote_follow:
     missing_resource: Die erforderliche Weiterleitungs-URL für dein Konto konnte nicht gefunden werden
   reports:
@@ -1887,7 +1874,6 @@ de:
     notifications: Benachrichtigungen
     preferences: Einstellungen
     profile: Öffentliches Profil
-    relationships: Follower und Folge ich
     severed_relationships: Getrennte Verbindungen
     statuses_cleanup: Automatisiertes Löschen
     strikes: Maßnahmen
@@ -2111,7 +2097,6 @@ de:
       apps_ios_action: Im App Store (Apple) herunterladen
       apps_step: Lade unsere offiziellen Apps herunter.
       apps_title: Mastodon-Apps
-      checklist_subtitle: 'Fangen wir an, diese neue soziale Dimension zu erkunden:'
       checklist_title: Willkommensleitfaden
       edit_profile_action: Personalisieren
       edit_profile_step: Mit einem vollständigen Profil interagieren andere eher mit dir.
@@ -2129,13 +2114,11 @@ de:
       follow_action: Folgen
       follow_step: Interessanten Profilen zu folgen ist das, was Mastodon ausmacht.
       follow_title: Personalisiere deine Startseite
-      follows_subtitle: Folge bekannten Profilen
       follows_title: Empfohlene Profile
       follows_view_more: Weitere Profile zum Folgen entdecken
       hashtags_recent_count:
         one: "%{people} Profil in den vergangenen 2 Tagen"
         other: "%{people} Profile in den vergangenen 2 Tagen"
-      hashtags_subtitle: Entdecke, was in den vergangenen 2 Tagen angesagt war
       hashtags_title: Angesagte Hashtags
       hashtags_view_more: Weitere angesagte Hashtags entdecken
       post_action: Verfassen

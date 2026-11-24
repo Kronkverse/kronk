@@ -916,17 +916,12 @@ kab:
     prompt: Ma tumneḍ asaɣ-a, sit fell-as akken ad tkemmleḍ.
     title: Ad teffɣeḍ seg %{instance}.
   relationships:
-    activity: Armud n umiḍan
     followers: Imeḍfaṛen
     following: Yeṭṭafaṛ
     invited: Yettwancad
     last_active: Armud aneggaru
     most_recent: Melmi kan
-    moved: Igujj
-    primary: Agejdan
     relationship: Assaɣ
-    remove_selected_follows: Ur ṭṭafar ara iseqdacen yettwafernen
-    status: Addad n umiḍan
   rss:
     content_warning: 'Alɣu n ugbur :'
     descriptions:
@@ -990,7 +985,6 @@ kab:
     notifications: Ilɣa s imayl
     preferences: Imenyafen
     profile: Ameɣnu
-    relationships: Imeḍfaṛen akked wid i teṭṭafaṛeḍ
     statuses_cleanup: Tukksa tawurmant n tsuffaɣ
     two_factor_authentication: Asesteb s snat n tarrayin
     webauthn_authentication: Tisura n teɣlist
@@ -1094,10 +1088,8 @@ kab:
       follow_action: Ḍfeṛ
       follow_step: Mastodon yebna meṛṛa ɣef uḍfar n yemdanen yesɛan azal.
       follow_title: Sagen isuddam n yisallen n wejgu-k·m agejdan
-      follows_subtitle: Ḍfer imiḍanen yettwassnen mliḥ
       follows_title: Anwa ara ḍefṛeḍ
       follows_view_more: Ssken-d ugar n medden ay tzemred ad tḍefred
-      hashtags_subtitle: Snirem ayen yellan d anezzuɣ deg 2 n wussan-a iεeddan
       hashtags_title: Ihacṭagen inezzaɣ
       hashtags_view_more: Sken-d ugar n yihacṭagen inezzaɣ
       post_action: Aru

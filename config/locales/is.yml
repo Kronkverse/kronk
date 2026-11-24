@@ -1794,26 +1794,13 @@ is:
     prompt: Ef þú treystir þessum tengli, geturðu smellt á hann til að halda áfram.
     title: Þú ert að yfirgefa %{instance}.
   relationships:
-    activity: Virkni aðgangs
-    confirm_follow_selected_followers: Ertu viss um að þú viljir fylgjast með völdum fylgjendum?
-    confirm_remove_selected_followers: Ertu viss um að þú viljir fjarlægja valda fylgjendur?
-    confirm_remove_selected_follows: Ertu viss um að þú viljir fjarlægja valið sem fylgst er með?
-    dormant: Sofandi
-    follow_failure: Gat ekki fylgst með sumum af völdu aðgöngunum.
-    follow_selected_followers: Fylgjast með völdum fylgjendum
     followers: Fylgjendur
     following: Fylgist með
     invited: Boðið
     last_active: Síðasta virkni
     most_recent: Nýjast
-    moved: Fært
     mutual: Sameiginlegir
-    primary: Aðal
     relationship: Vensl
-    remove_selected_domains: Fjarlægja alla fylgjendur frá völdum lénum
-    remove_selected_followers: Fjarlægja valda fylgjendur
-    remove_selected_follows: Hætta að fylgjast með völdum notendum
-    status: Staða aðgangs
   remote_follow:
     missing_resource: Gat ekki fundið endurbeiningarslóðina fyrir notandaaðganginn þinn
   reports:
@@ -1890,7 +1877,6 @@ is:
     notifications: Tilkynningar í tölvupósti
     preferences: Kjörstillingar
     profile: Notandasnið
-    relationships: Fylgist með og fylgjendur
     severed_relationships: Rofin tengsl
     statuses_cleanup: Sjálfvirk eyðing færslna
     strikes: Umsýsla refsinga
@@ -2114,7 +2100,6 @@ is:
       apps_ios_action: Sækja í App Store
       apps_step: Sæktu opinberu forritin okkar.
       apps_title: Mastodon-forrit
-      checklist_subtitle: 'Komum þér í gang á þessum nýja samfélagsmiðli:'
       checklist_title: Til minnis í upphafi
       edit_profile_action: Sérsníða
       edit_profile_step: Annað fólk er líklegra til að eiga samskipti við þig ef þý setur einhverjar áhugaverðar upplýsingar í notandasniðið þitt.
@@ -2132,13 +2117,11 @@ is:
       follow_action: Fylgjast með
       follow_step: Að fylgjast með áhugaverðu fólki er það sem Mastodon snýst um.
       follow_title: Aðlagaðu heimastreymið þitt eftir þínu höfði
-      follows_subtitle: Fylgstu með vel þekktum notendum
       follows_title: Hverjum ætti að fylgjast með
       follows_view_more: Skoða fleira fólk til að fylgjast með
       hashtags_recent_count:
         one: "%{people} aðili síðustu 2 daga"
         other: "%{people} manns á síðustu 2 dögum"
-      hashtags_subtitle: Skoðaðu hvað sé búið að vera í umræðunni síðustu 2 dagana
       hashtags_title: Vinsæl myllumerki
       hashtags_view_more: Sjá fleiri vinsæl myllumerki
       post_action: Skrifa

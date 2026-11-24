@@ -1755,26 +1755,13 @@ eo:
     prompt: Se vi fidas ĉi tiun ligon, alklaku ĝin por daŭrigi.
     title: Vi foriras %{instance}.
   relationships:
-    activity: Konta aktiveco
-    confirm_follow_selected_followers: Ĉu vi certas ke vi volas sekvi la elektitajn sekvantojn?
-    confirm_remove_selected_followers: Ĉu vi certas, ke vi volas forigi la elektitajn sekvantojn?
-    confirm_remove_selected_follows: Ĉu vi certas, ke vi volas forigi la elektitajn sekvatojn?
-    dormant: Dormanta
-    follow_failure: Ne eblis sekvi iom da la elektitaj kontoj.
-    follow_selected_followers: Sekvi selektitajn sekvantojn
     followers: Sekvantoj
     following: Sekvatoj
     invited: Invitita
     last_active: Laste aktiva
     most_recent: Plej lasta
-    moved: Moviĝita
     mutual: Reciproka
-    primary: Ĉefa
     relationship: Rilato
-    remove_selected_domains: Forigi ĉiujn sekvantojn el la selektitaj domajnoj
-    remove_selected_followers: Forigi selektitajn sekvantojn
-    remove_selected_follows: Ne plu sekvi elektitajn uzantojn
-    status: Stato de la konto
   remote_follow:
     missing_resource: La bezonata URL de plusendado por via konto ne estis trovita
   reports:
@@ -1851,7 +1838,6 @@ eo:
     notifications: Retpoŝtaj sciigoj
     preferences: Agordoj
     profile: Publika profilo
-    relationships: Sekvatoj kaj sekvantoj
     severed_relationships: Finitaj rilatoj
     statuses_cleanup: Automata mesaĝforigo
     strikes: Kontroladmonoj
@@ -2064,7 +2050,6 @@ eo:
       apps_ios_action: Elŝutu ĉe la App Store
       apps_step: Elŝutu niajn oficialajn aplikaĵojn.
       apps_title: Aplikaĵoj de Mastodon
-      checklist_subtitle: 'Nin eku vin en ĉi tiu nova socia rando:'
       checklist_title: Bonvenan Markolisto
       edit_profile_action: Agordi
       edit_profile_step: Plibonigi viajn interagojn per havas finitan profilon.
@@ -2082,13 +2067,11 @@ eo:
       follow_action: Sekvi
       follow_step: Sekvi interesajn homojn estas pri kio Mastodon temas.
       follow_title: Personigu vian hejmtemplinion
-      follows_subtitle: Sekvu konatajn kontojn
       follows_title: Kiun sekvi
       follows_view_more: Rigardu pli da homoj por sekvi
       hashtags_recent_count:
         one: "%{people} homo en la pasintaj 2 tagoj"
         other: "%{people} homoj en la pasintaj 2 tagoj"
-      hashtags_subtitle: Esploru kio estas tendenco ekde la pasintaj 2 tagoj
       hashtags_title: Popularaj kradvortoj
       hashtags_view_more: Vidi pli da popularaj kradvortoj
       post_action: Redakti

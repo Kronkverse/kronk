@@ -638,21 +638,13 @@ ro:
       limit_reached: S-a atins limita diferitelor reacţii
       unrecognized_emoji: nu este un zâmbet recunoscut
   relationships:
-    activity: Activitate cont
-    dormant: Latente
     followers: Urmăritori
     following: Urmăriți
     invited: Invitați
     last_active: Ultima activitate
     most_recent: Cei mai recenți
-    moved: Mutat
     mutual: Mutuali
-    primary: Primar
     relationship: Relaţie
-    remove_selected_domains: Eliminați toți urmăritorii din domeniile selectate
-    remove_selected_followers: Elimină urmăritorii selectați
-    remove_selected_follows: Anulează urmărirea utilizatorilor selectați
-    status: Starea contului
   remote_follow:
     missing_resource: Nu s-a putut găsi URL-ul de redirecționare necesar pentru contul dvs
   scheduled_statuses:
@@ -666,7 +658,6 @@ ro:
   settings:
     edit_profile: Editați profilul
     profile: Profil
-    relationships: Urmăriri și urmăritori
   statuses:
     attached:
       image:

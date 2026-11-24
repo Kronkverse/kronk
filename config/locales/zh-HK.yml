@@ -1486,26 +1486,13 @@ zh-HK:
     prompt: 如果你信任此連結，點擊它繼續。
     title: 你即將離開 %{instance}。
   relationships:
-    activity: 帳戶活動
-    confirm_follow_selected_followers: 你確定要追蹤選取的追蹤者嗎？
-    confirm_remove_selected_followers: 你確定要移除選取的追蹤者嗎？
-    confirm_remove_selected_follows: 你確定要移除選取的追蹤者嗎？
-    dormant: 潛在
-    follow_failure: 無法追蹤部份已選的帳號。
-    follow_selected_followers: 關注所選的追隨者
     followers: 追隨者
     following: 正在關注
     invited: 已邀請
     last_active: 上次活躍
     most_recent: 最近
-    moved: 已轉移
     mutual: 共同
-    primary: 主要
     relationship: 關係
-    remove_selected_domains: 從所選伺服器清除所有追隨者
-    remove_selected_followers: 刪除所選選項
-    remove_selected_follows: 取消關注所選用戶
-    status: 帳戶帖文
   remote_follow:
     missing_resource: 無法找到你用戶的轉接網址
   reports:
@@ -1581,7 +1568,6 @@ zh-HK:
     notifications: 電郵通知
     preferences: 偏好設定
     profile: 個人資料
-    relationships: 關注及追隨者
     severed_relationships: 已切斷關係
     statuses_cleanup: 自動嘟文刪除
     strikes: 審核警告
@@ -1765,7 +1751,6 @@ zh-HK:
       apps_ios_action: 從 App Store 下載
       apps_step: 下載官方應用程式。
       apps_title: Mastodon 應用程式
-      checklist_subtitle: 讓我們帶你進入全新的社交領域：
       checklist_title: 歡迎清單
       edit_profile_action: 自訂
       edit_profile_step: 完善個人檔案來促進互動。
@@ -1783,12 +1768,10 @@ zh-HK:
       follow_action: 追蹤
       follow_step: 追蹤有趣的人正是 Mastodon 的核心所在。
       follow_title: 自訂你的首頁時間軸
-      follows_subtitle: 追蹤知名帳號
       follows_title: 追蹤對象
       follows_view_more: 查看更多追蹤對象
       hashtags_recent_count:
         other: 過去兩天內有 %{people} 人
-      hashtags_subtitle: 查看過去兩天的流行話題
       hashtags_title: 熱門標籤
       hashtags_view_more: 查看更多熱門標籤
       post_action: 撰寫
