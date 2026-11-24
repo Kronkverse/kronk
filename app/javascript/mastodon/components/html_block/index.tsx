@@ -10,21 +10,13 @@ import { useElementHandledLink } from '../status/handled_link';
 export const HTMLBlock = polymorphicForwardRef<
   'div',
   EmojiHTMLProps & Parameters<typeof useElementHandledLink>[0]
->(
-  ({
-    onElement: onParentElement,
+>(({ onElement: onParentElement, hrefToMention, ...props }) => {
+  const { onElement: onLinkElement } = useElementHandledLink({
     hrefToMention,
-    hashtagAccountId,
-    ...props
-  }) => {
-    const { onElement: onLinkElement } = useElementHandledLink({
-      hrefToMention,
-      hashtagAccountId,
-    });
-    const onElement: OnElementHandler = useCallback(
-      (...args) => onParentElement?.(...args) ?? onLinkElement(...args),
-      [onLinkElement, onParentElement],
-    );
-    return <EmojiHTML {...props} onElement={onElement} />;
-  },
-);
+  });
+  const onElement: OnElementHandler = useCallback(
+    (...args) => onParentElement?.(...args) ?? onLinkElement(...args),
+    [onLinkElement, onParentElement],
+  );
+  return <EmojiHTML {...props} onElement={onElement} />;
+});

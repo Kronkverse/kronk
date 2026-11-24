@@ -45,7 +45,6 @@ import { initialState, me, owner, singleUserMode, trendsEnabled, landingPage, lo
 
 import BundleColumnError from './components/bundle_column_error';
 import { UploadArea } from './components/upload_area';
-import { HashtagMenuController } from './components/hashtag_menu_controller';
 import PwaInstallPrompt from '../../components/pwa_install_prompt';
 import ColumnsAreaContainer from './containers/columns_area_container';
 import LoadingBarContainer from './containers/loading_bar_container';
@@ -60,7 +59,6 @@ import {
   HomeTimeline,
   Reblogs,
   Favourites,
-  HashtagTimeline,
   NotificationRequests,
   NotificationRequest,
   FollowRequests,
@@ -70,7 +68,6 @@ import {
   Awawb,
   FavouritedStatuses,
   BookmarkedStatuses,
-  FollowedTags,
   LinkTimeline,
   Blocks,
   DomainBlocks,
@@ -258,7 +255,11 @@ class SwitchingColumnsArea extends PureComponent {
             {/* DMs live in the Nudges messenger — the classic direct-timeline is retired. */}
             <Redirect from='/conversations' to='/nudges' />
             <Redirect from='/timelines/direct' to='/nudges' />
-            <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
+            {/* Hashtags were retired from the UI on 2026-11-24
+                (docs/decisions.md); an old tag link lands on Home. */}
+            <Redirect from='/tags/:id' to='/home' />
+            <Redirect from='/timelines/tag/:id' to='/home' />
+            <Redirect from='/followed_tags' to='/home' />
             <WrappedRoute path='/links/:url' component={LinkTimeline} content={children} />
             {/* Nudges activity feed retired 2026-07-21 in favour of the Signal-shaped
                 messenger surface. Legacy /notifications and /nudges/activity
@@ -574,7 +575,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/@:acct/:statusId/quotes' component={Quotes} content={children} />
 
             {/* Legacy routes, cannot be easily factored with other routes because they share a param name */}
-            <WrappedRoute path='/timelines/tag/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/statuses/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/statuses/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path={['/statuses/:statusId/froths', '/statuses/:statusId/favourites']} component={Favourites} content={children} />
@@ -583,7 +583,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/mate_requests' component={MateRequests} content={children} />
             <WrappedRoute path='/blocks' component={Blocks} content={children} />
             <WrappedRoute path='/domain_blocks' component={DomainBlocks} content={children} />
-            <WrappedRoute path='/followed_tags' component={FollowedTags} content={children} />
             <WrappedRoute path='/mutes' component={Mutes} content={children} />
 
             <Route component={BundleColumnError} />
@@ -1019,7 +1018,6 @@ class UI extends PureComponent {
           {this.props.identity.signedIn && <KronkMenu />}
           {this.props.identity.signedIn && <WalkthroughRunner />}
           {!disableHoverCards && <HoverCardController />}
-          <HashtagMenuController />
           <PwaInstallPrompt />
           <LoadingBarContainer className='loading-bar' />
           <ModalContainer />

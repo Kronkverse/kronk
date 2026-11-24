@@ -599,7 +599,7 @@ class Status extends ImmutablePureComponent {
       statusAvatar = <AvatarOverlay account={avatarAccount} friend={account} />;
     }
 
-    const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
+    const {statusContentProps} = getHashtagBarForStatus(status);
 
     let tagCaption = null;
     const mediaAttachments = status.get('media_attachments');
@@ -697,7 +697,6 @@ class Status extends ImmutablePureComponent {
 
                 {media}
                 {tagCaption}
-                {hashtagBar}
 
                 {children}
               </>

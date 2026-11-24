@@ -17,6 +17,29 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-24 — Lists and hashtags retired from the UI
+
+**Decided by Tal.** "Retire lists for now", and hashtags "are mostly removed
+for now. Retire these and we'll rebuild them later if we find the need."
+
+- **Lists.** Mastodon's lists overlapped Krews, the one audience group, and
+  only reached members through the account ⋯ menu ("Add or remove from
+  lists") and the data pages. Those are gone: the menu item, its
+  follow-to-list and delete-list dialogs, the Lists row in Data export, and
+  Lists as an import type.
+- **Hashtags.** A tag in a post or a bio reads as the plain word, with no #
+  and no link (`HandledLink`). The tag bar under a post, the tag menu
+  (browse, follow, mute), the tag pages (`/tags/:id`, `/followed_tags`, which
+  now land on Home), Explore's Hashtags tab, trending tags in the side panel,
+  the composer's Kategory picker, hashtag warning and `#` suggestions, the
+  search box's "Go to hashtag" and hashtag rows in Search are gone. A last
+  line of nothing but tags is still trimmed from a post, as before.
+- **The data stays.** Lists, tags, followed tags and the API for each are
+  untouched, and so is the lists CSV export at its URL. Rebuilding either
+  means putting UI back, not recovering data.
+- **Not touched:** profile Kategory sections (`/settings/profile_sections`,
+  which nothing links to) and the server-rendered pages.
+
 ## 2026-11-24 — Kollection: a card opens the app's page
 
 **Decided by Tal**, the same day, reversing "tapping an app's card opens the

@@ -206,7 +206,7 @@ export const Profile: React.FC<{
               <span className='hint'>
                 <FormattedMessage
                   id='onboarding.profile.note_hint'
-                  defaultMessage='You can @mention other people or #hashtags…'
+                  defaultMessage='You can @mention other people…'
                 />
               </span>
               <div className='label_input'>

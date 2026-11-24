@@ -14,10 +14,6 @@ export function Firehose () {
   return import('../../firehose');
 }
 
-export function HashtagTimeline () {
-  return import('../../hashtag_timeline');
-}
-
 export function Status () {
   return import('../../status');
 }
@@ -60,10 +56,6 @@ export function MateRequests () {
 
 export function FavouritedStatuses () {
   return import('../../favourited_statuses');
-}
-
-export function FollowedTags () {
-  return import('../../followed_tags');
 }
 
 export function BookmarkedStatuses () {
@@ -112,10 +104,6 @@ export function Video () {
 
 export function EmbedModal () {
   return import('../components/embed_modal');
-}
-
-export function ListAdder () {
-  return import('../../list_adder');
 }
 
 export function Tesseract () {

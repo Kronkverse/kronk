@@ -25,7 +25,9 @@ const textAtCursorMatchesToken = (str, caretPosition) => {
     word = str.slice(left, right + caretPosition);
   }
 
-  if (!word || word.trim().length < 3 || ['@', '＠', ':', '#', '＃'].indexOf(word[0]) === -1) {
+  // No '#': hashtags were retired from the UI on 2026-11-24, so a tag is
+  // never suggested (docs/decisions.md).
+  if (!word || word.trim().length < 3 || ['@', '＠', ':'].indexOf(word[0]) === -1) {
     return [null, null];
   }
 

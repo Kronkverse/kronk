@@ -1,17 +1,8 @@
-import { useState, useCallback } from 'react';
-
-import { FormattedMessage } from 'react-intl';
-
-import { Link } from 'react-router-dom';
-
 import type { List, Record } from 'immutable';
 
 import { groupBy, minBy } from 'lodash';
 
 import { getStatusContent } from './status_content';
-
-// Fit on a single line on desktop
-const VISIBLE_HASHTAGS = 3;
 
 // Those types are not correct, they need to be replaced once this part of the state is typed
 export type TagLike = Record<{ name: string }>;
@@ -183,66 +174,11 @@ export function computeHashtagBarForStatus(status: StatusLike): {
   };
 }
 
-/**
- *  This function will process a status to, at the same time (avoiding parsing it twice):
- * - build the HashtagBar for this status
- * - remove the last-line hashtags from the status content
- * @param status The status to process
- * @returns Props to be passed to the <StatusContent> component, and the hashtagBar to render
- */
+// Hashtags were retired from the UI on 2026-11-24 (docs/decisions.md): the
+// bar of tags under a post is gone. A last line of nothing but tags is still
+// trimmed from the post, so those tags don't show either.
 export function getHashtagBarForStatus(status: StatusLike) {
-  const { statusContentProps, hashtagsInBar } =
-    computeHashtagBarForStatus(status);
+  const { statusContentProps } = computeHashtagBarForStatus(status);
 
-  return {
-    statusContentProps,
-    hashtagBar: (
-      <HashtagBar
-        hashtags={hashtagsInBar}
-        accountId={status.getIn(['account', 'id']) as string}
-      />
-    ),
-  };
+  return { statusContentProps };
 }
-
-const HashtagBar: React.FC<{
-  hashtags: string[];
-  accountId: string;
-}> = ({ hashtags, accountId }) => {
-  const [expanded, setExpanded] = useState(false);
-  const handleClick = useCallback(() => {
-    setExpanded(true);
-  }, []);
-
-  if (hashtags.length === 0) {
-    return null;
-  }
-
-  const revealedHashtags = expanded
-    ? hashtags
-    : hashtags.slice(0, VISIBLE_HASHTAGS);
-
-  return (
-    <div className='hashtag-bar'>
-      {revealedHashtags.map((hashtag) => (
-        <Link
-          key={hashtag}
-          to={`/tags/${hashtag}`}
-          data-menu-hashtag={accountId}
-        >
-          <span className='kategory-pill'>{hashtag}</span>
-        </Link>
-      ))}
-
-      {!expanded && hashtags.length > VISIBLE_HASHTAGS && (
-        <button className='link-button' onClick={handleClick}>
-          <FormattedMessage
-            id='hashtags.and_other'
-            defaultMessage='…and {count, plural, other {# more}}'
-            values={{ count: hashtags.length - VISIBLE_HASHTAGS }}
-          />
-        </button>
-      )}
-    </div>
-  );
-};

@@ -25,7 +25,6 @@ import { useIdentity } from 'mastodon/identity_context';
 import { domain, searchEnabled } from 'mastodon/initial_state';
 import type { RecentSearch, SearchType } from 'mastodon/models/search';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
-import { HASHTAG_REGEX } from 'mastodon/utils/hashtags';
 
 const messages = defineMessages({
   placeholder: { id: 'search.placeholder', defaultMessage: 'Search' },
@@ -243,8 +242,6 @@ export const Search: React.FC<{
 
       if (search.type === 'account') {
         history.push(`/@${search.q}`);
-      } else if (search.type === 'hashtag') {
-        history.push(`/tags/${search.q}`);
       } else {
         const queryParams = new URLSearchParams({ q: search.q });
         if (search.type) queryParams.set('type', search.type);
@@ -319,29 +316,6 @@ export const Search: React.FC<{
                 }
               }
 
-              unfocus();
-            },
-          });
-        }
-
-        const couldBeHashtag =
-          (trimmedValue.startsWith('#') && trimmedValue.length > 1) ||
-          trimmedValue.match(HASHTAG_REGEX);
-
-        if (couldBeHashtag) {
-          newQuickActions.push({
-            key: 'go-to-hashtag',
-            label: (
-              <FormattedMessage
-                id='search.quick_action.go_to_hashtag'
-                defaultMessage='Go to hashtag {x}'
-                values={{ x: <mark>{trimmedValue.replace(/^#/, '')}</mark> }}
-              />
-            ),
-            action: () => {
-              const query = trimmedValue.replace(/^#/, '');
-              history.push(`/tags/${query}`);
-              void dispatch(clickSearchResult({ q: query, type: 'hashtag' }));
               unfocus();
             },
           });
