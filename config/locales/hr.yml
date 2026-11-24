@@ -110,7 +110,6 @@ hr:
       request: Zatraži svoju arhivu
       size: Veličina
     blocks: Blokirali ste
-    lists: Liste
     storage: Pohrana medijskih sadržaja
   featured_tags:
     add_new: Dodaj novi

@@ -1423,7 +1423,6 @@ gl:
     bookmarks: Marcadores
     csv: CSV
     domain_blocks: Bloqueos de dominio
-    lists: Listaxes
     mutes: Silenciadas
     storage: Almacenamento de multimedia
   featured_tags:

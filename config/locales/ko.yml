@@ -1405,7 +1405,6 @@ ko:
     bookmarks: 북마크
     csv: CSV
     domain_blocks: 도메인 차단
-    lists: 리스트
     mutes: 뮤트
     storage: 미디어
   featured_tags:

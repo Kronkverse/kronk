@@ -1448,7 +1448,6 @@ pl:
     bookmarks: Zakładki
     csv: CSV
     domain_blocks: Blokady domen
-    lists: Listy
     mutes: Wyciszeni
     storage: Urządzenie przechowujące dane
   featured_tags:

@@ -1309,7 +1309,6 @@ io:
     bookmarks: Lektosigni
     csv: CSV
     domain_blocks: Domenobstrukti
-    lists: Listi
     mutes: Vu silencigesas
     storage: Audvidajkonservo
   featured_tags:

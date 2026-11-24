@@ -1426,7 +1426,6 @@ fi:
     bookmarks: Kirjanmerkit
     csv: CSV
     domain_blocks: Verkkotunnusten estot
-    lists: Listat
     mutes: Mykistykset
     storage: Mediatiedostot
   featured_tags:

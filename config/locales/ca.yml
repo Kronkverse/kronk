@@ -1404,7 +1404,6 @@ ca:
     bookmarks: Marcadors
     csv: CSV
     domain_blocks: Bloquejos de dominis
-    lists: Llistes
     mutes: Persones silenciades
     storage: Emmagatzematge
   featured_tags:
