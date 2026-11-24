@@ -1,15 +1,11 @@
 ---
 title: Rules
-updated: 2026-09-15
-status: instance-layer stub
+updated: 2026-11-24
 ---
 
-_Instance-layer file. Every fork edits this — Kronk-the-project
-doesn't dictate rules for downstream instances._
+## The rules
 
-## Baseline
-
-Baseline rules every Kronk instance is encouraged to keep:
+What we ask of everyone on Kronk:
 
 1. **No harassment.** Disagreement is welcome; personal targeting
    isn't. This applies to posts, replies and Nudges alike.
@@ -23,6 +19,3 @@ Baseline rules every Kronk instance is encouraged to keep:
 6. **Krews aren't broadcast channels.** Don't fan a single post
    across many Krews to get attention; target the Krew(s) the
    content actually concerns.
-
-Operators should extend these with anything specific to their
-community.

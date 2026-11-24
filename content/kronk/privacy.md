@@ -1,26 +1,24 @@
 ---
 title: Privacy policy
-updated: 2026-07-10
-status: instance-layer stub
+updated: 2026-11-24
+status: placeholder
 ---
 
-_This is an instance-layer file. Every Kronk fork edits this per their
-deployment. See <https://mastodon.kronk.info/> for the current
-production instance's policy._
+## Not written yet
 
-## Placeholder — replace before public launch
+Kronk's privacy policy hasn't been written yet. Until it is, if you
+have a question about what Kronk holds about you, ask the people who
+run Kronk.
 
-If you're reading this on a running instance, the operators haven't
-edited it yet. Reach out to them.
+Whatever the policy ends up saying, you can already get a copy of
+everything Kronk holds for you, and delete your account, from
+Settings.
 
-## What this file should cover (upstream template)
+## What it will cover
 
-Delete this list once you've written the actual policy:
-
-- What data the instance collects (accounts, statuses, media)
-- Where that data lives (server jurisdiction, hosting provider)
-- Who has access to it (operators, moderators, backup handlers)
-- What data leaves the instance (federation, media CDN, email)
-- Retention (how long tombstoned records / logs are kept)
-- How to request data export / deletion
-- Contact for privacy-related questions
+- What Kronk keeps about you: your account, your posts, your media.
+- Where that lives, and who can see it.
+- What leaves Kronk, such as email.
+- How long things are kept after you delete them.
+- How to get a copy of your data, or have it deleted.
+- Who to contact about privacy.

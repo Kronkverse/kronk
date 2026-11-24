@@ -29,7 +29,7 @@ and maintain each korner's code. Steward is **recognition, not
 power** — being named a steward doesn't grant runtime moderation
 authority beyond what any account has.
 
-Runtime moderation, when it's needed, escalates to the instance
-admins through the standard Mastodon report flow. Structural
+Runtime moderation, when it's needed, goes to the people who run
+Kronk, through a report on the post or account. Structural
 moderation (deprecating a korner, resetting a shared scope) routes
 through Kommons.
