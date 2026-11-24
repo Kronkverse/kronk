@@ -15,7 +15,7 @@
 #   connected_ids  oauth application ids the viewer holds a live token for
 #                  (KollectionApp.connected_application_ids)
 class REST::KollectionAppSerializer < ActiveModel::Serializer
-  attributes :id, :slug, :name, :tagline, :description, :website, :made_by,
+  attributes :id, :slug, :name, :tagline, :description, :website, :download_url, :made_by,
              :category, :platforms, :icon_url, :cover_url, :signs_in,
              :scopes, :status, :connected, :can_manage, :keeper, :created_at
 

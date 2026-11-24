@@ -83,7 +83,7 @@ class Api::V1::Kollection::AppsController < Api::BaseController
   end
 
   def app_params
-    params.permit(:name, :tagline, :description, :website, :made_by, :category, :sign_in, :redirect_uris, :icon_id, :cover_id,
+    params.permit(:name, :tagline, :description, :website, :download_url, :made_by, :category, :sign_in, :redirect_uris, :icon_id, :cover_id,
                   redirect_uris: [], scopes: [], platforms: [], screenshot_ids: [])
   end
 end

@@ -78,6 +78,18 @@ RSpec.describe 'Kollection app pages' do
       expect(response).to have_http_status(422)
     end
 
+    it 'takes where to get it for a phone, as a web address' do
+      post '/api/v1/kollection/apps', headers: headers, params: {
+        name: 'Anthemos', website: 'https://anthemos.example', download_url: ' https://anthemos.example/app.apk ',
+      }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to include('download_url' => 'https://anthemos.example/app.apk')
+
+      post '/api/v1/kollection/apps', headers: headers, params: { name: 'Odd', website: 'https://odd.example', download_url: 'anthemos://open' }
+      expect(response).to have_http_status(422)
+    end
+
     it 'keeps up to six screenshots, in order, from your own uploads' do
       mine = Fabricate.times(7, :media_attachment, account: user.account, status: nil)
       theirs = Fabricate(:media_attachment, status: nil)

@@ -17,6 +17,21 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-24 — Kollection: a card opens the app's page
+
+**Decided by Tal**, the same day, reversing "tapping an app's card opens the
+app" below: a card opens the app's Kollection page, which is where people
+see what the community has built (screenshots, details) and go on from
+there: **Open** for the website, **Get the app** for a phone download (a new
+field), or sign in with Kronk in the app itself. The small About link under
+each card goes. Two composer simplifications came with it: **Made by**
+starts as the adder's name ("it's probably pretty safe to assume that the
+people who are … putting it in the collection are the people who built it"),
+and the **icon** is optional, an app without one showing its first letter.
+Every sign-in field now says in plain words what it is for.
+
+Supersedes the first bullet of the entry below.
+
 ## 2026-11-24 — Kollection: tap to open, app store pages, Mates using it
 
 **Decided by Tal.** Kollection should feel like a place to find apps, not a

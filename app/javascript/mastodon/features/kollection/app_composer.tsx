@@ -39,6 +39,8 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { PhotoDropZone } from 'mastodon/components/media';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
+import { me } from 'mastodon/initial_state';
+import { useAppSelector } from 'mastodon/store';
 
 import { categoryMessages, platformMessages } from './details';
 import { knownScopes, scopeMessages } from './scopes';
@@ -47,11 +49,14 @@ import { knownScopes, scopeMessages } from './scopes';
 // (docs/spaces/kollection.md). The standard composer overlay with the kit:
 // what its app store style page shows (an icon, a cover, the name, a
 // tagline, what it is, who made it, a category, where it runs, up to six
-// screenshots in order), its website, and whether it signs people in with
-// Kronk. Editing ends with Remove this app, which asks first. One that does takes where Kronk sends people back (one
-// address per line, an app may have several) and what it may see. No
-// reach control: every app is for every member. No Konnect row: an app is
-// not something to Konnect.
+// screenshots in order), its website, where to get it for a phone, and
+// whether it signs people in with Kronk. One that does takes where Kronk
+// sends people back (one address per line, an app may have several) and
+// what it may see. Editing ends with Remove this app, which asks first.
+// Made by starts as your name, since whoever adds an app has usually made
+// it (Tal, 2026-11-24); the icon is optional, and without one the app shows
+// its first letter. No reach control: every app is for every member. No
+// Konnect row: an app is not something to Konnect.
 
 const messages = defineMessages({
   titleNew: {
@@ -91,9 +96,21 @@ const messages = defineMessages({
   website: { id: 'kollection.compose.website', defaultMessage: 'Website' },
   websiteHint: {
     id: 'kollection.compose.website_hint',
-    defaultMessage: 'Where people open it.',
+    defaultMessage: 'Where people use it on the web, if they can.',
   },
-  icon: { id: 'kollection.compose.icon', defaultMessage: 'Add an icon' },
+  download: {
+    id: 'kollection.compose.download',
+    defaultMessage: 'Get the app',
+  },
+  downloadHint: {
+    id: 'kollection.compose.download_hint',
+    defaultMessage:
+      'Where to download it for a phone, if it has an app: an app store page, or the file itself.',
+  },
+  icon: {
+    id: 'kollection.compose.icon',
+    defaultMessage: 'Add an icon (optional)',
+  },
   iconRemove: {
     id: 'kollection.compose.icon_remove',
     defaultMessage: 'Remove icon',
@@ -109,7 +126,7 @@ const messages = defineMessages({
   signInHint: {
     id: 'kollection.compose.sign_in_hint',
     defaultMessage:
-      'It gets a client key and secret for Sign in with Kronk. Leave this off for a link to an app with its own sign-in.',
+      'Tick this if the app has a “Sign in with Kronk” button. Saving gives it a key and secret, shown on its page to you only, which go into the app’s own server. Leave it off if the app has its own sign-in.',
   },
   signInFixed: {
     id: 'kollection.compose.sign_in_fixed',
@@ -127,7 +144,7 @@ const messages = defineMessages({
   redirectsHint: {
     id: 'kollection.compose.redirects_hint',
     defaultMessage:
-      'Its redirect URIs, one per line. An app on the web and a phone app can each have one.',
+      'After someone says yes on Kronk, Kronk sends them back to the app at this address. The app’s maker knows it, for example https://pod.anthemos.org/signup/callback. One per line if it has several.',
   },
   scopes: {
     id: 'kollection.compose.scopes',
@@ -249,7 +266,12 @@ export const AppComposer: React.FC<Props> = ({
   const [confirmDialog, confirm] = useConfirmDialog();
 
   const [tagline, setTagline] = useState('');
-  const [madeBy, setMadeBy] = useState('');
+  // Whoever adds an app has usually made it, so a new one starts with your name.
+  const myName = useAppSelector((state) => {
+    const account = me ? state.accounts.get(me) : undefined;
+    return account ? account.display_name || account.username : '';
+  });
+  const [madeBy, setMadeBy] = useState(editId ? '' : myName);
   const [category, setCategory] = useState<KollectionCategory | ''>('');
   const [platforms, setPlatforms] = useState<KollectionPlatform[]>([]);
   // As the icon: undefined untouched, null removed, a string an upload.
@@ -263,6 +285,7 @@ export const AppComposer: React.FC<Props> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [website, setWebsite] = useState('');
+  const [download, setDownload] = useState('');
   const [signIn, setSignIn] = useState(false);
   // Whether it signed in already when the composer opened: then it stays.
   const [signsIn, setSignsIn] = useState(false);
@@ -313,6 +336,7 @@ export const AppComposer: React.FC<Props> = ({
         );
         setDescription(app.description);
         setWebsite(app.website ?? '');
+        setDownload(app.download_url ?? '');
         setSignIn(app.signs_in);
         setSignsIn(app.signs_in);
         setRedirects((app.redirect_uris ?? []).join('\n'));
@@ -376,6 +400,11 @@ export const AppComposer: React.FC<Props> = ({
     },
     [],
   );
+  const handleDownload = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setDownload(e.target.value);
+  }, []);
   const handleSignIn = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
       setSignIn(e.target.checked);
@@ -525,6 +554,7 @@ export const AppComposer: React.FC<Props> = ({
       platforms,
       description: description.trim(),
       website: website.trim() ? withScheme(website.trim()) : null,
+      download_url: download.trim() ? withScheme(download.trim()) : null,
       sign_in: signIn,
       ...(signIn ? { redirect_uris: redirectList.join('\n'), scopes } : {}),
       ...(iconId !== undefined ? { icon_id: iconId } : {}),
@@ -550,6 +580,7 @@ export const AppComposer: React.FC<Props> = ({
     name,
     description,
     website,
+    download,
     signIn,
     redirects,
     scopes,
@@ -784,6 +815,20 @@ export const AppComposer: React.FC<Props> = ({
               inputMode='url'
               value={website}
               onChange={handleWebsite}
+              placeholder='https://'
+              maxLength={2000}
+            />
+          </ComposeField>
+
+          <ComposeField
+            label={<FormattedMessage {...messages.download} />}
+            hint={<FormattedMessage {...messages.downloadHint} />}
+          >
+            <ComposeInput
+              type='url'
+              inputMode='url'
+              value={download}
+              onChange={handleDownload}
               placeholder='https://'
               maxLength={2000}
             />

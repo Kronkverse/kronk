@@ -76,6 +76,8 @@ export interface ApiKollectionAppJSON {
   tagline: string;
   description: string;
   website: string | null;
+  // Where to get it for a phone: an app store, or the file itself.
+  download_url: string | null;
   made_by: string;
   category: string | null;
   platforms: string[];
@@ -113,6 +115,7 @@ export interface SaveKollectionAppParams {
   tagline?: string;
   description?: string;
   website?: string | null;
+  download_url?: string | null;
   made_by?: string;
   category?: KollectionCategory | null;
   platforms?: KollectionPlatform[];
