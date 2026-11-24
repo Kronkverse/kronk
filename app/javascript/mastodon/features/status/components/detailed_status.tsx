@@ -401,9 +401,7 @@ export const DetailedStatus: React.FC<{
     </Link>
   );
 
-  const { statusContentProps, hashtagBar } = getHashtagBarForStatus(
-    status as StatusLike,
-  );
+  const { statusContentProps } = getHashtagBarForStatus(status as StatusLike);
 
   const matchedFilters = status.get('matched_filters');
 
@@ -476,7 +474,6 @@ export const DetailedStatus: React.FC<{
             )}
 
             {media}
-            {hashtagBar}
 
             {status.get('quote') && (
               <QuotedStatus

@@ -24,7 +24,6 @@ export const EmbeddedStatusContent: React.FC<{
     [mentions],
   );
   const htmlHandlers = useElementHandledLink({
-    hashtagAccountId: status.get('account') as string | undefined,
     hrefToMention,
   });
 

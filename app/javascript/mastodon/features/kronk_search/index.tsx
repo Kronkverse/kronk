@@ -42,7 +42,7 @@ const messages = defineMessages({
   title: { id: 'kronk_search.title', defaultMessage: 'Search' },
   placeholder: {
     id: 'kronk_search.placeholder',
-    defaultMessage: 'Find people, posts, kategories\u2026',
+    defaultMessage: 'Find people, posts, events\u2026',
   },
   submit: { id: 'kronk_search.submit', defaultMessage: 'Search' },
   loading: { id: 'kronk_search.loading', defaultMessage: 'Searching\u2026' },

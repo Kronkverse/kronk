@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { NavLink, Switch, Route } from 'react-router-dom';
+import { NavLink, Redirect, Switch, Route } from 'react-router-dom';
 
 import TrendingUpIcon from '@/material-icons/400-24px/trending_up.svg?react';
 import { Column } from 'mastodon/components/column';
@@ -17,7 +17,6 @@ import { useIdentity } from 'mastodon/identity_context';
 import Links from './links';
 import Statuses from './statuses';
 import Suggestions from './suggestions';
-import Tags from './tags';
 
 const messages = defineMessages({
   title: { id: 'explore.title', defaultMessage: 'Trending' },
@@ -60,14 +59,6 @@ const Explore: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           />
         </NavLink>
 
-        <NavLink exact to='/explore/tags'>
-          <FormattedMessage
-            tagName='div'
-            id='explore.trending_tags'
-            defaultMessage='Hashtags'
-          />
-        </NavLink>
-
         {signedIn && (
           <NavLink exact to='/explore/suggestions'>
             <FormattedMessage
@@ -88,7 +79,7 @@ const Explore: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       </div>
 
       <Switch>
-        <Route path='/explore/tags' component={Tags} />
+        <Redirect from='/explore/tags' to='/explore' />
         <Route path='/explore/links' component={Links} />
         <Route path='/explore/suggestions' component={Suggestions} />
         <Route exact path={['/explore', '/explore/posts']}>

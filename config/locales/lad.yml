@@ -1343,7 +1343,6 @@ lad:
     bookmarks: Markadores
     csv: CSV
     domain_blocks: Blokos de domenos
-    lists: Listas
     mutes: Silensias
     storage: Magazinaje de multimedia
   featured_tags:

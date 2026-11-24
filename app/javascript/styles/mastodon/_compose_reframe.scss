@@ -99,68 +99,6 @@
   }
 }
 
-// ── kategory: a pill in the header next to the audience dropdown, same
-// format; its chips drop down as a menu rather than pushing the layout ──
-.compose-form__kategory-picker {
-  position: relative;
-  flex: 0 0 auto;
-
-  // Clear the leftover section divider + block padding from when Kategorize
-  // lived below the content — as a header pill it needs neither.
-  padding: 0;
-  border-top: 0;
-}
-
-.compose-form__kategory-toggle {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 11px;
-  border-radius: var(--radius-round, 999px);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-elevated);
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease;
-
-  &:hover {
-    color: var(--text-primary);
-    border-color: var(--border-default);
-  }
-
-  &[aria-expanded='true'] {
-    color: var(--text-primary);
-    border-color: var(--kronk-purple-bright);
-    background: color-mix(in srgb, var(--kronk-purple-deep) 45%, transparent);
-  }
-}
-
-.compose-form__kategory-chips {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 40;
-  width: 250px;
-  padding: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  background: var(--surface-sunken, var(--surface-primary));
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-medium, 10px);
-  box-shadow: 0 18px 44px -18px rgb(0 0 0 / 60%);
-}
-
-.compose-form__kategory-more {
-  width: 100%;
-  margin: 2px 0 0;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
 // ── audience boxes (a row of Kronk boxes; sibling of the dropdown) ──
 .reach-boxes {
   display: grid;

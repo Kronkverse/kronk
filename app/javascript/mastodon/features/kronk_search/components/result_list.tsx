@@ -36,14 +36,12 @@ import { PeopleStrip } from './people_strip';
 // the Hub and in its own chrome. Nothing is hardcoded here, so a korner
 // shipped next month is badged correctly in search the day it lands.
 //
-// A post belongs to no korner and borrows the Feed glyph. A kategory has
-// no space at all and falls through to the accent circle, which is the
-// honest answer rather than an invented icon.
+// A post belongs to no korner and borrows the Feed glyph. Hashtags aren't
+// listed: they were retired from the UI on 2026-11-24 (docs/decisions.md).
 
 const messages = defineMessages({
   post: { id: 'kronk_search.kind.post', defaultMessage: 'Post' },
   comment: { id: 'kronk_search.kind.comment', defaultMessage: 'Comment' },
-  kategory: { id: 'kronk_search.kind.kategory', defaultMessage: 'Kategory' },
   event: { id: 'kronk_search.kind.event', defaultMessage: 'Event' },
   proposal: { id: 'kronk_search.kind.proposal', defaultMessage: 'Proposal' },
   set: { id: 'kronk_search.kind.set', defaultMessage: 'Set' },
@@ -76,14 +74,10 @@ interface StatusShape {
   account?: AccountShape;
 }
 
-interface TagShape {
-  name?: string;
-}
-
 // What a row needs to draw itself, whatever it started life as.
 interface Row {
   key: string;
-  // The korner whose icon badges this row. Undefined for a kategory.
+  // The korner whose icon badges this row.
   korner?: string;
   kind: keyof typeof messages;
   title: string;
@@ -148,7 +142,6 @@ export const ResultList: React.FC<{
   const accounts = results.accounts as ApiAccountJSON[];
   const words = wordsOf(query);
   const statuses = results.statuses as StatusShape[];
-  const hashtags = results.hashtags as TagShape[];
 
   const rows: Row[] = [
     // A comment is a post with a parent. Nothing in the data models it as a
@@ -167,15 +160,6 @@ export const ResultList: React.FC<{
       url: `/@${status.account?.acct ?? ''}/${status.id ?? ''}`,
       at: timeOf(status.created_at),
       mentionOnly: matchedOnMentionOnly(status, words),
-    })),
-    ...hashtags.map((tag) => ({
-      key: `kategory-${tag.name ?? ''}`,
-      korner: undefined,
-      kind: 'kategory' as const,
-      title: `#${tag.name ?? ''}`,
-      subtitle: null,
-      url: `/tags/${tag.name ?? ''}`,
-      at: 0,
     })),
     ...kronkRows(results.events, 'event'),
     ...kronkRows(results.proposals, 'proposal'),

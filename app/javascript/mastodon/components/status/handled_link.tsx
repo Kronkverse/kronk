@@ -11,7 +11,6 @@ export interface HandledLinkProps {
   href: string;
   text: string;
   prevText?: string;
-  hashtagAccountId?: string;
   mention?: Pick<ApiMentionJSON, 'id' | 'acct'>;
 }
 
@@ -19,13 +18,14 @@ export const HandledLink: FC<HandledLinkProps & ComponentProps<'a'>> = ({
   href,
   text,
   prevText,
-  hashtagAccountId,
   mention,
   className,
   children,
   ...props
 }) => {
-  // Handle hashtags
+  // Hashtags were retired from the UI on 2026-11-24 (docs/decisions.md):
+  // a tag in a post reads as the plain word, with no # and no link. The
+  // tag still exists on the server, so this is where to bring them back.
   if (
     (text.startsWith('#') ||
       prevText?.endsWith('#') ||
@@ -35,18 +35,7 @@ export const HandledLink: FC<HandledLinkProps & ComponentProps<'a'>> = ({
   ) {
     const hashtag = text.replace(/^[#＃]/, '').trim();
 
-    // Kronk renders tags as clean pill labels — the `#` (baked into the
-    // server HTML `children`) is dropped in favour of the bare name.
-    return (
-      <Link
-        className={classNames('mention hashtag kategory-pill', className)}
-        to={`/tags/${encodeURIComponent(hashtag)}`}
-        rel='tag'
-        data-menu-hashtag={hashtagAccountId}
-      >
-        {hashtag}
-      </Link>
-    );
+    return <span className={className}>{hashtag}</span>;
   } else if (mention) {
     // Handle mentions
     return (
@@ -86,10 +75,8 @@ export const HandledLink: FC<HandledLinkProps & ComponentProps<'a'>> = ({
 };
 
 export const useElementHandledLink = ({
-  hashtagAccountId,
   hrefToMention,
 }: {
-  hashtagAccountId?: string;
   hrefToMention?: (href: string) => ApiMentionJSON | undefined;
 } = {}) => {
   const onElement = useCallback<OnElementHandler>(
@@ -103,7 +90,6 @@ export const useElementHandledLink = ({
             href={element.href}
             text={element.innerText}
             prevText={element.previousSibling?.textContent ?? undefined}
-            hashtagAccountId={hashtagAccountId}
             mention={mention}
           >
             {children}
@@ -112,7 +98,7 @@ export const useElementHandledLink = ({
       }
       return undefined;
     },
-    [hashtagAccountId, hrefToMention],
+    [hrefToMention],
   );
   return { onElement };
 };

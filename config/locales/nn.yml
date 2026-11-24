@@ -1422,7 +1422,6 @@ nn:
     bookmarks: Bokmerker
     csv: CSV
     domain_blocks: Domeneblokkeringer
-    lists: Lister
     mutes: Du dempar
     storage: Medielagring
   featured_tags:

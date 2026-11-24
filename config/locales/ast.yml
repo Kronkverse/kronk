@@ -553,7 +553,6 @@ ast:
     bookmarks: Marcadores
     csv: CSV
     domain_blocks: Dominios bloquiaos
-    lists: Llistes
     storage: Almacenamientu multimedia
   featured_tags:
     add_new: Amestar

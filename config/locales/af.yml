@@ -110,7 +110,6 @@ af:
     '403': Jy het nie toestemming om hierdie bladsy te sien nie.
   exports:
     bookmarks: Boekmerke
-    lists: Lyste
   filters:
     contexts:
       home: Tuis en lyste

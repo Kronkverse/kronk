@@ -12,14 +12,10 @@ import {
   unblockAccount,
   muteAccount,
   unmuteAccount,
-  followAccountSuccess,
   unpinAccount,
   pinAccount,
 } from 'mastodon/actions/accounts';
-import { showAlertForError } from 'mastodon/actions/alerts';
-import { openModal } from 'mastodon/actions/modal';
 import { initMuteModal } from 'mastodon/actions/mutes';
-import { apiFollowAccount } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
 import { DisplayName } from 'mastodon/components/display_name';
@@ -70,10 +66,6 @@ const messages = defineMessages({
   mateship: {
     id: 'account.mates_marker.title',
     defaultMessage: 'What you share',
-  },
-  addToLists: {
-    id: 'account.add_or_remove_from_list',
-    defaultMessage: 'Add or Remove from lists',
   },
   openOriginalPage: {
     id: 'account.open_original_page',
@@ -162,51 +154,6 @@ export const Account: React.FC<AccountProps> = ({
       }
 
       if (signedIn) {
-        const handleAddToLists = () => {
-          const openAddToListModal = () => {
-            dispatch(
-              openModal({
-                modalType: 'LIST_ADDER',
-                modalProps: {
-                  accountId: id,
-                },
-              }),
-            );
-          };
-          if (relationship?.following || relationship?.requested || id === me) {
-            openAddToListModal();
-          } else {
-            dispatch(
-              openModal({
-                modalType: 'CONFIRM_FOLLOW_TO_LIST',
-                modalProps: {
-                  accountId: id,
-                  onConfirm: () => {
-                    apiFollowAccount(id)
-                      .then((relationship) => {
-                        dispatch(
-                          followAccountSuccess({
-                            relationship,
-                            alreadyFollowing: false,
-                          }),
-                        );
-                        openAddToListModal();
-                      })
-                      .catch((err: unknown) => {
-                        dispatch(showAlertForError(err));
-                      });
-                  },
-                },
-              }),
-            );
-          }
-        };
-
-        arr.push({
-          text: intl.formatMessage(messages.addToLists),
-          action: handleAddToLists,
-        });
-
         if (id !== me && (relationship?.following || relationship?.requested)) {
           const handleEndorseToggle = () => {
             if (relationship.endorsed) {

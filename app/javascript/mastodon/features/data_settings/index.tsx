@@ -52,11 +52,6 @@ const messages = defineMessages({
     id: 'data_settings.csv_mutes_hint',
     defaultMessage: 'Accounts you’ve muted (kept out of your feed).',
   },
-  csvLists: { id: 'data_settings.csv_lists', defaultMessage: 'Lists' },
-  csvListsHint: {
-    id: 'data_settings.csv_lists_hint',
-    defaultMessage: 'Your lists and their members.',
-  },
   csvDomainBlocks: {
     id: 'data_settings.csv_domain_blocks',
     defaultMessage: 'Blocked domains',
@@ -102,11 +97,6 @@ const CSV_EXPORTS = [
     labelMsg: messages.csvMutes,
     hintMsg: messages.csvMutesHint,
     href: '/settings/exports/mutes.csv',
-  },
-  {
-    labelMsg: messages.csvLists,
-    hintMsg: messages.csvListsHint,
-    href: '/settings/exports/lists.csv',
   },
   {
     labelMsg: messages.csvDomainBlocks,

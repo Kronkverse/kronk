@@ -32,14 +32,12 @@ import { ComposeDraft } from './compose_draft';
 import { ComposeReachDropdown } from './compose_reach_dropdown';
 import { ComposeVoiceRecorder } from './compose_voice_recorder';
 import { EditIndicator } from './edit_indicator';
-import { KategoryPicker } from './kategory_picker';
 import { NavigationBar } from './navigation_bar';
 import { PollForm } from "./poll_form";
 import { ComposeQuotedStatus } from './quoted_post';
 import { ProfileTargetIndicator } from './profile_target_indicator';
 import { ReplyIndicator } from './reply_indicator';
 import { UploadForm } from './upload_form';
-import { Warning } from './warning';
 
 const allowedAroundShortCode = '><\u0085\u0020\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\u2028\u2029\u0009\u000a\u000b\u000c\u000d';
 
@@ -309,7 +307,6 @@ class ComposeForm extends ImmutablePureComponent {
       <form className='compose-form' onSubmit={this.handleSubmit}>
         <ReplyIndicator />
         <ProfileTargetIndicator />
-        <Warning />
 
         <div className={classNames('compose-form__highlightable', { active: highlighted })} ref={this.setRef}>
           <EditIndicator />
@@ -331,7 +328,6 @@ class ComposeForm extends ImmutablePureComponent {
               <ComposeDailyPrompt />
             </div>
             <div className='compose-form__head-tools'>
-              <KategoryPicker />
               {!this.props.isInReply && <ComposeReachDropdown />}
             </div>
           </div>

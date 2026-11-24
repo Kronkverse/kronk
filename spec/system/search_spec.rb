@@ -20,7 +20,7 @@ RSpec.describe 'Search', :inline_jobs, :js, :streaming do
   it 'shows the people found as cards on top, each with a Mate button' do
     visit '/hub/search'
 
-    fill_in 'Find people, posts, kategories…', with: 'tahlia'
+    fill_in 'Find people, posts, events…', with: 'tahlia'
     click_on 'Search'
 
     within('.kronk-search__people') do

@@ -8,17 +8,13 @@ import { useElementHandledLink } from './status/handled_link';
 interface AccountBioProps {
   className: string;
   accountId: string;
-  showDropdown?: boolean;
 }
 
 export const AccountBio: React.FC<AccountBioProps> = ({
   className,
   accountId,
-  showDropdown = false,
 }) => {
-  const htmlHandlers = useElementHandledLink({
-    hashtagAccountId: showDropdown ? accountId : undefined,
-  });
+  const htmlHandlers = useElementHandledLink();
 
   const note = useAppSelector((state) => {
     const account = state.accounts.get(accountId);

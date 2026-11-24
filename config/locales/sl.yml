@@ -1437,7 +1437,6 @@ sl:
     bookmarks: Zaznamki
     csv: CSV
     domain_blocks: Blokirane domene
-    lists: Seznami
     mutes: Utišani
     storage: Shranjeni mediji
   featured_tags:

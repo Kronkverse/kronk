@@ -559,7 +559,6 @@ oc:
     bookmarks: Marcadors
     csv: CSV
     domain_blocks: Blocatge de domenis
-    lists: Listas
     mutes: Personas rescondudas
     storage: Mèdias gardats
   featured_tags:
