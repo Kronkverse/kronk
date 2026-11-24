@@ -39,7 +39,7 @@ RSpec.describe Nudges::PushPayload do
 
     payload = described_class.new(event, recipient: bob).as_json
 
-    expect(payload).to include(title: 'People are in a Kuddle you follow', body: '2 people are in the Ember Kuddle now', url: "/hub/huddle/kuddle/#{kuddle.id}")
+    expect(payload).to include(title: "People are in a Kuddle you're tuned in to", body: '2 people are in the Ember Kuddle now', url: "/hub/huddle/kuddle/#{kuddle.id}")
   end
 
   it 'still names the Kuddle once it has emptied' do

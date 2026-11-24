@@ -121,7 +121,7 @@ const messages = defineMessages({
   },
   reportHint: {
     id: 'profile_settings.report_hint',
-    defaultMessage: "Send this account to the instance's moderators.",
+    defaultMessage: 'Send this account to Kronk’s admins.',
   },
 
   self: {

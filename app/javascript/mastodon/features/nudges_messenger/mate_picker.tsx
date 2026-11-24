@@ -18,7 +18,7 @@ const messages = defineMessages({
   loading: { id: 'nudges.mate_picker.loading', defaultMessage: 'Loading…' },
   empty: {
     id: 'nudges.mate_picker.empty',
-    defaultMessage: 'No Mates yet. Follow someone who follows you back.',
+    defaultMessage: 'No Mates yet. Send someone a Mate request.',
   },
   searchPlaceholder: {
     id: 'nudges.mate_picker.search_placeholder',

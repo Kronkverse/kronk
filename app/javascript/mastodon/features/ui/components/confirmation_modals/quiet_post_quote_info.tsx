@@ -13,12 +13,12 @@ import { ConfirmationModal } from './confirmation_modal';
 const messages = defineMessages({
   title: {
     id: 'confirmations.quiet_post_quote_info.title',
-    defaultMessage: 'Quoting quiet public posts',
+    defaultMessage: 'Quoting a quiet post',
   },
   message: {
     id: 'confirmations.quiet_post_quote_info.message',
     defaultMessage:
-      'When quoting a quiet public post, your post will be hidden from trending timelines.',
+      'This post is kept out of trending, so your quote will be too.',
   },
   got_it: {
     id: 'confirmations.quiet_post_quote_info.got_it',

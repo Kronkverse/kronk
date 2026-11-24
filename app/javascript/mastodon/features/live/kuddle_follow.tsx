@@ -16,21 +16,21 @@ export interface KuddleFollowState {
 }
 
 const messages = defineMessages({
-  follow: { id: 'huddle.kuddle.follow', defaultMessage: 'Follow' },
-  following: { id: 'huddle.kuddle.following', defaultMessage: 'Following' },
+  follow: { id: 'huddle.kuddle.follow', defaultMessage: 'Tune in' },
+  following: { id: 'huddle.kuddle.following', defaultMessage: 'Tuned in' },
   followAria: {
     id: 'huddle.kuddle.follow_aria',
     defaultMessage:
-      'Follow the {name} Kuddle, for a nudge when people gather in it',
+      'Tune in to the {name} Kuddle, for a nudge when people gather in it',
   },
   unfollowAria: {
     id: 'huddle.kuddle.unfollow_aria',
-    defaultMessage: 'Following the {name} Kuddle. Press to stop.',
+    defaultMessage: 'Tuned in to the {name} Kuddle. Press to tune out.',
   },
   unfollowKrewAria: {
     id: 'huddle.kuddle.unfollow_krew_aria',
     defaultMessage:
-      'Following the {name} Kuddle, as one of your Krews. Press to stop.',
+      'Tuned in to the {name} Kuddle, as one of your Krews. Press to tune out.',
   },
 });
 

@@ -286,7 +286,7 @@ class HomeTimeline extends PureComponent {
       feedConfig = {
         timelineId: 'home',
         onLoadMore: this.handleLoadMoreHome,
-        emptyMessage: <FormattedMessage id='empty_column.home' defaultMessage='Your home timeline is empty! Follow more people to fill it up.' />,
+        emptyMessage: <FormattedMessage id='empty_column.home' defaultMessage='Nothing here yet. Make some Mates, or tune in to a korner.' />,
         prepend: banners,
         insertNode: homeInsertNode,
       };

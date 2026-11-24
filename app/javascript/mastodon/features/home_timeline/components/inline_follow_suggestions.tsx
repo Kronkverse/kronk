@@ -33,12 +33,12 @@ const messages = defineMessages({
   },
   friendsOfFriendsHint: {
     id: 'follow_suggestions.hints.friends_of_friends',
-    defaultMessage: 'This profile is popular among the people you follow.',
+    defaultMessage: 'This profile is popular among your Mates.',
   },
   similarToRecentlyFollowedHint: {
     id: 'follow_suggestions.hints.similar_to_recently_followed',
     defaultMessage:
-      'This profile is similar to the profiles you have most recently followed.',
+      'This profile is like the ones you most recently became Mates with.',
   },
   featuredHint: {
     id: 'follow_suggestions.hints.featured',
@@ -46,7 +46,7 @@ const messages = defineMessages({
   },
   mostFollowedHint: {
     id: 'follow_suggestions.hints.most_followed',
-    defaultMessage: 'This profile is one of the most followed on {domain}.',
+    defaultMessage: 'This profile is one of the most connected on {domain}.',
   },
   mostInteractionsHint: {
     id: 'follow_suggestions.hints.most_interactions',
@@ -265,7 +265,7 @@ export const InlineFollowSuggestions: React.FC<{ hidden?: boolean }> = ({
         <h3 id={uniqueId}>
           <FormattedMessage
             id='follow_suggestions.who_to_follow'
-            defaultMessage='Who to follow'
+            defaultMessage='People you might know'
           />
         </h3>
 

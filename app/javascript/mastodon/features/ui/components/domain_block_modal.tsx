@@ -101,7 +101,7 @@ export const DomainBlockModal: React.FC<{
                   <strong>
                     <FormattedMessage
                       id='domain_block_modal.you_will_lose_num_followers'
-                      defaultMessage='You will lose {followersCount, plural, one {{followersCountDisplay} follower} other {{followersCountDisplay} followers}} and {followingCount, plural, one {{followingCountDisplay} person you follow} other {{followingCountDisplay} people you follow}}.'
+                      defaultMessage='You will lose {followersCount, plural, one {{followersCountDisplay} Mate} other {{followersCountDisplay} Mates}} from this site.'
                       values={{
                         followersCount: preview.followers_count,
                         followersCountDisplay: (
@@ -127,7 +127,7 @@ export const DomainBlockModal: React.FC<{
                 <strong>
                   <FormattedMessage
                     id='domain_block_modal.you_will_lose_relationships'
-                    defaultMessage='You will lose all followers and people you follow from this server.'
+                    defaultMessage='You will lose all your Mates from this site.'
                   />
                 </strong>
               </div>
@@ -165,7 +165,7 @@ export const DomainBlockModal: React.FC<{
             <div>
               <FormattedMessage
                 id='domain_block_modal.they_cant_follow'
-                defaultMessage='Nobody from this server can follow you.'
+                defaultMessage='Nobody from this site can be your Mate.'
               />
             </div>
           </div>

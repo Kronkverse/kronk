@@ -16,13 +16,12 @@ export const PRIVATE_QUOTE_MODAL_ID = 'quote/private_notify';
 const messages = defineMessages({
   title: {
     id: 'confirmations.private_quote_notify.title',
-    defaultMessage: 'Share with followers and mentioned users?',
+    defaultMessage: 'Share with your Mates and the people mentioned?',
   },
   message: {
     id: 'confirmations.private_quote_notify.message',
     defaultMessage:
-      'The person you are quoting and other mentions ' +
-      "will be notified and will be able to view your post, even if they're not following you.",
+      'The person you’re quoting and anyone you mention will be told, and can see your post even if they’re not your Mates.',
   },
   confirm: {
     id: 'confirmations.private_quote_notify.confirm',
