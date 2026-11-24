@@ -133,6 +133,13 @@ body.admin {
           font-size: 0.8rem;
         }
       }
+
+      // The dashboard's date range, a quiet line under the title.
+      &__period {
+        margin-top: 0.4rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+      }
     }
 
     // A section inside the page: the settings panel's section title.
