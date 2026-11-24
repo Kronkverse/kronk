@@ -11,7 +11,6 @@ import { FormattedMessage } from 'react-intl';
 import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 
-import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import { AnimatedNumber } from 'mastodon/components/animated_number';
 import { Avatar } from 'mastodon/components/avatar';
 import { ContentWarning } from 'mastodon/components/content_warning';
@@ -21,7 +20,6 @@ import { FilterWarning } from 'mastodon/components/filter_warning';
 import { FormattedDateWrapper } from 'mastodon/components/formatted_date';
 import type { StatusLike } from 'mastodon/components/hashtag_bar';
 import { getHashtagBarForStatus } from 'mastodon/components/hashtag_bar';
-import { Icon } from 'mastodon/components/icon';
 import { pickKornerCard } from 'mastodon/components/korner_cards';
 import {
   KronkLinkCards,
@@ -421,21 +419,6 @@ export const DetailedStatus: React.FC<{
           'status--has-quote': !!status.get('quote'),
         })}
       >
-        {status.get('visibility') === 'direct' && (
-          <div className='status__prepend'>
-            <div className='status__prepend-icon-wrapper'>
-              <Icon
-                id='at'
-                icon={AlternateEmailIcon}
-                className='status__prepend-icon'
-              />
-            </div>
-            <FormattedMessage
-              id='status.direct_indicator'
-              defaultMessage='Private mention'
-            />
-          </div>
-        )}
         {profileAcct && profileName && (
           <StatusProfileLabel
             acct={profileAcct}

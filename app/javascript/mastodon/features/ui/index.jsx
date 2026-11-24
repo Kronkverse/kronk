@@ -895,7 +895,7 @@ class UI extends PureComponent {
   };
 
   handleHotkeyGoToDirect = () => {
-    this.props.history.push('/conversations');
+    this.props.history.push('/nudges');
   };
 
   handleHotkeyGoToStart = () => {

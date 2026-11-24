@@ -1,6 +1,5 @@
 import { defineMessages, useIntl } from 'react-intl';
 
-import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
@@ -39,10 +38,6 @@ const messages = defineMessages({
   kronkverse_short: {
     id: 'privacy.kronkverse.short',
     defaultMessage: 'Kronkverse',
-  },
-  direct_short: {
-    id: 'privacy.direct.short',
-    defaultMessage: 'Specific people',
   },
   krew_short: {
     id: 'privacy.krew.short',
@@ -123,11 +118,9 @@ export const VisibilityIcon: React.FC<{
     // inbound federated posts (Phase 1 rollout — see file header).
     unlisted: justMeFace,
     private: matesFace,
-    direct: {
-      icon: 'at',
-      iconComponent: AlternateEmailIcon,
-      text: intl.formatMessage(messages.direct_short),
-    },
+    // Private mentions became Nudges; old ones were folded into Mates
+    // (docs/decisions.md, 2026-08-28).
+    direct: matesFace,
   };
 
   const visibilityIcon = visibilityIconInfo[visibility];
