@@ -1790,26 +1790,13 @@ pt-BR:
     prompt: Se você confia neste link, clique nele para continuar.
     title: Você está saindo de %{instance}.
   relationships:
-    activity: Atividade da conta
-    confirm_follow_selected_followers: Tem certeza que deseja seguir os seguidores selecionados?
-    confirm_remove_selected_followers: Tem certeza que deseja remover os seguidores selecionados?
-    confirm_remove_selected_follows: Tem certeza que deseja remover os grupos seguidos selecionados?
-    dormant: Inativo
-    follow_failure: Não foi possível seguir algumas das contas selecionadas.
-    follow_selected_followers: Seguir os seguidores selecionados
     followers: Seguidores
     following: Seguindo
     invited: Convidado
     last_active: Última atividade
     most_recent: Mais recente
-    moved: Mudou-se
     mutual: Mútuo
-    primary: Primário
     relationship: Relação
-    remove_selected_domains: Remover todos os seguidores dos domínios selecionados
-    remove_selected_followers: Remover os seguidores selecionados
-    remove_selected_follows: Deixar de seguir usuários selecionados
-    status: Status da conta
   remote_follow:
     missing_resource: Não foi possível encontrar o link de redirecionamento para sua conta
   reports:
@@ -1886,7 +1873,6 @@ pt-BR:
     notifications: Notificações por e-mail
     preferences: Preferências
     profile: Perfil
-    relationships: Seguindo e seguidores
     severed_relationships: Relacionamentos rompidos
     statuses_cleanup: Exclusão automatizada de publicações
     strikes: Avisos de moderação
@@ -2110,7 +2096,6 @@ pt-BR:
       apps_ios_action: Disponível na App Store
       apps_step: Baixe nossos aplicativos oficiais.
       apps_title: Apps Mastodon
-      checklist_subtitle: 'Vamos começar nesta nova fronteira social:'
       checklist_title: Lista de verificação de boas-vindas
       edit_profile_action: Personalizar
       edit_profile_step: Aumente suas interações tendo um perfil completo.
@@ -2128,13 +2113,11 @@ pt-BR:
       follow_action: Seguir
       follow_step: Seguir pessoas interessantes é do que trata Mastodon.
       follow_title: Personalize sua página inicial
-      follows_subtitle: Siga contas conhecidas
       follows_title: Quem seguir
       follows_view_more: Veja mais pessoas para seguir
       hashtags_recent_count:
         one: "%{people} Pessoas nos últimos 2 dias"
         other: "%{people} pessoas nos últimos 2 dias"
-      hashtags_subtitle: Explorar o que está em alta nos últimos 2 dias
       hashtags_title: Hashtags em alta
       hashtags_view_more: Ver mais hashtags em alta
       post_action: Escrever

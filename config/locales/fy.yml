@@ -1753,26 +1753,13 @@ fy:
     prompt: As jo dizze keppeling fertrouwe, klik der dan op om troch te gean.
     title: Jo ferlitte %{instance}.
   relationships:
-    activity: Accountaktiviteit
-    confirm_follow_selected_followers: Binne jo wis dat jo de selektearre folgers folgje wolle?
-    confirm_remove_selected_followers: Binne jo wis dat jo de selektearre folgers net mear folgje wolle?
-    confirm_remove_selected_follows: Binne jo wis dat jo de selektearre folge accounts net mear folgje wolle?
-    dormant: Slommerjend
-    follow_failure: Kin guon fan de selektearre accounts net folgje.
-    follow_selected_followers: Selektearre folgers folgje
     followers: Folgers
     following: Folgjend
     invited: Utnûge
     last_active: Letst warber
     most_recent: Meast resint
-    moved: Ferhuze
     mutual: Fan wjerskanten
-    primary: Primêr
     relationship: Relaasje
-    remove_selected_domains: Alle folgers fan de selektearre domeinen fuortsmite
-    remove_selected_followers: Selektearre folgers fuortsmite
-    remove_selected_follows: Selektearre brûkers net mear folgje
-    status: Accountsteat
   remote_follow:
     missing_resource: Koe fereaske trochferwizings-URL foar jo account net fine
   reports:
@@ -1849,7 +1836,6 @@ fy:
     notifications: E-mailmeldingen
     preferences: Ynstellingen
     profile: Profyl
-    relationships: Folgers en folgjenden
     severed_relationships: Ferbrutsen folchrelaasjes
     statuses_cleanup: Automatysk berjochten fuortsmite
     strikes: Fêststelde skeiningen
@@ -2055,7 +2041,6 @@ fy:
       apps_ios_action: Fia de App Store downloade
       apps_step: Us offisjele apps downloade
       apps_title: Mastodon-apps
-      checklist_subtitle: 'Litte wy oan dit nije sosjale aventoer begjinne:'
       checklist_title: Wolkomstkontrôlelist
       edit_profile_action: Personalisearje
       edit_profile_step: Wannear’t jo mear oer josels fertelle, krije jo mear ynteraksje mei oare minsken.
@@ -2073,13 +2058,11 @@ fy:
       follow_action: Folgje
       follow_step: Op Mastodon draait it hielendal om it folgjen fan ynteressante minsken.
       follow_title: Personalisearje jo starttiidline
-      follows_subtitle: Folgje bekende accounts
       follows_title: Wa te folgjen
       follows_view_more: Mear minsken om te folgjen besjen
       hashtags_recent_count:
         one: "%{people} persoan yn de ôfrûne 2 dagen"
         other: "%{people} persoanen yn de ôfrûne 2 dagen"
-      hashtags_subtitle: Wat der yn de ôfrûne 2 dagen bard is ferkenne
       hashtags_title: Populêre hashtags
       hashtags_view_more: Mear populêre hashtags besjen
       post_action: Opstelle

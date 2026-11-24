@@ -28,3 +28,14 @@
     border-block-end: 0;
   }
 }
+
+// Not yet Mates, under your own list (`not_yet_mates.tsx`).
+.mates-tab__not-yet {
+  margin-block-start: 2rem;
+}
+
+.mates-tab__hint {
+  margin-block: 0.25rem 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}

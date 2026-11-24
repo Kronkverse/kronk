@@ -1785,26 +1785,13 @@ fa:
     prompt: اگر به این پویند اطمینان دارید برای ادامه بزنید.
     title: دارید %{instance} را ترک می‌کنید.
   relationships:
-    activity: فعالیت حساب
-    confirm_follow_selected_followers: آیا مطمئنید که می خواهید دنبال کننده های انتخابی را دنبال کنید؟
-    confirm_remove_selected_followers: آیا شما واقعا می خواهید دنبال کننده های انتخابی را حذف کنید؟
-    confirm_remove_selected_follows: آیا شما واقعا می خواهید دنبال شده های انتخابی را حذف کنید؟
-    dormant: غیرفعال
-    follow_failure: نتوانست برخی از حساب‌های گزیده را پی بگیرد.
-    follow_selected_followers: پیگیری پیگیران انتخاب شده
     followers: پی‌گیران
     following: پی می‌گیرد
     invited: مدعو
     last_active: آخرین فعالیت
     most_recent: تازه‌ترین
-    moved: منتقل‌شده
     mutual: دوطرفه
-    primary: اصلی
     relationship: رابطه
-    remove_selected_domains: همهٔ پیگیران از این دامنه را بردار
-    remove_selected_followers: پیگیران انتخاب‌شده را بردار
-    remove_selected_follows: به پیگیری از کاربران انتخاب‌شده پایان بده
-    status: وضعیت حساب
   remote_follow:
     missing_resource: نشانی اینترنتی برای رسیدن به حساب شما پیدا نشد
   reports:
@@ -1881,7 +1868,6 @@ fa:
     notifications: آگاهی‌های رایانامه‌ای
     preferences: ترجیحات
     profile: نمایه
-    relationships: پیگیری‌ها و پیگیران
     severed_relationships: ارتباط‌های قطع شده
     statuses_cleanup: حذف فرستهٔ خودکار
     strikes: شکایت‌های مدیریتی
@@ -2105,7 +2091,6 @@ fa:
       apps_ios_action: بارگیری روی فروشگاه کاره
       apps_step: بارگیری کارهٔ رسمیمان.
       apps_title: کاره‌های ماستودون
-      checklist_subtitle: 'بیایید روی این مرز اجتماعی جدید راهتان بیندازیم:'
       checklist_title: سیاههٔ بررسی خوش‌آمد
       edit_profile_action: شخصی سازی
       edit_profile_step: تقویت تعامل‌هایتان با داشتن نمایه‌ای جامع.
@@ -2123,13 +2108,11 @@ fa:
       follow_action: پی‌گیری
       follow_step: You curate your own feed. Lets fill it with interesting people.
       follow_title: شخصی سازی خوراک خانگیتان
-      follows_subtitle: پی گرفتن حساب‌های شناخته شده
       follows_title: افرادی برای پی‌گیری
       follows_view_more: دیدن افرادی بیش‌تر برای پی‌گیری
       hashtags_recent_count:
         one: "%{people} نفر در ۲ روز اخیر"
         other: "%{people} نفر در ۲ روز اخیر"
-      hashtags_subtitle: کشف گرایه‌ها در ۲ روز گذشته
       hashtags_title: برچسب‌های داغ
       hashtags_view_more: دیدن برچسب‌های داغ بیش‌تر
       post_action: ایجاد

@@ -1764,26 +1764,13 @@ bg:
     prompt: Ако вярвате на тази връзка, то щракнете на нея, за да продължите.
     title: Напускате %{instance}.
   relationships:
-    activity: Дейност на акаунта
-    confirm_follow_selected_followers: Наистина ли искате да последвате избраните последователи?
-    confirm_remove_selected_followers: Наистина ли искате да премахнете избраните последователи?
-    confirm_remove_selected_follows: Наистина ли искате да премахнете избраните последвания?
-    dormant: Неактивен
-    follow_failure: Не може да се последват някои от избраните акаунти.
-    follow_selected_followers: Последване на избраните последователи
     followers: Последователи
     following: Последвани
     invited: С покана
     last_active: Последна дейност
     most_recent: Най-наскоро
-    moved: Преместен
     mutual: Взаимни
-    primary: Основен
     relationship: Отношение
-    remove_selected_domains: Премахване на всички последователи от избраните домейни
-    remove_selected_followers: Премахване на избраните последователи
-    remove_selected_follows: Стоп на следването на избраните потребители
-    status: Състояние на акаунта
   remote_follow:
     missing_resource: Не можа да се намери искания URL за пренасочване за акаунта ви
   reports:
@@ -1860,7 +1847,6 @@ bg:
     notifications: Известия по е-поща
     preferences: Предпочитания
     profile: Профил
-    relationships: Последвания и последователи
     severed_relationships: Прекъснати връзки
     statuses_cleanup: Автоматично изтриване на публикации
     strikes: Модериране на предупреждения
@@ -2080,7 +2066,6 @@ bg:
       apps_ios_action: Изтегляне в App Store
       apps_step: Изтегляне на служебните ни приложения.
       apps_title: Приложения на Mastodon
-      checklist_subtitle: 'Нека започнем приключение в тази нова социална граница:'
       checklist_title: Добре дошли при контролния списък
       edit_profile_action: Персонализиране
       edit_profile_step: Подсилете взаимодействията си, изграждайки цялостен профил.
@@ -2098,13 +2083,11 @@ bg:
       follow_action: Последване
       follow_step: Последването на интересни хора е основната цел на Mastodon.
       follow_title: Персонализиране на началния ви инфоканал
-      follows_subtitle: Следвайте добре известни акаунти
       follows_title: Кого да се последва
       follows_view_more: Преглед на още хора за последване
       hashtags_recent_count:
         one: "%{people} лице през последните 2 дни"
         other: "%{people} души през последните 2 дни"
-      hashtags_subtitle: Проучете какво изгрява от последните 2 дни
       hashtags_title: Изгряващи хаштагове
       hashtags_view_more: Преглед на още изгряващи хаштагове
       post_action: Съставяне

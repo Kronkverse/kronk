@@ -102,8 +102,6 @@ zgh:
         subject: "%{name} ⴼⴼⵖⵏ"
     mention:
       action: ⵔⴰⵔ
-  relationships:
-    remove_selected_follows: ⴽⴽⵙ ⴰⴹⴼⴼⵓⵕ ⵉ ⵉⵏⵙⵙⵎⵔⵙⵏ ⵜⵜⵓⵙⵜⵢⵏⵉⵏ
   settings:
     account_settings: ⵜⵉⵙⵖⴰⵍ ⵏ ⵓⵎⵉⴹⴰⵏ
     edit_profile: ⵙⵏⴼⵍ ⵉⴼⵔⵙ

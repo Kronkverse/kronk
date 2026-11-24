@@ -1863,26 +1863,13 @@ cs:
     prompt: Pokud tomuto odkazu důvěřujete, klikněte na něj a pokračujte.
     title: Odcházíte z %{instance}.
   relationships:
-    activity: Aktivita účtu
-    confirm_follow_selected_followers: Jste si jisti, že chcete sledovat vybrané sledující?
-    confirm_remove_selected_followers: Jste si jisti, že chcete odebrat vybrané sledující?
-    confirm_remove_selected_follows: Jste si jisti, že chcete odstranit vybrané sledované?
-    dormant: Nečinné
-    follow_failure: Nelze sledovat některé z vybraných účtů.
-    follow_selected_followers: Sledovat vybrané sledující
     followers: Sledující
     following: Sledovaní
     invited: Pozvánka odeslána
     last_active: Naposledy aktivní
     most_recent: Nejnovější
-    moved: Přesunuté
     mutual: Vzájemné
-    primary: Primární
     relationship: Vztah
-    remove_selected_domains: Odstranit všechny sledující z vybraných domén
-    remove_selected_followers: Odstranit vybrané sledující
-    remove_selected_follows: Přestat sledovat vybrané uživatele
-    status: Stav účtu
   remote_follow:
     missing_resource: Nemůžeme najít požadovanou přesměrovávací URL adresu pro váš účet
   reports:
@@ -1959,7 +1946,6 @@ cs:
     notifications: Emailové oznámení
     preferences: Předvolby
     profile: Profil
-    relationships: Sledovaní a sledující
     severed_relationships: Přerušené vztahy
     statuses_cleanup: Automatické mazání příspěvků
     strikes: Moderační prohřešky
@@ -2191,7 +2177,6 @@ cs:
       apps_ios_action: Stáhnout z App Store
       apps_step: Stáhněte si naše oficiální aplikace.
       apps_title: Aplikace Mastodon
-      checklist_subtitle: 'Začněme na této nové sociální hranici:'
       checklist_title: Uvítací kontrolní seznam
       edit_profile_action: Přizpůsobit
       edit_profile_step: Zlepšete své interakce tím, že si vytvoříte komplexní profil.
@@ -2209,7 +2194,6 @@ cs:
       follow_action: Sledovat
       follow_step: Mastodon je o sledování zajimavých lidí.
       follow_title: Přizpůsobte si svůj domovský kanál
-      follows_subtitle: Sledujte známé účty
       follows_title: Koho sledovat
       follows_view_more: Zobrazit více lidí ke sledování
       hashtags_recent_count:
@@ -2217,7 +2201,6 @@ cs:
         many: "%{people} osob v posledních 2 dnech"
         one: "%{people} osoba v posledních 2 dnech"
         other: "%{people} osob v posledních 2 dnech"
-      hashtags_subtitle: Prozkoumejte, co je populární od posledních 2 dnů
       hashtags_title: Populární hashtagy
       hashtags_view_more: Zobrazit více populárních hashtagů
       post_action: Sepsat

@@ -1147,22 +1147,13 @@ si:
       limit_reached: විවිධ ප්‍රතික්‍රියා වල සීමාව ළඟා විය
       unrecognized_emoji: පිළිගත් ඉමොජියක් නොවේ
   relationships:
-    activity: ගිණුමේ ක්‍රියාකාරකම්
-    dormant: නිදිමතයි
-    follow_selected_followers: තේරූ අනුගාමිකයින් අනුගමනය කරන්න
     followers: අනුගාමිකයින්
     following: අනුගමනය
     invited: ආරාධනා කළා
     last_active: අවසන් වරට ක්‍රියාකාරී
     most_recent: මෑතකාලීන
-    moved: මාරු කළා
     mutual: අන්යෝන්ය
-    primary: ප්‍රාථමික
     relationship: සම්බන්ධතාවය
-    remove_selected_domains: තේරූ වසම් වල සියලුම අනුගාමිකයින් ඉවත් කරන්න
-    remove_selected_followers: තේරූ අනුගාමිකයින් ඉවත් කරන්න
-    remove_selected_follows: තේරූ අය අනුගමනය නොකරන්න
-    status: ගිණුමේ තත්‍වය
   remote_follow:
     missing_resource: ඔබගේ ගිණුම සඳහා අවශ්‍ය යළි-යොමුවීම් URL එක සොයා ගැනීමට නොහැකි විය
   reports:
@@ -1228,7 +1219,6 @@ si:
     migrate: ගිණුම් සංක්‍රමණය
     preferences: අභිප්‍රේත
     profile: ප්‍රසිද්ධ පැතිකඩ
-    relationships: අනුගමන හා අනුගාමික
     statuses_cleanup: ස්වයංක්‍රීය ලිපි මැකීම
     two_factor_authentication: ද්වි සාධක Aut
     webauthn_authentication: ආරක්‍ෂණ යතුරු

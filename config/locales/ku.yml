@@ -1280,22 +1280,13 @@ ku:
       limit_reached: Sînorê reaksiyonên cihêrengî gihîşte asta dawî
       unrecognized_emoji: emojîyeke ne naskirî ye
   relationships:
-    activity: Çalakiya ajimêrê
-    dormant: Xewok
-    follow_selected_followers: Şopînerên hilbijartî bişopîne
     followers: Şopîner
     following: Dişopîne
     invited: Vexwendî
     last_active: Çalakiya dawî
     most_recent: Herî dawî
-    moved: Barkirî
     mutual: Hevpar
-    primary: Sereke
     relationship: Pêwendî
-    remove_selected_domains: Hemû şopînerên ji navpera hilbijartî rake
-    remove_selected_followers: Şopînerên hilbijartî rake
-    remove_selected_follows: Bikarhênerên hilbijartî neşopîne
-    status: Rewşa ajimêr
   remote_follow:
     missing_resource: Ji bo ajimêrê te girêdana beralîkirî ya pêwîst nehate dîtin
   reports:
@@ -1361,7 +1352,6 @@ ku:
     migrate: Barkirina ajimêrê
     preferences: Hilbijarte
     profile: Profîl
-    relationships: Şopandin û şopîner
     statuses_cleanup: Bi xweberî ve jêbirina şandiya
     strikes: Binpêkirinên çavdêriyê
     two_factor_authentication: Piştrastkirinê du-faktorî

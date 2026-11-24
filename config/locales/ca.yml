@@ -1766,26 +1766,13 @@ ca:
     prompt: Si confieu en aquest enllaç, feu-hi clic per a continuar.
     title: Deixeu %{instance}.
   relationships:
-    activity: Activitat del compte
-    confirm_follow_selected_followers: Segur que vols seguir els seguidors seleccionats?
-    confirm_remove_selected_followers: Segur que vols esborrar els seguidors seleccionats?
-    confirm_remove_selected_follows: Segur que vols esborrar els seguits seleccionats?
-    dormant: Inactiu
-    follow_failure: No es poden seguir alguns dels comptes seleccionats.
-    follow_selected_followers: Segueix als seguidors seleccionats
     followers: Seguidors
     following: Seguint
     invited: Convidat
     last_active: Última activitat
     most_recent: Més recent
-    moved: Mogut
     mutual: Mútua
-    primary: Primari
     relationship: Relació
-    remove_selected_domains: Elimina tots els seguidors dels dominis seleccionats
-    remove_selected_followers: Elimina els seguidors seleccionats
-    remove_selected_follows: Deixa de seguir els usuaris seleccionats
-    status: Estat del compte
   remote_follow:
     missing_resource: No s'ha pogut trobar l'enllaç de redirecció necessari per al compte
   reports:
@@ -1862,7 +1849,6 @@ ca:
     notifications: Notificacions per correu electrònic
     preferences: Preferències
     profile: Perfil
-    relationships: Seguits i seguidors
     severed_relationships: Relacions eliminades
     statuses_cleanup: Esborrat automàtic de tuts
     strikes: Accions de mediació
@@ -2085,7 +2071,6 @@ ca:
       apps_ios_action: Descarregueu-la de la botiga d'aplicacions
       apps_step: Descarregueu-vos les aplicacions oficials.
       apps_title: Aplicacions de Mastodon
-      checklist_subtitle: 'Inicieu-vos en aquesta nova frontera social:'
       checklist_title: Control inicial
       edit_profile_action: Personalitzeu
       edit_profile_step: Augmenteu les vostres interaccions amb un perfil complet.
@@ -2103,13 +2088,11 @@ ca:
       follow_action: Seguiu
       follow_step: Mastodon va de seguir gent interessant.
       follow_title: Personalitzeu la pantalla d'inici
-      follows_subtitle: Seguiu comptes populars
       follows_title: A qui seguir
       follows_view_more: Més persones a qui seguir
       hashtags_recent_count:
         one: "%{people} persona en els 2 últims dies"
         other: "%{people} persones en els 2 últims dies"
-      hashtags_subtitle: Exploreu què és tendència des de fa 2 dies
       hashtags_title: Etiquetes en tendència
       hashtags_view_more: Més etiquetes en tendència
       post_action: Redacteu

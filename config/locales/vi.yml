@@ -1751,26 +1751,13 @@ vi:
     prompt: Nếu tin tưởng liên kết dưới, hãy nhấn tiếp tục.
     title: Bạn đang rời khỏi %{instance}
   relationships:
-    activity: Tương tác
-    confirm_follow_selected_followers: Bạn có chắc muốn theo dõi những người đã chọn?
-    confirm_remove_selected_followers: Bạn có chắc muốn bỏ theo dõi những người đã chọn?
-    confirm_remove_selected_follows: Bạn có chắc muốn xóa những người theo dõi bạn đã chọn không?
-    dormant: Chưa
-    follow_failure: Không thể theo dõi một số tài khoản đã chọn.
-    follow_selected_followers: Theo dõi những người đã chọn
     followers: Người theo dõi
     following: Đang theo dõi
     invited: Đã mời
     last_active: Hoạt động lần cuối
     most_recent: Mới nhất
-    moved: Đã chuyển
     mutual: Đồng thời
-    primary: Còn
     relationship: Quan hệ
-    remove_selected_domains: Xóa hết người theo dõi từ các máy chủ đã chọn
-    remove_selected_followers: Xóa những người theo dõi đã chọn
-    remove_selected_follows: Bỏ theo dõi những người đã chọn
-    status: Trạng thái
   remote_follow:
     missing_resource: Không tìm thấy URL chuyển hướng cho tài khoản của bạn
   reports:
@@ -1847,7 +1834,6 @@ vi:
     notifications: Thông báo qua email
     preferences: Chung
     profile: Hồ sơ
-    relationships: Quan hệ
     severed_relationships: Quan hệ đứt gãy
     statuses_cleanup: Xóa tút cũ tự động
     strikes: Lần cảnh cáo
@@ -2067,7 +2053,6 @@ vi:
       apps_ios_action: Tải trên App Store
       apps_step: Tải ứng dụng chính thức.
       apps_title: Ứng dụng Mastodon
-      checklist_subtitle: 'Hãy bắt đầu trên mạng xã hội mới này:'
       checklist_title: Danh sách việc cần làm
       edit_profile_action: Cá nhân hoá
       edit_profile_step: Tạo sự tương tác bằng một hồ sơ hoàn chỉnh.
@@ -2085,12 +2070,10 @@ vi:
       follow_action: Theo dõi
       follow_step: Theo dõi những người thú vị trên Mastodon.
       follow_title: Cá nhân hóa bảng tin của bạn
-      follows_subtitle: Theo dõi những người thú vị
       follows_title: Gợi ý theo dõi
       follows_view_more: Xem thêm những người khác
       hashtags_recent_count:
         other: "%{people} người dùng trong 2 ngày qua"
-      hashtags_subtitle: Khám phá xu hướng 2 ngày qua
       hashtags_title: Hashtag xu hướng
       hashtags_view_more: Xem thêm hashtag xu hướng
       post_action: Soạn tút

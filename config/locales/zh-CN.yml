@@ -1751,26 +1751,13 @@ zh-CN:
     prompt: 如果你信任此链接，请单击以继续跳转。
     title: 你正在离开 %{instance} 。
   relationships:
-    activity: 账号活动
-    confirm_follow_selected_followers: 你确定想要关注所选的关注者吗？
-    confirm_remove_selected_followers: 你确定想要取关所选的关注者吗？
-    confirm_remove_selected_follows: 你确定要删除选定的关注者吗？
-    dormant: 休眠
-    follow_failure: 无法关注选中的部分账号。
-    follow_selected_followers: 关注选中的关注者
     followers: 关注者
     following: 正在关注
     invited: 已邀请
     last_active: 最近活动
     most_recent: 最近的
-    moved: 已迁移
     mutual: 互相关注
-    primary: 主要
     relationship: 关系
-    remove_selected_domains: 删除在选定站点中的全部关注者
-    remove_selected_followers: 移除选中的关注者
-    remove_selected_follows: 取消关注所选用户
-    status: 账号状态
   remote_follow:
     missing_resource: 无法确定你的账号的跳转 URL
   reports:
@@ -1847,7 +1834,6 @@ zh-CN:
     notifications: 邮件通知
     preferences: 偏好设置
     profile: 个人资料
-    relationships: 关注管理
     severed_relationships: 已断开的关系
     statuses_cleanup: 自动删除嘟文
     strikes: 管理处罚记录
@@ -2067,7 +2053,6 @@ zh-CN:
       apps_ios_action: 从 App Store 下载
       apps_step: 下载我们的官方应用。
       apps_title: Mastodon 应用
-      checklist_subtitle: 让我们带你开启这片社交新天地：
       checklist_title: 欢迎清单
       edit_profile_action: 个性化
       edit_profile_step: 完善个人资料，提升你的互动体验。
@@ -2085,12 +2070,10 @@ zh-CN:
       follow_action: 关注
       follow_step: 关注有趣的人，这就是 Mastodon 的意义所在。
       follow_title: 个性化你的主页动态
-      follows_subtitle: 关注知名账号
       follows_title: 推荐关注
       follows_view_more: 查看更多可关注的人
       hashtags_recent_count:
         other: 过去2天内有 %{people} 人
-      hashtags_subtitle: 探索过去2天以来的热门内容
       hashtags_title: 热门话题
       hashtags_view_more: 查看更多热门话题
       post_action: 撰写

@@ -1699,26 +1699,13 @@ eu:
     prompt: Esteka honetan fidatzen bazara, egin klik jarraitzeko.
     title: "%{instance} instantziatik zoaz."
   relationships:
-    activity: Kontuaren aktibitatea
-    confirm_follow_selected_followers: Ziur hautatutako jarraitzaileei jarraitu nahi dituzula?
-    confirm_remove_selected_followers: Ziur hautatutako jarraitzaileak ezabatu nahi dituzula?
-    confirm_remove_selected_follows: Ziur hautatutako jarraipenak ezabatu nahi dituzula?
-    dormant: Ez aktiboa
-    follow_failure: Ezin izan dira aukeratutako kontu batzuk jarraitu.
-    follow_selected_followers: Jarraitu hautatutako jarraitzaileak
     followers: Jarraitzaileak
     following: Jarraitzen
     invited: Gonbidatuta
     last_active: Azkenekoz aktiboa
     most_recent: Azkenak
-    moved: Lekuz aldatua
     mutual: Alde bikoa
-    primary: Primarioa
     relationship: Erlazioa
-    remove_selected_domains: Kendu hautatutako domeinuetako jarraitzaile guztiak
-    remove_selected_followers: Kendu hautatutako jarraitzaileak
-    remove_selected_follows: Utzi hautatutako erabiltzaileak jarraitzeari
-    status: Kontuaren egoera
   remote_follow:
     missing_resource: Ezin izan da zure konturako behar den birbideratze URL-a
   reports:
@@ -1795,7 +1782,6 @@ eu:
     notifications: Posta bidezko jakinarazpenak
     preferences: Hobespenak
     profile: Profila
-    relationships: Jarraitutakoak eta jarraitzaileak
     severed_relationships: Indartutako erlazioak
     statuses_cleanup: Bidalketak automatikoki ezabatzea
     strikes: Moderazio neurriak
@@ -2014,7 +2000,6 @@ eu:
       apps_ios_action: Deskargatu App Store-n
       apps_step: Deskargatu gure aplikazio ofizialak.
       apps_title: Mastodon-en aplikazioak
-      checklist_subtitle: 'Murgil zaitez sare sozialen aro berri honetan:'
       checklist_title: Ongietorrien kontrol-zerrenda
       edit_profile_action: Pertsonalizatu
       edit_profile_step: Handiagotu elkarreragina profil ulerkor bat sortuz.
@@ -2032,13 +2017,11 @@ eu:
       follow_action: Jarraitu
       follow_step: Jende interesgarria jarraitzean datza Mastodon.
       follow_title: Pertsonalizatu hasierako jarioa
-      follows_subtitle: Jarraitu kontu ospetsuak
       follows_title: Nor jarraitu
       follows_view_more: Ikusi jarrai dezakezun jende gehiago
       hashtags_recent_count:
         one: Pertson %{people} azken 2 egunetan
         other: "%{people} pertson azken 2 egunetan"
-      hashtags_subtitle: Arakatu azken 2 egunetan pil-pilean dagoena
       hashtags_title: Pil-pilean dauden traolak
       hashtags_view_more: Ikusi pil-pilean dauden traol gehiago
       post_action: Idatzi

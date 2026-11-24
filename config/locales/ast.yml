@@ -717,14 +717,11 @@ ast:
   privacy_policy:
     title: Política de privacidá
   relationships:
-    activity: Actividá
     followers: Siguidores
     last_active: Última actividá
     most_recent: Lo más recién
     mutual: Mutua
-    primary: Principal
     relationship: Rellación
-    remove_selected_follows: Dexar de siguir a los perfiles seleicionaos
   scheduled_statuses:
     over_daily_limit: Superesti la llende de %{limit} artículos programaos pa güei
     over_total_limit: Superesti la llende de %{limit} artículos programaos
@@ -781,7 +778,6 @@ ast:
     notifications: Avisos per corréu electrónicu
     preferences: Preferencies
     profile: Perfil públicu
-    relationships: Perfiles que sigues y te siguen
     statuses_cleanup: Desaniciu automáticu d'artículos
     two_factor_authentication: Autenticación en dos pasos
     webauthn_authentication: Llaves de seguranza
@@ -870,7 +866,6 @@ ast:
       hashtags_recent_count:
         one: "%{people} persona nos últimos 2 díes"
         other: "%{people} persones nos últimos 2 díes"
-      hashtags_subtitle: Esplora qué ta en tendencia dende hai 2 díes
       hashtags_title: Etiquetes en tendencia
       hashtags_view_more: Ver más etiquetes en tendencia
       post_step: Saluda al mundu con semeyes, vídeos, testu o encuestes.

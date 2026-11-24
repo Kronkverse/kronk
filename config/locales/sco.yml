@@ -1270,22 +1270,13 @@ sco:
       limit_reached: Limit o different reactions reached
       unrecognized_emoji: isnae a recognized emoji
   relationships:
-    activity: Accoont activity
-    dormant: Dormant
-    follow_selected_followers: Follae selectit follaers
     followers: Follaers
     following: Follaein
     invited: Invitit
     last_active: Last active
     most_recent: Maist recent
-    moved: Flittit
     mutual: Mutual
-    primary: Primary
     relationship: Relationship
-    remove_selected_domains: Tak doon aw follaers fae the selectit domains
-    remove_selected_followers: Remove selectit follaers
-    remove_selected_follows: Unfollae selectit uisers
-    status: Accoont status
   remote_follow:
     missing_resource: Cuidnae fin the requirt redirect URL fir yer accoont
   reports:
@@ -1351,7 +1342,6 @@ sco:
     migrate: Accoont flittin
     preferences: Preferences
     profile: Profile
-    relationships: Follaes and follaers
     statuses_cleanup: Automatit post deletion
     strikes: Moderation strikes
     two_factor_authentication: Twa-factor Auth

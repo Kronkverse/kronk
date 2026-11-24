@@ -1906,26 +1906,13 @@ ga:
     prompt: Má tá muinín agat as an nasc seo, cliceáil air chun leanúint ar aghaidh.
     title: Tá tú ag fágáil %{instance}.
   relationships:
-    activity: Gníomhaíocht chuntais
-    confirm_follow_selected_followers: An bhfuil tú cinnte gur mhaith leat na leantóirí roghnaithe a leanúint?
-    confirm_remove_selected_followers: An bhfuil tú cinnte gur mhaith leat na leantóirí roghnaithe a bhaint?
-    confirm_remove_selected_follows: An bhfuil tú cinnte gur mhaith leat na nithe seo a leanas roghnaithe a bhaint?
-    dormant: Díomhaoin
-    follow_failure: Níorbh fhéidir cuid de na cuntais roghnaithe a leanúint.
-    follow_selected_followers: Lean leantóirí roghnaithe
     followers: Leantóirí
     following: Ag leanúint
     invited: Cuireadh
     last_active: Gníomhach seo caite
     most_recent: Is déanaí
-    moved: Ar athraíodh a ionad
     mutual: Frithpháirteach
-    primary: Príomha
     relationship: Gaol
-    remove_selected_domains: Bain gach leantóir ó na fearainn roghnaithe
-    remove_selected_followers: Bain leantóirí roghnaithe
-    remove_selected_follows: Dí-lean úsáideoirí roghnaithe
-    status: Stádas cuntais
   remote_follow:
     missing_resource: Níorbh fhéidir an URL atreoraithe riachtanach do do chuntas a aimsiú
   reports:
@@ -2002,7 +1989,6 @@ ga:
     notifications: Fógraí ríomhphoist
     preferences: Sainroghanna pearsanta
     profile: Próifíl
-    relationships: Leantóirí agus leanúna
     severed_relationships: Caidrimh dhearfa
     statuses_cleanup: Uathscriosadh postála
     strikes: Stailceanna measarthachta
@@ -2238,7 +2224,6 @@ ga:
       apps_ios_action: Íoslódáil ar an App Store
       apps_step: Íoslódáil ár n-aipanna oifigiúla.
       apps_title: Aipeanna Mastodon
-      checklist_subtitle: 'Cuirimis tús leat ar an teorainn shóisialta nua seo:'
       checklist_title: Seicliosta Fáilte
       edit_profile_action: Pearsanú
       edit_profile_step: Cuir le d'idirghníomhaíochtaí trí phróifíl chuimsitheach a bheith agat.
@@ -2256,7 +2241,6 @@ ga:
       follow_action: Lean
       follow_step: Is éard atá i gceist le daoine suimiúla a leanúint ná Mastodon.
       follow_title: Cuir do chuid fotha baile in oiriúint duit féin
-      follows_subtitle: Lean cuntais aitheanta
       follows_title: Cé a leanúint
       follows_view_more: Féach ar níos mó daoine a leanúint
       hashtags_recent_count:
@@ -2265,7 +2249,6 @@ ga:
         one: "%{people} duine le 2 lá anuas"
         other: "%{people} daoine le 2 lá anuas"
         two: "%{people} daoine le 2 lá anuas"
-      hashtags_subtitle: Déan iniúchadh ar a bhfuil ag dul chun cinn le 2 lá anuas
       hashtags_title: Haischlib treochta
       hashtags_view_more: Féach ar níos mó Haischlib treochta
       post_action: Cum

@@ -1414,26 +1414,13 @@ my:
       limit_reached: မတူညီသော တုံ့ပြန်မှုများ၏ ကန့်သတ်ချက်သို့ ရောက်ရှိခဲ့သည်။
       unrecognized_emoji: အသိအမှတ်ပြုထားသော အီမိုဂျီမဟုတ်ပါ
   relationships:
-    activity: အကောင့်လုပ်ဆောင်ချက်
-    confirm_follow_selected_followers: ရွေးချယ်စောင့်ကြည့်သူများကို စောင့်ကြည့်လိုသည်မှာ သေချာပါသလား။
-    confirm_remove_selected_followers: ရွေးချယ်စောင့်ကြည့်သူများကို ဖယ်ရှားလိုသည်မှာ သေချာပါသလား။
-    confirm_remove_selected_follows: ရွေးချယ်စောင့်ကြည့်သူများကို ဖယ်ရှားလိုသည်မှာ သေချာပါသလား။
-    dormant: Dormant
-    follow_failure: ရွေးချယ်ထားသော အကောင့်အချို့ကို စောင့်ကြည့်၍ရမည်မဟုတ်ပါ။
-    follow_selected_followers: ရွေးချယ်စောင့်ကြည့်သူများကို စောင့်ကြည့်ပါ
     followers: စောင့်ကြည့်သူများ
     following: စောင့်ကြည့်နေသည်
     invited: ဖိတ်ခေါ်ထားပြီး
     last_active: နောက်ဆုံးအသုံးပြုခဲ့သည့်အချိန်
     most_recent: မကြာသေးမီက
-    moved: ရွှေ့ပြီးပါပြီ
     mutual: အပြန်အလှန်စောင့်ကြည့်ထားခြင်း
-    primary: ဦးစားပေး
     relationship: တော်စပ်ပုံ
-    remove_selected_domains: ရွေးချယ်ထားသော ဒိုမိန်းများမှ စောင့်ကြည့်သူအားလုံးကို ဖယ်ရှားပါ
-    remove_selected_followers: ရွေးချယ်ထားသော စောင့်ကြည့်သူများကို ဖယ်ရှားပါ
-    remove_selected_follows: ရွေးချယ်ထားသော အသုံးပြုသူများကို စောင့်ကြည့်ခြင်းမှ ဖြုတ်ပါ
-    status: အကောင့်အခြေအနေ
   remote_follow:
     missing_resource: သင့်အကောင့်အတွက် လိုအပ်သော ပြန်ညွှန်းမည့် URL ကို ရှာမတွေ့ပါ
   reports:
@@ -1505,7 +1492,6 @@ my:
     migrate: အကောင့်ပြောင်းရွှေ့ခြင်း
     preferences: သတ်မှတ်ချက်များ
     profile: ပရိုဖိုင်
-    relationships: စောင့်ကြည့်သူများနှင့် စောင့်ကြည့်စာရင်း
     statuses_cleanup: အလိုအလျောက်ပို့စ်ဖျက်ခြင်း
     strikes: စိစစ်လုပ်ဆောင်ချက်များ
     two_factor_authentication: နှစ်ဆင့်ခံလုံခြုံရေးစနစ်

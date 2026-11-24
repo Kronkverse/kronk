@@ -1785,26 +1785,13 @@ ia:
     prompt: Si tu te fide a iste ligamine, clicca sur illo pro continuar.
     title: Tu va lassar %{instance}.
   relationships:
-    activity: Activitate del conto
-    confirm_follow_selected_followers: Es tu secur que tu vole sequer le sequitores seligite?
-    confirm_remove_selected_followers: Es tu secur que tu vole remover le sequitores seligite?
-    confirm_remove_selected_follows: Es tu secur que tu vole cessar de sequer le contos seligite?
-    dormant: Dormiente
-    follow_failure: Impossibile sequer alcunes del contos seligite.
-    follow_selected_followers: Sequer le sequitores seligite
     followers: Sequitores
     following: Sequente
     invited: Invitate
     last_active: Ultime activitate
     most_recent: Plus recente
-    moved: Migrate
     mutual: Mutue
-    primary: Primari
     relationship: Relation
-    remove_selected_domains: Remover tote le sequitores del dominios seligite
-    remove_selected_followers: Remover le sequitores seligite
-    remove_selected_follows: Non plus sequer le usatores seligite
-    status: Stato del conto
   remote_follow:
     missing_resource: Impossibile trovar le URL de redirection requirite pro tu conto
   reports:
@@ -1881,7 +1868,6 @@ ia:
     notifications: Notificationes per e-mail
     preferences: Preferentias
     profile: Profilo public
-    relationships: Sequites e sequitores
     severed_relationships: Relationes rupte
     statuses_cleanup: Deletion de message automatic
     strikes: Sanctiones de moderation
@@ -2104,7 +2090,6 @@ ia:
       apps_ios_action: Discargar sur le App Store
       apps_step: Discarga nostre applicationes official.
       apps_title: Applicationes de Mastodon
-      checklist_subtitle: 'Comencia tu aventura sur le web social:'
       checklist_title: Prime passos
       edit_profile_action: Personalisar
       edit_profile_step: Impulsa tu interactiones con un profilo comprehensive.
@@ -2122,13 +2107,11 @@ ia:
       follow_action: Sequer
       follow_step: Sequer personas interessante es le ration de esser de Mastodon.
       follow_title: Personalisa tu fluxo principal
-      follows_subtitle: Seque contos popular
       follows_title: Qui sequer
       follows_view_more: Vider plus personas a sequer
       hashtags_recent_count:
         one: "%{people} persona in le passate duo dies"
         other: "%{people} personas in le passate duo dies"
-      hashtags_subtitle: Explora le tendentias del passate 2 dies
       hashtags_title: Hashtags in tendentia
       hashtags_view_more: Vider plus de hashtags in tendentia
       post_action: Scriber

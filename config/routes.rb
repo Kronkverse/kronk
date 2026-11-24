@@ -280,7 +280,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resource :relationships, only: [:show, :update]
+  resource :relationships, only: :show
   resources :severed_relationships, only: [:index] do
     member do
       constraints(format: :csv) do

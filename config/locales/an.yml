@@ -1282,25 +1282,13 @@ an:
       limit_reached: Limite de reaccions diferents aconseguiu
       unrecognized_emoji: no ye un emoji conoixiu
   relationships:
-    activity: Actividat d'a cuenta
-    confirm_follow_selected_followers: Yes seguro de querer seguir a los seguidors triaus?
-    confirm_remove_selected_followers: Yes seguro de querer eliminar a los seguidors triaus?
-    confirm_remove_selected_follows: Yes seguro de querer eliminar los seguimientos triaus?
-    dormant: Inactivo
-    follow_selected_followers: Seguir a los seguidores triaus
     followers: Seguidores
     following: Seguindo
     invited: Convidau
     last_active: Zaguera actividat
     most_recent: Mas recient
-    moved: Moviu
     mutual: Mutuo
-    primary: Prencipal
     relationship: Relación
-    remove_selected_domains: Eliminar totz los seguidores d'os dominios triaus
-    remove_selected_followers: Eliminar los seguidores triaus
-    remove_selected_follows: Deixar de seguir a los usuarios triaus
-    status: Estau d'a cuenta
   remote_follow:
     missing_resource: No se podió trobar la URL de redirección requerida pa la tuya cuenta
   reports:
@@ -1366,7 +1354,6 @@ an:
     migrate: Migración de cuenta
     preferences: Preferencias
     profile: Perfil
-    relationships: Seguindo y seguidores
     statuses_cleanup: Eliminación automatica de publicacions
     strikes: Amonestacions de moderación
     two_factor_authentication: Autenticación de dos factors

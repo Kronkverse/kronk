@@ -1849,26 +1849,13 @@ pl:
     prompt: Kliknij ten link jeżeli mu ufasz.
     title: Opuszczasz %{instance}.
   relationships:
-    activity: Aktywność konta
-    confirm_follow_selected_followers: Czy na pewno chcesz obserwować wybranych obserwujących?
-    confirm_remove_selected_followers: Czy na pewno chcesz usunąć wybranych obserwujących?
-    confirm_remove_selected_follows: Czy na pewno chcesz usunąć zaznaczone obserwacje?
-    dormant: Uśpione
-    follow_failure: Nie można obserwować niektórych wybranych kont.
-    follow_selected_followers: Zacznij obserwować wybranych obserwujących
     followers: Obserwujący
     following: Obserwowani
     invited: Zaproszeni
     last_active: Ostatnia aktywność
     most_recent: Ostatnie
-    moved: Przeniesione
     mutual: Wspólna
-    primary: Jednostronna
     relationship: Relacja
-    remove_selected_domains: Usuń wszystkich obserwujących z zaznaczonych domen
-    remove_selected_followers: Usuń zaznaczonych obserwujących
-    remove_selected_follows: Przestań obserwować zaznaczonych użytkowników
-    status: Stan konta
   remote_follow:
     missing_resource: Nie udało się znaleźć adresu przekierowania z Twojej domeny
   reports:
@@ -1945,7 +1932,6 @@ pl:
     notifications: Powiadomienia e-mail
     preferences: Preferencje
     profile: Profil
-    relationships: Obserwowani i obserwujący
     severed_relationships: Zerwane związki
     statuses_cleanup: Automatyczne usuwanie wpisów
     strikes: Ostrzeżenia moderacyjne
@@ -2173,7 +2159,6 @@ pl:
       apps_ios_action: Pobierz z App Store
       apps_step: Pobierz oficjalne aplikacje.
       apps_title: Aplikacje Mastodon
-      checklist_subtitle: 'Aby porządnie rozpocząć użytkowanie Mastodona:'
       checklist_title: Powitalna lista kontrolna
       edit_profile_action: Personalizuj
       edit_profile_step: Inni użytkownicy są bardziej skłonni do interakcji z Tobą jeśli posiadasz wypełniony profil.
@@ -2191,7 +2176,6 @@ pl:
       follow_action: Obserwuj
       follow_step: Zarządzasz swoim własnym kanałem. Wypełnij go interesującymi ludźmi.
       follow_title: Spersonalizuj swoją stronę główną
-      follows_subtitle: Obserwuj dobrze znane konta
       follows_title: Kogo obserwować
       follows_view_more: Zobacz więcej osób do obserwowania
       hashtags_recent_count:
@@ -2199,7 +2183,6 @@ pl:
         many: "%{people} osób w ostatnie 2 dni"
         one: "%{people} osoba w ostatnie 2 dni"
         other: "%{people} osób w ostatnie 2 dni"
-      hashtags_subtitle: Zobacz, co było popularne przez ostatnie 2 dni
       hashtags_title: Popularne hashtagi
       hashtags_view_more: Zobacz więcej popularnych hashtagów
       post_action: Utwórz wpis

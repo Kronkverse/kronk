@@ -1201,26 +1201,13 @@ sk:
     prompt: Ak tomuto odkazu veríš, klikni naňho pre pokračovanie.
     title: Opúšťaš %{instance}.
   relationships:
-    activity: Aktivita účtu
-    confirm_follow_selected_followers: Si si istý/á, že chceš nasledovať vybraných sledujúcich?
-    confirm_remove_selected_followers: Si si istý/á, že chceš odstrániť vybraných sledovateľov?
-    confirm_remove_selected_follows: Si si istý/á, že chceš odstrániť vybraných sledovaných?
-    dormant: Neaktívne
-    follow_failure: Nemožno nasledovať niektoré z vybraných účtov.
-    follow_selected_followers: Následuj označených sledovatelov
     followers: Sledujú vás
     following: Sledované vami
     invited: Pozvaný/á
     last_active: Naposledy aktívne
     most_recent: Najnovšie
-    moved: Presunuté
     mutual: Vzájomné
-    primary: Hlavné
     relationship: Vzťah
-    remove_selected_domains: Vymazať všetky sledujúce účty z vybraných domén
-    remove_selected_followers: Odstráň vybraných následovatrľov
-    remove_selected_follows: Zrušiť sledovanie vybraných účtov
-    status: Stav účtu
   remote_follow:
     missing_resource: Nemožno nájsť potrebnú presmerovaciu adresu k tvojmu účtu
   rss:
@@ -1271,7 +1258,6 @@ sk:
     notifications: E-mailové upozornenia
     preferences: Predvoľby
     profile: Profil
-    relationships: Sledované a sledujúce účty
     severed_relationships: Prerušené vzťahy
     statuses_cleanup: Automatické mazanie príspevkov
     two_factor_authentication: Dvojstupňové overenie

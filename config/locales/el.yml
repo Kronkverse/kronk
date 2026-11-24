@@ -1787,26 +1787,13 @@ el:
     prompt: Αν εμπιστεύεστε αυτόν τον σύνδεσμο, κάντε κλικ σε αυτόν για να συνεχίσετε.
     title: Αποχωρείτε από το %{instance}.
   relationships:
-    activity: Δραστηριότητα λογαριασμού
-    confirm_follow_selected_followers: Σίγουρα θες να ακολουθήσεις τους επιλεγμένους ακόλουθους;
-    confirm_remove_selected_followers: Σίγουρα θες να αφαιρέσεις τους επιλεγμένους ακόλουθους;
-    confirm_remove_selected_follows: Σίγουρα θες να αφαιρέσεις τα επιλεγμένα άτομα που ακολουθείς;
-    dormant: Αδρανείς
-    follow_failure: Δεν ήταν δυνατή η παρακολούθηση ορισμένων από τους επιλεγμένους λογαριασμούς.
-    follow_selected_followers: Ακολούθησε τους επιλεγμένους ακόλουθους
     followers: Ακόλουθοι
     following: Ακολουθείτε
     invited: Προσκεκλημένοι
     last_active: Τελευταία ενεργός
     most_recent: Πιο πρόσφατος
-    moved: Μετακόμισε
     mutual: Αμοιβαίοι
-    primary: Βασικός
     relationship: Σχέση
-    remove_selected_domains: Αφαίρεση όλων των ακόλουθων από τους επιλεγμένους τομείς
-    remove_selected_followers: Αφαίρεση επιλεγμένων ακολούθων
-    remove_selected_follows: Άρση ακολούθησης επιλεγμένων χρηστών
-    status: Κατάσταση λογαριασμού
   remote_follow:
     missing_resource: Δεν βρέθηκε το απαιτούμενο URL ανακατεύθυνσης για το λογαριασμό σου
   reports:
@@ -1883,7 +1870,6 @@ el:
     notifications: Ειδοποιήσεις μέσω email
     preferences: Προτιμήσεις
     profile: Προφίλ
-    relationships: Ακολουθείς και σε ακολουθούν
     severed_relationships: Αποκομμένες σχέσεις
     statuses_cleanup: Αυτοματοποιημένη διαγραφή αναρτήσεων
     strikes: Παραπτώματα από ομάδα συντονισμού
@@ -2107,7 +2093,6 @@ el:
       apps_ios_action: Λήψη από το AppStore
       apps_step: Κατεβάστε τις επίσημες εφαρμογές μας.
       apps_title: Εφαρμογές Mastodon
-      checklist_subtitle: 'Ας ξεκινήσουμε σε αυτό το νέο κοινωνικό σύνορο:'
       checklist_title: Λίστα Καλωσορίσματος
       edit_profile_action: Εξατομίκευση
       edit_profile_step: Ενίσχυσε τις αλληλεπιδράσεις σου έχοντας ένα ολοκληρωμένο προφίλ.
@@ -2125,13 +2110,11 @@ el:
       follow_action: Ακολούθησε
       follow_step: Το να ακολουθείς ενδιαφέροντα άτομα είναι όλη η ουσία του Mastodon.
       follow_title: Προσάρμοσε την αρχική ροή σου
-      follows_subtitle: Ακολουθήστε γνωστούς λογαριασμούς
       follows_title: Ποιον να ακολουθήσεις
       follows_view_more: Δες περισσότερα άτομα για να ακολουθήσεις
       hashtags_recent_count:
         one: "%{people} άτομο τις τελευταίες 2 ημέρες"
         other: "%{people} άτομα τις τελευταίες 2 ημέρες"
-      hashtags_subtitle: Εξερεύνησε τις τάσεις των τελευταίων 2 ημερών
       hashtags_title: Ετικέτες σε τάση
       hashtags_view_more: Δες περισσότερες ετικέτες σε τάση
       post_action: Σύνθεση

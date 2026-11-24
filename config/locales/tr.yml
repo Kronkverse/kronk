@@ -1790,26 +1790,13 @@ tr:
     prompt: Eğer bu bağlantıya güveniyorsanız, tıklayıp devam edebilirsiniz.
     title: "%{instance} sunucusundan ayrılıyorsunuz."
   relationships:
-    activity: Hesap etkinliği
-    confirm_follow_selected_followers: Seçili takipçileri takip etmek istediğinizden emin misiniz?
-    confirm_remove_selected_followers: Seçili takipçileri kaldırmak istediğinizden emin misiniz?
-    confirm_remove_selected_follows: Seçili takipleri kaldırmak istediğinizden emin misiniz?
-    dormant: Uykuda
-    follow_failure: Seçilen hesaplardan bazıları takip edilemedi.
-    follow_selected_followers: Seçili takipçileri takip et
     followers: Takipçiler
     following: Takip edilenler
     invited: Davet edildi
     last_active: Son etkinlik
     most_recent: En yeni
-    moved: Taşındı
     mutual: Karşılıklı
-    primary: Ana
     relationship: İlişki
-    remove_selected_domains: Seçilen alan adların tüm takipçileri kaldır
-    remove_selected_followers: Seçili takipçileri kaldır
-    remove_selected_follows: Seçili kullanıcıları takip etmeyi bırak
-    status: Hesap durumu
   remote_follow:
     missing_resource: Hesabınız için gerekli yönlendirme URL'si bulunamadı
   reports:
@@ -1886,7 +1873,6 @@ tr:
     notifications: E-posta bildirimleri
     preferences: Tercihler
     profile: Profil
-    relationships: Takip edilenler ve takipçiler
     severed_relationships: Kopmuş ilişkiler
     statuses_cleanup: Otomatik gönderi silme
     strikes: Moderasyon eylemleri
@@ -2110,7 +2096,6 @@ tr:
       apps_ios_action: App Store'dan İndirin
       apps_step: Resmi uygulamalarımızı indirin.
       apps_title: Mastodon uygulamaları
-      checklist_subtitle: 'Bu yeni sosyal sınırda başlamanızı sağlar:'
       checklist_title: Hoşgeldiniz Yapılacaklar Listesi
       edit_profile_action: Kişiselleştir
       edit_profile_step: Kapsamlı bir profille etkileşimlerinizi arttırın.
@@ -2128,13 +2113,11 @@ tr:
       follow_action: Takip et
       follow_step: Kendi akışınızı düzenliyorsunuz. Hadi onu ilginç kullanıcılarla dolduralım.
       follow_title: Ana sayfa akışınızı kişiselleştirin
-      follows_subtitle: Tanınmış hesapları takip edin
       follows_title: Takip edebileceklerin
       follows_view_more: Takip edecek daha fazla kişi görüntüleyin
       hashtags_recent_count:
         one: Son 2 günde %{people} kişi
         other: Son 2 günde %{people} kişi
-      hashtags_subtitle: Son 2 günde öne çıkanları keşfedin
       hashtags_title: Öne çıkan etiketler
       hashtags_view_more: Daha fazla öne çıkan etiket görüntüleyin
       post_action: Oluştur

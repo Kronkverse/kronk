@@ -1726,26 +1726,13 @@ uk:
     prompt: Якщо ви довіряєте цьому посиланню, натисніть, щоб продовжити.
     title: Ви покидаєте %{instance}.
   relationships:
-    activity: Діяльність облікового запису
-    confirm_follow_selected_followers: Ви справді бажаєте підписатися на обраних підписників?
-    confirm_remove_selected_followers: Ви дійсно бажаєте видалити вибраних підписників?
-    confirm_remove_selected_follows: Ви дійсно хочете вилучити вибрані підписки?
-    dormant: Неактивні
-    follow_failure: Не вдалося підписатися на деякі вибрані облікові записи.
-    follow_selected_followers: Стежити за вибраними підписниками
     followers: Підписники
     following: Підписник
     invited: Запрошені
     last_active: Остання активність
     most_recent: За часом створення
-    moved: Переміщено
     mutual: Взаємні уподобання
-    primary: Первинні
     relationship: Зв’язок
-    remove_selected_domains: Видалити усіх підписників з обраних доменів
-    remove_selected_followers: Видалити обраних підписників
-    remove_selected_follows: Не стежити за обраними користувачами
-    status: Стан облікового запису
   remote_follow:
     missing_resource: Не вдалося знайти необхідний URL переадресації для вашого облікового запису
   reports:
@@ -1822,7 +1809,6 @@ uk:
     notifications: Сповіщення е-поштою
     preferences: Налаштування
     profile: Загальнодоступний профіль
-    relationships: Підписки та підписники
     severed_relationships: Розірвані зв'язки
     statuses_cleanup: Автовидалення допису
     strikes: Попередження модераторів
@@ -2036,7 +2022,6 @@ uk:
       apps_ios_action: Завантажити з App Store
       apps_step: Завантажити наші офіційні застосунки.
       apps_title: Застосунки Mastodon
-      checklist_subtitle: 'Розпочнімо у цій новій соціальній межі:'
       checklist_title: Контрольний список привітання
       edit_profile_action: Персоналізувати
       edit_profile_step: Інші, ймовірно, швидше взаємодіятимуть з вами, якщо ви заповните профіль.
@@ -2054,7 +2039,6 @@ uk:
       follow_action: Підписатися
       follow_step: Ви керуєте головною стрічкою. Заповнюйте її цікавими людьми.
       follow_title: Персоналізуйте домашню стрічку
-      follows_subtitle: Стежте за відомими обліковими записами
       follows_title: На кого підписатися
       follows_view_more: Переглянути більше людей, щоб підписатися
       hashtags_recent_count:
@@ -2062,7 +2046,6 @@ uk:
         many: "%{people} осіб за останні 2 дні"
         one: "%{people} особа за останні 2 дні"
         other: "%{people} особа за останні 2 дні"
-      hashtags_subtitle: Дізнавайтеся, що було популярним минулі 2 дні
       hashtags_title: Популярні хештеги
       hashtags_view_more: Переглянути більше популярних хештеґів
       post_action: Створити

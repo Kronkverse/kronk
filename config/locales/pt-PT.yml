@@ -1785,26 +1785,13 @@ pt-PT:
     prompt: Se confias nesta hiperligação, clica nela para continuar.
     title: Estás a deixar %{instance}.
   relationships:
-    activity: Atividade da conta
-    confirm_follow_selected_followers: Tens a certeza que desejas seguir os seguidores selecionados?
-    confirm_remove_selected_followers: Tens a certeza que desejas seguir os seguidores selecionados?
-    confirm_remove_selected_follows: Tens certeza que desejas remover os seguidores selecionados?
-    dormant: Inativo
-    follow_failure: Não foi possível seguir algumas das contas selecionadas.
-    follow_selected_followers: Seguir seguidores selecionados
     followers: Seguidores
     following: Seguindo
     invited: Convidado
     last_active: Última atividade
     most_recent: Mais recente
-    moved: Mudou-se
     mutual: Mútuo
-    primary: Primário
     relationship: Relação
-    remove_selected_domains: Remover todos os seguidores dos domínios selecionados
-    remove_selected_followers: Remover seguidores selecionados
-    remove_selected_follows: Deixar de seguir os utilizadores selecionados
-    status: Estado da conta
   remote_follow:
     missing_resource: Não foi possível encontrar o URL de redirecionamento para a tua conta
   reports:
@@ -1881,7 +1868,6 @@ pt-PT:
     notifications: Notificações por e-mail
     preferences: Preferências
     profile: Perfil
-    relationships: Seguindo e seguidores
     severed_relationships: Relações cortadas
     statuses_cleanup: Eliminação automática da publicação
     strikes: Reprimendas de moderação
@@ -2105,7 +2091,6 @@ pt-PT:
       apps_ios_action: Obter na App Store
       apps_step: Descarrega as nossas aplicações oficiais.
       apps_title: Aplicações Mastodon
-      checklist_subtitle: 'Vamos começar nesta nova fronteira social:'
       checklist_title: Passos de boas-vindas
       edit_profile_action: Personalizar
       edit_profile_step: Aumente as suas interações ao ter um perfil mais completo.
@@ -2123,13 +2108,11 @@ pt-PT:
       follow_action: Seguir
       follow_step: Seguir pessoas interessantes é o objetivo do Mastodon.
       follow_title: Personaliza a cronologia na tua página inicial
-      follows_subtitle: Segue contas conhecidas
       follows_title: Quem seguir
       follows_view_more: Ver mais pessoas para seguir
       hashtags_recent_count:
         one: "%{people} pessoa nos últimos 2 dias"
         other: "%{people} pessoas nos últimos 2 dias"
-      hashtags_subtitle: Explore o que está em destaque nos últimos 2 dias
       hashtags_title: Etiquetas em destaque
       hashtags_view_more: Ver mais etiquetas em destaque
       post_action: Compor

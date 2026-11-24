@@ -1787,26 +1787,13 @@ gl:
     prompt: Se confías nesta ligazón, preme nela para continuar.
     title: Vas saír de %{instance}.
   relationships:
-    activity: Actividade da conta
-    confirm_follow_selected_followers: Tes a certeza de querer seguir as seguidoras seleccionadas?
-    confirm_remove_selected_followers: Tes a certeza de querer deixar de seguir as seguidoras seleccionadas?
-    confirm_remove_selected_follows: Tes a certeza de querer eliminar os seguimentos seleccionados?
-    dormant: En repouso
-    follow_failure: Non puido seguir algunha das contas seleccionadas.
-    follow_selected_followers: Seguir seguidoras seleccionadas
     followers: Seguidoras
     following: A Seguir
     invited: Convidado
     last_active: Último activo
     most_recent: Máis recente
-    moved: Movida
     mutual: Mutuo
-    primary: Principal
     relationship: Relación
-    remove_selected_domains: Eliminar todas as seguidoras dos dominios escollidos
-    remove_selected_followers: Eliminar as seguidoras escollidas
-    remove_selected_follows: Deixar de seguir as usuarias elexidas
-    status: Estado da conta
   remote_follow:
     missing_resource: Non se puido atopar o URL de redirecionamento requerido para a súa conta
   reports:
@@ -1883,7 +1870,6 @@ gl:
     notifications: Notificacións por correo
     preferences: Preferencias
     profile: Perfil
-    relationships: Seguindo e seguidoras
     severed_relationships: Relacións cortadas
     statuses_cleanup: Borrado automático da publicación
     strikes: Avisos da moderación
@@ -2107,7 +2093,6 @@ gl:
       apps_ios_action: Descarga desde App Store
       apps_step: Descarga as apps oficiais.
       apps_title: Apps de Mastodon
-      checklist_subtitle: 'Ímoste guiar no comezo nesta nova experiencia social:'
       checklist_title: Lista de comprobación
       edit_profile_action: Personalizar
       edit_profile_step: Aumenta as túas interaccións grazas a un perfil descriptivo.
@@ -2125,13 +2110,11 @@ gl:
       follow_action: Seguir
       follow_step: Mastodon consiste en seguir a persoas interesantes.
       follow_title: Personaliza a túa cronoloxía
-      follows_subtitle: Sigue estas contas populares
       follows_title: A quen seguir
       follows_view_more: Ver máis persoas para seguir
       hashtags_recent_count:
         one: "%{people} persoa nos últimos 2 días"
         other: "%{people} persoas nos últimos 2 días"
-      hashtags_subtitle: Descubre os temas en voga nos últimos 2 días
       hashtags_title: Cancelos en voga
       hashtags_view_more: Ver máis cancelos en voga
       post_action: Escribir

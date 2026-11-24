@@ -1665,26 +1665,13 @@ th:
     prompt: หากคุณเชื่อถือลิงก์นี้ ให้คลิกลิงก์เพื่อดำเนินการต่อ
     title: คุณกำลังจะออกจาก %{instance}
   relationships:
-    activity: กิจกรรมบัญชี
-    confirm_follow_selected_followers: คุณแน่ใจหรือไม่ว่าต้องการติดตามผู้ติดตามที่เลือก?
-    confirm_remove_selected_followers: คุณแน่ใจหรือไม่ว่าต้องการเอาผู้ติดตามที่เลือกออก?
-    confirm_remove_selected_follows: คุณแน่ใจหรือไม่ว่าต้องการเอาการติดตามที่เลือกออก?
-    dormant: ไม่เคลื่อนไหว
-    follow_failure: ไม่สามารถติดตามบัญชีที่เลือกบางส่วน
-    follow_selected_followers: ติดตามผู้ติดตามที่เลือก
     followers: ผู้ติดตาม
     following: กำลังติดตาม
     invited: เชิญแล้ว
     last_active: ใช้งานล่าสุด
     most_recent: ล่าสุด
-    moved: ย้ายแล้ว
     mutual: คนที่มีร่วมกัน
-    primary: หลัก
     relationship: ความสัมพันธ์
-    remove_selected_domains: เอาผู้ติดตามทั้งหมดออกจากโดเมนที่เลือก
-    remove_selected_followers: เอาผู้ติดตามที่เลือกออก
-    remove_selected_follows: เลิกติดตามผู้ใช้ที่เลือก
-    status: สถานะบัญชี
   remote_follow:
     missing_resource: ไม่พบ URL การเปลี่ยนเส้นทางที่จำเป็นสำหรับบัญชีของคุณ
   reports:
@@ -1761,7 +1748,6 @@ th:
     notifications: การแจ้งเตือนอีเมล
     preferences: การกำหนดลักษณะ
     profile: โปรไฟล์สาธารณะ
-    relationships: การติดตามและผู้ติดตาม
     severed_relationships: ความสัมพันธ์ที่ตัดขาด
     statuses_cleanup: การลบโพสต์แบบอัตโนมัติ
     strikes: การดำเนินการการกลั่นกรอง
@@ -1956,7 +1942,6 @@ th:
       apps_ios_action: ดาวน์โหลดใน App Store
       apps_step: ดาวน์โหลดแอปอย่างเป็นทางการของเรา
       apps_title: แอป Mastodon
-      checklist_subtitle: 'มาช่วยให้คุณเริ่มต้นใช้งานพรมแดนทางสังคมใหม่นี้กันเลย:'
       checklist_title: รายการตรวจสอบยินดีต้อนรับ
       edit_profile_action: ปรับแต่ง
       edit_profile_step: เพิ่มการโต้ตอบของคุณโดยการมีโปรไฟล์ที่ครอบคลุม
@@ -1974,12 +1959,10 @@ th:
       follow_action: ติดตาม
       follow_step: การติดตามผู้คนที่น่าสนใจคือสิ่งที่ Mastodon ให้ความสำคัญ
       follow_title: ปรับแต่งฟีดหน้าแรกของคุณ
-      follows_subtitle: ติดตามบัญชีที่มีชื่อเสียง
       follows_title: ติดตามใครดี
       follows_view_more: ดูผู้คนที่จะติดตามเพิ่มเติม
       hashtags_recent_count:
         other: "%{people} คนใน 2 วันที่ผ่านมา"
-      hashtags_subtitle: สำรวจสิ่งที่กำลังนิยมตั้งแต่ 2 วันที่ผ่านมา
       hashtags_title: แฮชแท็กที่กำลังนิยม
       hashtags_view_more: ดูแฮชแท็กที่กำลังนิยมเพิ่มเติม
       post_action: เขียน

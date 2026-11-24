@@ -16,12 +16,8 @@ SimpleNavigation::Configuration.run do |navigation|
     # Profile, privacy, preferences, filters, account and import/export
     # live in the app's Settings (/settings), so the Rails pages are
     # reached from there and not listed here twice. Invites likewise
-    # (the app's invite dialog).
-
-    n.item :relationships, safe_join([material_symbol('groups'), t('settings.relationships')]), relationships_path, if: -> { current_user.functional? && !self_destruct } do |s|
-      s.item :current, safe_join([material_symbol('groups'), t('settings.relationships')]), relationships_path
-      s.item :severed_relationships, safe_join([material_symbol('link_off'), t('settings.severed_relationships')]), severed_relationships_path
-    end
+    # (the app's invite dialog). Follows and followers is retired: your
+    # Mates list holds the one-way connections it showed.
 
     n.item :statuses_cleanup, safe_join([material_symbol('history'), t('settings.statuses_cleanup')]), statuses_cleanup_path, if: -> { current_user.functional_or_moved? && !self_destruct }
 

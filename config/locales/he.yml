@@ -1829,26 +1829,13 @@ he:
     prompt: יש ללחוץ על הקישור, אם לדעתך ניתן לסמוך עליו.
     title: יציאה מתוך %{instance}.
   relationships:
-    activity: רמת פעילות
-    confirm_follow_selected_followers: האם את/ה בטוח/ה שברצונך לעקוב אחרי החשבונות שסומנו?
-    confirm_remove_selected_followers: האם את/ה בטוח/ה שברצונך להסיר את העוקבים שסומנו?
-    confirm_remove_selected_follows: האם את/ה בטוח/ה שברצונך להסיר את הנעקבים שסומנו?
-    dormant: רדומים
-    follow_failure: נכשלה העקיבה אחרי חלק מהחשבונות שבחרת.
-    follow_selected_followers: עקוב אחר הנעקבים שנבחרו
     followers: עוקבים
     following: נעקבים
     invited: הוזמנו
     last_active: פעילות אחרונה
     most_recent: העדכניות ביותר
-    moved: הועברו
     mutual: הדדיים
-    primary: עיקריים
     relationship: יחסים
-    remove_selected_domains: הסר את כל העוקבים משמות המתחם שסומנו
-    remove_selected_followers: הסר את העוקבים שסומנו
-    remove_selected_follows: בטל מעקב אחר המשתמשים שסומנו
-    status: מצב חשבון
   remote_follow:
     missing_resource: לא ניתן למצוא קישורית להפניה לחשבונך
   reports:
@@ -1925,7 +1912,6 @@ he:
     notifications: התראות בדואל
     preferences: העדפות
     profile: פרופיל
-    relationships: נעקבים ועוקבים
     severed_relationships: קשרים שנותקו
     statuses_cleanup: מחיקת הודעות אוטומטית
     strikes: עבירות מנהלתיות
@@ -2155,7 +2141,6 @@ he:
       apps_ios_action: זמין ב־App Store
       apps_step: התקינו את היישומונים הרשמיים.
       apps_title: יישומונים של מסטודון
-      checklist_subtitle: 'נעזור לך לצאת למסע אל האופק החברתי החדש:'
       checklist_title: רשימת פריטים לקבלת הפנים
       edit_profile_action: התאמה אישית
       edit_profile_step: כדאי להשלים את הפרופיל כדי לעודד אחרים ליצירת קשר.
@@ -2175,14 +2160,12 @@ he:
       follow_action: לעקוב
       follow_step: עקיבה אחרי אנשים מעניינים זו מטרתו של מסטודון.
       follow_title: התאימו אישית את ציר זמן הבית שלכםן
-      follows_subtitle: לעקיבה אחרי חלשבונות ידועים
       follows_title: אחרי מי לעקוב
       follows_view_more: ראו עוד א.נשים לעקוב אחריהן.ם
       hashtags_recent_count:
         one: איש אחד ביומיים האחרונים
         other: "%{people} אנשים ביומיים האחרונים"
         two: שני אנשים ביומיים האחרונים
-      hashtags_subtitle: לחקור מהם הנושאים החמים ביומיים האחרונים
       hashtags_title: תגיות חמות
       hashtags_view_more: צפיה בעוד תגיות שכרגע חוזרות הרבה
       post_action: חיבור הודעה

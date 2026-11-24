@@ -1790,26 +1790,13 @@ da:
     prompt: Er der tillid til dette link, så klik på det for at fortsætte.
     title: Nu forlades %{instance}.
   relationships:
-    activity: Kontoaktivitet
-    confirm_follow_selected_followers: Sikker på, at de valgte følgere skal følges?
-    confirm_remove_selected_followers: Sikker på, at de valgte følgere skal fjernes?
-    confirm_remove_selected_follows: Sikker på, at de valgte følgere skal fjernes?
-    dormant: I dvale
-    follow_failure: Kunne ikke følge alle af de valgte konti.
-    follow_selected_followers: Følg valgte følgere
     followers: Følgere
     following: Følger
     invited: Inviteret
     last_active: Senest aktiv
     most_recent: Seneste
-    moved: Flyttet
     mutual: Gensidig
-    primary: Primær
     relationship: Relation
-    remove_selected_domains: Fjern alle følgere fra de valgte domæner
-    remove_selected_followers: Fjern valgte følgere
-    remove_selected_follows: Følg ikke længere valgte brugere
-    status: Kontostatus
   remote_follow:
     missing_resource: Nødvendige omdirigerings-URL til kontoen ikke fundet
   reports:
@@ -1886,7 +1873,6 @@ da:
     notifications: E-mailnotifikationer
     preferences: Præferencer
     profile: Offentlig profil
-    relationships: Følger og følgere
     severed_relationships: Afbrudte forhold
     statuses_cleanup: Automatiseret sletning af indlæg
     strikes: Moderationsadvarsler
@@ -2110,7 +2096,6 @@ da:
       apps_ios_action: Download i App Store
       apps_step: Download vores officielle apps.
       apps_title: Mastodon apps
-      checklist_subtitle: 'Kom i gang på denne nye sociale frontløber:'
       checklist_title: Velkomsttjekliste
       edit_profile_action: Personliggør
       edit_profile_step: Andre er mere tilbøjelige til at interagere med brugere med udfyldte profiler.
@@ -2128,13 +2113,11 @@ da:
       follow_action: Følg
       follow_step: At følge interessante personer, det er, hvad Mastodon handler om.
       follow_title: Personliggør hjemmefeedet
-      follows_subtitle: Følg velkendte konti
       follows_title: Profiler, du kan følge
       follows_view_more: Vis nogle personer at følge
       hashtags_recent_count:
         one: "%{people} person de seneste 2 dage"
         other: "%{people} personer de seneste 2 dage"
-      hashtags_subtitle: Udforsk de seneste 2 dages tendenser
       hashtags_title: Hashtags, der trender
       hashtags_view_more: Se flere populære hashtags
       post_action: Skriv

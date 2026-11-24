@@ -1179,18 +1179,13 @@ lt:
     prompt: Jei pasitiki šia nuoroda, spustelėk ją, kad tęstum.
     title: Palieki %{instance}
   relationships:
-    activity: Paskyros aktyvumas
-    dormant: Neaktyvus
     followers: Sekėjai
     following: Sekama
     invited: Pakviestas
     last_active: Paskutinį kartą aktyvus
     most_recent: Naujausias
-    moved: Perkelta
     mutual: Bendri
-    primary: Pirminis
     relationship: Sąryšis
-    status: Paskyros būsena
   remote_follow:
     missing_resource: Jūsų paskyros nukreipimo URL nerasta
   rss:
@@ -1241,7 +1236,6 @@ lt:
     notifications: El. laiško pranešimai
     preferences: Nuostatos
     profile: Viešas profilis
-    relationships: Sekimai ir sekėjai
     severed_relationships: Nutrūkę sąryšiai
     two_factor_authentication: Dvigubas tapatybės nustatymas
     webauthn_authentication: Saugumo raktai
@@ -1366,7 +1360,6 @@ lt:
       apps_ios_action: Atsisiųsti per App Store
       apps_step: Atsisiųsk oficialias programėles.
       apps_title: Mastodon programėlės
-      checklist_subtitle: 'Pradėkime pažintį su šia nauja socialine sritimi:'
       checklist_title: Pasveikinimo sąrašas
       edit_profile_action: Suasmeninti
       edit_profile_step: Padidink savo sąveiką turint išsamų profilį.
@@ -1384,10 +1377,8 @@ lt:
       follow_action: Sekti
       follow_step: Sekti įdomius žmones – tai, kas yra Mastodon.
       follow_title: Suasmenink savo pagrindinį srautą
-      follows_subtitle: Sek gerai žinomas paskyras.
       follows_title: Ką sekti
       follows_view_more: Peržiūrėti daugiau sekamų žmonių
-      hashtags_subtitle: Naršyk, kas tendencinga per pastarąsias 2 dienas
       hashtags_title: Populiarios grotažymės
       hashtags_view_more: Peržiūrėti daugiau populiarių grotažymių
       post_action: Sukurti

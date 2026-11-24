@@ -1790,26 +1790,13 @@ nl:
     prompt: Als je deze link vertrouwt, klik er dan op om door te gaan.
     title: Je verlaat %{instance}.
   relationships:
-    activity: Accountactiviteit
-    confirm_follow_selected_followers: Weet je zeker dat je de geselecteerde volgers wilt volgen?
-    confirm_remove_selected_followers: Weet je zeker dat je de geselecteerde volgers wilt verwijderen?
-    confirm_remove_selected_follows: Weet je zeker dat je de geselecteerde gevolgde accounts wilt verwijderen?
-    dormant: Sluimerend
-    follow_failure: Kan sommige van de geselecteerde accounts niet volgen.
-    follow_selected_followers: Geselecteerde volgers volgen
     followers: Volgers
     following: Volgend
     invited: Uitgenodigd
     last_active: Laatst actief
     most_recent: Recentelijk gevolgd
-    moved: Verhuisd
     mutual: Wederzijds
-    primary: Primair
     relationship: Volgrelatie
-    remove_selected_domains: Alle volgers van de geselecteerde domeinen verwijderen
-    remove_selected_followers: Geselecteerde volgers verwijderen
-    remove_selected_follows: Geselecteerde gebruikers ontvolgen
-    status: Accountstatus
   remote_follow:
     missing_resource: Kon vereiste doorverwijzings-URL voor jouw account niet vinden
   reports:
@@ -1886,7 +1873,6 @@ nl:
     notifications: E-mailmeldingen
     preferences: Voorkeuren
     profile: Openbaar profiel
-    relationships: Volgers en gevolgde accounts
     severed_relationships: Verbroken volgrelaties
     statuses_cleanup: Automatisch berichten verwijderen
     strikes: Vastgestelde overtredingen
@@ -2110,7 +2096,6 @@ nl:
       apps_ios_action: Via de App Store downloaden
       apps_step: Onze officiële apps downloaden.
       apps_title: Mastodon-apps
-      checklist_subtitle: 'Laten we aan dit nieuwe sociale avontuur beginnen:'
       checklist_title: Welkomstchecklist
       edit_profile_action: Personaliseren
       edit_profile_step: Wanneer je meer over jezelf vertelt, krijg je meer interactie met andere mensen.
@@ -2128,13 +2113,11 @@ nl:
       follow_action: Volgen
       follow_step: Op Mastodon draait het helemaal om het volgen van interessante mensen.
       follow_title: Personaliseer je starttijdlijn
-      follows_subtitle: Volg bekende accounts
       follows_title: Wie te volgen
       follows_view_more: Meer mensen om te volgen bekijken
       hashtags_recent_count:
         one: "%{people} persoon in de afgelopen 2 dagen"
         other: "%{people} mensen in de afgelopen 2 dagen"
-      hashtags_subtitle: Wat er in de afgelopen 2 dagen is gebeurd verkennen
       hashtags_title: Trending hashtags
       hashtags_view_more: Meer trending hashtags bekijken
       post_action: Opstellen

@@ -551,21 +551,13 @@ kk:
     errors:
       limit_reached: Түрлі реакциялар лимиті толды
   relationships:
-    activity: Аккаунт белсенділігі
-    dormant: Ұйқысыз
     followers: Оқырмандар
     following: Жазылғандары
     invited: Шақырылды
     last_active: Соңғы белсенділік
     most_recent: Ең соңғы
-    moved: Көшірілді
     mutual: Өзара
-    primary: Бастапқы
     relationship: Қарым-қатынас
-    remove_selected_domains: Таңдалған домендерден барлық оқырмандарды алып тастаңыз
-    remove_selected_followers: Таңдалған оқырмандарды өшіру
-    remove_selected_follows: Таңдалған қолданушыларды оқымау
-    status: Аккаунт статусы
   remote_follow:
     missing_resource: Аккаунтыңызға байланған URL табылмады
   scheduled_statuses:
@@ -618,7 +610,6 @@ kk:
     migrate: Аккаунт көшіру
     preferences: Баптаулар
     profile: Профиль
-    relationships: Жазылымдар және оқырмандар
     two_factor_authentication: Екі-факторлы авторизация
   statuses:
     attached:

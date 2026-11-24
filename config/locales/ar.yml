@@ -1926,26 +1926,13 @@ ar:
     prompt: إن كنت واثق من هذا الرابط، انقر عليه للمتابعة.
     title: إنّك مغادر %{instance}.
   relationships:
-    activity: نشاط الحساب
-    confirm_follow_selected_followers: هل أنت متأكد من أنك تريد متابعة المتابِعين المحددين؟
-    confirm_remove_selected_followers: هل أنت متأكد من أنك تريد إزالة المتابِعين المحددين؟
-    confirm_remove_selected_follows: هل أنت متيقِّن من أنك تريد إزالة الاشتراكات المحدَّدة؟
-    dormant: في سبات
-    follow_failure: تعذرت متابعة بعض الحسابات المختارة.
-    follow_selected_followers: متابَعة المتابِعين المحددين
     followers: المتابِعون
     following: يُتابِع
     invited: مَدعُوّ
     last_active: آخر نشاط
     most_recent: الأحدث
-    moved: هاجر
     mutual: متبادل
-    primary: رئيسي
     relationship: العلاقة
-    remove_selected_domains: احذف كافة المتابِعين القادمين مِن النطاقات المختارة
-    remove_selected_followers: احذف المتابِعين الذين قمت باختيارهم
-    remove_selected_follows: الغي متابعة المستخدمين الذين اخترتهم
-    status: حالة الحساب
   remote_follow:
     missing_resource: تعذر العثور على رابط التحويل المطلوب الخاص بحسابك
   reports:
@@ -2022,7 +2009,6 @@ ar:
     notifications: إشعارات البريد الإلكتروني
     preferences: التفضيلات
     profile: الملف التعريفي
-    relationships: المتابِعون والمتابَعون
     severed_relationships: العلاقات المنفصلة
     statuses_cleanup: الحذف الآلي للمنشورات
     strikes: عقوبات الإشراف
@@ -2259,7 +2245,6 @@ ar:
       apps_ios_action: التنزيل من App Store
       apps_step: تنزيل تطبيقاتنا الرسمية.
       apps_title: تطبيقات مَستُدون
-      checklist_subtitle: 'هيا بنا نبدأ مغامرتنا على الويب الاجتماعي الجديد:'
       checklist_title: الخطوات الترحيبية الأولى
       edit_profile_action: تخصيص
       edit_profile_step: قم بتعزيز تفاعلاتك بامتلاك مِلَفّ تعريفي كامل.
@@ -2277,7 +2262,6 @@ ar:
       follow_action: تابِع
       follow_step: إن متابعة الأشخاص المثيرين للاهتمام هي غاية ماستدون.
       follow_title: أضفِ طابعا شخصيا على موجزات خيطك الرئيس
-      follows_subtitle: اتبع الحسابات المشهورة
       follows_title: مَن عليك متابعته
       follows_view_more: متابعة المزيد من الأشخاص
       hashtags_recent_count:
@@ -2287,7 +2271,6 @@ ar:
         other: "%{people} أشخاص في اليومين الماضيين"
         two: "%{people} شخص في اليومين الماضيين"
         zero: "%{people} شخص في اليومين الماضيين"
-      hashtags_subtitle: استكشف ما رائج خلال اليومين الماضيين
       hashtags_title: الوسوم الرائجة
       hashtags_view_more: عرض المزيد من الوسوم الرائجة
       post_action: إنشاء

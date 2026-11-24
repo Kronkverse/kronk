@@ -689,22 +689,13 @@ hy:
     errors:
       unrecognized_emoji: ճանաչուած էմոջի չէ
   relationships:
-    activity: Հաշուի ակտիւութիւնը
-    dormant: Չգօրծող
-    follow_selected_followers: Հետեւել նշուած հետեւորդներին
     followers: Հետեւորդներ
     following: Հետեւում ես
     invited: Հրաւիրուած է
     last_active: Վերջին ակտիւութիւնը
     most_recent: Վերջին
-    moved: Տեղափոխուած
     mutual: Փոխադարձ
-    primary: Հիմնական
     relationship: Կապ
-    remove_selected_domains: Հեռացնել բոլոր հետեւորդներին նշուած դոմեյններից
-    remove_selected_followers: Հեռացնել նշուած հետեւորդներին
-    remove_selected_follows: Ապահետեւել նշուած օգտատէրերին
-    status: Հաշուի կարգավիճակ
   sessions:
     activity: Վերջին Ակտիւութիւնը
     browser: Դիտարկիչ
@@ -749,7 +740,6 @@ hy:
     migrate: Հաշուի տեղափոխում
     preferences: Կարգավորումներ
     profile: Հաշիւ
-    relationships: Հետեւումներ և հետեւորդներ
     two_factor_authentication: Երկքայլ նոյնականացում
     webauthn_authentication: Անվտանգութեան բանալիներ
   statuses:

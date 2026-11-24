@@ -1908,26 +1908,13 @@ en:
     prompt: If you trust this link, click it to continue.
     title: You are leaving %{instance}.
   relationships:
-    activity: Account activity
-    confirm_follow_selected_followers: Are you sure you want to follow selected followers?
-    confirm_remove_selected_followers: Are you sure you want to remove selected followers?
-    confirm_remove_selected_follows: Are you sure you want to remove selected follows?
-    dormant: Dormant
-    follow_failure: Could not follow some of the selected accounts.
-    follow_selected_followers: Follow selected followers
     followers: Followers
     following: Following
     invited: Invited
     last_active: Last active
     most_recent: Most recent
-    moved: Moved
     mutual: Mutual
-    primary: Primary
     relationship: Relationship
-    remove_selected_domains: Remove all followers from the selected domains
-    remove_selected_followers: Remove selected followers
-    remove_selected_follows: Unfollow selected users
-    status: Account status
   remote_follow:
     missing_resource: Could not find the required redirect URL for your account
   reports:
@@ -2007,7 +1994,6 @@ en:
     notifications: Email notifications
     preferences: Preferences
     profile: Public profile
-    relationships: Follows and followers
     severed_relationships: Severed relationships
     statuses_cleanup: Automated post deletion
     strikes: Moderation strikes
@@ -2231,7 +2217,6 @@ en:
       apps_ios_action: Download on the App Store
       apps_step: Open Kronk in your phone's browser and add it to your home screen.
       apps_title: Put Kronk on your phone
-      checklist_subtitle: 'Make yourself at home:'
       checklist_title: First Steps
       edit_profile_action: Set Up Profile
       edit_profile_step: A face, a name, a few words about yourself.
@@ -2249,13 +2234,11 @@ en:
       follow_action: Follow
       follow_step: It's quiet here. That's intentional.
       follow_title: Find your people
-      follows_subtitle: Some familiar faces
       follows_title: People here
       follows_view_more: See more
       hashtags_recent_count:
         one: "%{people} person recently"
         other: "%{people} people recently"
-      hashtags_subtitle: What people are talking about
       hashtags_title: Recent conversations
       hashtags_view_more: Explore more
       post_action: Write

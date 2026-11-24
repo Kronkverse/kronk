@@ -1532,26 +1532,13 @@ sr:
     prompt: Ако верујете овој вези, кликните на њу за наставак.
     title: Напуштате %{instance}.
   relationships:
-    activity: Активност налога
-    confirm_follow_selected_followers: Да ли сте сигурни да желите да пратите изабране пратиоце?
-    confirm_remove_selected_followers: Да ли сте сигурни да желите да уклоните изабране пратиоце?
-    confirm_remove_selected_follows: Да ли сте сигурни да желите да уклоните изабрана праћења?
-    dormant: Неактиван
-    follow_failure: Није могуће пратити неке од изабраних налога.
-    follow_selected_followers: Прати изабране пратиоце
     followers: Пратиоци
     following: Праћења
     invited: Позван
     last_active: Последњи пут активан
     most_recent: Најновији
-    moved: Премештен
     mutual: Заједнички
-    primary: Примарни
     relationship: Однос
-    remove_selected_domains: Уклони све пратиоце са изабраних домена
-    remove_selected_followers: Уклони изабране пратиоце
-    remove_selected_follows: Отпрати изабране кориснике
-    status: Статус налога
   remote_follow:
     missing_resource: Не могу да нађем захтевану адресу преусмеравања за Ваш налог
   reports:
@@ -1625,7 +1612,6 @@ sr:
     migrate: Пребацивање налога
     preferences: Подешавања
     profile: Јавни профил
-    relationships: Праћења и пратиоци
     severed_relationships: Прекинуте везе
     statuses_cleanup: Аутоматско брисање објава
     strikes: Модерацијски преступи
@@ -1814,7 +1800,6 @@ sr:
       apps_ios_action: Преузмите са App Store
       apps_step: Преузмите наше званичне апликације.
       apps_title: Mastodon апликације
-      checklist_subtitle: 'Започнимо на овој новој друштвеној граници:'
       checklist_title: Кораци добродошлице
       edit_profile_action: Персонализујте
       edit_profile_step: Повећајте своје интеракције тако што ћете имати свеобухватан профил.
@@ -1832,14 +1817,12 @@ sr:
       follow_action: Пратите
       follow_step: Праћење занимљивих људи је оно о чему се ради у Mastodon-у.
       follow_title: Персонализујте своју почетну страницу
-      follows_subtitle: Пратите добро познате налоге
       follows_title: Кога пратити
       follows_view_more: Погледајте још људи за праћење
       hashtags_recent_count:
         few: "%{people} особе у последња 2 дана"
         one: "%{people} особа у последња 2 дана"
         other: "%{people} особа у последња 2 дана"
-      hashtags_subtitle: Истражите шта је у тренду у последња 2 дана
       hashtags_title: Хеш ознаке у тренду
       hashtags_view_more: Погледајте још хеш ознака у тренду
       post_action: Напишите

@@ -738,21 +738,13 @@ oc:
       limit_reached: La limita de las reaccions diferentas es estada atenguda
       unrecognized_emoji: es pas un emoji reconegut
   relationships:
-    activity: Activitat del compte
-    dormant: Inactiu
     followers: Seguidors
     following: Abonaments
     invited: Convidat
     last_active: Darrièra activitat
     most_recent: Mai recenta
-    moved: Mudat
     mutual: Mutuala
-    primary: Primària
     relationship: Relacion
-    remove_selected_domains: Levar totes los seguidors dels domenis seleccionats
-    remove_selected_followers: Levar los seguidors seleccionats
-    remove_selected_follows: Quitar de sègre las personas seleccionadas
-    status: Estat del compte
   remote_follow:
     missing_resource: URL de redireccion pas trobada
   rss:
@@ -807,7 +799,6 @@ oc:
     migrate: Migracion de compte
     preferences: Preferéncias
     profile: Perfil
-    relationships: Abonaments e seguidors
     statuses_cleanup: Supression auto de las publicacions
     two_factor_authentication: Autentificacion en dos temps
     webauthn_authentication: Claus de seguretat

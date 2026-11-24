@@ -1785,26 +1785,13 @@ fo:
     prompt: Um tú lítir á hetta leinkið, so kanst tú klikkja á tað fyri at halda fram.
     title: Tú fer burtur úr %{instance}.
   relationships:
-    activity: Kontuvirksemi
-    confirm_follow_selected_followers: Vil tú veruliga fylgja valdu fylgjarunum?
-    confirm_remove_selected_followers: Vil tú veruliga strika valdu fylgjararnar?
-    confirm_remove_selected_follows: Vil tú veruliga strika valdu fylgingarnar?
-    dormant: Í dvala
-    follow_failure: Tað bar ikki til at fylgja øllum valdu kontunum.
-    follow_selected_followers: Fylg valdu fylgjarum
     followers: Fylgjarar
     following: Fylgi
     invited: Bjóðað
     last_active: Seinast virkin
     most_recent: Feskasta
-    moved: Flutti
     mutual: Sínamillum
-    primary: Fyrst/ur
     relationship: Samband
-    remove_selected_domains: Strika allar fylgjarar frá valdu navnaøkjunum
-    remove_selected_followers: Strika valdu fylgjarar
-    remove_selected_follows: Gevst at fylgja valdu brúkarar
-    status: Kontustøða
   remote_follow:
     missing_resource: Fann ikki kravda víðaribeinings-URL'in fyri tína kontu
   reports:
@@ -1881,7 +1868,6 @@ fo:
     notifications: Teldupostfráboðanir
     preferences: Stillingar
     profile: Vangi
-    relationships: Fylging og fylgjarar
     severed_relationships: Avbrotin tilknýti
     statuses_cleanup: Sjálvvirkandi striking av postum
     strikes: Umsjónaratsóknir
@@ -2105,7 +2091,6 @@ fo:
       apps_ios_action: Tak niður á App Store
       apps_step: Tak okkara almennu appir niður.
       apps_title: Mastodon appir
-      checklist_subtitle: 'Kom í gongd á hesum nýggja miðli:'
       checklist_title: Vælkomukekklisti
       edit_profile_action: Ger persónligt
       edit_profile_step: Stimbra títt samvirkni við einum fullfíggjaðum vanga.
@@ -2123,13 +2108,11 @@ fo:
       follow_action: Fylg
       follow_step: At fylgja áhugaverdum fólki er tað, sum Mastodon snýr seg um.
       follow_title: Ger tína heimarás persónliga
-      follows_subtitle: Fylg vælkendar kontur
       follows_title: Hvørji tú átti at fylgt
       follows_view_more: Sí fleiri fólk at fylgja
       hashtags_recent_count:
         one: "%{people} fólk seinastu 2 dagarnar"
         other: "%{people} fólk seinastu 2 dagarnar"
-      hashtags_subtitle: Kanna rákið seinastu 2 dagarnar
       hashtags_title: Vælumtókt frámerki
       hashtags_view_more: Sí fleiri vælumtókt frámerki
       post_action: Skriva

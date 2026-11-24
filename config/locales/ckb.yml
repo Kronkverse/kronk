@@ -838,22 +838,13 @@ ckb:
       limit_reached: سنووری کاردانه وه ی جیاواز گه یشت
       unrecognized_emoji: ئیمۆجییەکی ناسراو نییە
   relationships:
-    activity: چالاکی هەژمارە
-    dormant: ناچالاک
-    follow_selected_followers: شوێنکەوتوان دیاریکراو بکە
     followers: شوێنکەوتوان
     following: شوێن‌کەوتووی
     invited: بانگهێشتەکان
     last_active: دوایین چالاکی
     most_recent: تازەترین
-    moved: گوێزرایەوە
     mutual: دوولایەنە
-    primary: سەرەتایی
     relationship: پەیوەندی
-    remove_selected_domains: لابردنی هەموو شوێنکەوتوانی دۆمەینە دیاریکراوەکان
-    remove_selected_followers: شوێنکەوتوانی دیاریکراو لابدە
-    remove_selected_follows: کۆتایی بە بەدوادانەچوی بەکارهێنەرە دیاریکراوەکان بدە
-    status: دۆخی هەژمارە
   remote_follow:
     missing_resource: نەیتوانی URLی ئاراستەکردنەوەی پێویست بدۆزێتەوە بۆ ئەژمێرەکەت
   scheduled_statuses:
@@ -902,7 +893,6 @@ ckb:
     migrate: گواستنەوەی هەژمارە
     preferences: پەسەندەکان
     profile: پرۆفایل
-    relationships: شوێنکەوتوو و شوێنکەوتوان
     two_factor_authentication: کۆدی دووقۆناغی هاتنەژوور
     webauthn_authentication: کلیلەکانی پاراستن
   statuses:

@@ -1614,26 +1614,13 @@ io:
       limit_reached: Limito di diferanta reakto atingesis
       unrecognized_emoji: ne esas rikonocita emocimajo
   relationships:
-    activity: Kontoaktiveso
-    confirm_follow_selected_followers: Ka vu es certa ke vu volas sequar la selektata sequati?
-    confirm_remove_selected_followers: Ka vu es certa ke vu volas revokar la selektata sequati?
-    confirm_remove_selected_follows: Ka vu es certa ke vu volas revokar la selektata sequanti?
-    dormant: Neaktiva
-    follow_failure: Ne esis posibla sequar kelka ek la selektita konti.
-    follow_selected_followers: Sequez kelka sequanti
     followers: Sequanti
     following: Sequati
     invited: Invititi
     last_active: Recente aktiva
     most_recent: Maxim recenta
-    moved: Transferesis
     mutual: Reciproka
-    primary: Primara
     relationship: Relateso
-    remove_selected_domains: Efacez omna sequanti de selektita domeni
-    remove_selected_followers: Efacez selektita sequanti
-    remove_selected_follows: Desequez selektita uzanti
-    status: Kontostando
   remote_follow:
     missing_resource: La URL di plussendado ne povis esar trovita
   reports:
@@ -1706,7 +1693,6 @@ io:
     migrate: Kontomigro
     preferences: Preferi
     profile: Profilo
-    relationships: Sequati e sequanti
     statuses_cleanup: Automata postoefaco
     strikes: Jerstreki
     two_factor_authentication: Dufaktora autentikigo
