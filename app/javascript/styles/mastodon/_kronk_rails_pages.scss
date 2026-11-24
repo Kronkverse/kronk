@@ -79,15 +79,135 @@ body.admin {
     }
   }
 
+  // Back pill | title | an equal empty column, so the title centres on
+  // the page. On a phone the pill takes its own row above the title.
   .kronk-rails-stage__head {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
     min-height: 2.25rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.75rem;
+
+    > .space-badge {
+      justify-self: start;
+      margin-top: 0.4rem;
+    }
+
+    @media (width <= 629px) {
+      grid-template-columns: minmax(0, 1fr);
+
+      > .space-badge {
+        margin-top: 0;
+      }
+    }
   }
 
   .content-wrapper {
     padding: 0;
+  }
+
+  // ── Titles ──────────────────────────────────────────────────
+  // The page title is the app's space header title, centred across the
+  // top of the page like the app's own pages, with the back pill on its
+  // left; the sidebar and the page begin below it.
+  .content__heading {
+    margin: 0;
+    text-align: center;
+
+    &__row {
+      // Title, then the page's buttons on their own line under it.
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0;
+
+      > * {
+        margin: 0;
+      }
+    }
+
+    &__actions {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    &__tabs {
+      margin-top: 1rem;
+    }
+
+    h2 {
+      margin: 0;
+      color: var(--kronk-purple-bright);
+      font-family: var(--font-display);
+      font-size: clamp(1.85rem, 4vw, 2.35rem);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: 0.01em;
+
+      small {
+        margin-top: 0.35rem;
+        color: var(--text-muted);
+        font-family: var(--font-body);
+        font-size: 0.8rem;
+      }
+    }
+
+    // The dashboard's date range, a quiet line under the title.
+    &__period {
+      margin-top: 0.4rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  }
+
+  // ── Tabs (a page's sub-pages) ───────────────────────────────
+  // The app's segmented pill (`.space-view-picker`).
+  .content__heading__tabs > div {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--radius-large);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0.35rem 0.85rem;
+      text-decoration: none;
+      white-space: nowrap;
+      border-radius: var(--radius-round);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 15%,
+          transparent
+        );
+        color: var(--text-primary);
+      }
+
+      &.selected {
+        background: var(--accent);
+        color: var(--text-on-accent);
+        font-weight: 600;
+      }
+
+      @media screen and (width <= 629px) {
+        flex: 1 0 auto;
+      }
+    }
   }
 
   .content {
@@ -112,36 +232,6 @@ body.admin {
       color: var(--text-primary);
     }
 
-    // ── Titles ──────────────────────────────────────────────────
-    // The page title is the app's space header title.
-    .content__heading {
-      margin-bottom: 1.75rem;
-
-      h2 {
-        margin: 0;
-        color: var(--kronk-purple-bright);
-        font-family: var(--font-display);
-        font-size: clamp(1.85rem, 4vw, 2.35rem);
-        font-weight: 400;
-        line-height: 1.1;
-        letter-spacing: 0.01em;
-
-        small {
-          margin-top: 0.35rem;
-          color: var(--text-muted);
-          font-family: var(--font-body);
-          font-size: 0.8rem;
-        }
-      }
-
-      // The dashboard's date range, a quiet line under the title.
-      &__period {
-        margin-top: 0.4rem;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-      }
-    }
-
     // A section inside the page: the settings panel's section title.
     h3,
     h4 {
@@ -160,46 +250,6 @@ body.admin {
       border: 0;
       border-top: 1px solid var(--border-subtle);
       margin: 1.75rem 0;
-    }
-
-    // ── Tabs (a page's sub-pages) ───────────────────────────────
-    // The app's segmented pill (`.space-view-picker`).
-    .content__heading__tabs > div {
-      display: inline-flex;
-      flex-wrap: wrap;
-      gap: 2px;
-      padding: 3px;
-      border-radius: var(--radius-large);
-      background: var(--surface-elevated);
-      border: 1px solid var(--border-subtle);
-
-      a {
-        padding: 0.35rem 0.85rem;
-        border-radius: var(--radius-round);
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        font-weight: 500;
-
-        &:hover,
-        &:focus-visible {
-          background: color-mix(
-            in oklab,
-            var(--kronk-purple-accent) 15%,
-            transparent
-          );
-          color: var(--text-primary);
-        }
-
-        &.selected {
-          background: var(--accent);
-          color: var(--text-on-accent);
-          font-weight: 600;
-        }
-
-        @media screen and (width <= 629px) {
-          flex: 1 0 auto;
-        }
-      }
     }
   }
 
