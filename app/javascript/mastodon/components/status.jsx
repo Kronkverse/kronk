@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 
-import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import CancelFillIcon from '@/material-icons/400-24px/cancel-fill.svg?react';
 import { Hotkeys } from 'mastodon/components/hotkeys';
@@ -47,10 +46,6 @@ import StatusReplies from './status_replies';
 const domParser = new DOMParser();
 
 const messages = defineMessages({
-  public_short: { id: 'privacy.public.short', defaultMessage: 'Public' },
-  unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Quiet public' },
-  private_short: { id: 'privacy.private.short', defaultMessage: 'Followers' },
-  direct_short: { id: 'privacy.direct.short', defaultMessage: 'Specific people' },
   edited: { id: 'status.edited', defaultMessage: 'Edited {date}' },
   quote_noun: { id: 'status.quote_noun', defaultMessage: 'Quote', description: 'Quote as a noun' },
   contains_quote: { id: 'status.contains_quote', defaultMessage: 'Contains quote' },
@@ -459,13 +454,6 @@ class Status extends ImmutablePureComponent {
           commentId={status.get('kronk_comment_id')}
           list={contextType}
         />
-      );
-    } else if (status.get('visibility') === 'direct') {
-      prepend = (
-        <div className='status__prepend'>
-          <div className='status__prepend__icon'><Icon id='at' icon={AlternateEmailIcon} /></div>
-          <FormattedMessage id='status.direct_indicator' defaultMessage='Private mention' />
-        </div>
       );
     } else if (showThread && status.get('in_reply_to_id')) {
       prepend = (

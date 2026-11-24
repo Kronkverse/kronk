@@ -142,9 +142,6 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
     const disablePublicVisibilities = useAppSelector(
       selectDisablePublicVisibilities,
     );
-    const isQuotePost = useAppSelector(
-      (state) => state.compose.get('quoted_status_id') !== null,
-    );
 
     const visibilityItems = useMemo<SelectItem<StatusVisibility>[]>(() => {
       // The Kronk reach ladder (docs/spaces/feed.md (The reach ladder)), widest to
@@ -338,21 +335,6 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
                 id={quoteDescriptionId}
               />
             </div>
-
-            {isQuotePost && visibility === 'direct' && (
-              <div className='visibility-modal__quote-warning'>
-                <FormattedMessage
-                  id='visibility_modal.direct_quote_warning.title'
-                  defaultMessage="Quotes can't be embedded in private mentions"
-                  tagName='h3'
-                />
-                <FormattedMessage
-                  id='visibility_modal.direct_quote_warning.text'
-                  defaultMessage='If you save the current settings, the embedded quote will be converted to a link.'
-                  tagName='p'
-                />
-              </div>
-            )}
           </div>
           <div className='dialog-modal__content__actions'>
             <Button onClick={onClose} secondary>
@@ -388,24 +370,6 @@ const QuotePolicyHelper: FC<
       <FormattedMessage
         id='visibility_modal.helper.unlisted_quoting'
         defaultMessage='When people quote you, their post will also be hidden from trending timelines.'
-      />
-    );
-  }
-
-  if (visibility === 'private') {
-    hintText = (
-      <FormattedMessage
-        id='visibility_modal.helper.private_quoting'
-        defaultMessage='Mates posts made on Kronk can’t be quoted by others.'
-      />
-    );
-  }
-
-  if (visibility === 'direct') {
-    hintText = (
-      <FormattedMessage
-        id='visibility_modal.helper.direct_quoting'
-        defaultMessage="Private mentions authored on Kronk can't be quoted by others."
       />
     );
   }
