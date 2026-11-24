@@ -2010,18 +2010,14 @@ ar:
     title: الجلسات
     view_authentication_history: عرض سجل المصادقة لحسابك
   settings:
-    account: الحساب
     account_settings: إعدادات الحساب
     aliases: كُنيات الحساب
     appearance: المظهر
-    authorized_apps: التطبيقات المرخص لها
-    back: عودة إلى ماستدون
     development: التطوير
     edit_profile: تعديل الصفحة التعريفية
     export: تصدير
     featured_tags: الوسوم الشائعة
     import: استيراد
-    import_and_export: استيراد وتصدير
     migrate: تهجير الحساب
     notifications: إشعارات البريد الإلكتروني
     preferences: التفضيلات

@@ -1749,18 +1749,14 @@ th:
     title: เซสชัน
     view_authentication_history: ดูประวัติการรับรองความถูกต้องบัญชีของคุณ
   settings:
-    account: บัญชี
     account_settings: การตั้งค่าบัญชี
     aliases: นามแฝงบัญชี
     appearance: ลักษณะที่ปรากฏ
-    authorized_apps: แอปที่ได้รับอนุญาต
-    back: กลับไปที่ Mastodon
     development: การพัฒนา
     edit_profile: แก้ไขโปรไฟล์
     export: ส่งออก
     featured_tags: แฮชแท็กที่น่าสนใจ
     import: การนำเข้า
-    import_and_export: การนำเข้าและการส่งออก
     migrate: การโยกย้ายบัญชี
     notifications: การแจ้งเตือนอีเมล
     preferences: การกำหนดลักษณะ

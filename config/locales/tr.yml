@@ -1874,18 +1874,14 @@ tr:
     title: Oturumlar
     view_authentication_history: Hesabınızın kimlik doğrulama geçmişini görüntüle
   settings:
-    account: Hesap
     account_settings: Hesap ayarları
     aliases: Hesap takma adları
     appearance: Görünüm
-    authorized_apps: Yetkili uygulamalar
-    back: Mastodon'a geri dön
     development: Geliştirme
     edit_profile: Profili düzenle
     export: Dışa Aktar
     featured_tags: Öne çıkan etiketler
     import: İçe aktar
-    import_and_export: İçe ve dışa aktar
     migrate: Hesap taşıma
     notifications: E-posta bildirimleri
     preferences: Tercihler

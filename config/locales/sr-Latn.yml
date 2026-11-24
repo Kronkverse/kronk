@@ -1585,17 +1585,13 @@ sr-Latn:
     title: Sesije
     view_authentication_history: Pogledajte istoriju autentifikacije vašeg naloga
   settings:
-    account: Nalog
     account_settings: Podešavanja naloga
     aliases: Pseudonimi naloga
     appearance: Izgled
-    authorized_apps: Autorizovane aplikacije
-    back: Nazad na Mastodon
     development: Razvoj
     edit_profile: Uređivanje profila
     featured_tags: Istaknute heš oznake
     import: Uvoz
-    import_and_export: Uvoz i izvoz
     migrate: Prebacivanje naloga
     preferences: Podešavanja
     profile: Javni profil

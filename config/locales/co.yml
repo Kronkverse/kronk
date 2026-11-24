@@ -876,17 +876,13 @@ co:
     revoke_success: Sessione rivucata
     title: Sessioni
   settings:
-    account: Contu
     account_settings: Parametri di u contu
     aliases: Pseudonimi di contu
     appearance: Apparenza
-    authorized_apps: Applicazione auturizate
-    back: Ritornu nant’à Mastodon
     development: Sviluppu
     edit_profile: Mudificà u prufile
     featured_tags: Hashtag in vista
     import: Impurtazione
-    import_and_export: Impurtazione è spurtazione
     migrate: Migrazione di u contu
     preferences: Priferenze
     profile: Prufile

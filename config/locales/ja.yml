@@ -1809,18 +1809,14 @@ ja:
     title: セッション
     view_authentication_history: アカウントの認証履歴を表示
   settings:
-    account: アカウント
     account_settings: アカウント設定
     aliases: アカウントエイリアス
     appearance: 外観
-    authorized_apps: 認証済みアプリ
-    back: Mastodonに戻る
     development: 開発
     edit_profile: プロフィールを編集
     export: エクスポート
     featured_tags: 注目のハッシュタグ
     import: データのインポート
-    import_and_export: インポート・エクスポート
     migrate: アカウントの引っ越し
     notifications: メール通知
     preferences: ユーザー設定

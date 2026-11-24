@@ -1875,18 +1875,14 @@ de:
     title: Sitzungen
     view_authentication_history: Anmeldeverlauf deines Kontos anzeigen
   settings:
-    account: Konto
     account_settings: Kontoeinstellungen
     aliases: Konto-Aliasse
     appearance: Design
-    authorized_apps: Genehmigte Apps
-    back: Zurück zu Mastodon
     development: Entwicklung
     edit_profile: Profil bearbeiten
     export: Exportieren
     featured_tags: Vorgestellte Hashtags
     import: Importieren
-    import_and_export: Importieren und exportieren
     migrate: Kontoumzug
     notifications: Benachrichtigungen
     preferences: Einstellungen

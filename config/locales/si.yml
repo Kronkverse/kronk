@@ -1218,17 +1218,13 @@ si:
     title: වාර
     view_authentication_history: ඔබගේ ගිණුමේ සත්‍යාපන ඉතිහාසය බලන්න
   settings:
-    account: ගිණුම
     account_settings: ගිණුමේ සැකසුම්
     aliases: ගිණුම් අන්වර්ථ නාමයන්
     appearance: පෙනුම
-    authorized_apps: බලයලත් යෙදුම්
-    back: මාස්ටඩන් වෙත ආපසු
     development: සංවර්ධනය
     edit_profile: පැතිකඩ සංස්කරණය
     featured_tags: විශේෂාංගගත හැෂ් ටැග්
     import: ආයාතය
-    import_and_export: ආයාත හා නිර්යාත
     migrate: ගිණුම් සංක්‍රමණය
     preferences: අභිප්‍රේත
     profile: ප්‍රසිද්ධ පැතිකඩ

@@ -1869,18 +1869,14 @@ fa:
     title: نشست‌ها
     view_authentication_history: دیدن تاریخچهٔ تأییدهویت حسابتان
   settings:
-    account: حساب
     account_settings: تنظیمات حساب
     aliases: نام‌های مستعار
     appearance: نما
-    authorized_apps: برنامه‌های مجاز
-    back: بازگشت به ماستودون
     development: فرابری
     edit_profile: ویرایش نمایه
     export: برون‌ریزی
     featured_tags: برچسب‌های برگزیده
     import: درون‌ریزی
-    import_and_export: درون‌ریزی و برون‌بری
     migrate: انتقال حساب
     notifications: آگاهی‌های رایانامه‌ای
     preferences: ترجیحات

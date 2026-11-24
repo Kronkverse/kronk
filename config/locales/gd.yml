@@ -1947,18 +1947,14 @@ gd:
     title: Seiseanan
     view_authentication_history: Seall eachdraidh an dearbhaidh dhan chunntas agad
   settings:
-    account: Cunntas
     account_settings: Roghainnean a’ chunntais
     aliases: Aliasan a’ chunntais
     appearance: Coltas
-    authorized_apps: Aplacaidean ùghdarraichte
-    back: Till gu Mastodon
     development: Leasachadh
     edit_profile: Deasaich a’ phròifil
     export: Às-phortadh
     featured_tags: Tagaichean hais brosnaichte
     import: Ion-phortadh
-    import_and_export: Ion-phortadh ⁊ às-phortadh
     migrate: Imrich cunntais
     notifications: Brathan puist-d
     preferences: Roghainnean

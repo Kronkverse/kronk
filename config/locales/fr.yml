@@ -1871,18 +1871,14 @@ fr:
     title: Sessions
     view_authentication_history: Voir l'historique d'authentification de votre compte
   settings:
-    account: Compte
     account_settings: Paramètres du compte
     aliases: Alias du compte
     appearance: Apparence
-    authorized_apps: Applications autorisées
-    back: Retour vers Mastodon
     development: Développement
     edit_profile: Modifier le profil
     export: Exportation
     featured_tags: Hashtags mis en avant
     import: Import de données
-    import_and_export: Import et export
     migrate: Migration de compte
     notifications: Notifications par courriel
     preferences: Préférences

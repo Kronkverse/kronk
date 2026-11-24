@@ -892,17 +892,13 @@ ckb:
     revoke_success: دانیشتن بەسەرکەوتوویی بەتاڵکرا
     title: کۆبوونەوەکان
   settings:
-    account: هەژمارە
     account_settings: ڕێکخستنەکانی هەژمارە
     aliases: نازناوەی هەژمارە
     appearance: ڕووخسار
-    authorized_apps: ئەپەکانی ڕێگەپێدراو
-    back: گەڕانەوە بۆ ماستۆدۆن
     development: گەشەپێدان
     edit_profile: دەستکاری پرۆفایل
     featured_tags: هاشتاگی تایبەت
     import: هاوردن
-    import_and_export: هاوردەکردن و ناردن
     migrate: گواستنەوەی هەژمارە
     preferences: پەسەندەکان
     profile: پرۆفایل

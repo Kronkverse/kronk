@@ -1351,17 +1351,13 @@ ku:
     title: Danîştin
     view_authentication_history: Dîroka rastekirina ajimêra xwe bibîne
   settings:
-    account: Ajimêr
     account_settings: Sazkariyên ajimêr
     aliases: Nûçikên ajimêra
     appearance: Xuyang
-    authorized_apps: Rayedarê sepanan
-    back: Vegere bo Mastodon
     development: Pêşdebir
     edit_profile: Profîlê serrast bike
     featured_tags: Hashtagên bijarte
     import: Têxistin
-    import_and_export: Têxistin û derxistin
     migrate: Barkirina ajimêrê
     preferences: Hilbijarte
     profile: Profîl

@@ -1854,18 +1854,14 @@ sq:
     title: Sesione
     view_authentication_history: Shihni historik mirëfilltësimesh të llogarisë tuaj
   settings:
-    account: Llogari
     account_settings: Rregullime llogarie
     aliases: Aliase llogarish
     appearance: Dukje
-    authorized_apps: Aplikacione të autorizuara
-    back: Mbrapsht te Mastodon
     development: Zhvillim
     edit_profile: Përpunoni profilin
     export: Eksportim
     featured_tags: Hashtag-ë të zgjedhur
     import: Importo
-    import_and_export: Importim dhe eksportim
     migrate: Migrim llogarie
     notifications: Njoftime me email
     preferences: Parapëlqime

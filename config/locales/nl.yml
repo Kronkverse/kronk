@@ -1874,18 +1874,14 @@ nl:
     title: Sessies
     view_authentication_history: Inloggeschiedenis van jouw account bekijken
   settings:
-    account: Account
     account_settings: Accountinstellingen
     aliases: Accountaliassen
     appearance: Uiterlijk
-    authorized_apps: Geautoriseerde apps
-    back: Terug naar Mastodon
     development: Ontwikkelaars
     edit_profile: Profiel bewerken
     export: Exporteren
     featured_tags: Uitgelichte hashtags
     import: Importeren
-    import_and_export: Importeren en exporteren
     migrate: Accountmigratie
     notifications: E-mailmeldingen
     preferences: Voorkeuren

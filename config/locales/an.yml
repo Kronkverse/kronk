@@ -1356,17 +1356,13 @@ an:
     title: Sesions
     view_authentication_history: Veyer historial d'autenticación d'a tuya cuenta
   settings:
-    account: Cuenta
     account_settings: Achustes d'a cuenta
     aliases: Alias d'a cuenta
     appearance: Apariencia
-    authorized_apps: Aplicacions autorizadas
-    back: Tornar ta l'inicio
     development: Desembolique
     edit_profile: Editar perfil
     featured_tags: Hashtags destacaus
     import: Importar
-    import_and_export: Importar y exportar
     migrate: Migración de cuenta
     preferences: Preferencias
     profile: Perfil

@@ -1933,18 +1933,14 @@ ru:
     title: Сеансы
     view_authentication_history: просмотреть историю входов в вашу учётную запись
   settings:
-    account: Учётная запись
     account_settings: Настройки учётной записи
     aliases: Связанные учётные записи
     appearance: Внешний вид
-    authorized_apps: Приложения
-    back: Назад в Mastodon
     development: Разработчикам
     edit_profile: " Данные профиля"
     export: Экспорт
     featured_tags: Рекомендации хештегов
     import: Импорт
-    import_and_export: Импорт и экспорт
     migrate: Настройка перенаправления
     notifications: Уведомления по эл. почте
     preferences: Настройки

@@ -1871,18 +1871,14 @@ el:
     title: Συνεδρίες
     view_authentication_history: Δες το ιστορικό ταυτοποιήσεων του λογαριασμού σου
   settings:
-    account: Λογαριασμός
     account_settings: Ρυθμίσεις λογαριασμού
     aliases: Ψευδώνυμα λογαριασμών
     appearance: Εμφάνιση
-    authorized_apps: Εγκεκριμένες εφαρμογές
-    back: Πίσω στο Mastodon
     development: Ανάπτυξη
     edit_profile: Επεξεργασία προφίλ
     export: Εξαγωγή
     featured_tags: Αναδεδειγμένες ετικέτες
     import: Εισαγωγή
-    import_and_export: Εισαγωγή και εξαγωγή
     migrate: Μετακίνηση λογαριασμού
     notifications: Ειδοποιήσεις μέσω email
     preferences: Προτιμήσεις

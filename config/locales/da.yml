@@ -1874,18 +1874,14 @@ da:
     title: Sessioner
     view_authentication_history: Vis godkendelseshistorik for din konto
   settings:
-    account: Konto
     account_settings: Kontoindstillinger
     aliases: Kontoaliaser
     appearance: Udseende
-    authorized_apps: Godkendte apps
-    back: Tilbage til Mastodon
     development: Udvikling
     edit_profile: Redigér profil
     export: Eksport
     featured_tags: Fremhævede hashtags
     import: Import
-    import_and_export: Import og eksport
     migrate: Kontomigrering
     notifications: E-mailnotifikationer
     preferences: Præferencer

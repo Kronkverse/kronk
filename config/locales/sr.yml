@@ -1615,17 +1615,13 @@ sr:
     title: Сесије
     view_authentication_history: Погледајте историју аутентификације вашег налога
   settings:
-    account: Налог
     account_settings: Подешавања налога
     aliases: Псеудоними налога
     appearance: Изглед
-    authorized_apps: Ауторизоване апликације
-    back: Назад на Mastodon
     development: Развој
     edit_profile: Уређивање профила
     featured_tags: Истакнуте хеш ознаке
     import: Увоз
-    import_and_export: Увоз и извоз
     migrate: Пребацивање налога
     preferences: Подешавања
     profile: Јавни профил

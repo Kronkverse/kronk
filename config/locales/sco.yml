@@ -1341,17 +1341,13 @@ sco:
     title: Sessions
     view_authentication_history: Luik at authentication history o yer accoont
   settings:
-    account: Accoont
     account_settings: Accoont settins
     aliases: Accoont aliases
     appearance: Appearance
-    authorized_apps: Authorized apps
-    back: Back tae Mastodon
     development: Development
     edit_profile: Edit profile
     featured_tags: Featured hashtags
     import: Import
-    import_and_export: Import an export
     migrate: Accoont flittin
     preferences: Preferences
     profile: Profile
