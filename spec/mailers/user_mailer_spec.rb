@@ -315,17 +315,20 @@ RSpec.describe UserMailer do
   describe '#welcome' do
     let(:mail) { described_class.welcome(receiver) }
 
-    before do
-      # This is a bit hacky and low-level but this allows stubbing trending tags
-      tag_ids = Fabricate.times(5, :tag).pluck(:id)
-      allow(Trends.tags).to receive(:query).and_return(instance_double(Trends::Query, allowed: Tag.where(id: tag_ids)))
-    end
-
     it 'renders welcome mail' do
       expect(mail)
         .to be_present
         .and(have_subject(I18n.t('user_mailer.welcome.subject', name: receiver.account.username)))
         .and(have_body_text(I18n.t('user_mailer.welcome.explanation')))
+    end
+
+    # en-GB has its own upstream copy, which Rails reads before en's, so
+    # Kronk's words must be in both (config/locales/kronk/overrides.yml).
+    it 'welcomes an en-GB member to Kronk, not Mastodon' do
+      receiver.update!(locale: 'en-GB')
+
+      expect(mail.subject).to eq("You're approved—welcome to Kronk, #{receiver.account.username}")
+      expect(mail).to have_body_text('Open Kronk')
     end
 
     it_behaves_like 'delivery to memorialized user'
