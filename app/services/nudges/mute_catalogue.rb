@@ -32,7 +32,7 @@ module Nudges
       'feed.replied' => { korner: nil, label: 'Someone replies to your post' },
       'feed.mentioned' => { korner: nil, label: 'Someone mentions you' },
       'profile.posted_on' => { korner: nil, label: 'Someone posts on your profile' },
-      'mates.mate_requested' => { korner: nil, label: 'Someone wants to be Mates' },
+      'mates.mate_requested' => { korner: nil, label: 'Someone reckons you should be Mates' },
       'mates.mate_accepted' => { korner: nil, label: 'Someone becomes your Mate' },
       'media_tag' => { korner: nil, label: 'Someone tags you in a photo' },
       'poll' => { korner: nil, label: 'A poll you made or voted in ends' },

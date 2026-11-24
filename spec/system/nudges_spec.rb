@@ -64,7 +64,7 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.nudges-row--notifications.nudges-row--active')
     expect(page).to have_content('Ben and 1 other frothed your post')
     expect(page).to have_content('Swell is up at the point')
-    expect(page).to have_content('Ana wants to be Mates')
+    expect(page).to have_content('Ana reckons you should be Mates')
     # Two rows, not three: the two froths on one post are one row.
     expect(page).to have_css('.nudges-notification', count: 2)
     # Each row is badged: the froth heart, and the Mates mark (Mates has
@@ -116,7 +116,7 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(page).to have_no_css('.nudges-notification', text: 'Old post 44')
     rows = all('.nudges-notification').map(&:text)
     expect(rows.last).to include('Ben and 1 other frothed your post')
-    expect(rows.index { |t| t.include?('Ana wants to be Mates') }).to be < rows.index { |t| t.include?('Ben and 1 other') }
+    expect(rows.index { |t| t.include?('Ana reckons you should be Mates') }).to be < rows.index { |t| t.include?('Ben and 1 other') }
 
     # It opens at the bottom.
     scroller = '.nudges-messenger__notifications .nudges-notifications__scroll'

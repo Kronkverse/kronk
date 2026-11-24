@@ -252,22 +252,26 @@ table + p {
   color: $k-text-secondary;
 }
 
-.email-account-stats-table {
+.email-account-matuals-table {
   td {
-    padding-right: 16px;
     font-size: 14px;
-    line-height: 20px;
+    line-height: 24px;
     color: $k-text-secondary;
+    vertical-align: middle;
   }
 
-  b {
-    font-weight: 600;
-    color: $k-text;
+  img {
+    display: block;
+    border-radius: 50%;
   }
+}
 
-  span {
-    white-space: nowrap;
-  }
+.email-account-matual-img-td {
+  padding-right: 4px;
+}
+
+.email-account-matuals-text-td {
+  padding-left: 4px;
 }
 
 // Utility classes

@@ -17,11 +17,10 @@
       %table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
         %tr
           %td.email-padding-top-16
-            %table.email-w-full.email-account-stats-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
+            - count, shown = matuals_with(viewer, account)
+            %table.email-account-matuals-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
               %tr
-                %td
-                  %b= account_formatted_stat(account.statuses_count)
-                  %span= t('accounts.posts', count: account.statuses_count)
-                %td
-                  %b= account_formatted_stat(account.mates_count)
-                  %span= t('accounts.mates', count: account.mates_count)
+                - shown.each do |mate|
+                  %td.email-account-matual-img-td
+                    %img{ src: full_asset_url(mate.avatar_static_url), width: 24, height: 24, alt: '' }
+                %td.email-account-matuals-text-td= matuals_line(count, shown)

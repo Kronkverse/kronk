@@ -44,9 +44,12 @@ en:
     about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
     hosted_on: Kronk hosted on %{domain}
   accounts:
-    mates:
-      one: Mate
-      other: Mates
+    # Mates in common (Matuals), on the account card in Mate emails.
+    matuals:
+      none: No Mates in common yet
+      one: "1 Mate in common: %{names}"
+      other: "%{count} Mates in common: %{names}"
+    matuals_more: "%{names} and %{rest} more"
   activerecord:
     attributes:
       wachuneed_brand:
@@ -247,8 +250,8 @@ en:
       title: A new Mate
     follow_request:
       action: See Mate requests
-      body: "%{name} wants to be Mates."
-      subject: "%{name} wants to be Mates"
+      body: "%{name} reckons you should be Mates."
+      subject: "%{name} reckons you should be Mates"
       title: A Mate request
     reblog:
       body: 'Your post was shared by %{name}:'
@@ -302,7 +305,7 @@ en:
         live_shared: "%{who} is sharing their live location with you"
       mates:
         mate_accepted: "%{who} is now your Mate"
-        mate_requested: "%{who} wants to be Mates"
+        mate_requested: "%{who} reckons you should be Mates"
       message:
         krew: "%{who} nudged %{krew}"
         mate: "%{who} nudged you"
@@ -433,9 +436,12 @@ en-GB:
     about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
     hosted_on: Kronk hosted on %{domain}
   accounts:
-    mates:
-      one: Mate
-      other: Mates
+    # Mates in common (Matuals), on the account card in Mate emails.
+    matuals:
+      none: No Mates in common yet
+      one: "1 Mate in common: %{names}"
+      other: "%{count} Mates in common: %{names}"
+    matuals_more: "%{names} and %{rest} more"
   activerecord:
     attributes:
       wachuneed_brand:
@@ -636,8 +642,8 @@ en-GB:
       title: A new Mate
     follow_request:
       action: See Mate requests
-      body: "%{name} wants to be Mates."
-      subject: "%{name} wants to be Mates"
+      body: "%{name} reckons you should be Mates."
+      subject: "%{name} reckons you should be Mates"
       title: A Mate request
     reblog:
       body: 'Your post was shared by %{name}:'
@@ -691,7 +697,7 @@ en-GB:
         live_shared: "%{who} is sharing their live location with you"
       mates:
         mate_accepted: "%{who} is now your Mate"
-        mate_requested: "%{who} wants to be Mates"
+        mate_requested: "%{who} reckons you should be Mates"
       message:
         krew: "%{who} nudged %{krew}"
         mate: "%{who} nudged you"

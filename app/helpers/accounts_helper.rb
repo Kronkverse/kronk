@@ -43,4 +43,22 @@ module AccountsHelper
 
     [prepend_str, account.note].join(' · ')
   end
+
+  # Mates the viewer and this account have in common (Matuals), with up to
+  # `limit` of them to show. Same privacy as the app's Matuals
+  # (Api::V1::Accounts::MatualsController): hidden Mates show nothing.
+  def matuals_with(viewer, account, limit: 3)
+    return [0, []] if viewer.nil? || viewer.id == account.id || account.hides_followers?
+
+    scope = viewer.mates.where(id: account.mates.select(:id)).not_excluded_by_account(viewer)
+    [scope.count, scope.limit(limit).to_a]
+  end
+
+  def matuals_line(count, shown)
+    return t('accounts.matuals.none') if count.zero?
+
+    names = shown.map { |mate| display_name(mate) }
+    names = count > shown.size ? t('accounts.matuals_more', names: names.join(', '), rest: count - shown.size) : names.to_sentence
+    t('accounts.matuals', count: count, names: names)
+  end
 end
