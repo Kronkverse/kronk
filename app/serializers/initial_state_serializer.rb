@@ -54,6 +54,11 @@ class InitialStateSerializer < ActiveModel::Serializer
 
     store[:owner] = object.owner&.id&.to_s if Rails.configuration.x.single_user_mode
 
+    # Each space's icon name, so the nav draws the right icons on the
+    # first frame instead of placeholder circles until /api/v1/korners
+    # answers. Static per deploy. See useKornerIcon.
+    store[:korner_icons] = Kronk::KornerRegistry.all.to_h { |m| [m.slug, m.icon&.dig('material')] }.compact
+
     store
   end
 
