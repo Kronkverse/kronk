@@ -1874,18 +1874,14 @@ sv:
     title: Sessioner
     view_authentication_history: Visa autentiseringshistoriken för ditt konto
   settings:
-    account: Konto
     account_settings: Kontoinställningar
     aliases: Kontoalias
     appearance: Utseende
-    authorized_apps: Godkända appar
-    back: Tillbaka till Mastodon
     development: Utveckling
     edit_profile: Redigera profil
     export: Exportera
     featured_tags: Utvalda hashtaggar
     import: Importera
-    import_and_export: Import och export
     migrate: Kontoflytt
     notifications: E-postaviseringar
     preferences: Inställningar

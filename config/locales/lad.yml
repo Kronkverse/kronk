@@ -1749,18 +1749,14 @@ lad:
     title: Sesiones
     view_authentication_history: Ve estoria de autentifikasyon de tu kuento
   settings:
-    account: Kuento
     account_settings: Preferensyas de kuento
     aliases: Aliases del kuento
     appearance: Aparensya
-    authorized_apps: Aplikasyones autorizadas
-    back: Retorna a Mastodon
     development: Dezvelopamiento
     edit_profile: Edita profil
     export: Eksporto
     featured_tags: Etiketas avaliadas
     import: Importo
-    import_and_export: Importo i eksporto
     migrate: Migrasyon de kuento
     notifications: Avizos por posta elektronika
     preferences: Preferensyas

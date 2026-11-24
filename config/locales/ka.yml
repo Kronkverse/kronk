@@ -404,8 +404,6 @@ ka:
     revoke_success: სესია წარმატებით გაუქმდა
     title: სესიები
   settings:
-    authorized_apps: ავტორიზირებული აპლიკაციები
-    back: უკან მასტოდონისკენ
     development: დეველოპმენტი
     edit_profile: პროფილის ცვლილება
     import: იმპორტი

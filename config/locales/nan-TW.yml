@@ -1829,18 +1829,14 @@ nan-TW:
     title: Session
     view_authentication_history: 看lí ê口座ê驗證歷史
   settings:
-    account: 口座
     account_settings: 口座ê設定
     aliases: 口座ê別名
     appearance: 外觀
-    authorized_apps: 受授權ê應用程式
-    back: 轉去Mastodon
     development: 開發
     edit_profile: 編輯個人資料
     export: 輸出
     featured_tags: 特色ê hashtag
     import: 輸入
-    import_and_export: 輸入kap輸出
     migrate: 口座遷suá
     notifications: 電子phue ê通知
     preferences: 偏愛ê設定

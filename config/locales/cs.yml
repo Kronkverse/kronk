@@ -1947,18 +1947,14 @@ cs:
     title: Relace
     view_authentication_history: Zobrazit historii přihlášení do vašeho účtu
   settings:
-    account: Účet
     account_settings: Nastavení účtu
     aliases: Aliasy účtů
     appearance: Vzhled
-    authorized_apps: Autorizované aplikace
-    back: Zpět na Mastodon
     development: Vývoj
     edit_profile: Upravit profil
     export: Export
     featured_tags: Zvýrazněné hashtagy
     import: Import
-    import_and_export: Import a export
     migrate: Přesun účtu
     notifications: Emailové oznámení
     preferences: Předvolby

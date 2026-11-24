@@ -979,17 +979,13 @@ kab:
     title: Tiɣimiyin
     view_authentication_history: Wali amazray n usesteb n umiḍan-ik
   settings:
-    account: Amiḍan
     account_settings: Iɣewwaṛen n umiḍan
     appearance: Udem
-    authorized_apps: Isnasen yettussirgen
-    back: Uɣal ɣer Maṣṭudun
     development: Taneflit
     edit_profile: Ẓreg amaɣnu
     export: Sifeḍ
     featured_tags: Ihacṭagen ufrinen
     import: Kter
-    import_and_export: Taktert d usifeḍ
     migrate: Tunigin n umiḍan
     notifications: Ilɣa s imayl
     preferences: Imenyafen

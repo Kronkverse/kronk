@@ -1810,18 +1810,14 @@ uk:
     title: Сеанси
     view_authentication_history: Переглянути історію входів вашого облікового запису
   settings:
-    account: Обліковий запис
     account_settings: Налаштування облікового запису
     aliases: Псевдоніми облікового запису
     appearance: Вигляд
-    authorized_apps: Авторизовані застосунки
-    back: Назад до Mastodon
     development: Розробка
     edit_profile: Редагувати профіль
     export: Експорт
     featured_tags: Рекомендовані хештеґи
     import: Імпорт
-    import_and_export: Імпорт та експорт
     migrate: Міграція облікового запису
     notifications: Сповіщення е-поштою
     preferences: Налаштування

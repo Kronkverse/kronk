@@ -1874,18 +1874,14 @@ hu:
     title: Munkamenetek
     view_authentication_history: Fiók hitelesítési előzményeinek megtekintése
   settings:
-    account: Fiók
     account_settings: Fiókbeállítások
     aliases: Fiók aliasok
     appearance: Megjelenés
-    authorized_apps: Jóváhagyott alkalmazások
-    back: Vissza a Mastodonhoz
     development: Fejlesztőknek
     edit_profile: Profil szerkesztése
     export: Exportálás
     featured_tags: Kiemelt hashtagek
     import: Importálás
-    import_and_export: Import és export
     migrate: Fiók átirányítása
     notifications: E-mail-értesítések
     preferences: Beállítások

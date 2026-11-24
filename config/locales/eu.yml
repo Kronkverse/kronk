@@ -1783,18 +1783,14 @@ eu:
     title: Saioak
     view_authentication_history: Ikusi zure kontuaren autentifikazioen historia
   settings:
-    account: Kontua
     account_settings: Kontuaren ezarpenak
     aliases: Kontuaren ezizenak
     appearance: Itxura
-    authorized_apps: Baimendutako aplikazioak
-    back: Itzuli Mastodon-era
     development: Garapena
     edit_profile: Editatu profila
     export: Esportatu
     featured_tags: Nabarmendutako traolak
     import: Inportazioa
-    import_and_export: Inportatu eta esportatu
     migrate: Kontuaren migrazioa
     notifications: Posta bidezko jakinarazpenak
     preferences: Hobespenak

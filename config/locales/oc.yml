@@ -797,17 +797,13 @@ oc:
     revoke_success: Session ben revocada
     title: Sessions
   settings:
-    account: Compte
     account_settings: Paramètres de compte
     aliases: Alias de compte
     appearance: Aparéncia
-    authorized_apps: Aplicacions autorizadas
-    back: Tornar a Mastodon
     development: Desvolopament
     edit_profile: Modificar lo perfil
     featured_tags: Etiquetas en avant
     import: Importar de donadas
-    import_and_export: Import e export
     migrate: Migracion de compte
     preferences: Preferéncias
     profile: Perfil

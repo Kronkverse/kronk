@@ -1839,18 +1839,14 @@ eo:
     title: Salutaĵoj
     view_authentication_history: Vidi autentighistorion de via konto
   settings:
-    account: Konto
     account_settings: Agordoj de konto
     aliases: Kontoj alinomoj
     appearance: Apero
-    authorized_apps: Rajtigitaj aplikaĵoj
-    back: Reveni al Mastodon
     development: Evoluigado
     edit_profile: Redakti profilon
     export: Eksporti
     featured_tags: Elstarigitaj kradvortoj
     import: Enporti
-    import_and_export: Importi kaj eksporti
     migrate: Konta migrado
     notifications: Retpoŝtaj sciigoj
     preferences: Agordoj
