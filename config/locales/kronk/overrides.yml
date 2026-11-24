@@ -56,6 +56,9 @@ en:
               taken: is already in Brands
         freethedream/item:
           bringing: People are bringing it, so it stays something to bring
+  admin:
+    dashboard:
+      title: Admin Dashboard
   albutts:
     photos_added:
       one: Added a photo to %{title}
@@ -366,6 +369,9 @@ en-GB:
               taken: is already in Brands
         freethedream/item:
           bringing: People are bringing it, so it stays something to bring
+  admin:
+    dashboard:
+      title: Admin Dashboard
   albutts:
     photos_added:
       one: Added a photo to %{title}
