@@ -111,6 +111,14 @@ export interface FtdSectionRow {
   progress: FtdProgress;
 }
 
+// A fractal on its Komponent's page: its own checklist, and who it's
+// assigned to (Kommons "Fractals", 2026-11-22).
+export interface FtdFractal extends FtdSectionRow {
+  items: FtdItemRow[];
+  assignees: FtdAccount[];
+  can: { remove: boolean };
+}
+
 // A person in a project, on its Overview, with what they're on.
 export interface FtdCrewRow {
   account: FtdAccount;
@@ -161,6 +169,10 @@ export interface FtdItemRow {
   need?: FtdRef | null;
   // An offer: shared from its owner's Mycelium.
   mycelium?: boolean;
+  // A To do or something to Bring: who's been suggested for it, and
+  // whether that's you (Kommons "Tagging people on a checklist item").
+  suggested?: FtdAccount[];
+  suggested_me?: boolean;
 }
 
 // A thing on the list, quoted on a comment about it.
@@ -297,6 +309,8 @@ export interface FtdProject {
   source_idea: FtdRef | null;
   progress: FtdProgress;
   sections: FtdSectionRow[];
+  // A Komponent's fractals, each with its own checklist; none elsewhere.
+  fractals: FtdFractal[];
   still_needed: FtdStillNeeded[];
   items: FtdItemRow[];
   // Gear needed in the sections inside, section by section.

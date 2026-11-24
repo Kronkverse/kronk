@@ -3,12 +3,15 @@ import { createPortal } from 'react-dom';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import classNames from 'classnames';
+
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import LinkIcon from '@/material-icons/400-24px/link.svg?react';
 import { AttachmentPicker } from 'mastodon/components/attachment_picker';
 import { DraftBar } from 'mastodon/components/draft_bar';
 import { Icon } from 'mastodon/components/icon';
 import { KonnectRow } from 'mastodon/components/konnect_row';
+import { PhotoDropTarget } from 'mastodon/components/media/photo_drop_target';
 import type { DraftControls } from 'mastodon/hooks/useDraft';
 import type { KonnectControls } from 'mastodon/hooks/useKonnect';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -98,6 +101,9 @@ interface ComposeShellProps {
   // to read as chrome (the "who sees this?" ReachDropdown in the
   // feed-card composer shape from #1230).
   headerAction?: React.ReactNode;
+  // An action at the start of the footer, before Cancel: a destructive one
+  // such as Delete, as a `<KornerPill variant='destructive'>`.
+  footerStart?: React.ReactNode;
   // The composer's drafts, from `useDraft()`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   draft?: DraftControls<any>;
@@ -120,6 +126,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
   onCancel,
   switcher,
   headerAction,
+  footerStart,
   draft,
   konnect,
   children,
@@ -150,6 +157,12 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
     if (canSubmit && !submitting) onSubmit();
   }, [canSubmit, submitting, onSubmit]);
 
+  // Files dropped beside the panel, on the dimmed page, go nowhere rather
+  // than through to the post box underneath.
+  const swallowDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
   const primaryText =
     submitting && submittingLabel ? submittingLabel : submitLabel;
 
@@ -159,6 +172,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
       role='dialog'
       aria-modal='true'
       aria-label={label}
+      onDrop={swallowDrop}
     >
       <button
         type='button'
@@ -167,7 +181,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
         aria-label={intl.formatMessage(messages.close)}
         disabled={submitting}
       />
-      <div className='compose-shell__panel'>
+      <PhotoDropTarget className='compose-shell__panel'>
         <header className='compose-shell__header'>
           <span className='compose-shell__icon' aria-hidden='true'>
             <Icon id={`compose-${korner}`} icon={KornerIconComponent} />
@@ -217,7 +231,14 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
           )}
         </div>
 
-        <footer className='compose-shell__footer'>
+        <footer
+          className={classNames('compose-shell__footer', {
+            'compose-shell__footer--split': !!footerStart,
+          })}
+        >
+          {footerStart && (
+            <div className='compose-shell__footer-start'>{footerStart}</div>
+          )}
           <button
             type='button'
             className='compose-shell__cancel'
@@ -237,7 +258,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
             </button>
           )}
         </footer>
-      </div>
+      </PhotoDropTarget>
 
       {picking && source && konnect && (
         <AttachmentPicker

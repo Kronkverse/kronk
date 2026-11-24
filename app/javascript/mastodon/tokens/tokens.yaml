@@ -111,6 +111,10 @@ semantic:
   # shifts flow through the alias.
   tile-glyph-on: { dark: '#8c7dff', light: '#6364ff' }
   tile-glyph-off: { dark: '#4e4a72', light: '#a89fc5' }
+  # A korner's name on its Hub tile. The tile is dark in both themes, so
+  # its text is light in both; the theme's own text colour went dark on
+  # it in the light theme (Kommons "Titles of spaces", 2026-11-22).
+  tile-text: { dark: '#ece9f5', light: '#ece9f5' }
 
 # ── Fonts (theme-invariant) ────────────────────────────────────────
 font:

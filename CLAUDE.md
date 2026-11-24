@@ -42,8 +42,8 @@ should be.
 - **One reach ladder** — Just me → Mates → Orbit → Kronkverse — sets both how far
   a post goes (the composer) and how wide your feed reads (`/home/settings`).
   **Krews** are a separate group axis on top. Mastodon's visibilities are gone.
-- **Four pillars** — Me, Home (the feed), Hub, Nudges (notifications and
-  messages, two faces of one space)
+- **Four pillars** — Me, Home (the feed), Hub, Nudges (one list of chats
+  with Notifications pinned first)
   — and **korners** plugged into the Hub: Kalendar, Kommons, Booth, Kuestions,
   Moments, Albutts, Wachuneed, Kronikles, Krew and more.
 - **Governance is in the open.** Structural change is a Kommons proposal on the
@@ -163,7 +163,7 @@ server-side strings go in `config/locales/kronk/overrides.yml`.
 | Kommunity                            | (a reach tier)                   | the community korner, not a reach tier                  |
 | korner                               | app, module, planet              | "space" is the general term; a korner is one kind       |
 | tune in / tune out                   | subscribe, follow (a korner)     | code field stays `subscription`                         |
-| nudge, Nudges                        | bell                             | the space; its two faces are Notifications and Messages |
+| nudge, Nudges                        | bell                             | the space; Notifications sits pinned atop its chat list |
 | froth                                | like, favourite                  | code stays `favourite`                                  |
 | Konnect, Konnected, Diskonnect       | attach, attached, link           | records across spaces; code stays `attachment`          |
 | Kuddle                               | room, Huddle room                | a topical Huddle; code stays `room` / `HuddleSession`   |
@@ -577,7 +577,7 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.1.16 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
+Production is `2.1.17 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
 release, minors included, is "Rose" (decisions.md, 2026-10-19).
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —
@@ -596,7 +596,7 @@ PostgreSQL, Redis, push access and the memory flags are already set up there,
 and that is where the rest of the team builds and runs the suite. Ask the
 maintainer for access.
 
-To build on your own machine instead: Ruby 3.4.7 (`.ruby-version`; CI also
+To build on your own machine instead: Ruby 3.4.13 (`.ruby-version`; CI also
 tests 3.3, and 3.2 no longer installs), Node.js, Yarn, PostgreSQL, Redis.
 
 ```bash

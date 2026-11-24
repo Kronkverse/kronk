@@ -124,8 +124,9 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
   projekt's section follows its Krew (`krew.kuestions` in the projekt's
   API).
 - **Where it shows:** with the space on, on its Krew's or projekt's page
-  (`features/questions/home_kuestions.tsx`), a row of cards with Ask last
-  (Ask alone when there are none yet), from `GET /api/v2/kuestions?krew_id=`
+  (`features/questions/home_kuestions.tsx`), a row of cards with Ask first,
+  on the left (Kommons "Ask Question", 2026-11-22; Ask alone when there
+  are none yet), from `GET /api/v2/kuestions?krew_id=`
   or `?project_id=`. Not in the Deck. It is on
   your Answered list once you've answered or asked it, while you can see it.
 - **Opening one** (Tal, 2026-11-09): a card opens the standard pop-up over
@@ -135,7 +136,18 @@ A Kuestion asked in a Krew or a projekt is its own, not the community's
   included, and everyone's answers. Nothing to Konnect. The button at its
   foot is **Answer** while you are writing one, then **Next kuestion**,
   which steps through the row's Kuestions in turn (**Done** when there is
-  only one). The asker gets **Delete Kuestion** at its foot.
+  only one). The asker gets **Delete** (Delete Kuestion), a red pill at the
+  start of that bottom bar, beside Cancel (Tal, 2026-11-23; ComposeShell's
+  `footerStart`).
+- **One after the next** (Kommons "Kuestions", 2026-11-22: "If a kuestion
+  is opened, someone should be able to hit the 'next' button (left or
+  right arrow probably)"): with more than one in the row, ‹ and › either
+  side of "2 of 5" at the top of the pop-up step back and on at any time,
+  answered or not, round from the last to the first. So do the ← and →
+  keys (not while typing an answer) and a swipe sideways on a phone. In
+  the Kuestions korner, **Next kuestion** on a Kuestion opened from
+  Answered opens the next one in that list (its answers, or the answer
+  sheet if you haven't answered it); tapping outside closes it.
 - **Asking:** Ask opens a small composer of its own over the page
   (`home_kuestion_composer.tsx`): the question, how it's answered (words,
   choices, yes or no) and a line saying who sees it. No deck or profile
@@ -155,7 +167,8 @@ answer count is a running total.
 
 **Deleting one** (Tal, 2026-11-08): whoever asked a community Kuestion can
 delete it. Opening your own (from Answered, or a Krew's or projekt's row)
-shows **Delete Kuestion** under the answers; it asks first, then the
+shows **Delete Kuestion** (under the answers in the Kuestions korner; a
+red pill in the bottom bar of a Krew's or projekt's pop-up); it asks first, then the
 Kuestion goes with its answers, its Konnections and its post in the feed
 (`DELETE /api/v2/kuestions/:id`, `Question#deletable_by?`). Nobody else can
 delete it, and a profile Kuestion can't be deleted this way, since its

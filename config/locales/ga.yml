@@ -1990,18 +1990,14 @@ ga:
     title: Seisiúin
     view_authentication_history: Féach ar stair fíordheimhnithe do chuntais
   settings:
-    account: Cuntas
     account_settings: Socruithe cuntais
     aliases: Ailiasanna cuntais
     appearance: Cuma
-    authorized_apps: Aipeanna údaraithe
-    back: Ar ais go Mastodon
     development: Forbairt
     edit_profile: Cuir an phróifíl in eagar
     export: Easpórtáil
     featured_tags: Haischlib faoi thrácht
     import: Iompórtáil
-    import_and_export: Iompórtáil agus easpórtáil
     migrate: Imirce cuntais
     notifications: Fógraí ríomhphoist
     preferences: Sainroghanna pearsanta

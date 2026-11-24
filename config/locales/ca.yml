@@ -1850,18 +1850,14 @@ ca:
     title: Sessions
     view_authentication_history: Mostra l'historial d'autenticació del compte
   settings:
-    account: Compte
     account_settings: Configuració del compte
     aliases: Àlies de compte
     appearance: Aparença
-    authorized_apps: Aplicacions autoritzades
-    back: Torna a Mastodon
     development: Desenvolupament
     edit_profile: Edita el perfil
     export: Exporta
     featured_tags: Etiquetes destacades
     import: Importació
-    import_and_export: Importació i exportació
     migrate: Migració del compte
     notifications: Notificacions per correu electrònic
     preferences: Preferències

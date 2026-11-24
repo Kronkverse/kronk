@@ -108,6 +108,7 @@ theme.
 | `--success-green`                                       | `#4b9160`                   | Success                               |
 | `--decision-agree` / `-abstain` / `-block` / `-pending` | green / slate / red / amber | Kommons votes and outcomes            |
 | `--tile-glyph-on` / `--tile-glyph-off`                  | `#8c7dff` / `#4e4a72`       | Hub tile glyphs, live and coming-soon |
+| `--tile-text`                                           | `#ece9f5` (both themes)     | A korner's name on its Hub tile       |
 
 Kosmos has its own `--kosmos-*` tokens (the background canvas, see
 [Frame](#frame)). They are theme-invariant on purpose.
@@ -234,6 +235,30 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
 - **Settings navigation** (`features/settings/nav.tsx`). The profile entry
   goes to `/@:acct/shelves`. Editing a profile is Arrange mode on the shelves;
   the old `/@:acct/edit` composer is gone.
+- **Server-rendered settings and admin** (`/settings/*`, `/admin/*`,
+  `/filters`) have a left sidebar (`shared/_kronk_settings_nav.html.haml`):
+  every item in `config/navigation.rb`, each section's pages nested under
+  it. Moderation and Administration are headings that always show their
+  pages; a section that is itself a page shows its pages while you're in it.
+  Below 900px it folds behind a menu toggle above the content.
+  These pages wear the app's dress (2026-11-23,
+  `styles/mastodon/_kronk_rails_pages.scss`): the page sits in a Stage
+  panel (`--surface-stage`, pale in light, transparent on the starfield
+  in dark), the top-left back pill is the app's `.space-badge`
+  (`shared/_kronk_back_badge`: "Settings" on the member pages, "Kronk" in
+  admin, so the sidebar has no "Back to Kronk" item), and the title is the
+  space header title. Mastodon's colour variables (`--background-color`
+  and the rest) are mapped onto the semantic tokens inside them, so its
+  tables, cards and fields follow both themes; forms, buttons (the rose
+  `--destructive` pill), tabs, list filters and notices are restyled to
+  the kit. The static chrome (`shared/_kronk_static_chrome`) draws the
+  app's five pillars, avatar and all, and the phone tab bar.
+- **Theme on Rails pages.** Every page stamps `data-theme` (`applyThemeVariant`
+  from `mastodon/common`), not only the app, so the light tokens turn on
+  there too. A page that sits straight on the starfield with no Stage panel
+  (sign-in and the other Devise flows, sign-up, the signed-out landing)
+  pins the dark skin with `content_for :page_theme, 'default'`
+  (`ApplicationHelper#page_theme`): the starfield is dark in every theme.
 
 **Back navigation: one pattern.** Two primitives cover it:
 
@@ -254,9 +279,16 @@ label })` (2026-11-11). While it's open, the router stamps any link into
    another korner with `backTo` and `backLabel`, and a deeper page there
    backs up to it, named for it: a Krew's event in Kalendar, or its musik in
    Booth, returns to the Krew. A korner root reached that way (from the rail,
-   say) still backs out to `/hub`.
+   say) still backs out to `/hub`. A composer opened that way from a record
+   (`?konnect=`, or a Krew's `?krew=`) passes the way back on to what it
+   makes (2026-11-21): an album made from a Krew backs up to the Krew, not
+   to Albutts (`konnectedFrom` in `components/router.tsx`).
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
-   specific parent. Renders `.kronk-back-chip`.
+   specific parent. Renders `.kronk-back-chip`. Only where the Frame shows
+   no space badge (a profile's pages, say): a page never has two back
+   buttons. `<KornerDetail back>` enforces it (2026-11-23): on a korner page
+   it sets where the badge goes (`useSpaceBack`) instead of drawing a chip,
+   so the one badge reads "All brands" and goes there.
 
 A hand-rolled "← Back" link or button is banned. On the governed files,
 stylelint fails any class matching `__back`, `__back-link`, `__back-button`,
@@ -597,19 +629,19 @@ pointer-events: none`, with its own vignette so text always wins. This is the
 
 ### Responsive strategy
 
-`.kronk-frame` has `container-type: inline-size; container-name: frame`. It is
-on the Frame, not `body`, because putting it on `body` would change the
-containing block for `position: fixed` descendants.
+The Frame spans the viewport, so rules that switch on its width are plain
+`@media` queries. **No element that holds fixed chrome may be a query
+container** (`container-type`): older iPhone Safari gives a query container
+layout containment, which makes it the containing block for `position: fixed`
+descendants, so the tab bar, the top band and the rails scrolled with the page
+(2026-11-20). The Frame used to be the `frame` container for exactly that
+reason it broke. The Stage cell (`.kronk-frame__stage`) is the query container
+for page content instead; it holds no fixed chrome.
 
 - **≤ 889px** is the phone shape: BottomBand shows, RightBand hides, the header
-  row stacks. The rule on `.kronk-frame` itself has to be a media query (an
-  element can't query its own container); descendants use
-  `@container frame (width <= 889px)`. Some band rules are still plain `@media`.
-  Anything that decides whether the right rail's track exists (the grid
-  tracks, the RightBand, the chrome's right fade, the Stage cell's column)
-  must use the same `@media` query: the container is the viewport minus the
-  page scrollbar, so mixing the two leaves a band of widths (890px to about
-  905px) where the rail and its fade show but the Stage runs underneath them.
+  row stacks. Everything uses the same `@media (width <= 889px)`, so the grid
+  tracks, the RightBand, the chrome's right fade and the Stage cell's column
+  switch together.
 - **≤ 629px** also hides the top rail.
 
 Wider breakpoints are the korner's business.
@@ -742,7 +774,13 @@ The same card three ways (`variant`):
   four from 720px (`<SpaceGrid>` / `<SpaceCard>` in `space_grid.tsx`). Used by
   Albutts, Booth, Kalendar events and Wachuneed. `<SpaceGrid layout='row'>`
   is one line of the same tiles scrolling sideways, for a shelf among
-  others down a page (the Booth's By artist / By kind). `<SpaceGrid wide>`
+  others down a page (the Booth's By artist / By kind). A row of one
+  korner's things on a Krew or projekt (`<SpaceShelf>`, its Projekts and
+  Kuestions) is headed by `<KornerRowTitle>` inside its one
+  `.korner-section-heading`: the korner's glyph and name, with how many are
+  here quiet beside it, the whole heading linking to the korner, so rows
+  from different korners tell apart (2026-11-23; it replaced a purple card
+  at the head of the row, which read as one of the row's things). `<SpaceGrid wide>`
   makes the tiles half as wide again with a landscape image (two columns in
   the grid), for things that hold other things; with it a `<SpaceCard>` can
   take `images` (up to three, one large and two stacked), an `avatar` in the
@@ -856,6 +894,27 @@ A field drawn bigger on purpose (`.compose-title`) sets `--field-font-size` to
 its size and keeps it. User zoom stays on: never set `maximum-scale` or
 `user-scalable=no`. Spec: `spec/system/touch_input_zoom_spec.rb`.
 
+**Nothing crosses its container's edge on a phone.** A card stays inside
+its panel and a panel stays inside the screen. Only a row whose container
+scrolls sideways may run past (Card standard), along with anything positioned
+on purpose (badges, menus, toasts). Three things caused every crossing found
+(2026-11-24):
+
+- **A page centred with `margin: 0 auto` sizes to its content**, because the
+  Stage is a flex column and auto margins switch off stretching. One long
+  unbreakable line then held the whole page wider than the screen, and on
+  desktop each settings page came out a different width. `.kronk-stage > *`
+  now takes the full width up to the page's own `max-width`.
+- **A text field won't shrink below about 20 characters** unless it has
+  `min-width: 0`. In a row beside other things, give it that.
+- **A row of label and control** has to wrap (`flex-wrap: wrap`) so a wide
+  control drops below its label. `.settings-page__row` does.
+
+`spec/system/phone_crossovers_spec.rb` opens every page in the route table and
+every korner at 390px, and fails on any element sticking past its parent. A
+new page is covered without being added. Pages that need an id (one post, one
+event) aren't covered, so check those by eye.
+
 ---
 
 ## Platform primitives
@@ -883,22 +942,24 @@ with `app/`, `config/` or `styles/`.
 | `<FeedDrum>`                                                                            | The quarter-turn when the rotator changes face, and the swipe that turns it under the finger (home and most korners).   | `components/feed_drum.tsx`                                                              |
 | `<SettingsSpaceHeader>`                                                                 | A settings page's title, pushed into the header slot.                                                                   | `features/settings/space_header.tsx`                                                    |
 | `<StandardCard>` + slot components                                                      | The card shell: six slots, three arrangements. See [Card standard](#card-standard).                                     | `components/standard_card.tsx`                                                          |
-| `<SpaceGrid>` + `<SpaceCard>`                                                           | The grid arrangement as a ready-made tile grid.                                                                         | `components/space_grid.tsx`                                                             |
+| `<SpaceGrid>` + `<SpaceCard>`                                                           | The grid arrangement as a ready-made tile grid. `href` opens an outside address instead; `after` adds one small link.   | `components/space_grid.tsx`                                                             |
 | `<KronkStarfield>`                                                                      | Ambient starfield backdrop for individual surfaces.                                                                     | `components/kronk_starfield.tsx`, `styles/mastodon/_stars.scss`                         |
 
 ### Compose + confirmation
 
-| Primitive                                | What it does                                                                                                                                                                                                                                                                                                                                        | Where                                                                                                |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer. `draft={useDraft()}` adds the drafts line; `konnect={useKonnect()}` adds the Konnect row above it, and when the composer was opened for a record (`?konnect=`), an **Add existing** strip under the header. | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
-| Composer field kit                       | `<ComposeTitle>`, `<ComposeBody>`, `<ComposeField>` with `<ComposeInput>` / `<ComposeTextarea>` / `<ComposeSelect>`, `<ComposeCheck>`, `<ComposeRow>`, `<ComposeSection>`, `<ComposeHint>`: every composer's fields, one look (title in the serif, the rest in the body sans). Korner Standard L13.                                                 | `components/compose_fields.tsx`, `styles/mastodon/_compose_fields.scss`                              |
-| `useKonnect()` + `<KonnectRow>`          | A composer's Konnections: `?konnect=<slug>:<id>` arrives as the first, the row's Konnect tile picks more, `commit(slug, id)` links them once the record is made. See Konnect, below.                                                                                                                                                                | `hooks/useKonnect.ts`, `components/konnect_row.tsx`. decisions.md, 2026-10-23                        |
-| `<PhotoDropZone>`                        | **Every photo upload uses it.** A box you drop photos on or click to choose them; filters to `accept` and marks the drop handled so the main post box doesn't also take it. `__tests__/photo_drop_zone_guard.test.ts` fails a new raw photo input; the older ones are on its burn-down list.                                                        | `components/media/photo_drop_zone.tsx`, `styles/mastodon/_media_capture.scss`                        |
-| Upload path (`api.ts`)                   | Every `POST /api/v2/media` holds the screen awake (`utils/wake_lock`) and, for a video over 20 MB, first shrinks it on the device to ≤1280px at ~2.5 Mbit/s (`utils/compress_video`, mediabunny over WebCodecs, loaded on demand). Best effort: anything it can't do sends the original. Upload through `api()` and both come free.                 | `api.ts`                                                                                             |
-| `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                                                                                                                                                                                                                                           | `features/ui/components/kronk_menu.tsx`                                                              |
-| `<ArrangeList>`                          | A list put in order with Move up / Move down on each row; `onChange` gets the keys in their new order. A Krew's Page order.                                                                                                                                                                                                                         | `components/arrange_list.tsx`, `styles/mastodon/_settings_kit.scss`                                  |
-| `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.                                                                                                                                                                                                                          | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
-| `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                                                                                                                                                                                                                             | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
+| Primitive                                | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Where                                                                                                |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer. `draft={useDraft()}` adds the drafts line; `konnect={useKonnect()}` adds the Konnect row above it, and when the composer was opened for a record (`?konnect=`), an **Add existing** strip under the header. `footerStart` puts one action at the start of the footer, before Cancel: a destructive `<KornerPill>` such as a Kuestion's Delete.                                                                                                                                                                                                                                                                                                                                                                 | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
+| Composer field kit                       | `<ComposeTitle>`, `<ComposeBody>`, `<ComposeField>` with `<ComposeInput>` / `<ComposeTextarea>` / `<ComposeSelect>`, `<ComposeCheck>`, `<ComposeRow>`, `<ComposeSection>`, `<ComposeHint>`: every composer's fields, one look (title in the serif, the rest in the body sans). Korner Standard L13.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `components/compose_fields.tsx`, `styles/mastodon/_compose_fields.scss`                              |
+| `useKonnect()` + `<KonnectRow>`          | A composer's Konnections: `?konnect=<slug>:<id>` arrives as the first, the row's Konnect tile picks more, `commit(slug, id)` links them once the record is made. See Konnect, below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `hooks/useKonnect.ts`, `components/konnect_row.tsx`. decisions.md, 2026-10-23                        |
+| `<PhotoDropZone>`                        | A box you drop photos on or click to choose them, for a place with no picker of its own; filters to `accept` and marks the drop handled so the main post box doesn't also take it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `components/media/photo_drop_zone.tsx`, `styles/mastodon/_media_capture.scss`                        |
+| `<PhotoDropTarget>`                      | **Every file upload takes a drop.** Wrap a field whose file input already has its own look and a file dropped anywhere on it goes into the first input inside that takes it, as if picked. `<ComposeShell>` is one, so a drop anywhere on a composer lands; a drop on the dimmed page beside it goes nowhere. `__tests__/file_drop_guard.test.ts` fails a file input that takes no drop.                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `components/media/photo_drop_target.tsx`                                                             |
+| `usePhotoDrop()`                         | The drop itself, for an element that takes the file straight off it (a profile's cover and photo): `dropProps` to spread, `dragging` for `.photo-drop-over`. Its `data-photo-drop` keeps the page-wide drop-to-post overlay out of the way.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `hooks/usePhotoDrop.ts`, `styles/mastodon/_media_capture.scss`                                       |
+| Upload path (`api.ts`)                   | Every `POST /api/v2/media` holds the screen awake (`utils/wake_lock`) and, for a video over 20 MB, first shrinks it on the device to ≤1280px at ~2.5 Mbit/s (`utils/compress_video`, mediabunny over WebCodecs, loaded on demand). Best effort: anything it can't do sends the original. A file of 10 MB or more then goes to the browser to finish where it can (`utils/background_upload`, Background Fetch, Chrome on Android): it keeps going when the member leaves the app, the phone shows its progress in a notification, and the service worker (`service_worker/background_upload.js`) leaves the server's answer for the page, which carries on as if axios had returned it. Elsewhere (iPhone, Firefox) it is a page request, sent again once the page is back if the connection dropped. Upload through `api()` and all of it comes free. | `api.ts`                                                                                             |
+| `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `features/ui/components/kronk_menu.tsx`                                                              |
+| `<ArrangeList>`                          | A list put in order with Move up / Move down on each row; `onChange` gets the keys in their new order. A Krew's Page order.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `components/arrange_list.tsx`, `styles/mastodon/_settings_kit.scss`                                  |
+| `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
+| `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
 
 #### Drafts
 

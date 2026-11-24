@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_100300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -392,6 +392,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
     t.index ["question_id", "account_id"], name: "index_answers_on_question_id_and_account_id", unique: true
     t.index ["question_id"], name: "index_answers_on_question_id"
     t.index ["status_id"], name: "index_answers_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "anthemos_asks", force: :cascade do |t|
+    t.string "token", null: false
+    t.bigint "account_id", null: false
+    t.bigint "anthemos_link_id"
+    t.string "kind", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "status", default: "waiting", null: false
+    t.string "result"
+    t.datetime "expires_at", null: false
+    t.datetime "answered_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_anthemos_asks_on_account_id"
+    t.index ["anthemos_link_id"], name: "index_anthemos_asks_on_anthemos_link_id"
+    t.index ["token"], name: "index_anthemos_asks_on_token", unique: true
   end
 
   create_table "anthemos_links", force: :cascade do |t|
@@ -1167,6 +1184,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
     t.index ["root_id"], name: "index_freethedream_activities_on_root_id"
   end
 
+  create_table "freethedream_assignments", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_assignments_on_account_id"
+    t.index ["project_id", "account_id"], name: "index_freethedream_assignments_on_project_id_and_account_id", unique: true
+  end
+
   create_table "freethedream_claims", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -1325,6 +1351,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
     t.index ["project_id"], name: "index_freethedream_reads_on_project_id"
   end
 
+  create_table "freethedream_suggestions", force: :cascade do |t|
+    t.bigint "item_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "suggested_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_suggestions_on_account_id"
+    t.index ["item_id", "account_id"], name: "index_freethedream_suggestions_on_item_id_and_account_id", unique: true
+  end
+
   create_table "generated_annual_reports", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -1460,6 +1496,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
     t.index ["owner_id"], name: "index_kars_on_owner_id"
     t.index ["status_id"], name: "index_kars_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_kars_on_visibility"
+  end
+
+  create_table "kollection_app_screenshots", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "kollection_app_id", null: false
+    t.bigint "media_attachment_id", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["kollection_app_id", "position"], name: "idx_on_kollection_app_id_position_77590e854a"
+    t.index ["media_attachment_id"], name: "index_kollection_app_screenshots_on_media_attachment_id", unique: true
+  end
+
+  create_table "kollection_apps", force: :cascade do |t|
+    t.string "category"
+    t.bigint "cover_media_attachment_id"
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.bigint "icon_media_attachment_id"
+    t.bigint "keeper_id"
+    t.string "made_by", default: "", null: false
+    t.string "name", null: false
+    t.bigint "oauth_application_id"
+    t.string "platforms", default: [], null: false, array: true
+    t.datetime "pulled_at"
+    t.string "slug", null: false
+    t.integer "status", default: 0, null: false
+    t.string "tagline", default: "", null: false
+    t.datetime "updated_at", null: false
+    t.string "website"
+    t.index ["keeper_id"], name: "index_kollection_apps_on_keeper_id"
+    t.index ["oauth_application_id"], name: "index_kollection_apps_on_oauth_application_id", unique: true
+    t.index ["slug"], name: "index_kollection_apps_on_slug", unique: true
   end
 
   create_table "korner_attachments", force: :cascade do |t|
@@ -1649,6 +1717,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
     t.index ["ticket_date_id"], name: "index_listing_offers_on_ticket_date_id"
   end
 
+  create_table "listing_lesson_media", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "listing_id", null: false
+    t.bigint "media_attachment_id", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_id", "position"], name: "index_listing_lesson_media_on_listing_id_and_position"
+    t.index ["media_attachment_id"], name: "index_listing_lesson_media_on_media_attachment_id", unique: true
+  end
+
   create_table "listing_photos", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "listing_id", null: false
@@ -1736,6 +1814,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
     t.string "where_mode"
     t.date "due_on"
     t.integer "spots", default: 1, null: false
+    t.text "lesson_body"
+    t.text "pay_details"
     t.index ["account_id"], name: "index_listings_on_account_id"
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
@@ -3077,6 +3157,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
   add_foreign_key "announcement_reactions", "custom_emojis", on_delete: :cascade
   add_foreign_key "answers", "accounts", on_delete: :cascade
   add_foreign_key "answers", "questions", on_delete: :cascade
+  add_foreign_key "anthemos_asks", "accounts", on_delete: :cascade
+  add_foreign_key "anthemos_asks", "anthemos_links", on_delete: :nullify
   add_foreign_key "anthemos_links", "accounts", on_delete: :cascade
   add_foreign_key "appeals", "account_warnings", on_delete: :cascade
   add_foreign_key "appeals", "accounts", column: "approved_by_account_id", on_delete: :nullify
@@ -3182,6 +3264,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
   add_foreign_key "freethedream_activities", "accounts", on_delete: :nullify
   add_foreign_key "freethedream_activities", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_activities", "freethedream_projects", column: "root_id", on_delete: :cascade
+  add_foreign_key "freethedream_assignments", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_assignments", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_claims", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_claims", "freethedream_items", column: "item_id", on_delete: :cascade
   add_foreign_key "freethedream_comments", "accounts", on_delete: :cascade
@@ -3209,6 +3293,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
   add_foreign_key "freethedream_projects", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "freethedream_reads", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_reads", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_suggestions", "accounts", column: "suggested_by_id", on_delete: :nullify
+  add_foreign_key "freethedream_suggestions", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_suggestions", "freethedream_items", column: "item_id", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
   add_foreign_key "huddle_follows", "accounts", on_delete: :cascade
   add_foreign_key "huddle_follows", "huddle_sessions", on_delete: :cascade
@@ -3225,6 +3312,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
   add_foreign_key "kars", "accounts", column: "owner_id", on_delete: :cascade
   add_foreign_key "kars", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "kars", "statuses", on_delete: :nullify
+  add_foreign_key "kollection_app_screenshots", "kollection_apps", on_delete: :cascade
+  add_foreign_key "kollection_app_screenshots", "media_attachments", on_delete: :cascade
+  add_foreign_key "kollection_apps", "accounts", column: "keeper_id", on_delete: :nullify
+  add_foreign_key "kollection_apps", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
+  add_foreign_key "kollection_apps", "media_attachments", column: "icon_media_attachment_id", on_delete: :nullify
+  add_foreign_key "kollection_apps", "oauth_applications", on_delete: :cascade
   add_foreign_key "korner_attachments", "accounts", column: "created_by_account_id", on_delete: :cascade
   add_foreign_key "korner_content_views", "accounts", on_delete: :cascade
   add_foreign_key "korner_seen_markers", "accounts", on_delete: :cascade
@@ -3244,6 +3337,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_090000) do
   add_foreign_key "list_accounts", "lists", on_delete: :cascade
   add_foreign_key "listing_offers", "accounts", column: "offerer_id", on_delete: :cascade
   add_foreign_key "listing_offers", "listings", on_delete: :cascade
+  add_foreign_key "listing_lesson_media", "listings", on_delete: :cascade
+  add_foreign_key "listing_lesson_media", "media_attachments", on_delete: :cascade
   add_foreign_key "listing_photos", "listings", on_delete: :cascade
   add_foreign_key "listing_photos", "media_attachments", on_delete: :cascade
   add_foreign_key "listing_shop_sections", "listing_shops", on_delete: :cascade

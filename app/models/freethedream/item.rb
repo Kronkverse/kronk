@@ -35,6 +35,7 @@ module Freethedream
     has_many :placements, class_name: 'Freethedream::Placement', dependent: :delete_all
     has_many :projects, through: :placements
     has_many :claims, class_name: 'Freethedream::Claim', dependent: :delete_all
+    has_many :suggestions, class_name: 'Freethedream::Suggestion', dependent: :delete_all
     has_many :offers, class_name: 'Freethedream::Item', foreign_key: :need_id, inverse_of: :need, dependent: nil
     has_many :comments, class_name: 'Freethedream::Comment', as: :subject, dependent: :delete_all
 

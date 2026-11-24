@@ -148,6 +148,124 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.find_by(title: 'Hall deposit').task).to eq 'pay'
   end
 
+  # Kommons "Checklist" (2026-11-22): take off an entry added by mistake.
+  # One tap for your own; asked first once someone else has a hand in it.
+  it 'deletes an entry from its ⋯ menu', :aggregate_failures do
+    visit_kitchen
+    within('.freethedream-checklist__add') do
+      fill_in placeholder: 'Add something to do', with: 'Hall deposti'
+      send_keys :enter
+    end
+
+    within('.freethedream-checklist__entry', text: 'Hall deposti') do
+      click_on 'More for Hall deposti'
+    end
+    page.document.find('.privacy-dropdown__option', text: 'Delete').click
+    expect(page).to have_no_css('.freethedream-checklist__entry', text: 'Hall deposti')
+    expect(Freethedream::Item.where(title: 'Hall deposti')).to be_empty
+  end
+
+  it 'asks before taking off an entry someone else is on', :aggregate_failures do
+    visit_kitchen
+    kitchen = Freethedream::Project.find_by(title: 'Kitchen')
+    gas = Freethedream::Item.create!(kind: 'job', title: 'Gas bottles', owner: bob.account, root_id: kitchen.top_id)
+    gas.placements.create!(project: kitchen)
+    gas.claims.create!(account: Fabricate(:account))
+    visit current_path
+
+    within('.freethedream-checklist__entry', text: 'Gas bottles') do
+      click_on 'More for Gas bottles'
+    end
+    page.document.find('.privacy-dropdown__option', text: 'Delete').click
+    expect(page).to have_text('Someone else already has a hand in it.')
+    click_on 'Take it off'
+    expect(page).to have_no_css('.freethedream-checklist__entry', text: 'Gas bottles')
+    expect(Freethedream::Item.where(title: 'Gas bottles')).to be_empty
+  end
+
+  # Kommons "Tagging people on a checklist item" (2026-11-22): suggest
+  # someone from the entry's ⋯ menu; they see it, and can say not for me.
+  it 'suggests someone for an entry from its ⋯ menu', :aggregate_failures do
+    visit_kitchen
+    sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
+    Freethedream::Membership.create!(project: Freethedream::Project.find_by(title: 'Mini Doof'), account: sam, state: :member)
+    visit current_path
+    within('.freethedream-checklist__add') do
+      fill_in placeholder: 'Add something to do', with: 'Generator'
+      send_keys :enter
+    end
+
+    within('.freethedream-checklist__entry', text: 'Generator') do
+      click_on 'More for Generator'
+    end
+    page.document.find('.privacy-dropdown__option', text: 'Suggest someone…').click
+    page.document.find('.privacy-dropdown__option', text: 'Sam').click
+
+    within('.freethedream-checklist__entry', text: 'Generator') do
+      expect(page).to have_text('Suggested')
+      expect(page).to have_css(".people-row a[href='/@sam']")
+    end
+    item = Freethedream::Item.find_by(title: 'Generator')
+    expect(item.suggestions.pluck(:account_id)).to eq [sam.id]
+  end
+
+  # Kommons "Fractals" (2026-11-22): a Komponent's fractals are checklists
+  # on its own page, each assigned to people in the projekt.
+  it "shows a Komponent's fractals as checklists on its page, and assigns them", :aggregate_failures do
+    visit_kitchen
+    kitchen = Freethedream::Project.find_by(title: 'Kitchen')
+    Freethedream::Project.create!(title: 'Cooking', parent: kitchen, owner: bob.account)
+    visit current_path
+
+    within('.freethedream-fractal', text: 'Cooking') do
+      expect(page).to have_text('Not assigned yet')
+      fill_in placeholder: 'Add something to do', with: 'Spice run'
+      send_keys :enter
+      expect(page).to have_css('.freethedream-checklist__entry', text: 'Spice run')
+      click_on 'Assign'
+    end
+    page.document.find('.privacy-dropdown__option', text: bob.account.display_name.presence || bob.account.username).click
+
+    within('.freethedream-fractal', text: 'Cooking') do
+      expect(page).to have_css(".people-row a[href='/@#{bob.account.username}']")
+    end
+    expect(page).to have_no_css('.freethedream-group', text: 'Cooking')
+    expect(Freethedream::Item.find_by(title: 'Spice run').projects.map(&:title)).to eq ['Cooking']
+    expect(Freethedream::Assignment.sole).to have_attributes(account: bob.account)
+  end
+
+  # Kommons "drag and drop/move checklist items" (2026-11-22): the ⋯ menu on
+  # a phone or from a keyboard, a drag on a computer.
+  it 'moves a checklist entry into a fractal and back', :aggregate_failures do
+    visit_kitchen
+    kitchen = Freethedream::Project.find_by(title: 'Kitchen')
+    Freethedream::Project.create!(title: 'Cooking', parent: kitchen, owner: bob.account)
+    visit current_path
+    within('.freethedream-checklist__add', match: :first) do
+      fill_in placeholder: 'Add something to do', with: 'Spice run'
+      send_keys :enter
+    end
+
+    click_on 'More for Spice run'
+    page.document.find('.privacy-dropdown__option', text: 'Move to…').click
+    page.document.find('.privacy-dropdown__option', text: 'Cooking').click
+    within('.freethedream-fractal', text: 'Cooking') do
+      expect(page).to have_css('.freethedream-checklist__entry', text: 'Spice run')
+    end
+
+    # A drag, as the browser sends it (dragstart, dragover, drop).
+    page.execute_script(<<~JS)
+      const entry = [...document.querySelectorAll('.freethedream-checklist__entry')].find((li) => li.textContent.includes('Spice run'));
+      const target = document.querySelector('.freethedream-checklist__drop');
+      const data = new DataTransfer();
+      entry.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: data }));
+      target.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: data }));
+      target.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }));
+    JS
+    expect(page).to have_no_css('.freethedream-fractal .freethedream-checklist__entry', text: 'Spice run')
+    expect(Freethedream::Item.find_by(title: 'Spice run').projects).to eq [kitchen]
+  end
+
   it "decides something on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     within('.freethedream-checklist__add') do

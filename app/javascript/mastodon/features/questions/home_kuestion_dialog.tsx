@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
+import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import {
   apiAnswerKuestion,
   apiDeleteKuestion,
@@ -15,6 +17,8 @@ import {
   ComposeTextarea,
 } from 'mastodon/components/compose_fields';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { IconButton } from 'mastodon/components/icon_button';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
@@ -27,13 +31,17 @@ import { ChoiceReveal, TextReveal } from './reveal_sheet';
 // (the asker too), and everyone's answers, which every member sees whether
 // they've answered or not (Kuestions::VisibilityGate, a home is open).
 // Nothing to Konnect. Next kuestion steps through the row's Kuestions; the
-// asker can delete theirs.
+// asker can delete theirs, from a red Delete pill at the start of the
+// bottom bar, beside Cancel and Next kuestion (Tal, 2026-11-23).
+//
+// One after the next (Kommons "Kuestions", 2026-11-22: "If a kuestion is
+// opened, someone should be able to hit the 'next' button (left or right
+// arrow probably)"): ‹ and › either side of "2 of 5" step back and on at
+// any time, answered or not, as do the ← and → keys (not while typing an
+// answer) and a swipe sideways on a phone. The row wraps round.
 
 const messages = defineMessages({
-  label: {
-    id: 'kuestions.home_dialog.label',
-    defaultMessage: 'Kuestion {n} of {total}',
-  },
+  label: { id: 'kuestions.home_dialog.title', defaultMessage: 'Kuestion' },
   askedBy: {
     id: 'kuestions.home_dialog.asked_by',
     defaultMessage: 'asked by {asker}',
@@ -57,6 +65,12 @@ const messages = defineMessages({
     defaultMessage: 'No answers yet.',
   },
   next: { id: 'kuestions.reveal.next', defaultMessage: 'Next kuestion' },
+  prevArrow: { id: 'kuestions.home_dialog.prev', defaultMessage: 'Previous' },
+  nextArrow: { id: 'kuestions.home_dialog.next', defaultMessage: 'Next' },
+  position: {
+    id: 'kuestions.home_dialog.position',
+    defaultMessage: '{n} of {total}',
+  },
   done: { id: 'kuestions.home_dialog.done', defaultMessage: 'Done' },
   failed: {
     id: 'kuestions.home_dialog.failed',
@@ -160,10 +174,57 @@ export const HomeKuestionDialog: React.FC<Props> = ({
     [submit],
   );
 
+  const step = useCallback(
+    (by: number) => {
+      const n = kuestions.length;
+      const to = kuestions[(((index + by) % n) + n) % n];
+      if (to) setCurrentId(to.id);
+    },
+    [index, kuestions],
+  );
   const handleNext = useCallback(() => {
-    const next = kuestions[(index + 1) % kuestions.length];
-    if (next) setCurrentId(next.id);
-  }, [index, kuestions]);
+    step(1);
+  }, [step]);
+  const handlePrev = useCallback(() => {
+    step(-1);
+  }, [step]);
+
+  // ← and →, unless you're typing an answer.
+  const many = kuestions.length > 1;
+  useEffect(() => {
+    if (!many) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]'))
+        return;
+      if (e.key === 'ArrowRight') step(1);
+      else if (e.key === 'ArrowLeft') step(-1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [many, step]);
+
+  // A swipe sideways on a phone: mostly sideways, and far enough to mean it.
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touch.current = t ? { x: t.clientX, y: t.clientY } : null;
+  }, []);
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const start = touch.current;
+      const t = e.changedTouches[0];
+      touch.current = null;
+      if (!start || !t || !many) return;
+      const dx = t.clientX - start.x;
+      const dy = t.clientY - start.y;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5)
+        step(dx < 0 ? 1 : -1);
+    },
+    [many, step],
+  );
 
   const handleDelete = useCallback(() => {
     void (async () => {
@@ -200,10 +261,7 @@ export const HomeKuestionDialog: React.FC<Props> = ({
   return (
     <ComposeShell
       korner='kuestions'
-      label={intl.formatMessage(messages.label, {
-        n: index + 1,
-        total: kuestions.length,
-      })}
+      label={intl.formatMessage(messages.label)}
       subtitle={
         detail ? intl.formatMessage(messages.askedBy, { asker }) : undefined
       }
@@ -216,72 +274,105 @@ export const HomeKuestionDialog: React.FC<Props> = ({
       onSubmit={handleFooter}
       onCancel={onClose}
       konnect={null}
+      footerStart={
+        detail?.asked_by_me ? (
+          <KornerPill
+            variant='destructive'
+            label={intl.formatMessage(messages.deleteConfirm)}
+            ariaLabel={intl.formatMessage(messages.delete)}
+            onClick={handleDelete}
+            disabled={pending}
+          />
+        ) : undefined
+      }
     >
       {confirmDialog}
-      {!detail ? (
-        error ? (
-          <ComposeHint error>{intl.formatMessage(messages.failed)}</ComposeHint>
-        ) : (
-          <LoadingState />
-        )
-      ) : (
-        <>
-          <h2 className='home-kuestion-dialog__q'>{detail.title}</h2>
-
-          {!answered && textFormat && (
-            <ComposeField label={intl.formatMessage(messages.yourAnswer)}>
-              <ComposeTextarea
-                value={text}
-                onChange={handleText}
-                disabled={pending}
-                rows={3}
-              />
-            </ComposeField>
-          )}
-          {!answered && choiceFormat && (
-            <ComposeField label={intl.formatMessage(messages.pick)}>
-              <ChoiceGrid
-                options={detail.mc_options.map((o) => o.label)}
-                layout={detail.answer_format === 'yn' ? 'yn' : 'mc'}
-                disabled={pending}
-                onPick={handleChoice}
-              />
-            </ComposeField>
-          )}
-          {error && (
+      {many && (
+        <div className='home-kuestion-dialog__stepper'>
+          <IconButton
+            icon='chevron_left'
+            iconComponent={ChevronLeftIcon}
+            title={intl.formatMessage(messages.prevArrow)}
+            onClick={handlePrev}
+          />
+          <span className='home-kuestion-dialog__position'>
+            {intl.formatMessage(messages.position, {
+              n: index + 1,
+              total: kuestions.length,
+            })}
+          </span>
+          <IconButton
+            icon='chevron_right'
+            iconComponent={ChevronRightIcon}
+            title={intl.formatMessage(messages.nextArrow)}
+            onClick={handleNext}
+          />
+        </div>
+      )}
+      <div
+        className='home-kuestion-dialog__body'
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {!detail ? (
+          error ? (
             <ComposeHint error>
               {intl.formatMessage(messages.failed)}
             </ComposeHint>
-          )}
+          ) : (
+            <LoadingState />
+          )
+        ) : (
+          <>
+            <h2 className='home-kuestion-dialog__q'>{detail.title}</h2>
 
-          <section className='home-kuestion-dialog__answers'>
-            <h3 className='home-kuestion-dialog__heading'>
-              {intl.formatMessage(messages.answers, {
-                count: detail.answers_count,
-              })}
-            </h3>
-            {detail.answers_count === 0 ? (
-              <p className='home-kuestion-dialog__none'>
-                {intl.formatMessage(messages.none)}
-              </p>
-            ) : textFormat ? (
-              detail.answers && <TextReveal answers={detail.answers} />
-            ) : (
-              detail.aggregate && <ChoiceReveal aggregate={detail.aggregate} />
+            {!answered && textFormat && (
+              <ComposeField label={intl.formatMessage(messages.yourAnswer)}>
+                <ComposeTextarea
+                  value={text}
+                  onChange={handleText}
+                  disabled={pending}
+                  rows={3}
+                />
+              </ComposeField>
             )}
-          </section>
+            {!answered && choiceFormat && (
+              <ComposeField label={intl.formatMessage(messages.pick)}>
+                <ChoiceGrid
+                  options={detail.mc_options.map((o) => o.label)}
+                  layout={detail.answer_format === 'yn' ? 'yn' : 'mc'}
+                  disabled={pending}
+                  onPick={handleChoice}
+                />
+              </ComposeField>
+            )}
+            {error && (
+              <ComposeHint error>
+                {intl.formatMessage(messages.failed)}
+              </ComposeHint>
+            )}
 
-          {detail.asked_by_me && (
-            <button
-              type='button'
-              className='compose-shell__delete'
-              onClick={handleDelete}
-            >
-              {intl.formatMessage(messages.delete)}
-            </button>
-          )}
-        </>
-      )}
+            <section className='home-kuestion-dialog__answers'>
+              <h3 className='home-kuestion-dialog__heading'>
+                {intl.formatMessage(messages.answers, {
+                  count: detail.answers_count,
+                })}
+              </h3>
+              {detail.answers_count === 0 ? (
+                <p className='home-kuestion-dialog__none'>
+                  {intl.formatMessage(messages.none)}
+                </p>
+              ) : textFormat ? (
+                detail.answers && <TextReveal answers={detail.answers} />
+              ) : (
+                detail.aggregate && (
+                  <ChoiceReveal aggregate={detail.aggregate} />
+                )
+              )}
+            </section>
+          </>
+        )}
+      </div>
     </ComposeShell>
   );
 };

@@ -73,6 +73,73 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
 
     visit "/hub/map?map_place=#{place.id}"
     expect(page).to have_css('.map-place-card', text: 'Bondi Pavilion')
+    expect(page).to have_css(".map-place-card a.korner-pill[href='/hub/map/places/#{place.id}']", text: 'Open place')
+  end
+
+  # Tal, 2026-11-23: "Why is there two indicators?" An event at its Place
+  # is one marker, and the events sharing a Place are one marker too.
+  it 'draws one marker for the events at a Place, and one card', :aggregate_failures do
+    hall = MapPlace.create!(account: bob.account, name: 'Moyhu Hall', address: 'Moyhu, Victoria', latitude: -36.58, longitude: 146.38)
+    ember = Event.create!(account: bob.account, title: 'Ember', start_time: 3.days.from_now)
+    jam = Event.create!(account: bob.account, title: 'Hall jam', start_time: 20.days.from_now)
+    [ember, jam].each do |event|
+      KornerAttachment.create!(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: hall.id,
+                               kind: 'link', created_by_account: bob.account)
+    end
+
+    visit "/hub/map?event=#{ember.slug}"
+
+    within('.map-event-card') do
+      expect(page).to have_text('Ember')
+      expect(page).to have_text('Hall jam')
+      expect(page).to have_text('Moyhu Hall')
+      # The Place's name is the way to its page; no second "Open place", and
+      # each event's action is a pill (Tal, 2026-11-23).
+      expect(page).to have_link('Moyhu Hall', href: "/hub/map/places/#{hall.id}")
+      expect(page).to have_no_link('Open place')
+      expect(page).to have_css("a.korner-pill[href='/hub/kalendar/#{ember.slug}']", text: 'Open in Kalendar')
+    end
+    expect(page).to have_css('.map-event-pin', count: 1, text: '+1')
+    # The Kalendar korner's spiral, not a hand-drawn copy.
+    expect(page).to have_css('.map-event-pin .map-event-pin__disc svg.icon')
+    expect(page).to have_no_css('.map-place-pin')
+  end
+
+  # Tal, 2026-11-23: choose what the map shows, under a cog.
+  it 'hides and shows layers from the cog, and keeps the choice', :aggregate_failures do
+    hall = MapPlace.create!(account: bob.account, name: 'Moyhu Hall', latitude: -36.58, longitude: 146.38)
+    ember = Event.create!(account: bob.account, title: 'Ember', start_time: 3.days.from_now)
+    KornerAttachment.create!(source_slug: 'kalendar', source_id: ember.id, target_slug: 'map', target_id: hall.id,
+                             kind: 'link', created_by_account: bob.account)
+
+    visit "/hub/map?event=#{ember.slug}"
+    expect(page).to have_css('.map-event-pin', count: 1)
+    expect(page).to have_no_css('.map-place-pin')
+
+    click_on 'What the map shows'
+    within('.map-show__menu') { find('label', text: 'Events').click }
+
+    # The event marker goes, and the Place it stood on gets its own pin.
+    expect(page).to have_no_css('.map-event-pin')
+    expect(page).to have_css('.map-place-pin', count: 1)
+
+    # Kept after a reload (the map opened on the Place).
+    visit '/hub/map?lat=-36.58&lng=146.38'
+    expect(page).to have_css('.map-place-pin', count: 1)
+    expect(page).to have_no_css('.map-event-pin')
+
+    # A link to the event switches Events back on.
+    visit "/hub/map?event=#{ember.slug}"
+    expect(page).to have_css('.map-event-pin', count: 1)
+  end
+
+  # decisions.md, 2026-11-23: no adding Places on the Map.
+  it 'has no Place composer' do
+    visit '/hub/map/places/new'
+
+    expect(page).to have_css('.map-mates')
+    expect(page).to have_no_css('.compose-shell')
+    expect(page).to have_no_button('Add place')
   end
 
   it 'logs a trek on the day it happened, not the day it was posted' do

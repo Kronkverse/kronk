@@ -115,6 +115,8 @@ namespace :api, format: false do
           post :leave
           post :join_gang
           post :leave_gang
+          post :assign
+          post :unassign
           post :seen
           post :take_over
           post :hand_over
@@ -138,6 +140,9 @@ namespace :api, format: false do
           post :bring
           post :take_over
           post :hand_over
+          post :move
+          post :suggest
+          post :unsuggest
         end
         resources :placements, only: [:create, :destroy]
       end
@@ -384,6 +389,14 @@ namespace :api, format: false do
       resource :portfolio, only: [:update], controller: 'portfolios'
     end
 
+    # Kollection (docs/spaces/kollection.md): the apps linked to Kronk.
+    # Members add them; admins pull them from /admin/kollection_apps.
+    namespace :kollection do
+      resources :apps, only: [:index, :show, :create, :update, :destroy] do
+        post :disconnect, on: :member
+      end
+    end
+
     # Kronikles — single-author long-form written works. Body is
     # markdown, no length limit; kind labels the work (essay / short
     # story / poetry / letter / journal / constitution / legal / other).
@@ -479,6 +492,10 @@ namespace :api, format: false do
     # Anthemos phones linked to an account (docs/spaces/map.md, Live location).
     namespace :anthemos do
       resources :links, only: [:index, :create, :destroy]
+      # What the website asks the phone to do (docs/spaces/map.md, Asks from Kronk).
+      resources :asks, only: [:create, :show] do
+        member { post :answer }
+      end
     end
 
     namespace :klot do

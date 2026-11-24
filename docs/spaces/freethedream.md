@@ -277,6 +277,28 @@ asks a Yes or No Kuestion and starts undecided, and one that stops being
 a Decide takes its Kuestion with it. Something people are already
 bringing stays a Bring, so nobody's offer is left against a To do.
 
+**An entry's ⋯ menu** reads **Suggest someone…**, **Move to…** (when the
+page has fractals, below) and **Delete**, in red, for whoever added it.
+
+**Taking an entry off** (Kommons "Checklist", 2026-11-22: "easily delete
+checklist items if added by mistake"): whoever added an entry has
+**Delete** in its ⋯ menu. One tap takes it off (`DELETE /items/:id`, a Decide's
+Kuestion with it); once someone else is on it, bringing some or has
+picked a choice, it asks first.
+
+**Suggesting someone** (Kommons "Tagging people on a checklist item",
+2026-11-22: "If i know someone has a generator, i would suggest them"):
+anyone in the projekt picks **Suggest someone…** on a To do or something
+to Bring, then someone else in the projekt (`POST /items/:id/suggest`
+with `account_id`; picking them again takes it back, `unsuggest`). It's
+added after the entry, not while adding it. They're told (a Nudge,
+`freethedream.item.suggested`, linking to the entry), and the entry shows
+**Suggested** with their faces; to them it reads "You're suggested for
+this" with **Not for me** (`unsuggest` with no one given). It's a nudge,
+not a job: they take it on the usual way, On it or I'll bring it, which
+ends the suggestion, and leaving the projekt ends it too. Only people in
+the projekt can be suggested, as only they can take it on.
+
 ### The kinds of item
 
 | List               | What it is                                                     | How people take part                                                                                                                                                                                                                                                  |
@@ -460,8 +482,28 @@ the place the work is done:
   overlapping, then "+7" for the rest (`PeopleRow`, a kit primitive; Tal,
   2026-11-10: "a rough idea of which people, and how many"), whoever is on
   the most first. Each picture opens that person.
-- **Fractals** as the same row of cards (description, progress), each opening
-  its own page; members get **+ Add a fractal** last.
+- **Fractals** under its checklist, on this same page (Kommons "Fractals",
+  2026-11-22: "Fractals are not new pages, they're just displayed
+  checklists lists on this same page. Compartmentalised sections of the
+  overall task that can be assigned to team members"). Each is a panel
+  (`fractals.tsx`): its name, what it's about, who it's **assigned** to
+  (their pictures, or "Not assigned yet") and its own checklist, which
+  works as the Komponent's does. Anyone in the projekt assigns it, to
+  anyone in the projekt, from **Assign** (a menu of the projekt's people;
+  picking someone assigned takes them off; `Freethedream::Assignment`,
+  `POST /projects/:id/assign` and `/unassign` with `account_id`).
+  Whoever made a fractal removes it from the bin on its panel, asked
+  first. Members get **+ Add a fractal** last.
+- **Moving an entry between checklists** (Kommons "drag and drop/move
+  checklist items", 2026-11-22: "be able to move the check list items into
+  fractals"): once a Komponent has fractals, anyone in the projekt can move
+  an entry from its checklist into a fractal's, out again, or from one
+  fractal to another. On a computer, drag it onto the other checklist
+  (it's outlined, "Drop it here"); on a phone or from a keyboard, the ⋯
+  in the entry's corner has **Move to…**, which opens a list of the other
+  checklists (`POST /items/:id/move` with `from_project_id` and
+  `to_project_id`, both in the same projekt). Who is on it, bringing it or
+  has picked a choice stays as it was.
 - Events, Activity and Talk. Kuestions are the projekt's, so a
   gang's page has none of its own.
 - **Off the page for now** (Tal, 2026-11-08, "Sections": "We'll build up
@@ -475,7 +517,9 @@ the place the work is done:
   line ("Pills"): a need is Things and an idea is Skills.
 
 **A fractal's page** is the same, without fractals of its own; its back
-chip goes to its gang.
+chip goes to its gang. Nothing on the Komponent's page links to it any
+more; it is still where a fractal's talk and activity are, reached from
+Activity and Nudges.
 
 - **Lists roll up.** The emergence's list is everything in it: first **For
   all of Mini Doof**, what's placed on the emergence itself, which is

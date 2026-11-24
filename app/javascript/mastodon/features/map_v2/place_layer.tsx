@@ -32,7 +32,7 @@ import { CountryLine } from './country_line';
 
 const messages = defineMessages({
   close: { id: 'map.place_card.close', defaultMessage: 'Close' },
-  open: { id: 'map.place_card.open', defaultMessage: 'Open place →' },
+  open: { id: 'map.place_card.open', defaultMessage: 'Open place' },
   konnected: {
     id: 'map.place_card.konnected',
     defaultMessage: 'Konnected',
@@ -79,9 +79,12 @@ const boundsParam = (map: maplibregl.Map): string => {
 interface Props {
   map: maplibregl.Map | null;
   ready: boolean;
+  // Places an event marker already stands on (EventLayer): one marker per
+  // spot, so these draw no pin of their own.
+  hidden?: ReadonlySet<string>;
 }
 
-export const PlaceLayer: React.FC<Props> = ({ map, ready }) => {
+export const PlaceLayer: React.FC<Props> = ({ map, ready, hidden }) => {
   const [places, setPlaces] = useState<ApiMapPlaceJSON[]>([]);
   const [selected, setSelected] = useState<ApiMapPlaceJSON | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -115,16 +118,18 @@ export const PlaceLayer: React.FC<Props> = ({ map, ready }) => {
   useEffect(() => {
     if (!map || !ready) return;
 
-    markersRef.current = places.map((place) => {
-      const el = buildPlaceMarker(place);
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setSelected(place);
+    markersRef.current = places
+      .filter((place) => !hidden?.has(place.id))
+      .map((place) => {
+        const el = buildPlaceMarker(place);
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(place);
+        });
+        return new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([place.longitude, place.latitude])
+          .addTo(map);
       });
-      return new maplibregl.Marker({ element: el, anchor: 'bottom' })
-        .setLngLat([place.longitude, place.latitude])
-        .addTo(map);
-    });
 
     return () => {
       markersRef.current.forEach((m) => {
@@ -132,7 +137,7 @@ export const PlaceLayer: React.FC<Props> = ({ map, ready }) => {
       });
       markersRef.current = [];
     };
-  }, [places, map, ready]);
+  }, [places, hidden, map, ready]);
 
   // ── ?map_place=<id> deep link ─────────────────────────────────────────
   // Flies there; the Place then loads with the rest in view.
@@ -266,8 +271,13 @@ const PlacePreviewCard: React.FC<{
             )}
           </div>
         )}
-        <Link to={place.url} className='map-event-card__open'>
-          {intl.formatMessage(messages.open)}
+        <Link
+          to={place.url}
+          className='korner-pill korner-pill--primary map-event-card__action'
+        >
+          <span className='korner-pill__label'>
+            {intl.formatMessage(messages.open)}
+          </span>
         </Link>
       </div>
     </div>

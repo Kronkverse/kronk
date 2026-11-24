@@ -2,6 +2,7 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -9,10 +10,7 @@ import {
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
-
-import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
-import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
+import ArrowDownIcon from '@/material-icons/400-24px/arrow_downward.svg?react';
 import { submitMarkers } from 'mastodon/actions/markers';
 import {
   loadPending,
@@ -26,7 +24,6 @@ import {
 import type { ApiNudgeNotificationJSON } from 'mastodon/api_types/nudges_notifications';
 import { compareId } from 'mastodon/compare_id';
 import { EmptyState } from 'mastodon/components/empty_state';
-import { Icon } from 'mastodon/components/icon';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { PushPrompt } from 'mastodon/components/push_prompt';
@@ -40,9 +37,10 @@ import { SystemNoticeRow } from './system_notice_row';
 import { useNudgesAccountStream } from './use_nudges_account_stream';
 import type { NudgesArrival } from './use_nudges_account_stream';
 
-// The Notifications face of Nudges: everything addressed to you, newest
-// first, in one list. Spec: docs/spaces/nudges.md (Nudges spec)
-// § Notifications list.
+// Notifications in Nudges: everything addressed to you, in one list that
+// reads like a chat: oldest at the top, the newest at the bottom, where it
+// opens (Tal 2026-11-23, "can we try with the notifications also?"). Spec:
+// docs/spaces/nudges.md (Nudges spec) § Notifications list.
 //
 // Opening the face is what marks things seen — there is no "mark all read"
 // to press. What was new when you arrived stays marked as new for the rest
@@ -71,16 +69,20 @@ const messages = defineMessages({
     id: 'nudges.notifications.earlier',
     defaultMessage: 'Show earlier',
   },
-  unreadMessages: {
-    id: 'nudges.notifications.unread_messages',
-    defaultMessage:
-      '{count, plural, one {# unread message} other {# unread messages}}',
-  },
   listLabel: {
     id: 'nudges.notifications.list_label',
     defaultMessage: 'Notifications',
   },
+  newBelow: {
+    id: 'nudges.notifications.new_below',
+    defaultMessage: 'New',
+  },
 });
+
+// How close to an edge counts as being at it: the bottom, for staying
+// with the newest; the top, for loading earlier ones.
+const NEAR_BOTTOM = 80;
+const NEAR_TOP = 200;
 
 // Cards the user has clicked into stay flagged as "visited" locally, so a
 // system notice that still needs a response stays distinct from one already
@@ -116,17 +118,10 @@ type Entry =
 const sameDay = (a: string, b: string) =>
   new Date(a).toDateString() === new Date(b).toDateString();
 
-interface Props {
-  unreadMessages: number;
-  // Where the Messages face is right now (the chat list, or the chat that
-  // was open when the viewer turned away from it).
-  messagesPath: string;
-}
-
-export const NotificationsFace: React.FC<Props> = ({
-  unreadMessages,
-  messagesPath,
-}) => {
+// Notifications, open in the Nudges pane: the first row of the list of
+// chats (docs/spaces/nudges.md § Surfaces). The chats are beside it, or one
+// step back on a phone, so it no longer points at unread messages itself.
+export const NotificationsFace: React.FC = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
 
@@ -158,14 +153,31 @@ export const NotificationsFace: React.FC<Props> = ({
     }
   }, [dispatch]);
 
+  // The first page, newest first as the server sends it. Loaded again when
+  // something arrives: what comes back is merged in, so earlier pages
+  // already scrolled into stay where they are.
+  const loadedOnce = useRef(false);
   const load = useCallback(async () => {
     try {
       const page = await apiListNudgeNotifications();
       page.notifications.forEach((item) => {
         if (!item.seen) freshIds.current.add(item.id);
       });
-      setItems(page.notifications);
-      setNextBefore(page.next_before);
+      if (loadedOnce.current) {
+        setItems((prev) => {
+          const fresh = new Map(
+            page.notifications.map((item) => [item.id, item]),
+          );
+          const kept = prev.filter((item) => !fresh.has(item.id));
+          return [...page.notifications, ...kept].sort((a, b) =>
+            b.created_at.localeCompare(a.created_at),
+          );
+        });
+      } else {
+        loadedOnce.current = true;
+        setItems(page.notifications);
+        setNextBefore(page.next_before);
+      }
       setStatus('ready');
       dispatch(setNudgesUnseenNotifications(page.unseen_count));
       if (page.unseen_count > 0) {
@@ -181,7 +193,7 @@ export const NotificationsFace: React.FC<Props> = ({
     void load();
   }, [load]);
 
-  // A notification that arrives while the face is open joins the top.
+  // A notification that arrives while the face is open joins the bottom.
   const handleArrival = useCallback(
     (arrival: NudgesArrival) => {
       if (arrival === 'notification') void load();
@@ -207,12 +219,34 @@ export const NotificationsFace: React.FC<Props> = ({
     void load();
   }, [load]);
 
+  // ── Scrolling, as a chat does ────────────────────────────────────
+  // The list opens at the bottom and stays there while you are there; a
+  // row that arrives while you have scrolled up shows "New" instead of
+  // pulling you down. Earlier ones load as you near the top, holding what
+  // you are looking at still while they slot in above it.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const atBottom = useRef(true);
+  // The scroll height and position just before earlier rows went in.
+  const prepending = useRef<{ height: number; top: number } | null>(null);
+  const [newBelow, setNewBelow] = useState(false);
+
+  const toBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+    atBottom.current = true;
+    setNewBelow(false);
+  }, []);
+
   const handleEarlier = useCallback(() => {
     if (!nextBefore || loadingMore) return;
     setLoadingMore(true);
     void (async () => {
       try {
         const page = await apiListNudgeNotifications(nextBefore);
+        const el = scrollRef.current;
+        if (el)
+          prepending.current = { height: el.scrollHeight, top: el.scrollTop };
         setItems((prev) => {
           const known = new Set(prev.map((item) => item.id));
           return [
@@ -228,6 +262,15 @@ export const NotificationsFace: React.FC<Props> = ({
       }
     })();
   }, [nextBefore, loadingMore]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    atBottom.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM;
+    if (atBottom.current) setNewBelow(false);
+    if (el.scrollTop < NEAR_TOP) handleEarlier();
+  }, [handleEarlier]);
 
   // ── System notices (classic Notification store) ──────────────────
   const systemGroups = useAppSelector((state) =>
@@ -288,102 +331,152 @@ export const NotificationsFace: React.FC<Props> = ({
       });
     });
 
-    return merged.sort((a, b) => b.at.localeCompare(a.at));
+    return merged.sort((a, b) => a.at.localeCompare(b.at));
   }, [items, systemGroups, nextBefore]);
+
+  // After the rows change: earlier ones went in above, so hold the view
+  // where it was; or something new came in below, so follow it if you
+  // were at the bottom and say so if you weren't.
+  const newestKey = entries[entries.length - 1]?.key;
+  const lastNewest = useRef<string | undefined>(undefined);
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const before = prepending.current;
+    if (before) {
+      prepending.current = null;
+      el.scrollTop = before.top + (el.scrollHeight - before.height);
+    } else if (atBottom.current) {
+      el.scrollTop = el.scrollHeight;
+    } else if (lastNewest.current && newestKey !== lastNewest.current) {
+      setNewBelow(true);
+    }
+    lastNewest.current = newestKey;
+  }, [entries, newestKey, status]);
+
+  // Rows grow after they first paint (avatars, the strip above going), so
+  // stay pinned to the bottom through that while you are there.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || status !== 'ready') return undefined;
+    const observer = new ResizeObserver(() => {
+      if (atBottom.current) el.scrollTop = el.scrollHeight;
+    });
+    observer.observe(el);
+    Array.from(el.querySelectorAll('.nudges-notifications')).forEach(
+      (child) => {
+        observer.observe(child);
+      },
+    );
+    return () => {
+      observer.disconnect();
+    };
+  }, [status]);
 
   const isFreshGroup = (group: KronkSystemGroup) =>
     !!group.page_max_id &&
     compareId(group.page_max_id, arrivalMarker.current) > 0;
 
   return (
-    <div className='stage-column'>
-      <div className='stage-column__inner'>
-        {/* One surface for the whole list, so it reads on the sky in either
-            theme. */}
-        <div className='nudges-notifications'>
-          <PushPrompt variant='strip' />
+    <>
+      {/* Pinned above the list, so it isn't scrolled away at the top of a
+          list that opens at its bottom. */}
+      <PushPrompt variant='strip' />
 
-          {unreadMessages > 0 && (
-            <Link to={messagesPath} className='nudges-notifications__messages'>
-              <Icon id='chat' icon={ChatIcon} />
-              <span className='nudges-notifications__messages-label'>
-                {intl.formatMessage(messages.unreadMessages, {
-                  count: unreadMessages,
-                })}
-              </span>
-              <Icon id='chevron-right' icon={ChevronRightIcon} />
-            </Link>
-          )}
+      <div
+        className='stage-column nudges-notifications__scroll'
+        ref={scrollRef}
+        onScroll={handleScroll}
+      >
+        <div className='stage-column__inner'>
+          {/* One surface for the whole list, so it reads on the sky in
+              either theme. */}
+          <div className='nudges-notifications'>
+            {status === 'loading' && (
+              <LoadingState label={intl.formatMessage(messages.loading)} />
+            )}
 
-          {status === 'loading' && (
-            <LoadingState label={intl.formatMessage(messages.loading)} />
-          )}
-
-          {status === 'error' && (
-            <EmptyState
-              title={intl.formatMessage(messages.errorTitle)}
-              action={
-                <KornerPill
-                  label={intl.formatMessage(messages.retry)}
-                  onClick={handleRetry}
-                />
-              }
-            />
-          )}
-
-          {status === 'ready' && entries.length === 0 && (
-            <EmptyState
-              title={intl.formatMessage(messages.emptyTitle)}
-              body={intl.formatMessage(messages.emptyBody)}
-            />
-          )}
-
-          {status === 'ready' && entries.length > 0 && (
-            <ul
-              className='nudges-notifications__list'
-              aria-label={intl.formatMessage(messages.listLabel)}
-            >
-              {entries.map((entry, index) => {
-                const previous = entries[index - 1];
-                const newDay = !previous || !sameDay(previous.at, entry.at);
-
-                return (
-                  <Fragment key={entry.key}>
-                    {newDay && (
-                      <li className='nudges-notifications__day'>
-                        <DaySeparator timestamp={entry.at} />
-                      </li>
-                    )}
-                    {entry.kind === 'event' ? (
-                      <NotificationRow
-                        item={entry.item}
-                        fresh={freshIds.current.has(entry.item.id)}
-                      />
-                    ) : (
-                      <SystemNoticeRow
-                        group={entry.group}
-                        fresh={isFreshGroup(entry.group)}
-                        visited={visited}
-                        onVisit={handleVisit}
-                      />
-                    )}
-                  </Fragment>
-                );
-              })}
-            </ul>
-          )}
-
-          {status === 'ready' && nextBefore && (
-            <div className='nudges-notifications__more'>
-              <KornerPill
-                label={intl.formatMessage(messages.earlier)}
-                onClick={handleEarlier}
-                disabled={loadingMore}
+            {status === 'error' && (
+              <EmptyState
+                title={intl.formatMessage(messages.errorTitle)}
+                action={
+                  <KornerPill
+                    label={intl.formatMessage(messages.retry)}
+                    onClick={handleRetry}
+                  />
+                }
               />
-            </div>
-          )}
+            )}
+
+            {status === 'ready' && entries.length === 0 && (
+              <EmptyState
+                title={intl.formatMessage(messages.emptyTitle)}
+                body={intl.formatMessage(messages.emptyBody)}
+              />
+            )}
+
+            {/* Earlier ones load on their own as you near the top; the
+                pill is for when the list is too short to scroll, and for
+                the keyboard. */}
+            {status === 'ready' && nextBefore && (
+              <div className='nudges-notifications__more'>
+                <KornerPill
+                  label={intl.formatMessage(messages.earlier)}
+                  onClick={handleEarlier}
+                  disabled={loadingMore}
+                />
+              </div>
+            )}
+
+            {status === 'ready' && entries.length > 0 && (
+              <ul
+                className='nudges-notifications__list'
+                aria-label={intl.formatMessage(messages.listLabel)}
+              >
+                {entries.map((entry, index) => {
+                  const previous = entries[index - 1];
+                  const newDay = !previous || !sameDay(previous.at, entry.at);
+
+                  return (
+                    <Fragment key={entry.key}>
+                      {newDay && (
+                        <li className='nudges-notifications__day'>
+                          <DaySeparator timestamp={entry.at} />
+                        </li>
+                      )}
+                      {entry.kind === 'event' ? (
+                        <NotificationRow
+                          item={entry.item}
+                          fresh={freshIds.current.has(entry.item.id)}
+                        />
+                      ) : (
+                        <SystemNoticeRow
+                          group={entry.group}
+                          fresh={isFreshGroup(entry.group)}
+                          visited={visited}
+                          onVisit={handleVisit}
+                        />
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {newBelow && (
+        <div className='nudges-notifications__new'>
+          <KornerPill
+            label={intl.formatMessage(messages.newBelow)}
+            icon={ArrowDownIcon}
+            iconId='arrow_downward'
+            variant='primary'
+            onClick={toBottom}
+          />
+        </div>
+      )}
+    </>
   );
 };

@@ -18,7 +18,7 @@
 // bubble at the middle can navigate, open an overlay, or just sit
 // there without a container that assumes one shape.
 //
-// See `docs/spaces/settings.md`, `docs/spaces/you.md`,
+// See `docs/spaces/settings.md` (/settings and /settings/you) and
 // `docs/spaces/kronk.md` for the three consumers.
 
 import type { CSSProperties, MouseEventHandler, ReactNode } from 'react';

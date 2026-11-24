@@ -1837,18 +1837,14 @@ fy:
     title: Sesjes
     view_authentication_history: Oanmeldskiednis fan jo account besjen
   settings:
-    account: Account
     account_settings: Accountynstellingen
     aliases: Accountaliassen
     appearance: Werjefte
-    authorized_apps: Autorisearre apps
-    back: Tebek nei Mastodon
     development: Untwikkelers
     edit_profile: Profyl bewurkje
     export: Eksportearje
     featured_tags: Utljochte hashtags
     import: Ymportearje
-    import_and_export: Ymportearje en eksportearje
     migrate: Accountmigraasje
     notifications: E-mailmeldingen
     preferences: Ynstellingen

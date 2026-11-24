@@ -608,17 +608,13 @@ kk:
     revoke_success: Сессиялар сәтті жабылды
     title: Сессиялар
   settings:
-    account: Аккаунт
     account_settings: Аккаунт баптаулары
     aliases: Аккаунт алиастары
     appearance: Сыртқы түрі
-    authorized_apps: Authorizеd apps
-    back: Желіге оралу
     development: Жасаушы топ
     edit_profile: Профиль өңдеу
     featured_tags: Таңдаулы хэштегтер
     import: Импорт
-    import_and_export: Импорт/экспорт
     migrate: Аккаунт көшіру
     preferences: Баптаулар
     profile: Профиль

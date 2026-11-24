@@ -1922,18 +1922,14 @@ sl:
     title: Seje
     view_authentication_history: Oglejte si zgodovino overjanja za vaš račun
   settings:
-    account: Račun
     account_settings: Nastavitve računa
     aliases: Vzdevki računa
     appearance: Videz
-    authorized_apps: Pooblaščene aplikacije
-    back: Nazaj na Mastodon
     development: Razvoj
     edit_profile: Uredi profil
     export: Izvozi
     featured_tags: Vključeni ključniki
     import: Uvozi
-    import_and_export: Uvoz in izvoz
     migrate: Selitev računa
     notifications: E-poštna obvestila
     preferences: Nastavitve

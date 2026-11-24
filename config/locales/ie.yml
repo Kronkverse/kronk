@@ -1556,17 +1556,13 @@ ie:
     title: Sessiones
     view_authentication_history: Vider li historie de autentication por tui conto
   settings:
-    account: Conto
     account_settings: Parametres del conto
     aliases: Aliases del conto
     appearance: Aspecte
-    authorized_apps: Autorisat aplicationes
-    back: Retornar a Mastodon
     development: Developation
     edit_profile: Modificar profil
     featured_tags: Recomandat hashtags
     import: Importar
-    import_and_export: Importation e exportation
     migrate: Migration de conto
     preferences: Preferenties
     profile: Public profil

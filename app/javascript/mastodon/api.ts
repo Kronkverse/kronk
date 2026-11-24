@@ -9,6 +9,10 @@ import LinkHeader from 'http-link-header';
 
 import { getAccessToken } from './initial_state';
 import ready from './ready';
+import {
+  backgroundUploadAdapter,
+  goesInBackground,
+} from './utils/background_upload';
 import { holdScreenAwake } from './utils/wake_lock';
 
 export const getLinks = (response: AxiosResponse) => {
@@ -89,6 +93,28 @@ const authorizationTokenFromInitialState = (): RawAxiosRequestHeaders => {
   };
 };
 
+const UPLOAD_RETRIES = 2;
+
+// axios copies a request's config when it is sent again, so the count of
+// tries travels in the config itself.
+interface UploadTry {
+  uploadTry?: number;
+}
+
+// Resolves once the page is in front and the device has a connection.
+export const pageBackOnline = () =>
+  new Promise<void>((resolve) => {
+    const check = () => {
+      if (document.visibilityState !== 'visible' || !navigator.onLine) return;
+      document.removeEventListener('visibilitychange', check);
+      window.removeEventListener('online', check);
+      resolve();
+    };
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('online', check);
+    check();
+  });
+
 // eslint-disable-next-line import/no-default-export
 export default function api(withAuthorization = true) {
   const instance = axios.create({
@@ -136,8 +162,28 @@ export default function api(withAuthorization = true) {
     const file = data.get('file');
     return file instanceof File && file.type.startsWith('video/') ? file : null;
   };
+  // A big upload goes to the browser to finish (utils/background_upload),
+  // so it keeps going when the member leaves the app. Registered first so
+  // it runs last, once a video has been shrunk and its size is known.
+  instance.interceptors.request.use(
+    (config) => {
+      if (goesInBackground(config, !!(config as UploadTry).uploadTry)) {
+        config.adapter = backgroundUploadAdapter;
+      } else if (config.adapter === backgroundUploadAdapter) {
+        // Sent again after the browser couldn't finish it: as a page
+        // request this time.
+        config.adapter = undefined;
+      }
+      return config;
+    },
+    null,
+    { synchronous: true, runWhen: isUpload },
+  );
   instance.interceptors.request.use(
     async (config) => {
+      // An upload sent again after the connection dropped (below) keeps
+      // the video it already shrank.
+      if ((config as UploadTry).uploadTry) return config;
       const file = videoIn(config.data);
       if (file && config.data instanceof FormData) {
         const { shrinkVideo } = await import('./utils/compress_video');
@@ -168,8 +214,27 @@ export default function api(withAuthorization = true) {
       }
       return response;
     },
-    (error: AxiosError) => {
+    async (error: AxiosError) => {
       letSleep(error.config);
+      // A long upload dies with the connection when the phone leaves the
+      // app or drops signal part way (Kommons "Can't upload videos longer
+      // then 1 minute"). Send it again once the page is back and online,
+      // twice at most, rather than failing what the member picked.
+      const config = error.config;
+      const tries = (config as UploadTry | undefined)?.uploadTry ?? 0;
+      if (
+        config &&
+        isUpload(config) &&
+        error.code === 'ERR_NETWORK' &&
+        tries < UPLOAD_RETRIES
+      ) {
+        await pageBackOnline();
+        const again: typeof config & UploadTry = {
+          ...config,
+          uploadTry: tries + 1,
+        };
+        return instance.request(again);
+      }
       return Promise.reject(error);
     },
   );

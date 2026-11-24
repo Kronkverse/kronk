@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import LinkIcon from '@/material-icons/400-24px/link.svg?react';
@@ -51,6 +51,10 @@ const messages = defineMessages({
     defaultMessage: 'Konnect one you made',
   },
   empty: { id: 'space_shelf.empty', defaultMessage: 'Nothing here yet.' },
+  here: {
+    id: 'space_shelf.here',
+    defaultMessage: '{count, plural, =0 {None here yet} other {# here}}',
+  },
 });
 
 export interface ShelfCard {
@@ -90,6 +94,37 @@ export const ActionCard: React.FC<{
     </StandardCard>
   </li>
 );
+
+// The heading of a row of things from one korner, so rows from different
+// korners tell apart at a glance: the korner's glyph and name, how many of
+// its things are here, quiet beside it, and the whole of it opens the
+// korner (Tal's proposal "Differentiating different korner konnections",
+// 2026-11-18; a small header, not a card at the head of the row, Tal
+// 2026-11-23). It goes inside the section's one heading
+// (`.korner-section-heading`), in place of its plain label.
+export const KornerRowTitle: React.FC<{
+  korner: string;
+  // The row's name, when not the korner's own.
+  title?: string;
+  // How many of its things the row holds; left out while it loads.
+  count?: number;
+}> = ({ korner, title, count }) => {
+  const intl = useIntl();
+  const manifest = useKorner(korner);
+  const glyph = useKornerIcon(korner);
+
+  return (
+    <Link to={`/hub/${korner}`} className='korner-row-title'>
+      <Icon id={`korner-${korner}`} icon={glyph} />
+      <span>{title ?? manifest?.name ?? korner}</span>
+      {count !== undefined && (
+        <span className='korner-row-title__count'>
+          {intl.formatMessage(messages.here, { count })}
+        </span>
+      )}
+    </Link>
+  );
+};
 
 export const SpaceShelf: React.FC<{
   // The record whose page this is: a Krew or a projekt.
@@ -194,7 +229,13 @@ export const SpaceShelf: React.FC<{
       id={id}
       className={`krew-detail__section space-shelf ${className ?? ''}`}
     >
-      <h3 className='korner-section-heading'>{title}</h3>
+      <h3 className='korner-section-heading'>
+        <KornerRowTitle
+          korner={korner}
+          title={title}
+          count={settled ? items.length : undefined}
+        />
+      </h3>
 
       {settled && items.length === 0 && !canAdd && (
         <p className='krew-detail__section-hint'>

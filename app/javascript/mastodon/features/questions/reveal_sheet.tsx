@@ -57,6 +57,9 @@ const messages = defineMessages({
 interface RevealSheetProps {
   kuestion: ApiKuestionJSON;
   onNext: () => void;
+  // Tapping the backdrop or dragging the sheet down; Next kuestion when
+  // not given.
+  onClose?: () => void;
   // Given, the asker gets Delete Kuestion (Tal, 2026-11-08); called once
   // it is gone, to close the sheet and drop it from the list.
   onDeleted?: (id: string) => void;
@@ -67,6 +70,7 @@ const PAGE = 4;
 export const RevealSheet: React.FC<RevealSheetProps> = ({
   kuestion,
   onNext,
+  onClose,
   onDeleted,
 }) => {
   const intl = useIntl();
@@ -97,7 +101,10 @@ export const RevealSheet: React.FC<RevealSheetProps> = ({
   }, [confirm, intl, kuestionId, onDeleted]);
 
   return (
-    <SheetFrame onClose={onNext} closeLabel={intl.formatMessage(messages.next)}>
+    <SheetFrame
+      onClose={onClose ?? onNext}
+      closeLabel={intl.formatMessage(messages.next)}
+    >
       <div className='kuestions-reveal__banner'>
         <span className='kuestions-reveal__lock'>
           <svg

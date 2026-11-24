@@ -1696,17 +1696,13 @@ io:
     title: Sesioni
     view_authentication_history: Videz yurizeshistorio di vua konto
   settings:
-    account: Konto
     account_settings: Kontopreferaji
     aliases: Kontoaltnomi
     appearance: Aspekto
-    authorized_apps: Yurizita apliki
-    back: Retro a Mastodon
     development: Developo
     edit_profile: Redaktar la profilo
     featured_tags: Estelata hashtagi
     import: Importacar
-    import_and_export: Importaco e exportaco
     migrate: Kontomigro
     preferences: Preferi
     profile: Profilo

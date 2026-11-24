@@ -1874,18 +1874,14 @@ fi:
     title: Istunnot
     view_authentication_history: Näytä tilisi todennushistoria
   settings:
-    account: Tili
     account_settings: Tilin asetukset
     aliases: Tilin aliakset
     appearance: Ulkoasu
-    authorized_apps: Valtuutetut sovellukset
-    back: Takaisin Mastodoniin
     development: Kehitys
     edit_profile: Muokkaa profiilia
     export: Vie
     featured_tags: Esiteltävät aihetunnisteet
     import: Tuo
-    import_and_export: Tuo ja vie
     migrate: Tilin muutto toisaalle
     notifications: Sähköposti-ilmoitukset
     preferences: Asetukset

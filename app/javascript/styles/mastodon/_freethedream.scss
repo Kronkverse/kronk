@@ -117,7 +117,7 @@ $freethedream-wide: 1000px;
 // project page and the audit widen on a wide Stage; an item stays a
 // reading column.
 .korner-detail.freethedream-detail--wide {
-  @container frame (width >= #{$freethedream-wide}) {
+  @media (width >= #{$freethedream-wide}) {
     max-width: 72rem;
   }
 }
@@ -138,7 +138,7 @@ $freethedream-wide: 1000px;
   &--wide .korner-detail__hero {
     aspect-ratio: 5 / 2;
 
-    @container frame (width >= #{$freethedream-wide}) {
+    @media (width >= #{$freethedream-wide}) {
       aspect-ratio: 4 / 1;
     }
   }
@@ -177,14 +177,14 @@ $freethedream-wide: 1000px;
   gap: 1.25rem;
   align-items: start;
 
-  @container frame (width >= #{$freethedream-wide}) {
+  @media (width >= #{$freethedream-wide}) {
     grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
     gap: 2rem;
   }
 
   // A projekt's page: one column, as a Krew's is.
   &--single {
-    @container frame (width >= #{$freethedream-wide}) {
+    @media (width >= #{$freethedream-wide}) {
       grid-template-columns: minmax(0, 1fr);
     }
   }
@@ -379,6 +379,61 @@ $freethedream-wide: 1000px;
   &:focus-visible {
     border-color: var(--kronk-purple-bright);
     color: var(--kronk-purple-bright);
+  }
+}
+
+// A Komponent's fractals (Kommons "Fractals", 2026-11-22): each a panel
+// under its checklist, named like a card, with who it's assigned to and
+// its own checklist.
+.freethedream-fractal {
+  margin-block-start: 1rem;
+  padding: 0.25rem 0.75rem 0.85rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+
+  .freethedream-section {
+    margin-block-start: 0.5rem;
+  }
+
+  .freethedream-section__title {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  &__about {
+    margin: 0 0 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block-end: 0.75rem;
+
+    .people-row {
+      --people-row-size: 28px;
+
+      margin-block: 0;
+    }
+  }
+
+  &__remove.icon-button {
+    color: var(--text-muted);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--destructive);
+    }
+  }
+
+  &__add {
+    margin-block-start: 1rem;
   }
 }
 
@@ -1687,6 +1742,86 @@ $freethedream-wide: 1000px;
 
   &__menu {
     min-inline-size: 10rem;
+
+    // Delete, on an entry's ⋯ menu, in red (white on red when picked).
+    .privacy-dropdown__option[data-index='__remove'] {
+      .privacy-dropdown__option__content strong {
+        color: var(--destructive);
+      }
+
+      &:focus,
+      &.active {
+        background: var(--destructive);
+
+        .privacy-dropdown__option__content strong {
+          color: var(--surface-primary);
+        }
+      }
+    }
+  }
+
+  // Who's been suggested for an entry, on a line of its own under it.
+  &__suggested {
+    display: flex;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+  }
+
+  &__suggested-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  // An entry's corner: its ⋯ menu (Suggest someone…, Move to… when the
+  // page has other checklists, Delete for whoever added it). Pinned to the
+  // top corner so it never wraps onto a line of its own on a phone.
+  &__entry {
+    position: relative;
+    padding-inline-end: calc(0.75rem + var(--corner-buttons, 0) * 1.9rem);
+  }
+
+  &__entry--movable {
+    cursor: grab;
+  }
+
+  &__corner {
+    position: absolute;
+    inset-block-start: 0.45rem;
+    inset-inline-end: 0.4rem;
+    display: flex;
+    gap: 0.15rem;
+  }
+
+  &__more.icon-button {
+    color: var(--text-muted);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+    }
+  }
+
+  // A checklist an entry is being dragged over.
+  &__drop {
+    border-radius: var(--radius-medium);
+    outline: 2px dashed transparent;
+    outline-offset: 4px;
+    transition: outline-color var(--dur-fast) var(--ease-out);
+  }
+
+  &__drop--over {
+    outline-color: var(--accent);
+  }
+
+  &__drop--over::before {
+    content: attr(data-drop-label);
+    display: block;
+    margin-block-end: 0.4rem;
+    color: var(--accent-text);
+    font-size: 0.8rem;
+    font-weight: 600;
   }
 
   // A Pay entry's amount, and Paid or Booked once it's ticked.

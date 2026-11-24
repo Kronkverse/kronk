@@ -800,17 +800,14 @@ br:
       windows_phone: Windows Phone
     revoke: Dizober
   settings:
-    account: Kont
     account_settings: Arventennoù ar gont
     aliases: Aliasoù ar gont
     appearance: Neuz
-    back: Distreiñ da vMastodon
     development: Diorren
     edit_profile: Kemmañ ar profil
     export: Ezporzhiañ
     featured_tags: Penngerioù-klik
     import: Enporzhiañ
-    import_and_export: Enporzhiañ hag ezporzhiañ
     notifications: Kemennoù dre bostel
     preferences: Gwellvezioù
     profile: Profil

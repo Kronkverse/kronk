@@ -95,6 +95,13 @@ export const apiGeocodeSearch = (query: string) =>
 // filtered by the caller's visibility on the underlying Event. Powers
 // the events layer on the Mates face and the `?event=<slug>` deep link
 // that focuses on a specific event's pin.
+export interface ApiMapEventPlaceJSON {
+  id: string;
+  name: string;
+  address: string | null;
+  url: string;
+}
+
 export interface ApiMapEventPinJSON {
   id: string;
   slug: string;
@@ -106,6 +113,9 @@ export interface ApiMapEventPinJSON {
   lat: number;
   lng: number;
   zoom: number | null;
+  // The Place it stands on, when its location is a Konnected Place: the
+  // Map draws the two as one marker (docs/spaces/map.md, Events).
+  place?: ApiMapEventPlaceJSON | null;
   host: { acct: string; display_name: string };
   going_count: number;
   country?: ApiMapCountryJSON | null;

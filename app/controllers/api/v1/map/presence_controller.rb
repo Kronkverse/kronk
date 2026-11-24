@@ -60,7 +60,8 @@ class Api::V1::Map::PresenceController < Api::BaseController
       raw_lng: params.require(:lng),
       precision: params.require(:precision),
       scope: params[:share_scope].presence || 'friends',
-      label: params[:label],
+      # Anthemos sends only where the phone is; the pin is named for its town.
+      label: params[:label].presence || Kronk::Geocoder.reverse(params[:lat], params[:lng]),
       note: params[:note],
       ttl_minutes: params[:ttl_minutes].presence || PresenceState::DEFAULT_TTL_MINUTES
     )

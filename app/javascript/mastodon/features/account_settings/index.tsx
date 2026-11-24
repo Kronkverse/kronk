@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import {
   fetchSessions,
@@ -11,16 +11,6 @@ import type {
   SessionActivation,
   LoginActivity,
 } from 'mastodon/api/account_settings';
-import {
-  apiGetAnthemosLinks,
-  apiGetOwnLiveShares,
-  apiStopLiveShare,
-  apiUnlinkAnthemos,
-} from 'mastodon/api/map_live';
-import type {
-  ApiAnthemosLinkJSON,
-  ApiOwnLiveShareJSON,
-} from 'mastodon/api/map_live';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import {
@@ -69,29 +59,14 @@ const messages = defineMessages({
       'That device will be signed out of your account. If it was you, you can sign back in any time.',
   },
   connected: {
-    id: 'account_settings.connected',
+    id: 'account_settings.connected_apps',
     defaultMessage: 'Connected apps',
   },
   connectedDesc: {
-    id: 'account_settings.connected_desc',
+    id: 'account_settings.connected_apps_desc',
     defaultMessage:
-      'Anthemos phones linked to your account, and the live location they are sharing.',
+      'Apps you signed in to with Kronk, and Anthemos phones. They live in Kollection.',
   },
-  noConnected: {
-    id: 'account_settings.no_connected',
-    defaultMessage: 'No Anthemos phone is linked.',
-  },
-  unlink: { id: 'account_settings.unlink', defaultMessage: 'Unlink' },
-  unlinkTitle: {
-    id: 'account_settings.unlink_title',
-    defaultMessage: 'Unlink this phone?',
-  },
-  unlinkMessage: {
-    id: 'account_settings.unlink_message',
-    defaultMessage:
-      'It can no longer share with Kronk, and any live location it is sharing stops now. You can link it again from Anthemos.',
-  },
-  stop: { id: 'account_settings.stop_sharing', defaultMessage: 'Stop' },
   logins: { id: 'account_settings.logins', defaultMessage: 'Recent sign-ins' },
   loginsDesc: {
     id: 'account_settings.logins_desc',
@@ -167,8 +142,6 @@ export const AccountSettings: React.FC = () => {
   const [confirmDialog, confirm] = useConfirmDialog();
   const [sessions, setSessions] = useState<SessionActivation[] | null>(null);
   const [logins, setLogins] = useState<LoginActivity[] | null>(null);
-  const [links, setLinks] = useState<ApiAnthemosLinkJSON[] | null>(null);
-  const [shares, setShares] = useState<ApiOwnLiveShareJSON[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -191,56 +164,10 @@ export const AccountSettings: React.FC = () => {
         if (!cancelled) setLogins([]);
       });
 
-    void Promise.all([apiGetAnthemosLinks(), apiGetOwnLiveShares()])
-      .then(([linkRows, shareRows]) => {
-        if (cancelled) return undefined;
-        setLinks(linkRows);
-        setShares(shareRows);
-        return undefined;
-      })
-      .catch(() => {
-        if (!cancelled) setLinks([]);
-      });
-
     return () => {
       cancelled = true;
     };
   }, []);
-
-  const handleUnlink = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      const id = event.currentTarget.dataset.id;
-      if (!id) return;
-
-      void (async () => {
-        const ok = await confirm({
-          title: intl.formatMessage(messages.unlinkTitle),
-          message: intl.formatMessage(messages.unlinkMessage),
-          confirmLabel: intl.formatMessage(messages.unlink),
-          destructive: true,
-        });
-        if (!ok) return;
-
-        await apiUnlinkAnthemos(id);
-        setLinks((rows) => (rows ?? []).filter((row) => row.id !== id));
-        setShares((rows) => rows.filter((row) => row.link_id !== id));
-      })();
-    },
-    [confirm, intl],
-  );
-
-  const handleStop = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      const id = event.currentTarget.dataset.id;
-      if (!id) return;
-
-      void apiStopLiveShare(id).then(() => {
-        setShares((rows) => rows.filter((row) => row.id !== id));
-        return undefined;
-      });
-    },
-    [],
-  );
 
   const handleRevoke = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -313,87 +240,6 @@ export const AccountSettings: React.FC = () => {
         </SettingsSection>
 
         <SettingsSection
-          title={intl.formatMessage(messages.connected)}
-          description={intl.formatMessage(messages.connectedDesc)}
-        >
-          {links === null ? (
-            <LoadingState />
-          ) : links.length === 0 ? (
-            <p className='settings-page__row-desc'>
-              {intl.formatMessage(messages.noConnected)}
-            </p>
-          ) : (
-            links.map((link) => (
-              <div key={link.id}>
-                <div className='settings-page__row'>
-                  <div className='settings-page__row-body'>
-                    <div className='settings-page__row-label'>
-                      {link.device_name} · Anthemos
-                    </div>
-                    <div className='settings-page__row-desc'>
-                      <RelativeTimestamp
-                        timestamp={link.last_used_at ?? link.created_at}
-                      />
-                    </div>
-                  </div>
-                  <div className='settings-page__row-widget'>
-                    <button
-                      type='button'
-                      className='account-settings__revoke'
-                      data-id={link.id}
-                      onClick={handleUnlink}
-                    >
-                      {intl.formatMessage(messages.unlink)}
-                    </button>
-                  </div>
-                </div>
-                {shares
-                  .filter((share) => share.link_id === link.id)
-                  .map((share) => (
-                    <div key={share.id} className='settings-page__row'>
-                      <div className='settings-page__row-body'>
-                        <div className='settings-page__row-label'>
-                          <FormattedMessage
-                            id='account_settings.live_share'
-                            defaultMessage='Live location with {names}'
-                            values={{
-                              names: intl.formatList(
-                                share.recipients.map((r) => r.name),
-                              ),
-                            }}
-                          />
-                        </div>
-                        <div className='settings-page__row-desc'>
-                          <FormattedMessage
-                            id='account_settings.live_share_until'
-                            defaultMessage='Until {time}'
-                            values={{
-                              time: intl.formatTime(share.expires_at, {
-                                hour: 'numeric',
-                                minute: '2-digit',
-                              }),
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className='settings-page__row-widget'>
-                        <button
-                          type='button'
-                          className='account-settings__revoke'
-                          data-id={share.id}
-                          onClick={handleStop}
-                        >
-                          {intl.formatMessage(messages.stop)}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            ))
-          )}
-        </SettingsSection>
-
-        <SettingsSection
           title={intl.formatMessage(messages.logins)}
           description={intl.formatMessage(messages.loginsDesc)}
         >
@@ -428,6 +274,13 @@ export const AccountSettings: React.FC = () => {
         </SettingsSection>
 
         <SettingsSection title={intl.formatMessage(messages.manage)}>
+          {/* Connected apps live in Kollection's settings (decisions.md,
+              2026-11-23): apps signed in with Kronk, and Anthemos phones. */}
+          <SettingsActionRow
+            to='/hub/kollection/settings'
+            label={intl.formatMessage(messages.connected)}
+            description={intl.formatMessage(messages.connectedDesc)}
+          />
           {MANAGE_LINKS.map((link) => (
             <SettingsActionRow
               key={link.href}

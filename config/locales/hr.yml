@@ -195,17 +195,13 @@ hr:
     revoke_success: Sesija je uspješno opozvana
     title: Sesije
   settings:
-    account: Račun
     account_settings: Postavke računa
     aliases: Pseudonimi računa
     appearance: Izgled
-    authorized_apps: Autorizirane aplikacije
-    back: Natrag na Mastodon
     development: Razvijanje
     edit_profile: Uredi profil
     featured_tags: Istaknuti hashtagovi
     import: Uvezi
-    import_and_export: Uvezi i izvezi
     preferences: Postavke
     profile: Profil
     statuses_cleanup: Automatsko brisanje postova

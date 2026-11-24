@@ -74,9 +74,10 @@ describe('alertsReducer', () => {
     });
   });
 
-  const networkError = (method: string) =>
+  const networkError = (method: string, url = '/api/v1/statuses') =>
     new AxiosError('Network Error', AxiosError.ERR_NETWORK, {
       method,
+      url,
       headers: new AxiosHeaders(),
     });
 
@@ -94,5 +95,33 @@ describe('alertsReducer', () => {
         showAlertForError(networkError('post')) as ReturnType<typeof showAlert>,
       ),
     ).toHaveLength(1);
+  });
+
+  test('an upload whose connection dropped says so in words', () => {
+    const action = showAlertForError(
+      networkError('post', '/api/v2/media'),
+    ) as ReturnType<typeof showAlert>;
+    expect(action.payload.title).toMatchObject({
+      id: 'alert.upload_dropped.title',
+    });
+  });
+
+  test('a file the server refuses as too big says so', () => {
+    const action = showAlertForError(
+      axiosError(413, '<html>413 Request Entity Too Large</html>'),
+    ) as ReturnType<typeof showAlert>;
+    expect(action.payload.title).toMatchObject({
+      id: 'alert.upload_too_big.title',
+    });
+  });
+
+  test('an upload cancelled from the phone notification shows nothing', () => {
+    expect(
+      run(
+        showAlertForError(
+          new AxiosError('canceled', AxiosError.ERR_CANCELED),
+        ) as ReturnType<typeof showAlert>,
+      ),
+    ).toHaveLength(0);
   });
 });

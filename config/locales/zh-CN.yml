@@ -1835,18 +1835,14 @@ zh-CN:
     title: 会话
     view_authentication_history: 查看账号的认证历史
   settings:
-    account: 账号
     account_settings: 账号设置
     aliases: 账号别名
     appearance: 外观
-    authorized_apps: 已授权的应用
-    back: 返回 Mastodon
     development: 开发
     edit_profile: 更改个人资料
     export: 导出
     featured_tags: 精选话题
     import: 导入
-    import_and_export: 导入与导出
     migrate: 账号迁移
     notifications: 邮件通知
     preferences: 偏好设置

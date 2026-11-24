@@ -121,6 +121,16 @@ export type FtdProjectAction =
 export const apiFtdProjectAction = (id: string, action: FtdProjectAction) =>
   apiRequestPost<FtdProject>(`${base}/projects/${id}/${action}`);
 
+// Assign a fractal to someone in the projekt, or take them off it.
+export const apiFtdAssign = (
+  id: string,
+  accountId: string,
+  assigned: boolean,
+) =>
+  apiRequestPost(`${base}/projects/${id}/${assigned ? 'assign' : 'unassign'}`, {
+    account_id: accountId,
+  });
+
 // Its chat, for its page: the Nudges conversation and what's unread.
 export const apiFtdChat = (id: string) =>
   apiRequestGet<{ conversation_id: string; unread: number }>(
@@ -196,6 +206,27 @@ export type FtdItemAction =
 
 export const apiFtdItemAction = (id: string, action: FtdItemAction) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/${action}`);
+
+// Move a checklist entry from one part of the projekt to another (into a
+// fractal, out of one, or between them).
+export const apiFtdMoveItem = (id: string, fromId: string, toId: string) =>
+  apiRequestPost<FtdItem>(`${base}/items/${id}/move`, {
+    from_project_id: fromId,
+    to_project_id: toId,
+  });
+
+// Suggest someone in the projekt for a checklist entry, or take the
+// suggestion back (Kommons "Tagging people on a checklist item"); with no
+// one given, it's you saying it's not for you.
+export const apiFtdSuggest = (
+  id: string,
+  accountId: string | null,
+  on: boolean,
+) =>
+  apiRequestPost<FtdItem>(
+    `${base}/items/${id}/${on ? 'suggest' : 'unsuggest'}`,
+    accountId ? { account_id: accountId } : {},
+  );
 
 // How much of a need you're bringing (0 takes it back); from your
 // Mycelium when `myceliumItemId` is given.

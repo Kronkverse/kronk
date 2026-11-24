@@ -22,6 +22,7 @@ import { changeUploadCompose } from 'mastodon/actions/compose_typed';
 import { Button } from 'mastodon/components/button';
 import { GIFV } from 'mastodon/components/gifv';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
+import { PhotoDropTarget } from 'mastodon/components/media';
 import { Skeleton } from 'mastodon/components/skeleton';
 import { Audio } from 'mastodon/features/audio';
 import { CharacterCounter } from 'mastodon/features/compose/components/character_counter';
@@ -81,7 +82,7 @@ const UploadButton: React.FC<{
   );
 
   return (
-    <label>
+    <PhotoDropTarget as='label'>
       <Button onClick={handleClick}>{children}</Button>
 
       <input
@@ -92,7 +93,7 @@ const UploadButton: React.FC<{
         onChange={handleChange}
         style={{ display: 'none' }}
       />
-    </label>
+    </PhotoDropTarget>
   );
 };
 

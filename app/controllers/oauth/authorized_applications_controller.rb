@@ -2,9 +2,13 @@
 
 class OAuth::AuthorizedApplicationsController < Doorkeeper::AuthorizedApplicationsController
   skip_before_action :authenticate_resource_owner!
+  skip_before_action :validate_resource_owner
 
+  # Remember the page first, so signing in comes back here; Doorkeeper 5.9's
+  # validate_resource_owner would otherwise redirect before it is stored.
   before_action :store_current_location
   before_action :authenticate_resource_owner!
+  before_action :validate_resource_owner
   before_action :require_not_suspended!, only: :destroy
 
   before_action :set_last_used_at_by_app, only: :index, unless: -> { request.format == :json }

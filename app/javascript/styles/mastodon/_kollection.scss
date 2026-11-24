@@ -1,0 +1,239 @@
+// Kollection — /hub/kollection. The apps linked to Kronk.
+// See docs/spaces/kollection.md. The grid, the detail page and the
+// composer are the kit's (SpaceGrid, KornerDetail, ComposeShell); this
+// sizes only what is Kollection's own: an app's icon, its keys, and the
+// Pulled chip.
+
+.kollection__actions {
+  margin-bottom: var(--sp-4, 16px);
+}
+
+.space-card__tag--pulled {
+  border-color: var(--warning-red);
+  color: var(--warning-red);
+}
+
+.kollection-app {
+  &__cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 1;
+    object-fit: cover;
+    border-radius: var(--radius-large);
+  }
+
+  &__icon {
+    display: block;
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+    box-shadow: var(--elevation-card);
+  }
+
+  // The big Open, as on an app store page.
+  &__open {
+    min-width: 8rem;
+    justify-content: center;
+  }
+
+  // Screenshots in a row that scrolls sideways, each its own shape.
+  &__shots {
+    display: flex;
+    gap: var(--sp-3, 12px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    list-style: none;
+    margin: var(--sp-4, 16px) 0 0;
+    padding: 0 0 var(--sp-2, 8px);
+
+    li {
+      flex: none;
+      scroll-snap-align: start;
+    }
+
+    a {
+      display: block;
+      line-height: 0;
+    }
+
+    img {
+      height: 320px;
+      max-width: 80vw;
+      width: auto;
+      object-fit: contain;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-medium);
+      background: var(--surface-elevated);
+    }
+  }
+
+  &__description {
+    white-space: pre-line;
+  }
+
+  &__details {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--sp-2, 8px) var(--sp-4, 16px);
+    margin: 0;
+    font-size: 15px;
+
+    dt {
+      color: var(--text-muted);
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text-primary);
+      overflow-wrap: anywhere;
+    }
+
+    a {
+      color: var(--accent-text);
+    }
+  }
+
+  &__mates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3, 12px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    a {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2, 8px);
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 15px;
+    }
+
+    img {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-round);
+      object-fit: cover;
+    }
+  }
+
+  &__section {
+    margin-top: var(--sp-5, 24px);
+  }
+
+  &__heading {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--text-primary);
+    margin: 0 0 var(--sp-2, 8px);
+  }
+
+  &__text,
+  &__scopes {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin: 0;
+  }
+
+  &__scopes {
+    padding-inline-start: var(--sp-5, 24px);
+
+    li + li {
+      margin-top: var(--sp-1, 4px);
+    }
+  }
+
+  &__pulled,
+  &__error {
+    color: var(--warning-red);
+    font-size: 15px;
+    margin: 0 0 var(--sp-3, 12px);
+  }
+
+  &__keys {
+    margin: var(--sp-3, 12px) 0 0;
+
+    dt {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: var(--sp-3, 12px);
+    }
+
+    dd {
+      margin: var(--sp-1, 4px) 0 0;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text-primary);
+      word-break: break-all;
+      user-select: all;
+    }
+  }
+}
+
+.kollection-composer {
+  &__cover {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+  }
+
+  &__cover-preview {
+    width: 180px;
+    aspect-ratio: 3 / 1;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+  }
+
+  &__shots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2, 8px);
+    list-style: none;
+    margin: 0 0 var(--sp-2, 8px);
+    padding: 0;
+  }
+
+  &__shot {
+    position: relative;
+
+    img {
+      display: block;
+      height: 120px;
+      width: auto;
+      border-radius: var(--radius-small);
+      border: 1px solid var(--border-default);
+    }
+  }
+
+  &__shot-remove {
+    position: absolute;
+    inset-block-start: var(--sp-1, 4px);
+    inset-inline-end: var(--sp-1, 4px);
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--surface-primary) 80%, transparent);
+    color: var(--text-primary);
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+  }
+
+  &__icon-preview {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+  }
+}

@@ -32,7 +32,7 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
     within('.attachment-picker') { click_on 'Kuestions' }
 
     within('.krew-detail__kuestions') do
-      expect(page).to have_css('.space-grid__cell:last-child .home-kuestions__card--ask', text: 'Ask')
+      expect(page).to have_css('.space-grid__cell:first-child .home-kuestions__card--ask', text: 'Ask')
     end
     within('.attachment-section') { expect(page).to have_button('Kuestions') }
     expect(page).to have_no_css('.attachment-picker')
@@ -52,7 +52,11 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
     within('.compose-shell') { click_on 'Ask' }
 
     expect(page).to have_current_path("/hub/krew/#{krew.slug}")
-    within('.krew-detail__kuestions') { expect(page).to have_css('.home-kuestions__card', text: 'Which weekend for the harvest?') }
+    within('.krew-detail__kuestions') do
+      expect(page).to have_css('.home-kuestions__card', text: 'Which weekend for the harvest?')
+      # Kommons "Ask Question" (2026-11-22): Ask stays first, on the left.
+      expect(page).to have_css('.space-grid__cell:first-child .home-kuestions__card--ask')
+    end
     question = Question.find_by(title: 'Which weekend for the harvest?')
     expect(question.krew_id).to eq krew.id
     expect(question.status.krews).to eq [krew]
@@ -77,6 +81,29 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
       click_on 'Answer'
       expect(page).to have_text('I will')
       click_on 'Next kuestion'
+      expect(page).to have_css('.home-kuestion-dialog__q', text: 'Which weekend?')
+    end
+  end
+
+  # Kommons "Kuestions" (2026-11-22): ‹ and › step back and on through
+  # the row at any time, answered or not, round from the last to the first.
+  it 'steps through the row with the arrows', :aggregate_failures do
+    turn_on_kuestions
+    Question.create!(title: 'Who brings the generator?', created_by_account: asker, krew: krew, locked: true)
+    Question.create!(title: 'Which weekend?', created_by_account: asker, krew: krew, locked: true)
+
+    visit "/hub/krew/#{krew.slug}"
+    within('.krew-detail__kuestions') { find('.home-kuestions__card', text: 'Who brings the generator?').click }
+
+    # The row is newest first, so this one is the second of two.
+    within('.compose-shell') do
+      expect(page).to have_text('2 of 2')
+      within('.home-kuestion-dialog__stepper') { click_button 'Next' }
+      expect(page).to have_css('.home-kuestion-dialog__q', text: 'Which weekend?')
+      expect(page).to have_text('1 of 2')
+      within('.home-kuestion-dialog__stepper') { click_button 'Previous' }
+      expect(page).to have_css('.home-kuestion-dialog__q', text: 'Who brings the generator?')
+      within('.home-kuestion-dialog__stepper') { click_button 'Previous' }
       expect(page).to have_css('.home-kuestion-dialog__q', text: 'Which weekend?')
     end
   end
@@ -111,7 +138,8 @@ RSpec.describe 'Kuestions in a Krew', :js, :streaming do
 
     visit "/hub/krew/#{krew.slug}"
     within('.krew-detail__kuestions') { find('.home-kuestions__card', text: 'Who brings the generator?').click }
-    within('.compose-shell') { click_on 'Delete Kuestion' }
+    # A red pill in the bottom bar, beside Cancel (Tal, 2026-11-23).
+    within('.compose-shell__footer') { find('.korner-pill--destructive[aria-label="Delete Kuestion"]', text: 'Delete').click }
     within('.confirm-dialog__panel') { click_on 'Delete' }
 
     within('.krew-detail__kuestions') { expect(page).to have_no_css('.home-kuestions__card', text: 'Who brings the generator?') }

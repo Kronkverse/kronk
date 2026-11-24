@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
-
 import { useLocation } from 'react-router-dom';
 
 import type { Feature, Polygon } from 'geojson';
@@ -9,17 +7,14 @@ import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import GroupIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
   apiGetPresence,
   apiGetSelfPresence,
   apiRemovePresence,
 } from 'mastodon/api/map';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
-import { Icon } from 'mastodon/components/icon';
 import { MapNeedsWebGL } from 'mastodon/components/map_needs_webgl';
 
-import { AnthemosMissing, AnthemosShare } from './anthemos_share';
 import {
   BASEMAP_URL,
   HOME_CENTER,
@@ -32,7 +27,8 @@ import { CountryLayer } from './country_layer';
 import { CountryPrompt, useShouldOfferCountry } from './country_prompt';
 import { EventLayer } from './event_layer';
 import { LiveLayer } from './live_layer';
-import { NearMe } from './near_me';
+import { AnthemosMissing, LocationMenu } from './location_menu';
+import { MapShowMenu, useMapShow } from './map_show';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
@@ -59,23 +55,8 @@ import { PlaceLayer } from './place_layer';
 //     with a chevron indicating the outward direction. Tap → fly the
 //     map to that mate. Marks in similar directions collapse to a
 //     "+N" pill so a hundred mates in one direction stay legible.
-//     Hidden at anonymised zoom (the in-view panel is the only
-//     surface then).
-
-const messages = defineMessages({
-  hereN: {
-    id: 'map.cluster.here',
-    defaultMessage: '{count} here',
-  },
-  inViewToggle: {
-    id: 'map.in_view.toggle',
-    defaultMessage: '{count, plural, one {# mate} other {# mates}} in view',
-  },
-  inViewEmpty: {
-    id: 'map.in_view.empty',
-    defaultMessage: 'No mates in view. Zoom out.',
-  },
-});
+//     Hidden at anonymised zoom (the Mates list down the side is the
+//     way to find someone then).
 
 const POLL_MS = 30_000;
 // Two pins whose projected pixel positions are within this many CSS
@@ -193,7 +174,6 @@ const buildCluster = (count: number, title: string): HTMLElement => {
 };
 
 export const MatesView: React.FC = () => {
-  const intl = useIntl();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -202,6 +182,18 @@ export const MatesView: React.FC = () => {
   const [noMap, setNoMap] = useState(() => !supportsWebGL());
   const [pins, setPins] = useState<ApiPresencePinJSON[]>([]);
   const [selfPin, setSelfPin] = useState<ApiPresencePinJSON | null>(null);
+  // What the viewer chose to see (the cog, map_show.tsx).
+  const { show, setLayer } = useMapShow();
+  // The Places your events stand on: the event marker is the one marker
+  // there, so PlaceLayer leaves their pins off (docs/spaces/map.md, Events).
+  const [eventPlaces, setEventPlacesState] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const setEventPlaces = useCallback((ids: ReadonlySet<string>) => {
+    setEventPlacesState((was) =>
+      was.size === ids.size && [...ids].every((id) => was.has(id)) ? was : ids,
+    );
+  }, []);
 
   // People strip is sorted closest-to-me first when a self-pin exists;
   // otherwise the API's own order is preserved (freshest first, per
@@ -234,7 +226,6 @@ export const MatesView: React.FC = () => {
     w: number;
     h: number;
   } | null>(null);
-  const [inViewOpen, setInViewOpen] = useState(false);
   // Whether the place-a-pin panel is open. Owned here (was internal to
   // PlaceControl before the Tal 2026-08-10 rework) so the trigger can
   // live in the people-strip's self-slot instead of a bottom-left FAB.
@@ -408,20 +399,12 @@ export const MatesView: React.FC = () => {
     [pins, selfPin],
   );
 
-  // Which pins fall inside the current viewport? Used both by the
-  // in-view panel and to decide whether to draw them at all.
-  const pinsInView = useMemo(() => {
-    const bounds = viewport.bounds;
-    if (!bounds) return allPins;
-    return allPins.filter((p) => bounds.contains([p.lng, p.lat]));
-  }, [allPins, viewport]);
-
   const anonymising = viewport.zoom >= ANON_ZOOM;
 
   // Off-map compass marks. Recomputed whenever the viewport, the
   // canvas size, or the pin set changes. Only relevant when we're NOT
-  // anonymising — at close zoom the in-view panel is the whole
-  // affordance and the compass would just crowd the same information.
+  // anonymising — at close zoom no pin shows, and the Mates list down
+  // the side is the way to find someone.
   const compassMarks = useMemo(() => {
     const map = mapRef.current;
     const bounds = viewport.bounds;
@@ -512,11 +495,11 @@ export const MatesView: React.FC = () => {
     });
     markersRef.current = [];
 
-    // Anonymised zoom: no map markers at all. The in-view panel below
-    // takes over as the only surface a viewer can inspect. The fuzz
-    // layer also empties so a screenshot at this zoom shows nothing
-    // pin-shaped.
-    if (anonymising) {
+    // Anonymised zoom: no map markers at all; the Mates list down the
+    // side is how to find someone. The fuzz layer also empties so a
+    // screenshot at this zoom shows nothing pin-shaped.
+    // Mates switched off with the cog: none of them, nor their circles.
+    if (anonymising || !show.mates) {
       const source = map.getSource<maplibregl.GeoJSONSource>('fuzz');
       void source?.setData({ type: 'FeatureCollection', features: [] });
       return;
@@ -567,7 +550,7 @@ export const MatesView: React.FC = () => {
       type: 'FeatureCollection',
       features: allPins.map(circleFeature),
     });
-  }, [allPins, ready, anonymising, viewport]);
+  }, [allPins, ready, anonymising, viewport, show.mates]);
 
   // ── Place / remove me ─────────────────────────────────────────────
   // Pin-drop: the Country your new pin is on, offered as where you live.
@@ -610,16 +593,31 @@ export const MatesView: React.FC = () => {
     });
   }, [refresh]);
 
-  const handleSelectPin = useCallback((pin: ApiPresencePinJSON) => {
-    setSelectedAccountId(pin.account_id);
-    const map = mapRef.current;
-    if (!map) return;
-    map.flyTo({
-      center: [pin.lng, pin.lat],
-      zoom: Math.min(Math.max(map.getZoom(), 9), ANON_ZOOM - 0.5),
-      duration: 900,
-    });
-  }, []);
+  // The Mates list stays when Mates are switched off; picking someone
+  // from it shows Mates again, so the tap lands on them.
+  const handleSelectPin = useCallback(
+    (pin: ApiPresencePinJSON) => {
+      setLayer('mates', true);
+      setSelectedAccountId(pin.account_id);
+      const map = mapRef.current;
+      if (!map) return;
+      map.flyTo({
+        center: [pin.lng, pin.lat],
+        zoom: Math.min(Math.max(map.getZoom(), 9), ANON_ZOOM - 0.5),
+        duration: 900,
+      });
+    },
+    [setLayer],
+  );
+
+  // A link to an event, a Place or a live location shows that layer, even
+  // when it was switched off, so the link still lands on something.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.has('event')) setLayer('events', true);
+    if (params.has('map_place')) setLayer('places', true);
+    if (params.has('live')) setLayer('live', true);
+  }, [location.search, setLayer]);
 
   const closeCard = useCallback(() => {
     setSelectedAccountId(null);
@@ -672,13 +670,6 @@ export const MatesView: React.FC = () => {
     [refresh],
   );
 
-  const toggleInView = useCallback(() => {
-    setInViewOpen((v) => !v);
-  }, []);
-  const closeInView = useCallback(() => {
-    setInViewOpen(false);
-  }, []);
-
   if (noMap) return <MapNeedsWebGL />;
 
   return (
@@ -693,41 +684,19 @@ export const MatesView: React.FC = () => {
       <div className='map-mates__stage'>
         <div ref={containerRef} className='map-mates__canvas' />
 
-        {/* At close zoom, the on-map markers hide and this panel is the
-            only affordance for finding a mate. A drop-down of avatar
-            bubbles opens on click. Sits top-left so it doesn't fight
-            the zoom controls on the right. */}
-        {anonymising && (
-          <InViewPanel
-            pins={pinsInView}
-            open={inViewOpen}
-            onToggle={toggleInView}
-            onSelect={handleSelectPin}
-            onClose={closeInView}
-            intl={intl}
-          />
-        )}
-
-        {/* Near me: flies to your pin and lists what's closest. Sits
-            under the in-view panel when that takes the corner. */}
-        <NearMe
-          map={mapRef.current}
-          selfPin={selfPin}
-          pins={pins}
-          lower={anonymising}
-          onSelectPin={handleSelectPin}
-          onOpenPlace={openPlacePanel}
-        >
-          {/* Live location, handed over to Anthemos. */}
-          <AnthemosShare />
-        </NearMe>
+        {/* Your location, from Anthemos: Share and Update (only once a
+            phone is linked), and beside it the cog for what the map shows. */}
+        <div className='map-corner'>
+          <LocationMenu onPinMoved={refresh} />
+          <MapShowMenu show={show} onChange={setLayer} />
+        </div>
 
         {/* Off-map compass overlay — a marker at the canvas edge per
             direction that has mates outside the viewport. Absolute-
             positioned inside the stage; pointer-events are only enabled
             on the marks themselves so the map behind them still pans
             and zooms freely. */}
-        {!anonymising && compassMarks.length > 0 && (
+        {!anonymising && show.mates && compassMarks.length > 0 && (
           <div className='map-compass' aria-hidden={false}>
             {compassMarks.map((mark) => (
               <CompassMark
@@ -751,7 +720,7 @@ export const MatesView: React.FC = () => {
         />
 
         {/* Pin card. Opens when a pin is tapped (solo teardrop, compass
-            mark, in-view row, or people-strip tile). Bottom-left over
+            mark, or people-strip tile). Bottom-left over
             the map — matches the Kommunity orb tap card. Sits above the
             attribution control (see .maplibregl-ctrl-bottom-left offset
             in _map.scss). */}
@@ -772,7 +741,13 @@ export const MatesView: React.FC = () => {
             markers, and reads `?event=<slug>` from the URL to focus
             on a specific event when someone follows the location link
             from event_detail. */}
-        <EventLayer map={mapRef.current} ready={ready} />
+        {show.events && (
+          <EventLayer
+            map={mapRef.current}
+            ready={ready}
+            onPlaces={setEventPlaces}
+          />
+        )}
 
         {/* First Nations Country — a picture layer over Australia, under
             the pins, switched on from its own button under the zoom. */}
@@ -780,103 +755,22 @@ export const MatesView: React.FC = () => {
 
         {/* Places — exact spots with an address that things Konnect
             to (docs/spaces/map.md, Places). Reads `?map_place=<id>`. */}
-        <PlaceLayer map={mapRef.current} ready={ready} />
+        {show.places && (
+          <PlaceLayer
+            map={mapRef.current}
+            ready={ready}
+            hidden={show.events ? eventPlaces : undefined}
+          />
+        )}
 
         {/* Live location — Mates sharing exactly where they are with you
             from Anthemos (docs/spaces/map.md, Live location). Reads
             `?live=<account id>`. */}
-        <LiveLayer map={mapRef.current} ready={ready} />
+        {show.live && <LiveLayer map={mapRef.current} ready={ready} />}
 
-        {/* Back from Share live location with no Anthemos on the phone. */}
+        {/* Back from Share or Update with no Anthemos on the phone. */}
         <AnthemosMissing />
       </div>
-    </div>
-  );
-};
-
-// ── In-view mates panel ─────────────────────────────────────────────
-// At close zoom, precise pins hide. This surface takes over: a
-// count pill that expands into a dropdown of avatar bubbles. Each
-// bubble tap re-centres the map on that mate (still clamped to
-// ANON_ZOOM - 0.5 by handleSelectPin so the anonymisation stays
-// respected).
-
-const InViewRow: React.FC<{
-  pin: ApiPresencePinJSON;
-  onSelect: (pin: ApiPresencePinJSON) => void;
-}> = ({ pin, onSelect }) => {
-  const handleClick = useCallback(() => {
-    onSelect(pin);
-  }, [pin, onSelect]);
-  return (
-    <button
-      type='button'
-      className={`map-in-view__row${pin.self ? ' map-in-view__row--self' : ''}`}
-      onClick={handleClick}
-    >
-      <span
-        className='map-in-view__avatar'
-        style={{ backgroundImage: `url("${pin.avatar}")` }}
-      />
-      <span className='map-in-view__name'>{pin.name}</span>
-      <span className='map-in-view__handle'>@{pin.handle}</span>
-    </button>
-  );
-};
-
-interface InViewPanelProps {
-  pins: ApiPresencePinJSON[];
-  open: boolean;
-  onToggle: () => void;
-  onSelect: (pin: ApiPresencePinJSON) => void;
-  onClose: () => void;
-  intl: ReturnType<typeof useIntl>;
-}
-
-const InViewPanel: React.FC<InViewPanelProps> = ({
-  pins,
-  open,
-  onToggle,
-  onSelect,
-  onClose,
-  intl,
-}) => {
-  const count = pins.length;
-  const handleSelectAndClose = useCallback(
-    (pin: ApiPresencePinJSON) => {
-      onSelect(pin);
-      onClose();
-    },
-    [onSelect, onClose],
-  );
-  return (
-    <div className='map-in-view'>
-      <button
-        type='button'
-        className='map-in-view__toggle'
-        onClick={onToggle}
-        aria-expanded={open}
-      >
-        <Icon id='groups' icon={GroupIcon} />
-        <span>{intl.formatMessage(messages.inViewToggle, { count })}</span>
-      </button>
-      {open && (
-        <div className='map-in-view__panel' role='listbox'>
-          {count === 0 ? (
-            <p className='map-in-view__empty'>
-              <FormattedMessage {...messages.inViewEmpty} />
-            </p>
-          ) : (
-            pins.map((pin) => (
-              <InViewRow
-                key={pin.account_id}
-                pin={pin}
-                onSelect={handleSelectAndClose}
-              />
-            ))
-          )}
-        </div>
-      )}
     </div>
   );
 };

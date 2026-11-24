@@ -69,6 +69,7 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     claim = @item.claims.new(account: current_account)
     return render_invalid(claim) unless claim.save
 
+    took_it_on!
     log!(home, @item, 'claimed')
     render json: view.item(@item)
   end
@@ -96,6 +97,7 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
       mine.placements.create!(project: home)
     end
     log!(home, @item, 'bringing', quantity: amount, unit: @item.unit) if amount > before
+    took_it_on! if amount.positive?
 
     render json: view.item(@item.reload)
   end
@@ -134,10 +136,69 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     render json: view.item(@item)
   end
 
+  # Move a checklist entry from one part to another of the same projekt:
+  # into a fractal, out of it, or from one fractal to the next (Kommons
+  # "drag and drop/move checklist items", 2026-11-22). Anyone in the
+  # projekt can, as they can tick it or add to it.
+  def move
+    require_member!(@item.root)
+    from = @item.placements.find_by!(project_id: params.require(:from_project_id))
+    to = Freethedream::Project.find(params.require(:to_project_id))
+    raise ActiveRecord::RecordNotFound unless to.top_id == @item.root_id
+
+    Freethedream::Item.transaction do
+      if @item.placements.exists?(project_id: to.id)
+        from.destroy!
+      else
+        from.update!(project: to)
+      end
+    end
+    render json: view.item(@item.reload)
+  end
+
+  # Suggest someone in the projekt for a checklist entry (Kommons "Tagging
+  # people on a checklist item", 2026-11-22: "If i know someone has a
+  # generator, i would suggest them"). Anyone in the projekt can, from the
+  # entry's ⋯ menu; the person suggested is told.
+  def suggest
+    require_member!(@item.root)
+    account = Account.find(params.require(:account_id))
+    suggestion = @item.suggestions.find_or_initialize_by(account: account)
+    if suggestion.new_record?
+      suggestion.suggested_by = current_account
+      return render_invalid(suggestion) unless suggestion.save
+
+      if account.id != current_account.id
+        Kronk::KornerEvents.publish(
+          'freethedream.item.suggested',
+          actor_account_id: current_account.id,
+          recipient_account_id: account.id,
+          item_id: @item.id
+        )
+      end
+    end
+    render json: view.item(@item.reload)
+  end
+
+  # Take a suggestion back: anyone in the projekt (as they could make it),
+  # or the person suggested, saying it's not for them (no `account_id`).
+  def unsuggest
+    account_id = params[:account_id].presence || current_account.id
+    permit!(account_id.to_s == current_account.id.to_s || @item.root.member?(current_account))
+    @item.suggestions.where(account_id: account_id).delete_all
+    render json: view.item(@item.reload)
+  end
+
   private
 
   def set_item
     @item = Freethedream::Item.by_link!(params[:id])
+  end
+
+  # Someone suggested for it has taken it on: the suggestion has done its
+  # job.
+  def took_it_on!
+    @item.suggestions.where(account_id: current_account.id).delete_all
   end
 
   # The section an item first went into.

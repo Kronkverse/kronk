@@ -70,6 +70,17 @@
   border-radius: var(--radius-large) var(--radius-large) 0 0;
 }
 
+// Each page in the Stage fills its width, up to the page's own
+// max-width. A page centred with `margin: 0 auto` (most are) isn't
+// stretched by the flex column, so without this it shrank or grew to
+// its content: settings pages came out a different width each, and a
+// long unbreakable line (a one-line teaser) pushed a page past a
+// phone's edge. Guarded by spec/system/phone_crossovers_spec.rb.
+.kronk-stage > * {
+  width: 100%;
+  min-width: 0;
+}
+
 // border-box for the whole Stage subtree — standardised, so no korner
 // can overflow the Stage the way the Hub did. Mastodon has NO global
 // `* { box-sizing: inherit }`, and the classic `.columns-area--mobile`
@@ -241,7 +252,7 @@ body:has(.kronk-stage) {
 
 // Mobile: pills stack above the title so a long segmented picker
 // doesn't shrink its labels or overlap the h1.
-@container frame (width <= 889px) {
+@media (width <= 889px) {
   .space-header-row {
     padding: 0.75rem 0.75rem 0.5rem;
     display: flex;

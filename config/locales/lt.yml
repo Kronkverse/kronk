@@ -1229,18 +1229,14 @@ lt:
     title: Seansai
     view_authentication_history: Peržiūrėti paskyros tapatybės nustatymo istoriją
   settings:
-    account: Paskyra
     account_settings: Paskyros nustatymai
     aliases: Paskyros pseudonimai
     appearance: Išvaizda
-    authorized_apps: Leidžiamos programėlės
-    back: Grįžti į Mastodon
     development: Kūrimas
     edit_profile: Redaguoti profilį
     export: Eksportuoti
     featured_tags: Išskirtos grotažymės
     import: Importuoti
-    import_and_export: Importas ir eksportas
     migrate: Paskyros migracija
     notifications: El. laiško pranešimai
     preferences: Nuostatos

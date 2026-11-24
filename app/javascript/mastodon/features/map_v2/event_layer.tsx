@@ -1,17 +1,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FormattedDate, FormattedTime } from 'react-intl';
+import {
+  defineMessages,
+  FormattedDate,
+  FormattedTime,
+  useIntl,
+} from 'react-intl';
+import type { IntlShape } from 'react-intl';
 
 import { Link, useLocation } from 'react-router-dom';
 
 import * as maplibregl from 'maplibre-gl';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
+import LocationIcon from '@/material-icons/400-24px/location_on.svg?react';
 import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import { apiGetMapEvents } from 'mastodon/api/map';
-import type { ApiMapEventPinJSON } from 'mastodon/api/map';
+import type {
+  ApiMapCountryJSON,
+  ApiMapEventPinJSON,
+  ApiMapEventPlaceJSON,
+} from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { CountryLine } from './country_line';
 
@@ -27,14 +40,23 @@ import { CountryLine } from './country_line';
 // location row now points at `/hub/map?event=<slug>`, and this module
 // flies the map to that pin + opens its preview card on arrival.
 
-// SVG markup for the spiral glyph used inside the event marker bulb.
-// Inlined so the marker DOM (which MapLibre owns) can render without
-// pulling the React icon component in.
-const SPIRAL_SVG =
-  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='currentColor'><path d='M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q75 0 141 26t118 71.5Q791-737 820.5-676T860-540q0 55-21 102t-57.5 82.5Q745-320 697.5-299T595-278q-45 0-84.5-16.5T441-341q-30-30-46.5-69.5T378-495q0-32 12-60.5t33.5-50Q445-627 473-639t60-12q22 0 43 8t39 24q17 15 26.5 36.5T651-535q0 14-5.5 27T630-484q-10 10-22.5 15.5T582-463q-6 0-11-2t-9-6q-4-4-6.5-9.5T553-493q0-13 9-22t22-9q-1-16-12-27t-27-11q-19 0-33.5 8.5T487-529q-11 15-17 33t-6 38q0 45 32.5 76.5T574-350q40 0 74.5-16.5t60.5-45q26-28.5 40-67T763-560q0-49-19-92.5T692-729q-33-33-77-52t-95-19q-56 0-105.5 21T329-720q-36 36-57 85.5T251-529q0 61 23 115t63.5 94.5Q378-279 432-256t115 23q68 0 129-26t106.5-71.5Q828-376 855-437.5T882-570q0-83-32.5-156.5T760-855q-56-55-131.5-87T466-974q-85 0-158.5 32T177-855q-56 55-88.5 128.5T56-570q0 88 33.5 164T182-273q59 59 138 91.5T480-149q57 0 108.5-15T682-207l45 45q-53 40-115 61T480-80Z'/></svg>";
+// One marker per spot (docs/spaces/map.md, Events). An event whose
+// location is a Konnected Place stands on that Place, and the Places layer
+// draws Places too, so the two used to stack: a Place pin over an event
+// tile. Now the events at a spot are one marker, the Kalendar spiral, and the
+// Place they stand on leaves its own pin off (`onPlaces`, which mates_view
+// hands to PlaceLayer). Tapping it opens one card: the events, then the
+// Place.
 
-// Marker DOM — vanilla DOM (MapLibre owns positioning). Spiral glyph
-// in a purple square bulb; the huddle variant swaps to a videocam.
+const messages = defineMessages({
+  close: { id: 'map.event_card.close', defaultMessage: 'Close' },
+  open: { id: 'map.event_card.open', defaultMessage: 'Open in Kalendar' },
+  spot: {
+    id: 'map.event_pin.label',
+    defaultMessage: '{count, plural, one {{title}} other {# events here}}',
+  },
+});
+
 // What's on (docs/spaces/map.md, Events): an Event happening now glows and
 // pulses, and one in the next week glows softly, so you can see at a glance
 // where things are on. An Event with no end counts as on for three hours.
@@ -52,28 +74,107 @@ const whatsOn = (
   return null;
 };
 
-const buildEventMarker = (pin: ApiMapEventPinJSON): HTMLElement => {
-  const el = document.createElement('div');
+// The events at one spot: the ones on one Place, or at one point. Soonest
+// first, so the marker shows the next one.
+interface Spot {
+  key: string;
+  lat: number;
+  lng: number;
+  zoom: number | null;
+  place: ApiMapEventPlaceJSON | null;
+  events: ApiMapEventPinJSON[];
+}
+
+const spotKey = (pin: ApiMapEventPinJSON) =>
+  pin.place
+    ? `place:${pin.place.id}`
+    : `at:${pin.lat.toFixed(5)},${pin.lng.toFixed(5)}`;
+
+const toSpots = (events: ApiMapEventPinJSON[]): Spot[] => {
+  const spots = new Map<string, Spot>();
+  [...events]
+    .sort((a, b) => Date.parse(a.start_time) - Date.parse(b.start_time))
+    .forEach((pin) => {
+      const key = spotKey(pin);
+      const spot = spots.get(key);
+      if (spot) spot.events.push(pin);
+      else
+        spots.set(key, {
+          key,
+          lat: pin.lat,
+          lng: pin.lng,
+          zoom: pin.zoom,
+          place: pin.place ?? null,
+          events: [pin],
+        });
+    });
+  return [...spots.values()];
+};
+
+// The busiest "what's on" among a spot's events.
+const spotOn = (spot: Spot) => {
+  const on = spot.events.map((pin) => whatsOn(pin));
+  if (on.includes('now')) return 'now';
+  if (on.includes('soon')) return 'soon';
+  return null;
+};
+
+// The Kalendar korner's own glyph (its manifest's icon, the one on the
+// Kalendar tile and a KornerRowCard), as markup for a marker MapLibre owns.
+let kalendarGlyph: string | null = null;
+const kalendarMarkup = () =>
+  (kalendarGlyph ??= renderToStaticMarkup(
+    <Icon id='korner-kalendar' icon={kornerIcon('kalendar')} />,
+  ));
+
+// Marker DOM (MapLibre owns positioning): the Kalendar spiral, white on an
+// accent disc with a ring and a point at the spot (Tal, 2026-11-23), so it
+// reads on any Country's colour in either theme. "+2" when more events
+// share the spot. Text goes in with textContent, so a title can't become
+// markup.
+const buildSpotMarker = (spot: Spot, intl: IntlShape): HTMLElement => {
+  const next = spot.events[0];
+  if (!next) throw new Error('A spot has an event');
+  const el = document.createElement('button');
+  el.type = 'button';
   el.className = 'map-event-pin';
-  el.title = pin.title;
-  if (pin.event_type === 'huddle') el.classList.add('map-event-pin--huddle');
-  const on = whatsOn(pin);
+  const label = intl.formatMessage(messages.spot, {
+    count: spot.events.length,
+    title: next.title,
+  });
+  el.title = label;
+  el.setAttribute('aria-label', label);
+  if (spot.events.every((pin) => pin.event_type === 'huddle'))
+    el.classList.add('map-event-pin--huddle');
+  const on = spotOn(spot);
   if (on) el.classList.add(`map-event-pin--${on}`);
-  const bulb = document.createElement('div');
-  bulb.className = 'map-event-pin__bulb';
-  bulb.innerHTML = SPIRAL_SVG;
-  el.appendChild(bulb);
+
+  const disc = document.createElement('span');
+  disc.className = 'map-event-pin__disc';
+  disc.innerHTML = kalendarMarkup();
+  el.appendChild(disc);
+
+  if (spot.events.length > 1) {
+    const more = document.createElement('span');
+    more.className = 'map-event-pin__more';
+    more.textContent = `+${spot.events.length - 1}`;
+    el.appendChild(more);
+  }
   return el;
 };
 
 interface Props {
   map: maplibregl.Map | null;
   ready: boolean;
+  // The Places events stand on, whose own pins the Places layer leaves off.
+  onPlaces?: (ids: ReadonlySet<string>) => void;
 }
 
-export const EventLayer: React.FC<Props> = ({ map, ready }) => {
+export const EventLayer: React.FC<Props> = ({ map, ready, onPlaces }) => {
+  const intl = useIntl();
   const [events, setEvents] = useState<ApiMapEventPinJSON[]>([]);
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const spots = useMemo(() => toSpots(events), [events]);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const location = useLocation();
 
@@ -94,6 +195,12 @@ export const EventLayer: React.FC<Props> = ({ map, ready }) => {
       .catch(() => undefined);
   }, [requestedSlug]);
 
+  useEffect(() => {
+    onPlaces?.(
+      new Set(spots.flatMap((spot) => (spot.place ? [spot.place.id] : []))),
+    );
+  }, [spots, onPlaces]);
+
   // ── Render markers ───────────────────────────────────────────────
   useEffect(() => {
     if (!map || !ready) return;
@@ -105,19 +212,19 @@ export const EventLayer: React.FC<Props> = ({ map, ready }) => {
     });
     markersRef.current = [];
 
-    markersRef.current = events.map((pin) => {
-      const el = buildEventMarker(pin);
+    markersRef.current = spots.map((spot) => {
+      const el = buildSpotMarker(spot, intl);
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        setSelectedSlug(pin.slug);
+        setSelectedKey(spot.key);
         map.flyTo({
-          center: [pin.lng, pin.lat],
+          center: [spot.lng, spot.lat],
           zoom: Math.min(Math.max(map.getZoom(), 12), 15),
           duration: 700,
         });
       });
-      return new maplibregl.Marker({ element: el })
-        .setLngLat([pin.lng, pin.lat])
+      return new maplibregl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([spot.lng, spot.lat])
         .addTo(map);
     });
 
@@ -127,90 +234,141 @@ export const EventLayer: React.FC<Props> = ({ map, ready }) => {
       });
       markersRef.current = [];
     };
-  }, [events, map, ready]);
+  }, [spots, map, ready, intl]);
 
   // ── Handle ?event=<slug> deep link ───────────────────────────────
   useEffect(() => {
     if (!map || !ready || !requestedSlug) return;
-    const target = events.find((e) => e.slug === requestedSlug);
+    const target = spots.find((spot) =>
+      spot.events.some((e) => e.slug === requestedSlug),
+    );
     if (!target) return;
-    setSelectedSlug(target.slug);
+    setSelectedKey(target.key);
     map.flyTo({
       center: [target.lng, target.lat],
       zoom: target.zoom ?? 14,
       duration: 900,
     });
-  }, [requestedSlug, events, map, ready]);
+  }, [requestedSlug, spots, map, ready]);
 
   const selected = useMemo(
-    () => events.find((e) => e.slug === selectedSlug) ?? null,
-    [events, selectedSlug],
+    () => spots.find((spot) => spot.key === selectedKey) ?? null,
+    [spots, selectedKey],
   );
 
   const handleClose = useCallback(() => {
-    setSelectedSlug(null);
+    setSelectedKey(null);
   }, []);
 
   if (!selected) return null;
 
-  return <EventPreviewCard event={selected} onClose={handleClose} />;
+  return <SpotCard spot={selected} onClose={handleClose} />;
 };
 
-const EventPreviewCard: React.FC<{
-  event: ApiMapEventPinJSON;
+// One event in the card: its date, what and when, and the way to it.
+const SpotEvent: React.FC<{ event: ApiMapEventPinJSON }> = ({ event }) => {
+  const intl = useIntl();
+  return (
+    <div className='map-event-card__event'>
+      <div className='map-event-card__date'>
+        <span className='map-event-card__date-month'>
+          <FormattedDate value={event.start_time} month='short' />
+        </span>
+        <span className='map-event-card__date-day'>
+          <FormattedDate value={event.start_time} day='numeric' />
+        </span>
+      </div>
+      <div className='map-event-card__body'>
+        <div className='map-event-card__title'>
+          {event.event_type === 'huddle' ? (
+            <Icon
+              id='videocam'
+              icon={VideocamIcon}
+              className='map-event-card__type-icon'
+            />
+          ) : (
+            <Icon
+              id='spiral'
+              icon={SpiralIcon}
+              className='map-event-card__type-icon'
+            />
+          )}
+          {event.title}
+        </div>
+        <div className='map-event-card__meta'>
+          <FormattedDate value={event.start_time} weekday='short' />{' '}
+          <FormattedTime value={event.start_time} />
+          {event.end_time && (
+            <>
+              {' – '}
+              <FormattedTime value={event.end_time} />
+            </>
+          )}
+        </div>
+        {/* The card's main action, as the kit's pill (Tal, 2026-11-23). */}
+        <Link
+          to={`/hub/kalendar/${event.slug}`}
+          className='korner-pill korner-pill--primary map-event-card__action'
+        >
+          <span className='korner-pill__label'>
+            {intl.formatMessage(messages.open)}
+          </span>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+// The card for a spot: each event there, then where they are, the Place
+// with its way in when they stand on one, or the event's own place name.
+const SpotCard: React.FC<{
+  spot: Spot;
   onClose: () => void;
-}> = ({ event, onClose }) => (
-  <div className='map-event-card' role='dialog' aria-label={event.title}>
-    <button
-      type='button'
-      className='map-event-card__close'
-      onClick={onClose}
-      aria-label='Close'
+}> = ({ spot, onClose }) => {
+  const intl = useIntl();
+  const first = spot.events[0];
+  const country: ApiMapCountryJSON | null | undefined = first?.country;
+  const name = spot.place?.name ?? first?.location_name;
+  const label = spot.place?.name ?? first?.title ?? '';
+
+  return (
+    <div
+      className='map-event-card map-event-card--spot'
+      role='dialog'
+      aria-label={label}
     >
-      <Icon id='close' icon={CloseIcon} />
-    </button>
-    <div className='map-event-card__date'>
-      <span className='map-event-card__date-month'>
-        <FormattedDate value={event.start_time} month='short' />
-      </span>
-      <span className='map-event-card__date-day'>
-        <FormattedDate value={event.start_time} day='numeric' />
-      </span>
-    </div>
-    <div className='map-event-card__body'>
-      <div className='map-event-card__title'>
-        {event.event_type === 'huddle' ? (
-          <Icon
-            id='videocam'
-            icon={VideocamIcon}
-            className='map-event-card__type-icon'
-          />
-        ) : (
-          <Icon
-            id='spiral'
-            icon={SpiralIcon}
-            className='map-event-card__type-icon'
-          />
-        )}
-        {event.title}
+      <button
+        type='button'
+        className='map-event-card__close'
+        onClick={onClose}
+        aria-label={intl.formatMessage(messages.close)}
+      >
+        <Icon id='close' icon={CloseIcon} />
+      </button>
+      <div className='map-event-card__events'>
+        {spot.events.map((event) => (
+          <SpotEvent key={event.id} event={event} />
+        ))}
       </div>
-      <div className='map-event-card__meta'>
-        <FormattedDate value={event.start_time} weekday='short' />{' '}
-        <FormattedTime value={event.start_time} />
-        {event.end_time && (
-          <>
-            {' – '}
-            <FormattedTime value={event.end_time} />
-          </>
-        )}
-      </div>
-      {event.location_name && (
-        <div className='map-event-card__location'>{event.location_name}</div>
+      {(name ?? country?.name) && (
+        <div className='map-event-card__where'>
+          {name && (
+            <div className='map-event-card__location'>
+              <Icon
+                id='location_on'
+                icon={LocationIcon}
+                className='map-event-card__type-icon'
+              />
+              {/* The Place's name opens its page (Tal, 2026-11-23). */}
+              {spot.place ? <Link to={spot.place.url}>{name}</Link> : name}
+            </div>
+          )}
+          {spot.place?.address && (
+            <div className='map-place-card__address'>{spot.place.address}</div>
+          )}
+          <CountryLine country={country} />
+        </div>
       )}
-      <CountryLine country={event.country} />
-      <Link to={`/hub/kalendar/${event.slug}`} className='map-event-card__open'>
-        Open in Kalendar →
-      </Link>
     </div>
-  </div>
-);
+  );
+};

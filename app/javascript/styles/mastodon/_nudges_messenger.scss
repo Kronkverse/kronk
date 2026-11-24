@@ -1,14 +1,11 @@
-// Nudges messenger — the Messages face at /nudges/messages.
-// Spec: docs/spaces/nudges.md § Surfaces. A list of chats and the open
-// chat: side by side on a wide screen, two pages on a phone (Tal
-// 2026-10-12, Kommons proposal "Visibility like Signal"). Token-only.
+// Nudges — one space at /nudges (Tal, 2026-11-23). Spec:
+// docs/spaces/nudges.md § Surfaces. The list of chats, led by
+// Notifications, and whatever is open: side by side on a wide screen, two
+// pages on a phone (Tal 2026-10-12, Kommons proposal "Visibility like
+// Signal"). Token-only.
 
-// The messenger owns its own scrolling (the list and the stream scroll on
-// their own), so neither the page nor the Stage may scroll under it.
-// `.feed-drum__live >`: Nudges has two faces on a barrel and only this one
-// is the messenger. A static copy rides in the turn overlay while the
-// barrel turns; matching the live face alone means these page-level rules
-// follow the face you are arriving at.
+// The messenger owns its own scrolling (the list and the open pane scroll
+// on their own), so neither the page nor the Stage may scroll under it.
 
 // Nothing here sets a height. The messenger's height is measured in
 // `use_fill_viewport.ts`, from its own top edge to the top of the pillar
@@ -20,11 +17,11 @@
 // measurement that matters.
 // Selector matches the upstream `body.app-body.layout-single-column`
 // specificity so `overflow: hidden` wins over its `overflow-y: scroll`.
-body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
+body.layout-single-column:has(.nudges-messenger) {
   overflow: hidden;
 }
 
-.kronk-stage:has(.feed-drum__live > .nudges-messenger) {
+.kronk-stage:has(.nudges-messenger) {
   overflow: visible;
 }
 
@@ -51,20 +48,21 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   background: var(--surface-primary);
 }
 
-// Phone: the list and the open chat are two pages, never side by side.
-// With a chat open the list goes, and so does the title row above: the
-// chat's own row (back arrow, name) takes its place.
+// Phone: the list and what's open (a chat, or Notifications) are two
+// pages, never side by side. With something open the list goes, and so
+// does the title row above: the pane's own row (the way back, the name)
+// takes its place.
 @media (width <= 889px) {
   .nudges-messenger__sidebar {
     flex: 1 1 auto;
     border-right: 0;
   }
 
-  .nudges-messenger:not(.nudges-messenger--chat-open) .nudges-messenger__pane {
+  .nudges-messenger:not(.nudges-messenger--pane-open) .nudges-messenger__pane {
     display: none;
   }
 
-  .nudges-messenger--chat-open {
+  .nudges-messenger--pane-open {
     border-top: 0;
 
     .nudges-messenger__sidebar {
@@ -72,8 +70,7 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
     }
   }
 
-  .kronk-stage:has(.feed-drum__live > .nudges-messenger--chat-open)
-    .space-header-row {
+  .kronk-stage:has(.nudges-messenger--pane-open) .space-header-row {
     display: none;
   }
 }
@@ -498,14 +495,70 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   background: var(--surface-primary);
 }
 
-.nudges-empty {
+// Notifications open in the pane: its own head row (the name, and on a
+// phone the way back to the list), then the list, which scrolls in its
+// `.stage-column`. Already on the pane's surface, so the list's own box
+// (`.nudges-notifications`, drawn for when it stood alone on the sky)
+// goes.
+.nudges-messenger__notifications {
+  position: relative;
   flex: 1 1 auto;
+  min-height: 0;
   display: flex;
+  flex-direction: column;
+
+  .nudges-notifications {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  // Pinned above the list rather than scrolled with it: the list opens at
+  // its bottom, so the top of it is out of sight.
+  > .push-prompt {
+    flex: 0 0 auto;
+    margin: 0.75rem 1rem 0;
+  }
+}
+
+// The list reads like a chat: oldest at the top, the newest at the bottom.
+// A short list sits at the bottom too, as a short chat does, and the
+// bottom has no extra room under the last row.
+.nudges-notifications__scroll {
+  flex-direction: column;
   align-items: center;
+
+  // Not centred along the column: a centred list taller than the pane
+  // overflows above the top too, where it can't be scrolled to.
+  justify-content: flex-start;
+  padding-block-end: 1rem;
+
+  > .stage-column__inner {
+    margin-block-start: auto;
+  }
+}
+
+// "New", over the bottom of the list, when something arrived while you
+// were scrolled up. Tapping it goes down to it.
+.nudges-notifications__new {
+  position: absolute;
+  inset-block-end: 1rem;
+  inset-inline: 0;
+  display: flex;
   justify-content: center;
-  padding: 2rem;
-  color: var(--text-muted);
-  text-align: center;
+  pointer-events: none;
+
+  .korner-pill {
+    pointer-events: auto;
+    box-shadow: var(--elevation-floating);
+  }
+}
+
+// The pinned first row: a bell where a chat has a face.
+.nudges-row__notifications-icon .icon {
+  width: 22px;
+  height: 22px;
 }
 
 // `flex: 1 1 auto` + `min-height: 0` (not `height: 100%`) so the
@@ -673,8 +726,13 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 1rem;
+  padding: 1rem 0.75rem;
+
+  // Messages space themselves by run (`.nudges-msg`); everything else in
+  // the stream (a Krew join, a milestone) keeps a little air around it.
+  > :not(.nudges-msg, .nudges-day-separator, .nudges-conversation__load-older) {
+    margin-block: 0.5rem;
+  }
 }
 
 // "Load older messages" button at the top of the stream. Kept
@@ -706,54 +764,176 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 }
 
 // ── Message bubble ───────────────────────────────────────────────
+// Every message is a bubble (Tal, 2026-11-23, "bubbles around messages"):
+// other people's on the left in a neutral tint, yours on the right in the
+// accent. The incoming tint is a mix of the text colour into nothing, not
+// a surface token, so it shows on whatever the chat sits on: the Nudges
+// pane, or the Krew page's frame (which is `--surface-elevated`, the
+// colour the bubble used to be, so it vanished there).
+
+// A run of messages from one person (`--run-start` … `--run-end`, see
+// `sameRun` in conversation_view.tsx) sits close, with the name and
+// avatar once at the top; runs are spaced apart. The stream's own gap is
+// 0, so the spacing is all here.
 .nudges-msg {
+  --nudges-bubble-in: color-mix(in oklab, var(--text-primary) 10%, transparent);
+  --nudges-avatar: 28px;
+
   display: flex;
-  flex-direction: column;
-  max-width: 70%;
-  gap: 0.15rem;
-}
-
-.nudges-msg--out {
-  align-self: flex-end;
-  align-items: flex-end;
-}
-
-.nudges-msg--in {
-  align-self: flex-start;
   align-items: flex-start;
-}
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 2px;
 
-.nudges-msg__bubble {
-  padding: 0.5rem 0.8rem;
-  border-radius: var(--radius-large);
-  color: var(--text-primary);
-  background: var(--surface-elevated);
-  overflow-wrap: break-word;
+  &--run-start {
+    margin-top: 0.75rem;
+  }
 
-  .nudges-msg--out & {
-    background: var(--kronk-purple-primary);
-    color: var(--text-on-accent);
+  // A reaction chip hangs off the bottom edge; make room for it. Under a
+  // bubble with its time below, the time makes the room instead.
+  &--reacted {
+    padding-bottom: 0.85rem;
+  }
+
+  &--reacted:has(.nudges-msg__meta) {
+    padding-bottom: 0;
   }
 }
 
-// ── Reactions row (sits just below the bubble) ───────────────────
-.nudges-msg__reactions {
+.nudges-conversation__stream > .nudges-msg:first-child,
+.nudges-day-separator + .nudges-msg {
+  margin-top: 0;
+}
+
+.nudges-msg--out {
+  justify-content: flex-end;
+}
+
+.nudges-msg__avatar {
+  flex: none;
+  width: var(--nudges-avatar);
+  margin-top: 1.1rem; // level with the bubble, under the name
+
+  .nudges-msg--run-start & .account__avatar {
+    display: block;
+  }
+}
+
+.nudges-msg__main {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  min-width: 0;
+  max-width: min(78%, 36rem);
+
+  .nudges-msg--out & {
+    align-items: flex-end;
+  }
+
+  .nudges-msg--in & {
+    align-items: flex-start;
+  }
+}
+
+.nudges-msg__sender-name {
+  margin: 0 0 0.2rem 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+// The bubble and its controls, side by side. Yours mirror: controls on the
+// left of the bubble.
+.nudges-msg__line {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+
+  .nudges-msg--out & {
+    flex-direction: row-reverse;
+  }
+}
+
+.nudges-msg__bubble {
+  position: relative;
+  display: flow-root;
+  min-width: 0;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  background: var(--nudges-bubble-in);
+  overflow-wrap: break-word;
+
+  .nudges-msg--out & {
+    background: var(--accent);
+    color: var(--text-on-accent);
+  }
+
+  // The corner nearest the sender tightens inside a run, so a run reads
+  // as one block.
+  .nudges-msg--in:not(.nudges-msg--run-start) & {
+    border-start-start-radius: var(--radius-small);
+  }
+
+  .nudges-msg--in:not(.nudges-msg--run-end) & {
+    border-end-start-radius: var(--radius-small);
+  }
+
+  .nudges-msg--out:not(.nudges-msg--run-start) & {
+    border-start-end-radius: var(--radius-small);
+  }
+
+  .nudges-msg--out:not(.nudges-msg--run-end) & {
+    border-end-end-radius: var(--radius-small);
+  }
+}
+
+// When, and whether it's been read: small and muted, under the bubble's
+// edge, outside it (Tal, 2026-11-23); under the last of a run. It lines
+// up with the bubble's side: left under theirs, right under yours.
+.nudges-msg__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.2rem 0.6rem 0;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  // Below the reaction chips when there are some.
+  .nudges-msg--reacted & {
+    margin-top: 1.05rem;
+  }
+}
+
+// ── Reactions: chips on the bubble's bottom edge ─────────────────
+.nudges-msg__reactions {
+  position: absolute;
+  bottom: -0.95rem;
+  display: flex;
   gap: 0.2rem;
-  margin-top: 0.15rem;
+
+  .nudges-msg--in & {
+    inset-inline-start: 0.6rem;
+  }
+
+  .nudges-msg--out & {
+    inset-inline-end: 0.6rem;
+  }
 }
 
 .nudges-msg__reaction {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.15rem 0.5rem;
-  border: 1px solid var(--border-default);
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-round);
   background: var(--surface-elevated);
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  box-shadow: var(--elevation-subtle);
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -775,7 +955,7 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 }
 
 .nudges-msg__reaction-symbol {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   line-height: 1;
 }
 
@@ -783,27 +963,81 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   font-weight: 500;
 }
 
-// Compact add-picker — sits inline at the end of the reaction row.
-.nudges-msg__react-picker {
-  display: inline-flex;
-  gap: 0.2rem;
+// ── Beside the bubble: react, delete ─────────────────────────────
+// The reaction smiley is beside every message, yours too, there faintly
+// at rest so it can be found (Tal, 2026-11-23, couldn't see it at all
+// when it only showed on hover or a tap), and full on hover, on focus,
+// or after a tap on the bubble (`--active`, one message at a time). The
+// bin on your own is out of sight until then. Both stay in the layout
+// (not `display: none`) so showing them never shifts the bubble, and so
+// the keyboard can reach them.
+.nudges-msg__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.1rem;
+
+  // Yours: the smiley next to the bubble, the bin (hidden at rest) on the
+  // far side, so the smiley doesn't sit a gap away.
+  .nudges-msg--out & {
+    flex-direction: row-reverse;
+  }
+}
+
+.nudges-msg__react-add,
+.nudges-msg__delete {
+  transition: opacity var(--dur-fast) var(--ease-out);
+
+  .nudges-msg--active &,
+  .nudges-msg:focus-within &,
+  // The emoji picker is open from here.
+  .nudges-msg:has([aria-expanded='true']) & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: hover) {
+    .nudges-msg:hover & {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
 }
 
 .nudges-msg__react-add {
-  padding: 0.15rem 0.4rem;
-  border: 1px dashed var(--border-subtle);
-  border-radius: var(--radius-round);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition:
-    color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
+  opacity: 0.45;
+}
 
-  &:hover {
-    color: var(--text-primary);
-    border-color: var(--border-default);
+.nudges-msg__delete {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nudges-msg__action {
+  display: inline-flex;
+  color: var(--text-muted);
+
+  .icon-button {
+    padding: 0.3rem;
+    border-radius: var(--radius-round);
+    color: inherit;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      background: color-mix(in oklab, var(--text-primary) 10%, transparent);
+    }
+  }
+
+  &.nudges-msg__delete {
+    padding: 0.3rem;
+    border-radius: var(--radius-round);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--destructive);
+      background: color-mix(in oklab, var(--destructive) 12%, transparent);
+    }
   }
 }
 
@@ -830,6 +1064,35 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   min-height: 0;
   border-radius: var(--radius-medium);
   object-fit: cover;
+}
+
+// In place of a picture or video that can't be shown (gone, failed, or
+// still being processed): a quiet tile saying so, with a link to the
+// original when there is one.
+.nudges-msg__media-missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 10rem;
+  min-height: 6rem;
+  padding: 0.75rem;
+  background: var(--surface-elevated);
+  border: 1px dashed var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+
+  a {
+    color: var(--accent-text);
+  }
+}
+
+.nudges-msg__media-audio {
+  display: block;
+  width: 100%;
+  min-width: 14rem;
 }
 
 // Grid of message media — 1/2/3/4-tile layouts. Bubble constrains
@@ -955,43 +1218,9 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   opacity: 0.9;
 }
 
-.nudges-msg__time {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-// Mate-only "Seen" indicator on self-authored bubbles. Kept subtle —
-// same font size + muted-color slot as the timestamp; the eye-glyph
-// weight lets it read without shouting.
+// Read receipts ride in the meta line, in its colour.
 .nudges-msg__seen {
-  font-size: 0.7rem;
-  color: var(--text-muted);
   font-style: italic;
-}
-
-// Tiny × affordance shown next to the timestamp on self-authored
-// messages. Reveals only on hover so the timestamp stays clean.
-.nudges-msg__delete {
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 0.9rem;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-out);
-
-  .nudges-msg:hover & {
-    opacity: 1;
-  }
-
-  &:hover {
-    color: var(--warning-red);
-  }
 }
 
 // Deleted-message placeholder — muted italic bubble in place of the
@@ -999,14 +1228,16 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 .nudges-msg__bubble--deleted {
   color: var(--text-muted);
   font-style: italic;
-  background: var(--surface-elevated);
+  background: transparent;
+  outline: 1px dashed var(--border-subtle);
+  outline-offset: -1px;
 
   .nudges-msg--out & {
-    background: color-mix(
-      in oklab,
-      var(--kronk-purple-primary) 30%,
-      var(--surface-elevated)
-    );
+    color: var(--text-muted);
+    background: transparent;
+  }
+
+  .nudges-msg__meta {
     color: var(--text-muted);
   }
 }
@@ -1023,6 +1254,8 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 
 .nudges-msg__failed-controls {
   display: inline-flex;
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
   align-items: center;
   gap: 0.4rem;
 }

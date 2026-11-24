@@ -366,7 +366,7 @@
 // Compact treatment on narrow viewports (Tal 2026-08-16 "Shrink to
 // a compact header on phone"). Smaller label + tighter chevron
 // buttons so the barrel reads clearly without dominating the row.
-@container frame (width <= 640px) {
+@media (width <= 640px) {
   .art-discipline-barrel__label {
     font-size: 1.35rem;
     min-width: 6rem;

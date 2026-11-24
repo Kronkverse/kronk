@@ -2,9 +2,9 @@
 
 require 'rails_helper'
 
-# Nudges has two faces on one barrel: Notifications at /nudges (where you
-# land) and Messages at /nudges/messages. docs/spaces/nudges.md (Nudges spec)
-# § Surfaces.
+# Nudges is one space: the list of chats, led by Notifications, and whatever
+# is open beside it (on a phone, over it). docs/spaces/nudges.md (Nudges
+# spec) § Surfaces.
 RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
   include ProfileStories
 
@@ -16,6 +16,17 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
   let(:ana) { Fabricate(:account, username: 'ana', display_name: 'Ana') }
   let(:ben) { Fabricate(:account, username: 'ben', display_name: 'Ben') }
   let(:me)  { bob.account }
+
+  # The scroll position settles a frame or two after the rows render.
+  def eventually
+    deadline = Time.current + Capybara.default_max_wait_time
+    loop do
+      result = yield
+      return result if result || Time.current > deadline
+
+      sleep 0.1
+    end
+  end
 
   def notify(actor, **attrs)
     Fabricate(:nudges_event, conversation: nil, recipient_account: me, actor_account: actor, **attrs)
@@ -43,14 +54,14 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.hub-switcher__badge', text: /\A[23]\z/)
 
     visit '/nudges'
-    expect(page).to have_css('h1', text: 'Notifications')
+    expect(page).to have_css('.nudges-messenger__notifications .nudges-conversation__name', text: 'Notifications')
     expect(page).to have_css('.hub-switcher__badge', text: '1')
   end
 
-  it 'lands on notifications, rolled up and in plain words' do
+  it 'opens on notifications on a wide screen, rolled up and in plain words' do
     visit '/nudges'
 
-    expect(page).to have_css('h1', text: 'Notifications')
+    expect(page).to have_css('.nudges-row--notifications.nudges-row--active')
     expect(page).to have_content('Ben and 1 other frothed your post')
     expect(page).to have_content('Swell is up at the point')
     expect(page).to have_content('Ana wants to be Mates')
@@ -63,61 +74,98 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.nudges-notification--fresh', count: 1)
   end
 
-  it 'turns to messages and back' do
-    visit '/nudges'
+  # Tal, 2026-11-23: notifications are "one chat space, persistently at the
+  # top of the list", and the chats are beside it, "so its not swapping a page
+  # to get to chats but just changing view".
+  it 'keeps Notifications first in the list and changes the view beside it' do
+    visit "/nudges/with/#{ana.id}"
+    expect(page).to have_content('Dawn patrol tomorrow?')
 
-    # You land on notifications, so waiting messages are pointed out.
-    expect(page).to have_link('1 unread message')
+    # First in the list, with what's new in it counted.
+    expect(page).to have_css('.nudges-sidebar__list:first-of-type .nudges-row--notifications .nudges-row__badge', text: /\A[12]\z/)
 
-    click_on 'Next view'
-    expect(page).to have_css('.nudges-messenger')
-    expect(page).to have_current_path('/nudges/messages')
-    # The messenger carries no notifications any more.
+    find('.nudges-row--notifications .nudges-row__button').click
+    expect(page).to have_current_path('/nudges/notifications')
+    expect(page).to have_css('.nudges-notification', count: 2)
+    expect(page).to have_css('.nudges-notification--fresh', count: 1)
+    # Opening it is what marks them seen.
+    expect(page).to have_no_css('.nudges-row--notifications .nudges-row__badge')
+
+    find('.nudges-row', text: 'Ana').click
     expect(page).to have_no_css('.nudges-notification')
+    expect(page).to have_content('Dawn patrol tomorrow?')
 
-    # Messages wears the same turning title as every space. The bell that
-    # used to lead back is gone.
-    expect(page).to have_css('h1', text: 'Messages')
-    expect(page).to have_no_css('.nudges-sidebar__notifications')
-
-    click_on 'Next view'
-    expect(page).to have_current_path('/nudges')
-    expect(page).to have_css('h1', text: 'Notifications')
-    # Opening the face the first time is what marked them seen.
+    find('.nudges-row--notifications .nudges-row__button').click
     expect(page).to have_css('.nudges-notification', count: 2)
     expect(page).to have_no_css('.nudges-notification--fresh')
+  end
+
+  # Tal, 2026-11-23: "All the messages are in chronological order with the
+  # latest message at the bottom, can we try with the notifications also?"
+  it 'reads notifications like a chat: newest at the bottom, earlier ones above as you scroll up', :aggregate_failures do
+    45.times do |i|
+      post = Fabricate(:status, account: me, text: "Old post #{i}")
+      notify(ben, source_korner_slug: 'feed', verb: 'frothed', source_type: 'Status', source_id: post.id,
+                  created_at: (3 + i).days.ago, seen_at: 1.day.ago)
+    end
+    visit '/nudges/notifications'
+
+    # A page of them: the newest is the last row, the Mate request (older)
+    # comes before the froths.
+    expect(page).to have_css('.nudges-notification', minimum: 30)
+    expect(page).to have_no_css('.nudges-notification', text: 'Old post 44')
+    rows = all('.nudges-notification').map(&:text)
+    expect(rows.last).to include('Ben and 1 other frothed your post')
+    expect(rows.index { |t| t.include?('Ana wants to be Mates') }).to be < rows.index { |t| t.include?('Ben and 1 other') }
+
+    # It opens at the bottom.
+    scroller = '.nudges-messenger__notifications .nudges-notifications__scroll'
+    at_bottom = "(() => { const el = document.querySelector('#{scroller}'); " \
+                'return el.scrollHeight - el.scrollTop - el.clientHeight < 80; })()'
+    expect(page).to have_css('.nudges-notification', text: 'Ben and 1 other frothed your post')
+    expect(eventually { page.evaluate_script(at_bottom) }).to be true
+
+    # Scrolled up to the top, the earlier ones load in above, and what was
+    # at the top stays in view rather than jumping.
+    page.execute_script("document.querySelector('#{scroller}').scrollTop = 0")
+    expect(page).to have_css('.nudges-notification', count: 47)
+    expect(page.evaluate_script("document.querySelector('#{scroller}').scrollTop")).to be > 0
+    expect(first('.nudges-notification').text).to include('Old post 44')
   end
 
   it 'lists chats with a name and the latest line, and finds one by name' do
     visit '/nudges/messages'
 
-    within('.nudges-row') do
+    chats = '.nudges-row:not(.nudges-row--notifications)'
+    within(chats) do
       expect(page).to have_content('Ana')
       expect(page).to have_content('Dawn patrol tomorrow?')
     end
 
     fill_in placeholder: 'Search chats', with: 'zzz'
-    expect(page).to have_no_css('.nudges-row')
+    expect(page).to have_no_css(chats)
     expect(page).to have_content('No match')
+    # Notifications is not a chat to find; it stays put.
+    expect(page).to have_css('.nudges-row--notifications')
 
     fill_in placeholder: 'Search chats', with: 'an'
-    expect(page).to have_css('.nudges-row', count: 1)
+    expect(page).to have_css(chats, count: 1)
   end
 
   it 'on a phone, opens a chat as its own page with the text box on screen' do
     page.current_window.resize_to(390, 800)
-    visit '/nudges/messages'
+    visit '/nudges'
 
-    # The list is the whole page.
-    expect(page).to have_css('h1', text: 'Messages')
-    expect(page).to have_no_css('.nudges-conversation')
+    # The list is the whole page, Notifications first; nothing is open.
+    expect(page).to have_css('h1', text: 'Nudges')
+    expect(page).to have_no_css('.nudges-conversation, .nudges-notification')
 
-    find('.nudges-row__button').click
+    find('.nudges-row', text: 'Ana').click
 
     # The chat takes over: its own row with the way back and the name, no
     # title row, no list.
     expect(page).to have_content('Dawn patrol tomorrow?')
-    expect(page).to have_no_css('h1', text: 'Messages')
+    expect(page).to have_no_css('h1', text: 'Nudges')
     expect(page).to have_no_css('.nudges-row')
     expect(page).to have_link('Chats')
 
@@ -134,8 +182,22 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(edges['composer']).to be <= edges['screen']
 
     click_on 'Chats'
-    expect(page).to have_current_path('/nudges/messages')
-    expect(page).to have_css('.nudges-row')
+    expect(page).to have_current_path('/nudges')
+    expect(page).to have_css('.nudges-row', text: 'Ana')
+  end
+
+  it 'on a phone, opens Notifications from the top of the list, and back' do
+    page.current_window.resize_to(390, 800)
+    visit '/nudges'
+
+    find('.nudges-row--notifications .nudges-row__button').click
+    expect(page).to have_current_path('/nudges/notifications')
+    expect(page).to have_css('.nudges-notification', count: 2)
+    expect(page).to have_no_css('.nudges-row')
+
+    click_on 'Chats'
+    expect(page).to have_current_path('/nudges')
+    expect(page).to have_css('.nudges-row--notifications')
   end
 
   it 'on a wide screen, keeps the list beside the open chat down to the bottom edge' do
@@ -143,8 +205,8 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     visit "/nudges/with/#{ana.id}"
 
     expect(page).to have_content('Dawn patrol tomorrow?')
-    expect(page).to have_css('.nudges-row')
-    expect(page).to have_css('h1', text: 'Messages')
+    expect(page).to have_css('.nudges-row--active', text: 'Ana')
+    expect(page).to have_css('h1', text: 'Nudges')
     expect(page).to have_no_link('Chats')
 
     edges = page.evaluate_script(<<~JS)
@@ -154,6 +216,39 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
       })()
     JS
     expect(edges['composer']).to be_within(1.5).of(edges['screen'])
+  end
+
+  # Tal, 2026-11-23: bubbles, and the emoji picker at the side of a message
+  # (as in Signal), not a smiley under every one. Then: she couldn't see it at
+  # all in a chat where only she had posted; you react to your own too. And
+  # the time and read receipt go under the bubble, not in it.
+  it 'puts the reaction control beside every bubble, yours too, and the time under it', :aggregate_failures do
+    page.current_window.resize_to(390, 800)
+    visit "/nudges/with/#{ana.id}"
+
+    message = find('.nudges-msg', text: 'Dawn patrol tomorrow?')
+    expect(message).to have_css('.nudges-msg__line > .nudges-msg__bubble + .nudges-msg__actions .emoji-picker-dropdown', visible: :all)
+    expect(message).to have_no_css('.nudges-msg__reactions')
+    expect(message).to have_no_css('.nudges-msg__bubble .nudges-msg__meta')
+    expect(message).to have_css('.nudges-msg__main > .nudges-msg__meta')
+
+    # Something you've sent: the smiley is there at rest, faintly; the bin
+    # waits for a tap.
+    find('.nudges-composer textarea').fill_in(with: 'See you at six')
+    find('.nudges-composer textarea').send_keys(:enter)
+    mine = find('.nudges-msg--out', text: 'See you at six')
+    expect(mine).to have_css('.nudges-msg__react-add .emoji-picker-dropdown button', visible: :visible)
+    expect(mine).to have_no_css('.nudges-msg__delete', visible: :visible)
+    expect(mine).to have_css('.nudges-msg__main > .nudges-msg__meta')
+    expect(page).to have_no_css('.nudges-msg--active')
+
+    mine.find('.nudges-msg__body').click
+    expect(page).to have_css('.nudges-msg--active', text: 'See you at six')
+    expect(mine).to have_css('.nudges-msg__delete', visible: :visible)
+
+    # A tap on the empty stream puts it away.
+    page.execute_script("document.querySelector('.nudges-conversation__stream').click()")
+    expect(page).to have_no_css('.nudges-msg--active')
   end
 
   it 'opens the chat with a person from their account id' do

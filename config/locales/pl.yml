@@ -1933,18 +1933,14 @@ pl:
     title: Sesje
     view_authentication_history: Zobacz historię uwierzytelniania swojego konta
   settings:
-    account: Konto
     account_settings: Ustawienia konta
     aliases: Aliasy konta
     appearance: Wygląd
-    authorized_apps: Uwierzytelnione aplikacje
-    back: Powrót do Mastodona
     development: Tworzenie aplikacji
     edit_profile: Edytuj profil
     export: Eksportowanie danych
     featured_tags: Wyróżnione hashtagi
     import: Importowanie danych
-    import_and_export: Import i eksport
     migrate: Migracja konta
     notifications: Powiadomienia e-mail
     preferences: Preferencje

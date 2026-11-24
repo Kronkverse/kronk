@@ -1995,18 +1995,14 @@ en:
     title: Sessions
     view_authentication_history: View authentication history of your account
   settings:
-    account: Account
     account_settings: Account settings
     aliases: Account aliases
     appearance: Appearance
-    authorized_apps: Authorized apps
-    back: Back to Kronk
     development: Development
     edit_profile: Edit profile
     export: Export
     featured_tags: Featured hashtags
     import: Import
-    import_and_export: Import and export
     migrate: Account migration
     notifications: Email notifications
     preferences: Preferences

@@ -1839,18 +1839,14 @@ zh-TW:
     title: 作業階段
     view_authentication_history: 檢視您帳號的身份驗證歷史紀錄
   settings:
-    account: 帳號
     account_settings: 帳號設定
     aliases: 帳號別名
     appearance: 外觀設定
-    authorized_apps: 已授權應用程式
-    back: 回到 Mastodon
     development: 開發者
     edit_profile: 編輯個人檔案
     export: 匯出
     featured_tags: 推薦主題標籤
     import: 匯入
-    import_and_export: 匯入及匯出
     migrate: 帳號搬遷
     notifications: 電子郵件通知
     preferences: 偏好設定

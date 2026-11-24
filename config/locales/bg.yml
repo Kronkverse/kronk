@@ -1848,18 +1848,14 @@ bg:
     title: Сесии
     view_authentication_history: Преглед на историята на удостоверяване на акаунта ви
   settings:
-    account: Акаунт
     account_settings: Настройки на акаунта
     aliases: Псевдоними за акаунта
     appearance: Външен вид
-    authorized_apps: Упълномощени приложения
-    back: Обратно към Mastodon
     development: Разработка
     edit_profile: Редактирай профила си
     export: Изнасяне
     featured_tags: Отличени хаштагове
     import: Импортиране
-    import_and_export: Внасяне и изнасяне
     migrate: Миграция на акаунта
     notifications: Известия по е-поща
     preferences: Предпочитания

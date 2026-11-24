@@ -33,7 +33,28 @@ const messages = defineMessages({
     id: 'alert.server_error.message',
     defaultMessage: 'The server didn’t answer. Try again shortly.',
   },
+  uploadTooBigTitle: {
+    id: 'alert.upload_too_big.title',
+    defaultMessage: 'Too big to upload',
+  },
+  uploadTooBigMessage: {
+    id: 'alert.upload_too_big.message',
+    defaultMessage: 'That file is bigger than Kronk takes.',
+  },
+  uploadDroppedTitle: {
+    id: 'alert.upload_dropped.title',
+    defaultMessage: 'Upload didn’t finish',
+  },
+  uploadDroppedMessage: {
+    id: 'alert.upload_dropped.message',
+    defaultMessage:
+      'The connection dropped while it was sending. Keep Kronk open until it’s sent, and try again.',
+  },
 });
+
+const isMediaUpload = (error: AxiosError) =>
+  !!error.config?.url?.match(/^\/api\/v[12]\/media/) &&
+  ['post', 'put'].includes((error.config.method ?? '').toLowerCase());
 
 export const dismissAlert = createAction<{ key: number }>('alerts/dismiss');
 
@@ -51,6 +72,14 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
     // Skip these errors as they are reflected in the UI
     if (skipNotFound && (status === 404 || status === 410)) {
       return ignoreAlert();
+    }
+
+    if (status === 413) {
+      return showAlert({
+        title: messages.uploadTooBigTitle,
+        message: messages.uploadTooBigMessage,
+        error: true,
+      });
     }
 
     // Rate limit errors
@@ -83,7 +112,13 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
   }
 
   // An aborted request, e.g. due to reloading the browser window, is not really an error
-  if (error instanceof AxiosError && error.code === AxiosError.ECONNABORTED) {
+  // Nor is an upload the member cancelled from the phone's notification
+  // (utils/background_upload).
+  if (
+    error instanceof AxiosError &&
+    (error.code === AxiosError.ECONNABORTED ||
+      error.code === AxiosError.ERR_CANCELED)
+  ) {
     return ignoreAlert();
   }
 
@@ -97,6 +132,19 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
     (error.config?.method ?? 'get').toLowerCase() === 'get'
   ) {
     return ignoreAlert();
+  }
+
+  // An upload whose connection dropped, after api.ts has sent it again.
+  if (
+    error instanceof AxiosError &&
+    error.code === AxiosError.ERR_NETWORK &&
+    isMediaUpload(error)
+  ) {
+    return showAlert({
+      title: messages.uploadDroppedTitle,
+      message: messages.uploadDroppedMessage,
+      error: true,
+    });
   }
 
   console.error(error);

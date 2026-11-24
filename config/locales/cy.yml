@@ -2025,18 +2025,14 @@ cy:
     title: Sesiynau
     view_authentication_history: Gweld hanes dilysu eich cyfrif
   settings:
-    account: Cyfrif
     account_settings: Gosodiadau'r cyfrif
     aliases: Arallenwau cyfrif
     appearance: Golwg
-    authorized_apps: Apiau awdurdodedig
-    back: Nôl i Mastodon
     development: Datblygu
     edit_profile: Golygu'r proffil
     export: Allforio
     featured_tags: Prif hashnodau
     import: Mewnforio
-    import_and_export: Mewnforio ac allforio
     migrate: Mudo cyfrif
     notifications: Hysbysiadau e-bost
     preferences: Dewisiadau

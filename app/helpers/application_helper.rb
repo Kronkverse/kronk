@@ -156,10 +156,19 @@ module ApplicationHelper
     tag.meta(content: content, property: property)
   end
 
+  # The theme a page renders in: the member's, unless the layout pins one.
+  # The pages that sit straight on the starfield, with no Stage panel
+  # (sign-in and the other Devise flows, sign-up), pin the dark skin: the
+  # starfield is dark in every theme, so light text is the only text that
+  # reads on it (layouts/auth, layouts/kronk_void).
+  def page_theme
+    content_for?(:page_theme) ? content_for(:page_theme) : current_theme
+  end
+
   def body_classes
     output = []
     output << content_for(:body_classes)
-    output << "theme-#{current_theme.parameterize}"
+    output << "theme-#{page_theme.parameterize}"
     output << 'system-font' if current_account&.user&.setting_system_font_ui
     output << 'custom-scrollbars' unless current_account&.user&.setting_system_scrollbars_ui
     output << (current_account&.user&.setting_reduce_motion ? 'reduce-motion' : 'no-reduce-motion')

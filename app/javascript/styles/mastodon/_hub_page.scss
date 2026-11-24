@@ -122,7 +122,7 @@ $tile-shadow-2: #17151f;
     border-radius: 20px;
     border: 0;
     background: none;
-    color: var(--text-primary);
+    color: var(--tile-text);
     font: inherit;
     text-decoration: none;
     cursor: pointer;
@@ -166,7 +166,7 @@ $tile-shadow-2: #17151f;
     line-height: 1.1;
     text-align: center;
     padding: 0 6px;
-    color: var(--text-primary);
+    color: var(--tile-text);
     pointer-events: none;
   }
 
@@ -271,7 +271,7 @@ $tile-shadow-2: #17151f;
     place-items: center;
     opacity: 0;
     background: rgb(0 0 0 / 25%);
-    color: var(--text-secondary);
+    color: color-mix(in oklab, var(--tile-text) 75%, transparent);
     text-decoration: none;
     transition:
       opacity 0.15s,
@@ -367,7 +367,7 @@ $tile-shadow-2: #17151f;
     }
 
     .hub-page__tile-name {
-      color: var(--text-muted);
+      color: color-mix(in oklab, var(--tile-text) 55%, transparent);
     }
   }
 

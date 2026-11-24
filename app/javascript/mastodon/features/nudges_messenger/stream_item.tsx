@@ -2,16 +2,17 @@ import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
 
+import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import type {
   ApiNudgeKrewReadPointer,
   ApiNudgeMessageJSON,
   ApiNudgeStreamItem,
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
-import { Icon } from 'mastodon/components/icon';
+import { IconButton } from 'mastodon/components/icon_button';
 import {
   KronkLinkCards,
   kronkPathsInText,
@@ -24,6 +25,7 @@ import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { LinkifiedBody } from './linkified_body';
+import { MessageMediaGrid } from './message_media';
 
 const messages = defineMessages({
   addReaction: {
@@ -55,6 +57,15 @@ interface StreamItemProps {
   onDelete?: DeleteHandler;
   onRetry?: MessageHandler;
   onDismissFailed?: MessageHandler;
+  // Where the message sits in a run of messages from the same person
+  // (consecutive, a few minutes apart). The name and avatar show once, at
+  // the top of a run, and the bubbles in a run sit close together.
+  runStart?: boolean;
+  runEnd?: boolean;
+  // Its reaction and delete controls are showing: a tap on the bubble on a
+  // phone, where there is no hover. One message at a time.
+  active?: boolean;
+  onActivate?: (id: string | null) => void;
 }
 
 // One row in the conversation stream — either a message bubble or an
@@ -72,6 +83,10 @@ export const StreamItem: React.FC<StreamItemProps> = ({
   onDelete,
   onRetry,
   onDismissFailed,
+  runStart = true,
+  runEnd = true,
+  active = false,
+  onActivate,
 }) => {
   if (item.kind === 'message') {
     return (
@@ -86,6 +101,10 @@ export const StreamItem: React.FC<StreamItemProps> = ({
         onDelete={onDelete}
         onRetry={onRetry}
         onDismissFailed={onDismissFailed}
+        runStart={runStart}
+        runEnd={runEnd}
+        active={active}
+        onActivate={onActivate}
       />
     );
   }
@@ -104,6 +123,10 @@ interface MessageItemProps {
   onDelete?: DeleteHandler;
   onRetry?: MessageHandler;
   onDismissFailed?: MessageHandler;
+  runStart: boolean;
+  runEnd: boolean;
+  active: boolean;
+  onActivate?: (id: string | null) => void;
 }
 
 // Tombstoned messages redact to a "deleted" placeholder — brief
@@ -111,7 +134,16 @@ interface MessageItemProps {
 // stream's timing so no re-flow occurs on later fetches.
 const MessageItem: React.FC<MessageItemProps> = (props) => {
   if (props.item.deleted) {
-    return <DeletedMessage item={props.item} />;
+    return (
+      <DeletedMessage
+        item={props.item}
+        withSender={
+          props.conversationKind === 'krew' && !props.item.author_is_self
+        }
+        runStart={props.runStart}
+        runEnd={props.runEnd}
+      />
+    );
   }
   return <LiveMessageItem {...props} />;
 };
@@ -127,6 +159,10 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
   onDelete,
   onRetry,
   onDismissFailed,
+  runStart,
+  runEnd,
+  active,
+  onActivate,
 }) => {
   const intl = useIntl();
 
@@ -161,10 +197,10 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
     [item, onReact, onUnreact, grouped, canAdd],
   );
 
-  // Krew incoming bubbles show sender name + avatar (per brief
-  // §Surface 3). Mate bubbles stay bare — the pair is already known
-  // from the conversation header. Suppressed for optimistic-sending
-  // rows since the author stub isn't a real account yet.
+  // In a Krew chat, other people's messages carry who sent them: the
+  // avatar beside the bubble and the name above it, once per run. Mate
+  // chats stay bare, since the header already says who it is. Not for
+  // optimistic-sending rows, whose author stub isn't a real account yet.
   const showSender =
     conversationKind === 'krew' && !item.author_is_self && !item.sending;
 
@@ -208,91 +244,139 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
     void onDismissFailed?.(item);
   }, [item, onDismissFailed]);
 
+  const canReact = !isOptimistic && !!onReact && canAdd;
+  const canDelete = !isOptimistic && item.author_is_self && !!onDelete;
+
+  // A tap on the bubble shows its controls beside it (a phone has no
+  // hover); a second tap, or a tap on another message, puts them away. A
+  // tap on something in the bubble that does its own thing (a link, a
+  // video, a card) is left to it.
+  const handleBubbleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!onActivate || isOptimistic) return;
+      const target = e.target as HTMLElement;
+      if (target.closest('a, button, video, audio, input, textarea')) return;
+      onActivate(active ? null : item.id);
+    },
+    [onActivate, isOptimistic, active, item.id],
+  );
+
   return (
     <div
-      className={`nudges-msg ${
-        item.author_is_self ? 'nudges-msg--out' : 'nudges-msg--in'
-      } ${item.sending ? 'nudges-msg--sending' : ''} ${
-        item.failed ? 'nudges-msg--failed' : ''
-      }`}
+      className={classNames(
+        'nudges-msg',
+        item.author_is_self ? 'nudges-msg--out' : 'nudges-msg--in',
+        {
+          'nudges-msg--sending': item.sending,
+          'nudges-msg--failed': item.failed,
+          'nudges-msg--run-start': runStart,
+          'nudges-msg--run-end': runEnd,
+          'nudges-msg--active': active,
+          'nudges-msg--reacted': grouped.length > 0,
+          'nudges-msg--with-sender': showSender,
+        },
+      )}
     >
       {showSender && (
-        <div className='nudges-msg__sender'>
-          <SenderAvatar author={item.author} />
+        <span className='nudges-msg__avatar'>
+          {runStart && <SenderAvatar author={item.author} />}
+        </span>
+      )}
+      <div className='nudges-msg__main'>
+        {showSender && runStart && (
           <span className='nudges-msg__sender-name'>
             {item.author.display_name || item.author.username}
           </span>
-        </div>
-      )}
-      <div className='nudges-msg__bubble'>
-        {item.media.length > 0 && <MessageMediaGrid media={item.media} />}
-        {item.body && (
-          <span className='nudges-msg__body'>
-            <LinkifiedBody body={item.body} />
-          </span>
         )}
-        {/* Links to things on Kronk: their cards, as this viewer sees them. */}
-        {item.body && (
-          <KronkLinkCards
-            paths={kronkPathsInText(item.body)}
-            className='nudges-msg__links'
-          />
-        )}
-      </div>
+        <div className='nudges-msg__line'>
+          {/* The keyboard path to the controls is focus: they show when
+              tabbed to. The tap is for touch screens. */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+          <div className='nudges-msg__bubble' onClick={handleBubbleClick}>
+            {item.media.length > 0 && <MessageMediaGrid media={item.media} />}
+            {item.body && (
+              <span className='nudges-msg__body'>
+                <LinkifiedBody body={item.body} />
+              </span>
+            )}
+            {/* Links to things on Kronk: their cards, as this viewer sees them. */}
+            {item.body && (
+              <KronkLinkCards
+                paths={kronkPathsInText(item.body)}
+                className='nudges-msg__links'
+              />
+            )}
+            {/* Reactions sit on the bubble's bottom edge. */}
+            {!isOptimistic && grouped.length > 0 && (
+              <div className='nudges-msg__reactions'>
+                {grouped.map((r) => (
+                  <ReactionChip
+                    key={r.symbol}
+                    symbol={r.symbol}
+                    count={r.count}
+                    mine={r.mine}
+                    onToggle={handleToggle}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
-      {!isOptimistic && (grouped.length > 0 || onReact) && (
-        <div className='nudges-msg__reactions'>
-          {grouped.map((r) => (
-            <ReactionChip
-              key={r.symbol}
-              symbol={r.symbol}
-              count={r.count}
-              mine={r.mine}
-              onToggle={handleToggle}
-            />
-          ))}
-          {onReact && canAdd && (
-            <AddReactionPicker
-              onPick={handleToggle}
-              label={intl.formatMessage(messages.addReaction)}
-            />
+          {/* Beside the bubble, as in Signal: react, on every message,
+              yours too, there faintly at rest so it can be found; and take
+              back your own, on hover, on focus, or after a tap on the
+              bubble. */}
+          {(canReact || canDelete) && (
+            <div className='nudges-msg__actions'>
+              {canReact && (
+                <AddReactionPicker
+                  onPick={handleToggle}
+                  label={intl.formatMessage(messages.addReaction)}
+                />
+              )}
+              {canDelete && <DeleteButton item={item} onDelete={onDelete} />}
+            </div>
           )}
         </div>
-      )}
 
-      <span className='nudges-msg__time'>
-        {item.sending ? (
-          <FormattedMessage id='nudges.sending' defaultMessage='Sending…' />
-        ) : item.failed ? (
+        {/* When, and whether it's been read: under the bubble, not in it
+            (Tal, 2026-11-23), once at the end of a run, where Signal and
+            the rest put it too. One still going, or failed, says so. */}
+        {(runEnd || isOptimistic) && (
+          <span className='nudges-msg__meta'>
+            {item.sending ? (
+              <FormattedMessage id='nudges.sending' defaultMessage='Sending…' />
+            ) : (
+              <RelativeTimestamp timestamp={item.created_at} short />
+            )}
+            {seenByOther && (
+              <span className='nudges-msg__seen' aria-label='Seen' title='Seen'>
+                <FormattedMessage id='nudges.seen' defaultMessage='Seen' />
+              </span>
+            )}
+            {showKrewReadReceipt && (
+              <span
+                className='nudges-msg__seen'
+                aria-label={`Read by ${krewReadCount} of ${krewReadTotal}`}
+                title={`Read by ${krewReadCount} of ${krewReadTotal}`}
+              >
+                <FormattedMessage
+                  id='nudges.krew_seen'
+                  defaultMessage='Read {count}/{total}'
+                  values={{ count: krewReadCount, total: krewReadTotal }}
+                />
+              </span>
+            )}
+          </span>
+        )}
+
+        {item.failed && (
           <FailedControls
             onRetry={handleRetryClick}
             onDismiss={handleDismissClick}
           />
-        ) : (
-          <RelativeTimestamp timestamp={item.created_at} short />
         )}
-        {seenByOther && (
-          <span className='nudges-msg__seen' aria-label='Seen' title='Seen'>
-            <FormattedMessage id='nudges.seen' defaultMessage='Seen' />
-          </span>
-        )}
-        {showKrewReadReceipt && (
-          <span
-            className='nudges-msg__seen'
-            aria-label={`Read by ${krewReadCount} of ${krewReadTotal}`}
-            title={`Read by ${krewReadCount} of ${krewReadTotal}`}
-          >
-            <FormattedMessage
-              id='nudges.krew_seen'
-              defaultMessage='Read {count}/{total}'
-              values={{ count: krewReadCount, total: krewReadTotal }}
-            />
-          </span>
-        )}
-        {!isOptimistic && item.author_is_self && onDelete && (
-          <DeleteButton item={item} onDelete={onDelete} />
-        )}
-      </span>
+      </div>
     </div>
   );
 };
@@ -323,21 +407,44 @@ const FailedControls: React.FC<{
   </span>
 );
 
-const DeletedMessage: React.FC<{ item: ApiNudgeMessageJSON }> = ({ item }) => (
+const DeletedMessage: React.FC<{
+  item: ApiNudgeMessageJSON;
+  withSender: boolean;
+  runStart: boolean;
+  runEnd: boolean;
+}> = ({ item, withSender, runStart, runEnd }) => (
   <div
-    className={`nudges-msg nudges-msg--deleted ${
-      item.author_is_self ? 'nudges-msg--out' : 'nudges-msg--in'
-    }`}
+    className={classNames(
+      'nudges-msg',
+      'nudges-msg--deleted',
+      item.author_is_self ? 'nudges-msg--out' : 'nudges-msg--in',
+      {
+        'nudges-msg--run-start': runStart,
+        'nudges-msg--run-end': runEnd,
+        'nudges-msg--with-sender': withSender,
+      },
+    )}
   >
-    <div className='nudges-msg__bubble nudges-msg__bubble--deleted'>
-      <FormattedMessage
-        id='nudges.message_deleted'
-        defaultMessage='Message deleted'
-      />
+    {withSender && (
+      <span className='nudges-msg__avatar'>
+        {runStart && <SenderAvatar author={item.author} />}
+      </span>
+    )}
+    <div className='nudges-msg__main'>
+      <div className='nudges-msg__line'>
+        <div className='nudges-msg__bubble nudges-msg__bubble--deleted'>
+          <FormattedMessage
+            id='nudges.message_deleted'
+            defaultMessage='Message deleted'
+          />
+        </div>
+      </div>
+      {runEnd && (
+        <span className='nudges-msg__meta'>
+          <RelativeTimestamp timestamp={item.created_at} short />
+        </span>
+      )}
     </div>
-    <span className='nudges-msg__time'>
-      <RelativeTimestamp timestamp={item.created_at} short />
-    </span>
   </div>
 );
 
@@ -362,21 +469,16 @@ const DeleteButton: React.FC<{
   return (
     <>
       {confirmDialog}
-      <button
-        type='button'
-        className='nudges-msg__delete'
-        onClick={handleClick}
-        aria-label={intl.formatMessage({
-          id: 'nudges.delete',
-          defaultMessage: 'Delete',
-        })}
+      <IconButton
+        className='nudges-msg__action nudges-msg__delete'
+        icon='delete'
+        iconComponent={DeleteIcon}
         title={intl.formatMessage({
           id: 'nudges.delete',
           defaultMessage: 'Delete',
         })}
-      >
-        ×
-      </button>
+        onClick={handleClick}
+      />
     </>
   );
 };
@@ -385,45 +487,7 @@ const SenderAvatar: React.FC<{
   author: ApiNudgeMessageJSON['author'];
 }> = ({ author }) => {
   const account = createAccountFromServerJSON(author);
-  return <Avatar account={account} size={20} />;
-};
-
-const MessageMediaGrid: React.FC<{
-  media: ApiNudgeMessageJSON['media'];
-}> = ({ media }) => {
-  const count = Math.min(media.length, 4);
-  return (
-    <div className={`nudges-msg__media-grid nudges-msg__media-grid--${count}`}>
-      {media.map((m) => (
-        <MessageMediaTile key={m.id} media={m} />
-      ))}
-    </div>
-  );
-};
-
-const MessageMediaTile: React.FC<{
-  media: ApiNudgeMessageJSON['media'][number];
-}> = ({ media }) => {
-  if (media.type === 'video' || media.type === 'gifv') {
-    return (
-      // eslint-disable-next-line jsx-a11y/media-has-caption
-      <video
-        className='nudges-msg__media'
-        src={media.url ?? undefined}
-        poster={media.preview_url ?? undefined}
-        controls
-        playsInline
-      />
-    );
-  }
-
-  return (
-    <img
-      className='nudges-msg__media'
-      src={media.preview_url ?? media.url ?? undefined}
-      alt={media.description ?? ''}
-    />
-  );
+  return <Avatar account={account} size={28} />;
 };
 
 interface AddReactionPickerProps {
@@ -433,9 +497,9 @@ interface AddReactionPickerProps {
 
 // Wraps Mastodon's Compose EmojiPickerDropdown (same picker Compose
 // uses) so the full emoji palette + search + recents come along.
-// EmojiPickerDropdown owns its trigger button + positioning; we
-// just hand it the "+" icon and translate its onPickEmoji callback
-// into our reaction-toggle contract.
+// EmojiPickerDropdown owns its trigger button (the smiley) and its
+// positioning; we translate its onPickEmoji callback into our
+// reaction-toggle contract.
 const AddReactionPicker: React.FC<AddReactionPickerProps> = ({
   label,
   onPick,
@@ -454,11 +518,8 @@ const AddReactionPicker: React.FC<AddReactionPickerProps> = ({
   );
 
   return (
-    <span className='nudges-msg__react-add' title={label}>
-      <EmojiPickerDropdown
-        onPickEmoji={handlePick}
-        button={<Icon id='plus' icon={AddIcon} />}
-      />
+    <span className='nudges-msg__action nudges-msg__react-add' title={label}>
+      <EmojiPickerDropdown onPickEmoji={handlePick} />
     </span>
   );
 };

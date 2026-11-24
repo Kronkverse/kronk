@@ -56,6 +56,9 @@ en:
               taken: is already in Brands
         freethedream/item:
           bringing: People are bringing it, so it stays something to bring
+  admin:
+    dashboard:
+      title: Admin Dashboard
   albutts:
     photos_added:
       one: Added a photo to %{title}
@@ -147,6 +150,27 @@ en:
   # lang/main.json; {{…}} is Jitsi's placeholder, not Rails'.
   kalendar:
     krew_members_only: This event is for its Krew alone, so only its members can be invited.
+  kollection:
+    admin:
+      app: App
+      intro: Every app linked to Kronk. Members add them and they are live at once. Pulling one takes it off the list, revokes every token it holds and stops it signing anyone in, until it is restored. The keeper sees its client key and secret and can change it.
+      keeper: Keeper
+      keeper_cleared: "%{name} has no keeper now."
+      keeper_not_found: No member here is called %{username}.
+      keeper_set: "%{username} keeps %{name} now."
+      link_only: A link, no sign-in
+      live: Live
+      no_keeper: No keeper
+      pull: Pull
+      pull_confirm: Pull %{name}? It leaves Kollection, everyone connected to it is signed out of it, and it can't sign anyone in until you restore it.
+      pulled: "%{name} is pulled."
+      pulled_on: Pulled %{date}
+      restore: Restore
+      restored: "%{name} is back in Kollection."
+      set_keeper: Set
+      signs_in: Sees
+      status: Status
+      title: Kollection apps
   kronk_jitsi:
     booth_live:
       dialog:
@@ -210,6 +234,7 @@ en:
       freethedream:
         gang_talked: "%{who} said something in a Komponent you joined"
         gang_updated: "%{who} added to a Komponent you joined"
+        item_suggested: "%{who} suggested you for something on a checklist"
         mentioned: "%{who} tagged you in a projekt’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
         projekt_begun: A projekt you’re in has begun
@@ -344,6 +369,9 @@ en-GB:
               taken: is already in Brands
         freethedream/item:
           bringing: People are bringing it, so it stays something to bring
+  admin:
+    dashboard:
+      title: Admin Dashboard
   albutts:
     photos_added:
       one: Added a photo to %{title}
@@ -435,6 +463,27 @@ en-GB:
   # lang/main.json; {{…}} is Jitsi's placeholder, not Rails'.
   kalendar:
     krew_members_only: This event is for its Krew alone, so only its members can be invited.
+  kollection:
+    admin:
+      app: App
+      intro: Every app linked to Kronk. Members add them and they are live at once. Pulling one takes it off the list, revokes every token it holds and stops it signing anyone in, until it is restored. The keeper sees its client key and secret and can change it.
+      keeper: Keeper
+      keeper_cleared: "%{name} has no keeper now."
+      keeper_not_found: No member here is called %{username}.
+      keeper_set: "%{username} keeps %{name} now."
+      link_only: A link, no sign-in
+      live: Live
+      no_keeper: No keeper
+      pull: Pull
+      pull_confirm: Pull %{name}? It leaves Kollection, everyone connected to it is signed out of it, and it can't sign anyone in until you restore it.
+      pulled: "%{name} is pulled."
+      pulled_on: Pulled %{date}
+      restore: Restore
+      restored: "%{name} is back in Kollection."
+      set_keeper: Set
+      signs_in: Sees
+      status: Status
+      title: Kollection apps
   kronk_jitsi:
     booth_live:
       dialog:
@@ -498,6 +547,7 @@ en-GB:
       freethedream:
         gang_talked: "%{who} said something in a Komponent you joined"
         gang_updated: "%{who} added to a Komponent you joined"
+        item_suggested: "%{who} suggested you for something on a checklist"
         mentioned: "%{who} tagged you in a projekt’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
         projekt_begun: A projekt you’re in has begun

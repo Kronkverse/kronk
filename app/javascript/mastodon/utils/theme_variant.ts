@@ -29,11 +29,16 @@ function stampThemeVariant(): void {
 }
 
 // Stamp the variant now, and — for the `system` theme, whose light/dark
-// follows the OS — keep it in sync when the OS preference flips.
+// follows the OS — keep it in sync when the OS preference flips. Every page
+// calls it (entrypoints via mastodon/common), the Rails-served ones
+// included, and main.tsx calls it again; only the first call listens.
+let listening = false;
+
 export function applyThemeVariant(): void {
   stampThemeVariant();
 
-  if (document.body.classList.contains('theme-system')) {
+  if (!listening && document.body.classList.contains('theme-system')) {
+    listening = true;
     window
       .matchMedia(LIGHT_QUERY)
       .addEventListener('change', stampThemeVariant);

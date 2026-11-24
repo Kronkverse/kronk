@@ -9,7 +9,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
 import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
-import { uploadMediaBlob } from 'mastodon/components/media';
+import { uploadMediaBlob, PhotoDropTarget } from 'mastodon/components/media';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppSelector } from 'mastodon/store';
@@ -317,7 +317,7 @@ export const NudgeComposeModal: React.FC<{
           </button>
         </div>
       ) : (
-        <div className='nudge-compose-modal__body'>
+        <PhotoDropTarget className='nudge-compose-modal__body'>
           {draft.restored && (
             <DraftRestoredPill onDiscard={handleDiscardDraft} />
           )}
@@ -448,7 +448,7 @@ export const NudgeComposeModal: React.FC<{
               </Button>
             </div>
           </div>
-        </div>
+        </PhotoDropTarget>
       )}
 
       {mode === 'choose' && (

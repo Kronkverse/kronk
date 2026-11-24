@@ -1495,17 +1495,13 @@ my:
     title: ဆက်ရှင်များ
     view_authentication_history: သင့်အကောင့်၏ စစ်မှန်ကြောင်းအထောက်အထားပြမှုကို ကြည့်ပါ
   settings:
-    account: အကောင့်
     account_settings: အကောင့်သတ်မှတ်ချက်များ
     aliases: အကောင့်အမည်တူများ
     appearance: ပုံပန်းသဏ္ဌာန်
-    authorized_apps: ခွင့်ပြုထားသောအက်ပ်များ
-    back: Mastodon သို့ ပြန်သွားရန်
     development: Development
     edit_profile: ပရိုဖိုင်ပြင်ဆင်ရန်
     featured_tags: အသားပေးဖော်ပြထားသည့် ဟက်ရှ်တဂျ်များ
     import: ထည့်သွင်းခြင်း
-    import_and_export: ထည့်သွင်းခြင်းနှင့် ထုတ်ယူခြင်း
     migrate: အကောင့်ပြောင်းရွှေ့ခြင်း
     preferences: သတ်မှတ်ချက်များ
     profile: ပရိုဖိုင်

@@ -1108,17 +1108,13 @@ sc:
     revoke_success: Sessione revocada
     title: Sessiones
   settings:
-    account: Contu
     account_settings: Cunfiguratziones de su contu
     aliases: Nomìngios de su contu
     appearance: Aspetu
-    authorized_apps: Aplicatziones autorizadas
-    back: Torra a Mastodon
     development: Isvilupu
     edit_profile: Modìfica profilu
     featured_tags: Etichetas in evidèntzia
     import: Importatzione
-    import_and_export: Importatzione e esportatzione
     migrate: Tràmuda de contu
     preferences: Preferèntzias
     profile: Profilu pùblicu

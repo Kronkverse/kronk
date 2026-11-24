@@ -1870,18 +1870,14 @@ nn:
     title: Økter
     view_authentication_history: Vis autentiseringshistorikk for kontoen din
   settings:
-    account: Konto
     account_settings: Kontoinnstillingar
     aliases: Kallenamn til kontoen
     appearance: Utsjånad
-    authorized_apps: Godkjende appar
-    back: Tilbake til Mastodon
     development: Utvikling
     edit_profile: Endr profil
     export: Eksporter
     featured_tags: Utvalde emneknaggar
     import: Hent inn
-    import_and_export: Importer og eksporter
     migrate: Kontoflytting
     notifications: Epostvarsel
     preferences: Innstillingar

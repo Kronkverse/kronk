@@ -108,6 +108,7 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
         'booth.sample.used',
         'freethedream.comment.mentioned',
         'freethedream.mycelium.matched',
+        'freethedream.item.suggested',
         'freethedream.gang.talked',
         'freethedream.gang.updated',
         'freethedream.projekt.begun',

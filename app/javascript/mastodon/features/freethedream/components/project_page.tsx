@@ -41,6 +41,7 @@ import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { act } from './act';
 import { Checklist } from './checklist';
 import { eventMapHref, eventWhen, ProjectEvents } from './event_card';
+import { Fractals } from './fractals';
 import { GroupTiles } from './groups';
 import { Yours } from './overview';
 import { ProjectComposer } from './project_composer';
@@ -125,7 +126,6 @@ const messages = defineMessages({
     id: 'freethedream.coalesce_gang',
     defaultMessage: '+ Add a Komponent',
   },
-  fractals: { id: 'freethedream.fractals', defaultMessage: 'Fractals' },
   addFractal: {
     id: 'freethedream.add_fractal',
     defaultMessage: '+ Add a fractal',
@@ -175,10 +175,10 @@ const ProjectView: React.FC<{
   // new to you after that.
   const isMember = project.membership === 'member';
   const frameKuestions = useCallback(
-    (row: React.ReactNode) => (
-      <Section title={intl.formatMessage(messages.kuestions)}>{row}</Section>
+    (row: React.ReactNode, title: React.ReactNode) => (
+      <Section title={title}>{row}</Section>
     ),
-    [intl],
+    [],
   );
   useEffect(() => {
     if (isMember) void act(apiFtdSeen(project.id));
@@ -482,21 +482,26 @@ const ProjectView: React.FC<{
             bringing (Tal, 2026-11-10). */}
         {!project.top && <Checklist project={project} onChange={refresh} />}
 
+        {/* A Komponent's fractals under its checklist, each a checklist
+            of its own on this page, not a page of its own (Kommons
+            "Fractals", 2026-11-22). */}
+        {project.level === 'gang' && (
+          <Fractals
+            project={project}
+            onChange={refresh}
+            addLabel={intl.formatMessage(messages.addFractal)}
+            onAdd={canAddInside ? openSection : undefined}
+          />
+        )}
+
         {/* Its Komponents first, the main thing on a projekt's page (Tal,
-            2026-11-09): gangs under the emergence, fractals under a gang,
-            nothing under a fractal. */}
-        {(project.sections.length > 0 || canAddInside) && (
-          <Section
-            title={intl.formatMessage(
-              project.top ? messages.groups : messages.fractals,
-            )}
-          >
+            2026-11-09). */}
+        {project.top && (project.sections.length > 0 || canAddInside) && (
+          <Section title={intl.formatMessage(messages.groups)}>
             <GroupTiles
               row
               sections={groups}
-              addLabel={intl.formatMessage(
-                project.top ? messages.addGroup : messages.addFractal,
-              )}
+              addLabel={intl.formatMessage(messages.addGroup)}
               onAdd={canAddInside ? openSection : undefined}
             />
           </Section>

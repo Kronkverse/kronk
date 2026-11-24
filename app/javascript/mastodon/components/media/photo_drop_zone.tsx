@@ -1,5 +1,5 @@
-import type { ChangeEvent, DragEvent } from 'react';
-import { useCallback, useId, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { useCallback, useId } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -7,6 +7,7 @@ import classNames from 'classnames';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { usePhotoDrop } from 'mastodon/hooks/usePhotoDrop';
 
 const messages = defineMessages({
   pick: {
@@ -31,27 +32,14 @@ interface PhotoDropZoneProps {
   // Replaces the default "Drag photos here, or click to choose".
   label?: React.ReactNode;
   className?: string;
+  // The input's id, for a spec or an outside <label> to find it by.
+  id?: string;
 }
 
-// Does a file match an accept list like 'image/*,video/mp4,.heic'?
-const accepts = (file: File, accept: string): boolean =>
-  accept
-    .split(',')
-    .map((a) => a.trim().toLowerCase())
-    .filter(Boolean)
-    .some((a) => {
-      if (a.startsWith('.')) return file.name.toLowerCase().endsWith(a);
-      if (a.endsWith('/*')) return file.type.startsWith(a.slice(0, -1));
-      return file.type === a;
-    });
-
 // The one way to add photos (docs/design.md, Compose + confirmation): a box
-// you can drop photos on from the desktop, or click to choose them. Every
-// photo upload uses it, so drag and drop works everywhere.
-//
-// A drop here is marked handled (preventDefault), so the window-level drop
-// in features/ui/index.jsx leaves it alone instead of also uploading the
-// files into the main post box.
+// you can drop photos on from the desktop, or click to choose them. The
+// drop itself is usePhotoDrop, which places that already have a look of
+// their own (an avatar, a cover) use directly.
 export const PhotoDropZone: React.FC<PhotoDropZoneProps> = ({
   onFiles,
   accept = 'image/*',
@@ -59,19 +47,17 @@ export const PhotoDropZone: React.FC<PhotoDropZoneProps> = ({
   disabled = false,
   label,
   className,
+  id,
 }) => {
   const intl = useIntl();
-  const inputId = useId();
-  const [dragging, setDragging] = useState(false);
-
-  const take = useCallback(
-    (list: FileList | null) => {
-      const files = Array.from(list ?? []).filter((f) => accepts(f, accept));
-      const picked = multiple ? files : files.slice(0, 1);
-      if (picked.length > 0) onFiles(picked);
-    },
-    [accept, multiple, onFiles],
-  );
+  const autoId = useId();
+  const inputId = id ?? autoId;
+  const { dragging, dropProps, take } = usePhotoDrop({
+    onFiles,
+    accept,
+    multiple,
+    disabled,
+  });
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -82,36 +68,13 @@ export const PhotoDropZone: React.FC<PhotoDropZoneProps> = ({
     [take],
   );
 
-  const handleDragOver = useCallback(
-    (e: DragEvent) => {
-      e.preventDefault();
-      if (!disabled) setDragging(true);
-    },
-    [disabled],
-  );
-  const handleDragLeave = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-  }, []);
-  const handleDrop = useCallback(
-    (e: DragEvent) => {
-      e.preventDefault();
-      setDragging(false);
-      if (!disabled) take(e.dataTransfer.files);
-    },
-    [disabled, take],
-  );
-
   return (
     <div
       className={classNames('photo-drop-zone', className, {
         'photo-drop-zone--dragging': dragging,
         'photo-drop-zone--disabled': disabled,
       })}
-      onDragEnter={handleDragOver}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      {...dropProps}
     >
       <input
         id={inputId}

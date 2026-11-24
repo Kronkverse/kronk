@@ -146,14 +146,19 @@ and that should show on the card. So a listing's price has a kind
 what the amount is for (`listings.price_unit`, `Listing::PRICE_UNITS`:
 `hour`, `day`, `week`, `month`, `session`; null is the whole thing).
 
-| `price_type` | Composer says (offer / wanted)    | Card says      |
-| ------------ | --------------------------------- | -------------- |
-| `fixed`      | A set price / A set amount        | A$38.00 / hour |
-| `up_to`      | (wanted only) Up to               | Up to A$500.00 |
-| `offers`     | Open to offers                    | Open to offers |
-| `quote`      | Quote on request / Ask for quotes | Quote          |
-| `trade`      | Trade or swap                     | Trade          |
-| `free`       | Free                              | Free           |
+| `price_type` | Composer says (offer / wanted)      | Card says      |
+| ------------ | ----------------------------------- | -------------- |
+| `fixed`      | A set price / A set amount          | A$38.00 / hour |
+| `up_to`      | (wanted only) Up to                 | Up to A$500.00 |
+| `offers`     | Open to offers                      | Open to offers |
+| `quote`      | Quote on request / Ask for quotes   | Quote          |
+| `trade`      | Trade or swap                       | Trade          |
+| `free`       | Free                                | Free           |
+| `donation`   | (lessons only) Free, for a donation | Donation       |
+
+A lesson (see Lessons) offers **A set price**, **Pay what you want** (its
+`offers`, read so on the card and the page), **Free, for a donation** and
+**Free**, each for the whole lesson.
 
 Null reads as `fixed`, as every older listing does; a `fixed` listing
 with no amount is still free or by arrangement and shows no price. Only
@@ -350,6 +355,9 @@ stored on the listing (`listings.offering`: `product`, `appointment`,
 - **Tickets** (retreats, workshops; see Tickets below): **Sell here** or
   **Sold elsewhere** (a link to the ticket site), **Dates** (when, where,
   how many seats), and ticket types with prices (a **Ticket** variation).
+- **A lesson** (tutorials, music lessons, videos; see Lessons below): the
+  price, **What people will learn**, **The lesson** (uploads and notes) and
+  **How to pay you**.
 
 All of them are ordinary listings underneath (category Offerings), so they
 show on the one page, the shop, search and the feed as before, and are asked for
@@ -357,6 +365,51 @@ or booked through Requests. Kronk takes no payment: the seller says how to
 pay in the shop, and accepting is the agreement.
 
 Not built: a Huddle call link for online appointments (in the design).
+
+## Lessons
+
+Tal, 2026-11-22: people should be able to post a tutorial, a music lesson
+or a video that teaches something and earn from it, with the price theirs to
+set, or left to the person paying, or a donation, while Kronk still takes
+no payment (decisions.md, 2026-11-22).
+
+A lesson is a listing (`offering: 'lesson'`) with a lesson behind it:
+uploads (videos, recordings, pictures; `listing_lesson_media`, up to 20,
+apart from the photos) and notes (`listings.lesson_body`). Everyone who can
+see the listing sees its photos, title, price and **What people will
+learn** (the description), and how many of each upload it has ("2 videos ·
+notes"). The lesson itself opens (`Listing#lesson_unlocked_for?`) for:
+
+- the seller;
+- everyone who can see the listing, when it is **Free** or **Free, for a
+  donation** (`Listing#lesson_open?`; a donation lesson shows **Support
+  {name}** with how to pay them under it);
+- anyone whose request to unlock it the seller accepted, while they can
+  still see the listing.
+
+**Unlocking** is a request (see Requests). The page says how to pay the
+seller (`listings.pay_details`, **How to pay you** in the composer: PayID,
+bank details, PayPal.me, a Ko-fi link), and **Unlock** sends the request,
+with a note ("Paid by PayID") and, on Pay what you want, what they say
+they'll pay (`listing_offers.amount_cents`). The seller hears it in Nudges
+(`wachuneed.offer.made`, **See requests**), and the request card says
+**Asks to unlock this lesson** with **Let them in** and Decline. Whether
+they paid, or talked it over, is the seller's to judge. Letting someone in
+sends `wachuneed.offer.accepted` (**View listing**), and the lesson opens.
+A declined person can ask again; someone let in can't ask twice, and a
+free or donation lesson has nothing to ask. Letting someone in never
+reserves the listing.
+
+The serializer (`lesson` on the listing's detail) sends the notes and the
+uploads' addresses only to someone who may open it. An upload's address
+works for whoever has it, so someone let in could pass a file on: the lock
+keeps a lesson to the people the seller chose, it doesn't stop them sharing
+it.
+
+Not built: paying by card in Kronk with the lesson opening on payment
+(Stripe Connect; a change to "Kronk does not broker payment", for Tal);
+the same lock on a Cinema film, a Booth set or a Kronikle; taking someone
+back out of a lesson.
 
 ## Tickets
 
@@ -850,6 +903,10 @@ a hit shows only to whoever can see the listing (`PolicyFilter`).
 - **`listing_photos`**: ordered links to `MediaAttachment`, up to ten. The
   media belong to no post, so `Vacuum::MediaAttachmentsVacuum` excludes them
   from its sweep of unattached uploads.
+- **`listing_lesson_media`** (`ListingLessonMedium`): a lesson's uploads, in
+  order, up to 20; kept from the vacuum the same way. `listings.lesson_body`
+  holds its notes (a lesson only) and `listings.pay_details` how to pay the
+  seller (anything on offer, shown with a lesson).
 - **`listings`** also carries `ongoing`, `availability`, `announced`,
   `variants`, `options` and `booking` (see The shop builder, Options,
   Booking), and

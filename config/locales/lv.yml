@@ -1840,18 +1840,14 @@ lv:
     title: Sesijas
     view_authentication_history: Skatīt sava konta autentifikācijas vēsturi
   settings:
-    account: Konts
     account_settings: Konta iestatījumi
     aliases: Konta aizstājvārdi
     appearance: Izskats
-    authorized_apps: Pilnvarotās lietotnes
-    back: Atgriezties Mastodon
     development: Izstrāde
     edit_profile: Labot profilu
     export: Izgūt
     featured_tags: Piedāvātie tēmturi
     import: Imports
-    import_and_export: Ievietošana un izgūšana
     migrate: Konta migrācija
     notifications: E-pasta paziņojumi
     preferences: Iestatījumi

@@ -593,8 +593,8 @@
 // a dropdown of avatar bubbles. Tap a bubble → re-centre the map on
 // that mate (handleSelectPin still clamps to ANON_ZOOM - 0.5, so the
 // user zooms OUT to see them — anonymisation is preserved).
-// First Nations Country — always drawn; "Find a Country" sits under the zoom
-// buttons, top right, with the disclaimer or a Country's card beneath it.
+// First Nations Country — always drawn; a tapped Country's card sits under
+// the zoom buttons, top right.
 .map-country {
   position: absolute;
   top: 88px;
@@ -605,70 +605,6 @@
   align-items: flex-end;
   gap: 6px;
   max-width: min(260px, calc(100% - 32px));
-
-  &__note {
-    margin: 0;
-    padding: 8px 10px;
-    border-radius: var(--radius-medium);
-    background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
-    color: var(--text-secondary);
-    font-size: 11px;
-    line-height: 1.4;
-    text-align: right;
-    backdrop-filter: blur(10px);
-  }
-
-  &__find {
-    position: relative;
-    width: 220px;
-  }
-
-  &__find-input {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    font-size: 13px;
-    backdrop-filter: blur(10px);
-
-    &:focus-visible {
-      border-color: var(--accent);
-      outline: none;
-    }
-  }
-
-  &__matches {
-    display: flex;
-    flex-direction: column;
-    margin-top: 4px;
-    padding: 4px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: var(--surface-elevated);
-    box-shadow: var(--elevation-floating);
-  }
-
-  &__match {
-    padding: 8px 10px;
-    border: 0;
-    border-radius: var(--radius-small);
-    background: none;
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    font-size: 13px;
-    text-align: left;
-    cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-      background: color-mix(in srgb, var(--accent) 18%, transparent);
-      outline: none;
-    }
-  }
 
   &__card {
     box-sizing: border-box;
@@ -890,101 +826,130 @@
   }
 }
 
-// Near me (features/map_v2/near_me.tsx): a pill top-left that opens a list
-// of the closest Mates, Places and Events. Dropped below the in-view pill
-// when that is showing.
-.map-near-me {
+// Your location (features/map_v2/location_menu.tsx): a round pin button top
+// left that opens Share and Update, from Anthemos, and the shares running
+// now. Dropped below the in-view pill when that is showing.
+// The top-left corner of the Map: your location from Anthemos and the cog
+// for what the map shows, side by side (map_show.tsx). Each one's menu
+// drops below the row, so opening one doesn't move the other.
+.map-corner {
   position: absolute;
   top: 16px;
   left: 16px;
-
-  // Above the Country search on the right, so its panel and the Share
-  // live note open over it rather than under.
   z-index: 6;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
-  width: min(300px, calc(100% - 32px));
+  width: min(280px, calc(100% - 32px));
   pointer-events: none;
+}
 
-  &--lower {
-    top: 64px;
-  }
+.map-location,
+.map-show {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
 
-  &__buttons {
-    display: flex;
-    gap: 8px;
-  }
-
-  &__toggle,
-  &__panel {
+.map-location {
+  &__button,
+  &__menu {
     pointer-events: auto;
   }
 
-  &__toggle {
-    align-self: flex-start;
+  &__menu {
+    position: absolute;
+    inset-block-start: calc(44px + 8px);
+    inset-inline-start: 0;
+  }
+
+  &__button {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 14px 8px 12px;
-    border: 1px solid var(--border-default);
+    justify-content: center;
+    inline-size: 44px;
+    block-size: 44px;
+    padding: 0;
+    border: 1px solid var(--accent);
     border-radius: var(--radius-round);
     background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 13px;
-    line-height: 1;
+    color: var(--accent-text);
     cursor: pointer;
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
 
     .icon {
-      width: 16px;
-      height: 16px;
-      color: var(--accent-text);
+      width: 22px;
+      height: 22px;
     }
 
     &:hover,
-    &:focus-visible {
-      border-color: var(--accent);
+    &:focus-visible,
+    &[aria-expanded='true'] {
+      background: color-mix(
+        in oklab,
+        var(--accent) 24%,
+        var(--surface-elevated)
+      );
       outline: none;
     }
   }
 
-  &__panel {
+  // A share is running: the live faces' breathing dot on the button.
+  &__live,
+  &__dot {
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: var(--radius-round);
+    background: var(--accent);
+  }
+
+  &__live {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 2px solid var(--accent);
+      border-radius: var(--radius-round);
+      opacity: 0;
+      animation: map-live-ring 2s var(--ease-out, ease) infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &::after {
+        animation: none;
+      }
+    }
+  }
+
+  &__dot {
+    flex: 0 0 auto;
+  }
+
+  &__menu {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
+    width: min(280px, calc(100vw - 32px));
     padding: 6px;
-    max-height: min(420px, 60vh);
-    overflow-y: auto;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-medium);
-    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+    background: color-mix(in oklab, var(--surface-elevated) 96%, transparent);
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
   }
 
-  &__title {
-    margin: 4px 8px 2px;
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  &__empty {
-    margin: 0;
-    padding: 10px 12px;
-    color: var(--text-secondary);
-    font-size: 12px;
-  }
-
-  &__row {
+  &__item {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 2px;
     width: 100%;
-    padding: 6px 8px;
+    padding: 8px 10px;
     border: 0;
     border-radius: var(--radius-medium);
     background: transparent;
@@ -999,145 +964,52 @@
     }
   }
 
-  &__avatar {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    border-radius: var(--radius-round);
-    object-fit: cover;
-  }
-
-  &__name {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__km {
-    flex: 0 0 auto;
-    color: var(--text-muted);
-    font-size: 11px;
-  }
-}
-
-.map-in-view {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: min(300px, calc(100% - 32px));
-
-  &__toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px 8px 12px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
-    color: var(--text-primary);
+  &__item-title {
     font-family: var(--font-display);
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
-
-    .icon {
-      width: 16px;
-      height: 16px;
-      color: var(--kronk-purple-bright);
-    }
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--kronk-purple-bright);
-      outline: none;
-    }
+    font-size: 14px;
   }
 
-  &__panel {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 6px;
-    max-height: 320px;
-    overflow-y: auto;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
-  }
-
-  &__empty {
-    margin: 0;
-    padding: 10px 12px;
+  &__item-hint {
     color: var(--text-secondary);
     font-size: 12px;
   }
 
-  &__row {
-    display: inline-flex;
+  &__note {
+    margin: 4px 10px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  &__share {
+    display: flex;
     align-items: center;
     gap: 8px;
-    width: 100%;
-    padding: 6px 8px;
-    border: 0;
-    border-radius: var(--radius-medium);
+    margin-top: 4px;
+    padding: 8px 10px 4px;
+    border-top: 1px solid var(--border-default);
+    font-size: 12px;
+  }
+
+  &__share-text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__stop {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
     background: transparent;
     color: var(--text-primary);
-    text-align: start;
+    font-size: 12px;
     cursor: pointer;
 
     &:hover,
     &:focus-visible {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 18%,
-        transparent
-      );
+      border-color: var(--accent);
       outline: none;
     }
-
-    &--self .map-in-view__name::after {
-      content: ' · you';
-      color: var(--kronk-purple-bright);
-      font-weight: 500;
-    }
-  }
-
-  &__avatar {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    border-radius: var(--radius-round);
-    background-color: var(--surface-elevated);
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-  }
-
-  &__name {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__handle {
-    flex: 0 0 auto;
-    font-size: 11px;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
   }
 }
 
@@ -1534,7 +1406,7 @@
     }
   }
 
-  // The zoom buttons line up with Near me across the top, 16px in, on
+  // The zoom buttons line up with the location button across the top, 16px in, on
   // every screen (MapLibre's own margin is 10px).
   .maplibregl-ctrl-top-right .maplibregl-ctrl {
     margin: 16px 16px 0 0;
@@ -1991,62 +1863,121 @@
   }
 }
 
-// ── Event pins (Kalendar ↔ Map bridge) ───────────────────────────────
-// Distinct from the mates teardrop so the two layers read as different
-// things: presence = teardrop with a face, event = squircle with the
-// Kalendar spiral glyph. Huddle events swap in a videocam glyph.
-.map-event-pin {
-  --ev-w: 40px;
-  --ev-h: 40px;
+// The cog's menu: a box per layer (map_show.tsx). It wears the location
+// menu's frame; this only undoes the fieldset's own look.
+.map-show__menu {
+  margin: 0;
+  min-inline-size: 0;
+  width: min(220px, calc(100vw - 32px));
+  padding: 10px 12px;
 
-  width: var(--ev-w);
-  height: var(--ev-h);
+  .check-box {
+    padding: 6px 2px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+  }
+}
+
+.map-show__title {
+  float: inline-start;
+  width: 100%;
+  margin-block-end: 4px;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+// ── Event pins (Kalendar ↔ Map bridge) ───────────────────────────────
+// One marker per spot (event_layer.tsx): the Kalendar korner's spiral,
+// white on an accent disc with a ring in the surface colour and a point at
+// the spot (Tal, 2026-11-23). The ring and shadow keep it apart from any
+// Country's colour in either theme; a Mate is a face and a plain Place a
+// pin glyph. "+2" when events share the spot.
+.map-event-pin {
+  position: relative;
+  padding: 0 0 0.45rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  border: 0;
   cursor: pointer;
-  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 45%));
-  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 55%));
+  transition: transform var(--dur-fast) var(--ease-out);
+
+  // The point, in the ring's colour.
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 50%;
+    translate: -50% 0;
+    border: 0.45rem solid transparent;
+    border-block-end: 0;
+    border-block-start-color: var(--surface-primary);
+  }
 
   &:hover,
   &:focus-visible {
     transform: scale(1.08);
+    outline: none;
   }
 
-  &__bulb {
-    width: 100%;
-    height: 100%;
+  &__disc {
     display: flex;
     align-items: center;
     justify-content: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    background: var(--accent);
+    border: 3px solid var(--surface-primary);
+    border-radius: var(--radius-round);
     color: var(--semantic-text-on-accent);
-    background: var(--kronk-purple-accent);
-    border: 2px solid color-mix(in oklab, var(--kronk-purple-bright) 70%, white);
-    border-radius: var(--radius-medium);
 
-    svg {
-      width: 60%;
-      height: 60%;
+    .icon {
+      inline-size: 1.35rem;
+      block-size: 1.35rem;
       fill: currentColor;
     }
   }
 
-  &--huddle &__bulb {
+  &__more {
+    position: absolute;
+    inset-block-start: -0.35rem;
+    inset-inline-end: -0.55rem;
+    padding: 0.1rem 0.3rem;
+    background: var(--surface-primary);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-round);
+    color: var(--text-primary);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  &--huddle &__disc {
     background: var(--kronk-purple-bright);
   }
 
   // What's on: in the next week a soft glow; happening now a glow that
   // breathes (event_layer.tsx, whatsOn). Still with reduced motion.
-  &--soon &__bulb {
+  &--soon &__disc {
     box-shadow: 0 0 10px 2px
       color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
   }
 
-  &--now &__bulb {
+  &--now &__disc {
     box-shadow: 0 0 14px 4px
       color-mix(in oklab, var(--kronk-purple-bright) 80%, transparent);
     animation: map-event-on 2.4s ease-in-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    &--now &__bulb {
+    &--now &__disc {
       animation: none;
     }
   }
@@ -2210,15 +2141,63 @@
     white-space: nowrap;
   }
 
-  &__open {
-    margin-top: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--kronk-purple-bright);
+  // A card's action: the kit's pill (korner-pill), set under the text and
+  // left-aligned, at its own width (Tal, 2026-11-23: a button, not a text
+  // link with an arrow).
+  &__action {
+    align-self: flex-start;
+    margin-top: 8px;
     text-decoration: none;
+  }
 
-    &:hover {
-      text-decoration: underline;
+  // A spot's card (event_layer.tsx, SpotCard): each event there, then
+  // where they are.
+  &--spot {
+    flex-direction: column;
+    max-block-size: min(60vh, 26rem);
+    overflow-y: auto;
+  }
+
+  &__events {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__event {
+    display: flex;
+    gap: 12px;
+  }
+
+  &__events &__event + &__event {
+    padding-block-start: 12px;
+    border-block-start: 1px solid var(--border-subtle);
+  }
+
+  &__where {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-block-start: 10px;
+    border-block-start: 1px solid var(--border-subtle);
+
+    .map-event-card__location {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text-primary);
+      font-size: 13px;
+
+      a {
+        color: inherit;
+        text-decoration: none;
+
+        &:hover,
+        &:focus-visible {
+          color: var(--accent-text);
+          text-decoration: underline;
+        }
+      }
     }
   }
 }
@@ -2409,16 +2388,6 @@
   }
 }
 
-// The Place composer: its fields come from the composer kit; only the pin
-// buttons are its own.
-.place-composer {
-  &__pin-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-}
-
 // "On <name> Country" on a pin, Event, Place or Trek (country_line.tsx): a
 // quiet line that opens that Country on the map.
 .map-country-line {
@@ -2536,70 +2505,7 @@
   }
 }
 
-// Share live — beside Near me, handing over to Anthemos
-// (anthemos_share.tsx). Near me's pill, with a breathing dot like the live
-// faces so it reads as live.
-.anthemos-share {
-  border-color: var(--accent);
-
-  &__dot {
-    position: relative;
-    inline-size: 8px;
-    block-size: 8px;
-    border-radius: var(--radius-round);
-    background: var(--accent);
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border: 2px solid var(--accent);
-      border-radius: var(--radius-round);
-      opacity: 0;
-      animation: map-live-ring 2s var(--ease-out, ease) infinite;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      &::after {
-        animation: none;
-      }
-    }
-  }
-
-  // Off Android: where live location comes from. Spans Near me's column.
-  &__card {
-    position: absolute;
-    top: 44px;
-    left: 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium, 12px);
-    background: var(--surface-elevated);
-    color: var(--text-primary);
-    font-size: 13px;
-    pointer-events: auto;
-
-    a {
-      color: var(--text-primary);
-      font-weight: 600;
-    }
-  }
-
-  &__close {
-    flex: 0 0 auto;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-  }
-}
-
-// Back from Share live location with no Anthemos on the phone.
+// Back from Share or Update with no Anthemos on the phone.
 .anthemos-missing {
   position: absolute;
   inset-inline: 16px;

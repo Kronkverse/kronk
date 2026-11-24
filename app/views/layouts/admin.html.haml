@@ -5,22 +5,33 @@
 
 - content_for :body_classes, 'admin'
 
+-# Kronk dress (2026-11-23): the page sits in the Stage panel, as every
+-# page in the app does, with the top-left back pill. Admin backs out to
+-# Kronk; the member pages back out to Settings, the app's settings hub.
+- in_admin = request.path.start_with?('/admin')
+
 - content_for :content do
-  .admin-wrapper
+  .admin-wrapper.kronk-rails-stage
+    .kronk-rails-stage__head
+      - if in_admin
+        = render 'shared/kronk_back_badge', href: root_path, label: 'Kronk'
+      - else
+        = render 'shared/kronk_back_badge', href: '/settings', label: 'Settings', cog: true
+      -# The title sits above the sidebar and the page, centred, as the
+      -# app's own pages have it.
+      .content__heading
+        - if content_for?(:heading)
+          = yield :heading
+        - else
+          .content__heading__row
+            %h2= yield :page_title
+
+            - if content_for?(:heading_actions)
+              .content__heading__actions
+                = yield :heading_actions
     .content-wrapper
       = render 'shared/kronk_settings_nav'
       .content
-        .content__heading
-          - if content_for?(:heading)
-            = yield :heading
-          - else
-            .content__heading__row
-              %h2= yield :page_title
-
-              - if content_for?(:heading_actions)
-                .content__heading__actions
-                  = yield :heading_actions
-
         = render 'application/flashes'
 
         = yield

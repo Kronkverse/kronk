@@ -27,6 +27,7 @@ import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { aggregateStream } from './aggregate_stream';
+import type { StreamRenderItem } from './aggregate_stream';
 import { AggregatedEventItem } from './aggregated_event';
 import { Composer } from './composer';
 import { DaySeparator } from './day_separator';
@@ -45,6 +46,24 @@ const sameDay = (a: string, b: string) => {
     da.getFullYear() === db.getFullYear() &&
     da.getMonth() === db.getMonth() &&
     da.getDate() === db.getDate()
+  );
+};
+
+// Messages from one person, one after another and close in time, read as
+// a run: the name and avatar once, the bubbles close together.
+const RUN_GAP_MS = 5 * 60 * 1000;
+const sameRun = (
+  a: StreamRenderItem | null | undefined,
+  b: StreamRenderItem | null | undefined,
+) => {
+  if (!a || !b || a.kind !== 'message' || b.kind !== 'message') return false;
+  const sameAuthor = a.author_is_self
+    ? b.author_is_self
+    : !b.author_is_self && a.author.id === b.author.id;
+  return (
+    sameAuthor &&
+    sameDay(a.created_at, b.created_at) &&
+    Math.abs(Date.parse(b.created_at) - Date.parse(a.created_at)) < RUN_GAP_MS
   );
 };
 
@@ -231,11 +250,22 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   // back short of STREAM_LIMIT. Reset on conversationId change so a
   // different chat gets a fresh chance.
   const [hasMore, setHasMore] = useState(true);
+  // The one message whose controls are out (a tap on a phone).
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     setHasMore(true);
     setLoadingOlder(false);
+    setActiveMessageId(null);
   }, [conversationId]);
+
+  // A tap on the stream's empty space puts the controls away.
+  const handleStreamClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target === e.currentTarget) setActiveMessageId(null);
+    },
+    [],
+  );
 
   // Pin scroll to the newest message on open + on new arrivals. Direct
   // scrollTop write is more reliable across engines than scrollIntoView
@@ -558,7 +588,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       () => {
         void (async () => {
           await apiLeaveNudgeConversation(conversationId);
-          history.push('/nudges/messages');
+          history.push('/nudges');
         })();
       },
     );
@@ -643,7 +673,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           {/* Phones only (the stylesheet hides it on a wide screen, where the
             list is alongside): the shared back chip, to the list of chats. */}
           <BackToKorner
-            href='/nudges/messages'
+            href='/nudges'
             label={intl.formatMessage(messages.back)}
             className='nudges-conversation__to-chats'
           />
@@ -719,7 +749,12 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         </header>
       )}
 
-      <div className='nudges-conversation__stream' ref={streamRef}>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a tap away, for touch; the keyboard moves focus instead */}
+      <div
+        className='nudges-conversation__stream'
+        ref={streamRef}
+        onClick={handleStreamClick}
+      >
         {hasMore && detail.stream.length > 0 && (
           <button
             type='button'
@@ -742,6 +777,8 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         )}
         {oldestFirst.map((item, index) => {
           const previous = index > 0 ? oldestFirst[index - 1] : null;
+          const next =
+            index < oldestFirst.length - 1 ? oldestFirst[index + 1] : null;
           const showDay =
             !previous || !sameDay(previous.created_at, item.created_at);
           return (
@@ -766,6 +803,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                   onDelete={handleDelete}
                   onRetry={handleRetry}
                   onDismissFailed={handleDismissFailed}
+                  runStart={!sameRun(previous, item)}
+                  runEnd={!sameRun(item, next)}
+                  active={activeMessageId === item.id}
+                  onActivate={setActiveMessageId}
                 />
               )}
             </React.Fragment>

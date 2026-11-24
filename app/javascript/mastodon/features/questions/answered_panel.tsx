@@ -146,6 +146,16 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
     setRevealing(null);
   }, []);
 
+  // Next kuestion on the reveal steps on to the next one in the list
+  // (Kommons "Kuestions", 2026-11-22: "scroll one after the next"), or
+  // closes after the last.
+  const handleNextReveal = useCallback(() => {
+    const at = list?.findIndex((k) => k.id === revealing?.id) ?? -1;
+    const next = at >= 0 ? list?.[at + 1] : undefined;
+    setRevealing(null);
+    if (next) handleOpen(next.id);
+  }, [list, revealing, handleOpen]);
+
   const handleDeleted = useCallback((deletedId: string) => {
     setRevealing(null);
     setList((prev) => prev?.filter((k) => k.id !== deletedId) ?? prev);
@@ -165,7 +175,8 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
       {revealing && (
         <RevealSheet
           kuestion={revealing}
-          onNext={handleCloseReveal}
+          onNext={handleNextReveal}
+          onClose={handleCloseReveal}
           onDeleted={handleDeleted}
         />
       )}

@@ -22,10 +22,10 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
   pins, a people strip (a face per pin, your own slot last; tap to
   centre), your upcoming Kalendar events (hosting, going or interested) as
   markers, and Places.
-  **Near me** (top left, `near_me.tsx`) flies to your pin and lists the
-  five closest Mates, Places (within 50 km) and your Events, each with
-  about how far it is from your pin; a row opens that pin, Place or Event.
-  Without a pin it opens "Put me on the map".
+  **Your location** (top left, a round pin button, `location_menu.tsx`)
+  holds what Anthemos does on the Map; see Live location. Near me, which
+  listed what was closest, was taken off to keep the map to location (Tal,
+  2026-11-21).
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
   after your Mates' (Kommons "Treks list of Mates before Mine",
@@ -34,8 +34,8 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here),
 `/hub/map/composer` (the trek composer in the shared compose-shell
 overlay; `/hub/map/logger` is a legacy alias for it), and for Places
-`/hub/map/places/:id` (a Place's page) and `/hub/map/places/new` (the
-Place composer). The legacy bare
+`/hub/map/places/:id` (a Place's page). There is no Place composer on
+the Map (decisions.md, 2026-11-23). The legacy bare
 `/hub/map/treks` opens **My treks**.
 
 The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
@@ -68,9 +68,10 @@ report on login" (https://kronk.info/hub/kommons/p/117504037032494231).
 The map always shows the **First Nations Country** of Aboriginal and Torres
 Strait Islander peoples over Australia, under the pins (Kommons, @mangobee,
 2026-10-23; always on, with no switch, @mangobee, 2026-10-30; it was a button
-under the zoom buttons that turned it on). A note under "Find a Country" says
-the boundaries are approximate. It carries no on-map credit (@mangobee,
-2026-10-26: take the credit line away).
+under the zoom buttons that turned it on). It carries no on-map credit
+(@mangobee, 2026-10-26: take the credit line away). The search box and the
+note that sat under it were taken off the map to calm it (Tal, 2026-11-21);
+a Country's card still says the boundaries are approximate.
 
 The Countries are shapes you can tap (Kommons "Interactive Map Build",
 @mangobee, 2026-10-26, Option 2): `app/javascript/images/first-nations-countries.geojson`,
@@ -92,8 +93,6 @@ fill calms as you zoom in).
   the bottom of the map names the Country under its middle, changing as you
   move; a tap opens its card. A shape with no name takes the first name
   someone added to it.
-- **Find a Country**: a search box under the button matches any of those
-  names, and names people have added, and flies there.
 - **From a profile**: "Born on" and "Living on <name> Country" each link to
   `/hub/map?country=<name>`, which opens that Country.
 - **People on a Country**: the card shows faces under "Born here" and
@@ -140,7 +139,7 @@ stays open (@mangobee, 2026-10-30): `map_country_names` (`MapCountryName`,
   is saved.
 - On a Country's card anyone can **Add another name**, which ties that name to
   the shape. The card shows the added names as chips, each saying who added
-  it; the search and `?country=<name>` find a Country by them, and the profile
+  it; `?country=<name>` finds a Country by them, and the profile
   fields suggest them.
 - Only a steward (admin or moderator; @mangobee and Tal) takes a name off,
   with the × on its chip. A name taken off stays off: typing it again doesn't
@@ -223,16 +222,43 @@ an hour"), so the Kronk website shows them and hands the start over.
   over `anthemos-link-v1`, the account id and the key, proving it holds it
   (`POST /api/v1/anthemos/links`, `AnthemosLink`). Up to ten phones per
   account.
-- **Starting from the Map.** **Share live**, beside Near me at the top of
-  the map, with a breathing dot like the live faces (`anthemos_share.tsx`).
-  On Android it picks a Mate and opens Anthemos on them with an intent link
-  (`anthemos://kronk/share?to=<account id>&server=<host>`, package
-  `com.anthemos.app.two`); Anthemos looks the account up and asks before
-  sharing, for an hour. With no Anthemos on the phone the link falls back to
+- **Your location button.** Everything Anthemos does on the Map is under one
+  round pin button, top left (`location_menu.tsx`), shown only once a phone
+  is linked (`GET /api/v1/anthemos/links`); nowhere else on Kronk offers it.
+  It opens **Share** (live location with a Mate), **Update** (your pin, to
+  where the phone is) and the shares running now, each with **Stop**. While
+  one runs the button carries the live faces' breathing dot. Kronk itself
+  never reads the phone's position: on Android, Share (after picking a Mate)
+  and Update are asks to Anthemos (below), and the menu stays open saying
+  "Waiting for Anthemos on your phone" until the phone answers, then what it
+  did. With no Anthemos there the link falls back to
   `/hub/map?anthemos=missing`, which says the app is needed and links its
-  download. Anywhere else the button opens a note saying live location
-  comes from Anthemos on a phone. Kronk itself never reads the phone's
-  position.
+  download. On a computer, Share and Update say it comes from Anthemos on
+  your phone.
+- **Asks from Kronk.** How the website gets Anthemos to do something, for
+  location now and other things later (Tal, 2026-11-22). Kronk makes the
+  ask (`POST /api/v1/anthemos/asks`, `AnthemosAsk`: a kind, what it carries,
+  a random token, five minutes to live) and opens Anthemos with only the
+  token (`anthemos://kronk/ask?id=<token>&server=<host>&for=<acct>`, package
+  `com.anthemos.app.two`, via `useAnthemosAsk`). Anthemos reads the ask with
+  its own sign-in (`GET /api/v1/anthemos/asks/:token`). An ask belongs to the
+  account that made it, so a phone signed in to another account gets
+  nothing, and Anthemos says which account the ask was for and which one it
+  is connected as. It shows the ask as a card, "From Kronk, @you", with
+  Allow and Not now: a tap, not a spoken yes. On Allow it does the thing,
+  then answers, signed over `anthemos-answer-v1`, the token, its link id,
+  the outcome (`done`, `declined` or `failed`) and a short result, each as
+  sent (`POST /api/v1/anthemos/asks/:token/answer`). An ask is answered once;
+  the website watches it for the answer. Kinds: `location.update` and
+  `location.share` (carries `to`, a Mate). A new kind is an entry in
+  `AnthemosAsk::PAYLOAD` and a handler in Anthemos. Things asked of
+  Anthemos by voice are still confirmed by voice.
+- **Updating from Anthemos.** Update, or "update my location on Kronk" said
+  to Anthemos, places your pin like Place me (`POST /api/v1/map/presence`,
+  city precision, keeping who sees it and its note) from where the phone is.
+  The phone sends no name, so Kronk names the pin for its town and country
+  (`Kronk::Geocoder.reverse`, Nominatim, cached by the point to about a
+  kilometre).
 - **Starting.** The phone signs the permission: `anthemos-share-v1`, its link
   id, the Mates' account ids (sorted, comma-joined) and the end time
   (`POST /api/v1/map/live`, `LiveShare`). Kronk checks the signature, that
@@ -252,9 +278,10 @@ an hour"), so the Kronk website shows them and hands the start over.
   purpose. Its card: the name, Live, when it was updated and how accurate it
   is, when it ends, and "From Anthemos, signed by their phone", linking to
   anthemos.org.
-- **Stopping.** From the phone, or Stop in Account & Security, Connected
-  apps (`DELETE /api/v1/map/live/:id`). Unlinking the phone there stops all
-  of its shares. Both delete the point at once.
+- **Stopping.** From the phone, or Stop under the location button
+  (`DELETE /api/v1/map/live/:id`). Unlinking the phone in Connected apps
+  (`/hub/kollection/settings`, linked from Account & Security) stops all of
+  its shares. Both delete the point at once.
 
 For now the server reads the point as it passes. The next step is to
 encrypt it to viewers who use Anthemos too, so Kronk only carries it.
@@ -332,22 +359,17 @@ and `longitude` as exact decimals, `account_id` of its maker).
   name.
 - **On the Map.** A Places layer (`place_layer.tsx`) draws the Places in
   view as pin glyphs, reloading as the map moves. Tapping one opens a card
-  with its address and what's Konnected to it (both ways), and a link to
-  its page. `/hub/map?map_place=<id>` flies to a Place and opens its card
+  with its address and what's Konnected to it (both ways), and an **Open
+  place** pill to its page. `/hub/map?map_place=<id>` flies to a Place and opens its card
   (not `?place=`, which opens your own pin's search: `?place=1`).
 - **Its page** (`place_page.tsx`) is a `<KornerDetail>`: the pin as hero
   (`<MapPinPreview>`), the address, who added it, See on the map, Delete
   for its maker, and the Konnected block.
-- **Making one.** `/hub/map/places/new` (`place_composer.tsx`, in
-  `<ComposeShell>`): a name, an address, and a pin from the shared
-  `<MapPinPicker>` (search an address, or tap the map; a pin dropped on a
-  search result fills the address and name). Without a pin, the server
-  looks the address up (`Kronk::Geocoder`) and refuses one it can't find.
-  Opened with `?konnect=<slug>:<id>`, it links that record to the new
-  Place once it is made, then opens the Place. The Ж bubble still logs a
-  trek (`compose:`); the Place composer is reached from a Konnect (the
-  manifest's `konnect: { make: true, route: /hub/map/places/new, label:
-'New place' }`), or by its URL.
+- **Making one** happens only where a record's location is chosen, in
+  the Konnect picker (below). The Map has no Place composer and offers no
+  "New place": Tal, 2026-11-23, "I don't understand nor do i see the point
+  of adding a 'place' to the map" (decisions.md). Places stay as the
+  records locations Konnect to; nothing was removed from the data.
 - **A Place, from a composer.** Composers have no location fields
   (decisions.md, 2026-10-23, "Location fields become Konnect → Map"). In
   a composer's Konnect picker, picking Map opens the map at once
@@ -395,13 +417,49 @@ OpenStreetMap `location_url`, or no `location_url` and a Konnected Place
 `?event=<slug>` too, so that one event gets its pin even when you haven't
 answered it, if you may see it.
 
+**One marker per spot** (Tal, 2026-11-23: "Why is there two indicators?").
+An event pinned at its Place used to draw twice: the Places layer drew the
+Place's pin glyph and the events layer an event tile underneath, at the
+same point. Now an event pin says which Place it stands on (`place`: `id`,
+`name`, `address`, `url`, only when the pin comes from the Place), the
+events at one Place, or at one point, are a single marker, and that Place
+draws no pin of its own (`EventLayer` hands the ids to `PlaceLayer`). The
+marker is the Kalendar spiral (the korner's own icon, from its manifest),
+white on an accent disc with a ring and a point at the spot, and a "+N"
+chip when more events share it (Tal, 2026-11-23, in place of a date
+badge); the ring keeps it clear on any Country's colour in either theme.
+A Mate is a face and a plain Place is a pin glyph. Tapping it opens one card: each
+event (date, what, when, and an **Open in Kalendar** pill), then where
+they are: the Place's name, which is the link to its page, its address and
+Country, or the event's own place name (Tal, 2026-11-23: no separate "Open
+place", and actions are the kit's pill, not a text link with an arrow).
+
 **What's on.** An event stays on the map while it is happening (started and
 not yet ended; one with no end time counts as on for three hours), and its pin
-shows when: happening now, it glows and slowly breathes; starting within the
+shows when (on the spot's marker, the busiest of its events): happening now, it glows and slowly breathes; starting within the
 next week, it glows softly; later ones are plain (`whatsOn` in
 `event_layer.tsx`; still, without the breathing, with reduced motion).
 
-## API
+## What the map shows
+
+A cog in the Map's top-left corner, beside your location button, opens
+**Show on the map**: a box each for **Mates**, **Live locations**,
+**Events** and **Places**, all on to begin with (Tal, 2026-11-23: "choose
+what you see on the map … checkboxes … hidden under a button next to the
+pin button … a settings cog"; `map_show.tsx`). Each viewer's choice stays
+in their browser (`localStorage`, `kronk.map.show`); where storage is
+blocked it lasts the visit.
+
+- **Mates** off hides the Mates' pins, their circles and the off-map
+  compass. The Mates list down the side stays: it is
+  where your own pin is set, and picking someone from it shows Mates again
+  so the tap lands on them.
+- **Events** off hides the event markers, and a Place an event stood on
+  draws its own pin again (when Places are on).
+- A link that opens something on the Map (`?event=`, `?map_place=`,
+  `?live=`) switches its layer back on, so it never lands on nothing.
+- **First Nations Country** has no box: it is always on, with no switch
+  (@mangobee, 2026-10-30, above). Treks are their own view, not a layer.
 
 All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
 create, destroy), `presence/self`, `geocode`, `treks` (index, show,

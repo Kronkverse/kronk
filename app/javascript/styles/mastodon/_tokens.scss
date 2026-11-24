@@ -33,6 +33,7 @@
   --semantic-decision-pending: #f59e0b;
   --semantic-tile-glyph-on: #8c7dff;
   --semantic-tile-glyph-off: #4e4a72;
+  --semantic-tile-text: #ece9f5;
 
   // Consumer aliases — SCSS uses the short names below directly.
   --accent: var(--semantic-accent);
@@ -58,6 +59,7 @@
   --decision-pending: var(--semantic-decision-pending);
   --tile-glyph-on: var(--semantic-tile-glyph-on);
   --tile-glyph-off: var(--semantic-tile-glyph-off);
+  --tile-text: var(--semantic-tile-text);
 
   // ── Fonts ───────────────────────────────────────────────────────
   --font-display: 'Liberation Serif', Georgia, serif;
@@ -130,6 +132,7 @@
   --semantic-decision-pending: #c2410c;
   --semantic-tile-glyph-on: #6364ff;
   --semantic-tile-glyph-off: #a89fc5;
+  --semantic-tile-text: #ece9f5;
 }
 
 // Native OKLCH overrides — browsers without OKLCH support keep the
