@@ -42,6 +42,7 @@ import TravelExploreIcon from '@/material-icons/400-24px/travel_explore.svg?reac
 import ZhongIcon from '@/material-icons/400-24px/zhong.svg?react';
 import type { IconProp } from 'mastodon/components/icon';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { kornerIcons } from 'mastodon/initial_state';
 import { store } from 'mastodon/store';
 
 // Material Symbols name → React component. Every value in a manifest's
@@ -150,7 +151,9 @@ export const kornerIcon = (
 ): IconProp => {
   if (!slug) return AccentCircle;
   const resolved = manifest ?? store.getState().korners[slug];
-  const material = resolved?.icon?.material ?? undefined;
+  // Before fetchKorners lands, the page's initial state carries each
+  // slug's icon name, so the first frame isn't a row of AccentCircles.
+  const material = resolved?.icon?.material ?? kornerIcons[slug];
   if (!material) return AccentCircle;
   if (filled && MATERIAL_TO_ICON_FILLED[material]) {
     return MATERIAL_TO_ICON_FILLED[material];
