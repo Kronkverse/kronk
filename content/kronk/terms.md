@@ -1,24 +1,20 @@
 ---
 title: Terms of service
-updated: 2026-07-10
-status: instance-layer stub
+updated: 2026-11-24
+status: placeholder
 ---
 
-_This is an instance-layer file. Replace before launch. The upstream
-Kronk repo ships this as a placeholder; every fork edits it per their
-own operator's legal review._
+## Not written yet
 
-## Placeholder — replace before public launch
+Kronk's terms of service haven't been written yet. Until they are,
+the [rules](/kronk/rules) are what we ask of everyone here.
 
-If you're reading this on a running instance, the operators haven't
-edited it yet.
+## What they will cover
 
-## What this file should cover (upstream template)
-
-- Who's operating the instance and where they're jurisdictionally based
-- What account holders agree to when they sign up
-- What behaviour is prohibited (spam, abuse, illegal content)
-- Reporting and moderation flow
-- Account suspension / deletion policy
-- Governing law
-- How the terms can change (notice period, method of announcement)
+- Who runs Kronk, and where.
+- What you agree to when you join.
+- What isn't allowed: spam, abuse, illegal content.
+- How reports are handled.
+- When an account can be suspended or deleted.
+- Which law applies.
+- How the terms can change, and how you'll hear about it.
