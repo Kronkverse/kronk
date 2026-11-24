@@ -346,8 +346,17 @@ was settled.
 
 A Mate is a mutual follow (see [`feed.md`](feed.md) for how Mates work). Mates
 is the only relationship a profile shows, to anyone, including the owner. A
-one-way follow has no list and no count (Tal, 2026-09-04). Pending requests
-live at `/mate_requests`.
+one-way follow has no list and no count on a profile (Tal, 2026-09-04).
+Pending requests to you live at `/mate_requests`.
+
+**Not yet Mates.** Your own Mates list ends with your one-way connections,
+each list left out when empty (`mates_tab/not_yet_mates.tsx`, from
+`GET /api/v1/kommunity/not_yet_mates`). **Waiting on them** is who you asked,
+or added before Mates, and who hasn't added you back. Its button withdraws
+the request. **Not Mates yet** is who added you before Mates and was never
+added back. Its button makes it mutual. Only the owner sees these. They took
+over from the Rails Follows and followers page (Tal, 2026-11-24: merge it
+into Mates), and `/relationships` now redirects to your Mates list.
 
 **Who sees it.** The rule is held in three places that must agree:
 

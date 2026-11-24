@@ -527,6 +527,9 @@ namespace :api, format: false do
       # Mates (Tal 2026-11-11): the viewer's Mates, most recent poster
       # first. Kommunity's landing view.
       get 'mates', to: 'mates#index'
+      # Not yet Mates (Tal 2026-11-24): the viewer's one-way connections,
+      # under their own Mates list. Replaces the Follows and followers page.
+      get 'not_yet_mates', to: 'not_yet_mates#index'
       # Orb — top-N local accounts + follow edges between them.
       # Powers the <KronkOrb> Fibonacci sphere; response is cached
       # server-side (see OrbController::CACHE_TTL).

@@ -20,8 +20,10 @@ import { defineMessages, useIntl } from 'react-intl';
 import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { LoadingState } from 'mastodon/components/loading_state';
+import { me } from 'mastodon/initial_state';
 
 import { MatesListView } from './list_view';
+import { NotYetMates } from './not_yet_mates';
 import { useMatesList } from './use_mates_list';
 
 const messages = defineMessages({
@@ -37,8 +39,15 @@ export const MatesFace: React.FC<{ acct: string; backLabel: string }> = ({
   backLabel,
 }) => {
   const intl = useIntl();
-  const { accountIds, loading, loadingMore, error, hasMore, loadMore } =
-    useMatesList(acct);
+  const {
+    accountIds,
+    subject,
+    loading,
+    loadingMore,
+    error,
+    hasMore,
+    loadMore,
+  } = useMatesList(acct);
 
   return (
     <div className='stage-column'>
@@ -63,6 +72,9 @@ export const MatesFace: React.FC<{ acct: string; backLabel: string }> = ({
             onLoadMore={loadMore}
           />
         )}
+
+        {/* Your own list also holds your one-way connections. */}
+        {subject?.id === me && <NotYetMates />}
       </div>
     </div>
   );

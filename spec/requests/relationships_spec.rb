@@ -3,14 +3,15 @@
 require 'rails_helper'
 
 RSpec.describe 'Relationships' do
-  describe 'PUT /relationships' do
-    before { sign_in Fabricate(:user) }
+  describe 'GET /relationships' do
+    let(:user) { Fabricate(:user) }
 
-    it 'gracefully handles invalid nested params' do
-      put relationships_path(form_account_batch: 'invalid')
+    before { sign_in user }
 
-      expect(response)
-        .to redirect_to(relationships_path)
+    it 'sends you to your Mates list, where the page went' do
+      get relationships_path
+
+      expect(response).to redirect_to("/@#{user.account.username}/mates")
     end
   end
 end
