@@ -128,6 +128,28 @@ domain; that is debt, not precedent.
 - **Don't add docs.** Extend this file, the space's own doc, or the korner
   standard. A new standalone doc is almost always the wrong home.
 
+### How to work: four rules
+
+For anyone writing code here, people and Claude sessions alike (adopted by
+Tal, 2026-11-25, from
+[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills),
+after Andrej Karpathy's notes on how coding with a model goes wrong). They
+lean to care over speed; for a trivial change, use judgment.
+
+1. **Think before coding.** Say what you're assuming. If a request can be
+   read two ways, ask, or name both; don't pick one silently. If something
+   simpler would do, say so. If something is unclear, stop and name what.
+2. **Simplicity first.** The least code that does what was asked: no extra
+   features, no abstraction for one use, no options nobody asked for, no
+   handling of cases that can't happen. If 200 lines could be 50, rewrite it.
+3. **Surgical changes.** Touch only what the task needs. Don't tidy, reformat
+   or refactor the code around it; match its style. Notice dead code? Mention
+   it, don't delete it, unless your own change left it behind. Every changed
+   line should trace back to the request.
+4. **Goal-driven.** Turn the task into something you can check ("fix the bug"
+   becomes "a test that fails, then passes"), state a short plan with a check
+   per step, and keep going until the checks pass.
+
 ### The docs
 
 Kept deliberately few (consolidated 2026-10-04 from about 70). Everything else
