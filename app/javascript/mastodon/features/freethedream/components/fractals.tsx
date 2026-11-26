@@ -145,6 +145,9 @@ const AssignPick: React.FC<{
   );
 };
 
+// Each element's section, for its spoke on the wheel to scroll to.
+export const fractalSectionId = (id: string) => `fractal-${id}`;
+
 const Fractal: React.FC<{
   fractal: FtdFractal;
   members: FtdAccount[];
@@ -166,7 +169,7 @@ const Fractal: React.FC<{
   }, [fractal.id, onChange]);
 
   return (
-    <div className='freethedream-fractal' id={`fractal-${fractal.id}`}>
+    <div className='freethedream-fractal' id={fractalSectionId(fractal.id)}>
       <Section
         title={fractal.title}
         aside={

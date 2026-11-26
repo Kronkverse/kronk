@@ -33,7 +33,7 @@ const messages = defineMessages({
   },
   fractal_added: {
     id: 'freethedream.activity.fractal_added',
-    defaultMessage: '{what} fractal added',
+    defaultMessage: '{what} element added',
   },
   need_added: {
     id: 'freethedream.activity.need_added',
@@ -123,66 +123,87 @@ export const Updates: React.FC<{
 
   return (
     <Section title={intl.formatMessage(messages.title)}>
-      <ul className='freethedream-updates'>
-        {shown.map((u) => {
-          const title = u.data.title ?? '';
-          const name =
-            u.account?.display_name ?? intl.formatMessage(messages.someone);
-          const what =
-            (u.verb === 'need_added' || u.verb === 'bringing') &&
-            u.data.quantity &&
-            (u.data.quantity > 1 || u.data.unit)
-              ? `${formatAmount(u.data.quantity, u.data.unit ?? '')} ${title}`
-              : title;
-          const target = u.item_id
-            ? `/hub/freethedream/i/${u.item_id}`
-            : `/hub/freethedream/p/${u.data.section_id ?? u.project.id}`;
-          // Added to the emergence, it's a gang; to a gang, a fractal.
-          const verb =
-            u.verb === 'section_added'
-              ? u.project.id === rootId
-                ? 'group_added'
-                : 'fractal_added'
-              : u.verb;
-          return (
-            <li
-              key={u.id}
-              className={
-                fresh.has(u)
-                  ? 'freethedream-updates__row freethedream-updates__row--new'
-                  : 'freethedream-updates__row'
-              }
-            >
-              {u.account ? (
-                <img
-                  className='freethedream-updates__avatar'
-                  src={u.account.avatar}
-                  alt={name}
-                  title={name}
-                />
-              ) : (
-                <span className='freethedream-updates__avatar' />
-              )}
-              <span className='freethedream-updates__text'>
-                <Link to={target}>
-                  {intl.formatMessage(messages[verb], {
-                    name,
-                    what: (
-                      <strong className='freethedream-updates__what'>
-                        {thingFirst.has(verb) ? capitalise(what) : what}
-                      </strong>
-                    ),
-                  })}
-                </Link>
-                <span className='freethedream-updates__meta'>
-                  {u.project.id !== hereId && `${u.project.title} · `}
-                  <RelativeTimestamp timestamp={u.created_at} />
-                </span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      <UpdateList
+        updates={shown}
+        hereId={hereId}
+        rootId={rootId}
+        fresh={fresh}
+      />
     </Section>
+  );
+};
+
+// The lines themselves, also what's happened around you on a projekt's
+// dashboard.
+export const UpdateList: React.FC<{
+  updates: FtdUpdate[];
+  hereId: string;
+  rootId: string;
+  fresh?: Set<FtdUpdate>;
+}> = ({ updates: shown, hereId, rootId, fresh }) => {
+  const intl = useIntl();
+
+  return (
+    <ul className='freethedream-updates'>
+      {shown.map((u) => {
+        const title = u.data.title ?? '';
+        const name =
+          u.account?.display_name ?? intl.formatMessage(messages.someone);
+        const what =
+          (u.verb === 'need_added' || u.verb === 'bringing') &&
+          u.data.quantity &&
+          (u.data.quantity > 1 || u.data.unit)
+            ? `${formatAmount(u.data.quantity, u.data.unit ?? '')} ${title}`
+            : title;
+        const target = u.item_id
+          ? `/hub/freethedream/i/${u.item_id}`
+          : `/hub/freethedream/p/${u.data.section_id ?? u.project.id}`;
+        // Added to the emergence, it's a gang (a Komponent); to a gang, a
+        // fractal (an element on screen).
+        const verb =
+          u.verb === 'section_added'
+            ? u.project.id === rootId
+              ? 'group_added'
+              : 'fractal_added'
+            : u.verb;
+        return (
+          <li
+            key={u.id}
+            className={
+              fresh?.has(u)
+                ? 'freethedream-updates__row freethedream-updates__row--new'
+                : 'freethedream-updates__row'
+            }
+          >
+            {u.account ? (
+              <img
+                className='freethedream-updates__avatar'
+                src={u.account.avatar}
+                alt={name}
+                title={name}
+              />
+            ) : (
+              <span className='freethedream-updates__avatar' />
+            )}
+            <span className='freethedream-updates__text'>
+              <Link to={target}>
+                {intl.formatMessage(messages[verb], {
+                  name,
+                  what: (
+                    <strong className='freethedream-updates__what'>
+                      {thingFirst.has(verb) ? capitalise(what) : what}
+                    </strong>
+                  ),
+                })}
+              </Link>
+              <span className='freethedream-updates__meta'>
+                {u.project.id !== hereId && `${u.project.title} · `}
+                <RelativeTimestamp timestamp={u.created_at} />
+              </span>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 };

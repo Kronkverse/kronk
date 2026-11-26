@@ -14,6 +14,7 @@ module Freethedream
     STILL_NEEDED_MAX = 40
     UPDATES_MAX = 15
     MINE_NEEDED_MAX = 6
+    AROUND_DAYS = 14
 
     def initialize(viewer)
       @viewer = viewer
@@ -132,8 +133,9 @@ module Freethedream
 
     # What's the viewer's in a project, for its dashboard: the working
     # groups they have a hand in, where there's talk they haven't seen, the
-    # jobs they've taken, what they're bringing, and what's still needed in
-    # their groups.
+    # jobs they've taken, what they're bringing, what they're tagged in,
+    # what's happened lately around them, and what's still needed in their
+    # groups.
     def mine(top, tree)
       me = @viewer.id
       unseen = unseen_talk(top, tree)
@@ -158,12 +160,30 @@ module Freethedream
             { id: need.id.to_s, title: need.title, quantity: o.quantity, unit: need.unit, about: need.quantity, more_welcome: need.more_welcome, section: where.call(need) }
           end
         end,
+        # Tagged in and not yet taken on or sorted (Tal, 2026-11-26).
+        tagged: everything.select { |i| (i.need_kind? || i.job_kind?) && !i.sorted? && i.suggestions.any? { |s| s.account_id == me } }
+                          .map { |i| { id: i.id.to_s, slug: i.slug, title: i.title, kind: i.kind, section: where.call(i) } },
+        around: around_you(top, tree, groups, everything),
         needed: needed.sort_by { |i| [i.created_at, i.id] }.first(MINE_NEEDED_MAX).map do |item|
           where = tree.home_of(item, in_my_groups)
           item_row(item).merge(section: where && { id: where.id.to_s, slug: where.slug, title: where.title })
         end,
         needed_count: needed.size,
       }
+    end
+
+    # What other people did lately in the Komponents the viewer is part of,
+    # or to things they added, are on, are bringing or are tagged in.
+    def around_you(top, tree, groups, everything)
+      me = @viewer.id
+      parts = groups.flat_map { |group| tree.subtree_ids(group.id) }
+      items = everything.select do |i|
+        i.owner_id == me || i.claims.any? { |c| c.account_id == me } ||
+          i.offers.any? { |o| o.owner_id == me } || i.suggestions.any? { |s| s.account_id == me }
+      end
+      lately = Activity.where(root_id: top.id, created_at: AROUND_DAYS.days.ago..).where.not(account_id: me)
+      lately.where(project_id: parts).or(lately.where(item_id: items.map(&:id)))
+            .includes(:account, :project).latest.limit(UPDATES_MAX).map { |activity| update_row(activity) }
     end
 
     # Per project or section, how many talk comments from other people are
@@ -522,17 +542,19 @@ module Freethedream
     end
 
     def updates(project_ids)
-      Activity.where(project_id: project_ids).includes(:account, :project).latest.limit(UPDATES_MAX).map do |activity|
-        {
-          id: activity.id.to_s,
-          verb: activity.verb,
-          account: account(activity.account),
-          project: { id: activity.project_id.to_s, title: activity.project.title },
-          item_id: activity.item_id&.to_s,
-          data: activity.data,
-          created_at: activity.created_at,
-        }
-      end
+      Activity.where(project_id: project_ids).includes(:account, :project).latest.limit(UPDATES_MAX).map { |activity| update_row(activity) }
+    end
+
+    def update_row(activity)
+      {
+        id: activity.id.to_s,
+        verb: activity.verb,
+        account: account(activity.account),
+        project: { id: activity.project_id.to_s, title: activity.project.title },
+        item_id: activity.item_id&.to_s,
+        data: activity.data,
+        created_at: activity.created_at,
+      }
     end
 
     # Something in your Mycelium, with where you've offered it (On offer)

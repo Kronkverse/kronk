@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-26 — A projekt is a wheel, with your dashboard under it
+
+**Decision (Tal):** a projekt's page leads with a wheel, the projekt in the
+middle and its Komponents as spokes; tapping one opens its page. A
+Komponent's page draws the same wheel for its pieces, now called
+**elements** (fractals until now), and tapping one scrolls to its section.
+Under the projekt's wheel is the member's dashboard: what they're signed up
+to, tagged in and part of, and what happened around them, each compact with
+See all.
+
+**How:** `wheel.tsx` replaces the row of Komponent cards (Kommons
+2026-11-08 to 11-10); a spoke's ring shows how sorted it is. The dashboard
+(`Yours`) replaces What's yours, with two new parts from the server,
+`mine.tagged` and `mine.around`. Fractal stays the word in code.
+docs/spaces/freethedream.md, The landing page and A gang's page.
+
+---
+
 ## 2026-11-26 — A checklist is Do and Bring
 
 **Decision (Tal):** a Komponent's checklist adds two kinds only, **Do** and

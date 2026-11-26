@@ -41,8 +41,7 @@ import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { act } from './act';
 import { Checklist } from './checklist';
 import { eventMapHref, eventWhen, ProjectEvents } from './event_card';
-import { Fractals } from './fractals';
-import { GroupTiles } from './groups';
+import { Fractals, fractalSectionId } from './fractals';
 import { Yours } from './overview';
 import { ProjectComposer } from './project_composer';
 import { ProjectSchedules } from './project_schedules';
@@ -56,6 +55,8 @@ import {
 } from './shared';
 import { ThresholdMeter } from './threshold_meter';
 import { Updates } from './updates';
+import { Wheel } from './wheel';
+import type { Spoke } from './wheel';
 
 // A projekt, a Komponent (a gang in the code) or a fractal, on one page.
 // A projekt's page is what's yours, its Komponents and a live Activity,
@@ -63,9 +64,14 @@ import { Updates } from './updates';
 // no Krew row, no joining and no lists of work of its own, and Done, Hand
 // over and Remove are off the page (Tal, 2026-10-30).
 //
+// Both lead with a wheel (Tal, 2026-11-26): a projekt in the middle with
+// its Komponents as spokes, each opening its page, and your dashboard under
+// it; a Komponent with its elements (fractals in the code) as spokes, each
+// scrolling down to its section.
+//
 // A gang's page is its overview at a lower level (Tal, 2026-10-15): who's
-// in it first, then its fractals (Kitchen → Cooking, Cleaning, Storage,
-// Logistics) as a row of cards, Getting together, Activity and Talk.
+// in it first, then its checklist and its elements (Kitchen → Cooking,
+// Cleaning, Storage, Logistics), Getting together, Activity and Talk.
 // Kuestions are the projekt's, not a Komponent's (Tal, 2026-11-08). Thing Bringing, Actualise, On offer and Depends on are off the
 // page, to come back as they're needed, and so is the "needs met" count
 // (Tal, 2026-11-08). A fractal's page is the same without fractals of its
@@ -119,7 +125,6 @@ const messages = defineMessages({
     id: 'freethedream.gang.joined_hint',
     defaultMessage: 'You hear when people talk or add things here.',
   },
-  groups: { id: 'freethedream.gangs', defaultMessage: 'Komponents' },
   kuestions: { id: 'freethedream.kuestions', defaultMessage: 'Kuestions' },
   chat: { id: 'krew.detail.tile.chat', defaultMessage: 'Chat' },
   addGroup: {
@@ -128,7 +133,7 @@ const messages = defineMessages({
   },
   addFractal: {
     id: 'freethedream.add_fractal',
-    defaultMessage: '+ Add a fractal',
+    defaultMessage: '+ Add an element',
   },
   upForGrabs: {
     id: 'freethedream.up_for_grabs',
@@ -276,6 +281,9 @@ const ProjectView: React.FC<{
         : null,
   );
   const canAddInside = project.level !== 'fractal' && project.can.add;
+  const pickElement = useCallback((spoke: Spoke) => {
+    scrollToSection(fractalSectionId(spoke.id));
+  }, []);
 
   // Konnect → a space turns it on and goes to its section, New and Add
   // existing first.
@@ -449,11 +457,35 @@ const ProjectView: React.FC<{
       actions={gangBar}
     >
       <>
-        {/* Its threshold, under the cover band: what it needs before it
-            begins (Tomas's proposal "Threshold Meter", 2026-11-17). */}
+        {/* The wheel first (Tal, 2026-11-26): a projekt's Komponents,
+            the ones you have a hand in first, or a Komponent's elements. */}
+        {project.top && groups.length > 0 && (
+          <Wheel title={project.title} spokes={groups} />
+        )}
+        {project.level === 'gang' && project.fractals.length > 0 && (
+          <Wheel
+            title={project.title}
+            spokes={project.fractals}
+            onPick={pickElement}
+          />
+        )}
+        {project.top && canAddInside && (
+          <div className='freethedream-wheel-add'>
+            <button
+              type='button'
+              className='freethedream__button freethedream__button--quiet'
+              onClick={openSection}
+            >
+              {intl.formatMessage(messages.addGroup)}
+            </button>
+          </div>
+        )}
+        {/* Its threshold: what it needs before it begins (Tomas's
+            proposal "Threshold Meter", 2026-11-17). */}
         {project.top && project.threshold && (
           <ThresholdMeter threshold={project.threshold} />
         )}
+        {/* Your dashboard, scrolling down from the wheel. */}
         {project.top && <Yours project={project} />}
         {project.source_idea && (
           <div className='freethedream-intro'>
@@ -482,9 +514,9 @@ const ProjectView: React.FC<{
             bringing (Tal, 2026-11-10). */}
         {!project.top && <Checklist project={project} onChange={refresh} />}
 
-        {/* A Komponent's fractals under its checklist, each a checklist
+        {/* A Komponent's elements under its checklist, each a checklist
             of its own on this page, not a page of its own (Kommons
-            "Fractals", 2026-11-22). */}
+            "Fractals", 2026-11-22; elements since 2026-11-26). */}
         {project.level === 'gang' && (
           <Fractals
             project={project}
@@ -492,19 +524,6 @@ const ProjectView: React.FC<{
             addLabel={intl.formatMessage(messages.addFractal)}
             onAdd={canAddInside ? openSection : undefined}
           />
-        )}
-
-        {/* Its Komponents first, the main thing on a projekt's page (Tal,
-            2026-11-09). */}
-        {project.top && (project.sections.length > 0 || canAddInside) && (
-          <Section title={intl.formatMessage(messages.groups)}>
-            <GroupTiles
-              row
-              sections={groups}
-              addLabel={intl.formatMessage(messages.addGroup)}
-              onAdd={canAddInside ? openSection : undefined}
-            />
-          </Section>
         )}
 
         {/* One column, as a Krew's page is (Tal, 2026-11-09): Talk was
