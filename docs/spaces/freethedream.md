@@ -237,14 +237,26 @@ that once it hits the project begins."
 
 A Komponent's page (and a fractal's) leads with its **checklist**
 (`checklist.tsx`; Tal, 2026-11-10). One list, what's not done first, each
-entry a kind with its own action:
+entry a kind with its own action. **Only Do and Bring are added** (Tal,
+2026-11-26: "reduce the checklist options to two"); the add menu and an
+entry's kind offer just those. Entries added before as Pay, Book or Decide
+keep their kind and work as below.
 
-- **To do** (a `job` item): a tick anyone in the projekt can tick or
-  untick (`POST /items/:id/done`, `/undone`, `done_at`), and **I'm on it**
-  for whoever is doing it (a claim), their pictures beside it. Adding one
-  doesn't put you on it. It counts as sorted once ticked.
-- **Bring** (a `need`): "I'll bring it", as before (`BringControl`).
-- **Pay** and **Book** (decisions.md, 2026-11-11): To dos of their own kind
+- **Do** (a `job` item; To do until 2026-11-26): a tick anyone in the
+  projekt can tick or untick to mark it **Finished** (`POST
+/items/:id/done`, `/undone`, `done_at`), and **I'm on it** for whoever is
+  doing it (a claim), their pictures beside it. Adding one doesn't put you
+  on it. It counts as sorted once ticked.
+- **Bring** (a `need`): **Bring** (`BringControl`), with the pictures of
+  whoever is bringing it beside it. For one thing, one tap; once someone
+  is bringing it, the tap reads **Back up** for everyone else: a second,
+  in case it's needed (Tal, 2026-11-26). It is the same offer as bringing
+  (no new data): offers are in the order they were made, the first brings
+  it and the rest are backing them up (**Backing up ✓**), so if the first
+  takes theirs back the next one up is bringing it. For more than one,
+  Bring opens the how-many stepper (below).
+- **Pay** and **Book** (decisions.md, 2026-11-11; not added since
+  2026-11-26): To dos of their own kind
   (`items.task`: `todo`, `pay`, `book`), ticked and claimed the same way
   but saying so: "I'll pay it" and Paid, "I'll book it" and Booked. A Pay
   can have an amount in dollars, kept as the item's quantity with unit `$`
@@ -252,7 +264,7 @@ entry a kind with its own action:
   what there is to pay and how much of it is paid. Money still moves
   outside Kronk. Paying is one person settling a bill; chipping in towards
   something is still a Bring of "$400 for permits".
-- **Decide** (decisions.md, 2026-11-11): a To do (`task` `decide`) settled
+- **Decide** (decisions.md, 2026-11-11; not added since 2026-11-26): a To do (`task` `decide`) settled
   by a quick Kuestion asked in the Komponent (`items.question_id`), so it
   is in the Komponent's Kuestions too. Its choices go in the Choices box
   ("Sat, Sun", two to four), or none for Yes or No. Everyone in the
@@ -261,9 +273,12 @@ entry a kind with its own action:
   reads "Decided: Sun" for the choice most picked. Taking the entry off
   takes its Kuestion with it.
 
-Entries go in one line at a time under the list, with To do, Bring, Pay,
-Book or Decide picked from a dropdown beside the box (`QuickAdd`), each
-kind with its icon, which its entries show too. No pills: Tal, 2026-11-11,
+Entries go in one line at a time under the list, with Do or Bring picked
+from a dropdown beside the box (`QuickAdd`), each kind with its icon,
+which its entries show too. Beside it, **Tag** picks people in the
+projekt to tag in what's being added (Tal, 2026-11-26), the same as Tag
+someone… on an entry once it's there; it reads **Tag 2** with two picked,
+and empties once the entry is added. No pills: Tal, 2026-11-11,
 "i really really dont like the pill situation".
 
 **Changing an entry's kind** (Kommons "Checklist", 2026-11-18): whoever
@@ -277,7 +292,7 @@ asks a Yes or No Kuestion and starts undecided, and one that stops being
 a Decide takes its Kuestion with it. Something people are already
 bringing stays a Bring, so nobody's offer is left against a To do.
 
-**An entry's ⋯ menu** reads **Suggest someone…**, **Move to…** (when the
+**An entry's ⋯ menu** reads **Tag someone…**, **Move to…** (when the
 page has fractals, below) and **Delete**, in red, for whoever added it.
 
 **Taking an entry off** (Kommons "Checklist", 2026-11-22: "easily delete
@@ -286,16 +301,18 @@ checklist items if added by mistake"): whoever added an entry has
 Kuestion with it); once someone else is on it, bringing some or has
 picked a choice, it asks first.
 
-**Suggesting someone** (Kommons "Tagging people on a checklist item",
-2026-11-22: "If i know someone has a generator, i would suggest them"):
-anyone in the projekt picks **Suggest someone…** on a To do or something
-to Bring, then someone else in the projekt (`POST /items/:id/suggest`
-with `account_id`; picking them again takes it back, `unsuggest`). It's
-added after the entry, not while adding it. They're told (a Nudge,
-`freethedream.item.suggested`, linking to the entry), and the entry shows
-**Suggested** with their faces; to them it reads "You're suggested for
-this" with **Not for me** (`unsuggest` with no one given). It's a nudge,
-not a job: they take it on the usual way, On it or I'll bring it, which
+**Tagging someone** (Kommons "Tagging people on a checklist item",
+2026-11-22: "If i know someone has a generator, i would suggest them";
+called Suggest someone until Tal, 2026-11-26, and still a suggestion in
+the code): anyone in the projekt picks **Tag someone…** on a Do or
+something to Bring, then someone else in the projekt (`POST
+/items/:id/suggest` with `account_id`; picking them again takes it back,
+`unsuggest`), or tags them while adding it (Tag, above). They're told (a
+Nudge, `freethedream.item.suggested`, "tagged you in something on a
+checklist", linking to the entry), and the entry shows **Tagged** with
+their faces; to them it reads "You're tagged in this" with **Not for me**
+(`unsuggest` with no one given). It's a nudge, not a job: they take it on
+the usual way, On it or Bring, which
 ends the suggestion, and leaving the projekt ends it too. Only people in
 the projekt can be suggested, as only they can take it on.
 
@@ -316,10 +333,10 @@ have no headcount: "2 set-up crew" is just a title.
 
 **Bringing: one tap for one thing, a number for many** (Tal, 2026-10-15,
 refined 2026-10-17 to 19). A need for one thing (_Gas bottle_, _Pots_) is
-one tap: **I'll bring it**, and **Bringing ✓** takes it back; bringing two
-is extra and great, with no need to say so. A need with an amount ("2 gas
-bottles", "5 kg rice") asks **I'll
-bring some** and opens a small − 8 + stepper, so the row can say "12
+one tap: **Bring** (I'll bring it until 2026-11-26), and **Bringing ✓**
+takes it back; once someone is, it is **Back up** (The checklist, above). A
+need with an amount ("2 gas bottles", "5 kg rice") asks **Bring** (I'll
+bring some until 2026-11-26) and opens a small − 8 + stepper, so the row can say "12
 coming · Sam 8 · Jo 4". **More is welcome only where it is**: more is
 better at an event as a general idea, not a rule ("we don't need 20 gas
 bottles"), so whoever adds a need says. Once a line being typed has an

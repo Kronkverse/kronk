@@ -418,7 +418,9 @@ module Freethedream
         row[:covered] = covered
         row[:left] = [item.quantity - covered, 0].max
         row[:spare] = [covered - item.quantity, 0].max
-        row[:contributors] = item.offers.map { |o| { account: account(o.owner), quantity: o.quantity, offer_id: o.id.to_s } }
+        # In the order they said so: on a need for one thing the first brings
+        # it and the rest are backing them up (Tal, 2026-11-26).
+        row[:contributors] = item.offers.sort_by(&:id).map { |o| { account: account(o.owner), quantity: o.quantity, offer_id: o.id.to_s } }
         row[:my_quantity] = @viewer ? item.offers.select { |o| o.owner_id == @viewer.id }.sum(&:quantity) : 0
       when 'job'
         row[:task] = item.task

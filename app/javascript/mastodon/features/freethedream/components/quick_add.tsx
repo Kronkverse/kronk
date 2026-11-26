@@ -3,7 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { apiFtdCreateItem } from 'mastodon/api/freethedream';
-import type { FtdCategory, FtdTask } from 'mastodon/api_types/freethedream';
+import type {
+  FtdCategory,
+  FtdItem,
+  FtdTask,
+} from 'mastodon/api_types/freethedream';
 
 import {
   MoreWelcome,
@@ -72,6 +76,9 @@ interface Props {
   onAdded: () => void;
   // On the right of the box: on a checklist, the kind being added.
   pick?: React.ReactNode;
+  // Done with what was just added before the box clears: on a checklist,
+  // tagging who was picked (Tal, 2026-11-26).
+  afterCreate?: (item: FtdItem) => Promise<unknown>;
 }
 
 interface Line {
@@ -86,6 +93,7 @@ export const QuickAdd: React.FC<Props> = ({
   projectId,
   onAdded,
   pick,
+  afterCreate,
 }) => {
   const intl = useIntl();
   const [text, setText] = useState('');
@@ -200,6 +208,7 @@ export const QuickAdd: React.FC<Props> = ({
         more_welcome: kind === 'need' && line.more,
         category: line.unit === '$' ? 'money' : category,
       })
+        .then((item) => afterCreate?.(item))
         .then(() => {
           setText('');
           setCount('');
@@ -232,6 +241,7 @@ export const QuickAdd: React.FC<Props> = ({
       counts,
       projectId,
       onAdded,
+      afterCreate,
       intl,
       category,
     ],

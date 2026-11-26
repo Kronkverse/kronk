@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-26 — A checklist is Do and Bring
+
+**Decision (Tal):** a Komponent's checklist adds two kinds only, **Do** and
+**Bring**. A Do is marked finished. Bring is one tap for one thing; once
+someone is bringing it, everyone else gets **Back up**, a second in case
+it's needed; for more than one, Bring asks how many. Adding an entry can
+tag people in it, and Suggest someone is called **Tag** everywhere.
+
+**How:** the add menu and an entry's kind offer Do and Bring
+(`checklist.tsx`). A back up is an ordinary offer; offers are listed in
+the order they were made and the first is the one bringing it, so nothing
+new is stored. Entries already added as Pay, Book or Decide are left as
+they are and keep working. Supersedes adding the kinds in "Pay and Book
+on the checklist" and "Decide on the checklist" (2026-11-11). docs/spaces/freethedream.md, The
+checklist.
+
+---
+
 ## 2026-11-26 — Bring one, or many
 
 **Decision (Tal, Kommons proposal "Bringing multiples"):** a need's amount is
