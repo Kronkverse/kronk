@@ -196,5 +196,5 @@
               -# placeholder span needs `.html_safe` or it renders as
               -# literal text in the greeting (a bug on 2026-08-05).
               %p.threshold-ceremony__said
-                != t('kronk.thresholds.arrival.line_html', username: '<span class="threshold-arrival__handle" id="threshold-arrival-handle">…</span>'.html_safe)
+                != t('kronk.thresholds.arrival.line_html', username: '<span id="threshold-arrival-handle">…</span>'.html_safe)
               %button.threshold-ceremony__enter#threshold-enter{ type: 'submit' }= t('kronk.thresholds.arrival.cta_enter')

@@ -389,9 +389,9 @@ function attachCeremony(
         nextVow.classList.add('is-on');
       } else {
         // Final crossing — inject the username into the arrival panel
-        // greeting ("You're inside, @{username}. Take up space.").
+        // greeting. The locale string already carries the "@".
         if (arrivalHandle && usernameInput) {
-          arrivalHandle.textContent = `@${usernameInput.value.trim()}`;
+          arrivalHandle.textContent = usernameInput.value.trim();
         }
         arrival.classList.add('is-on');
       }
