@@ -23,6 +23,7 @@ import {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
+import { OneOrMany, isMany } from './one_or_many';
 import { CATEGORIES, categoryMessages, errorOf } from './shared';
 
 const messages = defineMessages({
@@ -78,7 +79,7 @@ const messages = defineMessages({
     id: 'freethedream.compose.no_category',
     defaultMessage: 'Not sure',
   },
-  howMany: { id: 'freethedream.compose.how_many', defaultMessage: 'How many' },
+  number: { id: 'freethedream.compose.number', defaultMessage: 'Number' },
   moreWelcome: {
     id: 'freethedream.compose.more_welcome',
     defaultMessage: 'More is welcome',
@@ -121,6 +122,7 @@ interface ItemDraftParams {
   quantity?: string;
   unit?: string;
   moreWelcome?: boolean;
+  many?: boolean;
 }
 
 interface Props {
@@ -149,6 +151,9 @@ export const ItemComposer: React.FC<Props> = ({
   );
   const [quantity, setQuantity] = useState(String(editing?.quantity ?? 1));
   const [unit, setUnit] = useState(editing?.unit ?? '');
+  const [many, setMany] = useState(
+    editing ? isMany(editing.quantity, editing.unit) : false,
+  );
   const [moreWelcome, setMoreWelcome] = useState(
     editing?.more_welcome ?? false,
   );
@@ -166,6 +171,7 @@ export const ItemComposer: React.FC<Props> = ({
       setQuantity(p.quantity ?? '1');
       setUnit(p.unit ?? '');
       setMoreWelcome(p.moreWelcome ?? false);
+      setMany(p.many ?? isMany(p.quantity, p.unit));
       setError(null);
     },
     [need?.category],
@@ -181,7 +187,7 @@ export const ItemComposer: React.FC<Props> = ({
         : null,
     active: !editing,
     snapshot: {
-      params: { title, body, category, quantity, unit, moreWelcome },
+      params: { title, body, category, quantity, unit, moreWelcome, many },
     },
     hasContent: title.trim() !== '' || body.trim() !== '',
     apply: applyDraft,
@@ -225,7 +231,15 @@ export const ItemComposer: React.FC<Props> = ({
     setUnit(e.target.value);
   }, []);
 
-  const amount = Number.parseInt(quantity, 10);
+  const handleMany = useCallback((next: boolean) => {
+    setMany(next);
+    // Many starts at two; One sends one, whatever the box said.
+    if (next) setQuantity((q) => (Number.parseInt(q, 10) > 1 ? q : '2'));
+  }, []);
+
+  // Money always has an amount; anything else is One unless it's Many.
+  const counted = category === 'money' || many;
+  const amount = counted ? Number.parseInt(quantity, 10) : 1;
   const canSubmit = title.trim().length > 0 && amount > 0;
 
   const handleSubmit = useCallback(() => {
@@ -236,8 +250,8 @@ export const ItemComposer: React.FC<Props> = ({
       body: body.trim(),
       category: category || null,
       quantity: amount,
-      unit: kind === 'job' ? '' : unit.trim(),
-      ...(kind === 'need' ? { more_welcome: moreWelcome } : {}),
+      unit: kind === 'job' || !counted ? '' : unit.trim(),
+      ...(kind === 'need' ? { more_welcome: counted && moreWelcome } : {}),
     };
     const request = editing
       ? apiFtdUpdateItem(editing.id, params)
@@ -261,6 +275,7 @@ export const ItemComposer: React.FC<Props> = ({
     body,
     category,
     amount,
+    counted,
     unit,
     moreWelcome,
     editing,
@@ -279,7 +294,7 @@ export const ItemComposer: React.FC<Props> = ({
   const where = need ?? project;
 
   const quantityLabel =
-    category === 'money' ? messages.howMuch : messages.howMany;
+    category === 'money' ? messages.howMuch : messages.number;
 
   return (
     <ComposeShell
@@ -317,7 +332,7 @@ export const ItemComposer: React.FC<Props> = ({
       {/* Actualise is open-ended (no headcount), and ideas are gone:
           neither has an amount. */}
       {kind !== 'idea' && kind !== 'job' && (
-        <ComposeRow>
+        <>
           <ComposeField label={intl.formatMessage(messages.category)}>
             <ComposeSelect value={category} onChange={handleCategory}>
               <option value=''>
@@ -330,27 +345,34 @@ export const ItemComposer: React.FC<Props> = ({
               ))}
             </ComposeSelect>
           </ComposeField>
-          <ComposeField label={intl.formatMessage(quantityLabel)}>
-            <ComposeInput
-              type='number'
-              min={1}
-              value={quantity}
-              onChange={handleQuantity}
-            />
-          </ComposeField>
-          <ComposeField label={intl.formatMessage(messages.unit)}>
-            <ComposeInput
-              value={unit}
-              onChange={handleUnit}
-              maxLength={20}
-              placeholder={intl.formatMessage(messages.unitPlaceholder)}
-            />
-          </ComposeField>
-        </ComposeRow>
+          {category !== 'money' && (
+            <OneOrMany many={many} onChange={handleMany} />
+          )}
+          {counted && (
+            <ComposeRow>
+              <ComposeField label={intl.formatMessage(quantityLabel)}>
+                <ComposeInput
+                  type='number'
+                  min={1}
+                  value={quantity}
+                  onChange={handleQuantity}
+                />
+              </ComposeField>
+              <ComposeField label={intl.formatMessage(messages.unit)}>
+                <ComposeInput
+                  value={unit}
+                  onChange={handleUnit}
+                  maxLength={20}
+                  placeholder={intl.formatMessage(messages.unitPlaceholder)}
+                />
+              </ComposeField>
+            </ComposeRow>
+          )}
+        </>
       )}
       {/* More is better at an event for some things, not all (Tal,
-          2026-10-19): whoever adds a need says. */}
-      {kind === 'need' && (
+          2026-10-19): whoever adds a need says. Only a Many has more. */}
+      {kind === 'need' && counted && (
         <ComposeCheck
           label={intl.formatMessage(messages.moreWelcome)}
           hint={intl.formatMessage(messages.moreWelcomeHint)}
