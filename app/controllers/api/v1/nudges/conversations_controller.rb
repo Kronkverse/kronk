@@ -8,15 +8,15 @@
 # docs/spaces/nudges.md (Nudges spec) § Concept. The current account only sees
 # conversations they're a participant in.
 class Api::V1::Nudges::ConversationsController < Api::BaseController
-  before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show]
+  before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show, :members]
   before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:create, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
   before_action :require_user!
 
   # The only things someone with a pending Krew-chat invite can do.
   INVITE_ACTIONS = %w(accept_invite decline_invite).freeze
-  before_action :set_conversation, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
-  before_action :authorize_participant!, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
-  before_action :reject_if_expired!, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
+  before_action :set_conversation, only: [:show, :members, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
+  before_action :authorize_participant!, only: [:show, :members, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
+  before_action :reject_if_expired!, only: [:show, :members, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
 
   DEFAULT_LIMIT = 40
   MAX_LIMIT     = 80
@@ -50,6 +50,11 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
         stream: interleaved_stream(@conversation),
       }
     end
+  end
+
+  # Who's in the chat, for its Members list in chat settings (Kommons, 2026-11-26).
+  def members
+    render json: @conversation.member_accounts, each_serializer: REST::AccountSerializer
   end
 
   # Open (find-or-create) a Mate conversation with a target account.

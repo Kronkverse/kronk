@@ -37,6 +37,10 @@ export const apiOpenMateConversation = (
 export const apiGetNudgeConversation = (id: string) =>
   apiRequestGet<ApiNudgeConversationDetail>(`v1/nudges/conversations/${id}`);
 
+// Who's in a chat, in the order they joined, for its Members list.
+export const apiGetNudgeConversationMembers = (id: string) =>
+  apiRequestGet<ApiAccountJSON[]>(`v1/nudges/conversations/${id}/members`);
+
 // Paginated "load older" — returns just `{ stream }`, without the
 // conversation envelope, since it's an incremental page.
 export const apiGetNudgeConversationPage = (id: string, before: string) =>

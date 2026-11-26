@@ -653,6 +653,7 @@ namespace :api, format: false do
       end
       resources :conversations, only: [:index, :show, :create] do
         member do
+          get  :members
           post :read
           post :leave
           post :mute
