@@ -31,7 +31,8 @@ cover. Titles use a serif display face over a sans body.
    colour for a korner. There is no colour field in a manifest.
 3. **Dark is the default; light is a mirror.** Every themed token has a `dark`
    and a `light` value. Build against the semantic aliases and both themes work.
-   Never branch on theme in feature code.
+   Never branch on theme in feature code. Light is switched off for now
+   (`decisions.md`, 2026-11-26); keep both values so it can come back.
 4. **No planet colours.** The pre-2.0 per-space `--space-color` and
    `planets.tsx` are gone from the code.
 5. **Radius by role.** Small for controls, medium for cards, large for hero
@@ -1279,9 +1280,8 @@ is a reminder nudge, not a gate (`decisions.md`, 2026-08-16).
 
 **Setup** (`features/setup`, `decisions.md` 2026-10-22). One page in the
 SPA, a short section per choice, each saved as it is picked; whatever is left
-alone waits for Settings: _How Kronk looks_ (Dark, Light or Match my device,
-then the shade slider; picking a theme reloads the page back at this section,
-`#look`, since the theme is its own stylesheet), _About you_ (the profile's bio field, `<ProfileBioField>`),
+alone waits for Settings: _How Kronk looks_ (the shade slider; the theme
+choice is gone while Kronk is dark only, `decisions.md` 2026-11-26), _About you_ (the profile's bio field, `<ProfileBioField>`),
 _Who sees your posts_ (the default reach, widest first), _Your spaces_ (every
 live space on the Hub with its icon, name and its `about.what` line, and the
 tune-in switch from Settings → Korners; it shows where the member already

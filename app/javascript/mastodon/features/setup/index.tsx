@@ -30,8 +30,9 @@ import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 // default, the spaces you're tuned in to, a few people to mate, and
 // notifications on this device. Each
 // choice saves as it is picked; anything left alone can be changed later in
-// Settings. Continue goes to Home with a full load, so the theme picked here
-// is the one the app opens in and the first-run walkthrough starts there.
+// Settings. Continue goes to Home with a full load, so the first-run
+// walkthrough starts there. Kronk is dark only for now (decisions.md,
+// 2026-11-26), so the look is just the shade.
 //
 // It writes through the same endpoints and pieces as Settings → Appearance,
 // Settings → Posting, the profile's bio, Settings → Korners' tune-in
@@ -48,22 +49,7 @@ const messages = defineMessages({
   lookTitle: { id: 'setup.look.title', defaultMessage: 'How Kronk looks' },
   lookIntro: {
     id: 'setup.look.intro',
-    defaultMessage: 'Pick a theme, then slide to your shade of Kronk-purple.',
-  },
-  themeDark: { id: 'setup.look.dark', defaultMessage: 'Dark' },
-  themeDarkHint: {
-    id: 'setup.look.dark_hint',
-    defaultMessage: 'Night sky, light text',
-  },
-  themeLight: { id: 'setup.look.light', defaultMessage: 'Light' },
-  themeLightHint: {
-    id: 'setup.look.light_hint',
-    defaultMessage: 'Pale pages, dark text',
-  },
-  themeSystem: { id: 'setup.look.system', defaultMessage: 'Match my device' },
-  themeSystemHint: {
-    id: 'setup.look.system_hint',
-    defaultMessage: 'Follows your phone or computer',
+    defaultMessage: 'Slide to your shade of Kronk-purple.',
   },
   shade: { id: 'setup.look.shade', defaultMessage: 'Your shade' },
   reachTitle: {
@@ -131,21 +117,6 @@ interface Choice {
   hint: MessageDescriptor;
 }
 
-// `default` is the dark skin; `contrast` stays in Settings only.
-const THEMES: Choice[] = [
-  { value: 'default', label: messages.themeDark, hint: messages.themeDarkHint },
-  {
-    value: 'mastodon-light',
-    label: messages.themeLight,
-    hint: messages.themeLightHint,
-  },
-  {
-    value: 'system',
-    label: messages.themeSystem,
-    hint: messages.themeSystemHint,
-  },
-];
-
 // The reach ladder, widest first (docs/spaces/feed.md).
 const REACHES: Choice[] = [
   {
@@ -162,7 +133,7 @@ interface Payload {
   values: Record<string, unknown>;
 }
 
-// A full load, so Home opens in the chosen theme and the tour starts.
+// A full load, so Home opens in the chosen shade and the tour starts.
 const goHome = () => {
   window.location.assign('/home');
 };
@@ -230,19 +201,6 @@ const LookStep: React.FC = () => {
   const intl = useIntl();
   const { values, save } = useSettings('v1/settings/appearance');
 
-  const handleTheme = useCallback(
-    (theme: string) => {
-      if (values?.theme === theme) return;
-      // The theme is a different stylesheet: reload, back at this section.
-      void save('theme', theme).then(() => {
-        window.location.hash = 'look';
-        window.location.reload();
-        return undefined;
-      });
-    },
-    [values, save],
-  );
-
   const handleHue = useCallback(
     (hue: number | null) => {
       applyPersonalAppearance({
@@ -260,27 +218,15 @@ const LookStep: React.FC = () => {
   if (!values) return null;
 
   return (
-    <>
-      <div className='setup__choices' role='group'>
-        {THEMES.map((choice) => (
-          <ChoiceButton
-            key={choice.value}
-            choice={choice}
-            selected={(values.theme ?? 'default') === choice.value}
-            onPick={handleTheme}
-          />
-        ))}
-      </div>
-      <div className='setup__shade'>
-        <span className='setup__shade-label'>
-          {intl.formatMessage(messages.shade)}
-        </span>
-        <HueWidget
-          value={values.personal_purple_hue as number | string | null}
-          onChange={handleHue}
-        />
-      </div>
-    </>
+    <div className='setup__shade'>
+      <span className='setup__shade-label'>
+        {intl.formatMessage(messages.shade)}
+      </span>
+      <HueWidget
+        value={values.personal_purple_hue as number | string | null}
+        onChange={handleHue}
+      />
+    </div>
   );
 };
 
@@ -411,12 +357,6 @@ const Section: React.FC<{
 export const Setup: React.FC = () => {
   const intl = useIntl();
   const heading = intl.formatMessage(messages.title);
-
-  // Back from the reload a theme pick does: at the look section.
-  useEffect(() => {
-    if (window.location.hash === '#look')
-      document.getElementById('look')?.scrollIntoView();
-  }, []);
 
   return (
     <Stage label={heading}>

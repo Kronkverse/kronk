@@ -198,9 +198,8 @@ class ApplicationController < ActionController::Base
   end
 
   def current_theme
-    return Setting.theme unless Themes.instance.names.include? current_user&.setting_theme
-
-    current_user.setting_theme
+    theme = Themes.instance.names.include?(current_user&.setting_theme) ? current_user.setting_theme : Setting.theme
+    Themes::LIGHT.include?(theme) ? 'default' : theme
   end
 
   def respond_with_error(code)

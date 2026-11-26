@@ -22,7 +22,7 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
   # `User#locale` / `User#time_zone` columns instead of the settings hash.
   # `options` yields the enum choice list (nil for booleans).
   FIELDS = {
-    'theme' => { key: 'theme', kind: 'enum', options: -> { Themes.instance.names } },
+    'theme' => { key: 'theme', kind: 'enum', options: -> { Themes.instance.offered } },
     'interface_language' => { key: :locale, kind: 'enum', options: -> { I18n.available_locales.map(&:to_s) } },
     # Regional. `time_zone` writes the User column (normalised in
     # `User` — an unknown zone name blanks it), `emoji_style`

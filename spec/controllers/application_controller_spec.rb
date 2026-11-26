@@ -107,13 +107,16 @@ RSpec.describe ApplicationController do
       expect(controller.view_context.current_theme).to eq 'contrast'
     end
 
-    it 'returns user\'s theme when it is set' do
-      current_user = Fabricate(:user)
-      current_user.settings.update(theme: 'mastodon-light')
-      current_user.save
-      sign_in current_user
+    # Light is off for now (decisions.md, 2026-11-26).
+    %w(mastodon-light system).each do |theme|
+      it "returns the dark default when the user's theme is #{theme}" do
+        current_user = Fabricate(:user)
+        current_user.settings.update(theme: theme)
+        current_user.save
+        sign_in current_user
 
-      expect(controller.view_context.current_theme).to eq 'mastodon-light'
+        expect(controller.view_context.current_theme).to eq 'default'
+      end
     end
   end
 
