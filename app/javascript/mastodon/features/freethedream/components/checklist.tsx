@@ -939,7 +939,7 @@ export const ChecklistEntries: React.FC<{
   const [tagged, setTagged] = useState<string[]>([]);
   const handleTag = useCallback((id: string) => {
     setTagged((was) =>
-      was.includes(id) ? was.filter((t) => t !== id) : [...was, id],
+      was.includes(id) ? was.filter((other) => other !== id) : [...was, id],
     );
   }, []);
   const tagAll = useCallback(
