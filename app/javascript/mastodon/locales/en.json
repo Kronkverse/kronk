@@ -3498,7 +3498,6 @@
   "nudges.notifications.error.title": "Couldn't load your notifications",
   "nudges.notifications.list_label": "Notifications",
   "nudges.notifications.loading": "Fetching your notifications",
-  "nudges.notifications.new_below": "New",
   "nudges.notifications.retry": "Try again",
   "nudges.notifications.waiting": "{count} new",
   "nudges.reactions.add": "Add reaction",
