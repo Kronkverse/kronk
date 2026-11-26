@@ -37,6 +37,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { LinkifiedText } from 'mastodon/components/linkified_text';
 import { PeopleRow } from 'mastodon/components/people_row';
+import { PersonList } from 'mastodon/components/person_row';
 import { useComeBackHere } from 'mastodon/components/space_back';
 import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { Stage } from 'mastodon/components/stage';
@@ -176,22 +177,6 @@ const messages = defineMessages({
 const initial = (name: string): string => {
   const first = name.trim().charAt(0);
   return first.length === 0 ? 'K' : first.toUpperCase();
-};
-
-// Someone in the Krew, in the People list.
-const PersonRow: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
-  const model = createAccountFromServerJSON(account);
-  return (
-    <li className='krew-detail__person'>
-      <Link to={`/@${account.acct}`} className='krew-detail__request-who'>
-        <Avatar account={model} size={36} />
-        <span className='krew-detail__request-name'>
-          {model.display_name || account.username}
-        </span>
-        <span className='krew-detail__request-acct'>@{account.acct}</span>
-      </Link>
-    </li>
-  );
 };
 
 // The faces under the Krew's name: a few of the people in it as the
@@ -1025,11 +1010,7 @@ export const KrewDetail = () => {
                     )}
                   </div>
                 )}
-                <ul className='krew-detail__requests'>
-                  {members.map((account) => (
-                    <PersonRow key={account.id} account={account} />
-                  ))}
-                </ul>
+                <PersonList people={members} />
               </section>
             )}
 

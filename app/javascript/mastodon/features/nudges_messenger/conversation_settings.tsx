@@ -10,19 +10,22 @@ import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import {
   apiGetNudgeConversation,
+  apiGetNudgeConversationMembers,
   apiLeaveNudgeConversation,
   apiMuteNudgeConversation,
   apiUnmuteNudgeConversation,
 } from 'mastodon/api/nudges_conversations';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { ApiNudgeConversationDetail } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
+import { PersonList } from 'mastodon/components/person_row';
 import { Stage } from 'mastodon/components/stage';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 // Per-conversation settings surface — the "chat info" screen a Signal
-// user opens by tapping the chat's header. Notification, mute, leave
-// options. A Krew's name, description and photo are changed in its own
+// user opens by tapping the chat's header. A group chat's Members, then
+// notification, mute, leave options. A Krew's name, description and photo are changed in its own
 // settings (any member), not here.
 //
 // Rendered as a full Stage so it takes over the pane the same way the
@@ -100,15 +103,27 @@ const ConversationSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [muteBusy, setMuteBusy] = useState(false);
   const [leaveBusy, setLeaveBusy] = useState(false);
+  const [members, setMembers] = useState<ApiAccountJSON[] | null>(null);
 
   useEffect(() => {
     if (!conversationId) return;
     let cancelled = false;
     setLoading(true);
+    setMembers(null);
     const load = async () => {
       try {
         const d = await apiGetNudgeConversation(conversationId);
         if (!cancelled) setDetail(d);
+        // A group chat lists who's in it; a Mate chat is just the two of you.
+        // Its own catch: without the list the rest of the page still works.
+        if (d.conversation.kind !== 'mate') {
+          apiGetNudgeConversationMembers(conversationId)
+            .then((people) => {
+              if (!cancelled) setMembers(people);
+              return undefined;
+            })
+            .catch(() => undefined);
+        }
       } catch {
         if (!cancelled) setDetail(null);
       } finally {
@@ -235,6 +250,15 @@ const ConversationSettings: React.FC = () => {
             </div>
           )}
         </div>
+
+        {isKrew && members && members.length > 0 && (
+          <section className='nudges-settings__section'>
+            <h2 className='nudges-settings__section-heading'>
+              {intl.formatMessage(messages.sectionMembers)}
+            </h2>
+            <PersonList people={members} />
+          </section>
+        )}
 
         <section className='nudges-settings__section'>
           <h2 className='nudges-settings__section-heading'>

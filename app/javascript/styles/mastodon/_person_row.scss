@@ -1,0 +1,38 @@
+// Who's in a space, one row each (components/person_row.tsx): a Krew's
+// People and a group chat's Members.
+.person-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+}
+
+.person-row {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+
+  &__who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  &__name {
+    font-weight: 600;
+  }
+
+  &__acct {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+}

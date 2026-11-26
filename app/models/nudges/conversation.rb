@@ -170,6 +170,20 @@ module Nudges
       krew&.name || freethedream_project&.title
     end
 
+    # Who's in it, in the order they joined, for the chat's Members list: a
+    # Krew chat's people are its Krew's members (the count its header shows),
+    # a projekt chat's its accepted members, a Mate chat's its two Mates.
+    def member_accounts
+      ids = if mate?
+              [account_a_id, account_b_id]
+            elsif krew?
+              krew ? krew.krew_memberships.order(:id).pluck(:account_id) : []
+            else
+              memberships.active.order(:id).pluck(:account_id)
+            end
+      Account.without_suspended.where(id: ids).index_by(&:id).values_at(*ids).compact
+    end
+
     def other_account_for(account)
       return nil unless mate?
 

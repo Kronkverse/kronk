@@ -192,7 +192,7 @@ RSpec.describe 'Krew page', :js, :streaming do
       expect(page).to have_text('Sam')
       expect(page).to have_button('Let them in')
       expect(page).to have_button('Invite people')
-      expect(page).to have_css('.krew-detail__person', text: '@bob')
+      expect(page).to have_css('.person-row', text: '@bob')
     end
 
     find('.krew-detail__faces').click

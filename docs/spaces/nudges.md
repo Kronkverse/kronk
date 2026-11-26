@@ -187,6 +187,13 @@ was two faces on a barrel, Notifications and Messages, from 2026-10-10.
 | `/nudges/with/:accountId` | Opens the Mate chat with that person, then becomes the URL above. |
 | `/nudges/messages`        | The list, as `/nudges` (older links).                             |
 
+- **Chat info** (`…/settings`, the chat's header opens it). A group chat
+  shows its **Members** first, one `<PersonRow>` each in the order they
+  joined (`GET /api/v1/nudges/conversations/:id/members`, participants only):
+  a Krew chat's are its Krew's members, the count its header shows; a
+  projekt chat's are its accepted members. Then the chat's notifications and,
+  for a Krew, Leave. A Mate chat has no Members (Kommons, Tomas, 2026-11-26).
+
 - **The list.** **Notifications** is always its first row, whatever the
   search: a bell, "What's new for you" (or "3 new"), and a count of what is
   new in it (everything behind the pillar that isn't an unread chat). Then
