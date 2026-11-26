@@ -45,6 +45,7 @@ ignore_missing:
   - 'auth.providers.*'
   # Kronk's own server strings live in config/locales/kronk/overrides.yml,
   # which i18n-tasks doesn't read (CLAUDE.md, CI gates).
+  - 'accounts.matuals*'
   - 'albutts.*'
   - 'kalendar.*'
   - 'kollection.*'
