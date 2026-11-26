@@ -15,7 +15,6 @@ import {
   ComposeField,
   ComposeHint,
   ComposeInput,
-  ComposeRow,
   ComposeSelect,
   ComposeTextarea,
   ComposeTitle,
@@ -23,6 +22,7 @@ import {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
+import { OneOrMany, isMany } from './one_or_many';
 import { CATEGORIES, categoryMessages, errorOf } from './shared';
 
 const messages = defineMessages({
@@ -50,7 +50,7 @@ const messages = defineMessages({
     id: 'freethedream.mycelium.note',
     defaultMessage: 'Note (optional)',
   },
-  howMany: { id: 'freethedream.compose.how_many', defaultMessage: 'How many' },
+  number: { id: 'freethedream.compose.number', defaultMessage: 'Number' },
   howMuch: {
     id: 'freethedream.compose.how_much',
     defaultMessage: 'How much ($)',
@@ -63,6 +63,7 @@ interface MyceliumDraftParams {
   title?: string;
   note?: string;
   quantity?: string;
+  many?: boolean;
 }
 
 interface Props {
@@ -83,6 +84,7 @@ export const MyceliumComposer: React.FC<Props> = ({
   const [title, setTitle] = useState(editing?.title ?? '');
   const [note, setNote] = useState(editing?.note ?? '');
   const [quantity, setQuantity] = useState(String(editing?.quantity ?? 1));
+  const [many, setMany] = useState(editing ? isMany(editing.quantity) : false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,6 +97,7 @@ export const MyceliumComposer: React.FC<Props> = ({
       setTitle(p.title ?? '');
       setNote(p.note ?? '');
       setQuantity(p.quantity ?? '1');
+      setMany(p.many ?? isMany(p.quantity));
       setError(null);
     },
     [],
@@ -105,7 +108,7 @@ export const MyceliumComposer: React.FC<Props> = ({
     kind: 'mycelium',
     context: null,
     active: !editing,
-    snapshot: { params: { category, title, note, quantity } },
+    snapshot: { params: { category, title, note, quantity, many } },
     hasContent: title.trim() !== '' || note.trim() !== '',
     apply: applyDraft,
     describe: (d) => d.params.title,
@@ -138,7 +141,15 @@ export const MyceliumComposer: React.FC<Props> = ({
     [],
   );
 
-  const amount = Number.parseInt(quantity, 10);
+  const handleMany = useCallback((next: boolean) => {
+    setMany(next);
+    // Many starts at two; One sends one, whatever the box said.
+    if (next) setQuantity((q) => (Number.parseInt(q, 10) > 1 ? q : '2'));
+  }, []);
+
+  // Money always has an amount; anything else is One unless it's Many.
+  const counted = category === 'money' || many;
+  const amount = counted ? Number.parseInt(quantity, 10) : 1;
 
   const handleSubmit = useCallback(() => {
     setBusy(true);
@@ -184,19 +195,20 @@ export const MyceliumComposer: React.FC<Props> = ({
         placeholder={intl.formatMessage(messages.placeholder)}
         aria-label={intl.formatMessage(messages.what)}
       />
-      <ComposeRow>
-        <ComposeField label={intl.formatMessage(messages.category)}>
-          <ComposeSelect value={category} onChange={handleCategory}>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {intl.formatMessage(categoryMessages[c])}
-              </option>
-            ))}
-          </ComposeSelect>
-        </ComposeField>
+      <ComposeField label={intl.formatMessage(messages.category)}>
+        <ComposeSelect value={category} onChange={handleCategory}>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {intl.formatMessage(categoryMessages[c])}
+            </option>
+          ))}
+        </ComposeSelect>
+      </ComposeField>
+      {category !== 'money' && <OneOrMany many={many} onChange={handleMany} />}
+      {counted && (
         <ComposeField
           label={intl.formatMessage(
-            category === 'money' ? messages.howMuch : messages.howMany,
+            category === 'money' ? messages.howMuch : messages.number,
           )}
         >
           <ComposeInput
@@ -206,7 +218,7 @@ export const MyceliumComposer: React.FC<Props> = ({
             onChange={handleQuantity}
           />
         </ComposeField>
-      </ComposeRow>
+      )}
       <ComposeField label={intl.formatMessage(messages.note)}>
         <ComposeTextarea
           rows={2}

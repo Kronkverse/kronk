@@ -17,6 +17,17 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-26 — Bring one, or many
+
+**Decision (Tal, Kommons proposal "Bringing multiples"):** a need's amount is
+**One** unless you say **Many**; only Many asks for a number. The item and
+Mycelium composers offer One / Many pills (Many opens the number, from 2, and
+the unit), and the quick add line hides its How many box behind a **Many**
+toggle. Money keeps its How much box. No server change: `quantity` already
+defaults to 1. docs/spaces/freethedream.md, Bringing.
+
+---
+
 ## 2026-11-26 — Dark only, for now
 
 **Decision (Tal, Kommons proposal "Light theme"):** remove the light theme

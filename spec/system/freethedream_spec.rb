@@ -327,6 +327,26 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(page).to have_css('.freethedream-checklist__entry--done', text: 'gas bottle')
   end
 
+  # Kommons "Bringing multiples" (2026-11-26): a need is One unless you say
+  # Many, which asks how many.
+  it 'asks how many only once Many is picked', :aggregate_failures do
+    visit_kitchen
+    within('.freethedream-checklist__add') do
+      find('.freethedream-checklist__pick').click
+    end
+    page.document.find('.privacy-dropdown__option', text: 'Bring').click
+    within('.freethedream-checklist__add') do
+      expect(page).to have_no_field(placeholder: 'How many')
+      click_on 'Many'
+      fill_in placeholder: 'How many', with: '6'
+      fill_in placeholder: "Add what's needed", with: 'chairs'
+      send_keys :enter
+    end
+
+    expect(page).to have_css('.freethedream-checklist__entry', text: 'chairs')
+    expect(Freethedream::Item.find_by(title: 'chairs')).to have_attributes(quantity: 6)
+  end
+
   # docs/spaces/freethedream.md, The Krew: the space badge goes to the Krew
   # made with the projekt, makes no other, and that Krew leads back.
   it "opens the emergence's own Krew, which leads back to it" do

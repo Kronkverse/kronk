@@ -1434,8 +1434,15 @@ $freethedream-wide: 1000px;
   }
 }
 
+// One or Many in the item and Mycelium composers: two pills in a row.
+.freethedream-compose__amount {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 // More welcome: off, a quiet outline; on, filled. Shows once a line has an
-// amount.
+// amount. Many on a quick-add need wears the same.
 .freethedream-more {
   display: inline-flex;
   align-items: center;

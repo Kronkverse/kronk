@@ -33,6 +33,7 @@ const messages = defineMessages({
     defaultMessage: "Add what's needed",
   },
   howMany: { id: 'freethedream.quick.how_many', defaultMessage: 'How many' },
+  many: { id: 'freethedream.quick.many', defaultMessage: 'Many' },
   howMuch: { id: 'freethedream.quick.how_much', defaultMessage: 'Amount' },
   job: {
     id: 'freethedream.quick.todo',
@@ -89,6 +90,10 @@ export const QuickAdd: React.FC<Props> = ({
   const intl = useIntl();
   const [text, setText] = useState('');
   const [count, setCount] = useState('');
+  // A need is one unless you say Many, which opens the How many box (Kommons
+  // "Bringing multiples", Tal, 2026-11-26). "20 plates" in the line still
+  // counts without it.
+  const [many, setMany] = useState(false);
   const [choices, setChoices] = useState('');
   const [more, setMore] = useState(false);
   // No category pills under the box any more (Tal, 2026-11-08): a need is
@@ -105,6 +110,7 @@ export const QuickAdd: React.FC<Props> = ({
   // how much for Pay.
   useEffect(() => {
     setCount('');
+    setMany(false);
     setNote(null);
     setError(null);
   }, [kind]);
@@ -142,6 +148,12 @@ export const QuickAdd: React.FC<Props> = ({
 
   const handleCount = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setCount(e.target.value.replace(/\D/g, '').slice(0, 6));
+    setNote(null);
+  }, []);
+
+  const handleMany = useCallback(() => {
+    setMany((m) => !m);
+    setCount('');
     setNote(null);
   }, []);
 
@@ -191,6 +203,7 @@ export const QuickAdd: React.FC<Props> = ({
         .then(() => {
           setText('');
           setCount('');
+          setMany(false);
           setChoices('');
           setMore(false);
           setBusy(false);
@@ -249,7 +262,21 @@ export const QuickAdd: React.FC<Props> = ({
         maxLength={180}
       />
       {pick}
-      {counts && (
+      {kind === 'need' && (
+        <button
+          type='button'
+          className={
+            many
+              ? 'freethedream-more freethedream-more--on'
+              : 'freethedream-more'
+          }
+          aria-pressed={many}
+          onClick={handleMany}
+        >
+          {intl.formatMessage(messages.many)}
+        </button>
+      )}
+      {(kind === 'pay' || (kind === 'need' && many)) && (
         <input
           className='freethedream__input freethedream-quick__count'
           type='text'
