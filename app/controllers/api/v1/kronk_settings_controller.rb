@@ -11,8 +11,8 @@
 #       body: { feed_opens_on: 'mates' }
 #       => same shape, updated
 #
-# `feed_opens_on` is the width Home opens on (`kommunity` is Kronkverse,
-# the default). Turning the barrel on Home doesn't change it (Tal,
+# `feed_opens_on` is the width Home opens on (`orbit` by default;
+# `kommunity` is Kronkverse). Turning the barrel on Home doesn't change it (Tal,
 # 2026-11-11); only feed settings does. docs/spaces/feed.md, What the feed
 # shows.
 class Api::V1::KronkSettingsController < Api::BaseController

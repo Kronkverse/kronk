@@ -2,9 +2,10 @@
 
 require 'rails_helper'
 
-# docs/spaces/feed.md, What the feed shows: Home opens on Kronkverse unless
-# the member picks another width in feed settings, and turning the title
-# moves between widths without changing where it opens (Tal, 2026-11-11).
+# docs/spaces/feed.md, What the feed shows: Home opens on Orbit unless the
+# member picks another width in feed settings, and turning the title moves
+# between widths without changing where it opens (Tal, 2026-11-11; Orbit
+# default 2026-11-26).
 RSpec.describe 'Where the feed opens', :js, :streaming do
   include ProfileStories
 
@@ -19,16 +20,16 @@ RSpec.describe 'Where the feed opens', :js, :streaming do
     find('.scope-title .space-header__title')
   end
 
-  it 'opens on Kronkverse, and a turn of the title is not kept' do
+  it 'opens on Orbit, and a turn of the title is not kept' do
     visit '/home'
-    expect(title).to have_text('Kronkverse')
+    expect(title).to have_text('Orbit')
 
     find('.scope-title__nav--next').click
-    expect(title).to have_no_text('Kronkverse')
+    expect(title).to have_no_text('Orbit')
 
     visit '/home'
-    expect(title).to have_text('Kronkverse')
-    expect(bob.reload.settings['kronk.feed_opens_on']).to eq 'kommunity'
+    expect(title).to have_text('Orbit')
+    expect(bob.reload.settings['kronk.feed_opens_on']).to eq 'orbit'
   end
 
   it 'opens on the width chosen in feed settings' do

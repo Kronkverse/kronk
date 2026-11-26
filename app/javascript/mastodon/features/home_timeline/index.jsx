@@ -80,15 +80,15 @@ class HomeTimeline extends PureComponent {
   };
 
   // The Home column shows one status feed at a time. It opens on the width
-  // the member chose in feed settings (kronk.feed_opens_on), Kronkverse
-  // unless they picked another (Tal, 2026-11-11); turning the title moves
+  // the member chose in feed settings (kronk.feed_opens_on), Orbit
+  // unless they picked another (Tal, 2026-11-26); turning the title moves
   // between widths for this visit and isn't saved. Me / Mates / Orbit all ride the
   // mastodon home timeline — Me and Mates fetch it with a `?scope=` param into
   // their own cache, and the server narrows them behind
   // Kronk::FeatureFlags.feed_scope_enforced (until the flag is on, every tier
   // shows the same feed). Kommunity drives the local timeline.
   state = {
-    reach: 'kommunity',
+    reach: 'orbit',
   };
 
   // Fetch a scope's timeline when it's shown. Orbit is pre-seeded and
@@ -109,14 +109,14 @@ class HomeTimeline extends PureComponent {
   // which the API (doorkeeper) never accepts — every call 401'd and the
   // saved choice was silently never read.
   loadOpensOn = async () => {
-    let scope = 'kommunity';
+    let scope = 'orbit';
     try {
       const data = await apiRequestGet('v1/kronk_settings');
       if (['me', 'mates', 'orbit', 'kommunity'].includes(data?.feed_opens_on)) {
         scope = data.feed_opens_on;
       }
     } catch {
-      // Silent: open on Kronkverse.
+      // Silent: open on Orbit.
     }
     this.ensureScopeLoaded(scope);
     this.setState(prev => (prev.reach === scope ? null : { reach: scope }));

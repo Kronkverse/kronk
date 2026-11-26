@@ -208,7 +208,7 @@ export const FeedSettings: React.FC = () => {
   const intl = useIntl();
   const korners = useAllKorners();
 
-  const [scope, setScope] = useState<Scope>('kommunity');
+  const [scope, setScope] = useState<Scope>('orbit');
   const [tuneStates, setTuneStates] = useState<Record<string, boolean>>({});
   const [loaded, setLoaded] = useState(false);
   const [savingScope, setSavingScope] = useState(false);

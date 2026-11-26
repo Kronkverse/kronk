@@ -17,6 +17,18 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-26 — The feed opens on Orbit
+
+**Decision (Tal, Kommons proposal "Orbit"):** Home opens on Orbit, not
+Kronkverse. The **Opens on** choice in feed settings stays.
+
+**How:** `kronk.feed_opens_on` defaults to `orbit`. Members who never chose
+move with the default; anyone who picked a width in feed settings keeps it.
+Supersedes the Kronkverse default in "The feed opens on Kronkverse"
+(2026-11-11).
+
+---
+
 ## 2026-11-24 — Kollection: a card opens the app's page
 
 **Decided by Tal**, the same day, reversing "tapping an app's card opens the

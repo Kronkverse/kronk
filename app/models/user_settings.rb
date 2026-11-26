@@ -123,13 +123,13 @@ class UserSettings
   # read and any subsequent write normalises the stored value.
   #
   # `feed_scope` was also the width Home last turned to, saved on every turn.
-  # Since 2026-11-11 (Tal) Home opens on `feed_opens_on` instead, Kronkverse
-  # (`kommunity`) unless the member picks another in feed settings, and a
-  # turn of the barrel isn't saved. `feed_scope` is no longer read; stored
+  # Since 2026-11-11 (Tal) Home opens on `feed_opens_on` instead, Orbit
+  # (since 2026-11-26; Kronkverse before) unless the member picks another in
+  # feed settings, and a turn of the barrel isn't saved. `feed_scope` is no longer read; stored
   # values are left where they are.
   namespace :kronk do
     setting :feed_scope, default: 'orbit', in: %w(me mates orbit kommunity)
-    setting :feed_opens_on, default: 'kommunity', in: %w(me mates orbit kommunity)
+    setting :feed_opens_on, default: 'orbit', in: %w(me mates orbit kommunity)
   end
 
   def initialize(original_hash)
