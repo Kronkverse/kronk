@@ -76,7 +76,6 @@ module TestEndpoints
     /settings/profile
     /settings/featured_tags
     /settings/export
-    /relationships
     /filters
     /statuses_cleanup
     /auth/edit
