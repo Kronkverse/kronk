@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-26 — Dark only, for now
+
+**Decision (Tal, Kommons proposal "Light theme"):** remove the light theme
+altogether for now.
+
+**How:** `Themes::LIGHT` (`system`, `mastodon-light`) render as the dark
+default in `ApplicationController#current_theme`, so a stored choice of either
+shows dark; the settings forms and `/api/v1/settings/appearance` offer only
+`Themes#offered` (Dark and High contrast), and the site default is `default`.
+Setup's _How Kronk looks_ keeps the shade slider and drops the theme buttons.
+Stored choices and the light token values stay, so light can return by
+emptying `Themes::LIGHT`. Supersedes the Dark / Light / Match my device choice
+in "Setup after signup" (2026-10-22).
+
+---
+
 ## 2026-11-26 — The feed opens on Orbit
 
 **Decision (Tal, Kommons proposal "Orbit"):** Home opens on Orbit, not
