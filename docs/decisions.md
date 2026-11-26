@@ -45,6 +45,18 @@ Supersedes the Kronkverse default in "The feed opens on Kronkverse"
 
 ---
 
+## 2026-11-26 — Notifications newest at the top
+
+**Decision (Tal, Kommons proposal "Notifications"):** the Notifications list
+in Nudges shows the latest at the top again. It had read like a chat since
+2026-11-23 (#2644: oldest at the top, opening at the bottom, earlier ones
+loading as you scroll up). Chats keep chat order.
+
+**How:** #2644 reverted: newest first, "Show earlier" at the bottom, live
+arrivals merged in at the top.
+
+---
+
 ## 2026-11-24 — Kollection: a card opens the app's page
 
 **Decided by Tal**, the same day, reversing "tapping an app's card opens the
