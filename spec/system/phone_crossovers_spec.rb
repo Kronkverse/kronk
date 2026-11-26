@@ -41,6 +41,10 @@ RSpec.describe 'Phone crossovers', :js, :streaming do
           if (['fixed', 'absolute'].includes(style.position) || style.visibility === 'hidden') continue;
           // Toasts slide in from off-screen.
           if (el.closest('.notification-list')) continue;
+          // Inside an <svg>, drawing is clipped to the svg, but a shape's box
+          // ignores clip paths: Inflow's moon shadow is a disc slid off the
+          // moon by the day's phase, so near full moon its box sits ~70px out.
+          if (el instanceof SVGElement && !(el instanceof SVGSVGElement)) continue;
           const box = el.getBoundingClientRect();
           if (box.width <= 1 || box.height <= 1) continue;
           if (/(auto|scroll)/.test(getComputedStyle(parent).overflowX)) continue;
