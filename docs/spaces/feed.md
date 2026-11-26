@@ -222,9 +222,9 @@ only takes a drop nothing else handled.
 ## What the feed shows
 
 **Width.** Home opens on `UserSettings` `kronk.feed_opens_on` (`me | mates
-| orbit | kommunity`, default `kommunity`, which reads as Kronkverse),
+| orbit | kommunity`, default `orbit`; `kommunity` reads as Kronkverse),
 chosen under **Opens on** in feed settings (`/home/settings`) (Tal,
-2026-11-11). The home feed turns between widths with `FeedDrum`, and the
+2026-11-11; Orbit default since 2026-11-26). The home feed turns between widths with `FeedDrum`, and the
 title above it (`ScopeTitle`, the same rotator every space uses) is the
 selector; a turn lasts for the visit and isn't saved. The older
 `kronk.feed_scope` held the last width turned to and is no longer read.
