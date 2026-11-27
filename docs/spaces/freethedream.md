@@ -406,14 +406,21 @@ getting involved, not for doing the work itself:
   the last fortnight in their Komponents or to things they added, are on,
   are bringing or are tagged in (`mine.around`, Activity lines). It
   replaced What's yours (New talk and On you).
-- **Spaces** (Tal, 2026-11-09: "i really like how the krew setup now
-  works"): a projekt's spaces work as a Krew's do. Last on the page,
-  after its sections (Tal, 2026-11-10, as a Krew's sit just above its
-  posts), under **Spaces**, a tile for each space it has, which scrolls to its
-  section, then what it's Konnected to, then **Konnect**. Something
-  Konnected with a picture of its own (a Place's map) is a section of its
-  own under that, headed with its space's name, on a Krew's page too
-  (`AttachmentSection cardsApart`). Konnect → a
+- **Spaces and Konnected** (Tal, 2026-11-09: "i really like how the krew
+  setup now works"): a projekt's spaces work as a Krew's do. Since
+  2026-11-26 they sit under the title, description and faces as small
+  squares with soft corners, each its space's icon (Tal: "The Konnected
+  elements … will sit under the title and description, as smaller soft
+  edged squares with the icon of the konnected space. We'll remove the
+  spaces section from the bottom of the page"; `AttachmentSection
+squares`, docs/design.md): a square for each space it has, which
+  scrolls to its section, then one for each thing it's Konnected to,
+  which opens it, then **+** (Konnect) and, for its owner, a pencil that
+  shows Diskonnect and Same as on each square. Each is named on hover and
+  to screen readers. Until then they were tiles under **Spaces** at the
+  foot of the page (2026-11-10). Something Konnected with a picture of its
+  own (a Place's map) also keeps a section of its own in the body, headed
+  with its space's name (`AttachmentSection cardsOnly`). Konnect → a
   space (the grid's `space` for a projekt: Kalendar, Albutts, Kronikles,
   Kuestions) turns it on (`POST /projects/:id/spaces`, owner only,
   `Project::SPACES`) and goes to its section; anything else is linked as

@@ -521,8 +521,9 @@ RSpec.describe 'Projekts', :js, :streaming do
   end
 
   # docs/spaces/freethedream.md, A projekt's spaces (Tal, 2026-11-09): its
-  # spaces work as a Krew's do.
-  it 'turns a space on from Konnect, with a tile and a section', :aggregate_failures do
+  # spaces work as a Krew's do. Their squares are under its title (Tal,
+  # 2026-11-26), and the foot of the page has no Spaces any more.
+  it 'turns a space on from Konnect, with a square and a section', :aggregate_failures do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
     doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
     krew = doof.reload.krew
@@ -530,7 +531,7 @@ RSpec.describe 'Projekts', :js, :streaming do
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
     expect(page).to have_css('.korner-detail__title', text: 'Mini Doof')
     expect(page).to have_no_css('.space-shelf')
-    within('.attachment-section') { click_on 'Konnect' }
+    within('.konnected-squares') { click_on 'Konnect' }
     within('.attachment-picker') { click_on 'Kronikles' }
 
     expect(page).to have_no_css('.attachment-picker')
@@ -538,8 +539,28 @@ RSpec.describe 'Projekts', :js, :streaming do
       expect(page).to have_css('h3', text: /kronikles/i)
       expect(page).to have_button('New')
     end
-    within('.attachment-section') { expect(page).to have_button('Kronikles') }
+    within('.konnected-squares') { expect(page).to have_button('Kronikles') }
     expect(doof.reload.spaces).to eq ['kronikles']
+    expect(page).to have_no_css('.attachment-section')
+  end
+
+  # Tal, 2026-11-26: what a page is Konnected to is a row of small squares
+  # under its title; the pencil shows Diskonnect on each.
+  it 'shows what a projekt is Konnected to as squares under its title', :aggregate_failures do
+    ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
+    doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
+    krew = doof.reload.krew
+    piece = ArtPiece.create!(owner: bob.account, title: 'Blue study')
+    KornerAttachment.create!(source_slug: 'art', source_id: piece.id, target_slug: 'freethedream', target_id: doof.id,
+                             kind: 'link', created_by_account: bob.account)
+
+    visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
+    within('.konnected-squares') do
+      expect(page).to have_css("a.konnected-square[title*='Blue study']")
+      expect(page).to have_no_css('.space-tile__remove')
+      click_on 'Change what’s Konnected'
+      expect(page).to have_css(".space-tile__remove[title*='Diskonnect']")
+    end
   end
 
   it "arranges a projekt's sections from Edit" do
@@ -613,7 +634,7 @@ RSpec.describe 'Projekts', :js, :streaming do
       click_button(class: 'nudges-composer__send')
       expect(page).to have_text('Who has the urn?')
     end
-    within('.attachment-section') { expect(page).to have_button('Chat') }
+    within('.konnected-squares') { expect(page).to have_button('Chat') }
     expect(Nudges::Conversation.find_by(kind: 'projekt', freethedream_project: doof).messages.last.body).to eq 'Who has the urn?'
   end
 

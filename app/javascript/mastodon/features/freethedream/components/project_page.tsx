@@ -30,7 +30,7 @@ import { SpaceShelf } from 'mastodon/components/space_shelf';
 import { KrewChat } from 'mastodon/features/krew/krew_chat';
 import {
   arrangeSections,
-  JumpTile,
+  JumpSquare,
   scrollToSection,
 } from 'mastodon/features/krew/krew_detail';
 import { KuddleFrame } from 'mastodon/features/live/kuddle_frame';
@@ -84,7 +84,6 @@ import type { Spoke } from './wheel';
 const spaceSectionId = (slug: FtdSpace) => `projekt-space-${slug}`;
 
 const messages = defineMessages({
-  spaces: { id: 'freethedream.spaces', defaultMessage: 'Spaces' },
   events: { id: 'freethedream.events.title', defaultMessage: 'Events' },
   albums: { id: 'freethedream.albums.title', defaultMessage: 'Albums' },
   kronikles: {
@@ -351,6 +350,43 @@ const ProjectView: React.FC<{
   }, [chatOn, project.id]);
   const handleChatRead = useCallback(() => undefined, []);
 
+  // What it's Konnected to, as small squares under its title (Tal,
+  // 2026-11-26: "under the title and description, as smaller soft edged
+  // squares with the icon of the konnected space"): a square for each space
+  // it has, scrolling to its section, then what it's Konnected to, then
+  // Konnect. It replaced the Spaces tiles at the foot of the page. Its
+  // spaces' records show in their sections, a Kuddle as a call frame, and a
+  // projekt lives in its Krew.
+  const konnectedSlugs = ['huddle', 'albutts', 'kronikles', ...spaces];
+  const konnectedExclude = [
+    ...project.events.map((e) => ({ slug: 'kalendar', id: e.id })),
+    ...(project.top && project.krew
+      ? [{ slug: 'krew', id: project.krew.id }]
+      : []),
+  ];
+  const konnected = (
+    <AttachmentSection
+      korner='freethedream'
+      recordId={project.id}
+      canManage={project.can.edit}
+      leading={spaces.map((slug) => (
+        <JumpSquare
+          key={slug}
+          slug={slug}
+          target={spaceSectionId(slug)}
+          label={spaceLabel(slug)}
+        />
+      ))}
+      excludeSlugs={konnectedSlugs}
+      exclude={konnectedExclude}
+      onTurnOnSpace={isMember ? turnOnSpace : undefined}
+      turnOnSlugs={
+        project.top && project.can.edit ? [...FTD_SPACES, 'huddle'] : ['huddle']
+      }
+      squares
+    />
+  );
+
   const goRoot = useCallback(() => {
     history.push(projectPath(project.root));
   }, [history, project.root]);
@@ -454,6 +490,7 @@ const ProjectView: React.FC<{
           </>
         )
       }
+      konnected={konnected}
       actions={gangBar}
     >
       <>
@@ -615,42 +652,15 @@ const ProjectView: React.FC<{
                 />,
               ],
             ])}
-            {/* Its Konnect tiles, last, as a Krew's sit just above its posts
-                (Tal, 2026-11-10): a tile for each space, scrolling to its
-                section, then what it's Konnected to, then Konnect. */}
+            {/* A Konnected record with something to show (a Place's map)
+                keeps a section of its own (Tal, 2026-11-09); its square is
+                under the title with the rest. */}
             <AttachmentSection
               korner='freethedream'
               recordId={project.id}
-              canManage={project.can.edit}
-              heading={
-                spaces.length > 0 ? (
-                  <FormattedMessage {...messages.spaces} />
-                ) : undefined
-              }
-              leading={spaces.map((slug) => (
-                <JumpTile
-                  key={slug}
-                  slug={slug}
-                  target={spaceSectionId(slug)}
-                  label={spaceLabel(slug)}
-                />
-              ))}
-              // Its spaces' records show in their sections, a Kuddle as a call
-              // frame, and a projekt lives in its Krew.
-              excludeSlugs={['huddle', 'albutts', 'kronikles', ...spaces]}
-              exclude={[
-                ...project.events.map((e) => ({ slug: 'kalendar', id: e.id })),
-                ...(project.top && project.krew
-                  ? [{ slug: 'krew', id: project.krew.id }]
-                  : []),
-              ]}
-              onTurnOnSpace={isMember ? turnOnSpace : undefined}
-              turnOnSlugs={
-                project.top && project.can.edit
-                  ? [...FTD_SPACES, 'huddle']
-                  : ['huddle']
-              }
-              cardsApart
+              excludeSlugs={konnectedSlugs}
+              exclude={konnectedExclude}
+              cardsOnly
             />
             {actions}
           </div>

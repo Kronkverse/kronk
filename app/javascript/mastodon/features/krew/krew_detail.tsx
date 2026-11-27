@@ -287,6 +287,31 @@ export const JumpTile: React.FC<{
   );
 };
 
+// The same, as a small square under a page's title, beside what it's
+// Konnected to (`<AttachmentSection squares>`; Tal, 2026-11-26).
+export const JumpSquare: React.FC<{
+  slug: string;
+  target: string;
+  label: string;
+}> = ({ slug, target, label }) => {
+  const handle = useCallback(() => {
+    scrollToSection(target);
+  }, [target]);
+  return (
+    <li>
+      <button
+        type='button'
+        className='konnected-square'
+        onClick={handle}
+        aria-label={label}
+        title={label}
+      >
+        <KrewSpaceIcon slug={slug} className='konnected-square__icon' />
+      </button>
+    </li>
+  );
+};
+
 // Where each section is, for its tile.
 const SECTION_IDS = {
   projekts: 'krew-projekts',

@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LinkIcon from '@/material-icons/400-24px/link.svg?react';
 import LinkOffIcon from '@/material-icons/400-24px/link_off.svg?react';
 import type {
@@ -65,9 +66,27 @@ import { serverError } from 'mastodon/utils/api_error';
 //
 // Renders nothing when there is nothing to show and nothing to add, so a
 // detail page with no Konnections stays clean.
+//
+// `squares` draws it under a page's title instead (Tal, 2026-11-26: "as
+// smaller soft edged squares with the icon of the konnected space", the way
+// a page's people are a row of faces): no heading, each record a square with
+// its space's icon, named on hover and to screen readers, and Konnect a +
+// square at the end. Whoever looks after the record gets a pencil square
+// that shows the × and Same as on each square, and the notes, while it's on;
+// a square has no room for its audience marker. Records with a card are
+// squares too; `cardsOnly` is a second instance in the page's body that
+// shows just their sections (`cardsApart`), so a Place's map keeps its own.
 
 const messages = defineMessages({
   konnect: { id: 'attachment_section.konnect', defaultMessage: 'Konnect' },
+  konnected: {
+    id: 'attachment_section.heading_konnected',
+    defaultMessage: 'Konnected',
+  },
+  edit: {
+    id: 'attachment_section.edit',
+    defaultMessage: 'Change what’s Konnected',
+  },
   diskonnect: {
     id: 'attachment_section.diskonnect',
     defaultMessage: 'Diskonnect {title}',
@@ -150,6 +169,8 @@ interface AttachmentSectionProps {
   // each a section (Tal, 2026-11-09: "a map being connected, but not in its
   // own section").
   cardsApart?: boolean;
+  squares?: boolean;
+  cardsOnly?: boolean;
   // Under the grid, inside the section (the Krew page's tray). A function
   // gets the one that opens the picker.
   children?: React.ReactNode | ((openPicker: () => void) => React.ReactNode);
@@ -175,6 +196,8 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   onTurnOnSpace,
   turnOnSlugs,
   cardsApart = false,
+  squares = false,
+  cardsOnly = false,
   children,
   className,
 }) => {
@@ -313,6 +336,11 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   const openPicker = useCallback(() => {
     setPickerOpen(true);
   }, []);
+  // The squares' pencil: their × and Same as, and the notes, while on.
+  const [editing, setEditing] = useState(false);
+  const toggleEditing = useCallback(() => {
+    setEditing((was) => !was);
+  }, []);
   const closePicker = useCallback(() => {
     setPickerOpen(false);
   }, []);
@@ -331,9 +359,129 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   // No flash of an empty heading while the first load is out.
   if (empty && loading) return null;
 
-  const cardSlugs = cardsApart
-    ? [...new Set(cards.map((link) => link.otherSlug))]
-    : [];
+  const cardSlugs =
+    cardsApart || cardsOnly
+      ? [...new Set(cards.map((link) => link.otherSlug))]
+      : [];
+  const cardSections = cardSlugs.map((slug) => (
+    <CardSection key={slug} slug={slug}>
+      {cards
+        .filter((link) => link.otherSlug === slug)
+        .map((link) => (
+          <KonnectedTile
+            key={link.attachment.id}
+            link={link}
+            canManage={canManage}
+            canFollow={canFollow && followable(link)}
+            onRemove={diskonnect}
+            onFollow={changeFollow}
+          />
+        ))}
+    </CardSection>
+  ));
+  if (cardsOnly) return cardSections;
+
+  const noteLines = notes.map(({ link, mismatch }) => {
+    const own = names.the(link.own);
+    const other = names.the({ ...link.other, slug: link.otherSlug });
+    return (
+      <p className='attachment-section__note' key={link.attachment.id}>
+        {mismatch.everyone
+          ? intl.formatMessage(messages.notEveryoneCanOpen, {
+              own,
+              other,
+            })
+          : intl.formatMessage(messages.krewsCantOpen, {
+              krews: krewNames(intl, mismatch.krews),
+              own,
+            })}
+        {canFollow && followable(link) && !leads(link) && (
+          <NoteFix link={link} other={other} onFollow={changeFollow} />
+        )}
+      </p>
+    );
+  });
+  const errorLine = linkError && (
+    <p
+      className='attachment-section__note attachment-section__note--error'
+      role='alert'
+    >
+      {linkError}
+    </p>
+  );
+  const picker = pickerOpen && recordId != null && (
+    <AttachmentPicker
+      sourceSlug={korner}
+      sourceId={recordId}
+      onClose={closePicker}
+      onAttached={refresh}
+      onTurnOnSpace={onTurnOnSpace}
+      turnOnSlugs={turnOnSlugs}
+      exclude={linked}
+    />
+  );
+
+  if (squares)
+    return (
+      <section
+        className={['konnected-squares', className].filter(Boolean).join(' ')}
+        aria-label={intl.formatMessage(messages.konnected)}
+      >
+        <ul className='konnected-squares__row'>
+          {leading}
+          {links.map((link) => (
+            <KonnectedSquare
+              key={link.attachment.id}
+              link={link}
+              editing={editing}
+              canManage={canManage}
+              canFollow={canFollow && followable(link)}
+              onRemove={diskonnect}
+              onFollow={changeFollow}
+            />
+          ))}
+          {canKonnect && (
+            <li>
+              <button
+                type='button'
+                className='konnected-square konnected-square--action'
+                onClick={openPicker}
+                aria-label={intl.formatMessage(messages.konnect)}
+                title={intl.formatMessage(messages.konnect)}
+              >
+                <Icon
+                  id='add'
+                  icon={AddIcon}
+                  className='konnected-square__icon'
+                />
+              </button>
+            </li>
+          )}
+          {canManage && links.length > 0 && (
+            <li>
+              <button
+                type='button'
+                className='konnected-square konnected-square--action'
+                onClick={toggleEditing}
+                aria-pressed={editing}
+                aria-label={intl.formatMessage(messages.edit)}
+                title={intl.formatMessage(messages.edit)}
+              >
+                <Icon
+                  id='edit'
+                  icon={EditIcon}
+                  className='konnected-square__icon'
+                />
+              </button>
+            </li>
+          )}
+        </ul>
+        {editing && noteLines}
+        {errorLine}
+        {confirmDialog}
+        {picker}
+      </section>
+    );
 
   return (
     <>
@@ -399,68 +547,15 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
             ))}
         </ul>
 
-        {notes.map(({ link, mismatch }) => {
-          const own = names.the(link.own);
-          const other = names.the({ ...link.other, slug: link.otherSlug });
-          return (
-            <p className='attachment-section__note' key={link.attachment.id}>
-              {mismatch.everyone
-                ? intl.formatMessage(messages.notEveryoneCanOpen, {
-                    own,
-                    other,
-                  })
-                : intl.formatMessage(messages.krewsCantOpen, {
-                    krews: krewNames(intl, mismatch.krews),
-                    own,
-                  })}
-              {canFollow && followable(link) && !leads(link) && (
-                <NoteFix link={link} other={other} onFollow={changeFollow} />
-              )}
-            </p>
-          );
-        })}
-
-        {linkError && (
-          <p
-            className='attachment-section__note attachment-section__note--error'
-            role='alert'
-          >
-            {linkError}
-          </p>
-        )}
-
+        {noteLines}
+        {errorLine}
         {confirmDialog}
 
         {typeof children === 'function' ? children(openPicker) : children}
 
-        {pickerOpen && recordId != null && (
-          <AttachmentPicker
-            sourceSlug={korner}
-            sourceId={recordId}
-            onClose={closePicker}
-            onAttached={refresh}
-            onTurnOnSpace={onTurnOnSpace}
-            turnOnSlugs={turnOnSlugs}
-            exclude={linked}
-          />
-        )}
+        {picker}
       </section>
-      {cardSlugs.map((slug) => (
-        <CardSection key={slug} slug={slug}>
-          {cards
-            .filter((link) => link.otherSlug === slug)
-            .map((link) => (
-              <KonnectedTile
-                key={link.attachment.id}
-                link={link}
-                canManage={canManage}
-                canFollow={canFollow && followable(link)}
-                onRemove={diskonnect}
-                onFollow={changeFollow}
-              />
-            ))}
-        </CardSection>
-      ))}
+      {cardSections}
     </>
   );
 };
@@ -635,6 +730,87 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
         <span className={`${tileClass} space-tile--static`}>{body}</span>
       )}
       {controls}
+    </li>
+  );
+};
+
+// The other record as a square under the page's title: its space's icon, a
+// way there, its name on hover and to screen readers. While editing, the ×
+// and Same as sit on its corner, as on a tile.
+const KonnectedSquare: React.FC<KonnectedTileProps & { editing: boolean }> = ({
+  link,
+  editing,
+  canManage,
+  canFollow,
+  onRemove,
+  onFollow,
+}) => {
+  const intl = useIntl();
+  const names = useRecordName();
+  const { other, otherSlug } = link;
+  const OtherIcon = useKornerIcon(otherSlug);
+  const title = other.title ?? names.The({ ...other, slug: otherSlug });
+  const noun = names.noun(otherSlug, other.noun);
+  const label = noun ? `${title}, ${noun}` : title;
+  const named = names.the({ ...other, slug: otherSlug });
+  const following = leads(link);
+  const handleRemove = useCallback(() => {
+    onRemove(link);
+  }, [link, onRemove]);
+  const handleFollow = useCallback(() => {
+    onFollow(link, !following);
+  }, [link, following, onFollow]);
+  const followLabel = intl.formatMessage(
+    following ? messages.unfollow : messages.follow,
+    { title: named },
+  );
+  const squareClass = `konnected-square${following ? ' konnected-square--leads' : ''}`;
+
+  return (
+    <li className='konnected-squares__item'>
+      {other.url ? (
+        <Link
+          to={other.url}
+          className={squareClass}
+          aria-label={label}
+          title={label}
+        >
+          <OtherIcon className='konnected-square__icon' />
+        </Link>
+      ) : (
+        <span
+          className={`${squareClass} konnected-square--static`}
+          aria-label={label}
+          title={label}
+        >
+          <OtherIcon className='konnected-square__icon' />
+        </span>
+      )}
+      {editing && canFollow && (
+        <button
+          type='button'
+          className={`space-tile__follow${following ? ' space-tile__follow--on' : ''}`}
+          onClick={handleFollow}
+          aria-label={followLabel}
+          title={followLabel}
+        >
+          <Icon
+            id={following ? 'link_off' : 'link'}
+            icon={following ? LinkOffIcon : LinkIcon}
+          />
+        </button>
+      )}
+      {editing && canManage && (
+        <button
+          type='button'
+          className='space-tile__remove'
+          onClick={handleRemove}
+          aria-label={intl.formatMessage(messages.diskonnect, { title: named })}
+          title={intl.formatMessage(messages.diskonnect, { title: named })}
+        >
+          <Icon id='close' icon={CloseIcon} />
+        </button>
+      )}
     </li>
   );
 };
