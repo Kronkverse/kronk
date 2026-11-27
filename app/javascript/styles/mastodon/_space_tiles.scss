@@ -490,3 +490,94 @@
 .space-tile__kind {
   margin-block-start: -0.35rem;
 }
+
+// What a page is Konnected to, under its title as a row of small squares
+// with soft corners, each its space's icon (`<AttachmentSection squares>`,
+// Tal 2026-11-26), centred as the faces row is. Editing puts the × and Same
+// as on a square's corners, as on a tile.
+.konnected-squares {
+  margin-block: 0.75rem 0.25rem;
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    position: relative;
+
+    .space-tile__follow,
+    .space-tile__remove {
+      inset-block-start: -0.5rem;
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      background: var(--surface-elevated);
+      box-shadow: 0 0 0 1px var(--border-default);
+    }
+
+    .space-tile__follow {
+      inset-inline-start: -0.5rem;
+    }
+
+    .space-tile__remove {
+      inset-inline-end: -0.5rem;
+    }
+  }
+
+  .attachment-section__note {
+    text-align: center;
+  }
+}
+
+.konnected-square {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--kronk-purple-accent);
+    color: var(--text-primary);
+  }
+
+  &__icon {
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+  }
+
+  // The one this page's audience follows.
+  &--leads {
+    border-color: var(--kronk-purple-accent);
+  }
+
+  &--action {
+    border-style: dashed;
+    background: transparent;
+
+    &[aria-pressed='true'] {
+      border-style: solid;
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+  }
+
+  &--static {
+    cursor: default;
+  }
+}

@@ -36,6 +36,9 @@ interface KornerDetailProps {
   subtitle?: React.ReactNode;
   hero?: React.ReactNode;
   meta?: React.ReactNode;
+  // What the page is Konnected to, as small squares under its title, meta
+  // and faces (`<AttachmentSection squares>`; Tal, 2026-11-26).
+  konnected?: React.ReactNode;
   actions?: React.ReactNode;
   // Banner strip rendered above the title (LIVE NOW pip, etc.).
   banner?: React.ReactNode;
@@ -85,6 +88,7 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
   subtitle,
   hero,
   meta,
+  konnected,
   actions,
   banner,
   back,
@@ -116,6 +120,7 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
         </h1>
         {subtitle && <p className='korner-detail__subtitle'>{subtitle}</p>}
         {meta && <div className='korner-detail__meta'>{meta}</div>}
+        {konnected}
         {actions && <div className='korner-detail__actions'>{actions}</div>}
         {children && <div className='korner-detail__body'>{children}</div>}
         {attached && (

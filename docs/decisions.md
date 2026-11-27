@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-11-26 — What a page is Konnected to sits under its title
+
+**Decision (Tal):** Konnected things sit under a page's title and
+description as small soft-edged squares with the Konnected space's icon,
+the way its people are a row of faces, and the Spaces section at the foot
+of a projekt's page goes. Meant as a standard for every page's title
+section across Kronk.
+
+**How:** `<AttachmentSection squares>` in `<KornerDetail konnected>`: the
+same data, picker, Diskonnect and Same as, drawn as squares, with a pencil
+for whoever looks after the record. Built on projekt and Komponent pages
+first; the other detail pages (`attached`) and the Krew page move to it
+next. A record with a card (a Place's map) keeps its section in the body
+(`cardsOnly`). docs/design.md, Platform primitives; docs/spaces/freethedream.md.
+
+---
+
 ## 2026-11-26 — A projekt is a wheel, with your dashboard under it
 
 **Decision (Tal):** a projekt's page leads with a wheel, the projekt in the
