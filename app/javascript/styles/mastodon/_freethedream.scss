@@ -438,122 +438,143 @@ $freethedream-wide: 1000px;
 }
 
 // Working groups: a grid of tiles, more columns as the Stage widens.
-.freethedream-groups {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
-  gap: 0.75rem;
+// A projekt as a wheel: the projekt in the middle, its Komponents round it
+// as spokes (or a Komponent and its elements). Square, and its labels scale
+// with it (container units). Each spoke's ring fills as it's sorted.
+.freethedream-wheel {
+  position: relative;
+  container-type: inline-size;
+  inline-size: min(100%, 26rem);
+  aspect-ratio: 1;
+  margin: 0.5rem auto 1.5rem;
 
-  > li {
+  &__spokes {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+
+    line {
+      stroke: color-mix(in srgb, var(--accent) 35%, transparent);
+      stroke-width: 0.4;
+    }
+  }
+
+  &__rim {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    > li {
+      position: absolute;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  &__hub,
+  &__spoke {
     display: flex;
-  }
-}
-
-// Komponents (and fractals) as one row that scrolls sideways, the next card
-// peeking in, the same measure as the shared row (`.space-grid--row`).
-.freethedream-groups--row {
-  grid-template-columns: none;
-  grid-auto-flow: column;
-
-  // Wider than a space's row: a Komponent card is the page's main thing.
-  grid-auto-columns: calc((100% - 0.75rem) / 1.4);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 0.5rem;
-
-  @media (width >= 720px) {
-    grid-auto-columns: calc((100% - 1.5rem) / 2.5);
-  }
-
-  > li {
-    scroll-snap-align: start;
-    min-inline-size: 0;
-  }
-}
-
-.freethedream-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  inline-size: 100%;
-  min-block-size: 9rem;
-  padding: 1rem 1.125rem 1.125rem;
-  background: var(--surface-card);
-  border: 1px solid transparent;
-  border-radius: var(--radius-large);
-  color: var(--text-primary);
-  font: inherit;
-  text-align: start;
-  text-decoration: none;
-  transition: border-color var(--dur-fast) var(--ease-out);
-
-  &:hover,
-  &:focus-visible {
-    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-  }
-
-  .freethedream &,
-  .freethedream &:hover {
-    color: var(--text-primary);
-  }
-
-  &__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    min-block-size: 1.25rem;
-  }
-
-  &__title {
-    font-family: var(--font-display);
-    font-size: 24px;
-    font-weight: 400;
-    line-height: 1.15;
-    overflow-wrap: anywhere;
-  }
-
-  // What it is, in brief: its description, to two lines.
-  &__about {
-    display: -webkit-box;
-    overflow: hidden;
-    color: var(--text-secondary);
-    font-size: 13px;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  // How far along it is, along the card's foot.
-  .freethedream-progress {
-    display: flex;
-    margin-block-start: auto;
-    padding-block-start: 0.5rem;
-  }
-
-  .freethedream-progress__bar {
-    block-size: 6px;
-  }
-
-  .freethedream-progress__fill {
-    background: var(--signal);
-  }
-
-  &--add {
     align-items: center;
     justify-content: center;
-    min-block-size: 9rem;
-    background: transparent;
-    border-style: dashed;
-    color: var(--text-secondary);
+    border-radius: 50%;
+    text-align: center;
+  }
+
+  &__hub {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: 32%;
+    aspect-ratio: 1;
+    padding: 3cqi;
+    transform: translate(-50%, -50%);
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font-family: var(--font-display);
+    font-size: 5.2cqi;
+    line-height: 1.1;
+  }
+
+  &__spoke {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    padding: 1.6cqi;
+    border: 0;
+
+    // The ring: sorted in the accent, the rest a quiet line.
+    background:
+      radial-gradient(
+        closest-side,
+        var(--surface-card) calc(100% - 4px),
+        transparent calc(100% - 3px)
+      ),
+      conic-gradient(
+        var(--accent) var(--sorted, 0deg),
+        color-mix(in srgb, var(--accent) 18%, transparent) 0
+      );
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 3.4cqi;
+    line-height: 1.15;
+    text-decoration: none;
     cursor: pointer;
+    transition: transform var(--dur-fast) var(--ease-out);
 
     .freethedream &,
     .freethedream &:hover {
-      color: var(--text-secondary);
+      color: var(--text-primary);
+    }
+
+    &:hover,
+    &:focus-visible {
+      transform: scale(1.06);
+    }
+
+    &--done {
+      opacity: 0.6;
     }
   }
+
+  // Its name, to three lines inside the circle.
+  &__label {
+    display: -webkit-box;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  // Talk you haven't seen in it.
+  &__new {
+    position: absolute;
+    inset-block-start: 8%;
+    inset-inline-end: 8%;
+    inline-size: 2.4cqi;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--signal);
+  }
+}
+
+.freethedream-wheel-add {
+  display: flex;
+  justify-content: center;
+  margin-block-end: 1.5rem;
+}
+
+// A dashboard part's first few rows, the last fading into See all.
+.freethedream-compact--faded {
+  mask-image: linear-gradient(
+    to bottom,
+    black calc(100% - 3.5rem),
+    transparent
+  );
+}
+
+.freethedream-compact__more {
+  margin-block-start: 0.25rem;
 }
 
 // The emergence list: the kit's <SpaceGrid> of cover tiles, given room.

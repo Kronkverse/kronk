@@ -244,6 +244,10 @@ export interface FtdMine {
     more_welcome: boolean;
     section: FtdRef | null;
   })[];
+  // Tagged in, not yet taken on or sorted.
+  tagged: (FtdRef & { kind: FtdItemKind; section: FtdRef | null })[];
+  // What other people did lately around them.
+  around: FtdUpdate[];
   needed: FtdStillNeeded[];
   needed_count: number;
 }

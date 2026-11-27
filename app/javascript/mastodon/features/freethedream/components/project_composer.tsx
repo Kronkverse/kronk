@@ -153,7 +153,7 @@ const messages = defineMessages({
   },
   newFractal: {
     id: 'freethedream.compose.fractal',
-    defaultMessage: 'Add a fractal',
+    defaultMessage: 'Add an element',
   },
   // Seeded from anywhere but a Krew page there is no Krew for it to live
   // in (Tal, 2026-10-31: a projekt is only made from inside a Krew).

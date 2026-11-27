@@ -35,16 +35,16 @@ no example or label that only fits a party.
 **The words** (Tal, 2026-10-15). The nucleus is the people creating
 something, not the thing itself, so the words name the people:
 
-| Say                                    | Not                      | In the code                         |
-| -------------------------------------- | ------------------------ | ----------------------------------- |
-| **emergence**; you **seed** one        | project; start a project | a top-level `Freethedream::Project` |
-| **gang**; you **coalesce** one         | working group, section   | a `Project` with a `parent`         |
-| **fractal** (a piece of a gang)        | section                  | a `Project` under a gang            |
-| **Thing Bringing** (gear and supplies) | Gear & supplies, needs   | `Item` kind `need`                  |
-| **Actualise** (bring an idea to life)  | Jobs, Ideas              | `Item` kind `job`, `Claim`          |
-| **actualiser**; you **jump on board**  | claim a slot             | `Claim`                             |
-| **On offer**                           |                          | `Item` kind `offer`                 |
-| **Krew** (the emergence's people)      | Dreamers                 | the `Krew` it lives in (`krew_id`)  |
+| Say                                                            | Not                      | In the code                          |
+| -------------------------------------------------------------- | ------------------------ | ------------------------------------ |
+| **emergence**; you **seed** one                                | project; start a project | a top-level `Freethedream::Project`  |
+| **gang**; you **coalesce** one                                 | working group, section   | a `Project` with a `parent`          |
+| **element** (a piece of a Komponent; fractal until 2026-11-26) | section                  | a `Project` under a gang (a fractal) |
+| **Thing Bringing** (gear and supplies)                         | Gear & supplies, needs   | `Item` kind `need`                   |
+| **Actualise** (bring an idea to life)                          | Jobs, Ideas              | `Item` kind `job`, `Claim`           |
+| **actualiser**; you **jump on board**                          | claim a slot             | `Claim`                              |
+| **On offer**                                                   |                          | `Item` kind `offer`                  |
+| **Krew** (the emergence's people)                              | Dreamers                 | the `Krew` it lives in (`krew_id`)   |
 
 It is built on a syntropic framework: collaboration is contributor-driven,
 and **Mycelium** (Syntropic World's synergistic audit, Tal 2026-10-19) is
@@ -83,7 +83,7 @@ areas and functionalities in a way that can help keep track").
 | **Talk**   | What's been said and done?       | Threads on a space or an item; Updates; what's new to you                              | `freethedream_comments`, `_activities`, `_reads`                  |
 | **Links**  | What does Kronk already do here? | The Kalendar event (date, place, RSVP), the Map pin, Nudges for mentions; nothing kept | `korner_attachments`, the `freethedream.comment.mentioned` event  |
 
-What's yours on an emergence's page is not a sixth area: it reads the other
+Your dashboard on an emergence's page is not a sixth area: it reads the other
 five for one person
 (`Freethedream::View#mine`). The same goes for Still needed.
 
@@ -220,7 +220,7 @@ that once it hits the project begins."
 - **No money measure.** Money moves outside Kronk; chipping in towards
   something is a Bring ("$400 for permits") and counts as a thing once
   covered.
-- Its page shows a **meter** under the cover band, above What's yours
+- Its page shows a **meter** under the wheel, above your dashboard
   (`threshold_meter.tsx`): a bar for each measure with "7 of 10", one bar
   each rather than one combined so it's clear which is short, drawn in
   segments (one per person or thing) up to 20 and as a smooth fill past
@@ -376,23 +376,36 @@ getting involved, not for doing the work itself:
   Kalendar event (the place linked to its pin on the Kronk Map,
   `/hub/map?event=<slug>`). No creator, no people count, no "By" date, no
   sorted bar.
-- **What's yours** (a member, each only when there's something in it):
-  **New talk**, the gangs with talk from other people they haven't
-  looked at, with a count (opening a gang clears its count); and **On
-  you**, what they're actualising and what they're bringing.
-- **Komponents** first, as a row of cards that scrolls sideways, the next
-  card peeking in, with **+ Add a Komponent** last (Tal, 2026-11-08:
-  "swipable cards rather than grid view"; `GroupTiles row`). They are what a
-  projekt is made of, so their card is its own and larger than a space's
-  (Tal, 2026-11-09: "Komponents are the important part of a projekt, and
-  currently they look the same as kuestions"): the name large, its
-  description in brief (two lines), and how far along it is as a bar along
-  its foot. No counts of people or fractals on the card (Tal, 2026-11-10:
-  "would be better with the brief description of the komponent instead").
-  A Komponent is a gang in the code (Tal, 2026-10-30). **Nobody leads a Komponent**, so no owner
-  shows on a tile or a Komponent's page (the owner still exists in the
-  data, for who may edit it). The ones you have a hand in come first,
-  tagged with any new talk. Members get **+ Add a Komponent**.
+- **The wheel** first (Tal, 2026-11-26: "an interactive wheel that shows
+  the center (Projekt) with all the Komponents coming out like spokes";
+  `wheel.tsx`): the projekt's name in an accent circle in the middle, and
+  each Komponent a circle at the end of a spoke, its name inside. Tapping
+  one opens its page. A spoke's ring fills in the accent as its checklist
+  is sorted (the same count as before: Brings covered and Dos finished),
+  a dot on it says there's talk you haven't seen there, and a done one is
+  quieter. The ones you have a hand in come first round the wheel, from
+  the top. Spokes shrink to fit as there are more. **+ Add a Komponent**
+  is under the wheel, for members. It replaced the row of Komponent cards
+  (2026-11-08 to 11-26), so a Komponent's description shows on its page,
+  not on the projekt's. A Komponent is a gang in the code (Tal,
+  2026-10-30). **Nobody leads a Komponent**, so no owner shows on a spoke
+  or a Komponent's page (the owner still exists in the data, for who may
+  edit it).
+- **Your dashboard** (a member), scrolling down from the wheel (Tal,
+  2026-11-26: "an overview of what they're signed up to, what they've
+  been tagged in, which komponents they're a part of, and any other
+  activity that involves them"; `Yours` in `overview.tsx`). Each part is
+  compact: its first four rows, the last fading, then **See all 5** opens
+  the rest in place (**Show less** folds it). A part with nothing in it
+  isn't there. In order: **Signed up to**, what they're bringing and the
+  Dos they're on; **Tagged in**, what they're tagged in and haven't taken
+  on, still unsorted (`mine.tagged`); **Your Komponents**, those they have
+  a hand in or joined, each with its progress and any new talk; **New
+  talk**, the places with talk from other people they haven't looked at
+  (opening one clears its count); **Around you**, what other people did in
+  the last fortnight in their Komponents or to things they added, are on,
+  are bringing or are tagged in (`mine.around`, Activity lines). It
+  replaced What's yours (New talk and On you).
 - **Spaces** (Tal, 2026-11-09: "i really like how the krew setup now
   works"): a projekt's spaces work as a Krew's do. Last on the page,
   after its sections (Tal, 2026-11-10, as a Krew's sit just above its
@@ -507,7 +520,12 @@ the place the work is done:
   overlapping, then "+7" for the rest (`PeopleRow`, a kit primitive; Tal,
   2026-11-10: "a rough idea of which people, and how many"), whoever is on
   the most first. Each picture opens that person.
-- **Fractals** under its checklist, on this same page (Kommons "Fractals",
+- **Its wheel** first (Tal, 2026-11-26): the Komponent in the middle and
+  its elements as spokes, drawn as the projekt's is; tapping one scrolls
+  down to its section on this page (`fractalSectionId`). No wheel until it
+  has an element.
+- **Elements** (fractals in the code, and in this doc; called elements on
+  screen since Tal, 2026-11-26) under its checklist, on this same page (Kommons "Fractals",
   2026-11-22: "Fractals are not new pages, they're just displayed
   checklists lists on this same page. Compartmentalised sections of the
   overall task that can be assigned to team members"). Each is a panel
@@ -518,7 +536,7 @@ the place the work is done:
   picking someone assigned takes them off; `Freethedream::Assignment`,
   `POST /projects/:id/assign` and `/unassign` with `account_id`).
   Whoever made a fractal removes it from the bin on its panel, asked
-  first. Members get **+ Add a fractal** last.
+  first. Members get **+ Add an element** last.
 - **Moving an entry between checklists** (Kommons "drag and drop/move
   checklist items", 2026-11-22: "be able to move the check list items into
   fractals"): once a Komponent has fractals, anyone in the projekt can move

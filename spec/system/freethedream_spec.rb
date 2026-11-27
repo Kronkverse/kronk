@@ -86,7 +86,7 @@ RSpec.describe 'Projekts', :js, :streaming do
       expect(page).to have_field(placeholder: 'Sound, Design, Paperwork', with: 'Kitchen')
       click_on 'Add'
     end
-    expect(page).to have_css('.freethedream-group', text: 'Kitchen')
+    expect(page).to have_css('.freethedream-wheel__spoke', text: 'Kitchen')
   end
 
   # Kommons, 2026-11-10 (Projekts and Krew work): a Komponent's page is its
@@ -260,7 +260,8 @@ RSpec.describe 'Projekts', :js, :streaming do
     within('.freethedream-fractal', text: 'Cooking') do
       expect(page).to have_css(".people-row a[href='/@#{bob.account.username}']")
     end
-    expect(page).to have_no_css('.freethedream-group', text: 'Cooking')
+    # Its spoke on the Komponent's wheel scrolls here; it isn't a page.
+    within('.freethedream-wheel') { expect(page).to have_button('Cooking') }
     expect(Freethedream::Item.find_by(title: 'Spice run').projects.map(&:title)).to eq ['Cooking']
     expect(Freethedream::Assignment.sole).to have_attributes(account: bob.account)
   end
@@ -426,7 +427,7 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
 
     expect(page).to have_no_css('.compose-shell')
-    within('.freethedream-groups') { click_link 'Kitchen' }
+    within('.freethedream-wheel') { click_link 'Kitchen' }
     expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
     find('.kronk-menu__trigger').click
     find('.kronk-menu__moon[title="Remove"]').click
@@ -436,10 +437,11 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Project.where(title: 'Kitchen')).to be_empty
   end
 
-  # Kommons, 2026-11-08 (Komponent Cards, Join Button, Sections, Make an
-  # event): Komponents are a row of cards, whoever makes one is in it, its
-  # page has no lists, and its Events have a + for the whole projekt.
-  it 'shows Komponents as a row, puts their maker in them, and keeps the page plain' do
+  # Kommons, 2026-11-08 (Join Button, Sections, Make an event): whoever
+  # makes a Komponent is in it, its page has no lists, and its Events have a
+  # + for the whole projekt. Komponents are spokes on the projekt's wheel
+  # (Tal, 2026-11-26).
+  it 'shows Komponents on the wheel, puts their maker in them, and keeps the page plain' do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
     doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account, spaces: ['kalendar'])
     krew = doof.reload.krew
@@ -453,9 +455,9 @@ RSpec.describe 'Projekts', :js, :streaming do
       fill_in placeholder: 'Sound, Design, Paperwork', with: 'Kitchen'
       click_on 'Add'
     end
-    expect(page).to have_css('.freethedream-groups--row .freethedream-group', text: 'Kitchen')
+    expect(page).to have_css('.freethedream-wheel .freethedream-wheel__spoke', text: 'Kitchen')
 
-    within('.freethedream-groups') { click_link 'Kitchen' }
+    within('.freethedream-wheel') { click_link 'Kitchen' }
     expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
     expect(page).to have_css('.freethedream-join-gang', text: 'Joined')
     ['Thing Bringing', 'Actualise', 'On offer', 'Depends on'].each do |heading|
@@ -463,25 +465,23 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
   end
 
-  # Kommons, 2026-11-10 (Projekts and Krew work): a Komponent's card says
-  # what it is, not how many, and its page shows who's in it as a row of
-  # pictures under its description.
-  it "shows a Komponent's description on its card and its people as a row", :aggregate_failures do
+  # Kommons, 2026-11-10 (Projekts and Krew work): a Komponent's page shows
+  # who's in it as a row of pictures under its description.
+  it "shows a Komponent's people as a row", :aggregate_failures do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
     doof = Freethedream::Project.create!(title: 'Mini Doof', owner: bob.account)
     krew = doof.reload.krew
     Freethedream::Project.create!(title: 'Sound', description: 'Speakers, a desk and the long cable run', parent: doof, owner: bob.account)
 
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
-    expect(page).to have_css('.freethedream-group', text: 'Speakers, a desk and the long cable run')
-    expect(page).to have_no_css('.freethedream-group', text: /person|people|fractal/)
+    expect(page).to have_css('.freethedream-wheel__spoke', text: 'Sound')
 
     click_on '+ Add a Komponent'
     within('.compose-shell') do
       fill_in placeholder: 'Sound, Design, Paperwork', with: 'Kitchen'
       click_on 'Add'
     end
-    within('.freethedream-groups') { click_link 'Kitchen' }
+    within('.freethedream-wheel') { click_link 'Kitchen' }
 
     expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
     expect(page).to have_css(".people-row a[href='/@#{bob.account.username}']")
@@ -499,7 +499,7 @@ RSpec.describe 'Projekts', :js, :streaming do
     visit "/hub/krew/#{krew.slug}/p/#{doof.slug}"
     expect(page).to have_css('.home-kuestions__card--ask')
 
-    within('.freethedream-groups') { click_link 'Kitchen' }
+    within('.freethedream-wheel') { click_link 'Kitchen' }
     expect(page).to have_css('.korner-detail__title', text: 'Kitchen')
     expect(page).to have_no_css('.home-kuestions')
   end
@@ -615,6 +615,61 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
     within('.attachment-section') { expect(page).to have_button('Chat') }
     expect(Nudges::Conversation.find_by(kind: 'projekt', freethedream_project: doof).messages.last.body).to eq 'Who has the urn?'
+  end
+
+  # Tal, 2026-11-26: the projekt's wheel, then your dashboard: what you're
+  # signed up to, tagged in and part of, and what happened around you,
+  # each compact with See all.
+  it 'shows your dashboard under the wheel', :aggregate_failures do
+    visit_kitchen
+    doof = seed_dashboard(Freethedream::Project.find_by(title: 'Kitchen'))
+
+    visit "/hub/krew/#{doof.krew.slug}/p/#{doof.slug}"
+    within('.freethedream-wheel') { expect(page).to have_link('Kitchen') }
+    within('.freethedream-dashboard') do
+      within('.freethedream-section', text: /Signed up to/i) { expect(page).to have_text('Set out chairs') }
+      within('.freethedream-section', text: /Your Komponents/i) { expect(page).to have_link('Kitchen') }
+      within('.freethedream-section', text: /Around you/i) { expect(page).to have_text('Set out chairs') }
+      within('.freethedream-section', text: /Tagged in/i) do
+        expect(page).to have_css('.freethedream-rows > li', count: 4)
+        click_on 'See all 5'
+        expect(page).to have_css('.freethedream-rows > li', count: 5)
+        expect(page).to have_button('Show less')
+      end
+    end
+  end
+
+  # Tal, 2026-11-26: a Komponent's wheel has its elements as spokes, and
+  # tapping one goes down to its section on the same page.
+  it "scrolls to an element from the Komponent's wheel", :aggregate_failures do
+    visit_kitchen
+    kitchen = Freethedream::Project.find_by(title: 'Kitchen')
+    cooking = Freethedream::Project.create!(title: 'Cooking', parent: kitchen, owner: bob.account)
+    visit current_path
+
+    path = current_path
+    within('.freethedream-wheel') { click_on 'Cooking' }
+    expect(page).to have_current_path(path)
+    expect(page).to have_css("#fractal-#{cooking.id}", text: 'Cooking')
+    expect(page).to have_button('+ Add an element')
+  end
+
+  # Sam asks bob to set out chairs, which bob is on, and tags bob in five
+  # pots to bring.
+  def seed_dashboard(kitchen)
+    doof = kitchen.top
+    sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
+    Freethedream::Membership.create!(project: doof, account: sam, state: :member)
+    chairs = Freethedream::Item.create!(kind: 'job', title: 'Set out chairs', owner: sam, root_id: doof.id)
+    chairs.placements.create!(project: kitchen)
+    chairs.claims.create!(account: bob.account)
+    5.times do |n|
+      thing = Freethedream::Item.create!(kind: 'need', title: "Pot #{n + 1}", quantity: 1, category: 'things', owner: sam, root_id: doof.id)
+      thing.placements.create!(project: kitchen)
+      thing.suggestions.create!(account: bob.account, suggested_by: sam)
+    end
+    Freethedream::Activity.log!(project: kitchen, account: sam, verb: 'need_added', item: chairs, title: 'Set out chairs')
+    doof
   end
 
   def visit_kitchen
