@@ -90,9 +90,9 @@ RSpec.describe 'Projekts', :js, :streaming do
   end
 
   # Kommons, 2026-11-10 (Projekts and Krew work): a Komponent's page is its
-  # checklist. A To do is ticked off and anyone can say they're on it;
-  # something to Bring is "I'll bring it".
-  it "ticks off a To do on a Komponent's checklist", :aggregate_failures do
+  # checklist. A Do is marked finished and anyone can say they're on it;
+  # something to Bring is Bring (Tal, 2026-11-26: just Do and Bring).
+  it "finishes a Do on a Komponent's checklist", :aggregate_failures do
     visit_kitchen
     expect(page).to have_text('Nothing on it yet')
     within('.freethedream-checklist__add') do
@@ -109,14 +109,20 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.find_by(title: 'Email the council')).to be_done
   end
 
-  it "pays for something on a Komponent's checklist", :aggregate_failures do
+  it 'offers only Do and Bring to add' do
     visit_kitchen
-    within('.freethedream-checklist__add') do
-      find('.freethedream-checklist__pick').click
-      page.document.find('.privacy-dropdown__option', text: 'Pay').click
-      fill_in placeholder: 'Add something to pay for', with: '$200 hall deposit'
-      send_keys :enter
-    end
+    within('.freethedream-checklist__add') { find('.freethedream-checklist__pick', text: 'Do').click }
+    expect(page.document.all('.privacy-dropdown__option').map(&:text)).to eq %w(Do Bring)
+  end
+
+  # Pay, Book and Decide aren't added any more (Tal, 2026-11-26); one added
+  # before keeps working.
+  it "pays for something added before as a Pay on a Komponent's checklist", :aggregate_failures do
+    visit_kitchen
+    kitchen = Freethedream::Project.find_by(title: 'Kitchen')
+    deposit = Freethedream::Item.create!(kind: 'job', task: 'pay', title: 'hall deposit', quantity: 200, unit: '$', category: 'money', owner: bob.account, root_id: kitchen.top_id)
+    deposit.placements.create!(project: kitchen)
+    visit current_path
 
     within('.freethedream-checklist__entry', text: 'hall deposit') do
       expect(page).to have_css('.freethedream-checklist__kind', text: 'Pay')
@@ -137,15 +143,15 @@ RSpec.describe 'Projekts', :js, :streaming do
     end
 
     within('.freethedream-checklist__entry', text: 'Hall deposit') do
-      find('.freethedream-checklist__kind--change', text: 'To do').click
+      find('.freethedream-checklist__kind--change', text: 'Do').click
     end
-    page.document.find('.privacy-dropdown__option', text: 'Pay').click
+    page.document.find('.privacy-dropdown__option', text: 'Bring').click
 
     within('.freethedream-checklist__entry', text: 'Hall deposit') do
-      expect(page).to have_css('.freethedream-checklist__kind', text: 'Pay')
-      expect(page).to have_button('I’ll pay it')
+      expect(page).to have_css('.freethedream-checklist__kind', text: 'Bring')
+      expect(page).to have_css('button[aria-pressed]', text: 'Bring')
     end
-    expect(Freethedream::Item.find_by(title: 'Hall deposit').task).to eq 'pay'
+    expect(Freethedream::Item.find_by(title: 'Hall deposit')).to be_need_kind
   end
 
   # Kommons "Checklist" (2026-11-22): take off an entry added by mistake.
@@ -183,9 +189,10 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.where(title: 'Gas bottles')).to be_empty
   end
 
-  # Kommons "Tagging people on a checklist item" (2026-11-22): suggest
-  # someone from the entry's ⋯ menu; they see it, and can say not for me.
-  it 'suggests someone for an entry from its ⋯ menu', :aggregate_failures do
+  # Kommons "Tagging people on a checklist item" (2026-11-22): tag someone
+  # from the entry's ⋯ menu (Suggest until Tal, 2026-11-26); they see it,
+  # and can say not for me.
+  it 'tags someone in an entry from its ⋯ menu', :aggregate_failures do
     visit_kitchen
     sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
     Freethedream::Membership.create!(project: Freethedream::Project.find_by(title: 'Mini Doof'), account: sam, state: :member)
@@ -198,15 +205,39 @@ RSpec.describe 'Projekts', :js, :streaming do
     within('.freethedream-checklist__entry', text: 'Generator') do
       click_on 'More for Generator'
     end
-    page.document.find('.privacy-dropdown__option', text: 'Suggest someone…').click
+    page.document.find('.privacy-dropdown__option', text: 'Tag someone…').click
     page.document.find('.privacy-dropdown__option', text: 'Sam').click
 
     within('.freethedream-checklist__entry', text: 'Generator') do
-      expect(page).to have_text('Suggested')
+      expect(page).to have_text('Tagged')
       expect(page).to have_css(".people-row a[href='/@sam']")
     end
     item = Freethedream::Item.find_by(title: 'Generator')
     expect(item.suggestions.pluck(:account_id)).to eq [sam.id]
+  end
+
+  # Tal, 2026-11-26: "On creating a checklist item, there's an option to tag
+  # someone in it".
+  it 'tags someone while adding an entry', :aggregate_failures do
+    visit_kitchen
+    sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
+    Freethedream::Membership.create!(project: Freethedream::Project.find_by(title: 'Mini Doof'), account: sam, state: :member)
+    visit current_path
+    within('.freethedream-checklist__add') { click_on 'Tag someone in what you’re adding' }
+    page.document.find('.privacy-dropdown__option', text: 'Sam').click
+    within('.freethedream-checklist__add') do
+      click_on 'Tag someone in what you’re adding'
+      expect(page).to have_button('Tag someone in what you’re adding', text: 'Tag 1')
+      fill_in placeholder: 'Add something to do', with: 'Generator'
+      send_keys :enter
+    end
+
+    within('.freethedream-checklist__entry', text: 'Generator') do
+      expect(page).to have_text('Tagged')
+      expect(page).to have_css(".people-row a[href='/@sam']")
+    end
+    expect(Freethedream::Item.find_by(title: 'Generator').suggestions.pluck(:account_id)).to eq [sam.id]
+    within('.freethedream-checklist__add') { expect(page).to have_button('Tag someone in what you’re adding', text: 'Tag') }
   end
 
   # Kommons "Fractals" (2026-11-22): a Komponent's fractals are checklists
@@ -266,26 +297,6 @@ RSpec.describe 'Projekts', :js, :streaming do
     expect(Freethedream::Item.find_by(title: 'Spice run').projects).to eq [kitchen]
   end
 
-  it "decides something on a Komponent's checklist", :aggregate_failures do
-    visit_kitchen
-    within('.freethedream-checklist__add') do
-      find('.freethedream-checklist__pick').click
-      page.document.find('.privacy-dropdown__option', text: 'Decide').click
-      fill_in placeholder: 'Choices, or none for yes or no', with: 'Sat, Sun'
-      fill_in placeholder: 'Add something to decide', with: 'Which day?'
-      send_keys :enter
-    end
-
-    within('.freethedream-checklist__entry', text: 'Which day?') do
-      expect(page).to have_css('.freethedream-checklist__kind', text: 'Decide')
-      click_on 'Sun'
-      expect(page).to have_css("button[aria-pressed='true']", text: /Sun\s*1/)
-      check
-    end
-    expect(page).to have_css('.freethedream-checklist__state', text: 'Decided: Sun')
-    expect(Freethedream::Item.find_by(title: 'Which day?')).to have_attributes(task: 'decide', done?: true)
-  end
-
   # Tal, 2026-11-11: a Komponent's event is just scheduling a call, in its
   # own Kuddle.
   it 'schedules a call from a Komponent', :aggregate_failures do
@@ -322,7 +333,8 @@ RSpec.describe 'Projekts', :js, :streaming do
 
     within('.freethedream-checklist__entry', text: 'gas bottle') do
       expect(page).to have_css('.freethedream-checklist__kind', text: 'Bring')
-      click_on 'I’ll bring it'
+      find('button[aria-pressed]', text: 'Bring').click
+      expect(page).to have_css('button[aria-pressed=true]', text: 'Bringing')
     end
     expect(page).to have_css('.freethedream-checklist__entry--done', text: 'gas bottle')
   end
@@ -345,6 +357,26 @@ RSpec.describe 'Projekts', :js, :streaming do
 
     expect(page).to have_css('.freethedream-checklist__entry', text: 'chairs')
     expect(Freethedream::Item.find_by(title: 'chairs')).to have_attributes(quantity: 6)
+  end
+
+  # Tal, 2026-11-26: once someone is bringing the one that's needed, Bring
+  # becomes Back up, a second in case it's needed.
+  it 'backs up someone bringing the one thing needed', :aggregate_failures do
+    visit_kitchen
+    kitchen = Freethedream::Project.find_by(title: 'Kitchen')
+    sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
+    Freethedream::Membership.create!(project: kitchen.top, account: sam, state: :member)
+    gas = Freethedream::Item.create!(kind: 'need', title: 'Gas bottle', quantity: 1, category: 'things', owner: sam, root_id: kitchen.top_id)
+    gas.placements.create!(project: kitchen)
+    Freethedream::Item.create!(kind: 'offer', need: gas, title: 'Gas bottle', quantity: 1, category: 'things', owner: sam, root_id: kitchen.top_id).placements.create!(project: kitchen)
+    visit current_path
+
+    within('.freethedream-checklist__entry', text: 'Gas bottle') do
+      expect(page).to have_css(".people-row a[href='/@sam']")
+      find('button[aria-pressed]', text: 'Back up').click
+      expect(page).to have_css('button[aria-pressed=true]', text: 'Backing up')
+    end
+    expect(gas.offers.order(:id).pluck(:owner_id)).to eq [sam.id, bob.account.id]
   end
 
   # docs/spaces/freethedream.md, The Krew: the space badge goes to the Krew

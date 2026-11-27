@@ -30,6 +30,7 @@ import {
 import type {
   FtdAccount,
   FtdDecide,
+  FtdItem,
   FtdItemRow,
   FtdProject,
   FtdTask,
@@ -51,16 +52,16 @@ import { Section, formatAmount } from './shared';
 // A Komponent's checklist (docs/spaces/freethedream.md, The checklist; Tal,
 // 2026-11-10: "Checklist seems sensible, and then we can have variations
 // in what sort of things each entry is"). One list; each entry is a kind
-// with its own small action: a To do is ticked off, and anyone can say
-// they're on it; something to Bring is "I'll bring it"; Pay and Book are
-// To dos that say so ("I'll pay it", Paid; "I'll book it", Booked), and a
-// Pay can have an amount; a Decide is a quick Kuestion in the Komponent,
-// its choices picked right on the entry and ticked once it's decided. What's
-// not done comes first.
+// with its own small action: a Do is marked finished, and anyone can say
+// they're on it; something to Bring is Bring, or Back up once someone is
+// bringing it. Only Do and Bring are added (Tal, 2026-11-26); entries
+// added before as Pay, Book or Decide keep working as they did (Pay and
+// Book say "I'll pay it", Paid; "I'll book it", Booked, and a Decide's
+// choices are picked right on the entry). What's not done comes first.
 
 const messages = defineMessages({
   title: { id: 'freethedream.checklist.title', defaultMessage: 'Checklist' },
-  todo: { id: 'freethedream.checklist.todo', defaultMessage: 'To do' },
+  todo: { id: 'freethedream.checklist.todo', defaultMessage: 'Do' },
   bring: { id: 'freethedream.checklist.bring', defaultMessage: 'Bring' },
   pay: { id: 'freethedream.checklist.pay', defaultMessage: 'Pay' },
   book: { id: 'freethedream.checklist.book', defaultMessage: 'Book' },
@@ -73,7 +74,7 @@ const messages = defineMessages({
     id: 'freethedream.checklist.change_kind',
     defaultMessage: 'Change what kind of entry this is',
   },
-  tick: { id: 'freethedream.checklist.tick', defaultMessage: 'Done' },
+  tick: { id: 'freethedream.checklist.tick', defaultMessage: 'Finished' },
   tickPay: { id: 'freethedream.checklist.tick_pay', defaultMessage: 'Paid' },
   tickBook: {
     id: 'freethedream.checklist.tick_book',
@@ -127,15 +128,24 @@ const messages = defineMessages({
   },
   suggest: {
     id: 'freethedream.checklist.suggest',
-    defaultMessage: 'Suggest someone…',
+    defaultMessage: 'Tag someone…',
   },
   suggested: {
     id: 'freethedream.checklist.suggested',
-    defaultMessage: 'Suggested',
+    defaultMessage: 'Tagged',
   },
   suggestedYou: {
     id: 'freethedream.checklist.suggested_you',
-    defaultMessage: 'You’re suggested for this',
+    defaultMessage: 'You’re tagged in this',
+  },
+  tag: { id: 'freethedream.checklist.tag', defaultMessage: 'Tag' },
+  tagCount: {
+    id: 'freethedream.checklist.tag_count',
+    defaultMessage: 'Tag {count}',
+  },
+  tagWho: {
+    id: 'freethedream.checklist.tag_who',
+    defaultMessage: 'Tag someone in what you’re adding',
   },
   notForMe: {
     id: 'freethedream.checklist.not_for_me',
@@ -178,7 +188,7 @@ const TASK_WORDS: Record<
   },
 };
 
-// The kinds to add, in the order they're offered.
+// The kinds to add: Do and Bring, nothing more (Tal, 2026-11-26).
 // Picked from a small menu on the right of the add box, each kind with its
 // icon, not a row of pills (Tal, 2026-11-11: "i really really dont like the
 // pill situation"; then "the drop down menu is way larger than it needs to
@@ -186,10 +196,16 @@ const TASK_WORDS: Record<
 const ADD_KINDS: { kind: QuickAddKind; label: MessageDescriptor }[] = [
   { kind: 'job', label: messages.todo },
   { kind: 'need', label: messages.bring },
-  { kind: 'pay', label: messages.pay },
-  { kind: 'book', label: messages.book },
-  { kind: 'decide', label: messages.decide },
 ];
+
+// What every kind is called, those added before included.
+const KIND_LABELS: Record<QuickAddKind, MessageDescriptor> = {
+  job: messages.todo,
+  need: messages.bring,
+  pay: messages.pay,
+  book: messages.book,
+  decide: messages.decide,
+};
 
 // Each kind's icon, on its entries and beside the dropdown.
 const KIND_ICONS: Record<QuickAddKind, { id: string; icon: typeof CheckIcon }> =
@@ -425,9 +441,7 @@ const KindPick: React.FC<{
     setOpen(false);
     button.current?.focus();
   }, []);
-  const label = intl.formatMessage(
-    ADD_KINDS.find((k) => k.kind === kind)?.label ?? messages.todo,
-  );
+  const label = intl.formatMessage(KIND_LABELS[kind]);
   const handlePick = useCallback(
     (value: string) => {
       setOpen(false);
@@ -508,10 +522,11 @@ const DRAG_TYPE = 'application/x-kronk-checklist-entry';
 const move = (itemId: string, fromId: string, toId: string) =>
   act(apiFtdMoveItem(itemId, fromId, toId));
 
-// An entry's ⋯ menu: Suggest someone… (anyone in the projekt, Kommons
-// "Tagging people on a checklist item", 2026-11-22), Move to… (when the
-// page has other checklists) and Delete, in red, for whoever added it.
-// Suggest someone… and Move to… each open their own list in the same menu.
+// An entry's ⋯ menu: Tag someone… (anyone in the projekt, Kommons
+// "Tagging people on a checklist item", 2026-11-22; called Suggest until
+// 2026-11-26), Move to… (when the page has other checklists) and Delete, in
+// red, for whoever added it. Tag someone… and Move to… each open their own
+// list in the same menu.
 // A drag moves an entry too on a computer; the menu is how it's done on a
 // phone, where there is no dragging, and from a keyboard.
 const REMOVE = '__remove';
@@ -642,8 +657,9 @@ const EntryMenu: React.FC<{
   );
 };
 
-// Who's been suggested for an entry; to whoever it is, a way to say it's
-// not for them (taking it on, On it or I'll bring it, ends it too).
+// Who's tagged in an entry; to whoever it is, a way to say it's not for
+// them (taking it on, On it or Bring, ends it too). A tag is a suggestion
+// in the code.
 const Suggested: React.FC<{
   item: FtdItemRow;
   canAct: boolean;
@@ -768,6 +784,12 @@ const Entry: React.FC<{
       {item.kind === 'need' ? (
         <>
           <span className='freethedream-checklist__title'>{item.title}</span>
+          <PeopleRow
+            people={(item.contributors ?? []).flatMap((c) =>
+              c.account ? [c.account] : [],
+            )}
+            max={3}
+          />
           {canAct && <BringControl need={item} onChange={onChange} />}
         </>
       ) : (
@@ -804,6 +826,96 @@ const Entry: React.FC<{
   );
 };
 
+// Who to tag in what's being added, beside its kind (Tal, 2026-11-26: "On
+// creating a checklist item, there's an option to tag someone in it"). The
+// same people as Tag someone… in an entry's ⋯ menu; picking someone again
+// leaves them out, and the menu stays open for the next.
+const TagPick: React.FC<{
+  people: FtdAccount[];
+  tagged: string[];
+  onToggle: (id: string) => void;
+}> = ({ people, tagged, onToggle }) => {
+  const intl = useIntl();
+  const button = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const items = useMemo<SelectItem[]>(
+    () =>
+      people.map((p) => ({
+        value: p.id,
+        text: p.display_name || p.acct,
+        icon: tagged.includes(p.id) ? 'check' : 'person',
+        iconComponent: tagged.includes(p.id) ? CheckIcon : PersonIcon,
+      })),
+    [people, tagged],
+  );
+  const handleToggle = useCallback(() => {
+    setOpen((was) => !was);
+  }, []);
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    button.current?.focus();
+  }, []);
+  const handlePick = useCallback(
+    (value: string) => {
+      onToggle(value);
+      setOpen(true);
+    },
+    [onToggle],
+  );
+
+  return (
+    <>
+      <button
+        ref={button}
+        type='button'
+        className='freethedream-checklist__pick'
+        aria-haspopup='listbox'
+        aria-expanded={open}
+        aria-label={intl.formatMessage(messages.tagWho)}
+        title={intl.formatMessage(messages.tagWho)}
+        onClick={handleToggle}
+      >
+        <Icon id='person' icon={PersonIcon} aria-hidden />
+        <span>
+          {tagged.length > 0
+            ? intl.formatMessage(messages.tagCount, { count: tagged.length })
+            : intl.formatMessage(messages.tag)}
+        </span>
+      </button>
+      <Overlay
+        show={open}
+        offset={[0, 4]}
+        placement='bottom-end'
+        onHide={handleClose}
+        flip
+        target={button.current}
+        popperConfig={{ strategy: 'fixed' }}
+      >
+        {({ props, placement }) => (
+          <div {...props} className='privacy-dropdown__overlay'>
+            <div
+              className={classNames(
+                'dropdown-animation',
+                'privacy-dropdown__dropdown',
+                'freethedream-checklist__menu',
+                placement,
+              )}
+            >
+              <DropdownSelector
+                items={items}
+                value=''
+                onClose={handleClose}
+                onChange={handlePick}
+                classNamePrefix='privacy-dropdown'
+              />
+            </div>
+          </div>
+        )}
+      </Overlay>
+    </>
+  );
+};
+
 // One checklist's entries and its add line: a Komponent's own, or one of
 // its fractals' (Kommons "Fractals", 2026-11-22).
 export const ChecklistEntries: React.FC<{
@@ -822,8 +934,23 @@ export const ChecklistEntries: React.FC<{
     () => targets.filter((t) => t.id !== projectId),
     [targets, projectId],
   );
-  // Suggesting is for someone else: the viewer is left out.
+  // Tagging is for someone else: the viewer is left out.
   const people = useMemo(() => members.filter((m) => m.id !== me), [members]);
+  const [tagged, setTagged] = useState<string[]>([]);
+  const handleTag = useCallback((id: string) => {
+    setTagged((was) =>
+      was.includes(id) ? was.filter((other) => other !== id) : [...was, id],
+    );
+  }, []);
+  const tagAll = useCallback(
+    (item: FtdItem) =>
+      Promise.all(tagged.map((id) => apiFtdSuggest(item.id, id, true))).then(
+        () => {
+          setTagged([]);
+        },
+      ),
+    [tagged],
+  );
 
   // An entry dragged here from another checklist on the page moves here.
   const [over, setOver] = useState(false);
@@ -909,13 +1036,23 @@ export const ChecklistEntries: React.FC<{
             kind={kind}
             projectId={projectId}
             onAdded={onChange}
+            afterCreate={tagged.length > 0 ? tagAll : undefined}
             pick={
-              <KindPick
-                kind={kind}
-                onPick={setKind}
-                label={messages.addKind}
-                className='freethedream-checklist__pick'
-              />
+              <>
+                <KindPick
+                  kind={kind}
+                  onPick={setKind}
+                  label={messages.addKind}
+                  className='freethedream-checklist__pick'
+                />
+                {people.length > 0 && (
+                  <TagPick
+                    people={people}
+                    tagged={tagged}
+                    onToggle={handleTag}
+                  />
+                )}
+              </>
             }
           />
         </div>

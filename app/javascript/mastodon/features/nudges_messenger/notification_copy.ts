@@ -217,7 +217,7 @@ const sentences = defineMessages({
   },
   freethedreamItemSuggested: {
     id: 'nudges.notification.freethedream.item_suggested',
-    defaultMessage: '{who} suggested you for something on a checklist',
+    defaultMessage: '{who} tagged you in something on a checklist',
   },
   krewJoinRequested: {
     id: 'nudges.notification.krew.join_requested',

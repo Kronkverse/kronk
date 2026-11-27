@@ -4,25 +4,39 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { apiFtdBring } from 'mastodon/api/freethedream';
 import type { FtdItem, FtdItemRow } from 'mastodon/api_types/freethedream';
+import { me } from 'mastodon/initial_state';
 
 import { act } from './act';
 
-// Bringing something. One thing (a gas bottle, a pot) is one tap: "I'll
-// bring it", and tap again to take it back. Something counted (about 20
-// plates, 5 kg rice) asks how many you're bringing, so the list can say
-// how many are coming; the amount it asks for is rough, not a goal, and
-// bringing more is extra and welcome (Tal, 2026-10-17).
+// Bringing something. One thing (a gas bottle, a pot) is one tap: Bring,
+// and tap again to take it back. Once someone is bringing it, the tap is
+// Back up instead: a second, in case it's needed (Tal, 2026-11-26); the
+// first to say so brings it, and if they stop, the next one up does.
+// Something counted (about 20 plates, 5 kg rice) asks how many you're
+// bringing, so the list can say how many are coming; the amount it asks for
+// is rough, not a goal, and bringing more is extra and welcome (Tal,
+// 2026-10-17).
 
 const messages = defineMessages({
-  bring: { id: 'freethedream.bring.one_tap', defaultMessage: 'I’ll bring it' },
+  bring: { id: 'freethedream.bring.one_tap', defaultMessage: 'Bring' },
   bringing: { id: 'freethedream.bring.mine', defaultMessage: 'Bringing ✓' },
+  backUp: { id: 'freethedream.bring.back_up', defaultMessage: 'Back up' },
+  backUpTitle: {
+    id: 'freethedream.bring.back_up_title',
+    defaultMessage:
+      'Someone is bringing {title}. Offer a second, in case it’s needed.',
+  },
+  backingUp: {
+    id: 'freethedream.bring.backing_up',
+    defaultMessage: 'Backing up ✓',
+  },
   takeBack: {
     id: 'freethedream.bring.take_back',
     defaultMessage: 'Not bringing {title} after all',
   },
   bringSome: {
     id: 'freethedream.bring.some',
-    defaultMessage: 'I’ll bring some',
+    defaultMessage: 'Bring',
   },
   bringingAmount: {
     id: 'freethedream.bring.mine_amount',
@@ -57,6 +71,9 @@ export const BringControl: React.FC<Props> = (props) =>
 const BringOne: React.FC<Props> = ({ need, onChange }) => {
   const intl = useIntl();
   const mine = (need.my_quantity ?? 0) > 0;
+  // Who says so first brings it; anyone after is backing them up.
+  const bringer = need.contributors?.[0]?.account?.id;
+  const backUp = mine ? bringer !== me : !!bringer;
   const [busy, setBusy] = useState(false);
 
   const toggle = useCallback(() => {
@@ -80,10 +97,20 @@ const BringOne: React.FC<Props> = ({ need, onChange }) => {
       title={
         mine
           ? intl.formatMessage(messages.takeBack, { title: need.title })
-          : undefined
+          : backUp
+            ? intl.formatMessage(messages.backUpTitle, { title: need.title })
+            : undefined
       }
     >
-      {intl.formatMessage(mine ? messages.bringing : messages.bring)}
+      {intl.formatMessage(
+        mine
+          ? backUp
+            ? messages.backingUp
+            : messages.bringing
+          : backUp
+            ? messages.backUp
+            : messages.bring,
+      )}
     </button>
   );
 };
